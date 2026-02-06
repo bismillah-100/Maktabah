@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "K7b-oO-EeD.placeholderString" : {
+      "comment" : "Class = \"NSSearchFieldCell\"; placeholderString = \"Search Book Name\"; ObjectID = \"K7b-oO-EeD\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث في أسماء الكتب"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search Book Name"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari Nama Kitab"
+          }
+        }
+      }
+    },
+    "uzy-nO-FzB.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"اختر كل الكتب الموجودة\"; ObjectID = \"uzy-nO-FzB\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر كل الكتب الموجودة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "اختر كل الكتب الموجودة"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر كل الكتب الموجودة"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

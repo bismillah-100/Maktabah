@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="SearchSidebarVC" customModule="Maktabah" customModuleProvider="target">
+            <connections>
+                <outlet property="outlineView" destination="kk9-Dg-fOm" id="e8U-Ol-mUh"/>
+                <outlet property="searchField" destination="UNf-te-qvs" id="MHX-Eb-swQ"/>
+                <outlet property="view" destination="J1w-Su-YGs" id="uie-hY-FSO"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="J1w-Su-YGs">
+            <rect key="frame" x="0.0" y="0.0" width="202" height="516"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="28" horizontalPageScroll="10" verticalLineScroll="28" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lsp-0W-zag">
+                    <rect key="frame" x="0.0" y="0.0" width="202" height="401"/>
+                    <clipView key="contentView" drawsBackground="NO" id="Io9-0a-9n0">
+                        <rect key="frame" x="0.0" y="0.0" width="202" height="401"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" mirrorLayoutDirectionWhenInternationalizing="never" columnAutoresizingStyle="lastColumnOnly" tableStyle="sourceList" selectionHighlightStyle="sourceList" multipleSelection="NO" autosaveColumns="NO" rowHeight="26" rowSizeStyle="automatic" viewBased="YES" floatsGroupRows="NO" indentationPerLevel="13" outlineTableColumn="vLT-oQ-KAJ" userInterfaceLayoutDirection="rightToLeft" id="kk9-Dg-fOm">
+                                <rect key="frame" x="0.0" y="0.0" width="202" height="401"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <size key="intercellSpacing" width="4" height="2"/>
+                                <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                <tableColumns>
+                                    <tableColumn identifier="AutomaticTableColumnIdentifier.0" width="170" minWidth="16" maxWidth="1000" id="vLT-oQ-KAJ">
+                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
+                                            <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                        </tableHeaderCell>
+                                        <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" id="glJ-Rz-pPB">
+                                            <font key="font" metaFont="system"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                        <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                        <prototypeCellViews>
+                                            <tableCellView identifier="HeaderCell" id="xZB-UH-p7J">
+                                                <rect key="frame" x="12" y="1" width="178" height="26"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="never" id="pKX-Nb-9D6">
+                                                        <rect key="frame" x="1" y="0.0" width="157" height="26"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" alignment="right" id="Pid-GY-B9s">
+                                                            <font key="font" size="16" name="KFGQPCUthmanTahaNaskh"/>
+                                                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                    <button mirrorLayoutDirectionWhenInternationalizing="never" verticalHuggingPriority="750" id="Dij-1N-lee">
+                                                        <rect key="frame" x="0.0" y="0.0" width="178" height="26"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="right" state="on" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" inset="2" id="j4A-Zh-rzT">
+                                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                            <font key="font" size="13" name="KFGQPCUthmanTahaNaskh"/>
+                                                        </buttonCell>
+                                                    </button>
+                                                </subviews>
+                                                <connections>
+                                                    <outlet property="textField" destination="pKX-Nb-9D6" id="DwR-nl-nM8"/>
+                                                </connections>
+                                            </tableCellView>
+                                            <tableCellView identifier="DataCell" id="K4Z-LG-dWg">
+                                                <rect key="frame" x="12" y="29" width="178" height="26"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textField verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="never" id="9Mo-VX-QaC">
+                                                        <rect key="frame" x="1" y="0.0" width="157" height="26"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" alignment="right" id="dTH-Vq-7nB">
+                                                            <font key="font" size="16" name="KFGQPCUthmanTahaNaskh"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                    <button mirrorLayoutDirectionWhenInternationalizing="never" verticalHuggingPriority="750" id="nzD-VQ-u4b">
+                                                        <rect key="frame" x="0.0" y="0.0" width="178" height="26"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="right" state="on" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" inset="2" id="NMY-ga-0Cp">
+                                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                            <font key="font" size="13" name="KFGQPCUthmanTahaNaskh"/>
+                                                        </buttonCell>
+                                                    </button>
+                                                </subviews>
+                                                <connections>
+                                                    <outlet property="textField" destination="9Mo-VX-QaC" id="bvU-AY-qoQ"/>
+                                                </connections>
+                                            </tableCellView>
+                                        </prototypeCellViews>
+                                    </tableColumn>
+                                </tableColumns>
+                            </outlineView>
+                        </subviews>
+                        <nil key="backgroundColor"/>
+                    </clipView>
+                    <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="fBF-jd-McG">
+                        <rect key="frame" x="0.0" y="385" width="180" height="16"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                    <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="EB6-3A-UYH">
+                        <rect key="frame" x="224" y="17" width="15" height="102"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                </scrollView>
+                <button mirrorLayoutDirectionWhenInternationalizing="never" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="YTn-NH-Mir">
+                    <rect key="frame" x="20" y="409" width="174" height="23"/>
+                    <buttonCell key="cell" type="check" title="اختر كل الكتب الموجودة" bezelStyle="regularSquare" imagePosition="leading" alignment="right" state="on" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" inset="2" id="uzy-nO-FzB">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" size="16" name="KFGQPCUthmanTahaNaskh"/>
+                    </buttonCell>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="23" id="wwP-YJ-pA6"/>
+                    </constraints>
+                    <connections>
+                        <action selector="selectAllBook:" target="-2" id="GcF-Qo-eCK"/>
+                    </connections>
+                </button>
+                <searchField wantsLayer="YES" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UNf-te-qvs" customClass="DSFSearchField" customModule="Maktabah" customModuleProvider="target">
+                    <rect key="frame" x="4" y="440" width="194" height="22"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="22" id="sKR-bj-dq2"/>
+                    </constraints>
+                    <searchFieldCell key="cell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search Book Name" usesSingleLineMode="YES" bezelStyle="round" maximumRecents="10" recentsAutosaveName="LibraryVCSearch" id="K7b-oO-EeD">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </searchFieldCell>
+                </searchField>
+            </subviews>
+            <constraints>
+                <constraint firstItem="UNf-te-qvs" firstAttribute="leading" secondItem="J1w-Su-YGs" secondAttribute="leading" constant="4" id="0KZ-gu-Q4y"/>
+                <constraint firstItem="UNf-te-qvs" firstAttribute="top" secondItem="J1w-Su-YGs" secondAttribute="top" constant="54" id="7KU-lV-UTI"/>
+                <constraint firstAttribute="trailing" secondItem="UNf-te-qvs" secondAttribute="trailing" constant="4" id="8TQ-Up-9MM"/>
+                <constraint firstAttribute="bottom" secondItem="Lsp-0W-zag" secondAttribute="bottom" id="Ddm-wp-Rie"/>
+                <constraint firstItem="Lsp-0W-zag" firstAttribute="leading" secondItem="J1w-Su-YGs" secondAttribute="leading" id="KU5-H5-0zU"/>
+                <constraint firstAttribute="trailing" secondItem="YTn-NH-Mir" secondAttribute="trailing" constant="8" id="RVv-Yk-esc"/>
+                <constraint firstItem="Lsp-0W-zag" firstAttribute="top" secondItem="YTn-NH-Mir" secondAttribute="bottom" constant="8" symbolic="YES" id="YqI-PH-ypq"/>
+                <constraint firstAttribute="trailing" secondItem="Lsp-0W-zag" secondAttribute="trailing" id="a6B-rH-s2V"/>
+                <constraint firstItem="YTn-NH-Mir" firstAttribute="leading" secondItem="J1w-Su-YGs" secondAttribute="leading" constant="20" symbolic="YES" id="rEL-Cu-nog"/>
+                <constraint firstItem="YTn-NH-Mir" firstAttribute="top" secondItem="UNf-te-qvs" secondAttribute="bottom" constant="8" symbolic="YES" id="urb-tZ-tx9"/>
+            </constraints>
+            <point key="canvasLocation" x="-23" y="-108"/>
+        </customView>
+    </objects>
+</document>

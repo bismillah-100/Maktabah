@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="القرآن الكريم" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" appearanceType="aqua" frameAutosaveName="" animationBehavior="default" tabbingMode="disallowed" titlebarAppearsTransparent="YES" toolbarStyle="compact" titleVisibility="hidden" id="QvC-M9-y7g" customClass="QuranWindow" customModule="Maktabah" customModuleProvider="target">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" fullSizeContentView="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="196" y="240" width="480" height="270"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1366" height="738"/>
+            <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
+                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            </view>
+            <toolbar key="toolbar" implicitIdentifier="9BFFF9C8-D441-4519-9BC2-775EC5EC0157" autosavesConfiguration="NO" allowsUserCustomization="NO" showsBaselineSeparator="NO" displayMode="iconAndLabel" sizeMode="regular" id="RDq-wD-OzY">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="ED38798D-AD4E-45F3-8864-2A2C46F83E8F" explicitItemIdentifier="searchTafseer" label="Search Tafseer" paletteLabel="Search Tafseer" sizingBehavior="auto" id="x3o-wz-zfY">
+                        <nil key="toolTip"/>
+                        <searchField key="view" wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" textCompletion="NO" id="ysJ-Gz-qYW">
+                            <rect key="frame" x="0.0" y="14" width="96" height="24"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" usesSingleLineMode="YES" bezelStyle="round" id="Xm3-S1-Ine">
+                                <font key="font" metaFont="system"/>
+                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </searchFieldCell>
+                        </searchField>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="1R4-zb-07T"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="jwL-ki-VuB"/>
+                    <toolbarItem implicitItemIdentifier="AF911E58-4971-4EBD-8459-48095A4166CF" explicitItemIdentifier="navSegment" label="Navigation" paletteLabel="Navigation" bordered="YES" sizingBehavior="auto" id="RXH-Mo-2kb">
+                        <nil key="toolTip"/>
+                        <segmentedControl key="view" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="never" id="Yzd-gj-pBL">
+                            <rect key="frame" x="17" y="14" width="30" height="24"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <segmentedCell key="cell" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="momentary" id="bkC-ih-W6K">
+                                <font key="font" metaFont="system"/>
+                                <segments>
+                                    <segment image="arrow.left" catalog="system" width="15"/>
+                                    <segment image="arrow.right" catalog="system" width="14" tag="1"/>
+                                </segments>
+                            </segmentedCell>
+                        </segmentedControl>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="E10F6E88-CDA3-4316-B58B-C517F96EB5D1" explicitItemIdentifier="searchField" label="Search In Book" paletteLabel="Search In Current Book" sizingBehavior="auto" id="mLM-ba-6db">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="doc.text.magnifyingglass" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="nOd-hZ-v6F">
+                            <rect key="frame" x="50" y="14" width="30" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="bQo-Dg-nV4">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="doc.text.magnifyingglass" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="1678EB78-0887-4543-9F16-5E7F66F067B4" explicitItemIdentifier="searchQuran" label="Search Quran" paletteLabel="Search Quran" sizingBehavior="auto" id="6x4-Qt-3K8">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="text.magnifyingglass.rtl" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="1j9-7a-UrX">
+                            <rect key="frame" x="24" y="14" width="32" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="hkI-uz-0j9">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="text.magnifyingglass.rtl" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="jwL-ki-VuB"/>
+                    <toolbarItem reference="mLM-ba-6db"/>
+                    <toolbarItem reference="RXH-Mo-2kb"/>
+                    <toolbarItem reference="x3o-wz-zfY"/>
+                    <toolbarItem reference="6x4-Qt-3K8"/>
+                </defaultToolbarItems>
+            </toolbar>
+            <connections>
+                <outlet property="navSegment" destination="RXH-Mo-2kb" id="rvf-vY-BFG"/>
+                <outlet property="searchCurrent" destination="mLM-ba-6db" id="BSo-HL-GGi"/>
+                <outlet property="searchQuran" destination="6x4-Qt-3K8" id="MfK-xc-99x"/>
+                <outlet property="searchTafseer" destination="x3o-wz-zfY" id="koj-hD-qxP"/>
+            </connections>
+            <point key="canvasLocation" x="36" y="37"/>
+        </window>
+    </objects>
+    <resources>
+        <image name="arrow.left" catalog="system" width="16" height="12"/>
+        <image name="arrow.right" catalog="system" width="16" height="12"/>
+        <image name="doc.text.magnifyingglass" catalog="system" width="18" height="22"/>
+        <image name="text.magnifyingglass.rtl" catalog="system" width="20" height="19"/>
+    </resources>
+</document>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <tableCellView identifier="ResultCell" id="AwY-fv-aeW">
+            <rect key="frame" x="0.0" y="0.0" width="374" height="17"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" mirrorLayoutDirectionWhenInternationalizing="always" translatesAutoresizingMaskIntoConstraints="NO" id="M4Y-v7-GfY">
+                    <rect key="frame" x="4" y="3" width="17" height="11"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="11" id="0Un-g2-0l7"/>
+                        <constraint firstAttribute="width" constant="17" id="eBb-eg-E48"/>
+                    </constraints>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="doc.text.fill" catalog="system" id="rpq-tX-JSf"/>
+                </imageView>
+                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsExpansionToolTips="YES" mirrorLayoutDirectionWhenInternationalizing="always" translatesAutoresizingMaskIntoConstraints="NO" id="KIQ-CN-NYP">
+                    <rect key="frame" x="27" y="1" width="345" height="16"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="vuk-dB-tN4">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <constraints>
+                <constraint firstItem="KIQ-CN-NYP" firstAttribute="centerY" secondItem="AwY-fv-aeW" secondAttribute="centerY" id="1ym-gJ-7tX"/>
+                <constraint firstItem="M4Y-v7-GfY" firstAttribute="centerY" secondItem="AwY-fv-aeW" secondAttribute="centerY" id="aGX-Qr-Rlq"/>
+                <constraint firstItem="M4Y-v7-GfY" firstAttribute="leading" secondItem="AwY-fv-aeW" secondAttribute="leading" constant="4" id="pIL-ga-JTN"/>
+                <constraint firstItem="KIQ-CN-NYP" firstAttribute="leading" secondItem="M4Y-v7-GfY" secondAttribute="trailing" constant="8" symbolic="YES" id="utv-R7-bCp"/>
+                <constraint firstAttribute="trailing" secondItem="KIQ-CN-NYP" secondAttribute="trailing" constant="4" id="vKW-lV-8Y5"/>
+            </constraints>
+            <connections>
+                <outlet property="imageView" destination="M4Y-v7-GfY" id="1AI-gT-RNf"/>
+                <outlet property="textField" destination="KIQ-CN-NYP" id="kYv-WP-zZq"/>
+            </connections>
+            <point key="canvasLocation" x="85" y="135"/>
+        </tableCellView>
+    </objects>
+    <resources>
+        <image name="doc.text.fill" catalog="system" width="15" height="16"/>
+    </resources>
+</document>

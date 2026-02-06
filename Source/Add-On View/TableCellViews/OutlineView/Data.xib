@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <tableCellView identifier="DataCell" id="HIR-f8-chs">
+            <rect key="frame" x="0.0" y="0.0" width="154" height="26"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tm1-bh-JxI">
+                    <rect key="frame" x="1" y="2" width="132" height="26"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" alignment="right" title="شرح المسلم" id="5uZ-FS-F30">
+                        <font key="font" size="16" name="KFGQPCUthmanTahaNaskh"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1GW-ae-srK">
+                    <rect key="frame" x="135" y="7" width="20" height="14"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <imageCell key="cell" refusesFirstResponder="YES" imageScaling="proportionallyDown" id="aOM-ea-yEv">
+                        <imageReference key="image" image="book" catalog="system" symbolScale="default" renderingMode="template"/>
+                    </imageCell>
+                </imageView>
+            </subviews>
+            <connections>
+                <outlet property="imageView" destination="1GW-ae-srK" id="qiC-Zb-xsn"/>
+                <outlet property="textField" destination="Tm1-bh-JxI" id="bLJ-vu-PPQ"/>
+            </connections>
+            <point key="canvasLocation" x="40" y="-79"/>
+        </tableCellView>
+    </objects>
+    <resources>
+        <image name="book" catalog="system" width="19" height="14"/>
+    </resources>
+</document>

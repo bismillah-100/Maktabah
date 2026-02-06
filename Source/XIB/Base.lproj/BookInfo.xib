@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="BookInfo" customModule="Maktabah" customModuleProvider="target">
+            <connections>
+                <outlet property="segmentedControl" destination="k4t-aW-vVI" id="F9g-vS-Vdf"/>
+                <outlet property="stackView" destination="Jpr-gt-p6E" id="KQM-QS-OKy"/>
+                <outlet property="textView" destination="N6q-RH-t4N" id="bvt-cQ-OWk"/>
+                <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
+                <outlet property="xBtn" destination="hsF-uG-AU5" id="wFL-Aj-Z75"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView wantsLayer="YES" id="Hz6-mo-xeY">
+            <rect key="frame" x="0.0" y="0.0" width="467" height="357"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <stackView distribution="fill" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Jpr-gt-p6E">
+                    <rect key="frame" x="20" y="315" width="427" height="22"/>
+                    <subviews>
+                        <button hidden="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hsF-uG-AU5">
+                            <rect key="frame" x="0.0" y="-2" width="30" height="24"/>
+                            <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="xmark.circle.fill" catalog="system" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="th3-pU-WEQ">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                                <font key="font" metaFont="systemBold" size="12"/>
+                                <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                            </buttonCell>
+                            <color key="bezelColor" name="systemRedColor" catalog="System" colorSpace="catalog"/>
+                            <color key="contentTintColor" name="systemRedColor" catalog="System" colorSpace="catalog"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="30" id="fcM-T8-Kfs"/>
+                            </constraints>
+                            <connections>
+                                <action selector="dismissController:" target="-2" id="GhQ-ye-iY6"/>
+                            </connections>
+                        </button>
+                        <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="k4t-aW-vVI">
+                            <rect key="frame" x="0.0" y="0.0" width="427" height="22"/>
+                            <segmentedCell key="cell" borderStyle="border" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" alignment="left" segmentDistribution="fillEqually" style="texturedRounded" trackingMode="selectOne" id="0hy-yc-kbz">
+                                <font key="font" metaFont="system"/>
+                                <segments>
+                                    <segment label="Author" image="person.fill" catalog="system"/>
+                                    <segment label="Publication" image="pencil.and.outline" catalog="system" selected="YES" tag="1"/>
+                                    <segment label="Detail">
+                                        <imageReference key="image" image="character.book.closed.fill.ar" catalog="system" symbolScale="default"/>
+                                    </segment>
+                                </segments>
+                            </segmentedCell>
+                            <connections>
+                                <action selector="bookSegment:" target="-2" id="zul-Nf-YcT"/>
+                            </connections>
+                        </segmentedControl>
+                    </subviews>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="22" id="OtY-EP-l0H"/>
+                    </constraints>
+                    <visibilityPriorities>
+                        <integer value="1000"/>
+                        <integer value="1000"/>
+                    </visibilityPriorities>
+                    <customSpacing>
+                        <real value="3.4028234663852886e+38"/>
+                        <real value="3.4028234663852886e+38"/>
+                    </customSpacing>
+                </stackView>
+                <box title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="NVM-xR-pbl">
+                    <rect key="frame" x="20" y="20" width="427" height="287"/>
+                    <view key="contentView" id="16E-cD-3a1">
+                        <rect key="frame" x="0.0" y="0.0" width="427" height="287"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" id="2DN-B9-gAV">
+                                <rect key="frame" x="0.0" y="0.0" width="427" height="287"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <clipView key="contentView" drawsBackground="NO" id="Z8W-x0-Xqb">
+                                    <rect key="frame" x="0.0" y="0.0" width="427" height="287"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <textView wantsLayer="YES" editable="NO" drawsBackground="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" baseWritingDirection="rightToLeft" findStyle="bar" incrementalSearchingEnabled="YES" smartInsertDelete="YES" id="N6q-RH-t4N" customClass="IbarotTextView" customModule="Maktabah" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="0.0" width="427" height="287"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            <size key="minSize" width="427" height="287"/>
+                                            <size key="maxSize" width="456" height="10000000"/>
+                                            <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        </textView>
+                                    </subviews>
+                                </clipView>
+                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="2DY-a1-nnD">
+                                    <rect key="frame" x="-100" y="-100" width="240" height="16"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </scroller>
+                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="2qp-4w-TxZ">
+                                    <rect key="frame" x="410" y="0.0" width="17" height="287"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                </scroller>
+                            </scrollView>
+                        </subviews>
+                    </view>
+                </box>
+            </subviews>
+            <constraints>
+                <constraint firstItem="Jpr-gt-p6E" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" constant="20" symbolic="YES" id="2Pz-lk-Iqf"/>
+                <constraint firstItem="NVM-xR-pbl" firstAttribute="trailing" secondItem="Jpr-gt-p6E" secondAttribute="trailing" id="3hd-XI-3pR"/>
+                <constraint firstAttribute="bottom" secondItem="NVM-xR-pbl" secondAttribute="bottom" constant="20" symbolic="YES" id="CYe-3s-Skx"/>
+                <constraint firstAttribute="trailing" secondItem="Jpr-gt-p6E" secondAttribute="trailing" constant="20" symbolic="YES" id="JhR-7n-YgH"/>
+                <constraint firstItem="NVM-xR-pbl" firstAttribute="top" secondItem="Jpr-gt-p6E" secondAttribute="bottom" constant="8" symbolic="YES" id="ffK-D7-BeG"/>
+                <constraint firstItem="Jpr-gt-p6E" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" constant="20" symbolic="YES" id="hzQ-hd-dXp"/>
+                <constraint firstItem="NVM-xR-pbl" firstAttribute="leading" secondItem="Jpr-gt-p6E" secondAttribute="leading" id="sQy-dJ-d05"/>
+            </constraints>
+            <point key="canvasLocation" x="55.5" y="177.5"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="character.book.closed.fill.ar" catalog="system" width="15" height="16"/>
+        <image name="pencil.and.outline" catalog="system" width="16" height="17"/>
+        <image name="person.fill" catalog="system" width="15" height="14"/>
+        <image name="xmark.circle.fill" catalog="system" width="15" height="15"/>
+    </resources>
+</document>
