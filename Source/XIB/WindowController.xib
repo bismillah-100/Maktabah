@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="WindowController" customModule="Maktabah" customModuleProvider="target">
+            <connections>
+                <outlet property="window" destination="hvs-Zu-o00" id="zNS-Xx-jzF"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <window title="المكتبة" subtitle="صفحة ٨٥٣٢, جزء ٣" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" frameAutosaveName="MainWindow" animationBehavior="default" toolbarStyle="unified" id="hvs-Zu-o00" customClass="MainWindow" customModule="Maktabah" customModuleProvider="target">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" fullSizeContentView="YES"/>
+            <rect key="contentRect" x="335" y="390" width="1000" height="600"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1366" height="738"/>
+            <view key="contentView" id="Vuc-Nn-loG" customClass="NSSplitView">
+                <rect key="frame" x="0.0" y="0.0" width="1000" height="600"/>
+                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            </view>
+            <toolbar key="toolbar" implicitIdentifier="B99E6AE4-0A97-45B6-A4CA-29A1B196F1CA" showsBaselineSeparator="NO" displayMode="iconOnly" sizeMode="regular" id="13r-X6-Vgm">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="996D8A3B-0E1F-413F-B02B-8A9E4CA156F8" explicitItemIdentifier="modeSelector" label="Mode" paletteLabel="Switch Mode" sizingBehavior="auto" navigational="YES" id="M0h-up-RKc">
+                        <nil key="toolTip"/>
+                        <segmentedControl key="view" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" id="Rjf-yZ-xJe">
+                            <rect key="frame" x="0.0" y="14" width="81" height="24"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <segmentedCell key="cell" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="selectOne" id="v11-kf-HkS">
+                                <font key="font" metaFont="system"/>
+                                <segments>
+                                    <segment image="segmentedCell:v11-kf-HkS:image" width="23" selected="YES"/>
+                                    <segment image="A3156DE5-76C8-4B47-B269-A89F9B066916" width="23" tag="1"/>
+                                    <segment image="2FA2C6CF-BD8E-40C0-A721-2A9DBC703528" width="23" tag="3"/>
+                                </segments>
+                            </segmentedCell>
+                            <connections>
+                                <action selector="modeSelectorChanged:" target="hvs-Zu-o00" id="0bf-O9-5B8"/>
+                            </connections>
+                        </segmentedControl>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="3017ECFC-34C6-41E6-ABA6-8B0BAFFD54A6" explicitItemIdentifier="NSToolbarSidebarTrackingSeparatorItemIdentifier" label="" paletteLabel="" tag="-1" bordered="YES" sizingBehavior="auto" id="Lkk-KV-dUW"/>
+                    <toolbarItem implicitItemIdentifier="3AA17054-4055-46C1-9526-517DE574D2E0" explicitItemIdentifier="sidebarLeading" label="Library" paletteLabel="Library" bordered="YES" sizingBehavior="auto" id="63Q-zL-PYa">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="sidebar.leading" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="3oI-Lu-4Vw">
+                            <rect key="frame" x="4" y="14" width="36" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Uz5-Ms-RJn">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="sidebar.leading" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="350B1BE7-D968-415C-983B-227FC89090BF" explicitItemIdentifier="searchSidebarLeadingContent" label="Search Book" paletteLabel="Search Book" bordered="YES" sizingBehavior="auto" id="UjM-Pp-sjn">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="line.3.horizontal.decrease.circle" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="pV1-Bh-q8w">
+                            <rect key="frame" x="22" y="14" width="31" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="k0h-I3-uun">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="line.3.horizontal.decrease.circle" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="45D13220-BEE7-4231-9C5D-868A1432B4F2" explicitItemIdentifier="bookInfo" label="Info" paletteLabel="Book Info" bordered="YES" title="Textured Rounded" sizingBehavior="auto" id="lzi-YI-uww">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="info.circle" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="hGg-JU-gUF">
+                            <rect key="frame" x="13" y="14" width="31" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" title="Textured Rounded" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="a9r-ci-O9X">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="info.circle" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="AeT-Ss-iQR"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="jVk-vO-Ktz"/>
+                    <toolbarItem implicitItemIdentifier="CBA8BA91-3F57-4C35-9456-AB59761CEC08" explicitItemIdentifier="navSegment" label="Navigasi" paletteLabel="Navigasi" sizingBehavior="auto" id="QNp-AO-PTe">
+                        <nil key="toolTip"/>
+                        <segmentedControl key="view" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="never" springLoaded="YES" id="Cpq-EG-19m">
+                            <rect key="frame" x="4" y="14" width="45" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <segmentedCell key="cell" borderStyle="border" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" alignment="left" segmentDistribution="fillEqually" style="texturedRounded" trackingMode="momentary" id="3jG-r2-N3i">
+                                <font key="font" metaFont="system"/>
+                                <segments>
+                                    <segment image="arrow.right" catalog="system" width="17" tag="1"/>
+                                    <segment toolTip="Next" image="arrow.left" catalog="system" width="17" tag="2"/>
+                                </segments>
+                            </segmentedCell>
+                        </segmentedControl>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="519C8FCB-B166-440F-AE8B-3F3E460A2CA9" explicitItemIdentifier="searchField" label="Search In Book" paletteLabel="Search Current Book" bordered="YES" sizingBehavior="auto" id="BPL-9h-f7l">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="doc.text.magnifyingglass" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="EyG-7W-BsB">
+                            <rect key="frame" x="43" y="14" width="31" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mJm-hk-O2Y">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="doc.text.magnifyingglass" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="8F22C054-13CF-4601-90D2-FF44690DA7A4" explicitItemIdentifier="pageSlider" label="Page" paletteLabel="Page" bordered="YES" title="Page" sizingBehavior="auto" id="R6m-Pf-1B3">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="slider.horizontal.below.rectangle" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="O6E-tU-epI">
+                            <rect key="frame" x="1" y="14" width="32" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" title="Page" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="5RE-Cr-pgw">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="slider.horizontal.below.rectangle" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                        <connections>
+                            <action selector="navigationPage:" target="-1" id="oOH-h7-mGG"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="B7674AA1-C83A-487A-A005-A90987DB8059" explicitItemIdentifier="textViewOptions" label="View" paletteLabel="View" bordered="YES" title="Textured Rounded" sizingBehavior="auto" id="MzL-Yw-Wsp">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="textformat.size.ar" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="gLZ-xC-Ecn">
+                            <rect key="frame" x="0.0" y="14" width="33" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" title="Textured Rounded" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="QF5-me-Bfv">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="textformat.size.ar" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                        <connections>
+                            <action selector="viewOptions:" target="-1" id="bZz-QA-UDL"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="74BF8B98-97B3-4A3D-BF41-4E6820B6CBD7" explicitItemIdentifier="copyDetails" label="Copy" paletteLabel="Copy + Detail" bordered="YES" sizingBehavior="auto" id="jBg-bk-WBD">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="doc.on.clipboard" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="IL5-Rh-Wiu">
+                            <rect key="frame" x="23" y="14" width="33" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="GrQ-aA-Ixq">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="doc.on.clipboard" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="3F174C60-0178-4E7D-A5B9-574BBB9432AA" explicitItemIdentifier="displayAllNotations" label="Annotations" paletteLabel="Annotations" bordered="YES" sizingBehavior="auto" id="vtE-iQ-qW9">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="quote.closing" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="b2W-yN-bW3">
+                            <rect key="frame" x="18" y="14" width="34" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="843-lO-fzb">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="quote.closing" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="A2F9F05F-0911-4A92-8F3B-FB25E96F851B" explicitItemIdentifier="searchTableOfContents" label="Search Contents" paletteLabel="Search Contents" bordered="YES" sizingBehavior="auto" id="gdd-WZ-Tt5">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="rectangle.and.text.magnifyingglass.rtl" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="qFl-wc-ETI">
+                            <rect key="frame" x="29" y="14" width="37" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="KKm-m5-utr">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="rectangle.and.text.magnifyingglass.rtl" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="13D62D38-22B4-461C-A74B-6F51858CC088" explicitItemIdentifier="sidebarTrailing" label="Contents" paletteLabel="Contents" bordered="YES" title="Textured Rounded" sizingBehavior="auto" id="tcU-VN-f5q">
+                        <nil key="toolTip"/>
+                        <imageReference key="image" image="sidebar.trailing" catalog="system" symbolScale="large"/>
+                        <button key="view" verticalHuggingPriority="750" id="3P0-lN-sVs">
+                            <rect key="frame" x="10" y="14" width="36" height="23"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <buttonCell key="cell" type="roundTextured" title="Textured Rounded" bezelStyle="texturedRounded" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="a7b-Ry-gqT">
+                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                <font key="font" metaFont="system"/>
+                                <imageReference key="image" image="sidebar.trailing" catalog="system" symbolScale="large"/>
+                            </buttonCell>
+                        </button>
+                        <connections>
+                            <action selector="hideTableOfContents:" target="-1" id="3Md-4N-jR2"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="u3G-jc-t0s"/>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="63Q-zL-PYa"/>
+                    <toolbarItem reference="UjM-Pp-sjn"/>
+                    <toolbarItem reference="Lkk-KV-dUW"/>
+                    <toolbarItem reference="M0h-up-RKc"/>
+                    <toolbarItem reference="lzi-YI-uww"/>
+                    <toolbarItem reference="MzL-Yw-Wsp"/>
+                    <toolbarItem reference="jBg-bk-WBD"/>
+                    <toolbarItem reference="QNp-AO-PTe"/>
+                    <toolbarItem reference="BPL-9h-f7l"/>
+                    <toolbarItem reference="R6m-Pf-1B3"/>
+                    <toolbarItem reference="vtE-iQ-qW9"/>
+                    <toolbarItem reference="gdd-WZ-Tt5"/>
+                    <toolbarItem reference="tcU-VN-f5q"/>
+                </defaultToolbarItems>
+            </toolbar>
+            <connections>
+                <outlet property="bookInfo" destination="lzi-YI-uww" id="K4I-6U-pGH"/>
+                <outlet property="copyWith" destination="jBg-bk-WBD" id="HZZ-US-8Md"/>
+                <outlet property="displayAnnotations" destination="vtE-iQ-qW9" id="Yzp-Qr-fcn"/>
+                <outlet property="modeSegment" destination="Rjf-yZ-xJe" id="Qkw-EF-EKo"/>
+                <outlet property="modeSegmentToolbarItem" destination="M0h-up-RKc" id="TyF-az-Z57"/>
+                <outlet property="navSegment" destination="QNp-AO-PTe" id="1J1-zP-gme"/>
+                <outlet property="navigationPage" destination="R6m-Pf-1B3" id="CQX-UQ-Xqe"/>
+                <outlet property="searchBook" destination="BPL-9h-f7l" id="FAb-Ws-tTI"/>
+                <outlet property="searchSidebarLeading" destination="UjM-Pp-sjn" id="VDM-Vx-XYt"/>
+                <outlet property="searchSidebarTrailing" destination="gdd-WZ-Tt5" id="uiW-fs-19y"/>
+                <outlet property="sidebarLeading" destination="63Q-zL-PYa" id="JCy-dP-uj1"/>
+                <outlet property="sidebarTrailing" destination="tcU-VN-f5q" id="NzT-pG-wTI"/>
+                <outlet property="viewOpt" destination="MzL-Yw-Wsp" id="b1c-Pu-nMI"/>
+            </connections>
+            <point key="canvasLocation" x="239" y="400"/>
+        </window>
+    </objects>
+    <resources>
+        <image name="2FA2C6CF-BD8E-40C0-A721-2A9DBC703528" width="19" height="14">
+            <mutableData key="keyedArchiveRepresentation">
+YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05T
+S2V5ZWRBcmNoaXZlctEICVRyb290gAGvEBALDB8gJSssLS40QEhJTVBRVSRudWxs2Q0ODxAREhMUFRYX
+GBkaGxwdHlZOU1NpemVcTlNJbWFnZUZsYWdzVk5TUmVwc1tOU1RpbnRDb2xvclYkY2xhc3NXTlNDb2xv
+cl5OU1Jlc2l6aW5nTW9kZVxOU0lzVGVtcGxhdGVfECZOU0FsaWdubWVudFJlY3RJbk5vcm1hbGl6ZWRD
+b29yZGluYXRlc4ACEiDAAACAA4AAgA+ACRAACYAOWHsxOSwgMTR90iERIiRaTlMub2JqZWN0c6EjgASA
+CNIhESYkoycoKYAFgAaAB4AIEAZfEBVwZXJzb24udGV4dC5yZWN0YW5nbGUI0i8wMTJaJGNsYXNzbmFt
+ZVgkY2xhc3Nlc1dOU0FycmF5ojEzWE5TT2JqZWN01jURNjc4OTo7PD0+P1dOU1doaXRlXE5TQ29tcG9u
+ZW50c1xOU0NvbG9yU3BhY2VfEBJOU0N1c3RvbUNvbG9yU3BhY2VfEBBOU0xpbmVhckV4cG9zdXJlRDAg
+MACADUMwIDAQA4AKQTHUQUJDEURFRkdUTlNJRFVOU0lDQ1dOU01vZGVsEAmACxAAgAxPERGcAAARnGFw
+cGwCAAAAbW50ckdSQVlYWVogB9wACAAXAA8ALgAPYWNzcEFQUEwAAAAAbm9uZQAAAAAAAAAAAAAAAAAA
+AAAAAPbWAAEAAAAA0y1hcHBsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAFZGVzYwAAAMAAAAB5ZHNjbQAAATwAAAgaY3BydAAACVgAAAAjd3RwdAAACXwAAAAUa1RSQwAA
+CZAAAAgMZGVzYwAAAAAAAAAfR2VuZXJpYyBHcmF5IEdhbW1hIDIuMiBQcm9maWxlAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAG1sdWMAAAAAAAAAHwAAAAxza1NLAAAALgAAAYRkYURLAAAAOgAAAbJjYUVTAAAAOAAA
+Aex2aVZOAAAAQAAAAiRwdEJSAAAASgAAAmR1a1VBAAAALAAAAq5mckZVAAAAPgAAAtpodUhVAAAANAAA
+Axh6aFRXAAAAGgAAA0xrb0tSAAAAIgAAA2ZuYk5PAAAAOgAAA4hjc0NaAAAAKAAAA8JoZUlMAAAAJAAA
+A+pyb1JPAAAAKgAABA5kZURFAAAATgAABDhpdElUAAAATgAABIZzdlNFAAAAOAAABNR6aENOAAAAGgAA
+BQxqYUpQAAAAJgAABSZlbEdSAAAAKgAABUxwdFBPAAAAUgAABXZubE5MAAAAQAAABchlc0VTAAAATAAA
+Bgh0aFRIAAAAMgAABlR0clRSAAAAJAAABoZmaUZJAAAARgAABqpockhSAAAAPgAABvBwbFBMAAAASgAA
+By5hckVHAAAALAAAB3hydVJVAAAAOgAAB6RlblVTAAAAPAAAB94AVgFhAGUAbwBiAGUAYwBuAOEAIABz
+AGkAdgDhACAAZwBhAG0AYQAgADIALAAyAEcAZQBuAGUAcgBpAHMAawAgAGcAcgDlACAAMgAsADIAIABn
+AGEAbQBtAGEALQBwAHIAbwBmAGkAbABHAGEAbQBtAGEAIABkAGUAIABnAHIAaQBzAG8AcwAgAGcAZQBu
+AOgAcgBpAGMAYQAgADIALgAyAEMepQB1ACAAaADsAG4AaAAgAE0A4AB1ACAAeADhAG0AIABDAGgAdQBu
+AGcAIABHAGEAbQBtAGEAIAAyAC4AMgBQAGUAcgBmAGkAbAAgAEcAZQBuAOkAcgBpAGMAbwAgAGQAYQAg
+AEcAYQBtAGEAIABkAGUAIABDAGkAbgB6AGEAcwAgADIALAAyBBcEMAQzBDAEOwRMBD0EMAAgAEcAcgBh
+AHkALQQzBDAEPAQwACAAMgAuADIAUAByAG8AZgBpAGwAIABnAOkAbgDpAHIAaQBxAHUAZQAgAGcAcgBp
+AHMAIABnAGEAbQBtAGEAIAAyACwAMgDBAGwAdABhAGwA4QBuAG8AcwAgAHMAegD8AHIAawBlACAAZwBh
+AG0AbQBhACAAMgAuADKQGnUocHCWjlFJXqYAMgAuADKCcl9pY8+P8Md8vBgAINaMwMkAIKwQucgAIAAy
+AC4AMgAg1QS4XNMMx3wARwBlAG4AZQByAGkAcwBrACAAZwByAOUAIABnAGEAbQBtAGEAIAAyACwAMgAt
+AHAAcgBvAGYAaQBsAE8AYgBlAGMAbgDhACABYQBlAGQA4QAgAGcAYQBtAGEAIAAyAC4AMgXSBdAF3gXU
+ACAF0AXkBdUF6AAgBdsF3AXcBdkAIAAyAC4AMgBHAGEAbQBhACAAZwByAGkAIABnAGUAbgBlAHIAaQBj
+AQMAIAAyACwAMgBBAGwAbABnAGUAbQBlAGkAbgBlAHMAIABHAHIAYQB1AHMAdAB1AGYAZQBuAC0AUABy
+AG8AZgBpAGwAIABHAGEAbQBtAGEAIAAyACwAMgBQAHIAbwBmAGkAbABvACAAZwByAGkAZwBpAG8AIABn
+AGUAbgBlAHIAaQBjAG8AIABkAGUAbABsAGEAIABnAGEAbQBtAGEAIAAyACwAMgBHAGUAbgBlAHIAaQBz
+AGsAIABnAHIA5QAgADIALAAyACAAZwBhAG0AbQBhAHAAcgBvAGYAaQBsZm6QGnBwXqZ8+2VwADIALgAy
+Y8+P8GWHTvZOAIIsMLAw7DCkMKww8zDeACAAMgAuADIAIDDXMO0w1TChMKQw6wOTA7UDvQO5A7oDzAAg
+A5MDugPBA7kAIAOTA6wDvAO8A7EAIAAyAC4AMgBQAGUAcgBmAGkAbAAgAGcAZQBuAOkAcgBpAGMAbwAg
+AGQAZQAgAGMAaQBuAHoAZQBuAHQAbwBzACAAZABhACAARwBhAG0AbQBhACAAMgAsADIAQQBsAGcAZQBt
+AGUAZQBuACAAZwByAGkAagBzACAAZwBhAG0AbQBhACAAMgAsADIALQBwAHIAbwBmAGkAZQBsAFAAZQBy
+AGYAaQBsACAAZwBlAG4A6QByAGkAYwBvACAAZABlACAAZwBhAG0AbQBhACAAZABlACAAZwByAGkAcwBl
+AHMAIAAyACwAMg4jDjEOBw4qDjUOQQ4BDiEOIQ4yDkAOAQ4jDiIOTA4XDjEOSA4nDkQOGwAgADIALgAy
+AEcAZQBuAGUAbAAgAEcAcgBpACAARwBhAG0AYQAgADIALAAyAFkAbABlAGkAbgBlAG4AIABoAGEAcgBt
+AGEAYQBuACAAZwBhAG0AbQBhACAAMgAsADIAIAAtAHAAcgBvAGYAaQBpAGwAaQBHAGUAbgBlAHIAaQEN
+AGsAaQAgAEcAcgBhAHkAIABHAGEAbQBtAGEAIAAyAC4AMgAgAHAAcgBvAGYAaQBsAFUAbgBpAHcAZQBy
+AHMAYQBsAG4AeQAgAHAAcgBvAGYAaQBsACAAcwB6AGEAcgBvAVsAYwBpACAAZwBhAG0AbQBhACAAMgAs
+ADIGOgYnBkUGJwAgADIALgAyACAGRAZIBkYAIAYxBkUGJwYvBkoAIAY5BicGRQQeBDEESQQwBE8AIARB
+BDUEQAQwBE8AIAQzBDAEPAQ8BDAAIAAyACwAMgAtBD8EQAQ+BEQEOAQ7BEwARwBlAG4AZQByAGkAYwAg
+AEcAcgBhAHkAIABHAGEAbQBtAGEAIAAyAC4AMgAgAFAAcgBvAGYAaQBsAGUAAHRleHQAAAAAQ29weXJp
+Z2h0IEFwcGxlIEluYy4sIDIwMTIAAFhZWiAAAAAAAADzUQABAAAAARbMY3VydgAAAAAAAAQAAAAABQAK
+AA8AFAAZAB4AIwAoAC0AMgA3ADsAQABFAEoATwBUAFkAXgBjAGgAbQByAHcAfACBAIYAiwCQAJUAmgCf
+AKQAqQCuALIAtwC8AMEAxgDLANAA1QDbAOAA5QDrAPAA9gD7AQEBBwENARMBGQEfASUBKwEyATgBPgFF
+AUwBUgFZAWABZwFuAXUBfAGDAYsBkgGaAaEBqQGxAbkBwQHJAdEB2QHhAekB8gH6AgMCDAIUAh0CJgIv
+AjgCQQJLAlQCXQJnAnECegKEAo4CmAKiAqwCtgLBAssC1QLgAusC9QMAAwsDFgMhAy0DOANDA08DWgNm
+A3IDfgOKA5YDogOuA7oDxwPTA+AD7AP5BAYEEwQgBC0EOwRIBFUEYwRxBH4EjASaBKgEtgTEBNME4QTw
+BP4FDQUcBSsFOgVJBVgFZwV3BYYFlgWmBbUFxQXVBeUF9gYGBhYGJwY3BkgGWQZqBnsGjAadBq8GwAbR
+BuMG9QcHBxkHKwc9B08HYQd0B4YHmQesB78H0gflB/gICwgfCDIIRghaCG4IggiWCKoIvgjSCOcI+wkQ
+CSUJOglPCWQJeQmPCaQJugnPCeUJ+woRCicKPQpUCmoKgQqYCq4KxQrcCvMLCwsiCzkLUQtpC4ALmAuw
+C8gL4Qv5DBIMKgxDDFwMdQyODKcMwAzZDPMNDQ0mDUANWg10DY4NqQ3DDd4N+A4TDi4OSQ5kDn8Omw62
+DtIO7g8JDyUPQQ9eD3oPlg+zD88P7BAJECYQQxBhEH4QmxC5ENcQ9RETETERTxFtEYwRqhHJEegSBxIm
+EkUSZBKEEqMSwxLjEwMTIxNDE2MTgxOkE8UT5RQGFCcUSRRqFIsUrRTOFPAVEhU0FVYVeBWbFb0V4BYD
+FiYWSRZsFo8WshbWFvoXHRdBF2UXiReuF9IX9xgbGEAYZRiKGK8Y1Rj6GSAZRRlrGZEZtxndGgQaKhpR
+GncanhrFGuwbFBs7G2MbihuyG9ocAhwqHFIcexyjHMwc9R0eHUcdcB2ZHcMd7B4WHkAeah6UHr4e6R8T
+Hz4faR+UH78f6iAVIEEgbCCYIMQg8CEcIUghdSGhIc4h+yInIlUigiKvIt0jCiM4I2YjlCPCI/AkHyRN
+JHwkqyTaJQklOCVoJZclxyX3JicmVyaHJrcm6CcYJ0kneierJ9woDSg/KHEooijUKQYpOClrKZ0p0CoC
+KjUqaCqbKs8rAis2K2krnSvRLAUsOSxuLKIs1y0MLUEtdi2rLeEuFi5MLoIuty7uLyQvWi+RL8cv/jA1
+MGwwpDDbMRIxSjGCMbox8jIqMmMymzLUMw0zRjN/M7gz8TQrNGU0njTYNRM1TTWHNcI1/TY3NnI2rjbp
+NyQ3YDecN9c4FDhQOIw4yDkFOUI5fzm8Ofk6Njp0OrI67zstO2s7qjvoPCc8ZTykPOM9Ij1hPaE94D4g
+PmA+oD7gPyE/YT+iP+JAI0BkQKZA50EpQWpBrEHuQjBCckK1QvdDOkN9Q8BEA0RHRIpEzkUSRVVFmkXe
+RiJGZ0arRvBHNUd7R8BIBUhLSJFI10kdSWNJqUnwSjdKfUrESwxLU0uaS+JMKkxyTLpNAk1KTZNN3E4l
+Tm5Ot08AT0lPk0/dUCdQcVC7UQZRUFGbUeZSMVJ8UsdTE1NfU6pT9lRCVI9U21UoVXVVwlYPVlxWqVb3
+V0RXklfgWC9YfVjLWRpZaVm4WgdaVlqmWvVbRVuVW+VcNVyGXNZdJ114XcleGl5sXr1fD19hX7NgBWBX
+YKpg/GFPYaJh9WJJYpxi8GNDY5dj62RAZJRk6WU9ZZJl52Y9ZpJm6Gc9Z5Nn6Wg/aJZo7GlDaZpp8WpI
+ap9q92tPa6dr/2xXbK9tCG1gbbluEm5rbsRvHm94b9FwK3CGcOBxOnGVcfByS3KmcwFzXXO4dBR0cHTM
+dSh1hXXhdj52m3b4d1Z3s3gReG54zHkqeYl553pGeqV7BHtje8J8IXyBfOF9QX2hfgF+Yn7CfyN/hH/l
+gEeAqIEKgWuBzYIwgpKC9INXg7qEHYSAhOOFR4Wrhg6GcobXhzuHn4gEiGmIzokziZmJ/opkisqLMIuW
+i/yMY4zKjTGNmI3/jmaOzo82j56QBpBukNaRP5GokhGSepLjk02TtpQglIqU9JVflcmWNJaflwqXdZfg
+mEyYuJkkmZCZ/JpomtWbQpuvnByciZz3nWSd0p5Anq6fHZ+Ln/qgaaDYoUehtqImopajBqN2o+akVqTH
+pTilqaYapoum/adup+CoUqjEqTepqaocqo+rAqt1q+msXKzQrUStuK4trqGvFq+LsACwdbDqsWCx1rJL
+ssKzOLOutCW0nLUTtYq2AbZ5tvC3aLfguFm40blKucK6O7q1uy67p7whvJu9Fb2Pvgq+hL7/v3q/9cBw
+wOzBZ8Hjwl/C28NYw9TEUcTOxUvFyMZGxsPHQce/yD3IvMk6ybnKOMq3yzbLtsw1zLXNNc21zjbOts83
+z7jQOdC60TzRvtI/0sHTRNPG1EnUy9VO1dHWVdbY11zX4Nhk2OjZbNnx2nba+9uA3AXcit0Q3ZbeHN6i
+3ynfr+A24L3hROHM4lPi2+Nj4+vkc+T85YTmDeaW5x/nqegy6LzpRunQ6lvq5etw6/vshu0R7ZzuKO60
+70DvzPBY8OXxcvH/8ozzGfOn9DT0wvVQ9d72bfb794r4Gfio+Tj5x/pX+uf7d/wH/Jj9Kf26/kv+3P9t
+///SLzBKS1xOU0NvbG9yU3BhY2WiTDNcTlNDb2xvclNwYWNl0i8wTk9XTlNDb2xvcqJOM18QM3t7MCwg
+MC4xNDI4NTcxNDI4NTcxNDI4NX0sIHsxLCAwLjY0Mjg1NzE0Mjg1NzE0Mjl9fdIvMFJTV05TSW1hZ2Wi
+UjMACAARABoAJAApADIANwBJAEwAUQBTAGYAbAB/AIYAkwCaAKYArQC1AMQA0QD6APwBAQEDAQUBBwEJ
+AQsBDAEOARcBHAEnASkBKwEtATIBNgE4AToBPAE+AUABWAFZAV4BaQFyAXoBfQGGAZMBmwGoAbUBygHd
+AeIB5AHoAeoB7AHuAfcB/AICAgoCDAIOAhACEhOyE7cTxBPHE9QT2RPhE+QUGhQfFCcAAAAAAAACAQAA
+AAAAAABUAAAAAAAAAAAAAAAAAAAUKg
+</mutableData>
+        </image>
+        <image name="A3156DE5-76C8-4B47-B269-A89F9B066916" width="17" height="15">
+            <mutableData key="keyedArchiveRepresentation">
+YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05T
+S2V5ZWRBcmNoaXZlctEICVRyb290gAGvEBALDB8gJSssLS40QEhJTVBRVSRudWxs2Q0ODxAREhMUFRYX
+GBkaGxwdHlZOU1NpemVcTlNJbWFnZUZsYWdzVk5TUmVwc1tOU1RpbnRDb2xvclYkY2xhc3NXTlNDb2xv
+cl5OU1Jlc2l6aW5nTW9kZVxOU0lzVGVtcGxhdGVfECZOU0FsaWdubWVudFJlY3RJbk5vcm1hbGl6ZWRD
+b29yZGluYXRlc4ACEiDAAACAA4AAgA+ACRAACYAOWHsxNywgMTV90iERIiRaTlMub2JqZWN0c6EjgASA
+CNIhESYkoycoKYAFgAaAB4AIEAZfEA90ZXh0LnZpZXdmaW5kZXII0i8wMTJaJGNsYXNzbmFtZVgkY2xh
+c3Nlc1dOU0FycmF5ojEzWE5TT2JqZWN01jURNjc4OTo7PD0+P1dOU1doaXRlXE5TQ29tcG9uZW50c1xO
+U0NvbG9yU3BhY2VfEBJOU0N1c3RvbUNvbG9yU3BhY2VfEBBOU0xpbmVhckV4cG9zdXJlRDAgMACADUMw
+IDAQA4AKQTHUQUJDEURFRkdUTlNJRFVOU0lDQ1dOU01vZGVsEAmACxAAgAxPERGcAAARnGFwcGwCAAAA
+bW50ckdSQVlYWVogB9wACAAXAA8ALgAPYWNzcEFQUEwAAAAAbm9uZQAAAAAAAAAAAAAAAAAAAAAAAPbW
+AAEAAAAA0y1hcHBsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF
+ZGVzYwAAAMAAAAB5ZHNjbQAAATwAAAgaY3BydAAACVgAAAAjd3RwdAAACXwAAAAUa1RSQwAACZAAAAgM
+ZGVzYwAAAAAAAAAfR2VuZXJpYyBHcmF5IEdhbW1hIDIuMiBQcm9maWxlAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAG1sdWMAAAAAAAAAHwAAAAxza1NLAAAALgAAAYRkYURLAAAAOgAAAbJjYUVTAAAAOAAAAex2aVZO
+AAAAQAAAAiRwdEJSAAAASgAAAmR1a1VBAAAALAAAAq5mckZVAAAAPgAAAtpodUhVAAAANAAAAxh6aFRX
+AAAAGgAAA0xrb0tSAAAAIgAAA2ZuYk5PAAAAOgAAA4hjc0NaAAAAKAAAA8JoZUlMAAAAJAAAA+pyb1JP
+AAAAKgAABA5kZURFAAAATgAABDhpdElUAAAATgAABIZzdlNFAAAAOAAABNR6aENOAAAAGgAABQxqYUpQ
+AAAAJgAABSZlbEdSAAAAKgAABUxwdFBPAAAAUgAABXZubE5MAAAAQAAABchlc0VTAAAATAAABgh0aFRI
+AAAAMgAABlR0clRSAAAAJAAABoZmaUZJAAAARgAABqpockhSAAAAPgAABvBwbFBMAAAASgAABy5hckVH
+AAAALAAAB3hydVJVAAAAOgAAB6RlblVTAAAAPAAAB94AVgFhAGUAbwBiAGUAYwBuAOEAIABzAGkAdgDh
+ACAAZwBhAG0AYQAgADIALAAyAEcAZQBuAGUAcgBpAHMAawAgAGcAcgDlACAAMgAsADIAIABnAGEAbQBt
+AGEALQBwAHIAbwBmAGkAbABHAGEAbQBtAGEAIABkAGUAIABnAHIAaQBzAG8AcwAgAGcAZQBuAOgAcgBp
+AGMAYQAgADIALgAyAEMepQB1ACAAaADsAG4AaAAgAE0A4AB1ACAAeADhAG0AIABDAGgAdQBuAGcAIABH
+AGEAbQBtAGEAIAAyAC4AMgBQAGUAcgBmAGkAbAAgAEcAZQBuAOkAcgBpAGMAbwAgAGQAYQAgAEcAYQBt
+AGEAIABkAGUAIABDAGkAbgB6AGEAcwAgADIALAAyBBcEMAQzBDAEOwRMBD0EMAAgAEcAcgBhAHkALQQz
+BDAEPAQwACAAMgAuADIAUAByAG8AZgBpAGwAIABnAOkAbgDpAHIAaQBxAHUAZQAgAGcAcgBpAHMAIABn
+AGEAbQBtAGEAIAAyACwAMgDBAGwAdABhAGwA4QBuAG8AcwAgAHMAegD8AHIAawBlACAAZwBhAG0AbQBh
+ACAAMgAuADKQGnUocHCWjlFJXqYAMgAuADKCcl9pY8+P8Md8vBgAINaMwMkAIKwQucgAIAAyAC4AMgAg
+1QS4XNMMx3wARwBlAG4AZQByAGkAcwBrACAAZwByAOUAIABnAGEAbQBtAGEAIAAyACwAMgAtAHAAcgBv
+AGYAaQBsAE8AYgBlAGMAbgDhACABYQBlAGQA4QAgAGcAYQBtAGEAIAAyAC4AMgXSBdAF3gXUACAF0AXk
+BdUF6AAgBdsF3AXcBdkAIAAyAC4AMgBHAGEAbQBhACAAZwByAGkAIABnAGUAbgBlAHIAaQBjAQMAIAAy
+ACwAMgBBAGwAbABnAGUAbQBlAGkAbgBlAHMAIABHAHIAYQB1AHMAdAB1AGYAZQBuAC0AUAByAG8AZgBp
+AGwAIABHAGEAbQBtAGEAIAAyACwAMgBQAHIAbwBmAGkAbABvACAAZwByAGkAZwBpAG8AIABnAGUAbgBl
+AHIAaQBjAG8AIABkAGUAbABsAGEAIABnAGEAbQBtAGEAIAAyACwAMgBHAGUAbgBlAHIAaQBzAGsAIABn
+AHIA5QAgADIALAAyACAAZwBhAG0AbQBhAHAAcgBvAGYAaQBsZm6QGnBwXqZ8+2VwADIALgAyY8+P8GWH
+TvZOAIIsMLAw7DCkMKww8zDeACAAMgAuADIAIDDXMO0w1TChMKQw6wOTA7UDvQO5A7oDzAAgA5MDugPB
+A7kAIAOTA6wDvAO8A7EAIAAyAC4AMgBQAGUAcgBmAGkAbAAgAGcAZQBuAOkAcgBpAGMAbwAgAGQAZQAg
+AGMAaQBuAHoAZQBuAHQAbwBzACAAZABhACAARwBhAG0AbQBhACAAMgAsADIAQQBsAGcAZQBtAGUAZQBu
+ACAAZwByAGkAagBzACAAZwBhAG0AbQBhACAAMgAsADIALQBwAHIAbwBmAGkAZQBsAFAAZQByAGYAaQBs
+ACAAZwBlAG4A6QByAGkAYwBvACAAZABlACAAZwBhAG0AbQBhACAAZABlACAAZwByAGkAcwBlAHMAIAAy
+ACwAMg4jDjEOBw4qDjUOQQ4BDiEOIQ4yDkAOAQ4jDiIOTA4XDjEOSA4nDkQOGwAgADIALgAyAEcAZQBu
+AGUAbAAgAEcAcgBpACAARwBhAG0AYQAgADIALAAyAFkAbABlAGkAbgBlAG4AIABoAGEAcgBtAGEAYQBu
+ACAAZwBhAG0AbQBhACAAMgAsADIAIAAtAHAAcgBvAGYAaQBpAGwAaQBHAGUAbgBlAHIAaQENAGsAaQAg
+AEcAcgBhAHkAIABHAGEAbQBtAGEAIAAyAC4AMgAgAHAAcgBvAGYAaQBsAFUAbgBpAHcAZQByAHMAYQBs
+AG4AeQAgAHAAcgBvAGYAaQBsACAAcwB6AGEAcgBvAVsAYwBpACAAZwBhAG0AbQBhACAAMgAsADIGOgYn
+BkUGJwAgADIALgAyACAGRAZIBkYAIAYxBkUGJwYvBkoAIAY5BicGRQQeBDEESQQwBE8AIARBBDUEQAQw
+BE8AIAQzBDAEPAQ8BDAAIAAyACwAMgAtBD8EQAQ+BEQEOAQ7BEwARwBlAG4AZQByAGkAYwAgAEcAcgBh
+AHkAIABHAGEAbQBtAGEAIAAyAC4AMgAgAFAAcgBvAGYAaQBsAGUAAHRleHQAAAAAQ29weXJpZ2h0IEFw
+cGxlIEluYy4sIDIwMTIAAFhZWiAAAAAAAADzUQABAAAAARbMY3VydgAAAAAAAAQAAAAABQAKAA8AFAAZ
+AB4AIwAoAC0AMgA3ADsAQABFAEoATwBUAFkAXgBjAGgAbQByAHcAfACBAIYAiwCQAJUAmgCfAKQAqQCu
+ALIAtwC8AMEAxgDLANAA1QDbAOAA5QDrAPAA9gD7AQEBBwENARMBGQEfASUBKwEyATgBPgFFAUwBUgFZ
+AWABZwFuAXUBfAGDAYsBkgGaAaEBqQGxAbkBwQHJAdEB2QHhAekB8gH6AgMCDAIUAh0CJgIvAjgCQQJL
+AlQCXQJnAnECegKEAo4CmAKiAqwCtgLBAssC1QLgAusC9QMAAwsDFgMhAy0DOANDA08DWgNmA3IDfgOK
+A5YDogOuA7oDxwPTA+AD7AP5BAYEEwQgBC0EOwRIBFUEYwRxBH4EjASaBKgEtgTEBNME4QTwBP4FDQUc
+BSsFOgVJBVgFZwV3BYYFlgWmBbUFxQXVBeUF9gYGBhYGJwY3BkgGWQZqBnsGjAadBq8GwAbRBuMG9QcH
+BxkHKwc9B08HYQd0B4YHmQesB78H0gflB/gICwgfCDIIRghaCG4IggiWCKoIvgjSCOcI+wkQCSUJOglP
+CWQJeQmPCaQJugnPCeUJ+woRCicKPQpUCmoKgQqYCq4KxQrcCvMLCwsiCzkLUQtpC4ALmAuwC8gL4Qv5
+DBIMKgxDDFwMdQyODKcMwAzZDPMNDQ0mDUANWg10DY4NqQ3DDd4N+A4TDi4OSQ5kDn8Omw62DtIO7g8J
+DyUPQQ9eD3oPlg+zD88P7BAJECYQQxBhEH4QmxC5ENcQ9RETETERTxFtEYwRqhHJEegSBxImEkUSZBKE
+EqMSwxLjEwMTIxNDE2MTgxOkE8UT5RQGFCcUSRRqFIsUrRTOFPAVEhU0FVYVeBWbFb0V4BYDFiYWSRZs
+Fo8WshbWFvoXHRdBF2UXiReuF9IX9xgbGEAYZRiKGK8Y1Rj6GSAZRRlrGZEZtxndGgQaKhpRGncanhrF
+GuwbFBs7G2MbihuyG9ocAhwqHFIcexyjHMwc9R0eHUcdcB2ZHcMd7B4WHkAeah6UHr4e6R8THz4faR+U
+H78f6iAVIEEgbCCYIMQg8CEcIUghdSGhIc4h+yInIlUigiKvIt0jCiM4I2YjlCPCI/AkHyRNJHwkqyTa
+JQklOCVoJZclxyX3JicmVyaHJrcm6CcYJ0kneierJ9woDSg/KHEooijUKQYpOClrKZ0p0CoCKjUqaCqb
+Ks8rAis2K2krnSvRLAUsOSxuLKIs1y0MLUEtdi2rLeEuFi5MLoIuty7uLyQvWi+RL8cv/jA1MGwwpDDb
+MRIxSjGCMbox8jIqMmMymzLUMw0zRjN/M7gz8TQrNGU0njTYNRM1TTWHNcI1/TY3NnI2rjbpNyQ3YDec
+N9c4FDhQOIw4yDkFOUI5fzm8Ofk6Njp0OrI67zstO2s7qjvoPCc8ZTykPOM9Ij1hPaE94D4gPmA+oD7g
+PyE/YT+iP+JAI0BkQKZA50EpQWpBrEHuQjBCckK1QvdDOkN9Q8BEA0RHRIpEzkUSRVVFmkXeRiJGZ0ar
+RvBHNUd7R8BIBUhLSJFI10kdSWNJqUnwSjdKfUrESwxLU0uaS+JMKkxyTLpNAk1KTZNN3E4lTm5Ot08A
+T0lPk0/dUCdQcVC7UQZRUFGbUeZSMVJ8UsdTE1NfU6pT9lRCVI9U21UoVXVVwlYPVlxWqVb3V0RXklfg
+WC9YfVjLWRpZaVm4WgdaVlqmWvVbRVuVW+VcNVyGXNZdJ114XcleGl5sXr1fD19hX7NgBWBXYKpg/GFP
+YaJh9WJJYpxi8GNDY5dj62RAZJRk6WU9ZZJl52Y9ZpJm6Gc9Z5Nn6Wg/aJZo7GlDaZpp8WpIap9q92tP
+a6dr/2xXbK9tCG1gbbluEm5rbsRvHm94b9FwK3CGcOBxOnGVcfByS3KmcwFzXXO4dBR0cHTMdSh1hXXh
+dj52m3b4d1Z3s3gReG54zHkqeYl553pGeqV7BHtje8J8IXyBfOF9QX2hfgF+Yn7CfyN/hH/lgEeAqIEK
+gWuBzYIwgpKC9INXg7qEHYSAhOOFR4Wrhg6GcobXhzuHn4gEiGmIzokziZmJ/opkisqLMIuWi/yMY4zK
+jTGNmI3/jmaOzo82j56QBpBukNaRP5GokhGSepLjk02TtpQglIqU9JVflcmWNJaflwqXdZfgmEyYuJkk
+mZCZ/JpomtWbQpuvnByciZz3nWSd0p5Anq6fHZ+Ln/qgaaDYoUehtqImopajBqN2o+akVqTHpTilqaYa
+poum/adup+CoUqjEqTepqaocqo+rAqt1q+msXKzQrUStuK4trqGvFq+LsACwdbDqsWCx1rJLssKzOLOu
+tCW0nLUTtYq2AbZ5tvC3aLfguFm40blKucK6O7q1uy67p7whvJu9Fb2Pvgq+hL7/v3q/9cBwwOzBZ8Hj
+wl/C28NYw9TEUcTOxUvFyMZGxsPHQce/yD3IvMk6ybnKOMq3yzbLtsw1zLXNNc21zjbOts83z7jQOdC6
+0TzRvtI/0sHTRNPG1EnUy9VO1dHWVdbY11zX4Nhk2OjZbNnx2nba+9uA3AXcit0Q3ZbeHN6i3ynfr+A2
+4L3hROHM4lPi2+Nj4+vkc+T85YTmDeaW5x/nqegy6LzpRunQ6lvq5etw6/vshu0R7ZzuKO6070DvzPBY
+8OXxcvH/8ozzGfOn9DT0wvVQ9d72bfb794r4Gfio+Tj5x/pX+uf7d/wH/Jj9Kf26/kv+3P9t///SLzBK
+S1xOU0NvbG9yU3BhY2WiTDNcTlNDb2xvclNwYWNl0i8wTk9XTlNDb2xvcqJOM18QNHt7MCwgMC4yMDAw
+MDAwMDAwMDAwMDAwMX0sIHsxLCAwLjU5OTk5OTk5OTk5OTk5OTk4fX3SLzBSU1dOU0ltYWdlolIzAAgA
+EQAaACQAKQAyADcASQBMAFEAUwBmAGwAfwCGAJMAmgCmAK0AtQDEANEA+gD8AQEBAwEFAQcBCQELAQwB
+DgEXARwBJwEpASsBLQEyATYBOAE6ATwBPgFAAVIBUwFYAWMBbAF0AXcBgAGNAZUBogGvAcQB1wHcAd4B
+4gHkAeYB6AHxAfYB/AIEAgYCCAIKAgwTrBOxE74TwRPOE9MT2xPeFBUUGhQiAAAAAAAAAgEAAAAAAAAA
+VAAAAAAAAAAAAAAAAAAAFCU
+</mutableData>
+        </image>
+        <image name="arrow.left" catalog="system" width="16" height="12"/>
+        <image name="arrow.right" catalog="system" width="16" height="12"/>
+        <image name="doc.on.clipboard" catalog="system" width="21" height="23"/>
+        <image name="doc.text.magnifyingglass" catalog="system" width="18" height="22"/>
+        <image name="info.circle" catalog="system" width="19" height="19"/>
+        <image name="line.3.horizontal.decrease.circle" catalog="system" width="19" height="19"/>
+        <image name="quote.closing" catalog="system" width="22" height="14"/>
+        <image name="rectangle.and.text.magnifyingglass.rtl" catalog="system" width="27" height="19"/>
+        <image name="segmentedCell:v11-kf-HkS:image" width="19" height="14">
+            <mutableData key="keyedArchiveRepresentation">
+YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05T
+S2V5ZWRBcmNoaXZlctEICVRyb290gAGvEBALDB8gJSssLS40QEhJTVBRVSRudWxs2Q0ODxAREhMUFRYX
+GBkaGxwdHlZOU1NpemVcTlNJbWFnZUZsYWdzVk5TUmVwc1tOU1RpbnRDb2xvclYkY2xhc3NXTlNDb2xv
+cl5OU1Jlc2l6aW5nTW9kZVxOU0lzVGVtcGxhdGVfECZOU0FsaWdubWVudFJlY3RJbk5vcm1hbGl6ZWRD
+b29yZGluYXRlc4ACEiDAAACAA4AAgA+ACRAACYAOWHsxOSwgMTR90iERIiRaTlMub2JqZWN0c6EjgASA
+CNIhESYkoycoKYAFgAaAB4AIEAZUYm9vawjSLzAxMlokY2xhc3NuYW1lWCRjbGFzc2VzV05TQXJyYXmi
+MTNYTlNPYmplY3TWNRE2Nzg5Ojs8PT4/V05TV2hpdGVcTlNDb21wb25lbnRzXE5TQ29sb3JTcGFjZV8Q
+Ek5TQ3VzdG9tQ29sb3JTcGFjZV8QEE5TTGluZWFyRXhwb3N1cmVEMCAwAIANQzAgMBADgApBMdRBQkMR
+REVGR1ROU0lEVU5TSUNDV05TTW9kZWwQCYALEACADE8REZwAABGcYXBwbAIAAABtbnRyR1JBWVhZWiAH
+3AAIABcADwAuAA9hY3NwQVBQTAAAAABub25lAAAAAAAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLWFwcGwA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVkZXNjAAAAwAAAAHlk
+c2NtAAABPAAACBpjcHJ0AAAJWAAAACN3dHB0AAAJfAAAABRrVFJDAAAJkAAACAxkZXNjAAAAAAAAAB9H
+ZW5lcmljIEdyYXkgR2FtbWEgMi4yIFByb2ZpbGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbWx1YwAAAAAA
+AAAfAAAADHNrU0sAAAAuAAABhGRhREsAAAA6AAABsmNhRVMAAAA4AAAB7HZpVk4AAABAAAACJHB0QlIA
+AABKAAACZHVrVUEAAAAsAAACrmZyRlUAAAA+AAAC2mh1SFUAAAA0AAADGHpoVFcAAAAaAAADTGtvS1IA
+AAAiAAADZm5iTk8AAAA6AAADiGNzQ1oAAAAoAAADwmhlSUwAAAAkAAAD6nJvUk8AAAAqAAAEDmRlREUA
+AABOAAAEOGl0SVQAAABOAAAEhnN2U0UAAAA4AAAE1HpoQ04AAAAaAAAFDGphSlAAAAAmAAAFJmVsR1IA
+AAAqAAAFTHB0UE8AAABSAAAFdm5sTkwAAABAAAAFyGVzRVMAAABMAAAGCHRoVEgAAAAyAAAGVHRyVFIA
+AAAkAAAGhmZpRkkAAABGAAAGqmhySFIAAAA+AAAG8HBsUEwAAABKAAAHLmFyRUcAAAAsAAAHeHJ1UlUA
+AAA6AAAHpGVuVVMAAAA8AAAH3gBWAWEAZQBvAGIAZQBjAG4A4QAgAHMAaQB2AOEAIABnAGEAbQBhACAA
+MgAsADIARwBlAG4AZQByAGkAcwBrACAAZwByAOUAIAAyACwAMgAgAGcAYQBtAG0AYQAtAHAAcgBvAGYA
+aQBsAEcAYQBtAG0AYQAgAGQAZQAgAGcAcgBpAHMAbwBzACAAZwBlAG4A6AByAGkAYwBhACAAMgAuADIA
+Qx6lAHUAIABoAOwAbgBoACAATQDgAHUAIAB4AOEAbQAgAEMAaAB1AG4AZwAgAEcAYQBtAG0AYQAgADIA
+LgAyAFAAZQByAGYAaQBsACAARwBlAG4A6QByAGkAYwBvACAAZABhACAARwBhAG0AYQAgAGQAZQAgAEMA
+aQBuAHoAYQBzACAAMgAsADIEFwQwBDMEMAQ7BEwEPQQwACAARwByAGEAeQAtBDMEMAQ8BDAAIAAyAC4A
+MgBQAHIAbwBmAGkAbAAgAGcA6QBuAOkAcgBpAHEAdQBlACAAZwByAGkAcwAgAGcAYQBtAG0AYQAgADIA
+LAAyAMEAbAB0AGEAbADhAG4AbwBzACAAcwB6APwAcgBrAGUAIABnAGEAbQBtAGEAIAAyAC4AMpAadShw
+cJaOUUlepgAyAC4AMoJyX2ljz4/wx3y8GAAg1ozAyQAgrBC5yAAgADIALgAyACDVBLhc0wzHfABHAGUA
+bgBlAHIAaQBzAGsAIABnAHIA5QAgAGcAYQBtAG0AYQAgADIALAAyAC0AcAByAG8AZgBpAGwATwBiAGUA
+YwBuAOEAIAFhAGUAZADhACAAZwBhAG0AYQAgADIALgAyBdIF0AXeBdQAIAXQBeQF1QXoACAF2wXcBdwF
+2QAgADIALgAyAEcAYQBtAGEAIABnAHIAaQAgAGcAZQBuAGUAcgBpAGMBAwAgADIALAAyAEEAbABsAGcA
+ZQBtAGUAaQBuAGUAcwAgAEcAcgBhAHUAcwB0AHUAZgBlAG4ALQBQAHIAbwBmAGkAbAAgAEcAYQBtAG0A
+YQAgADIALAAyAFAAcgBvAGYAaQBsAG8AIABnAHIAaQBnAGkAbwAgAGcAZQBuAGUAcgBpAGMAbwAgAGQA
+ZQBsAGwAYQAgAGcAYQBtAG0AYQAgADIALAAyAEcAZQBuAGUAcgBpAHMAawAgAGcAcgDlACAAMgAsADIA
+IABnAGEAbQBtAGEAcAByAG8AZgBpAGxmbpAacHBepnz7ZXAAMgAuADJjz4/wZYdO9k4AgiwwsDDsMKQw
+rDDzMN4AIAAyAC4AMgAgMNcw7TDVMKEwpDDrA5MDtQO9A7kDugPMACADkwO6A8EDuQAgA5MDrAO8A7wD
+sQAgADIALgAyAFAAZQByAGYAaQBsACAAZwBlAG4A6QByAGkAYwBvACAAZABlACAAYwBpAG4AegBlAG4A
+dABvAHMAIABkAGEAIABHAGEAbQBtAGEAIAAyACwAMgBBAGwAZwBlAG0AZQBlAG4AIABnAHIAaQBqAHMA
+IABnAGEAbQBtAGEAIAAyACwAMgAtAHAAcgBvAGYAaQBlAGwAUABlAHIAZgBpAGwAIABnAGUAbgDpAHIA
+aQBjAG8AIABkAGUAIABnAGEAbQBtAGEAIABkAGUAIABnAHIAaQBzAGUAcwAgADIALAAyDiMOMQ4HDioO
+NQ5BDgEOIQ4hDjIOQA4BDiMOIg5MDhcOMQ5IDicORA4bACAAMgAuADIARwBlAG4AZQBsACAARwByAGkA
+IABHAGEAbQBhACAAMgAsADIAWQBsAGUAaQBuAGUAbgAgAGgAYQByAG0AYQBhAG4AIABnAGEAbQBtAGEA
+IAAyACwAMgAgAC0AcAByAG8AZgBpAGkAbABpAEcAZQBuAGUAcgBpAQ0AawBpACAARwByAGEAeQAgAEcA
+YQBtAG0AYQAgADIALgAyACAAcAByAG8AZgBpAGwAVQBuAGkAdwBlAHIAcwBhAGwAbgB5ACAAcAByAG8A
+ZgBpAGwAIABzAHoAYQByAG8BWwBjAGkAIABnAGEAbQBtAGEAIAAyACwAMgY6BicGRQYnACAAMgAuADIA
+IAZEBkgGRgAgBjEGRQYnBi8GSgAgBjkGJwZFBB4EMQRJBDAETwAgBEEENQRABDAETwAgBDMEMAQ8BDwE
+MAAgADIALAAyAC0EPwRABD4ERAQ4BDsETABHAGUAbgBlAHIAaQBjACAARwByAGEAeQAgAEcAYQBtAG0A
+YQAgADIALgAyACAAUAByAG8AZgBpAGwAZQAAdGV4dAAAAABDb3B5cmlnaHQgQXBwbGUgSW5jLiwgMjAx
+MgAAWFlaIAAAAAAAAPNRAAEAAAABFsxjdXJ2AAAAAAAABAAAAAAFAAoADwAUABkAHgAjACgALQAyADcA
+OwBAAEUASgBPAFQAWQBeAGMAaABtAHIAdwB8AIEAhgCLAJAAlQCaAJ8ApACpAK4AsgC3ALwAwQDGAMsA
+0ADVANsA4ADlAOsA8AD2APsBAQEHAQ0BEwEZAR8BJQErATIBOAE+AUUBTAFSAVkBYAFnAW4BdQF8AYMB
+iwGSAZoBoQGpAbEBuQHBAckB0QHZAeEB6QHyAfoCAwIMAhQCHQImAi8COAJBAksCVAJdAmcCcQJ6AoQC
+jgKYAqICrAK2AsECywLVAuAC6wL1AwADCwMWAyEDLQM4A0MDTwNaA2YDcgN+A4oDlgOiA64DugPHA9MD
+4APsA/kEBgQTBCAELQQ7BEgEVQRjBHEEfgSMBJoEqAS2BMQE0wThBPAE/gUNBRwFKwU6BUkFWAVnBXcF
+hgWWBaYFtQXFBdUF5QX2BgYGFgYnBjcGSAZZBmoGewaMBp0GrwbABtEG4wb1BwcHGQcrBz0HTwdhB3QH
+hgeZB6wHvwfSB+UH+AgLCB8IMghGCFoIbgiCCJYIqgi+CNII5wj7CRAJJQk6CU8JZAl5CY8JpAm6Cc8J
+5Qn7ChEKJwo9ClQKagqBCpgKrgrFCtwK8wsLCyILOQtRC2kLgAuYC7ALyAvhC/kMEgwqDEMMXAx1DI4M
+pwzADNkM8w0NDSYNQA1aDXQNjg2pDcMN3g34DhMOLg5JDmQOfw6bDrYO0g7uDwkPJQ9BD14Peg+WD7MP
+zw/sEAkQJhBDEGEQfhCbELkQ1xD1ERMRMRFPEW0RjBGqEckR6BIHEiYSRRJkEoQSoxLDEuMTAxMjE0MT
+YxODE6QTxRPlFAYUJxRJFGoUixStFM4U8BUSFTQVVhV4FZsVvRXgFgMWJhZJFmwWjxayFtYW+hcdF0EX
+ZReJF64X0hf3GBsYQBhlGIoYrxjVGPoZIBlFGWsZkRm3Gd0aBBoqGlEadxqeGsUa7BsUGzsbYxuKG7Ib
+2hwCHCocUhx7HKMczBz1HR4dRx1wHZkdwx3sHhYeQB5qHpQevh7pHxMfPh9pH5Qfvx/qIBUgQSBsIJgg
+xCDwIRwhSCF1IaEhziH7IiciVSKCIq8i3SMKIzgjZiOUI8Ij8CQfJE0kfCSrJNolCSU4JWgllyXHJfcm
+JyZXJocmtyboJxgnSSd6J6sn3CgNKD8ocSiiKNQpBik4KWspnSnQKgIqNSpoKpsqzysCKzYraSudK9Es
+BSw5LG4soizXLQwtQS12Last4S4WLkwugi63Lu4vJC9aL5Evxy/+MDUwbDCkMNsxEjFKMYIxujHyMioy
+YzKbMtQzDTNGM38zuDPxNCs0ZTSeNNg1EzVNNYc1wjX9Njc2cjauNuk3JDdgN5w31zgUOFA4jDjIOQU5
+Qjl/Obw5+To2OnQ6sjrvOy07azuqO+g8JzxlPKQ84z0iPWE9oT3gPiA+YD6gPuA/IT9hP6I/4kAjQGRA
+pkDnQSlBakGsQe5CMEJyQrVC90M6Q31DwEQDREdEikTORRJFVUWaRd5GIkZnRqtG8Ec1R3tHwEgFSEtI
+kUjXSR1JY0mpSfBKN0p9SsRLDEtTS5pL4kwqTHJMuk0CTUpNk03cTiVObk63TwBPSU+TT91QJ1BxULtR
+BlFQUZtR5lIxUnxSx1MTU19TqlP2VEJUj1TbVShVdVXCVg9WXFapVvdXRFeSV+BYL1h9WMtZGllpWbha
+B1pWWqZa9VtFW5Vb5Vw1XIZc1l0nXXhdyV4aXmxevV8PX2Ffs2AFYFdgqmD8YU9homH1YklinGLwY0Nj
+l2PrZEBklGTpZT1lkmXnZj1mkmboZz1nk2fpaD9olmjsaUNpmmnxakhqn2r3a09rp2v/bFdsr20IbWBt
+uW4SbmtuxG8eb3hv0XArcIZw4HE6cZVx8HJLcqZzAXNdc7h0FHRwdMx1KHWFdeF2Pnabdvh3VnezeBF4
+bnjMeSp5iXnnekZ6pXsEe2N7wnwhfIF84X1BfaF+AX5ifsJ/I3+Ef+WAR4CogQqBa4HNgjCCkoL0g1eD
+uoQdhICE44VHhauGDoZyhteHO4efiASIaYjOiTOJmYn+imSKyoswi5aL/IxjjMqNMY2Yjf+OZo7OjzaP
+npAGkG6Q1pE/kaiSEZJ6kuOTTZO2lCCUipT0lV+VyZY0lp+XCpd1l+CYTJi4mSSZkJn8mmia1ZtCm6+c
+HJyJnPedZJ3SnkCerp8dn4uf+qBpoNihR6G2oiailqMGo3aj5qRWpMelOKWpphqmi6b9p26n4KhSqMSp
+N6mpqhyqj6sCq3Wr6axcrNCtRK24ri2uoa8Wr4uwALB1sOqxYLHWskuywrM4s660JbSctRO1irYBtnm2
+8Ldot+C4WbjRuUq5wro7urW7LrunvCG8m70VvY++Cr6Evv+/er/1wHDA7MFnwePCX8Lbw1jD1MRRxM7F
+S8XIxkbGw8dBx7/IPci8yTrJuco4yrfLNsu2zDXMtc01zbXONs62zzfPuNA50LrRPNG+0j/SwdNE08bU
+SdTL1U7V0dZV1tjXXNfg2GTY6Nls2fHadtr724DcBdyK3RDdlt4c3qLfKd+v4DbgveFE4cziU+Lb42Pj
+6+Rz5PzlhOYN5pbnH+ep6DLovOlG6dDqW+rl63Dr++yG7RHtnO4o7rTvQO/M8Fjw5fFy8f/yjPMZ86f0
+NPTC9VD13vZt9vv3ivgZ+Kj5OPnH+lf65/t3/Af8mP0p/br+S/7c/23//9IvMEpLXE5TQ29sb3JTcGFj
+ZaJMM1xOU0NvbG9yU3BhY2XSLzBOT1dOU0NvbG9yok4zXxAze3swLCAwLjE0Mjg1NzE0Mjg1NzE0Mjg1
+fSwgezEsIDAuNjQyODU3MTQyODU3MTQyOX190i8wUlNXTlNJbWFnZaJSMwAIABEAGgAkACkAMgA3AEkA
+TABRAFMAZgBsAH8AhgCTAJoApgCtALUAxADRAPoA/AEBAQMBBQEHAQkBCwEMAQ4BFwEcAScBKQErAS0B
+MgE2ATgBOgE8AT4BQAFFAUYBSwFWAV8BZwFqAXMBgAGIAZUBogG3AcoBzwHRAdUB1wHZAdsB5AHpAe8B
+9wH5AfsB/QH/E58TpBOxE7QTwRPGE84T0RQHFAwUFAAAAAAAAAIBAAAAAAAAAFQAAAAAAAAAAAAAAAAA
+ABQXA
+</mutableData>
+        </image>
+        <image name="sidebar.leading" catalog="system" width="24" height="17"/>
+        <image name="sidebar.trailing" catalog="system" width="24" height="17"/>
+        <image name="slider.horizontal.below.rectangle" catalog="system" width="20" height="19"/>
+        <image name="textformat.size.ar" catalog="system" width="21" height="16"/>
+    </resources>
+</document>

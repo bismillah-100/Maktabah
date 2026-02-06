@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "1Qb-nD-HTt.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Keep Screen On for 10 min.\"; ObjectID = \"1Qb-nD-HTt\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الشاشة مضيئة لمدة ١٠ دقائق"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Keep Screen On for 10 min."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layar Tetap Nyala 10 mnt."
+          }
+        }
+      }
+    },
+    "5Xb-ew-vqm.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Click Annotations to Edit\"; ObjectID = \"5Xb-ew-vqm\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعليقات قابلة للنقر"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Click Annotations to Edit"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik untuk Edit Anotasi"
+          }
+        }
+      }
+    },
+    "WMO-nU-PFa.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Show Diacritics\"; ObjectID = \"WMO-nU-PFa\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار التشكيل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show Diacritics"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tampilkan Harakat"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

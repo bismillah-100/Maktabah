@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="NSView safe area layout guides" minToolsVersion="12.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="QuranNashVC" customModule="Maktabah" customModuleProvider="target">
+            <connections>
+                <outlet property="ayahTextField" destination="pIn-u0-lwP" id="Qhh-2I-5NW"/>
+                <outlet property="hLine" destination="fjE-RW-ikT" id="fV3-xm-wtQ"/>
+                <outlet property="stackView" destination="Bf3-MB-Lwi" id="CRU-50-GT1"/>
+                <outlet property="textView" destination="UbW-YS-mR2" id="AXC-ko-Jkw"/>
+                <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="Hz6-mo-xeY">
+            <rect key="frame" x="0.0" y="0.0" width="480" height="393"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <stackView distribution="fill" orientation="vertical" alignment="centerX" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Bf3-MB-Lwi">
+                    <rect key="frame" x="0.0" y="0.0" width="480" height="341"/>
+                    <subviews>
+                        <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" mirrorLayoutDirectionWhenInternationalizing="never" translatesAutoresizingMaskIntoConstraints="NO" id="pIn-u0-lwP">
+                            <rect key="frame" x="6" y="333" width="468" height="8"/>
+                            <textFieldCell key="cell" selectable="YES" allowsUndo="NO" baseWritingDirection="rightToLeft" userInterfaceLayoutDirection="rightToLeft" alignment="right" id="ZDi-1a-koi">
+                                <font key="font" size="20" name="KFGQPCUthmanTahaNaskh"/>
+                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            </textFieldCell>
+                        </textField>
+                        <box verticalHuggingPriority="750" boxType="separator" id="fjE-RW-ikT">
+                            <rect key="frame" x="0.0" y="322" width="96" height="5"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        </box>
+                        <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="a3z-2E-AeI">
+                            <rect key="frame" x="0.0" y="0.0" width="480" height="316"/>
+                            <clipView key="contentView" drawsBackground="NO" id="YQu-5m-LFP">
+                                <rect key="frame" x="0.0" y="0.0" width="480" height="316"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <textView wantsLayer="YES" importsGraphics="NO" richText="NO" verticallyResizable="YES" smartInsertDelete="YES" id="UbW-YS-mR2" customClass="IbarotTextView" customModule="Maktabah" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="0.0" width="480" height="316"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        <size key="minSize" width="480" height="316"/>
+                                        <size key="maxSize" width="485" height="10000000"/>
+                                        <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                    </textView>
+                                </subviews>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="3qg-NQ-b0U">
+                                <rect key="frame" x="-100" y="-100" width="240" height="16"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="Pcc-2f-Lme">
+                                <rect key="frame" x="463" y="0.0" width="17" height="316"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                        </scrollView>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="pIn-u0-lwP" firstAttribute="leading" secondItem="Bf3-MB-Lwi" secondAttribute="leading" constant="8" id="Nur-zA-YRh"/>
+                        <constraint firstAttribute="trailing" secondItem="pIn-u0-lwP" secondAttribute="trailing" constant="8" id="x8j-cM-3rC"/>
+                    </constraints>
+                    <visibilityPriorities>
+                        <integer value="1000"/>
+                        <integer value="1000"/>
+                        <integer value="1000"/>
+                    </visibilityPriorities>
+                    <customSpacing>
+                        <real value="3.4028234663852886e+38"/>
+                        <real value="3.4028234663852886e+38"/>
+                        <real value="3.4028234663852886e+38"/>
+                    </customSpacing>
+                </stackView>
+            </subviews>
+            <constraints>
+                <constraint firstItem="Bf3-MB-Lwi" firstAttribute="top" secondItem="snZ-aP-LyQ" secondAttribute="top" id="1gj-Q1-UO0"/>
+                <constraint firstItem="snZ-aP-LyQ" firstAttribute="trailing" secondItem="Bf3-MB-Lwi" secondAttribute="trailing" id="UMC-dI-fVQ"/>
+                <constraint firstItem="Bf3-MB-Lwi" firstAttribute="leading" secondItem="snZ-aP-LyQ" secondAttribute="leading" id="YId-hf-7wf"/>
+                <constraint firstItem="snZ-aP-LyQ" firstAttribute="bottom" secondItem="Bf3-MB-Lwi" secondAttribute="bottom" id="gQv-4J-jDg"/>
+            </constraints>
+            <viewLayoutGuide key="safeArea" id="snZ-aP-LyQ"/>
+            <viewLayoutGuide key="layoutMargins" id="8A1-JY-ClN"/>
+            <point key="canvasLocation" x="39" y="135"/>
+        </customView>
+    </objects>
+</document>

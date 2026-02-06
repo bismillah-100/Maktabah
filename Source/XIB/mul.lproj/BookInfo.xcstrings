@@ -1,0 +1,126 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "0hy-yc-kbz.ibShadowedLabels[0]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; 0hy-yc-kbz.ibShadowedLabels[0] = \"Author\"; ObjectID = \"0hy-yc-kbz\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " مؤلف"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Author"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penulis"
+          }
+        }
+      }
+    },
+    "0hy-yc-kbz.ibShadowedLabels[1]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; 0hy-yc-kbz.ibShadowedLabels[1] = \"Publication\"; ObjectID = \"0hy-yc-kbz\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بطاقة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Publication"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cetakan"
+          }
+        }
+      }
+    },
+    "0hy-yc-kbz.ibShadowedLabels[2]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; 0hy-yc-kbz.ibShadowedLabels[2] = \"Detail\"; ObjectID = \"0hy-yc-kbz\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معلومات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Detail"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rincian"
+          }
+        }
+      }
+    },
+    "NVM-xR-pbl.title" : {
+      "comment" : "Class = \"NSBox\"; title = \"Box\"; ObjectID = \"NVM-xR-pbl\";",
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Box"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Box"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Box"
+          }
+        }
+      }
+    },
+    "th3-pU-WEQ.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"th3-pU-WEQ\";",
+      "extractionState" : "stale",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutup"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

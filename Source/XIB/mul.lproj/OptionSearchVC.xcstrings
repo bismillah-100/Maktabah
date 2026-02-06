@@ -1,0 +1,198 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "2NL-XY-b7V.headerCell.title" : {
+      "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"النص\"; ObjectID = \"2NL-XY-b7V\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النص"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "النص"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النص"
+          }
+        }
+      }
+    },
+    "7uL-kR-Cgu.headerCell.title" : {
+      "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"ص\"; ObjectID = \"7uL-kR-Cgu\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ص"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ص"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ص"
+          }
+        }
+      }
+    },
+    "e7E-8s-TbD.ibShadowedLabels[0]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; e7E-8s-TbD.ibShadowedLabels[0] = \"Exact Phrase\"; ObjectID = \"e7E-8s-TbD\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بحث مطابق"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exact Phrase"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frasa persis"
+          }
+        }
+      }
+    },
+    "e7E-8s-TbD.ibShadowedLabels[1]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; e7E-8s-TbD.ibShadowedLabels[1] = \"Separate Words\"; ObjectID = \"e7E-8s-TbD\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كلمات متفرقة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Separate Words"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kata tersebar"
+          }
+        }
+      }
+    },
+    "LY6-Tg-5yf.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Stop & Clear\"; ObjectID = \"LY6-Tg-5yf\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انهاء بحذف النتائج"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stop & Clear"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop & Bersihkan"
+          }
+        }
+      }
+    },
+    "VQ2-Lr-gF6.headerCell.title" : {
+      "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"ج\"; ObjectID = \"VQ2-Lr-gF6\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ج"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ج"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ج"
+          }
+        }
+      }
+    },
+    "yAh-Nk-gGL.headerCell.title" : {
+      "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"إسم الكتاب\"; ObjectID = \"yAh-Nk-gGL\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إسم الكتاب"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "إسم الكتاب"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إسم الكتاب"
+          }
+        }
+      }
+    },
+    "Yff-nA-F4M.placeholderString" : {
+      "comment" : "Class = \"NSSearchFieldCell\"; placeholderString = \"Search in Selected Books\"; ObjectID = \"Yff-nA-F4M\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث في الكتب المختارة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search in Selected Books"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari di Kitab yang terpilih"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

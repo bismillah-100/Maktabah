@@ -1,0 +1,246 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "3pT-bp-gwD.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Masters\"; ObjectID = \"3pT-bp-gwD\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الشيوخ"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Masters"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syuyukh"
+          }
+        }
+      }
+    },
+    "8Gx-y8-8Xn.headerCell.title" : {
+      "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"إسم الكتاب\"; ObjectID = \"8Gx-y8-8Xn\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إسم الكتاب"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "إسم الكتاب"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إسم الكتاب"
+          }
+        }
+      }
+    },
+    "Apd-Ej-vAZ.headerCell.title" : {
+      "comment" : "Class = \"NSTableColumn\"; headerCell.title = \"النص\"; ObjectID = \"Apd-Ej-vAZ\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النص"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "النص"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النص"
+          }
+        }
+      }
+    },
+    "ARd-my-HFh.ibShadowedLabels[0]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; ARd-my-HFh.ibShadowedLabels[0] = \"Sidebar Filter\"; ObjectID = \"ARd-my-HFh\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الشريط الجانبي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sidebar Filter"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bar Samping"
+          }
+        }
+      }
+    },
+    "ARd-my-HFh.ibShadowedLabels[1]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; ARd-my-HFh.ibShadowedLabels[1] = \"Inclusive Search\"; ObjectID = \"ARd-my-HFh\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث الشامل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Inclusive Search"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencarian Inklusif"
+          }
+        }
+      }
+    },
+    "CRl-Ap-Qp4.placeholderString" : {
+      "comment" : "Class = \"NSSearchFieldCell\"; placeholderString = \"Search Narrator of Hadith\"; ObjectID = \"CRl-Ap-Qp4\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث العام في رواة الحديث"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Search Narrator of Hadith"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari perawi Hadits"
+          }
+        }
+      }
+    },
+    "Fbh-ev-Qve.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Criticism & Validation\"; ObjectID = \"Fbh-ev-Qve\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجرح و التعديل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Criticism & Validation"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jarh wa Ta'dil"
+          }
+        }
+      }
+    },
+    "gDi-9y-M6V.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Students\"; ObjectID = \"gDi-9y-M6V\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التلاميذ"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Students"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Murid"
+          }
+        }
+      }
+    },
+    "rVo-jX-Nsp.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Summary\"; ObjectID = \"rVo-jX-Nsp\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الملخص"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Summary"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikhtisar"
+          }
+        }
+      }
+    },
+    "uH7-MJ-xnH.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"إسم الراوي\"; ObjectID = \"uH7-MJ-xnH\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إسم الراوي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "إسم الراوي"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nama Rowi"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

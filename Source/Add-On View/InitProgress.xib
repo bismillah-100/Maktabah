@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="22505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22505"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="InitProgress" customModule="maktab" customModuleProvider="target">
+            <connections>
+                <outlet property="indicator" destination="KCb-Pb-se6" id="1uz-si-Iwm"/>
+                <outlet property="view" destination="WCu-Q1-4oH" id="9qo-7r-QZq"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <view id="WCu-Q1-4oH">
+            <rect key="frame" x="0.0" y="0.0" width="132" height="42"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <subviews>
+                <progressIndicator wantsLayer="YES" maxValue="100" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="KCb-Pb-se6">
+                    <rect key="frame" x="50" y="5" width="32" height="32"/>
+                </progressIndicator>
+            </subviews>
+            <constraints>
+                <constraint firstItem="KCb-Pb-se6" firstAttribute="centerY" secondItem="WCu-Q1-4oH" secondAttribute="centerY" id="Oh6-bJ-5SK"/>
+                <constraint firstItem="KCb-Pb-se6" firstAttribute="centerX" secondItem="WCu-Q1-4oH" secondAttribute="centerX" id="SHn-AV-4ag"/>
+            </constraints>
+            <point key="canvasLocation" x="-408" y="17"/>
+        </view>
+    </objects>
+</document>

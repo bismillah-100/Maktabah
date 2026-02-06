@@ -1,0 +1,9 @@
+/* 
+  InfoPlist.strings
+  Maktabah
+
+  Created by Ghoys on 01/02/26.
+  
+*/
+CFBundleDisplayName = "Maktabah";
+CFBundleName = "Maktabah";

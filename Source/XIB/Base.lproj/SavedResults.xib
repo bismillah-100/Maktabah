@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="SavedResults" customModule="Maktabah" customModuleProvider="target">
+            <connections>
+                <outlet property="outlineView" destination="150-Co-PSP" id="ny5-wo-s3K"/>
+                <outlet property="searchField" destination="aHS-ie-CAO" id="HPg-GC-ree"/>
+                <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
+                <outlet property="xButton" destination="OsB-cN-YV4" id="44a-U2-zl4"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="Hz6-mo-xeY">
+            <rect key="frame" x="0.0" y="0.0" width="411" height="273"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="21" horizontalPageScroll="10" verticalLineScroll="21" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OvM-41-fTH">
+                    <rect key="frame" x="0.0" y="0.0" width="411" height="215"/>
+                    <clipView key="contentView" id="qMN-5W-eV7">
+                        <rect key="frame" x="0.0" y="0.0" width="411" height="215"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="21" viewBased="YES" indentationPerLevel="13" autoresizesOutlineColumn="YES" outlineTableColumn="pJ0-gg-RJJ" id="150-Co-PSP">
+                                <rect key="frame" x="0.0" y="0.0" width="411" height="215"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <size key="intercellSpacing" width="17" height="0.0"/>
+                                <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                <tableColumns>
+                                    <tableColumn identifier="AutomaticTableColumnIdentifier.0" width="379" minWidth="40" maxWidth="1000" id="pJ0-gg-RJJ">
+                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
+                                            <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                        </tableHeaderCell>
+                                        <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" id="wVQ-J5-uSL">
+                                            <font key="font" metaFont="system"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                        <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                    </tableColumn>
+                                </tableColumns>
+                            </outlineView>
+                        </subviews>
+                    </clipView>
+                    <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="L06-tC-sj2">
+                        <rect key="frame" x="1" y="118" width="238" height="16"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                    <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="9pL-6K-igH">
+                        <rect key="frame" x="224" y="17" width="15" height="102"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </scroller>
+                </scrollView>
+                <searchField wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aHS-ie-CAO">
+                    <rect key="frame" x="167" y="229" width="224" height="24"/>
+                    <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" maximumRecents="10" id="Gza-BD-SFf">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </searchFieldCell>
+                    <connections>
+                        <action selector="search:" target="-2" id="S14-3s-uFy"/>
+                    </connections>
+                </searchField>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="y0b-nO-oHn">
+                    <rect key="frame" x="137" y="227" width="24" height="31"/>
+                    <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="folder.fill.badge.plus" catalog="system" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="Iwa-A7-CJQ">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                        <font key="font" metaFont="systemBold" size="12"/>
+                    </buttonCell>
+                    <color key="bezelColor" name="systemGreenColor" catalog="System" colorSpace="catalog"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="22" id="aLi-2R-r49"/>
+                    </constraints>
+                    <connections>
+                        <action selector="addFolder:" target="-2" id="mD3-k5-6wy"/>
+                    </connections>
+                </button>
+                <button toolTip="Delete Selected" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="WLf-A0-49K">
+                    <rect key="frame" x="115" y="226" width="15" height="31"/>
+                    <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="eraser.fill" catalog="system" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="HHm-ax-v8J">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
+                        <font key="font" metaFont="systemBold" size="12"/>
+                    </buttonCell>
+                    <color key="bezelColor" name="systemRedColor" catalog="System" colorSpace="catalog"/>
+                    <connections>
+                        <action selector="deleteFolder:" target="-2" id="Pa2-Ei-ZRu"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OsB-cN-YV4">
+                    <rect key="frame" x="20" y="229" width="70" height="24"/>
+                    <buttonCell key="cell" type="push" title="Done" bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="zOc-bj-81M">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                        <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                    </buttonCell>
+                    <color key="bezelColor" name="systemRedColor" catalog="System" colorSpace="catalog"/>
+                    <constraints>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="70" id="jJO-oJ-0GB"/>
+                    </constraints>
+                    <connections>
+                        <action selector="dismissController:" target="-2" id="F2l-oN-VIx"/>
+                    </connections>
+                </button>
+            </subviews>
+            <constraints>
+                <constraint firstItem="OsB-cN-YV4" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" constant="20" symbolic="YES" id="DbS-6q-m0D"/>
+                <constraint firstItem="WLf-A0-49K" firstAttribute="baseline" secondItem="y0b-nO-oHn" secondAttribute="baseline" id="Gih-Bl-aje"/>
+                <constraint firstItem="OvM-41-fTH" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="GsP-Za-We0"/>
+                <constraint firstItem="OsB-cN-YV4" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" constant="20" symbolic="YES" id="QFg-66-Ijg"/>
+                <constraint firstItem="y0b-nO-oHn" firstAttribute="top" secondItem="aHS-ie-CAO" secondAttribute="top" id="SV3-E5-gq9"/>
+                <constraint firstItem="aHS-ie-CAO" firstAttribute="leading" secondItem="y0b-nO-oHn" secondAttribute="trailing" constant="8" symbolic="YES" id="VL9-GC-WRF"/>
+                <constraint firstItem="OsB-cN-YV4" firstAttribute="bottom" secondItem="WLf-A0-49K" secondAttribute="bottom" id="ZFD-0o-Bd1"/>
+                <constraint firstAttribute="bottom" secondItem="OvM-41-fTH" secondAttribute="bottom" id="ZMw-Uf-uud"/>
+                <constraint firstItem="y0b-nO-oHn" firstAttribute="leading" secondItem="WLf-A0-49K" secondAttribute="trailing" constant="7" id="dL2-5C-wZG"/>
+                <constraint firstItem="OvM-41-fTH" firstAttribute="top" secondItem="OsB-cN-YV4" secondAttribute="bottom" constant="14" id="hP4-PK-Cnh"/>
+                <constraint firstItem="WLf-A0-49K" firstAttribute="leading" secondItem="OsB-cN-YV4" secondAttribute="trailing" constant="25" id="heS-aH-rgK"/>
+                <constraint firstAttribute="trailing" secondItem="aHS-ie-CAO" secondAttribute="trailing" constant="20" symbolic="YES" id="qL2-iL-qOs"/>
+                <constraint firstItem="OsB-cN-YV4" firstAttribute="baseline" secondItem="aHS-ie-CAO" secondAttribute="firstBaseline" id="sB6-h2-xqc"/>
+                <constraint firstItem="WLf-A0-49K" firstAttribute="top" secondItem="y0b-nO-oHn" secondAttribute="top" id="uWp-aH-Ljh"/>
+                <constraint firstAttribute="trailing" secondItem="OvM-41-fTH" secondAttribute="trailing" id="wlb-WH-aIa"/>
+            </constraints>
+            <point key="canvasLocation" x="120.5" y="140.5"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="eraser.fill" catalog="system" width="15" height="15"/>
+        <image name="folder.fill.badge.plus" catalog="system" width="20" height="15"/>
+    </resources>
+</document>
