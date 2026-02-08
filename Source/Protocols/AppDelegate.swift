@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import SwiftUI
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -199,6 +200,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task.detached { [unowned self] in
             await checkAppUpdates(false)
         }
+    }
+
+    @IBAction fileprivate func checkBooksUpdates(_ sender: Any?) {
+        // 1. Inisialisasi SwiftUI View
+        let contentView = UpdateView()
+
+        // 2. Bungkus dalam NSHostingView
+        let hostingView = NSHostingView(rootView: contentView)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+
+        // 3. Buat Window baru dengan style mask yang sudah benar dari awal
+        let window = NSWindow(
+            contentRect: hostingView.frame,
+            styleMask: [.fullSizeContentView, .titled, .resizable], // ← Langsung pakai di sini
+            backing: .buffered,
+            defer: false
+        )
+
+        window.center()
+        window.title = "Books Updates".localized
+        window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
+        window.titleVisibility = .hidden
+        window.contentView = hostingView
+        window.isReleasedWhenClosed = false
+
+        // 4. Jalankan sebagai Modal
+        NSApp.runModal(for: window)
     }
 
     @IBAction fileprivate func selectFolder(_ sender: Any?) {
@@ -484,6 +513,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let windowObserver {
             NotificationCenter.default.removeObserver(windowObserver)
         }
-        windowObserver = nil
     }
 }

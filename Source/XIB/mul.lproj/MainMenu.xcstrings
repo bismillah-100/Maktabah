@@ -1969,6 +1969,30 @@
         }
       }
     },
+    "YaK-Pt-jJO.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"Books Updates...\"; ObjectID = \"YaK-Pt-jJO\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديثات الكتب..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Books Updates..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pembaruan Kitab…"
+          }
+        }
+      }
+    },
     "YEy-JH-Tfz.title" : {
       "comment" : "Class = \"NSMenuItem\"; title = \"Find and Replace…\"; ObjectID = \"YEy-JH-Tfz\";",
       "extractionState" : "extracted_with_value",

@@ -33,6 +33,12 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="VOq-y0-SEH"/>
+                            <menuItem title="Books Updates..." id="YaK-Pt-jJO">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="checkBooksUpdates:" target="Voe-Tx-rLC" id="Xa3-8V-7oM"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Check Updates..." id="eWT-Pc-0td">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

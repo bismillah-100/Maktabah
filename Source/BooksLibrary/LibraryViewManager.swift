@@ -28,26 +28,31 @@ class LibraryViewManager: NSObject {
         self.searchField = searchField
         super.init()
         self.setupDSFSearchField()
+        setupNotificationObservers()
     }
 
     func prepareData() {
-        for data in data.allRootCategories {
-            displayedCategories.append(data)
-        }
+        displayedCategories = data.allRootCategories
         buildBookLookup()
     }
 
     func buildBookLookup() {
         bookLookup.removeAll()
-        for category in displayedCategories {
+
+        func traverse(_ category: CategoryData) {
             for child in category.children {
                 if let book = child as? BooksData {
                     bookLookup[book.book] = (category, book)
+                } else if let subCategory = child as? CategoryData {
+                    traverse(subCategory)
                 }
             }
         }
-    }
 
+        for category in displayedCategories {
+            traverse(category)
+        }
+    }
 
     func setupDSFSearchField() {
         // Di dalam LibraryViewManager atau View Controller Anda:
@@ -228,3 +233,101 @@ extension LibraryViewManager: NSSearchFieldDelegate {
     }
 }
 
+
+extension LibraryViewManager {
+
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: .booksChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleBooksChanged(notification)
+        }
+    }
+
+    private func handleBooksChanged(_ notification: Notification) {
+        guard let payload = notification.object as? BooksChangedNotification else { return }
+
+        // Handle inserted books
+        for (categoryId, book) in payload.insertedBooks {
+            handleBookInserted(categoryId: categoryId, book: book)
+        }
+
+        // Handle updated books
+        if !payload.updatedBookIds.isEmpty {
+            reloadUpdatedBooks(payload.updatedBookIds)
+        }
+    }
+
+    private func handleBookInserted(categoryId: Int, book: BooksData) {
+        // Update bookLookup
+        if let category = findCategoryInDisplayed(categoryId) {
+            bookLookup[book.book] = (category, book)
+
+            if searchField.stringValue.isEmpty {
+                // Expand category jika belum
+                if !outlineView.isItemExpanded(category) {
+                    outlineView.expandItem(category)
+                }
+
+                // Reload category dengan children
+                outlineView.reloadItem(category, reloadChildren: true)
+
+                // Optional: Scroll ke buku baru dan select
+                let row = outlineView.row(forItem: book)
+                if row >= 0 {
+                    outlineView.scrollRowToVisible(row)
+                }
+            } else {
+                // Re-apply filter
+                let currentQuery = searchField.stringValue
+                if !currentQuery.isEmpty {
+                    _ = data.filterContent(with: currentQuery, displayedCategories: &displayedCategories)
+                    outlineView.reloadData()
+                }
+            }
+        }
+    }
+
+    private func reloadUpdatedBooks(_ bookIds: Set<Int>) {
+        for bookId in bookIds {
+            guard let book = data.booksById[bookId] else { continue }
+
+            // Update bookLookup jika nama buku berubah
+            for (oldName, value) in bookLookup where value.book.id == bookId {
+                bookLookup.removeValue(forKey: oldName)
+                bookLookup[book.book] = (value.category, book)
+                break
+            }
+
+            // Reload item di OutlineView
+            let row = outlineView.row(forItem: book)
+            if row >= 0 {
+                outlineView.reloadItem(book)
+            }
+        }
+    }
+
+    private func findCategoryInDisplayed(_ categoryId: Int) -> CategoryData? {
+        func search(_ category: CategoryData) -> CategoryData? {
+            if category.id == categoryId {
+                return category
+            }
+            for child in category.children {
+                if let subCategory = child as? CategoryData,
+                   let found = search(subCategory) {
+                    return found
+                }
+            }
+            return nil
+        }
+
+        for rootCategory in displayedCategories {
+            if let found = search(rootCategory) {
+                return found
+            }
+        }
+        return nil
+    }
+}

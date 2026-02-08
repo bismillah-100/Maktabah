@@ -229,6 +229,37 @@ class ReusableFunc {
         }
     }
 
+    static func compressData(_ text: String, level: Int32 = 10) -> Data? {
+        let inputData = Data(text.utf8)
+        guard !inputData.isEmpty else { return Data() }
+
+        let bound = ZSTD_compressBound(inputData.count)
+        var output = Data(count: Int(bound))
+
+        let compressedSize = output.withUnsafeMutableBytes { outPtr -> Int in
+            return inputData.withUnsafeBytes { inPtr in
+                return ZSTD_compress(
+                    outPtr.baseAddress,
+                    bound,
+                    inPtr.baseAddress,
+                    inputData.count,
+                    level
+                )
+            }
+        }
+
+        if ZSTD_isError(compressedSize) != 0 {
+            let errorName = String(cString: ZSTD_getErrorName(compressedSize))
+            #if DEBUG
+                print("❌ Zstd Compress Error: \(errorName)")
+            #endif
+            return nil
+        }
+
+        output.count = compressedSize
+        return output
+    }
+
     static func helpSearchOpt(_ sender: NSButton) {
         let searchHelpPopover: NSPopover = NSPopover()
 

@@ -7,50 +7,50 @@
 
 import Foundation
 
-final class CachedBookContent: NSObject {
-    let content: BookContent
-    init(_ content: BookContent) {
-        self.content = content
-    }
-}
-
 final class BookPageCache {
     static let shared = BookPageCache()
 
-    // Key: "bookId-contentId"
-    private let cache = NSCache<NSString, CachedBookContent>()
+    // Key: bookId (NSNumber) -> Value: Map of pages (NSMutableDictionary)
+    private let cache = NSCache<NSNumber, NSMutableDictionary>()
     private let lock = NSLock()
 
-    init() {
+    private init() {
         cache.countLimit = 2000     // total item cache
         cache.totalCostLimit = 50 * 1024 * 1024 // 50 MB memory (opsional)
     }
 
-    private func key(bookId: Int, contentId: Int) -> NSString {
-        return "\(bookId)-\(contentId)" as NSString
-    }
-
     func get(bookId: Int, contentId: Int) -> BookContent? {
-        let k = key(bookId: bookId, contentId: contentId)
         lock.lock()
         defer { lock.unlock() }
 
-        if let cached = cache.object(forKey: k) {
-            print("Cache HIT: \(k)")
-            return cached.content
-        } else {
-            print("Cache MISS: \(k)")
-            return nil
-        }
+        let bookKey = bookId as NSNumber
+        let pages = cache.object(forKey: bookKey)
+        #if DEBUG
+            print("Cache HIT: \(bookKey), \(String(describing: pages))")
+        #endif
+        return pages?[contentId as NSNumber] as? BookContent
     }
 
     func set(bookId: Int, content: BookContent) {
-        let k = key(bookId: bookId, contentId: content.id)
         lock.lock()
         defer { lock.unlock() }
 
-        print("Cache SET: \(k)")
-        cache.setObject(CachedBookContent(content), forKey: k)
+        let bookKey = bookId as NSNumber
+        let pages = cache.object(forKey: bookKey) ?? NSMutableDictionary()
+
+        pages[content.id as NSNumber] = content
+        cache.setObject(pages, forKey: bookKey)
+    }
+
+    func remove(bookId: Int) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        // Langsung hapus satu buku beserta seluruh halamannya
+        cache.removeObject(forKey: bookId as NSNumber)
+        #if DEBUG
+            print("Cache REMOVED all content for bookId: \(bookId)")
+        #endif
     }
 
     // Optional: helper to remove or clear cache safely

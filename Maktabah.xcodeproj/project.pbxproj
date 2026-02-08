@@ -36,6 +36,7 @@
 		4B3202722EDB5E3D003B95D1 /* Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3202712EDB5E3D003B95D1 /* Navigation.swift */; };
 		4B33928B2EE02E710028C706 /* LibraryDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B33928A2EE02E710028C706 /* LibraryDataManager.swift */; };
 		4B3392962EE058130028C706 /* SearchSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3392942EE058130028C706 /* SearchSplitView.swift */; };
+		4B3B966D2F35A74400B57E1D /* BookUpdateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */; };
 		4B47F3992EE9A36D009A399F /* RowiProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B47F3982EE9A36D009A399F /* RowiProtocols.swift */; };
 		4B47F39C2EE9A759009A399F /* RowiResultsSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B47F39A2EE9A759009A399F /* RowiResultsSplitVC.swift */; };
 		4B47F39D2EE9A759009A399F /* RowiResultsSplitVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B47F39B2EE9A759009A399F /* RowiResultsSplitVC.xib */; };
@@ -91,6 +92,9 @@
 		4B6AF23B2EE5AC39002EBFFC /* ResultsSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6AF2392EE5AC39002EBFFC /* ResultsSplitVC.swift */; };
 		4B73BF452EF0799E001ED591 /* AnnotationCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B73BF442EF0799E001ED591 /* AnnotationCellView.swift */; };
 		4B73BF472EF09D67001ED591 /* AnnotationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B73BF462EF09D67001ED591 /* AnnotationDelegate.swift */; };
+		4B96D3412F3612BD0018D902 /* BookUpdateVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3402F3612BD0018D902 /* BookUpdateVM.swift */; };
+		4B96D3432F3612D50018D902 /* BookUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3422F3612D50018D902 /* BookUpdateView.swift */; };
+		4B96D3532F3675290018D902 /* BookUpdateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3522F3675290018D902 /* BookUpdateModels.swift */; };
 		4B9A0AE22EEC17CC0049202E /* TarjamahDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9A0AE12EEC17CC0049202E /* TarjamahDataManager.swift */; };
 		4B9A0AE52EEC51C20049202E /* Result.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B9A0AE42EEC51C20049202E /* Result.xib */; };
 		4B9A0AE72EEC53320049202E /* CellIViewIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9A0AE62EEC53320049202E /* CellIViewIdentifier.swift */; };
@@ -181,6 +185,7 @@
 		4B33CCA72EEEF12000CCAE59 /* zstd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zstd.h; sourceTree = "<group>"; };
 		4B33CCA82EEEF12900CCAE59 /* libzstd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libzstd.dylib; sourceTree = "<group>"; };
 		4B33CCAC2EEEF2CB00CCAE59 /* zstd_errors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zstd_errors.h; sourceTree = "<group>"; };
+		4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookUpdateManager.swift; sourceTree = "<group>"; };
 		4B47F3982EE9A36D009A399F /* RowiProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiProtocols.swift; sourceTree = "<group>"; };
 		4B47F39A2EE9A759009A399F /* RowiResultsSplitVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiResultsSplitVC.swift; sourceTree = "<group>"; };
 		4B47F39B2EE9A759009A399F /* RowiResultsSplitVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RowiResultsSplitVC.xib; sourceTree = "<group>"; };
@@ -236,6 +241,9 @@
 		4B6AF2392EE5AC39002EBFFC /* ResultsSplitVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsSplitVC.swift; sourceTree = "<group>"; };
 		4B73BF442EF0799E001ED591 /* AnnotationCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationCellView.swift; sourceTree = "<group>"; };
 		4B73BF462EF09D67001ED591 /* AnnotationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationDelegate.swift; sourceTree = "<group>"; };
+		4B96D3402F3612BD0018D902 /* BookUpdateVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookUpdateVM.swift; sourceTree = "<group>"; };
+		4B96D3422F3612D50018D902 /* BookUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookUpdateView.swift; sourceTree = "<group>"; };
+		4B96D3522F3675290018D902 /* BookUpdateModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookUpdateModels.swift; sourceTree = "<group>"; };
 		4B9A0AE12EEC17CC0049202E /* TarjamahDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TarjamahDataManager.swift; sourceTree = "<group>"; };
 		4B9A0AE42EEC51C20049202E /* Result.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Result.xib; sourceTree = "<group>"; };
 		4B9A0AE62EEC53320049202E /* CellIViewIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellIViewIdentifier.swift; sourceTree = "<group>"; };
@@ -394,6 +402,7 @@
 		4B4C97072F1EFC310051503E /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				4B96D33F2F3612A10018D902 /* BookUpdate */,
 				4BAB8A4A2F286C7D00732FC9 /* Annotations */,
 				4B01CA2E2EFD3656002A66FA /* App Config */,
 				4B4C97082F1EFC380051503E /* Database */,
@@ -412,6 +421,7 @@
 			children = (
 				4B56955F2EEFDAFB00ABEB48 /* AnnotationManager.swift */,
 				4B540F462EDF25A4001D8C0B /* BookConnection.swift */,
+				4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */,
 				4BEC35902F34BA330038FC0F /* DatabaseError.swift */,
 				4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
@@ -438,6 +448,7 @@
 				4B5695582EEFDAAE00ABEB48 /* Annotations.swift */,
 				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
 				4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */,
+				4B96D3522F3675290018D902 /* BookUpdateModels.swift */,
 				4B32024F2EDB1B5A003B95D1 /* DataModel.swift */,
 				4B4C97112F1F026C0051503E /* Narrathor.swift */,
 				4B6100EC2EFA773C00CCBED6 /* Quran.swift */,
@@ -634,6 +645,15 @@
 			path = Reader;
 			sourceTree = "<group>";
 		};
+		4B96D33F2F3612A10018D902 /* BookUpdate */ = {
+			isa = PBXGroup;
+			children = (
+				4B96D3402F3612BD0018D902 /* BookUpdateVM.swift */,
+				4B96D3422F3612D50018D902 /* BookUpdateView.swift */,
+			);
+			path = BookUpdate;
+			sourceTree = "<group>";
+		};
 		4B9A0AE32EEC51980049202E /* OutlineView */ = {
 			isa = PBXGroup;
 			children = (
@@ -725,7 +745,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1520;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					4B3202272EDAFE85003B95D1 = {
@@ -827,11 +847,13 @@
 				4B6AD4EF2EF86A7D004669F5 /* TarjamahDataManagerU.swift in Sources */,
 				4BAB8A492F28682200732FC9 /* ArabicTextRenderer.swift in Sources */,
 				4B20DB792EE7D1BB00B97126 /* ReusableFunc.swift in Sources */,
+				4B3B966D2F35A74400B57E1D /* BookUpdateManager.swift in Sources */,
 				4B73BF472EF09D67001ED591 /* AnnotationDelegate.swift in Sources */,
 				4BD728232EE44C5500ACEB7C /* IbarotTextView.swift in Sources */,
 				4BAB8A4C2F286C8A00732FC9 /* AnnotationCoordinator.swift in Sources */,
 				4B540F472EDF25A4001D8C0B /* BookConnection.swift in Sources */,
 				4B63E1E02EE9412900D58F3B /* RowiSidebarVC.swift in Sources */,
+				4B96D3532F3675290018D902 /* BookUpdateModels.swift in Sources */,
 				4B9A0AE72EEC53320049202E /* CellIViewIdentifier.swift in Sources */,
 				F300A2EC2F2DCE860095015E /* StorageError.swift in Sources */,
 				4B3202432EDB1068003B95D1 /* SidebarVC.swift in Sources */,
@@ -851,6 +873,7 @@
 				4B63E1E42EE9425400D58F3B /* RowiResultsVC.swift in Sources */,
 				4B5EC29E2EE33E3200991F39 /* ResultWriter.swift in Sources */,
 				4B63E1D52EE93F7900D58F3B /* RowiSplitVC.swift in Sources */,
+				4B96D3412F3612BD0018D902 /* BookUpdateVM.swift in Sources */,
 				4B5695642EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift in Sources */,
 				4B0139E02EEAFC3000424CFA /* CustomSplitView.swift in Sources */,
 				4B5B4BA22EE8404C000C22D5 /* BackgroundOptions.swift in Sources */,
@@ -859,6 +882,7 @@
 				4B4C97122F1F026C0051503E /* Narrathor.swift in Sources */,
 				4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */,
 				4B6AF23B2EE5AC39002EBFFC /* ResultsSplitVC.swift in Sources */,
+				4B96D3432F3612D50018D902 /* BookUpdateView.swift in Sources */,
 				4B68AE2C2F20576700CB3ED9 /* AppUpdate.swift in Sources */,
 				4B65CCC02EE0A10F0085CEB4 /* SearchEngine.swift in Sources */,
 				4B3202502EDB1B5A003B95D1 /* DataModel.swift in Sources */,
@@ -1161,7 +1185,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 0;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
@@ -1192,7 +1216,7 @@
 					"$(PROJECT_DIR)/Source/Third-Party/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-lzstd";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
@@ -1215,7 +1239,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 0;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
@@ -1247,7 +1271,7 @@
 					"$(PROJECT_DIR)/Source/Third-Party/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-lzstd";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;

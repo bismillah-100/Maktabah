@@ -338,3 +338,140 @@ class LibraryDataManager {
         db.fetchBooksInfo(for: book)
     }
 }
+
+extension LibraryDataManager {
+
+    /// Update atau insert books berdasarkan BookUpdateResult
+    /// - Parameter updateResults: Results dari book update process
+    func processBookUpdates(_ updateResults: [BookUpdateResult]) async throws {
+        guard !updateResults.isEmpty else { return }
+
+        var insertedBooks: [(categoryId: Int, book: BooksData)] = []
+        var updatedBookIds: Set<Int> = []
+
+        for result in updateResults {
+            let bookId = result.bookId
+
+            switch result.action {
+            case .inserted:
+                // Fetch buku baru dari database
+                if let book = try db.fetchBook(byId: bookId) {
+                    // Tambahkan ke data structures
+                    booksById[bookId] = book
+
+                    // Dapatkan category ID
+                    let categoryId = result.catId
+
+                    // Tambahkan ke category hierarchy
+                    if let category = categoryMap[categoryId] {
+                        category.children.append(book)
+                        insertedBooks.append((categoryId, book))
+                    }
+
+                    // Update archive
+                    await updateArchiveForBooks([book])
+                }
+
+            case .updated:
+                // Fetch buku yang diupdate dari database
+                if let book = try db.fetchBook(byId: bookId) {
+                    // Update booksById cache
+                    booksById[bookId] = book
+
+                    // Update di hierarchy tree
+                    updateBookInHierarchy(book)
+
+                    // Clear cache
+                    BookPageCache.shared.remove(bookId: bookId)
+
+                    // Update archive
+                    await updateArchiveForBooks([book])
+
+                    updatedBookIds.insert(bookId)
+                }
+
+            case .skipped:
+                // Do nothing
+                break
+            }
+        }
+
+        // Kirim combined notification
+        if !insertedBooks.isEmpty || !updatedBookIds.isEmpty {
+            NotificationCenter.default.postBooksChanged(
+                insertedBooks: insertedBooks,
+                updatedBookIds: updatedBookIds
+            )
+        }
+    }
+
+    /// Update single book di hierarchy tree
+    private func updateBookInHierarchy(_ updatedBook: BooksData) {
+        // Cari book di tree dan replace
+        for category in allRootCategories {
+            if replaceBookInCategory(category, with: updatedBook) {
+                break
+            }
+        }
+    }
+
+    private func replaceBookInCategory(_ category: CategoryData, with book: BooksData) -> Bool {
+        // Cek children langsung
+        for (index, child) in category.children.enumerated() {
+            if let existingBook = child as? BooksData, existingBook.id == book.id {
+                category.children[index] = book
+                return true
+            } else if let subCategory = child as? CategoryData {
+                if replaceBookInCategory(subCategory, with: book) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /// Update archive untuk beberapa buku
+    private func updateArchiveForBooks(_ books: [BooksData]) async {
+        for book in books {
+            let archiveId = book.archive
+            guard archiveId != 0 else { continue }
+
+            let tableName = "b\(book.id)"
+
+            if archives[archiveId] == nil {
+                archives[archiveId] = ArchiveInfo(tables: [], books: [])
+            }
+
+            // Remove old entry if exists
+            if let index = archives[archiveId]?.tables.firstIndex(of: tableName) {
+                archives[archiveId]?.tables.remove(at: index)
+                archives[archiveId]?.books.remove(at: index)
+            }
+
+            // Add new entry
+            archives[archiveId]?.tables.append(tableName)
+            archives[archiveId]?.books.append(book)
+        }
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let booksChanged = Notification.Name("booksChanged")
+}
+
+// MARK: - Type-safe Posting Helper
+
+extension NotificationCenter {
+    func postBooksChanged(
+        insertedBooks: [(categoryId: Int, book: BooksData)],
+        updatedBookIds: Set<Int>
+    ) {
+        let payload = BooksChangedNotification(
+            insertedBooks: insertedBooks,
+            updatedBookIds: updatedBookIds
+        )
+        post(name: .booksChanged, object: payload)
+    }
+}

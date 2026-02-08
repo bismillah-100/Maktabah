@@ -28,6 +28,7 @@ class DatabaseManager {
     let bokMuallif = Expression<Int>("authno")
     let bokInf = Expression<String>("inf")
     let tafseerNam = Expression<String?>("TafseerNam")
+    let bVer = Expression<Int?>("bVer")
 
     // Column definitions untuk 0cat
     let catId = Expression<Int>("id")
@@ -96,12 +97,21 @@ class DatabaseManager {
     }
 
     func fetchBooks(forCategory catId: Int) throws -> [BooksData] {
+        try fetchBooks(forCategory: catId, bookIds: nil)
+    }
+
+    // Fetch buku spesifik di category (atau semua jika bookIds = nil)
+    func fetchBooks(forCategory catId: Int, bookIds: Set<Int>?) throws -> [BooksData] {
         guard let db = db else { return [] }
 
+        var query = booksTable.filter(bokCat == catId)
+
+        // Filter by specific bookIds if provided
+        if let bookIds = bookIds, !bookIds.isEmpty {
+            query = query.filter(bookIds.contains(bokId))
+        }
+
         var books: [BooksData] = []
-
-        let query = booksTable.filter(bokCat == catId)
-
         for row in try db.prepare(query) {
             let book = BooksData(
                 id: row[bokId],
@@ -109,13 +119,37 @@ class DatabaseManager {
                 archive: row[bokArchive],
                 muallif: row[bokMuallif]
             )
-            book.tafseerNam =
-                row[tafseerNam]?.isEmpty == true ? nil : row[tafseerNam]
+            book.tafseerNam = row[tafseerNam]?.isEmpty == true ? nil : row[tafseerNam]
             books.append(book)
         }
 
         return books
     }
+
+    // Fetch single book by ID (untuk update individual)
+    func fetchBook(byId bookId: Int) throws -> BooksData? {
+        guard let db = db else { throw
+            NSError(domain: DatabaseError.noConnection.localizedDescription,
+                    code: 1)
+        }
+
+        let query = booksTable.filter(bokId == bookId).limit(1)
+
+        guard let row = try db.pluck(query) else { throw
+            NSError(domain: DatabaseError.bookNotFound(bookId).localizedDescription, code: 1)
+        }
+
+        let book = BooksData(
+            id: row[bokId],
+            book: row[bokName],
+            archive: row[bokArchive],
+            muallif: row[bokMuallif]
+        )
+        book.tafseerNam = row[tafseerNam]?.isEmpty == true ? nil : row[tafseerNam]
+
+        return book
+    }
+
 
     func fetchBooksInfo(for bookData: BooksData) {
         guard let db = DatabaseManager.shared.db else {

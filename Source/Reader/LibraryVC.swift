@@ -43,8 +43,8 @@ class LibraryVC: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         guard !isDataLoaded else { return }
-        ReusableFunc.showProgressWindow(view)
         searchField.delegate = dataVM
+        ReusableFunc.showProgressWindow(view)
         Task.detached { [weak self] in
             guard let self else { return }
             await self.data.loadData()
