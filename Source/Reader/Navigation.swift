@@ -77,7 +77,8 @@ class Navigation: NSViewController {
             )
         #endif
 
-        await MainActor.run {
+        await MainActor.run { [weak self] in
+            guard let self else { return }
             // Setup juz slider
             juzMax.stringValue = "\(totalJuz)"
             juzSlider.minValue = 1
@@ -94,6 +95,11 @@ class Navigation: NSViewController {
 
         // Setup page slider berdasarkan juz saat ini
         await updatePageSlider(forJuz: currentJuz)
+
+        await MainActor.run { [weak self] in
+            guard let self else { return }
+            pageSlider.integerValue = currentPage
+        }
     }
 
     func updatePageSlider(forJuz juz: Int) async {
