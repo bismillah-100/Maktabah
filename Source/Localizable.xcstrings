@@ -1511,6 +1511,9 @@
         }
       }
     },
+    "searchIsRunning" : {
+
+    },
     "searchOptionsHelp" : {
       "extractionState" : "manual",
       "localizations" : {

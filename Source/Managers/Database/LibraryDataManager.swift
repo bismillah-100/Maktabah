@@ -17,11 +17,11 @@ class LibraryDataManager {
     private(set) lazy var booksById: [Int: BooksData] = [:]
     private(set) lazy var archives: [Int: ArchiveInfo] = [:]
 
+    private(set) var searchIsRunning: Bool = false
+
     lazy var authorsCache: [Int: Muallif] = [:]
 
     private(set) var isDataLoaded = false
-
-    let searchEngine = SearchEngine()
 
     let coordinator = LoadCoordinator()
 
@@ -69,7 +69,9 @@ class LibraryDataManager {
             let books = try db.fetchBooks(forCategory: cat.id)
             cat.children.append(contentsOf: books)
             for book in books {
-                booksById[book.id] = book
+                if booksById[book.id] == nil {
+                    booksById[book.id] = book
+                }
             }
         }
 
@@ -198,14 +200,15 @@ class LibraryDataManager {
     }
 
     func performSearch(tableToScan: Set<String> = [],
+                       searchEngine: SearchEngine,
                        query: String,
                        mode: SearchMode,
                        onInitialize: @escaping (Int) -> Void, // totalTables
                        onTableProgress: @escaping (Int) -> Void, // completedTables
                        onRowProgress: @escaping (String, String, Int, Int) -> Void,  // ✅ BARU
                        completion: @escaping (SearchResultItem) -> Void,
-                       onComplete: @escaping () -> Void) {
-
+                       onComplete: @escaping () -> Void) async {
+        searchIsRunning = true
         let allowed = tableToScan
 
         let searchKeywords: [String]
@@ -229,7 +232,9 @@ class LibraryDataManager {
             }
         }
 
+        #if DEBUG
         print("🎯 Filter: Dari \(archives.count) archive → \(relevantArchives.count) relevan")
+        #endif
 
         var totalTables = 0
 
@@ -253,8 +258,9 @@ class LibraryDataManager {
                 connections: connections,
                 batchSize: 200
             )
-
+            #if DEBUG
             print("✅ Worker archive \(archiveId): \(relevantTablesForArchive.count) tables")
+            #endif
         }
 
         if totalTables == 0 { return }
@@ -264,7 +270,7 @@ class LibraryDataManager {
 
             var completedTablesGlobal = 0
 
-            self.searchEngine.startSearch(
+            searchEngine.startSearch(
                 keywords: searchKeywords,
                 allowedTables: allowed.isEmpty ? nil : allowed,
                 mode: mode,
@@ -305,11 +311,16 @@ class LibraryDataManager {
                         ))
                     }
                 },
-                onComplete: {
+                onComplete: { [weak self] in
                     onComplete()
+                    self?.stopSearch()
                 }
             )
         }
+    }
+
+    func stopSearch() {
+        searchIsRunning = false
     }
 
     func filterContent(with searchText: String, displayedCategories: inout [CategoryData]) -> Bool {

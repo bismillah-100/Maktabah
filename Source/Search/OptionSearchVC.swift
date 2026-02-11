@@ -54,6 +54,7 @@ class OptionSearchVC: NSViewController {
     private var resultsLoadingTask: Task<Void, Never>?
 
     private(set) var isDataLoaded: Bool = false
+    private let searchEngine = SearchEngine()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -203,115 +204,117 @@ class OptionSearchVC: NSViewController {
         isRunning: Bool
     ) async {
         if isPaused {
-            ldm.searchEngine.resume()
+            searchEngine.resume()
             return
         }
 
         if isRunning {
-            ldm.searchEngine.pause()
+            searchEngine.pause()
             return
         }
 
-        if !isRunning {
-            // Reset UI
-            await MainActor.run {
-                self.startButton.image = NSImage(
-                    systemSymbolName: "pause.fill",
-                    accessibilityDescription: .none
-                )
-                self.results.removeAll()
-                self.tableView.reloadData()
-            }
+        guard !isRunning else { return }
 
-            let tableToScan: Set<String>
-
-            if let libraryViewManager {
-                tableToScan = ldm.getCheckedTables(
-                    libraryViewManager.displayedCategories
-                )
-            } else {
-                tableToScan = [bkId]
-            }
-
-            ldm.performSearch(
-                tableToScan: tableToScan,
-                query: searchText,
-                mode: currentMode,
-                onInitialize: { [weak self] totalTables in
-                    guard let self = self else { return }
-
-                    // Set maxValue dan tampilkan HANYA progressTable
-                    progressTable.maxValue = Double(totalTables)
-                    progressTable.doubleValue = 0
-                    progressTable.isHidden = false
-
-                    #if DEBUG
-                        print("📊 Total Tables: \(totalTables)")
-                    #endif
-                },
-                onTableProgress: { [weak self] completedTables in
-                    guard let self = self else { return }
-
-                    // Update progress
-                    progressTable.doubleValue = Double(completedTables)
-                    #if DEBUG
-                        print(
-                            "📈 Progress: \(completedTables)/\(Int(progressTable.maxValue))"
-                        )
-                    #endif
-                },
-                onRowProgress: {
-                    [weak self] archiveId, tableName, current, total in
-                    guard let self = self else { return }
-                    // ✅ Update row progress
-                    if progressRows.isHidden {
-                        progressRows.isHidden = false
-                        // labelCurrentTable.isHidden = false
-                    }
-
-                    progressRows.maxValue = Double(total)
-                    progressRows.doubleValue = Double(current)
-
-                    // ✅ Format info tabel yang sedang di-scan
-                    // let bookId = Int(tableName.dropFirst()) ?? 0
-                    // let bookTitle = ldm.booksById[bookId]?.book ?? tableName
-                    // labelCurrentTable.stringValue = "Scanning: \(bookTitle) (\(current)/\(total) rows)"
-
-                    #if DEBUG
-                        print(
-                            "🔍 Row Progress [\(tableName)]: \(current)/\(total)"
-                        )
-                    #endif
-                },
-                completion: { [weak self] item in
-                    guard let self = self else { return }
-                    // Jika performa buruk dengan banyak hasil, pertimbangkan pembaruan batch di sini
-                    // Untuk saat ini, asumsikan pembaruan per item masih dapat diterima
-                    results.append(item)
-                    tableView.insertRows(
-                        at: IndexSet(integer: results.count - 1)
-                    )
-                },
-                onComplete: { [weak self] in
-                    guard let self = self else { return }
-                    ldm.searchEngine.stop()
-                    progressTable.doubleValue = progressTable.maxValue
-                    progressRows.doubleValue = progressRows.maxValue
-
-                    Task { @MainActor [weak self] in
-                        guard let self = self else { return }
-                        // Hapus penundaan Task.sleep yang tidak perlu
-                        // try? await Task.sleep(nanoseconds: 955_000_000)
-                        updateStartButton(state: .off)
-                        resetProgressBar()
-                        // labelCurrentTable.isHidden = true
-                    }
-                    #if DEBUG
-                        print("🎉 Search Complete!")
-                    #endif
-                }
+        // Reset UI
+        await MainActor.run { [weak self] in
+            guard let self else { return }
+            startButton.image = NSImage(
+                systemSymbolName: "pause.fill",
+                accessibilityDescription: .none
             )
+            results.removeAll()
+            tableView.reloadData()
         }
+
+        let tableToScan: Set<String>
+
+        if let libraryViewManager {
+            tableToScan = ldm.getCheckedTables(
+                libraryViewManager.displayedCategories
+            )
+        } else {
+            tableToScan = [bkId]
+        }
+
+        await ldm.performSearch(
+            tableToScan: tableToScan,
+            searchEngine: searchEngine,
+            query: searchText,
+            mode: currentMode,
+            onInitialize: { [weak self] totalTables in
+                guard let self = self else { return }
+
+                // Set maxValue dan tampilkan HANYA progressTable
+                resetIndeterminateProgress(!bkId.isEmpty)
+                progressTable.maxValue = Double(totalTables)
+                progressTable.doubleValue = 0
+
+                #if DEBUG
+                    print("📊 Total Tables: \(totalTables)")
+                #endif
+            },
+            onTableProgress: { [weak self] completedTables in
+                guard let self = self else { return }
+
+                // Update progress
+                progressTable.doubleValue = Double(completedTables)
+                #if DEBUG
+                    print(
+                        "📈 Progress: \(completedTables)/\(Int(progressTable.maxValue))"
+                    )
+                #endif
+            },
+            onRowProgress: {
+                [weak self] archiveId, tableName, current, total in
+                guard let self = self else { return }
+                // ✅ Update row progress
+                if progressRows.isHidden {
+                    progressRows.isHidden = false
+                    // labelCurrentTable.isHidden = false
+                }
+
+                progressRows.maxValue = Double(total)
+                progressRows.doubleValue = Double(current)
+
+                // ✅ Format info tabel yang sedang di-scan
+                // let bookId = Int(tableName.dropFirst()) ?? 0
+                // let bookTitle = ldm.booksById[bookId]?.book ?? tableName
+                // labelCurrentTable.stringValue = "Scanning: \(bookTitle) (\(current)/\(total) rows)"
+
+                #if DEBUG
+                    print(
+                        "🔍 Row Progress [\(tableName)]: \(current)/\(total)"
+                    )
+                #endif
+            },
+            completion: { [weak self] item in
+                guard let self = self else { return }
+                // Jika performa buruk dengan banyak hasil, pertimbangkan pembaruan batch di sini
+                // Untuk saat ini, asumsikan pembaruan per item masih dapat diterima
+                results.append(item)
+                tableView.insertRows(
+                    at: IndexSet(integer: results.count - 1)
+                )
+            },
+            onComplete: { [weak self] in
+                guard let self = self else { return }
+                searchEngine.stop()
+                progressTable.doubleValue = progressTable.maxValue
+                progressRows.doubleValue = progressRows.maxValue
+
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    // Hapus penundaan Task.sleep yang tidak perlu
+                    // try? await Task.sleep(nanoseconds: 955_000_000)
+                    updateStartButton(state: .off)
+                    resetProgressBar()
+                    // labelCurrentTable.isHidden = true
+                }
+                #if DEBUG
+                    print("🎉 Search Complete!")
+                #endif
+            }
+        )
     }
 
     func resetProgressBar() {
@@ -336,8 +339,17 @@ class OptionSearchVC: NSViewController {
     @IBAction func startSearch(_ sender: Any) {
         if searchText.isEmpty || (compactConfigured && bkId.isEmpty) { return }
         ReusableFunc.updateBuiltInRecents(with: searchText, in: searchField)
-        let isPaused = ldm.searchEngine.currentlyPaused()
-        let isRunning = ldm.searchEngine.isRunning()
+        let isPaused = searchEngine.currentlyPaused()
+        let isRunning = searchEngine.isRunning()
+
+        if !isRunning, !isPaused {
+            if ldm.searchIsRunning {
+                ReusableFunc.showAlert(title: String(localized: "searchIsRunning"), message: "")
+                updateStartButton(state: .off)
+                return
+            }
+            setupIndeterminateProgress()
+        }
 
         if isPaused {
             updateStartButton(systemSymbolName: "pause.fill", state: .on)
@@ -357,7 +369,8 @@ class OptionSearchVC: NSViewController {
     }
 
     @IBAction func stopSearch(_ sender: Any?) {
-        ldm.searchEngine.stop()
+        searchEngine.stop()
+        ldm.stopSearch()
         startButton.state = .off
         startButton.image = NSImage(
             systemSymbolName: "play.fill",
