@@ -1512,7 +1512,26 @@
       }
     },
     "searchIsRunning" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير قادر على البحث أثناء تشغيل عمليات البحث الأخرى."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to search while other search processes are running."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak dapat melakukan pencarian ketika proses pencarian lain sedang berjalan."
+          }
+        }
+      }
     },
     "searchOptionsHelp" : {
       "extractionState" : "manual",

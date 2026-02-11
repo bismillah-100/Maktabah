@@ -31,7 +31,6 @@ class ResultsViewManager: NSObject {
 
     private var isSearching = false
     private var searchResultsByFolder: [Int64?: [ResultNode]] = [:]
-    private var searchText: String = ""
     private var matchingFolderIds: Set<Int64> = []
 
     var writer: Bool = true
@@ -125,7 +124,6 @@ class ResultsViewManager: NSObject {
         if text.isEmpty {
             isSearching = false
             searchResultsByFolder.removeAll()
-            searchText = ""
             matchingFolderIds.removeAll()
             outlineView.reloadData()
             return
@@ -137,7 +135,6 @@ class ResultsViewManager: NSObject {
             guard let self else { return }
 
             let query = text.lowercased()
-            searchText = query
 
             // 1. Folder match (pakai cache)
             let matchedFolders = vm.searchFoldersInMemory(query)

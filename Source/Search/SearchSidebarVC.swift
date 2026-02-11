@@ -11,7 +11,6 @@ class SearchSidebarVC: NSViewController {
     @IBOutlet weak var searchField: DSFSearchField!
     @IBOutlet weak var outlineView: NSOutlineView!
 
-    var data: LibraryDataManager = .shared
     var dataVM: LibraryViewManager!
 
     override func viewDidLoad() {

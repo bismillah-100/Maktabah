@@ -347,9 +347,11 @@ class ResultsViewModel {
         return folderById[id]
     }
 
+    /*
     func findResultNode(_ id: Int64) -> ResultNode? {
         return resultById[id]
     }
+     */
 
     func findParent(of node: FolderNode, in roots: [FolderNode]) -> FolderNode? {
         for root in roots {
