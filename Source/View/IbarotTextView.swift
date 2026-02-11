@@ -188,11 +188,10 @@ class IbarotTextView: NSTextView {
 
         // Batch update
         ts.beginEditing()
-        for annotation in annotationRanges {
-            if enable {
-                let linkURL = "\(annotation.id)"
-                ts.addAttribute(.link, value: linkURL, range: annotation.range)
-            } else {
+        if enable {
+            refreshAnnotations()
+        } else {
+            for annotation in annotationRanges {
                 ts.removeAttribute(.link, range: annotation.range)
             }
         }
@@ -653,22 +652,11 @@ class IbarotTextView: NSTextView {
         try? AnnotationManager.shared.deleteAnnotation(id: annId)
 
         // Update UI: hapus atribut annotation dari textStorage dan reapply annotations
-        if let bkId = bkId, let contentId = contentId, let ts = textStorage {
+        if let ts = textStorage {
             ts.beginEditing()
 
-            let anns = AnnotationManager.shared.loadAnnotations(
-                bkId: bkId,
-                contentId: contentId
-            )
             let range = state.showHarakat ? ann.rangeDiacritics : ann.range
             removeAttributesForRange(range, in: ts)
-
-            // implementasi: applyAnnotations akan membaca annotations terbaru dari manager
-            renderer.applyAnnotations(
-                anns,
-                to: ts,
-                showHarakat: state.showHarakat
-            )
 
             ts.endEditing()
 
@@ -709,7 +697,9 @@ class IbarotTextView: NSTextView {
             )
 
             // Apply to UI
-            if let ts = textStorage {
+            if state.clickableAnnotation {
+                refreshAnnotations()
+            } else if let ts = textStorage {
                 renderer.applyAnnotations(
                     [annotation],
                     to: ts,
@@ -747,7 +737,9 @@ class IbarotTextView: NSTextView {
             )
 
             // Apply to UI
-            if let ts = textStorage {
+            if state.clickableAnnotation {
+                refreshAnnotations()
+            } else if let ts = textStorage {
                 renderer.applyAnnotations(
                     [annotation],
                     to: ts,
@@ -818,6 +810,46 @@ class IbarotTextView: NSTextView {
         )
 
         presentAnnotationEditorForNewAnnotation(ann, atCharIndex: middleIndex)
+    }
+
+    func refreshAnnotations() {
+        guard let bkId = bkId, let contentId = contentId, let ts = textStorage else { return }
+
+        // 1. Ambil data terbaru
+        let anns = AnnotationManager.shared.loadAnnotations(
+            bkId: bkId,
+            contentId: contentId
+        )
+
+        ts.beginEditing()
+
+        // ==========================================
+        // LANGKAH PENTING: BERSIHKAN ATRIBUT LAMA 🧹
+        // ==========================================
+        let fullRange = NSRange(location: 0, length: ts.length)
+
+        // Hapus Background (Highlight)
+        ts.removeAttribute(.backgroundColor, range: fullRange)
+
+        // Hapus Underline
+        ts.removeAttribute(.underlineStyle, range: fullRange)
+
+        // Hapus Link (Agar area klik hilang untuk yang sudah dihapus)
+        ts.removeAttribute(.link, range: fullRange)
+
+        // Hapus ID Anotasi custom Anda
+        ts.removeAttribute(NSAttributedString.Key("annotationID"), range: fullRange)
+
+        // ==========================================
+
+        // 2. Apply yang baru (Fresh)
+        renderer.applyAnnotations(
+            anns,
+            to: ts,
+            showHarakat: state.showHarakat
+        )
+
+        ts.endEditing()
     }
 
     func presentAnnotationEditorForNewAnnotation(

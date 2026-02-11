@@ -61,6 +61,7 @@ class AnnotationCoordinator {
         return findLargestOverlap(in: anns, with: selectionRange, showHarakat: showHarakat)
     }
 
+    @discardableResult
     func saveHighlight(
         text: String,
         range: NSRange,

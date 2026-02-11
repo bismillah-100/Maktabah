@@ -213,11 +213,8 @@ extension IbarotTextView: AnnotationEditorDelegate {
         // Apply annotations ulang untuk content terkait (gunakan bkId/contentId)
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            if let ts = textStorage {
-                let anns = AnnotationManager.shared.loadAnnotations(bkId: annToSave.bkId, contentId: annToSave.contentId)
-                renderer.applyAnnotations(anns, to: ts, showHarakat: state.showHarakat)
-                setSelectedRange(NSRange(location: NSNotFound, length: 0))
-            }
+            refreshAnnotations()
+            setSelectedRange(NSRange(location: NSNotFound, length: 0))
         }
     }
 

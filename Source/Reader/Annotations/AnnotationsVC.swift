@@ -50,12 +50,16 @@ class AnnotationsVC: NSViewController {
         }
         outlineView.deselectAll(nil)
         dataSource.outlineView = outlineView
-        reloadAnnotations(nil)
-        isDataLoaded = true
-        DispatchQueue.main.async{ [weak self] in
+
+        Task { [weak self] in
             guard let self else { return }
-            ReusableFunc.closeProgressWindow(view)
-            ReusableFunc.setupSearchField(searchField)
+            reloadAnnotations(nil)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                ReusableFunc.closeProgressWindow(view)
+                ReusableFunc.setupSearchField(searchField)
+                isDataLoaded = true
+            }
         }
     }
 
