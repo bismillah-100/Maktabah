@@ -457,6 +457,10 @@ extension IbarotTextVC: OptionSearchDelegate {
 }
 
 extension IbarotTextVC: TarjamahBDelegate {
+    func didSelectRowi() {
+        currentBook = nil
+    }
+
     func didSelect(tarjamahB: TarjamahMen, query: String?) async {
         guard
             let bookData = LibraryDataManager

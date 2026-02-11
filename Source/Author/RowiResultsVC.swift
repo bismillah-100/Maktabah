@@ -239,7 +239,7 @@ class RowiResultsVC: NSViewController {
         }
 
         didClickButton = true
-        tableView.deselectAll(nil)
+
         guard let currentRowi else { return }
 
         // 2. Tentukan teks berdasarkan tombol yang diklik (sender)
@@ -254,6 +254,10 @@ class RowiResultsVC: NSViewController {
         updateWindowTitle()
         viewerSplitVC?.hideTOC()
         didClickButton = false
+        delegate?.didSelectRowi()
+        if tableView.selectedRow != -1 {
+            tableView.deselectAll(nil)
+        }
     }
 
     func updateWindowTitle() {
@@ -331,8 +335,12 @@ extension RowiResultsVC: NSTableViewDelegate {
 
     func tableViewSelectionDidChange(_ notification: Notification) {
         let row = tableView.selectedRow
-        guard !didClickButton, row != -1 else {
+        guard !didClickButton else {
             selectedButtons?.performClick(nil)
+            return
+        }
+
+        guard row != -1  else {
             return
         }
 

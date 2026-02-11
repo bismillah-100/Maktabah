@@ -24,6 +24,7 @@ protocol ResultsDelegate: AnyObject {
 }
 
 protocol TarjamahBDelegate: AnyObject {
+    func didSelectRowi()
     func didSelect(tarjamahB: TarjamahMen, query: String?) async
 }
 
