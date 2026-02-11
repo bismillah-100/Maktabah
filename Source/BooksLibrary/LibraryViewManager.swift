@@ -34,6 +34,7 @@ class LibraryViewManager: NSObject {
     func prepareData() {
         displayedCategories = data.allRootCategories
         buildBookLookup()
+        outlineView.reloadData()
     }
 
     func buildBookLookup() {

@@ -53,6 +53,8 @@ class OptionSearchVC: NSViewController {
     // Mengganti DispatchWorkItem dengan Task untuk konsistensi konkurensi
     private var resultsLoadingTask: Task<Void, Never>?
 
+    private(set) var isDataLoaded: Bool = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTableView()
@@ -62,6 +64,8 @@ class OptionSearchVC: NSViewController {
         searchField.delegate = self
         tableView.userInterfaceLayoutDirection = .leftToRight
         if #available(macOS 26.0, *) {  // PERINGATAN: Ganti 26.0 dengan versi macOS yang aktual
+            progressTable.controlSize = .small
+            progressRows.controlSize = .small
             optionsSegment.borderShape = .circle
             let btn = [
                 cleanUpButton, startButton, stopButton, insertNewResults,
@@ -77,9 +81,18 @@ class OptionSearchVC: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        if isDataLoaded, bkId.isEmpty { return }
+        setupIndeterminateProgress()
         Task.detached {
+            await LibraryDataManager.shared.loadData()
             await LibraryDataManager.shared.coordinator.waitUntilLoaded()
             await LibraryDataManager.shared.buildArchive()
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                libraryViewManager?.prepareData()
+                isDataLoaded = true
+                resetIndeterminateProgress(true)
+            }
         }
     }
 
@@ -306,6 +319,18 @@ class OptionSearchVC: NSViewController {
         progressRows.isHidden = true
         progressTable.doubleValue = 0
         progressRows.doubleValue = 0
+    }
+
+    func setupIndeterminateProgress() {
+        progressTable.isIndeterminate = true
+        progressTable.startAnimation(nil)
+        progressTable.isHidden = false
+    }
+
+    func resetIndeterminateProgress(_ hide: Bool) {
+        progressTable.stopAnimation(nil)
+        progressTable.isIndeterminate = false
+        progressTable.isHidden = hide
     }
 
     @IBAction func startSearch(_ sender: Any) {
