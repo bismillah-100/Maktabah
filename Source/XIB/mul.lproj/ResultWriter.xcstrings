@@ -50,49 +50,25 @@
       }
     },
     "j1H-0w-HVO.placeholderString" : {
-      "comment" : "Class = \"NSTextFieldCell\"; placeholderString = \"Search Results Name\"; ObjectID = \"j1H-0w-HVO\";",
+      "comment" : "Class = \"NSTextFieldCell\"; placeholderString = \"Enter result name...\"; ObjectID = \"j1H-0w-HVO\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إسم نتائج البحث"
+            "value" : "أدخل إسم نتائج البحث"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Search Results Name"
+            "value" : "Enter result name..."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nama Hasil Pencarian"
-          }
-        }
-      }
-    },
-    "rwt-Fz-7KV.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Text Cell\"; ObjectID = \"rwt-Fz-7KV\";",
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "-"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Text Cell"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "-"
+            "value" : "Masukkan nama hasil..."
           }
         }
       }

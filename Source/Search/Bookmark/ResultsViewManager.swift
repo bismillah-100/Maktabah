@@ -31,30 +31,69 @@ class ResultsViewManager: NSObject {
 
     private var isSearching = false
     private var searchResultsByFolder: [Int64?: [ResultNode]] = [:]
+    private var searchText: String = ""
+    private var matchingFolderIds: Set<Int64> = []
 
     var writer: Bool = true
 
     weak var delegate: ResultsDelegate?
 
-    static let folderCreateErrorTitle = NSLocalizedString("errorCreateFolderTitle", comment: "")
-    static let folderCreateErrorDesc = NSLocalizedString("errorCreateFolderDesc", comment: "")
-    static let inFolderCreateErrorDesc = NSLocalizedString("errorCreateInFolderDesc", comment: "")
+    static let folderCreateErrorTitle = NSLocalizedString(
+        "errorCreateFolderTitle",
+        comment: ""
+    )
+    static let folderCreateErrorDesc = NSLocalizedString(
+        "errorCreateFolderDesc",
+        comment: ""
+    )
+    static let inFolderCreateErrorDesc = NSLocalizedString(
+        "errorCreateInFolderDesc",
+        comment: ""
+    )
 
-    static let saveResultErrorTitle = NSLocalizedString("errorSaveResultTitle", comment: "")
-    static let saveResultErrorDesc = NSLocalizedString("errorSaveResultDesc", comment: "")
+    static let saveResultErrorTitle = NSLocalizedString(
+        "errorSaveResultTitle",
+        comment: ""
+    )
+    static let saveResultErrorDesc = NSLocalizedString(
+        "errorSaveResultDesc",
+        comment: ""
+    )
 
-    static let renameFolderErrorTitle = NSLocalizedString("errorUpdateFolderTitle", comment: "")
-    static let renameResultErrorTitle = NSLocalizedString("errorUpdateResultTitle", comment: "")
-    static let renameFolderOrResultErrorDesc = NSLocalizedString("errorUpdateFolderOrResultDesc", comment: "")
+    static let renameFolderErrorTitle = NSLocalizedString(
+        "errorUpdateFolderTitle",
+        comment: ""
+    )
+    static let renameResultErrorTitle = NSLocalizedString(
+        "errorUpdateResultTitle",
+        comment: ""
+    )
+    static let renameFolderOrResultErrorDesc = NSLocalizedString(
+        "errorUpdateFolderOrResultDesc",
+        comment: ""
+    )
 
-    static let errorMovingFolderTitle = NSLocalizedString("errorMovingFolderTitle", comment: "")
-    static let errorMovingFolderDesc = NSLocalizedString("errorMovingFolderDesc", comment: "")
-    static let errorMovingResultTitle = NSLocalizedString("errorMovingResultTitle", comment: "")
-    static let errorMovingResultDesc = NSLocalizedString("errorMovingResultDesc", comment: "")
+    static let errorMovingFolderTitle = NSLocalizedString(
+        "errorMovingFolderTitle",
+        comment: ""
+    )
+    static let errorMovingFolderDesc = NSLocalizedString(
+        "errorMovingFolderDesc",
+        comment: ""
+    )
+    static let errorMovingResultTitle = NSLocalizedString(
+        "errorMovingResultTitle",
+        comment: ""
+    )
+    static let errorMovingResultDesc = NSLocalizedString(
+        "errorMovingResultDesc",
+        comment: ""
+    )
 
-    init(outlineView: NSOutlineView!,
-         delegate: ResultsDelegate? = nil,
-         writer: Bool = true
+    init(
+        outlineView: NSOutlineView!,
+        delegate: ResultsDelegate? = nil,
+        writer: Bool = true
     ) {
 
         self.writer = writer
@@ -66,144 +105,242 @@ class ResultsViewManager: NSObject {
         )
 
         ReusableFunc.registerNib(
-            tableView: outlineView, 
+            tableView: outlineView,
             nibName: .bookmarkParentNib,
             cellIdentifier: .bookmarkParent
         )
 
         outlineView.registerForDraggedTypes([
             .folderNode,
-            .resultNode
+            .resultNode,
         ])
 
         outlineView.setDraggingSourceOperationMask(.move, forLocal: true)
-        
+
         self.outlineView = outlineView
         self.delegate = delegate
     }
 
-    func findNode(by id: Int64, in roots: [FolderNode]) -> FolderNode? {
-        for r in roots {
-            if r.id == id { return r }
-            if let found = findNode(by: id, in: r.children) { return found }
-        }
-        return nil
-    }
-
-    private func results(for folderId: Int64?) -> [ResultNode] {
-        return isSearching ? (searchResultsByFolder[folderId] ?? []) : (folderResults[folderId] ?? [])
-    }
-
     func searchResults(for text: String) {
         if text.isEmpty {
-            // kosong -> keluar dari mode search
             isSearching = false
             searchResultsByFolder.removeAll()
+            searchText = ""
+            matchingFolderIds.removeAll()
             outlineView.reloadData()
             return
         }
 
         searchWorkItem?.cancel()
 
-        searchWorkItem = DispatchWorkItem { [weak self] in
+        let workItem = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            // ambil hasil dari view model (asumsi return [(result, folderId, folderPath)])
-            let items = vm.searchResultsWithFolderPath(text)
+
+            let query = text.lowercased()
+            searchText = query
+
+            // 1. Folder match (pakai cache)
+            let matchedFolders = vm.searchFoldersInMemory(query)
+            matchingFolderIds = Set(matchedFolders.map(\.id))
+
+            // 2. Result match (pakai cache)
+            let resultsWithPath = vm.searchResultsWithFolderPath(query)
 
             // group per folderId
-            searchResultsByFolder.removeAll()
-            for entry in items {
-                searchResultsByFolder[entry.folderId, default: []].append(entry.result)
-            }
-            // optional: sort tiap grup
+            searchResultsByFolder = Dictionary(
+                grouping: resultsWithPath.map(\.result),
+                by: { $0.parentId }
+            )
+
+            // sort tiap folder
             for key in searchResultsByFolder.keys {
-                searchResultsByFolder[key]?.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                searchResultsByFolder[key]?.sort {
+                    $0.name.localizedCaseInsensitiveCompare($1.name)
+                        == .orderedAscending
+                }
             }
 
             isSearching = true
 
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                outlineView.reloadData()
-
-                // expand semua folder yang berisi hasil
-                for (folderId, _) in searchResultsByFolder {
-                    if let id = folderId, let node = vm.findFolder(id) {
-                        outlineView.expandItem(node)
-                    } else {
-                        // folderId == nil -> hasil di root, tidak perlu expand
-                    }
-                }
-
-                // pilih hasil pertama (jika ada)
-                if let first = items.first {
-                    let row = outlineView.row(forItem: first.result)
-                    if row >= 0 {
-                        outlineView.scrollRowToVisible(row)
-                    }
-                }
+            DispatchQueue.main.async {
+                self.applySearchUI(resultsWithPath: resultsWithPath)
             }
         }
 
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: searchWorkItem!)
+        searchWorkItem = workItem
+        DispatchQueue.global(qos: .userInitiated)
+            .asyncAfter(deadline: .now() + 0.3, execute: workItem)
     }
 
+    private func applySearchUI(
+        resultsWithPath: [(
+            result: ResultNode, folderId: Int64?, folderPath: String
+        )]
+    ) {
+        outlineView.reloadData()
+
+        // expand semua folder relevan
+        let foldersToExpand =
+            Set(searchResultsByFolder.keys.compactMap { $0 })
+            .union(matchingFolderIds)
+
+        for folderId in foldersToExpand {
+            expandFolderChain(folderId)
+        }
+
+        // scroll ke item pertama
+        if let first = resultsWithPath.first {
+            let row = outlineView.row(forItem: first.result)
+            outlineView.scrollRowToVisible(row)
+        } else if let folderId = matchingFolderIds.first,
+            let folder = vm.findFolder(folderId)
+        {
+            let row = outlineView.row(forItem: folder)
+            outlineView.scrollRowToVisible(row)
+        }
+    }
+
+    private func expandFolderChain(_ folderId: Int64) {
+        var currentId: Int64? = folderId
+
+        while let id = currentId, let node = vm.findFolder(id) {
+            outlineView.expandItem(node)
+            currentId = vm.parentById[id] ?? nil
+        }
+    }
+
+    private func shouldShowFolder(_ folder: FolderNode) -> Bool {
+        guard isSearching else { return true }
+
+        if matchingFolderIds.contains(folder.id) {
+            return true
+        }
+
+        if let results = searchResultsByFolder[folder.id], !results.isEmpty {
+            return true
+        }
+
+        return folder.children.contains { shouldShowFolder($0) }
+    }
 
     static func showAlertCreateFolderError(subFolder: Bool = false) {
-        let message = subFolder ? Self.inFolderCreateErrorDesc : Self.folderCreateErrorDesc
-        ReusableFunc.showAlert(title: Self.folderCreateErrorTitle, message: message, style: .critical)
+        let message =
+            subFolder
+            ? Self.inFolderCreateErrorDesc : Self.folderCreateErrorDesc
+        ReusableFunc.showAlert(
+            title: Self.folderCreateErrorTitle,
+            message: message,
+            style: .critical
+        )
     }
+
+    func visibleFolders(in folder: FolderNode) -> [FolderNode] {
+        guard isSearching else { return folder.children }
+
+        if matchingFolderIds.contains(folder.id) {
+            return folder.children
+        }
+
+        return folder.children.filter { shouldShowFolder($0) }
+    }
+
+    func visibleItems(in folderId: Int64?) -> [ResultNode] {
+        guard isSearching else {
+            return folderResults[folderId] ?? []
+        }
+
+        if folderId == nil {
+            return searchResultsByFolder[nil] ?? []
+        }
+
+        if matchingFolderIds.contains(folderId!) {
+            return folderResults[folderId!] ?? []
+        }
+
+        return searchResultsByFolder[folderId!] ?? []
+    }
+
 }
 
 extension ResultsViewManager: NSOutlineViewDataSource {
-    func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+    func outlineView(
+        _ outlineView: NSOutlineView,
+        numberOfChildrenOfItem item: Any?
+    ) -> Int {
         if let folder = item as? FolderNode {
-            let childFolders = folder.children.count
-            let resultsCount = writer ? 0 : results(for: folder.id).count
-            return childFolders + resultsCount
+            let foldersToShow = visibleFolders(in: folder)
+            let itemsToShow = writer ? 0 : visibleItems(in: folder.id).count
+            return foldersToShow.count + itemsToShow
         }
 
-        let rootFoldersCount = folderRoots.count
-        let rootResultsCount = writer ? 0 : results(for: nil).count
-        return rootFoldersCount + rootResultsCount
+        let rootFolders: [FolderNode] =
+            isSearching
+            ? folderRoots.filter { shouldShowFolder($0) }
+            : folderRoots
+
+        let rootItems = writer ? [] : visibleItems(in: nil)
+
+        return rootFolders.count + rootItems.count
     }
 
-    func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
+    func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any)
+        -> Bool
+    {
         if item is ResultNode { return false }
         if let folder = item as? FolderNode {
-            let hasChildren = !folder.children.isEmpty
-            let hasResults = !writer && !results(for: folder.id).isEmpty
-            return hasChildren || hasResults
+            // Gunakan helper visible agar konsisten
+            let folders = visibleFolders(in: folder)
+            let items = visibleItems(in: folder.id)
+            return !folders.isEmpty || (!writer && !items.isEmpty)
         }
         return false
     }
 
-    func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
+    func outlineView(
+        _ outlineView: NSOutlineView,
+        child index: Int,
+        ofItem item: Any?
+    ) -> Any {
         if let folder = item as? FolderNode {
-            let childFolders = folder.children
-            if index < childFolders.count { return childFolders[index] }
-            if !writer {
-                let list = results(for: folder.id)
-                return list[index - childFolders.count]
+            let foldersToShow = visibleFolders(in: folder)
+            let itemsToShow = visibleItems(in: folder.id)
+
+            // Urutan: Tampilkan Folder dulu, baru Item
+            if index < foldersToShow.count {
+                return foldersToShow[index]
+            } else {
+                return itemsToShow[index - foldersToShow.count]
             }
         } else {
-            if index < folderRoots.count { return folderRoots[index] }
-            if !writer {
-                let rootList = results(for: nil)
-                let resultIndex = index - folderRoots.count
-                if resultIndex < rootList.count { return rootList[resultIndex] }
+            let rootFolders: [FolderNode] =
+                isSearching
+                ? folderRoots.filter { shouldShowFolder($0) }
+                : folderRoots
+
+            let rootItems = writer ? [] : visibleItems(in: nil)
+
+            if index < rootFolders.count {
+                return rootFolders[index]
+            } else {
+                return rootItems[index - rootFolders.count]
             }
         }
-        return folderRoots[index] // fallback
     }
 }
 
 extension ResultsViewManager: NSOutlineViewDelegate {
-    func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
+    func outlineView(
+        _ outlineView: NSOutlineView,
+        viewFor tableColumn: NSTableColumn?,
+        item: Any
+    ) -> NSView? {
 
         if let result = item as? ResultNode,
-           let cell = outlineView.makeView(withIdentifier: resultCellIdentifier, owner: self) as? NSTableCellView,
-           let textField = cell.textField
+            let cell = outlineView.makeView(
+                withIdentifier: resultCellIdentifier,
+                owner: self
+            ) as? NSTableCellView,
+            let textField = cell.textField
         {
             textField.stringValue = "\(result.name)"
             textField.delegate = self
@@ -212,8 +349,11 @@ extension ResultsViewManager: NSOutlineViewDelegate {
         }
 
         if let folder = item as? FolderNode,
-           let cell = outlineView.makeView(withIdentifier: folderCellIdentifier, owner: self) as? NSTableCellView,
-           let textField = cell.textField
+            let cell = outlineView.makeView(
+                withIdentifier: folderCellIdentifier,
+                owner: self
+            ) as? NSTableCellView,
+            let textField = cell.textField
         {
             textField.stringValue = "\(folder.name)"
             textField.delegate = self
@@ -226,7 +366,7 @@ extension ResultsViewManager: NSOutlineViewDelegate {
     func outlineViewSelectionDidChange(_ notification: Notification) {
         let row = outlineView.selectedRow
         guard row >= 0,
-              let result = outlineView.item(atRow: row) as? ResultNode
+            let result = outlineView.item(atRow: row) as? ResultNode
         else { return }
 
         // Tampilkan hasil pencarian
@@ -235,8 +375,10 @@ extension ResultsViewManager: NSOutlineViewDelegate {
 }
 
 extension ResultsViewManager {
-    func outlineView(_ outlineView: NSOutlineView,
-                     pasteboardWriterForItem item: Any) -> NSPasteboardWriting? {
+    func outlineView(
+        _ outlineView: NSOutlineView,
+        pasteboardWriterForItem item: Any
+    ) -> NSPasteboardWriting? {
 
         let pbItem = NSPasteboardItem()
 
@@ -255,13 +397,19 @@ extension ResultsViewManager {
 }
 
 extension ResultsViewManager {
-    func outlineView(_ outlineView: NSOutlineView,
-                     validateDrop info: NSDraggingInfo,
-                     proposedItem item: Any?,
-                     proposedChildIndex index: Int) -> NSDragOperation {
+    func outlineView(
+        _ outlineView: NSOutlineView,
+        validateDrop info: NSDraggingInfo,
+        proposedItem item: Any?,
+        proposedChildIndex index: Int
+    ) -> NSDragOperation {
 
         // Hanya izinkan drop ON item
         guard index == NSOutlineViewDropOnItemIndex else {
+            return []
+        }
+
+        if item is ResultNode {
             return []
         }
 
@@ -270,10 +418,12 @@ extension ResultsViewManager {
 }
 
 extension ResultsViewManager {
-    func outlineView(_ outlineView: NSOutlineView,
-                     acceptDrop info: NSDraggingInfo,
-                     item: Any?,
-                     childIndex index: Int) -> Bool {
+    func outlineView(
+        _ outlineView: NSOutlineView,
+        acceptDrop info: NSDraggingInfo,
+        item: Any?,
+        childIndex index: Int
+    ) -> Bool {
 
         guard let pbItem = info.draggingPasteboard.pasteboardItems?.first else {
             return false
@@ -283,20 +433,21 @@ extension ResultsViewManager {
 
         // --- FOLDER NODE -----------------------------------------------------
         if let idStr = pbItem.string(forType: .folderNode),
-           let draggedId = Int64(idStr),
-           let draggedNode = findNode(by: draggedId, in: vm.folderRoots) {
+            let draggedId = Int64(idStr),
+            let draggedNode = vm.findFolder(draggedId)
+        {
 
-            let oldParent = findParent(of: draggedNode, in: vm.folderRoots)
+            let oldParent = vm.findParent(of: draggedNode, in: vm.folderRoots)
 
             do {
                 try vm.moveNode(draggedNode: draggedNode, newParent: newParent)
-                
+
                 // reload UI
                 outlineView.reloadItem(newParent, reloadChildren: true)
                 if let oldParent {
                     outlineView.reloadItem(oldParent, reloadChildren: true)
                 } else {
-                    outlineView.reloadItem(nil, reloadChildren: true) // penting: refresh root results
+                    outlineView.reloadItem(nil, reloadChildren: true)  // penting: refresh root results
                 }
                 return true
             } catch {
@@ -312,22 +463,29 @@ extension ResultsViewManager {
 
         // --- RESULT NODE -----------------------------------------------------
         if let idStr = pbItem.string(forType: .resultNode),
-           let resultId = Int64(idStr) {
+            let resultId = Int64(idStr)
+        {
 
             // Pindahkan di memory
             do {
                 try vm.moveResult(resultId, to: newParent?.id)
                 // Reload UI: jika ada old folder reload itu, kalau tidak reload root
-                if let oldParentId = Int64(idStr), let oldFolder = vm.findFolder(oldParentId) {
+                if let oldParentId = Int64(idStr),
+                    let oldFolder = vm.findFolder(oldParentId)
+                {
                     outlineView.reloadItem(oldFolder, reloadChildren: true)
                 } else {
-                    outlineView.reloadItem(nil, reloadChildren: true) // penting: refresh root results
+                    outlineView.reloadItem(nil, reloadChildren: true)  // penting: refresh root results
                 }
 
                 outlineView.reloadItem(newParent, reloadChildren: true)
                 return true
             } catch {
-                ReusableFunc.showAlert(title: Self.errorMovingResultTitle, message: Self.errorMovingResultDesc, style: .critical)
+                ReusableFunc.showAlert(
+                    title: Self.errorMovingResultTitle,
+                    message: Self.errorMovingResultDesc,
+                    style: .critical
+                )
             }
 
             return false
@@ -335,25 +493,12 @@ extension ResultsViewManager {
 
         return false
     }
-
-
-    private func findParent(of node: FolderNode, in roots: [FolderNode]) -> FolderNode? {
-        for root in roots {
-            if root.children.contains(where: { $0.id == node.id }) {
-                return root
-            }
-            if let parent = findParent(of: node, in: root.children) {
-                return parent
-            }
-        }
-        return nil
-    }
 }
 
 extension ResultsViewManager: NSTextFieldDelegate {
     func controlTextDidEndEditing(_ obj: Notification) {
         guard let textField = obj.object as? NSTextField,
-              let cell = textField.superview as? NSTableCellView
+            let cell = textField.superview as? NSTableCellView
         else {
             return
         }
@@ -361,7 +506,9 @@ extension ResultsViewManager: NSTextFieldDelegate {
         let row = outlineView.row(for: cell)
         let item = outlineView.item(atRow: row)
 
-        let newName = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newName = textField.stringValue.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         guard !newName.isEmpty else {
             outlineView.reloadItem(item)
             return
@@ -377,21 +524,24 @@ extension ResultsViewManager: NSTextFieldDelegate {
                 try vm.updateFolderName(id: folderNode.id, newName: newName)
             } else if let resultNode = item as? ResultNode {
                 guard resultNode.name != newName else { return }
-                let parent = outlineView.parent(forItem: item) as? FolderNode
                 // Kasus 2: Mengubah nama Result (Query)
                 // Panggil fungsi database untuk memperbarui nama query/result
-                // Dapatkan nilai lama sebelum perubahan
-                let folderId = parent?.id
-
                 // Perbarui model data di ViewModel (penting untuk OutlineView)
                 errorTitle = Self.renameResultErrorTitle
-                try vm.updateResultQueryName(id: resultNode.id, newName: newName, folderId: folderId)
+                try vm.updateResultQueryName(
+                    id: resultNode.id,
+                    newName: newName
+                )
             }
         } catch {
-            ReusableFunc.showAlert(title: errorTitle, message: Self.renameFolderOrResultErrorDesc, style: .critical)
+            ReusableFunc.showAlert(
+                title: errorTitle,
+                message: Self.renameFolderOrResultErrorDesc,
+                style: .critical
+            )
             outlineView.reloadItem(item)
             #if DEBUG
-            print(error)
+                print(error)
             #endif
         }
     }

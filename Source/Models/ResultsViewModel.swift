@@ -12,10 +12,18 @@ class ResultsViewModel {
 
     let db: ResultsHandler = .shared
 
+    // sumber data
     private(set) var folderRoots: [FolderNode] = []
-    private(set) var folderResults: [Int64?: [ResultNode]] = [:] // TAMBAHKAN INI
+    private(set) var folderResults: [Int64?: [ResultNode]] = [:] // hasil per folder (nullable key -> root)
+
+    // CACHE STRUKTURAL (index untuk operasi cepat)
+    private(set) var folderById: [Int64: FolderNode] = [:]
+    private(set) var parentById: [Int64: Int64?] = [:]      // parentById[childId] = parentId (nil = root)
+    private(set) var resultById: [Int64: ResultNode] = [:]  // lookup ResultNode by id
 
     private init() {}
+
+    // MARK: - Initial load / indexes
 
     func getFolders() async {
         var roots = db.fetchFolderTree()
@@ -23,13 +31,7 @@ class ResultsViewModel {
         sortTree(roots)
 
         folderRoots = roots
-    }
-
-    func sortTree(_ nodes: [FolderNode]) {
-        for node in nodes {
-            node.children.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-            sortTree(node.children)
-        }
+        rebuildFolderIndex()
     }
 
     func dbLoadAllResults() async {
@@ -43,13 +45,13 @@ class ResultsViewModel {
                     $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
                 }
                 allResults[folderId] = sortedNodes
+            } else {
+                // ensure empty arrays not stored — keep behavior consistent with existing code
             }
         }
 
-        // load root results (folderId == nil)
         loadResultsForFolderId(nil)
 
-        // load for every folder in tree
         func loadResultsForFolder(_ folder: FolderNode) {
             loadResultsForFolderId(folder.id)
             for child in folder.children {
@@ -62,77 +64,170 @@ class ResultsViewModel {
         }
 
         self.folderResults = allResults
+        rebuildResultIndex()
+    }
+
+    private func rebuildFolderIndex() {
+        folderById.removeAll()
+        parentById.removeAll()
+
+        func walk(_ node: FolderNode, parent: Int64?) {
+            updateFolder(node, newParent: parent)
+            for c in node.children {
+                walk(c, parent: node.id)
+            }
+        }
+
+        for root in folderRoots {
+            walk(root, parent: nil)
+        }
+    }
+
+    private func rebuildResultIndex() {
+        resultById.removeAll()
+        // folderResults keys are Int64?; iterate and map
+        for (folderId, results) in folderResults {
+            for r in results {
+                resultById[r.id] = r
+                // ensure result parentId is consistent
+                r.parentId = folderId
+            }
+        }
+    }
+
+    // MARK: - Folder helpers
+
+    func sortTree(_ nodes: [FolderNode]) {
+        for node in nodes {
+            node.children.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            sortTree(node.children)
+        }
     }
 
     func addRootFolder(name: String) throws {
-        guard let id = try db.insertRootFolder(name: name) else {
-            return
-        }
+        guard let id = try db.insertRootFolder(name: name) else { return }
 
-        folderRoots.append(FolderNode(id: id, name: name))
+        let node = FolderNode(id: id, name: name)
+        folderRoots.append(node)
+        folderRoots.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+        // update caches
+        updateFolder(node, newParent: nil)
     }
 
     func addSubFolder(parentNode: FolderNode, name: String) throws {
-        guard let id = try db.insertSubFolder(
-            parentNode: parentNode,
-            name: name
-        ) else {
-            return
-        }
+        guard let id = try db.insertSubFolder(parentNode: parentNode, name: name) else { return }
 
         let newNode = FolderNode(id: id, name: name)
         parentNode.children.append(newNode)
+        parentNode.children.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+        // update caches
+        updateFolder(newNode, newParent: parentNode.id)
     }
 
-    // Memperbarui nama folder di folderRoots
+    // Memperbarui nama folder — temukan node lewat index, jangan asumsi root
     func updateFolderName(id folderId: Int64, newName: String) throws {
         try db.updateFolderName(id: folderId, newName: newName)
-        if let index = folderRoots.firstIndex(where: { $0.id == folderId }) {
-            folderRoots[index].name = newName
+        if let node = folderById[folderId] {
+            node.name = newName
+            // jika perlu, resort siblings parent.children (optional)
+            if let parentId = parentById[folderId], let pId = parentId {
+                if let parent = folderById[pId] {
+                    parent.children.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                }
+            } else {
+                folderRoots.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            }
+        } else {
+            // fallback: try to find and update (shouldn't happen if index consistent)
+            if let idx = folderRoots.firstIndex(where: { $0.id == folderId }) {
+                folderRoots[idx].name = newName
+            }
         }
     }
 
-    // Memperbarui nama query di folderResults
-    func updateResultQueryName(id resultId: Int64, newName: String, folderId: Int64?) throws {
-        // Cari folder yang sesuai
-        guard let resultsArray = folderResults[folderId] else { return }
+    // Memperbarui nama result berdasarkan id (bukan name)
+    func updateResultQueryName(id resultId: Int64, newName: String) throws {
+        guard let node = resultById[resultId] else { return }
+        let folderId = node.parentId
 
-        // Cari ResultNode yang sesuai di dalam array
-        if let index = resultsArray.firstIndex(where: { $0.id == resultId }) {
-            // Panggil fungsi database BARU untuk memperbarui SEMUA baris
-            try db.updateResultQueryName(
-                folderId: folderId,
-                oldName: resultsArray[index].name,
-                newName: newName
-            )
+        // update DB by id if possible; fallback using existing DB API
+        try db.updateResultQueryName(
+            folderId: folderId,
+            oldName: node.name,
+            newName: newName
+        )
 
-            resultsArray[index].name = newName
-            // Perbarui dictionary
-            folderResults[folderId] = resultsArray
+        // in-memory update
+        node.name = newName
+
+        // keep folderResults sorted
+        if var arr = folderResults[folderId] {
+            if let i = arr.firstIndex(where: { $0.id == resultId }) {
+                arr[i] = node
+                arr.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                folderResults[folderId] = arr
+            }
         }
+
+        // update index
+        resultById[resultId] = node
     }
 
     func deleteFolder(node: FolderNode) {
+        // delete in DB
         db.deleteFolder(node.id)
+
+        // remove results under this subtree
+        let ids = getAllDescendantIds(of: node)
+        for id in ids {
+            // remove folderResults entries for each descendant
+            folderResults.removeValue(forKey: id)
+        }
+
+        // remove resultById entries that belonged to those folders
+        var removedResultIds: [Int64] = []
+        for (rid, rnode) in resultById {
+            if let p = rnode.parentId, ids.contains(p) {
+                removedResultIds.append(rid)
+            }
+        }
+        for rid in removedResultIds { resultById.removeValue(forKey: rid) }
+
+        // remove folder nodes from tree
         removeNodeFromTree(node)
+
+        // update indexes
+        for id in ids {
+            removeFolder(id)
+        }
     }
 
     func deleteResult(_ parentFolderId: Int64?, name: String) {
-        // 1. Delete dari database (atomic)
+        // Prefer deleting by id; but current API deletes by (parent,name)
         db.deleteResult(parentFolderId, name: name)
 
-        // 2. Hapus dari memory
+        // remove from memory
         if var results = folderResults[parentFolderId] {
+            // find all matching ids with same name (if duplicates exist, remove all that match name)
+            let removed = results.filter { $0.name == name }
             results.removeAll(where: { $0.name == name })
 
-            // Update atau hapus entry jika kosong
             if results.isEmpty {
                 folderResults.removeValue(forKey: parentFolderId)
             } else {
                 folderResults[parentFolderId] = results
             }
+
+            // remove from resultById
+            for r in removed {
+                resultById.removeValue(forKey: r.id)
+            }
         }
     }
+
+    // MARK: - Move folder / move result
 
     func moveNode(draggedNode: FolderNode, newParent: FolderNode?) throws {
         try db.updateParent(of: draggedNode.id, to: newParent?.id)
@@ -153,11 +248,20 @@ class ResultsViewModel {
         if let parent = newParent {
             parent.children.append(draggedNode)
             parent.children.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            parentById[draggedNode.id] = parent.id
         } else {
             folderRoots.append(draggedNode)
             folderRoots.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            parentById[draggedNode.id] = nil
         }
 
+        // NOTE:
+        // descendants tetap memiliki parentById yang menunjuk ke immediate parent (yang berada di subtree).
+        // Karena kita memindahkan node sebagai object yang sama, parentById untuk descendant masih valid.
+        // Hanya parentById[draggedNode.id] perlu diupdate (sudah di atas).
+
+        // update folderById if missing (usually not necessary)
+        folderById[draggedNode.id] = draggedNode
         // 4. Update results di semua descendant folders
         let allIds = getAllDescendantIds(of: draggedNode)
         for id in allIds {
@@ -165,6 +269,7 @@ class ResultsViewModel {
         }
     }
 
+    // MARK: - Tree utilities
     private func isDescendant(_ node: FolderNode, of ancestor: FolderNode) -> Bool {
         if node.id == ancestor.id { return true }
 
@@ -176,11 +281,9 @@ class ResultsViewModel {
 
     private func getAllDescendantIds(of node: FolderNode) -> [Int64] {
         var ids: [Int64] = [node.id]
-
         for child in node.children {
             ids.append(contentsOf: getAllDescendantIds(of: child))
         }
-
         return ids
     }
 
@@ -206,44 +309,8 @@ class ResultsViewModel {
         }
     }
 
-    func findFolder(_ id: Int64) -> FolderNode? {
-        for root in folderRoots {
-            if let found = findFolderRecursive(root, id) {
-                return found
-            }
-        }
-        return nil
-    }
-
-    func findFolder(optionalId id: Int64?) -> FolderNode? {
-        guard let id = id else { return nil } // nil berarti root, tidak ada FolderNode
-        return findFolder(id)
-    }
-
-    private func findFolderRecursive(_ node: FolderNode, _ id: Int64) -> FolderNode? {
-        if node.id == id { return node }
-
-        for child in node.children {
-            if let found = findFolderRecursive(child, id) {
-                return found
-            }
-        }
-
-        return nil
-    }
-
-    func findResultNode(_ id: Int64) -> ResultNode? {
-        for (_, results) in folderResults {
-            if let result = results.first(where: { $0.id == id }) {
-                return result
-            }
-        }
-        return nil
-    }
-
-    // gunakan Int64? untuk from dan to
     func moveResult(_ resultId: Int64, to newFolderId: Int64?) throws {
-        guard let node = findResultNode(resultId) else { return }
+        guard let node = resultById[resultId] else { return }
         let oldFolderId = node.parentId
         try db.updateResultParent(
             newParentId: newFolderId,
@@ -251,22 +318,71 @@ class ResultsViewModel {
             name: node.name
         )
 
-        // Hapus dari folder lama (oldFolderId bisa nil)
+        // Update in-memory: remove from old list
         if var oldList = folderResults[oldFolderId] {
             oldList.removeAll { $0.id == resultId }
-            folderResults[oldFolderId] = oldList
+            if oldList.isEmpty {
+                folderResults.removeValue(forKey: oldFolderId)
+            } else {
+                folderResults[oldFolderId] = oldList
+            }
         }
 
-        // Tambah ke folder baru (newFolderId bisa nil = root)
-        folderResults[newFolderId, default: []].append(node)
+        // Change parentId on node
+        node.parentId = newFolderId
 
-        // Sort kembali jika perlu
+        // Add to new folder
+        folderResults[newFolderId, default: []].append(node)
         folderResults[newFolderId] = folderResults[newFolderId]?.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
+
+        // Update index
+        resultById[resultId] = node
     }
 
-    // Cari di semua folder (in-memory)
+    // MARK: - Find helpers using index
+
+    func findFolder(_ id: Int64) -> FolderNode? {
+        return folderById[id]
+    }
+
+    func findResultNode(_ id: Int64) -> ResultNode? {
+        return resultById[id]
+    }
+
+    func findParent(of node: FolderNode, in roots: [FolderNode]) -> FolderNode? {
+        for root in roots {
+            if root.children.contains(where: { $0.id == node.id }) {
+                return root
+            }
+            if let parent = findParent(of: node, in: root.children) {
+                return parent
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Search helpers
+
+    // search folders in memory (returns folder nodes)
+    func searchFoldersInMemory(_ query: String) -> [FolderNode] {
+        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return [] }
+
+        let lower = q.lowercased()
+        var matches: [FolderNode] = []
+
+        for (_, node) in folderById {
+            if node.name.lowercased().contains(lower) {
+                matches.append(node)
+            }
+        }
+
+        return matches.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // search results (all results across folderResults)
     func searchResultsInMemory(_ query: String) -> [ResultNode] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return [] }
@@ -274,31 +390,14 @@ class ResultsViewModel {
         let lower = q.lowercased()
         var matches: [ResultNode] = []
 
-        for (_, results) in folderResults {
-            for r in results {
-                if r.name.lowercased().contains(lower) {
-                    matches.append(r)
-                }
-                // jika ResultNode punya properti lain (mis. body/text) tambahkan ceknya di sini
-                // else if r.body?.lowercased().contains(lower) { matches.append(r) }
+        for (_, r) in resultById {
+            if r.name.lowercased().contains(lower) {
+                matches.append(r)
             }
         }
 
         return matches.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
-    
-    /*
-    // Cari di folder tertentu (folderId bisa nil -> root)
-    func searchResults(inFolder folderId: Int64?, query: String) -> [ResultNode] {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { return [] }
-        let lower = q.lowercased()
-        guard let list = folderResults[folderId] else { return [] }
-        
-        return list.filter { $0.name.lowercased().contains(lower) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-     */
 
     // Mengembalikan tuple (result, folderId, folderPathString)
     func searchResultsWithFolderPath(_ query: String) -> [(result: ResultNode, folderId: Int64?, folderPath: String)] {
@@ -309,36 +408,34 @@ class ResultsViewModel {
         }
     }
 
-    // Helper: buat path folder dari folderRoots; jika nil -> "Root"
+    // Helper: buat path folder dari parentById/folderById; jika nil -> "Root"
     private func folderPath(for folderId: Int64?) -> String {
-        guard let id = folderId else { return "Root" }
+        guard var id = folderId else { return "Root" }
 
-        // cari node
-        if findFolder(optionalId: id) != nil {
-            // naik sampai root — kita butuh parent references; jika FolderNode tidak menyimpan parent,
-            // kita bisa membangun path dengan traversal dari folderRoots.
-            var stack: [String] = []
-            func dfs(_ current: FolderNode, _ targetId: Int64) -> Bool {
-                if current.id == targetId {
-                    stack.insert(current.name, at: 0)
-                    return true
-                }
-                for child in current.children {
-                    if dfs(child, targetId) {
-                        stack.insert(current.name, at: 0)
-                        return true
-                    }
-                }
-                return false
+        var parts: [String] = []
+        while let node = folderById[id] {
+            parts.insert(node.name, at: 0)
+            if let parent = parentById[id], let p = parent {
+                id = p
+            } else {
+                break
             }
-
-            for root in folderRoots {
-                if dfs(root, id) { break }
-            }
-            return stack.joined(separator: " / ")
-        } else {
-            return "Unknown Folder"
         }
+        return parts.joined(separator: " / ")
     }
 
+    // Cache helper
+    private func updateFolder(
+        _ folder: FolderNode,
+        newParent: Int64?
+    ) {
+        // Single point untuk update semua cache
+        folderById[folder.id] = folder
+        parentById[folder.id] = newParent
+    }
+
+    private func removeFolder(_ id: Int64) {
+        folderById.removeValue(forKey: id)
+        parentById.removeValue(forKey: id)
+    }
 }
