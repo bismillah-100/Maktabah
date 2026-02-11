@@ -219,7 +219,10 @@ class MainWindow: NSWindow {
          */
 
         removeToolbarItem(.trackingSeparator, from: toolbar)
-        if let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .searchContents }) {
+        if #available(macOS 26, *),
+           let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .searchContents }),
+           index >= 0, index < toolbar.items.count
+        {
             toolbar.insertItem(withItemIdentifier: .trackingSeparator, at: index)
         }
     }
