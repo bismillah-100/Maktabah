@@ -475,7 +475,7 @@ extension OptionSearchVC: LibraryViewDelegate {
             return
         }
 
-        guard let bookData = ldm.booksById[tableInt] else {
+        guard let bookData = ldm.getBook([tableInt]).first else {
             #if DEBUG
                 print("bookData not cached")
             #endif

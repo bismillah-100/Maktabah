@@ -20,7 +20,7 @@ extension IbarotTextVC: AnnotationDelegate {
     func didSelect(annotation: Annotation) {
         let bkId = annotation.bkId
         let contentId = annotation.contentId
-        guard let book = LibraryDataManager.shared.booksById[bkId] else {
+        guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
             return
         }
 

@@ -460,7 +460,7 @@ extension IbarotTextVC: TarjamahBDelegate {
     func didSelect(tarjamahB: TarjamahMen, query: String?) async {
         guard
             let bookData = LibraryDataManager
-                .shared.booksById[tarjamahB.bk]
+                .shared.getBook([tarjamahB.bk]).first
         else {
             return
         }

@@ -76,6 +76,29 @@ class LibraryDataManager {
         return rootCats
     }
 
+    func getBook(_ ids: [Int]) -> [BooksData] {
+        var books = [BooksData]()
+        for id in ids {
+            if let book = booksById[id] {
+                books.append(book)
+                continue
+            }
+
+            do {
+                if let book =  try db.fetchBook(byId: id) {
+                    booksById[id] = book
+                    books.append(book)
+                }
+            } catch {
+                #if DEBUG
+                    print(error.localizedDescription)
+                #endif
+            }
+        }
+
+        return books
+    }
+
     func buildArchive() async {
         if !archives.isEmpty { return }
         // gunakan var lokal agar thread-safe selama build

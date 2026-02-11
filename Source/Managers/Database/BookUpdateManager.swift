@@ -50,7 +50,7 @@ final class BookUpdateManager {
         for entry in entries {
             // Ambil nama buku dari LibraryDataManager
             let bookName =
-                LibraryDataManager.shared.booksById[entry.bkid]?.book
+            LibraryDataManager.shared.getBook([entry.bkid]).first?.book
                 ?? entry.bk
 
             // Periksa versi saat ini di database

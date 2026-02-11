@@ -435,7 +435,8 @@ final class AnnotationManager {
             let root = AnnotationNode(title: "All Books")
             let anns = self.loadAnnotations()
             let grouped = Dictionary(grouping: anns, by: { $0.bkId })
-            let sortedBooks = grouped.keys.compactMap { LibraryDataManager.shared.booksById[$0] }
+            let sortedBooks = grouped.keys
+                .compactMap { LibraryDataManager.shared.getBook([$0]).first }
                 .sorted { $0.book.localizedCaseInsensitiveCompare($1.book) == .orderedAscending }
 
             for book in sortedBooks {
@@ -559,7 +560,7 @@ final class AnnotationManager {
             return existing
         }
 
-        guard let book = LibraryDataManager.shared.booksById[bkId] else {
+        guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
             let fallbackNode = AnnotationNode(title: "Unknown Book")
             root.children.append(fallbackNode)
             return fallbackNode

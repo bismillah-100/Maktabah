@@ -127,7 +127,7 @@ class TarjamahGlobalManager {
 
                 var t = TarjamahMen(name: name, bk: bk, id: id)
 
-                if let bookData = LibraryDataManager.shared.booksById[bk] {
+                if let bookData = LibraryDataManager.shared.getBook([bk]).first {
                     t.bookTitle = bookData.book
                     t.archive   = bookData.archive
                 }
@@ -184,7 +184,7 @@ class TarjamahGlobalManager {
 
                 var t = TarjamahMen(name: isoStr, bk: bk, id: id) // manid nil di men_u
 
-                if let bookData = LibraryDataManager.shared.booksById[bk] {
+                if let bookData = LibraryDataManager.shared.getBook([bk]).first {
                     t.bookTitle = bookData.book
                     t.archive = bookData.archive
                 }
@@ -238,7 +238,7 @@ class TarjamahGlobalManager {
 
                 var t = TarjamahMen(name: name, bk: bk, id: id)
 
-                if let bookData = LibraryDataManager.shared.booksById[bk] {
+                if let bookData = LibraryDataManager.shared.getBook([bk]).first {
                     t.bookTitle = bookData.book
                     t.archive = bookData.archive
                 }

@@ -196,7 +196,7 @@ extension ResultsHandler {
 
                 for cid in contentsId {
                     guard let idInt = Int(cid),
-                          let book = LibraryDataManager.shared.booksById[row[bkId]]
+                          let book = LibraryDataManager.shared.getBook([row[bkId]]).first
                     else { continue }
 
                     let item = SavedResultsItem(
