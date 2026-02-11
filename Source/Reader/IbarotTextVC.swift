@@ -112,7 +112,7 @@ class IbarotTextVC: NSViewController {
         if let page {
             let pageString = String(page)
             let pageArb = pageString.convertToArabicDigits()
-            if let part, part != 0 {
+            if let part {
                 currentPart = part
                 let partString = String(part)
                 let partArb = partString.convertToArabicDigits()
