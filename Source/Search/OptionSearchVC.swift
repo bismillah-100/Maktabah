@@ -64,6 +64,7 @@ class OptionSearchVC: NSViewController {
         searchField.recentsAutosaveName = "SearchInSelectedBooks"
         searchField.delegate = self
         tableView.userInterfaceLayoutDirection = .leftToRight
+        ReusableFunc.setupSearchField(searchField)
         if #available(macOS 26.0, *) {  // PERINGATAN: Ganti 26.0 dengan versi macOS yang aktual
             progressTable.controlSize = .small
             progressRows.controlSize = .small

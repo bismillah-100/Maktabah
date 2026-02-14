@@ -366,16 +366,16 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="8TA-o4-jDi"/>
-                            <menuItem title="Next Page" image="arrow.right" catalog="system" keyEquivalent="" id="CRE-7g-vUN">
+                            <menuItem title="Next Page" image="arrow.left" catalog="system" keyEquivalent="" id="CRE-7g-vUN">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="previousPage:" target="-1" id="2yP-Ve-hdx"/>
+                                    <action selector="nextPage:" target="-1" id="lOY-Kh-117"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Previous Page" image="arrow.left" catalog="system" keyEquivalent="" id="aJX-oS-mds">
+                            <menuItem title="Previous Page" image="arrow.right" catalog="system" keyEquivalent="" id="aJX-oS-mds">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="nextPage:" target="-1" id="DaN-l4-pzb"/>
+                                    <action selector="previousPage:" target="-1" id="wuH-wi-xyZ"/>
                                 </connections>
                             </menuItem>
                         </items>

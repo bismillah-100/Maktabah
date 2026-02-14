@@ -44,7 +44,9 @@ class RowiSplitVC: NSSplitViewController, RootSplitView {
         sidebarVC.delegate = resultsSplitVC.rowiResultsVC
         ibarotTextVC = resultsSplitVC.viewerSplitVC.ibarotVC
         viewerSplitVC = resultsSplitVC.viewerSplitVC
-        viewerSplitVC?.splitView.autosaveName = "AuthorViewerSplitView"
+        if !MainWindow.rtl {
+            viewerSplitVC?.splitView.autosaveName = "AuthorViewerSplitView"
+        }
         splitView.autosaveName = "RowiSplitVC_autoSaveSplitView"
         // Do view setup here.
     }

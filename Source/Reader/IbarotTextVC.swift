@@ -347,7 +347,11 @@ extension IbarotTextVC: NavigationDelegate {
         let range = diacritics ? ann.rangeDiacritics : ann.range
 
         textView.scrollRangeToVisible(range)
-        textView.showFindIndicator(for: range)  // Animasi indicator (opsional)
+        Task { [weak self] in
+            await Task.yield()
+            await Task.yield()
+            self?.textView.showFindIndicator(for: range)
+        }
     }
 
     @MainActor

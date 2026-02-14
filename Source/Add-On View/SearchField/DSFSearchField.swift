@@ -68,7 +68,7 @@ import AppKit
     }
 
     var rtl: Bool {
-        window?.windowTitlebarLayoutDirection == .rightToLeft
+        MainWindow.rtl
     }
 
     // Show custom menu on mouse down and make field first responder

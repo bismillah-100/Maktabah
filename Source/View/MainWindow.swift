@@ -30,12 +30,15 @@ class MainWindow: NSWindow {
     private(set) var searchSplitVC: SearchSplitView?
     private(set) var authorSplitVC: RowiSplitVC?
 
-    var rtl: Bool {
-        windowTitlebarLayoutDirection == .rightToLeft
+    static var rtl: Bool {
+        let languageCode = Locale.current.language.languageCode?.identifier ?? "en"
+        let isRTL = Locale.Language(identifier: languageCode).characterDirection == .rightToLeft
+        return isRTL
     }
 
     override func awakeFromNib() {
-        modeSegmentToolbarItem.isNavigational = !rtl
+        sidebarTrailing.isNavigational = Self.rtl
+        searchSidebarTrailing.isNavigational = Self.rtl
 
         Task { @MainActor in
             // Restore last mode dari UserDefaults
@@ -219,7 +222,7 @@ class MainWindow: NSWindow {
          */
 
         removeToolbarItem(.trackingSeparator, from: toolbar)
-        if #available(macOS 26, *),
+        if #available(macOS 26, *), !Self.rtl,
            let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .searchContents }),
            index >= 0, index < toolbar.items.count
         {

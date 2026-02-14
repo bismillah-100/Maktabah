@@ -21,7 +21,7 @@ class QuranWindow: NSWindow {
     }
 
     var rtl: Bool {
-        windowTitlebarLayoutDirection == .rightToLeft
+        MainWindow.rtl
     }
 
     override func awakeFromNib() {

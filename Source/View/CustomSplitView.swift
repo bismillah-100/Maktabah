@@ -38,7 +38,8 @@ class CustomSplitView: NSSplitView {
 
     func updateDividerColor(to bgColor: BackgroundColor) {
         customDividerColor = switch bgColor {
-        case .black, .gray, .white, .darkSepia: .separatorColor
+        case .black, .gray, .white: .separatorColor
+        case .darkSepia: bgColor.nsColor.shadow(withLevel: 0.2) ?? bgColor.nsColor
         case .sepia: bgColor.nsColor.shadow(withLevel: 0.3) ?? bgColor.nsColor
         }
     }

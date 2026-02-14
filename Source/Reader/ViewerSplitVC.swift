@@ -32,15 +32,19 @@ class ViewerSplitVC: NSSplitViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let ltr = splitView.userInterfaceLayoutDirection == .leftToRight
+        let ltr = !MainWindow.rtl
 
         ibarotVC = IbarotTextVC()
         let ibarot: NSSplitViewItem
         let sidebar: NSSplitViewItem
 
         if #available(macOS 26, *) {
-            sidebar = NSSplitViewItem(inspectorWithViewController: sidebarVC)
             ibarot = NSSplitViewItem(viewController: ibarotVC)
+            if ltr {
+                sidebar = NSSplitViewItem(inspectorWithViewController: sidebarVC)
+            } else {
+                sidebar = NSSplitViewItem(viewController: sidebarVC)
+            }
         } else {
             sidebar = NSSplitViewItem(viewController: sidebarVC)
             ibarot = NSSplitViewItem(viewController: ibarotVC)
@@ -55,15 +59,25 @@ class ViewerSplitVC: NSSplitViewController {
             sidebarItem.allowsFullHeightLayout = true
             sidebarItem.titlebarSeparatorStyle = .automatic
             sidebarItem.minimumThickness = 135
-            sidebarItem.holdingPriority = NSLayoutConstraint.Priority(251)
+
+            if ltr {
+                sidebarItem.holdingPriority = NSLayoutConstraint.Priority(251)
+            } else {
+                sidebarItem.holdingPriority = NSLayoutConstraint.Priority(260)
+                ibarotTextItem.holdingPriority = NSLayoutConstraint.Priority(250)
+            }
 
             if #available(macOS 26, *) {
-                addSplitViewItem(ibarotTextItem)
-                addSplitViewItem(sidebarItem)
+                if ltr {
+                    addSplitViewItem(ibarotTextItem)
+                    addSplitViewItem(sidebarItem)
+                } else {
+                    addSplitViewItem(sidebarItem)
+                    addSplitViewItem(ibarotTextItem)
+                }
             } else if ltr {
                 addSplitViewItem(ibarotTextItem)
                 addSplitViewItem(sidebarItem)
-                sidebarItem.holdingPriority = NSLayoutConstraint.Priority(260)
             } else {
                 addSplitViewItem(sidebarItem)
                 addSplitViewItem(ibarotTextItem)
@@ -252,7 +266,7 @@ class ViewerSplitVC: NSSplitViewController {
     }
 
     private func updateDivider(for bg: BackgroundColor) {
-        if #available(macOS 26, *) {
+        if #available(macOS 26, *), !MainWindow.rtl {
             return
         } else if let splitView = splitView as? CustomSplitView {
             // Update warna divider

@@ -3,6 +3,7 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="NSView safe area layout guides" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -19,9 +20,8 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customView id="c22-O7-iKe">
+        <customView translatesAutoresizingMaskIntoConstraints="NO" id="c22-O7-iKe">
             <rect key="frame" x="0.0" y="0.0" width="135" height="377"/>
-            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <button verticalHuggingPriority="750" id="54F-3B-nyc">
                     <rect key="frame" x="54" y="177" width="27" height="23"/>
@@ -130,12 +130,14 @@ Gw
                         </searchField>
                     </subviews>
                     <constraints>
-                        <constraint firstItem="y6P-iD-BOi" firstAttribute="leading" secondItem="hbV-qX-hTf" secondAttribute="leading" constant="4" id="25e-oU-2zo"/>
+                        <constraint firstItem="y6P-iD-BOi" firstAttribute="leading" secondItem="B5E-i9-M7f" secondAttribute="leading" constant="4" id="25e-oU-2zo"/>
                         <constraint firstAttribute="height" constant="30" id="6tZ-Dg-jf1"/>
-                        <constraint firstItem="y6P-iD-BOi" firstAttribute="top" secondItem="hbV-qX-hTf" secondAttribute="top" constant="4" id="GDj-A3-SjQ"/>
-                        <constraint firstAttribute="bottom" secondItem="y6P-iD-BOi" secondAttribute="bottom" constant="4" id="k5q-XP-TOa"/>
-                        <constraint firstAttribute="trailing" secondItem="y6P-iD-BOi" secondAttribute="trailing" constant="4" id="p8A-hw-vMu"/>
+                        <constraint firstItem="y6P-iD-BOi" firstAttribute="top" secondItem="B5E-i9-M7f" secondAttribute="top" constant="4" id="GDj-A3-SjQ"/>
+                        <constraint firstItem="B5E-i9-M7f" firstAttribute="bottom" secondItem="y6P-iD-BOi" secondAttribute="bottom" constant="4" id="k5q-XP-TOa"/>
+                        <constraint firstItem="B5E-i9-M7f" firstAttribute="trailing" secondItem="y6P-iD-BOi" secondAttribute="trailing" constant="4" id="p8A-hw-vMu"/>
                     </constraints>
+                    <viewLayoutGuide key="safeArea" id="B5E-i9-M7f"/>
+                    <viewLayoutGuide key="layoutMargins" id="qNI-aZ-FKv"/>
                 </customView>
             </subviews>
             <constraints>

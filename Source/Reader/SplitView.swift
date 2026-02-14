@@ -65,7 +65,9 @@ class SplitView: NSSplitViewController, RootSplitView {
             viewerSplitVC = containerVC
         }
 
-        viewerSplitVC?.splitView.autosaveName = "LibraryViewerSplitView"
+        if !MainWindow.rtl {
+            viewerSplitVC?.splitView.autosaveName = "LibraryViewerSplitView"
+        }
         splitView.autosaveName = "ReaderSplitView"
     }
 }

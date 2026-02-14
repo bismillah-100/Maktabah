@@ -59,8 +59,9 @@ class SearchSplitView: NSSplitViewController, RootSplitView, ToolbarActionDelega
         optionSearchVC?.searchSplitVC = self
         viewerSplitVC = resultsSplitVC.viewerVC
         optionSearchVC?.libraryViewManager = searchSidebarVC.dataVM
-        viewerSplitVC?.splitView.autosaveName = "SearchViewerSplitView"
-        
+        if !MainWindow.rtl {
+            viewerSplitVC?.splitView.autosaveName = "SearchViewerSplitView"
+        }
         splitView.autosaveName = "SearchSplitView_autoSaveSplitviews"
     }
 }

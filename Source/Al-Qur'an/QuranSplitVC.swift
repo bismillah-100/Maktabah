@@ -53,8 +53,8 @@ class QuranSplitVC: NSSplitViewController {
             addSplitViewItem(textVCItem)
         } else {
             addSplitViewItem(textVCItem)
-            addSplitViewItem(sidebarSurahItem)
             addSplitViewItem(tafseerItem)
+            addSplitViewItem(sidebarSurahItem)
         }
 
         sidebarSurah.delegate = textVC
