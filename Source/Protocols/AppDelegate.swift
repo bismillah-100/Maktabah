@@ -474,18 +474,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @IBAction func showDiacritics(_ sender: NSMenuItem) {
-        sender.state = sender.state == .on ? .off : .on
-
-        let isChecked = sender.state == .on
-        UserDefaults.standard.textViewShowHarakat = isChecked
-
-        NotificationCenter.default.post(
-            name: .didChangeHarakat,
-            object: nil,
-            userInfo: ["on": isChecked,
-                       "appDelegate": true
-                      ]
-        )
+        TextViewState.shared.toggleHarakat()
     }
     
     @objc private func showCurrentBookInfo(_ sender: NSMenuItem) {

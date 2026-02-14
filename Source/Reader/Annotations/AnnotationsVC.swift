@@ -3,6 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
+//  Fix Reveal In Finder after change personal data folder
 //
 
 import Cocoa
@@ -38,6 +39,7 @@ class AnnotationsVC: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         floatMenuItem.state = .on
+        ReusableFunc.setupSearchField(searchField)
     }
 
     override func viewDidAppear() {
@@ -57,7 +59,6 @@ class AnnotationsVC: NSViewController {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 ReusableFunc.closeProgressWindow(view)
-                ReusableFunc.setupSearchField(searchField)
                 isDataLoaded = true
             }
         }
@@ -134,13 +135,10 @@ class AnnotationsVC: NSViewController {
     }
 
     @IBAction func revealInFinder(_ sender: Any?) {
-        let fm = FileManager.default
-        if let appSupport = try? fm.url(for: .applicationSupportDirectory,
-                                         in: .userDomainMask,
-                                         appropriateFor: nil,
-                                         create: false) {
-            let appDir = appSupport.appendingPathComponent("Maktabah", isDirectory: true)
-            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: appDir.path)
+        if let annotationsFolder = AppConfig.folder(
+                for: AppConfig.annotationsAndResultsFolder
+            ) {
+            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: annotationsFolder.path)
         }
     }
 

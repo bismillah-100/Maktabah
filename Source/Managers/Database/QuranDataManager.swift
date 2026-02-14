@@ -25,7 +25,7 @@ class QuranDataManager {
     private init() {
         guard let path else { return }
         if sqlite3_open(path, &db) != SQLITE_OK {
-            defer { sqlite3_close(db) }
+            do { sqlite3_close(db) }
             #if DEBUG
             print("error saat mencoba membuka database")
             #endif

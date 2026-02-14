@@ -225,6 +225,10 @@ class ReusableFunc {
                 return ""
             }
 
+            if decompressedSize < Int(expectedSize) {
+                outputBuffer.removeSubrange(decompressedSize..<outputBuffer.count)
+            }
+
             return String(data: outputBuffer, encoding: .utf8) ?? ""
         }
     }

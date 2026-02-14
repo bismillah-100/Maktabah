@@ -410,6 +410,38 @@ extension ResultsViewManager {
             return []
         }
 
+        // Jika yang di-drag adalah folder, jangan izinkan drop
+        // jika folder tujuan merupakan child (atau sama) dari folder yang di-drag.
+        if let pbItems = info.draggingPasteboard.pasteboardItems {
+            for pb in pbItems {
+                // 1. Ambil data dasar dan pastikan target adalah FolderNode
+                guard let idStr = pb.string(forType: .folderNode),
+                      let draggedId = Int64(idStr),
+                      let draggedNode = vm.findFolder(draggedId),
+                      let targetFolder = item as? FolderNode else {
+                    continue // Lanjut ke item pasteboard berikutnya jika data tidak cocok
+                }
+
+                // 2. Cek hubungan silsilah (Ancestry Check)
+                var current: FolderNode? = targetFolder
+
+                while let cur = current {
+                    // Jika target adalah dirinya sendiri atau anak dari dirinya sendiri
+                    if cur.id == draggedNode.id {
+                        return [] 
+                    }
+
+                    // 3. Naik ke parent berikutnya menggunakan guard
+                    // Jika parentId nil atau folder tidak ditemukan, break (sudah sampai root)
+                    guard let parentId = vm.parentById[cur.id] ?? nil,
+                          let nextParent = vm.findFolder(parentId) else {
+                        break
+                    }
+                    current = nextParent
+                }
+            }
+        }
+        
         return .move
     }
 }

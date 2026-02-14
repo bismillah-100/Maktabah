@@ -157,14 +157,12 @@ extension AppDelegate {
 
     fileprivate struct GitHubRelease: Codable {
         let tagName: String
-        let name: String?
         let body: String?
         let htmlUrl: String
         let assets: [Asset]?
 
         enum CodingKeys: String, CodingKey {
             case tagName = "tag_name"
-            case name
             case body
             case htmlUrl = "html_url"
             case assets
