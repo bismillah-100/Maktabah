@@ -52,8 +52,8 @@ class SavedResults: NSViewController {
         let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
         let alert = NSAlert()
         alert.messageText = "Create New Folder".localized
-        alert.addButton(withTitle: "Cancel".localized)
         alert.addButton(withTitle: "Save".localized)
+        alert.addButton(withTitle: "Cancel".localized)
         alert.accessoryView = textField
 
         let response = alert.runModal()

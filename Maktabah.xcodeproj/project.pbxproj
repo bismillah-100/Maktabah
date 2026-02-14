@@ -169,7 +169,7 @@
 		4B2649912F355BE100479175 /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/AnnotationEditorVC.xcstrings; sourceTree = "<group>"; };
 		4B2FAD992EED472E008E933E /* TOCLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOCLoader.swift; sourceTree = "<group>"; };
 		4B3202282EDAFE85003B95D1 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maktabah.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4B32022B2EDAFE85003B95D1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4B32022B2EDAFE85003B95D1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = "<none>"; };
 		4B32022D2EDAFE88003B95D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4B32023C2EDB0F76003B95D1 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 		4B3202402EDB0FD3003B95D1 /* SplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitView.swift; sourceTree = "<group>"; };

@@ -1216,25 +1216,18 @@
         }
       }
     },
-    "New Version %@ (%d) available" : {
-      "comment" : "Pesan versi baru",
+    "New Version %@ available" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الإصدار الجديد %1$@ (%2$d) متوفر"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "New Version %1$@ (%2$d) available"
+            "value" : "الإصدار الجديد %@ متوفر"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Versi Terbaru %1$@ (%2$d) tersedia"
+            "value" : "Versi Terbaru %@ tersedia"
           }
         }
       }
@@ -1261,7 +1254,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ا توجد كتب مفتوحة حاليًا متاحة لعملية البحث."
+            "value" : "لا توجد كتب مفتوحة حاليًا متاحة لعملية البحث."
           }
         },
         "en" : {
@@ -1749,6 +1742,22 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "View Details" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض التفاصيل"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lihat Detail"
+          }
+        }
+      }
     },
     "ViewOptions" : {
       "localizations" : {

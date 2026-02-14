@@ -7,180 +7,242 @@
 
 import AppKit
 
-private var tempFilePath: URL {
-    // Mendapatkan URL Application Support untuk user saat ini
-    let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-
-    return appSupport.appendingPathComponent("AppUpdate.csv")
-}
-
 extension AppDelegate {
-
-    /**
-     Memeriksa pembaruan aplikasi dengan membandingkan versi dan build aplikasi saat ini dengan data yang diambil dari file CSV.
-     
-     Fungsi ini melakukan langkah-langkah berikut:
-     1. Memeriksa apakah pembaruan telah diunduh sebelumnya dan menunggu untuk diinstal ulang saat aplikasi ditutup. Jika ya, tampilkan pemberitahuan dan keluar dari fungsi.
-     2. Mengambil data pembaruan dari file CSV yang terletak di URL yang ditentukan.
-     3. Membandingkan versi dan build aplikasi saat ini dengan versi dan build terbaru yang tersedia dari data CSV.
-     4. Jika versi atau build terbaru lebih tinggi dari versi atau build saat ini, fungsi akan:
-     - Menampilkan `NSAlert` untuk opsi membuka link download.
-     5. Jika pemeriksaan dilakukan saat peluncuran aplikasi dan versi/build terbaru tidak lebih tinggi dari versi/build yang disimpan untuk dilewati, fungsi akan keluar.
-     6. Jika pemeriksaan dilakukan saat peluncuran aplikasi dan ada pembaruan yang tersedia, fungsi akan menampilkan pemberitahuan tentang pembaruan yang tersedia.
-     7. Jika pemeriksaan tidak dilakukan saat peluncuran aplikasi dan tidak ada pembaruan yang tersedia, fungsi akan menampilkan pemberitahuan bahwa tidak ada pembaruan.
-     8. Jika pemeriksaan tidak dilakukan saat peluncuran aplikasi dan ada pembaruan yang tersedia, fungsi akan:
-     - Menyimpan versi dan build aplikasi saat ini ke dalam UserDefaults.
-     - Menyimpan URL pembaruan ke dalam UserDefaults.
-     - Membuka aplikasi agen untuk melakukan pembaruan.
-     9. Menghapus file sementara jika ada.
-     - Parameter atLaunch: Tidak menampilkan `NSAlert` jika tidak ada pembaruan dan bernilai `true`.
-     */
     func checkAppUpdates(_ atLaunch: Bool = true) async {
-        let checkAtStart = UserDefaults.standard.bool(forKey: "SuppressUpdateCheck")
+        let checkAtStart = UserDefaults.standard.bool(
+            forKey: "SuppressUpdateCheck"
+        )
 
         if !checkAtStart, atLaunch {
             return
         }
 
-        guard let isConnected = try? await ReusableFunc.checkInternetConnectivityDirectly(), isConnected 
+        guard
+            let isConnected =
+                try? await ReusableFunc.checkInternetConnectivityDirectly(),
+            isConnected
         else { return }
 
-        fetchCSVData(from: "https://drive.google.com/uc?export=download&id=1mITjjMwdPE6DFaZPvizq6crMBqbQxfNt") { updates in
-            guard let (version, build, link) = updates else { return }
-            // Versi aplikasi saat ini
-            let currentVersion = Double(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0") ?? 0
-            let currentBuild = Double(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0") ?? 0
+        // Fetch dari GitHub Releases API
+        await fetchLatestRelease { release in
+            guard let release else { return }
 
-            // Gabungkan semua release notes
-            if version > currentVersion || (version == currentVersion && build > currentBuild) {
+            // Parse current version dari Info.plist
+            let currentVersionStr =
+                Bundle.main.infoDictionary?["CFBundleShortVersionString"]
+                as? String ?? "0.0.0"
+            let currentBuildStr =
+                Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
 
-                // Jalankan UI di Main Thread
-                DispatchQueue.main.async {
-                    let alert = NSAlert()
-                    alert.messageText = NSLocalizedString("Application Update", comment: "Judul NSAlert untuk update aplikasi")
-                    let infoFormat = NSLocalizedString("New Version %@ (%d) available", comment: "Pesan versi baru")
-                    alert.informativeText = String(format: infoFormat, "\(version)", Int(build))
-                    alert.alertStyle = .informational
+            let currentParts = currentVersionStr.split(separator: ".")
+                .compactMap { Int($0) }
+            let currentMajor = currentParts.count > 0 ? currentParts[0] : 0
+            let currentMinor = currentParts.count > 1 ? currentParts[1] : 0
+            let currentPatch =
+                currentParts.count > 2
+                ? currentParts[2] : Int(currentBuildStr) ?? 0
 
-                    // Tombol pertama (index 1000)
-                    alert.addButton(withTitle: NSLocalizedString("Download Update", comment: ""))
-                    // Tombol kedua (index 1001)
-                    alert.addButton(withTitle: NSLocalizedString("Later", comment: ""))
+            #if DEBUG
+                print(
+                    "currentMajor:",
+                    currentMajor,
+                    "currentMinor:",
+                    currentMinor,
+                    "currentPatch:",
+                    currentPatch
+                )
+                print(
+                    "relase.major:",
+                    release.major,
+                    "release.minor:",
+                    release.minor,
+                    "release.patch:",
+                    release.patch
+                )
+            #endif
 
-                    // --- TAMBAHKAN SUPPRESS BUTTON DISINI ---
-                    alert.showsSuppressionButton = true
-                    alert.suppressionButton?.title = NSLocalizedString("Check at Start", comment: "")
-                    alert.suppressionButton?.state = checkAtStart ? .on : .off
-                    // ----------------------------------------
-
-                    // Menampilkan alert secara modal
-                    let response = alert.runModal()
-
-                    // Simpan status suppress jika dicentang
-                    if alert.suppressionButton?.state == .on {
-                        UserDefaults.standard.set(true, forKey: "SuppressUpdateCheck")
-                    } else {
-                        UserDefaults.standard.set(false, forKey: "SuppressUpdateCheck")
-                    }
-
-                    if response == .alertFirstButtonReturn {
-                        // Jika user klik "Download Update"
-                        NSWorkspace.shared.open(link)
-                    }
-                }
+            // Compare versions
+            let needsUpdate: Bool
+            if release.major > currentMajor {
+                needsUpdate = true
+            } else if release.major == currentMajor
+                && release.minor > currentMinor
+            {
+                needsUpdate = true
+            } else if release.major == currentMajor
+                && release.minor == currentMinor && release.patch > currentPatch
+            {
+                needsUpdate = true
             } else {
-                if !atLaunch {
-                    DispatchQueue.main.async {
-                        ReusableFunc.showAlert(title: NSLocalizedString("This is the latest version", comment: "Aplikasi sudah versi terbaru"), message: "")
-                    }
-                }
-                #if DEBUG
-                    print("currentVersion: \(currentVersion), currentBuild: (\(currentBuild)). newVersion: \(version) (\(build))")
-                #endif
+                needsUpdate = false
             }
 
-            do {
-                if FileManager.default.fileExists(atPath: tempFilePath.path) {
-                    try FileManager.default.removeItem(at: tempFilePath)
+            DispatchQueue.main.async(qos: .utility) { [needsUpdate, atLaunch] in
+                let alert = NSAlert()
+                alert.showsSuppressionButton = true
+                alert.suppressionButton?.title = NSLocalizedString(
+                    "Check at Start",
+                    comment: ""
+                )
+                alert.suppressionButton?.state = checkAtStart ? .on : .off
+                if needsUpdate {
+                    alert.messageText = NSLocalizedString(
+                        "Application Update",
+                        comment: ""
+                    )
+                    alert.informativeText = String(
+                        format: NSLocalizedString(
+                            "New Version %@ available",
+                            comment: ""
+                        ),
+                        release.versionString
+                    )
+
+                    if !release.notes.isEmpty {
+                        let preview = String(release.notes.prefix(200))
+                        let truncated = release.notes.count > 200 ? "..." : ""
+                        alert.informativeText += "\n\n" + preview + truncated
+                    }
+
+                    alert.alertStyle = .informational
+                    alert.addButton(
+                        withTitle: NSLocalizedString(
+                            "Download Update",
+                            comment: ""
+                        )
+                    )
+                    alert.addButton(
+                        withTitle: NSLocalizedString(
+                            "View Details",
+                            comment: ""
+                        )
+                    )
+                    alert.addButton(
+                        withTitle: NSLocalizedString("Later", comment: "")
+                    )
+
+                    let response = alert.runModal()
+
+                    UserDefaults.standard.set(
+                        alert.suppressionButton?.state == .on,
+                        forKey: "SuppressUpdateCheck"
+                    )
+
+                    if response == .alertFirstButtonReturn {
+                        // Download
+                        NSWorkspace.shared.open(release.downloadURL)
+                    } else if response == .alertSecondButtonReturn {
+                        // View Details
+                        if let releaseURL = URL(
+                            string:
+                                "https://github.com/USERNAME/maktabah/releases/latest"
+                        ) {
+                            NSWorkspace.shared.open(releaseURL)
+                        }
+                    }
+                } else {
+                    if !atLaunch {
+                        alert.messageText = NSLocalizedString(
+                            "This is the latest version",
+                            comment: ""
+                        )
+                        alert.runModal()
+                    }
                 }
-            } catch {
-                print(error.localizedDescription)
             }
         }
     }
 
-    /// Mengunduh data CSV dari URL yang diberikan dan memprosesnya untuk mendapatkan informasi versi, build, dan tautan.
-    ///
-    ///
-    /// - Parameter:
-    ///     - urlString: String representasi dari URL tempat file CSV akan diunduh.
-    ///     - completion:
-    ///         - Closure yang dipanggil setelah proses pengunduhan dan parsing selesai. Closure ini menerima sebuah tuple opsional `(Double, URL)?`.
-    ///             - Double pertama adalah versi yang diekstrak dari file CSV.
-    ///             - URL adalah tautan yang diekstrak dari file CSV.
-    ///   Jika terjadi kesalahan selama proses, closure akan dipanggil dengan nilai `nil`.
-    ///
-    /// - Note: Fungsi ini mengunduh file ke lokasi sementara, memprosesnya, dan kemudian menghapus file sementara tersebut.
-    func fetchCSVData(from urlString: String, completion: @escaping ((Double, Double, URL)?) -> Void) {
+    // MARK: - GitHub Releases API
+
+    fileprivate struct GitHubRelease: Codable {
+        let tagName: String
+        let name: String?
+        let body: String?
+        let htmlUrl: String
+        let assets: [Asset]?
+
+        enum CodingKeys: String, CodingKey {
+            case tagName = "tag_name"
+            case name
+            case body
+            case htmlUrl = "html_url"
+            case assets
+        }
+
+        struct Asset: Codable {
+            let name: String
+            let browserDownloadUrl: String
+
+            enum CodingKeys: String, CodingKey {
+                case name
+                case browserDownloadUrl = "browser_download_url"
+            }
+        }
+    }
+
+    fileprivate struct AppRelease {
+        let major: Int
+        let minor: Int
+        let patch: Int
+        let notes: String
+        let downloadURL: URL
+
+        var versionString: String { "\(major).\(minor).\(patch)" }
+    }
+
+    fileprivate func fetchLatestRelease(completion: @escaping (AppRelease?) -> Void) async {
+        let urlString =
+            "https://api.github.com/repos/bismillah-100/maktabah/releases/latest"
+
         guard let url = URL(string: urlString) else {
             completion(nil)
             return
         }
 
-        // Mulai download file
-        let task = URLSession.shared.downloadTask(with: url) { tempURL, _, error in
-            if let error {
-                #if DEBUG
-                    print("Error downloading file: \(error)")
-                #endif
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let release = try JSONDecoder().decode(
+                GitHubRelease.self,
+                from: data
+            )
+
+            // Parse semantic version: v1.2.3
+            let tag = release.tagName.lowercased().replacingOccurrences(
+                of: "v",
+                with: ""
+            )
+            let parts = tag.split(separator: ".").compactMap { Int($0) }
+
+            guard parts.count >= 3 else {
                 completion(nil)
                 return
             }
 
-            guard let tempURL else {
-                #if DEBUG
-                    print("Temp URL is nil")
-                #endif
-                completion(nil)
-                return
+            let downloadURL: URL
+            if let asset = release.assets?.first(where: {
+                $0.name.hasSuffix(".zip")
+            }),
+                let url = URL(string: asset.browserDownloadUrl)
+            {
+                downloadURL = url
+            } else {
+                downloadURL = URL(string: release.htmlUrl)!
             }
 
-            do {
-                if FileManager.default.fileExists(atPath: tempFilePath.path) {
-                    try FileManager.default.removeItem(at: tempFilePath)
-                }
-                // Pindahkan file dari URL temporary ke tempFilePath
-                try FileManager.default.moveItem(at: tempURL, to: tempFilePath)
+            let appRelease = AppRelease(
+                major: parts[0],
+                minor: parts[1],
+                patch: parts[2],
+                notes: release.body ?? "",
+                downloadURL: downloadURL
+            )
 
-                // Baca file CSV dari tempFilePath
-                let content = try String(contentsOf: tempFilePath, encoding: .utf8)
+            completion(appRelease)
 
-                // Normalisasi newline: ganti semua `\r\n` (Windows-style) menjadi `\n` (Unix-style)
-                let normalizedContent = content.replacingOccurrences(of: "\r\n", with: "\n")
-
-                // Parsing CSV
-                let rows = normalizedContent.split(separator: "\n")
-                guard let firstRow = rows.first else {
-                    completion(nil)
-                    return
-                }
-
-                let columns = firstRow.split(separator: ";")
-                if let version = Double(columns[0]),
-                   let build = Double(columns[1]),
-                   let link = URL(string: String(columns[2]))
-                {
-                    completion((version, build, link))
-                } else {
-                    completion(nil)
-                }
-            } catch {
-                #if DEBUG
-                    print("Error reading file: \(error)")
-                #endif
-                completion(nil)
-            }
+        } catch {
+            print("Error fetching GitHub release: \(error)")
+            completion(nil)
         }
-        task.resume()
     }
 }
