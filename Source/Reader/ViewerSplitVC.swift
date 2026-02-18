@@ -29,10 +29,20 @@ class ViewerSplitVC: NSSplitViewController {
 
     var workItemAppereance: DispatchWorkItem?
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        setupLayout()
+    }
 
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    func setupLayout() {
         let ltr = !MainWindow.rtl
+
+        splitView = CustomSplitView(frame: .zero)
+        splitView.isVertical = true
 
         ibarotVC = IbarotTextVC()
         let ibarot: NSSplitViewItem
@@ -165,18 +175,6 @@ class ViewerSplitVC: NSSplitViewController {
             updateDivider(for: getBgColor())
         } else {
             sidebarItem?.isCollapsed = true
-        }
-    }
-
-    func hideTOC() {
-        if sidebarItem?.isCollapsed == false {
-            sidebarItem?.isCollapsed = true
-        }
-    }
-
-    func showTOC() {
-        if sidebarItem?.isCollapsed == true {
-            sidebarItem?.isCollapsed = false
         }
     }
 

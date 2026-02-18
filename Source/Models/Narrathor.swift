@@ -8,7 +8,7 @@
 import Foundation
 
 /// Entry tarjamah dari tabel men_b
-struct TarjamahMen {
+struct TarjamahMen: Codable {
     let name: String        // Nama dalam tarjamah
     let bk: Int            // Book ID (dari tabel 0bok)
     let id: Int            // ID di tabel buku (row id)
@@ -19,7 +19,7 @@ struct TarjamahMen {
 }
 
 /// Hasil tarjamah lengkap dengan konten
-struct TarjamahResult {
+struct TarjamahResult: Codable {
     let tarjamah: TarjamahMen
     let content: String    // Konten dari tabel b{bkid}
 }

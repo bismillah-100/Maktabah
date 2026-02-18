@@ -30,7 +30,6 @@ class RowiResultsVC: NSViewController {
     @IBOutlet weak var optionSegment: NSSegmentedControl!
 
     weak var delegate: TarjamahBDelegate?
-    weak var viewerSplitVC: ViewerSplitVC?
     weak var textView: IbarotTextView?
 
     var didClickButton: Bool = false
@@ -48,13 +47,20 @@ class RowiResultsVC: NSViewController {
 
     let data: RowiDataManager = .shared
 
+    var shouldClickButton: Bool = true
+
     var currentRowi: Rowi? {
         didSet {
-            optionSegment.setSelected(true, forSegment: 0)
+            guard oldValue?.id != currentRowi?.id else { return }
+
             hideStackUtils()
-            selectedButtons?.performClick(nil)
             if let rowi = currentRowi {
+                data.loadRowiData(rowi)
                 rowiTextField.stringValue = rowi.isoName
+            }
+            if shouldClickButton {
+                optionSegment.setSelected(true, forSegment: 0)
+                selectedButtons?.performClick(nil)
             }
             rowiMode = .sidebar
         }
@@ -101,6 +107,11 @@ class RowiResultsVC: NSViewController {
             btns.forEach { btn in
                 btn?.borderShape = .circle
             }
+            hStackSearch.subviews.forEach { view in
+                if let v = view as? NSButton {
+                    v.borderShape = .circle
+                }
+            }
         }
         // Do view setup here.
     }
@@ -108,6 +119,7 @@ class RowiResultsVC: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         updateWindowTitle()
+        ReusableFunc.setupSearchField(searchField)
     }
 
     @MainActor
@@ -227,10 +239,6 @@ class RowiResultsVC: NSViewController {
         rowiMode = .fullSearch
     }
 
-    @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
-
-    }
-
     @IBAction func buttonDidClick(_ sender: NSButton) {
         // 1. Atur status ON/OFF
         selectedButtons = sender
@@ -252,15 +260,20 @@ class RowiResultsVC: NSViewController {
             break
         }
         updateWindowTitle()
-        viewerSplitVC?.hideTOC()
         didClickButton = false
-        delegate?.didSelectRowi()
+
+        delegate?.didSelectRowi(rowi: currentRowi)
+
         if tableView.selectedRow != -1 {
             tableView.deselectAll(nil)
         }
     }
 
-    func updateWindowTitle() {
+    func updateWindowTitle(_ force: Bool = false) {
+        if !force, hStackButtons.allSatisfy({ $0.state == .off }) {
+            return
+        }
+
         view.window?.title = windowTitle
         view.window?.subtitle.removeAll()
     }
@@ -284,6 +297,10 @@ class RowiResultsVC: NSViewController {
 
     func presentTilmidz(for rowi: Rowi) {
         textView?.string = rowi.telmez ?? nullText
+    }
+
+    func turnOffStateButtons() {
+        hStackButtons.forEach({ $0.state = .off })
     }
 }
 
@@ -335,27 +352,99 @@ extension RowiResultsVC: NSTableViewDelegate {
 
     func tableViewSelectionDidChange(_ notification: Notification) {
         let row = tableView.selectedRow
-        guard !didClickButton else {
+        guard !didClickButton, row != -1 else {
             selectedButtons?.performClick(nil)
             return
         }
 
-        guard row != -1  else {
-            return
-        }
+        turnOffStateButtons()
 
-        hStackButtons.forEach( { $0.state = .off} )
         let data = tarjamahList[row]
 
         Task.detached { [weak self] in
             await self?.delegate?.didSelect(tarjamahB: data.tarjamah, query: self?.searchField.stringValue)
-            await MainActor.run { [weak self] in
-                self?.viewerSplitVC?.showTOC()
-            }
         }
     }
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         24
+    }
+}
+
+extension RowiResultsVC: ReaderStateComponent {
+    func updateState(_ state: inout ReaderState) {
+        state.currentRowi = currentRowi
+        state.authorTarjamahResults = tarjamahList
+        state.authorRowiMode = (rowiMode == .sidebar) ? "sidebar" : "fullSearch"
+        if rowiMode == .fullSearch {
+            state.authorSearchQuery = searchField.stringValue
+        }
+        let sidebarSelection: Bool = hStackButtons.contains { $0.state == .on }
+        state.authorDisplayMode = sidebarSelection ? .rowiInfo : .bookContent
+    }
+
+    func restore(from state: ReaderState) {
+        guard let rowi = state.currentRowi else { return }
+
+        shouldClickButton = false
+        currentRowi = rowi
+
+        // Restore mode pencarian penulis
+        if let savedMode = state.authorRowiMode {
+            rowiMode = (savedMode == "sidebar") ? .sidebar : .fullSearch
+
+            if rowiMode == .sidebar {
+                sidebarTarjamahList = state.authorTarjamahResults ?? []
+            } else {
+                searchTarjamahList = state.authorTarjamahResults ?? []
+                searchField.stringValue = state.authorSearchQuery ?? ""
+            }
+
+            updateUIForRestoredMode()
+            tableView.reloadData()
+        }
+
+        // Restore tampilan konten atau info bio
+        if let displayMode = state.authorDisplayMode {
+            if displayMode == .rowiInfo, let btn = selectedButtons {
+                buttonDidClick(btn)
+            } else if displayMode == .bookContent {
+                turnOffStateButtons()
+            }
+        }
+
+        shouldClickButton = true
+    }
+
+    func cleanUpState() {
+        currentRowi = nil
+        sidebarTarjamahList.removeAll()
+        searchTarjamahList.removeAll()
+        searchField.stringValue = ""
+        rowiTextField.stringValue = ""
+        tableView.reloadData()
+        updateWindowTitle(true)
+    }
+
+    // MARK: - UI Update for Restored State
+
+    /// Update UI berdasarkan rowiMode yang di-restore
+    func updateUIForRestoredMode() {
+        switch rowiMode {
+        case .sidebar:
+            hStackSearch.isHidden = true
+            hStack.isHidden = false
+            optionSegment.setSelected(true, forSegment: 0)
+        case .fullSearch:
+            hStack.isHidden = true
+            hStackSearch.isHidden = false
+            optionSegment.setSelected(true, forSegment: 1)
+        }
+
+        rowiTextField.stringValue = "إسم الراوي من الشريط الجانبي"
+
+        #if DEBUG
+            print("🔄 Updated UI for restored mode: \(rowiMode)")
+        #endif
     }
 }

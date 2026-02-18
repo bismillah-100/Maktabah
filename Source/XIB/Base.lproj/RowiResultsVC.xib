@@ -262,39 +262,44 @@
             <point key="canvasLocation" x="-564.5" y="-478.5"/>
         </customView>
         <stackView hidden="YES" distribution="fill" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" id="ogd-g5-ikI">
-            <rect key="frame" x="0.0" y="0.0" width="281" height="24"/>
+            <rect key="frame" x="0.0" y="0.0" width="286" height="24"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <button wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="xvn-qB-uWa">
-                    <rect key="frame" x="0.0" y="0.0" width="39" height="24"/>
-                    <buttonCell key="cell" type="push" bezelStyle="rounded" image="stop.fill" catalog="system" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="tGc-4d-j64">
+                    <rect key="frame" x="0.0" y="0.0" width="32" height="24"/>
+                    <buttonCell key="cell" type="push" bezelStyle="rounded" image="stop.fill" catalog="system" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="tGc-4d-j64">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="24" id="bwq-n9-sij"/>
+                        <constraint firstAttribute="width" constant="32" id="cuF-td-d2D"/>
+                    </constraints>
                     <connections>
                         <action selector="stopSearch:" target="-2" id="lY7-qS-Kkk"/>
                     </connections>
                 </button>
                 <button wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cMj-3z-UH4">
-                    <rect key="frame" x="47" y="0.0" width="36" height="24"/>
-                    <buttonCell key="cell" type="push" bezelStyle="rounded" image="play.fill" catalog="system" imagePosition="overlaps" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Dn1-eX-oTv">
+                    <rect key="frame" x="40" y="0.0" width="32" height="24"/>
+                    <buttonCell key="cell" type="push" bezelStyle="rounded" image="play.fill" catalog="system" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Dn1-eX-oTv">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="24" id="8lr-RH-eZu"/>
+                        <constraint firstAttribute="width" constant="32" id="eDt-JV-aXX"/>
+                    </constraints>
                     <connections>
                         <action selector="startSearch:" target="-2" id="8Mt-0O-qxh"/>
                     </connections>
                 </button>
                 <searchField wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BuX-9L-h8S" customClass="DSFSearchField" customModule="Maktabah" customModuleProvider="target">
-                    <rect key="frame" x="91" y="0.0" width="190" height="24"/>
+                    <rect key="frame" x="80" y="0.0" width="206" height="24"/>
                     <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Search Narrator of Hadith" usesSingleLineMode="YES" bezelStyle="round" id="CRl-Ap-Qp4">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </searchFieldCell>
-                    <connections>
-                        <action selector="searchFieldDidChange:" target="-2" id="2El-WT-3mh"/>
-                    </connections>
                 </searchField>
             </subviews>
             <visibilityPriorities>

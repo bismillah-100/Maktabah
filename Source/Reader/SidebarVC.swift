@@ -278,6 +278,17 @@ class SidebarVC: NSViewController {
         }
         return nil
     }
+
+    func cleanUpOutlineView() {
+        filteredTree.removeAll()
+        tocTree.removeAll()
+        idToRow.removeAll()
+        ranges.removeAll()
+        searchField.stringValue.removeAll()
+        loadingTask?.cancel()
+        loadingTask = nil
+        outlineView.reloadData()
+    }
 }
 
 extension SidebarVC: NSOutlineViewDataSource {

@@ -33,13 +33,16 @@ class QuranSplitVC: NSSplitViewController {
         NSSplitViewItem(viewController: tafseerVC)
     }()
 
-    override var nibName: NSNib.Name? {
-        "SplitView"
+    override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        setupLayout()
     }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        splitView.autosaveName = "QuranSplitView"
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    func setupLayout() {
         sidebarSurahItem.minimumThickness = 115
         sidebarSurahItem.holdingPriority = NSLayoutConstraint.Priority(260)
         tafseerItem.minimumThickness = 150
@@ -58,6 +61,7 @@ class QuranSplitVC: NSSplitViewController {
         }
 
         sidebarSurah.delegate = textVC
+        splitView.autosaveName = "QuranSplitView"
     }
 
     override func viewDidAppear() {

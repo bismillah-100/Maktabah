@@ -1427,6 +1427,28 @@
         }
       }
     },
+    "ResetCurrentView" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين العرض الحالي"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Current View"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Tampilan Saat Ini"
+          }
+        }
+      }
+    },
     "Rowi" : {
       "localizations" : {
         "ar" : {

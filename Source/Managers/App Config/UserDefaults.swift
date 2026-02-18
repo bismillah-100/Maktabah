@@ -6,6 +6,7 @@
 //
 
 import Foundation
+private let key = "LastAppMode"
 
 extension UserDefaults {
     // MARK: - fontSize (Float)
@@ -103,6 +104,20 @@ extension UserDefaults {
         }
     }
 
+    // MARK: - APP MODE
+
+    var lastAppMode: AppMode {
+        get {
+            let int = integer(forKey: key)
+            if let appMode = AppMode(rawValue: int) {
+                return appMode
+            }
+            return .viewer
+        }
+        set {
+            set(newValue.rawValue, forKey: key)
+        }
+    }
     enum TextViewKeys {
         static let fontSize = "textViewFontSize"
         static let fontName = "textViewFontName"

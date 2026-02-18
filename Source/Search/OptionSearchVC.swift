@@ -25,11 +25,11 @@ class OptionSearchVC: NSViewController {
     // Array penampung hasil
     var results: [SearchResultItem] = []
 
+    static var query: String = .init()
+
     var searchText: String = .init() {
         didSet {
-            if searchSplitVC != nil {
-                SearchSplitView.query = searchText
-            }
+            Self.query = searchText
         }
     }
 
@@ -42,7 +42,6 @@ class OptionSearchVC: NSViewController {
     weak var delegate: LibraryDelegate?
     weak var itemDelegate: OptionSearchDelegate?
     weak var libraryViewManager: LibraryViewManager?
-    weak var searchSplitVC: SearchSplitView?
 
     var bkId: String = ""
     var onSelectedItem: ((Int, String) -> Void)?
@@ -65,7 +64,7 @@ class OptionSearchVC: NSViewController {
         searchField.delegate = self
         tableView.userInterfaceLayoutDirection = .leftToRight
         ReusableFunc.setupSearchField(searchField)
-        if #available(macOS 26.0, *) {  // PERINGATAN: Ganti 26.0 dengan versi macOS yang aktual
+        if #available(macOS 26.0, *) {
             progressTable.controlSize = .small
             progressRows.controlSize = .small
             optionsSegment.borderShape = .circle
@@ -85,7 +84,7 @@ class OptionSearchVC: NSViewController {
         super.viewDidAppear()
         if isDataLoaded, bkId.isEmpty { return }
         setupIndeterminateProgress()
-        Task.detached {
+        Task.detached(priority: .userInitiated) {
             await LibraryDataManager.shared.loadData()
             await LibraryDataManager.shared.coordinator.waitUntilLoaded()
             await LibraryDataManager.shared.buildArchive()
@@ -666,5 +665,34 @@ private struct ResultBuffer {
         let flushed = items
         items.removeAll(keepingCapacity: true)
         return flushed
+    }
+}
+
+extension OptionSearchVC: ReaderStateComponent {
+    func updateState(_ state: inout ReaderState) {
+        state.searchResults = results
+        state.searchQuery = searchField.stringValue
+    }
+
+    func restore(from state: ReaderState) {
+        // Hanya restore jika hasil saat ini kosong untuk menghindari overwrite saat pencarian aktif
+        guard results.isEmpty,
+              let savedResults = state.searchResults,
+              !savedResults.isEmpty else { return }
+
+        results = savedResults
+        tableView.reloadData()
+
+        if let query = state.searchQuery {
+            searchField.stringValue = query
+            searchText = query
+        }
+    }
+
+    func cleanUpState() {
+        results.removeAll()
+        searchField.stringValue = ""
+        searchText = ""
+        tableView.reloadData()
     }
 }

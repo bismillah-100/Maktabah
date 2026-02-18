@@ -3,6 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 29/11/25.
+//  Restorable state saat membuka jendela baru
 //
 
 import Cocoa
@@ -46,6 +47,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSApplication.shared.activate(ignoringOtherApps: true)
+        restorePersistedState(mainWindowController.window as? MainWindow)
         buildViewMenu()
 
         BookConnection.tocTreeCache.countLimit = 20
@@ -99,9 +101,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        persistCurrentState()
+        return .terminateNow
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
         ScreenTimeManager.shared.cancel()
         // Insert code here to tear down your application
+    }
+
+    func applicationDidResignActive(_ notification: Notification) {
+        persistCurrentState()
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
@@ -119,7 +130,72 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         return true
     }
-    
+
+    // MARK: - App Launch
+
+    func restorePersistedState(_ window: MainWindow?) {
+        guard let window else {
+            #if DEBUG
+                print("mainWindowController window nil")
+            #endif
+            return
+        }
+
+        window.setupContentView()
+
+        guard let splitVC = window.contentViewController as? SplitVC else {
+            #if DEBUG
+                print("Cannot restore state: SplitVC not found")
+            #endif
+            return
+        }
+        
+        // Get last active mode
+        let lastMode = window.currentMode
+
+        #if DEBUG
+            print("Restoring app to last mode: \(lastMode)")
+        #endif
+
+        splitVC.setupForMode(lastMode)
+        splitVC.setupAutoSave()
+
+        // Ini baru load state yang dibutuhkan
+        splitVC.stateManager.restoreState(
+            for: lastMode,
+            components: splitVC.components(for: lastMode)
+        )
+
+        // Switch to last mode (this will restore the state)
+        window.setupView()
+        window.displayIfNeeded()
+    }
+
+    // MARK: - App Termination
+
+    func persistCurrentState() {
+        guard let window = keyWindow,
+            let splitVC = window.contentViewController as? SplitVC
+        else {
+            return
+        }
+
+        let mode = splitVC.currentMode
+
+        // Save current state
+        splitVC.stateManager.saveState(
+            for: splitVC.currentMode,
+            components: splitVC.components(for: mode)
+        )
+
+        // Persist to disk
+        splitVC.stateManager.persistToDisk()
+
+        #if DEBUG
+            print("Persisted state before app termination")
+        #endif
+    }
+
     func changeBaseUrl(to newURL: URL) throws {
 
         let fm = FileManager.default
@@ -374,8 +450,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         let bookInfo = buildMenu(NSLocalizedString("BookInfo", comment: ""), image: bookInfoImage, keyEquivalent: "i")
-        bookInfo.keyEquivalentModifierMask = [.control]
 
+        let resetCurrentView = buildMenu(
+            NSLocalizedString("ResetCurrentView", comment: ""),
+            image: "arrow.counterclockwise",
+            keyEquivalent: "r"
+        )
+
+        bookInfo.keyEquivalentModifierMask = [.control]
+        resetCurrentView.keyEquivalentModifierMask = [.control, .option]
         annotations.keyEquivalentModifierMask = [.control]
         daftarIsi.keyEquivalentModifierMask = [.control, .option]
         pageSlider.keyEquivalentModifierMask = [.control, .option]
@@ -392,7 +475,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         viewOpt.action = #selector(viewOptions)
         pageSlider.action = #selector(navigationSlider)
         quranWindow.action = #selector(displayQuranWindow(_:))
+        resetCurrentView.action = #selector(resetCurrentViewState)
 
+        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+        viewMenu.insertItem(resetCurrentView, at: viewMenu.items.count - 1)
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
         viewMenu.insertItem(quranWindow, at: viewMenu.items.count - 1)
         viewMenu.insertItem(annotations, at: viewMenu.items.count - 1)
@@ -405,6 +491,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         viewMenu.insertItem(search, at: viewMenu.items.count - 1)
         viewMenu.insertItem(author, at: viewMenu.items.count - 1)
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+    }
+
+    @objc private func resetCurrentViewState() {
+        guard let keyWindow else { return }
+        let splitVC = keyWindow.splitVC
+        let mode = UserDefaults.standard.lastAppMode
+        splitVC.stateManager.cleanUpState(
+            for: mode,
+            components: splitVC.components(for: mode)
+        )
     }
 
     @objc private func viewOptions() {
@@ -478,7 +574,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc private func showCurrentBookInfo(_ sender: NSMenuItem) {
-        keyWindow?.currentSplitVC?.bookInfo(sender)
+        keyWindow?.splitVC.bookInfo(sender)
     }
 
     @IBAction func decreaseFontSize(_ sender: NSMenuItem) {
@@ -492,10 +588,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func newWindow(_ sender: Any) {
         let wc = WindowController(windowNibName: "WindowController")
         wc.window?.setFrameAutosaveName("MainWindow")
+
+        guard let w = wc.window as? MainWindow else { return }
+
         if mainWindowController == nil {
-         mainWindowController = wc
+            restorePersistedState(w)
+        } else {
+            w.setupContentView(restoreState: false)
         }
-        wc.showWindow(nil)
+
+        mainWindowController = wc
+
+        w.makeKeyAndOrderFront(sender)
+        w.displayIfNeeded()
     }
 
     deinit {

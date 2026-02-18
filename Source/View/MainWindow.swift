@@ -2,7 +2,7 @@
 //  MainWindow.swift
 //  maktab
 //
-//  Created by MacBook on 08/12/25.
+//  Simplified window dengan single container
 //
 
 import Cocoa
@@ -22,13 +22,14 @@ class MainWindow: NSWindow {
     @IBOutlet weak var searchSidebarTrailing: NSToolbarItem!
     @IBOutlet weak var sidebarTrailing: NSToolbarItem!
 
-    private(set) var currentMode: AppMode = .viewer
+    // MARK: - Single Container (state terjaga)
+    lazy var splitVC: SplitVC = {
+        SplitVC()
+    }()
 
-    // View Controllers untuk setiap mode
-    private(set) var currentSplitVC: ToolbarActionDelegate?
-    private(set) var viewerSplitVC: SplitView?
-    private(set) var searchSplitVC: SearchSplitView?
-    private(set) var authorSplitVC: RowiSplitVC?
+    var currentMode: AppMode {
+        UserDefaults.standard.lastAppMode
+    }
 
     static var rtl: Bool {
         let languageCode = Locale.current.language.languageCode?.identifier ?? "en"
@@ -37,29 +38,40 @@ class MainWindow: NSWindow {
     }
 
     override func awakeFromNib() {
+        super.awakeFromNib()
         sidebarTrailing.isNavigational = Self.rtl
         searchSidebarTrailing.isNavigational = Self.rtl
-
-        Task { @MainActor in
-            // Restore last mode dari UserDefaults
-            if let lastMode = UserDefaults.standard.object(forKey: "LastAppMode") as? Int,
-               let mode = AppMode(rawValue: lastMode) {
-                currentMode = mode  // Set dulu sebelum switchToMode
-                await switchToMode(mode, force: true)  // Force load
-
-                if let modeSelector = toolbar?.item(with: .modeSelector)?.view as? NSSegmentedControl {
-                    modeSelector.selectedSegment = lastMode
-                }
-            } else {
-                // Default viewer mode - force load pertama kali
-                await switchToMode(.viewer, force: true)
-            }
-        }
     }
 
     override func becomeKey() {
         super.becomeKey()
         updateToolbar()
+    }
+
+    func setupContentView(restoreState: Bool = true) {
+        let currentFrame = frame
+        // Restore last mode
+        if !restoreState {
+            splitVC.setupForMode(currentMode)
+            splitVC.setupAutoSave()
+        }
+        contentViewController = splitVC
+        splitVC.currentMode = currentMode
+        // Restore frame
+        setFrame(currentFrame, display: true, animate: false)
+
+        if !restoreState {
+            setupView()
+        }
+    }
+
+    func setupView() {
+        Task { @MainActor in
+            await Task.yield()
+            // Setup toolbar once
+            setupToolbarTargets()
+            updateUI()
+        }
     }
 
     private func setupToolbarTargets() {
@@ -107,11 +119,10 @@ class MainWindow: NSWindow {
     }
 
     func setAnnotationsPanelDelegate() {
-        if let rootSplitVC = currentSplitVC as? RootSplitView,
-           let annVC = SharedPopover.annotationsVC {
-            annVC.dataSource.delegate = rootSplitVC.ibarotTextVC
-        }
+        splitVC.setAnnotationsPanelDelegate()
     }
+
+    // MARK: - Mode Switching (Simplified)
 
     func switchMode(_ sender: NSMenuItem) {
         guard let mode = sender.representedObject as? AppMode,
@@ -119,109 +130,40 @@ class MainWindow: NSWindow {
             return
         }
 
-        // Save preference
-        currentMode = mode
-        UserDefaults.standard.set(mode.rawValue, forKey: "LastAppMode")
-        let currentFrame = frame
-
-        switch mode {
-        case .viewer: viewReader()
-        case .search: viewFinder()
-        case .author: viewAuthor()
-        }
-
-        rebuildWindow(currentFrame: currentFrame)
+        switchToMode(mode)
     }
 
-    func viewReader() {
-        if viewerSplitVC == nil {
-            viewerSplitVC = SplitView(nibName: "SplitView", bundle: nil)
-        }
-        contentViewController = viewerSplitVC
-        currentSplitVC = viewerSplitVC
-        modeSegment?.selectedSegment = 0
-    }
-
-    func viewFinder() {
-        if searchSplitVC == nil {
-            searchSplitVC = SearchSplitView(nibName: "SearchSplitView", bundle: nil)
-        }
-        contentViewController = searchSplitVC
-        currentSplitVC = searchSplitVC
-        modeSegment?.selectedSegment = 1
-    }
-
-    func viewAuthor() {
-        if authorSplitVC == nil {
-            authorSplitVC = RowiSplitVC(nibName: "RowiSplitVC", bundle: nil)
-        }
-        contentViewController = authorSplitVC
-        currentSplitVC = authorSplitVC
-        modeSegment?.selectedSegment = 2
-    }
-
-    @MainActor
-    func switchToMode(_ mode: AppMode, force: Bool = false) async {
-        guard force || currentMode != mode else { return }  // Tambah force parameter
-
-        currentMode = mode
+    private func switchToMode(_ mode: AppMode) {
+        guard mode != currentMode else { return }
 
         // Save preference
-        UserDefaults.standard.set(mode.rawValue, forKey: "LastAppMode")
+        UserDefaults.standard.lastAppMode = mode
 
-        let currentFrame = frame
-
-        // Switch content view controller
-        switch mode {
-        case .viewer: viewReader()
-        case .search: viewFinder()
-        case .author: viewAuthor()
-        }
-
-        rebuildWindow(currentFrame: currentFrame)
+        splitVC.switchToMode(mode)
+        updateDelegateAndSegment()
     }
 
-    func rebuildWindow(currentFrame: NSRect) {
-        // Rebuild toolbar items
-        setFrame(currentFrame, display: true, animate: false)
-        setAnnotationsPanelDelegate()
+    private func updateUI() {
+        // Update UI
         updateToolbar()
-        setupToolbarTargets()
+        updateDelegateAndSegment()
     }
 
-    func removeToolbarItem(_ identifier: NSToolbarItem.Identifier, from toolbar: NSToolbar) {
-        if let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == identifier }) {
-            toolbar.removeItem(at: index)
+    private func updateDelegateAndSegment() {
+        // Update segment control
+        setAnnotationsPanelDelegate()
+        if let modeSelector = toolbar?.item(with: .modeSelector)?.view as? NSSegmentedControl {
+            modeSelector.selectedSegment = currentMode.rawValue
         }
     }
+
+    // MARK: - Toolbar Update (Simplified - hanya sekali)
 
     private func updateToolbar() {
         guard let toolbar, toolbar.customizationPaletteIsRunning == false else { return }
-        /*
-        if currentMode == .search {
-            removeToolbarItem(.searchSidebarLeadingContent, from: toolbar)
-
-            if !toolbar.items.contains(where: { $0.itemIdentifier == .bookmark }),
-               let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .textViewOptions }) {
-                toolbar.insertItem(withItemIdentifier: .bookmark, at: index - 1)
-            }
-
-            if !toolbar.items.contains(where: { $0.itemIdentifier == .insertBookmark }),
-               let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .textViewOptions }) {
-                toolbar.insertItem(withItemIdentifier: .insertBookmark, at: index - 1)
-            }
-
-        } else {
-            if !toolbar.items.contains(where: { $0.itemIdentifier == .searchSidebarLeadingContent }),
-               let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .sidebarLeading }) {
-                toolbar.insertItem(withItemIdentifier: .searchSidebarLeadingContent, at: index + 1)
-            }
-            removeToolbarItem(.bookmark, from: toolbar)
-            removeToolbarItem(.insertBookmark, from: toolbar)
-        }
-         */
 
         removeToolbarItem(.trackingSeparator, from: toolbar)
+
         if #available(macOS 26, *), !Self.rtl,
            let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == .searchContents }),
            index >= 0, index < toolbar.items.count
@@ -230,44 +172,26 @@ class MainWindow: NSWindow {
         }
     }
 
-    /*
-    private func updateToolbar() {
-        guard let toolbar else { return }
-        let keep: Set<NSToolbarItem.Identifier> = [
-            .modeSelector,
-            NSToolbarItem.Identifier.sidebarTrackingSeparator
-        ]
-
-        // Hapus semua item kecuali yang dipertahankan
-        for (index, item) in toolbar.items.enumerated().reversed() {
-            if keep.contains(item.itemIdentifier) == false {
-                toolbar.removeItem(at: index)
-            }
-        }
-
-        // Tambahkan item baru sesuai mode, tetapi jangan masukkan item yang sudah dipertahankan
-        let itemIdentifiers = toolbarItemsForMode(currentMode)
-        for identifier in itemIdentifiers where keep.contains(identifier) == false {
-            toolbar.insertItem(withItemIdentifier: identifier, at: toolbar.items.count)
+    private func removeToolbarItem(_ identifier: NSToolbarItem.Identifier, from toolbar: NSToolbar)
+    {
+        if let index = toolbar.items.firstIndex(where: { $0.itemIdentifier == identifier }) {
+            toolbar.removeItem(at: index)
         }
     }
-     */
+
+    // MARK: - Cleanup
 
     override func close() {
         #if DEBUG
         print("MainWindow close() called")
         #endif
-        // Hanya cleanup jika ini adalah tab terakhir atau window benar-benar close
-        // Lepaskan semua view controllers
+
+        splitVC.persistCurrentStateToDisk()
+
         super.close()
 
         contentViewController = nil
-        viewerSplitVC = nil
-        searchSplitVC = nil
-        authorSplitVC = nil
         contentView = nil
-
-        // Lepaskan delegate
         delegate = nil
     }
 
@@ -278,97 +202,66 @@ class MainWindow: NSWindow {
     }
 }
 
-// MARK: - WindowController Toolbar Actions Extension
+// MARK: - Toolbar Actions (Delegasi ke SplitVC)
 extension MainWindow {
     @IBAction func modeSelectorChanged(_ sender: NSSegmentedControl) {
         if let mode = AppMode(rawValue: sender.selectedSegment) {
-            Task {
-                await switchToMode(mode)
-            }
+            switchToMode(mode)
         }
     }
 
-    // MARK: - Computed Properties untuk akses VC
-    private var viewerSplit: SplitView? {
-        viewerSplitVC
-    }
-
     // MARK: - Navigation Actions
+
     @IBAction func sidebarLeadingToggle(_ sender: Any) {
-        currentSplitVC?.sidebarLeadingToggle()
+        splitVC.sidebarLeadingToggle()
     }
 
     @IBAction func sidebarTrailing(_ sender: Any) {
-        currentSplitVC?.sidebarTrailing()
+        splitVC.sidebarTrailing()
     }
 
     @IBAction func pageControl(_ sender: NSSegmentedControl) {
         switch sender.selectedSegment {
-        case 0:
-            nextPage()
-        case 1:
-            prevPage()
-        default:
-            break
+        case 0: splitVC.nextPage()
+        case 1: splitVC.prevPage()
+        default: break
         }
     }
 
-    private func prevPage() {
-        currentSplitVC?.nextPage()
-    }
-
-    private func nextPage() {
-        currentSplitVC?.prevPage()
-    }
-
     @IBAction func navigationPage(_ sender: Any) {
-        currentSplitVC?.navigationPage(sender)
+        splitVC.navigationPage(sender)
     }
 
     // MARK: - View Options
+
     @IBAction func viewOptions(_ sender: Any) {
-        currentSplitVC?.viewOptions(sender)
+        splitVC.viewOptions(sender)
     }
 
     @IBAction func bookInfo(_ sender: NSButton) {
-        currentSplitVC?.bookInfo(sender)
+        splitVC.bookInfo(sender)
     }
 
     @IBAction func copyWith(_ sender: NSButton) {
-        currentSplitVC?.copyDetails(sender)
+        splitVC.copyDetails()
     }
 
     // MARK: - Search Actions
 
     @IBAction func hideLibrarySearchField(_ sender: Any) {
-        switch currentMode {
-        case .viewer:
-            if let libraryVC = viewerSplit?.libraryItem?.viewController as? LibraryVC {
-                libraryVC.searchFieldIsHidden.toggle()
-                libraryVC.unhideSearchField()
-
-            }
-        case .author:
-            if let libraryVC = authorSplitVC?.sidebarVC {
-                libraryVC.searchFieldIsHidden.toggle()
-                libraryVC.unhideSearchField()
-            }
-        case .search:
-            if let searchSidebarVC = searchSplitVC?.searchSidebarVC {
-                searchSidebarVC.searchField.becomeFirstResponder()
-            }
-        }
+        // Implementation di SplitVC
+        splitVC.hideLibrarySearchField()
     }
 
     @IBAction func searchSidebarTrailingContent(_ sender: Any) {
-        currentSplitVC?.searchSidebarTrailing()
+        splitVC.searchSidebarTrailing()
     }
 
     @IBAction func displayAllNotations(_ sender: Any?) {
-        currentSplitVC?.displayAnnotations(sender)
+        splitVC.displayAnnotations(sender)
     }
 
     @IBAction func searchPopover(_ sender: NSButton) {
-        currentSplitVC?.searchCurrentBook(sender)
+        splitVC.searchCurrentBook(sender)
     }
 }

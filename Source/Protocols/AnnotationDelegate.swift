@@ -30,7 +30,7 @@ extension IbarotTextVC: AnnotationDelegate {
             await bookDB.connect(archive: book.archive)
 
             if await currentBook?.id != bkId {
-                try? await didChangeBook(book: book)
+                await didChangeBook(book: book)
             }
 
             await handleDelegate(contentId, fromResults: true)

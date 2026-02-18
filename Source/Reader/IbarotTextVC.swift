@@ -23,21 +23,21 @@ class IbarotTextVC: NSViewController {
 
     var bookDB: BookConnection = .init()
 
-    var currentBook: BooksData?
     var sidebarVC: SidebarVC?
 
-    var currentPage: Int?
-    var currentID: Int?
-    var currentPart: Int?
+    let defaultTitle: String = "المكتبة الإسلامية"
+    let subtitle: String = "لتيسر البحث العبارة"
 
-    var windowTitle: String = "المكتبة الإسلامية" {
+    var windowTitle: String = .init() {
         didSet {
+            if windowTitle.isEmpty { return }
             view.window?.title = windowTitle
         }
     }
 
-    var windowSubtitle: String = "لتيسر البحث العبارة" {
+    var windowSubtitle: String = .init() {
         didSet {
+            if windowSubtitle.isEmpty { return }
             view.window?.subtitle = windowSubtitle
         }
     }
@@ -49,9 +49,6 @@ class IbarotTextVC: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        view.window?.title = windowTitle
-        view.window?.subtitle = windowSubtitle
-
         //        guard let window = view.window,
         //              let guide = window.contentLayoutGuide as? NSLayoutGuide
         //        else { return }
@@ -71,12 +68,31 @@ class IbarotTextVC: NSViewController {
         //        ])
     }
 
-    func didChangeBook(book: BooksData) async throws {
-        if currentBook?.id == book.id {
-            throw (NSError(domain: "Book not chaned", code: 1))
-        }
+    func restoreWindowTitleAfterModeSwitch(
+        oldTitle: String,
+        oldSubtitle: String
+    ) {
+        guard !windowTitle.isEmpty,
+              !windowSubtitle.isEmpty
+        else { return }
 
-        if let sidebarVC {
+        guard oldTitle != defaultTitle,
+              oldSubtitle != subtitle
+        else { return }
+
+        setDefaultWindowTitle()
+    }
+
+    fileprivate func setDefaultWindowTitle() {
+        view.window?.title = defaultTitle
+        view.window?.subtitle = subtitle
+    }
+
+    func didChangeBook(
+        book: BooksData,
+        loadSidebar: Bool = true
+    ) {
+        if let sidebarVC, loadSidebar {
             Task { @MainActor in
                 await sidebarVC.reloadBook(book: book)
             }
@@ -224,10 +240,18 @@ class IbarotTextVC: NSViewController {
     }
 
     @IBAction func bookInfo(_ sender: Any) {
+        let dm = LibraryDataManager.shared
         guard let currentBook else { return }
-        LibraryDataManager.shared.loadBookInfo(currentBook.id) { [weak self] in
+        guard
+            let bookOnLibrary = dm.getBook(
+                [currentBook.id]).first
+        else { return }
+
+        self.currentBook = bookOnLibrary
+
+        dm.loadBookInfo(bookOnLibrary.id) { [weak self] in
             let bookInf = BookInfo()
-            bookInf.bookData = currentBook
+            bookInf.bookData = bookOnLibrary
             if let button = sender as? NSButton {
                 WindowController.showPopOver(
                     sender: button,
@@ -276,6 +300,92 @@ class IbarotTextVC: NSViewController {
 
         // Optional: juga tulis plain text untuk fallback
         pasteboard.setString(combined.string, forType: .string)
+    }
+}
+
+extension IbarotTextVC {
+    /// Get SplitVC dari hierarchy
+    private var splitVC: SplitVC? {
+        // Navigate up the view controller hierarchy
+        var current: NSViewController? = self
+        while let parent = current?.parent {
+            if let unified = parent as? SplitVC {
+                return unified
+            }
+            current = parent
+        }
+        return nil
+    }
+
+    // MARK: - State Properties (via SplitVC)
+
+    /// Current book - reads/writes dari SplitVC state
+    var currentBook: BooksData? {
+        get {
+            splitVC?.currentState.currentBook
+        }
+        set {
+            if var state = splitVC?.currentState {
+                state.currentBook = newValue
+                splitVC?.currentState = state
+            }
+        }
+    }
+
+    /// Current page
+    var currentPage: Int? {
+        get {
+            splitVC?.currentState.currentPage
+        }
+        set {
+            if var state = splitVC?.currentState {
+                state.currentPage = newValue
+                splitVC?.currentState = state
+            }
+        }
+    }
+
+    /// Current ID
+    var currentID: Int? {
+        get {
+            splitVC?.currentState.currentID
+        }
+        set {
+            if var state = splitVC?.currentState {
+                state.currentID = newValue
+                splitVC?.currentState = state
+            }
+        }
+    }
+
+    /// Current part
+    var currentPart: Int? {
+        get {
+            splitVC?.currentState.currentPart
+        }
+        set {
+            if var state = splitVC?.currentState {
+                state.currentPart = newValue
+                splitVC?.currentState = state
+            }
+        }
+    }
+
+    // MARK: - State Operations
+
+    /// Clear state (untuk close book)
+    func clearUI() {
+        textView.bkId = nil
+        textView.page = nil
+        textView.part = nil
+        textView.contentId = nil
+        textView.string.removeAll()
+        sidebarVC?.cleanUpOutlineView()
+        windowTitle = ""
+        windowSubtitle = ""
+        if splitVC?.currentMode != .author {
+            setDefaultWindowTitle()
+        }
     }
 }
 
@@ -441,13 +551,11 @@ extension IbarotTextVC: SidebarDelegate {
 
 extension IbarotTextVC: LibraryDelegate {
     func didSelectBook(for book: BooksData) async {
-        do {
-            try await didChangeBook(book: book)
-            bookDB.connect(archive: book.archive)
-            fetchInitialBook()
-        } catch {
-            return
+        if currentBook?.id != book.id {
+            didChangeBook(book: book)
         }
+        bookDB.connect(archive: book.archive)
+        fetchInitialBook()
     }
 }
 
@@ -460,9 +568,50 @@ extension IbarotTextVC: OptionSearchDelegate {
     }
 }
 
+// MARK: - Author Mode Specific
+
+extension IbarotTextVC {
+
+    /// Current rowi (untuk Author mode)
+    var currentRowi: Rowi? {
+        get {
+            splitVC?.currentState.currentRowi
+        }
+        set {
+            guard var state = splitVC?.currentState else { return }
+            state.edit {
+                $0.currentRowi = newValue
+            }
+        }
+    }
+
+    func setRowiDisplayMode() {
+        guard var state = splitVC?.currentState else { return }
+        state.edit {
+            $0.authorDisplayMode = .bookContent
+        }
+    }
+
+    /// Set state untuk Rowi button display (dipanggil dari RowiResultsVC.buttonDidClick)
+    func setAuthorRowiDisplay(rowi: Rowi) {
+        var state = splitVC?.currentState ?? ReaderState()
+        state.edit{
+            $0.currentRowi = rowi
+            $0.authorDisplayMode = .rowiInfo
+        }
+
+        #if DEBUG
+            print("Author mode: display mode (\(String(describing: state.authorDisplayMode) ))")
+        #endif
+    }
+}
+
 extension IbarotTextVC: TarjamahBDelegate {
-    func didSelectRowi() {
+    func didSelectRowi(rowi: Rowi) {
         currentBook = nil
+        textView.bkId = nil
+        sidebarVC?.cleanUpOutlineView()
+        setAuthorRowiDisplay(rowi: rowi)
     }
 
     func didSelect(tarjamahB: TarjamahMen, query: String?) async {
@@ -473,10 +622,10 @@ extension IbarotTextVC: TarjamahBDelegate {
             return
         }
 
-        do {
-            try await didChangeBook(book: bookData)
+        if currentBook?.id != bookData.id {
+            didChangeBook(book: bookData)
             bookDB.connect(archive: bookData.archive)
-        } catch {
+        } else {
             return
         }
 
@@ -494,6 +643,7 @@ extension IbarotTextVC: TarjamahBDelegate {
 
         didChangePage(content: content)
         didNavigateToContent(content)
+        setRowiDisplayMode()
 
         try? await Task.sleep(nanoseconds: 300_000_000)
         await MainActor.run { [weak self] in
@@ -501,5 +651,116 @@ extension IbarotTextVC: TarjamahBDelegate {
                 self?.highlightAndScrollToText(query.normalizeArabic(true))
             }
         }
+    }
+}
+
+extension IbarotTextVC: ReaderStateComponent {
+    // MARK: - ReaderStateComponent
+
+    func updateState(_ state: inout ReaderState) {
+        // Update data buku
+        state.edit {
+             $0.currentBook = currentBook
+             $0.currentPage = currentPage
+             $0.currentID = currentID
+             $0.currentPart = currentPart
+             $0.currentRowi = currentRowi
+             $0.selectedRange = textView.selectedRange()
+        }
+
+        // Update UI (Scroll & Selection)
+        if let scrollView = textView.enclosingScrollView {
+            state.scrollPosition = scrollView.documentVisibleRect.origin
+        }
+
+        // Update Sidebar/TOC
+        if let sidebarVC = sidebarVC {
+            state.expandedNodeIDs = collectExpandedNodeIDs()
+            state.sidebarScrollPosition = sidebarVC.scrollView.documentVisibleRect.origin
+        }
+    }
+
+    func restore(from state: ReaderState) {
+        guard state.hasContent else {
+            clearUI()
+            return
+        }
+
+        // 1. Load data buku & halaman
+        if let book = state.currentBook {
+            bookDB.connect(archive: book.archive)
+            if currentBook?.id != book.id {
+                didChangeBook(book: book)
+            }
+
+            if let id = state.currentID,
+                let content = bookDB.getContent(bkid: String(book.id), contentId: id)
+            {
+                didChangePage(content: content)
+
+                // 2. Restore Sidebar (Async)
+                Task { @MainActor in
+                    if let sidebarVC = sidebarVC {
+                        await sidebarVC.reloadBook(book: book)
+                        didNavigateToContent(content)
+
+                        // Restore expanded items & scroll sidebar
+                        sidebarVC.enableDelegate = false
+                        for nodeID in state.expandedNodeIDs {
+                            if let node = sidebarVC.findNodeById(nodeID) {
+                                sidebarVC.outlineView.expandItem(node)
+                            }
+                        }
+                        if let pos = state.sidebarScrollPosition {
+                            sidebarVC.scrollView.documentView?.scroll(pos)
+                        }
+                        sidebarVC.enableDelegate = true
+                    }
+
+                    // 3. Restore Main Text Scroll & Selection
+                    if let scrollPos = state.scrollPosition {
+                        textView.enclosingScrollView?.documentView?.scroll(scrollPos)
+                    }
+
+                    if let range = state.selectedRange {
+                        textView.setSelectedRange(range)
+                        view.window?.makeFirstResponder(textView)
+                    }
+
+                    // 4. Spesifik untuk Search Mode highlight
+                    if let query = state.searchQuery {
+                        highlightAndScrollToText(query)
+                    }
+                }
+            }
+        }
+    }
+
+    func cleanUpState() {
+        clearUI()
+        var newState = ReaderState()
+        let collapsed = splitVC?.sidebarItem.isCollapsed ?? false
+        newState.isSidebarCollapsed = collapsed
+        splitVC?.currentState = newState
+    }
+
+    // MARK: - Sidebar Helpers
+    private func collectExpandedNodeIDs() -> [Int] {
+        guard let outlineView = sidebarVC?.outlineView else { return [] }
+        var expandedIDs: [Int] = []
+        func collectExpanded(item: Any?) {
+            let childCount = outlineView.numberOfChildren(ofItem: item)
+            for i in 0..<childCount {
+                let child = outlineView.child(i, ofItem: item)
+                if let node = child as? TOCNode {
+                    if outlineView.isItemExpanded(child) {
+                        expandedIDs.append(node.id)
+                        collectExpanded(item: child)
+                    }
+                }
+            }
+        }
+        collectExpanded(item: nil)
+        return expandedIDs
     }
 }

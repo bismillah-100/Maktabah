@@ -106,7 +106,7 @@ class ResultWriter: NSViewController {
     }
 
     @IBAction func saveClicked(_ sender: Any) {
-        let query = SearchSplitView.query
+        let query = OptionSearchVC.query
         if query.isEmpty { return }
 
         let folderId: Int64?

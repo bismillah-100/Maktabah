@@ -3,6 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 29/11/25.
+//  Penyesuaian splitView dan restorable state
 //
 
 import Cocoa
@@ -17,11 +18,12 @@ class WindowController: NSWindowController {
     @IBAction override func newWindowForTab(_ sender: Any?) {
         // PERBAIKAN: Instance otomatis disimpan di windowDidLoad
         let newWindowController = WindowController(windowNibName: "WindowController")
-        _ = newWindowController.window
 
         // Tambahkan sebagai tab
-        if let newWindow = newWindowController.window {
-            self.window?.addTabbedWindow(newWindow, ordered: .above)
+        if let newWindow = newWindowController.window as? MainWindow {
+            window?.addTabbedWindow(newWindow, ordered: .above)
+            newWindow.setupContentView(restoreState: false)
+            newWindow.setupView()
             newWindow.makeKeyAndOrderFront(nil)
         }
     }
@@ -93,13 +95,12 @@ extension WindowController: NSToolbarDelegate {
                 return NSToolbarItem(itemIdentifier: itemIdentifier)
             }
 
-            // Dapatkan ViewerSplitVC yang benar
             guard let mainWindow = window as? MainWindow,
-                  let rootSplitVC = mainWindow.contentViewController as? RootSplitView,
-                  let viewerContainer = rootSplitVC.viewerSplitVC else {
+                  let rootSplitVC = mainWindow.contentViewController as? SplitVC else {
                 return NSToolbarItem(itemIdentifier: itemIdentifier)
             }
 
+            let viewerContainer = rootSplitVC.viewerSplitVC
             // ViewerSplitVC punya 2 items (IbarotTextVC dan SidebarVC)
             // Jadi hanya ada 1 divider di index 0
             let trackingSeparator = NSTrackingSeparatorToolbarItem(

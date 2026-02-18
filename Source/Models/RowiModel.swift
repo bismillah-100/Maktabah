@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Rowi {
+class Rowi: Codable {
     let id: Int
     var name: String?
     let tabaqa: String?
