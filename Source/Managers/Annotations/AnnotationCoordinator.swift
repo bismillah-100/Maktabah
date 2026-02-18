@@ -83,7 +83,7 @@ class AnnotationCoordinator {
             showHarakat: showHarakat
         )
 
-        let hex = hexString(from: color) ?? "#FFFF00"
+        let hex = color.hexString()
 
         let ann = Annotation(
             id: nil,
@@ -130,14 +130,6 @@ class AnnotationCoordinator {
         }
 
         return bestAnnotation
-    }
-
-    private func hexString(from color: NSColor) -> String? {
-        guard let rgb = color.usingColorSpace(.deviceRGB) else { return nil }
-        let r = Int(round(rgb.redComponent * 255))
-        let g = Int(round(rgb.greenComponent * 255))
-        let b = Int(round(rgb.blueComponent * 255))
-        return String(format: "#%02X%02X%02X", r, g, b)
     }
 }
 

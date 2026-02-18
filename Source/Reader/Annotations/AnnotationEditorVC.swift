@@ -78,7 +78,7 @@ class AnnotationEditorVC: NSViewController {
     @objc func saveTapped() {
         // update annotation object
         let newNote = noteField.string
-        let newColorHex = hexString(from: colorWell.color) ?? "#FFEA00"
+        let newColorHex = colorWell.color.hexString()
 
         var updated = annotation!
         updated = Annotation(
@@ -98,6 +98,7 @@ class AnnotationEditorVC: NSViewController {
             partArb: annotation.partArb
         )
 
+        TextViewState.shared.pushRecentHighlightColor(colorWell.color)
         // Persist ke DB
         delegate?.annotationEditorDidSave(updated)
         cancelTapped()
@@ -142,15 +143,6 @@ class AnnotationEditorVC: NSViewController {
     @IBAction func underLineTapped(_ sender: NSButton) {
         annotation.type = underLine.state == .on ? .underline : .highlight
         colorWell.isHidden = underLine.state == .on
-    }
-
-    // MARK: - Helpers
-    private func hexString(from color: NSColor) -> String? {
-        guard let rgb = color.usingColorSpace(.deviceRGB) else { return nil }
-        let r = Int(round(rgb.redComponent * 255))
-        let g = Int(round(rgb.greenComponent * 255))
-        let b = Int(round(rgb.blueComponent * 255))
-        return String(format: "#%02X%02X%02X", r, g, b)
     }
 }
 
@@ -215,6 +207,7 @@ extension IbarotTextView: AnnotationEditorDelegate {
             guard let self else { return }
             refreshAnnotations()
             setSelectedRange(NSRange(location: NSNotFound, length: 0))
+            colorMenuView.reloadColors()
         }
     }
 

@@ -75,9 +75,11 @@ class ArabicTextRenderer {
     private func applyAnnotation(_ ann: Annotation, at range: NSRange, to textStorage: NSTextStorage) {
         if ann.type == .highlight {
             let color = NSColor(hex: ann.colorHex) ?? .yellow
+            textStorage.removeAttribute(.backgroundColor, range: range)
             textStorage.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.6), range: range)
             textStorage.removeAttribute(.underlineStyle, range: range)
         } else if ann.type == .underline {
+            textStorage.removeAttribute(.underlineStyle, range: range)
             textStorage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
             textStorage.removeAttribute(.backgroundColor, range: range)
         }

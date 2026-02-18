@@ -36,6 +36,24 @@ class IbarotTextView: NSTextView {
     var page: Int?
     var part: Int?
 
+    lazy var colorMenuView: AnnotationColorMenuView = {
+        let view = AnnotationColorMenuView(target: self)
+        let frame = view.frame
+        let newFrame = NSRect(x: 16, y: frame.origin.y,
+                              width: frame.width,
+                              height: frame.height)
+        view.frame = newFrame
+        view.colorAction = #selector(menuDidSelectColor(_:))
+        view.underlineAction = #selector(menuDidSelectUnderline(_:))
+        return view
+    }()
+
+    private lazy var colorMenuItem: NSMenuItem = {
+        let item = NSMenuItem()
+        item.view = colorMenuView
+        return item
+    }()
+
     func contentKey() -> ContentKey? {
         guard let b = bkId, let c = contentId else { return nil }
         return ContentKey(bkId: b, contentId: c)
@@ -288,6 +306,10 @@ class IbarotTextView: NSTextView {
             )
         }
 
+        #if DEBUG
+        print("attributedString:", attributedString.string)
+        #endif
+
         textStorage?.setAttributedString(attributedString)
     }
 
@@ -385,53 +407,6 @@ class IbarotTextView: NSTextView {
                 break
             }
         }
-    }
-
-    private func buildHighlightGroup() -> [NSMenuItem] {
-        var items: [NSMenuItem] = []
-
-        // Highlight colors
-        let colors: [(String, NSColor, Int)] = [
-            ("Yellow".localized, .yellow, 1),
-            ("Green".localized, .green, 2),
-            ("Blue".localized, .highlightBlue, 3),
-            ("Pink".localized, .systemPink, 4),
-            ("Purple".localized, .purple, 5),
-        ]
-
-        for (title, color, tag) in colors {
-            items.append(makeColorItem(title: title, color: color, tag: tag))
-        }
-
-        // Underline
-        let underline = NSMenuItem(
-            title: "Underline".localized,
-            action: #selector(underlineSelection(_:)),
-            keyEquivalent: ""
-        )
-        underline.image = NSImage(
-            systemSymbolName: "underline",
-            accessibilityDescription: nil
-        )
-        underline.target = self
-        items.append(underline)
-        items.append(.separator())
-
-        return items
-    }
-
-    private func makeColorItem(title: String, color: NSColor, tag: Int)
-        -> NSMenuItem
-    {
-        let item = NSMenuItem(
-            title: title,
-            action: #selector(highlightSelection(_:)),
-            keyEquivalent: ""
-        )
-        item.image = NSImage.coloredCircle(color: color)
-        item.tag = tag
-        item.target = self
-        return item
     }
 
     var isRtl: Bool {
@@ -664,89 +639,105 @@ class IbarotTextView: NSTextView {
         }
     }
 
-    @IBAction func highlightSelection(_ sender: NSMenuItem) {
-        let sel = selectedRange()
-        guard sel.length > 0,
+    // MARK: - applyHighlightWithColor
+
+    private func applyAnnotations(
+        in selectedRange: NSRange,
+        with color: NSColor,
+        mode: AnnotationMode
+    ) throws {
+
+        defer {
+            setSelectedRange(NSRange(location: NSNotFound, length: 0))
+            colorMenuView.reloadColors()
+        }
+
+        guard selectedRange.length > 0,
             let bkId = bkId,
             let contentId = contentId,
             let page = page,
             let part = part
         else { return }
 
-        let color: NSColor
-        switch sender.tag {
-        case 1: color = .yellow
-        case 2: color = .green
-        case 3: color = .blue
-        case 4: color = .systemPink
-        case 5: color = .purple
-        default: color = .yellow
-        }
-
-        do {
-            let annotation = try annotationCoordinator.saveHighlight(
-                text: string,
-                range: sel,
-                color: color,
-                bkId: bkId,
-                contentId: contentId,
-                page: page,
-                part: part,
-                diacriticsText: diacriticsIbarot,
-                showHarakat: state.showHarakat
+        // Cek apakah sudah ada anotasi di range ini
+        if let annotation = annotationCoordinator.findBestAnnotation(
+            overlapping: selectedRange,
+            bkId: bkId,
+            contentId: contentId,
+            showHarakat: state.showHarakat
+        ) {
+            // UPDATE Anotasi sudah ada, perbarui warna dan tipenya
+            let updated = Annotation(
+                id: annotation.id,
+                bkId: annotation.bkId,
+                contentId: annotation.contentId,
+                range: annotation.range,
+                rangeDiacritics: annotation.rangeDiacritics,
+                colorHex: color.hexString(),
+                type: mode,
+                note: annotation.note,
+                createdAt: annotation.createdAt,
+                context: annotation.context,
+                page: annotation.page,
+                part: annotation.part,
+                pageArb: annotation.pageArb,
+                partArb: annotation.partArb
             )
 
-            // Apply to UI
-            if state.clickableAnnotation {
-                refreshAnnotations()
-            } else if let ts = textStorage {
-                renderer.applyAnnotations(
-                    [annotation],
-                    to: ts,
-                    showHarakat: state.showHarakat
-                )
-            }
+            try AnnotationManager.shared.updateAnnotation(updated)
+            state.pushRecentHighlightColor(color)
 
-            setSelectedRange(NSRange(location: NSNotFound, length: 0))
+            // Segarkan UI untuk menghapus atribut lama (seperti underline jika berubah)
+            refreshAnnotations()
+            return
+        }
+
+        // CREATE: Belum ada anotasi, buat baru
+        let annotation = try annotationCoordinator.saveHighlight(
+            text: string,
+            range: selectedRange,
+            color: color,
+            bkId: bkId,
+            contentId: contentId,
+            page: page,
+            part: part,
+            diacriticsText: diacriticsIbarot,
+            showHarakat: state.showHarakat,
+            mode: mode
+        )
+
+        state.pushRecentHighlightColor(color)
+
+        // Apply ke UI
+        if state.clickableAnnotation {
+            refreshAnnotations()
+        } else if let ts = textStorage {
+            renderer.applyAnnotations(
+                [annotation],
+                to: ts,
+                showHarakat: state.showHarakat
+            )
+        }
+    }
+
+    /// Highlight seleksi dengan warna dinamis.
+    /// Setelah berhasil disimpan, warna di-push ke urutan pertama UserDefaults.
+    func applyHighlightWithColor(_ color: NSColor) {
+        let sel = selectedRange()
+        do {
+            try applyAnnotations(in: sel, with: color, mode: .highlight)
         } catch {
             #if DEBUG
-                print("Failed to save highlight: \(error)")
+                print("Failed to save or update highlight: \(error)")
             #endif
         }
     }
 
     @IBAction func underlineSelection(_ sender: Any?) {
         let sel = selectedRange()
-        guard sel.length > 0,
-            let bkId, let contentId,
-            let page, let part
-        else { return }
 
         do {
-            let annotation = try annotationCoordinator.saveHighlight(
-                text: string,
-                range: sel,
-                color: .black,
-                bkId: bkId,
-                contentId: contentId,
-                page: page,
-                part: part,
-                diacriticsText: diacriticsIbarot,
-                showHarakat: state.showHarakat,
-                mode: .underline
-            )
-
-            // Apply to UI
-            if state.clickableAnnotation {
-                refreshAnnotations()
-            } else if let ts = textStorage {
-                renderer.applyAnnotations(
-                    [annotation],
-                    to: ts,
-                    showHarakat: state.showHarakat
-                )
-            }
-
+            try applyAnnotations(in: sel, with: .black, mode: .underline)
             setSelectedRange(NSRange(location: NSNotFound, length: 0))
         } catch {
             #if DEBUG
@@ -800,7 +791,7 @@ class IbarotTextView: NSTextView {
             contentId: contentId,
             range: rangeWithoutDiacritics,
             rangeDiacritics: rangeWithDiacritics,
-            colorHex: "#FFEA00",
+            colorHex: state.lastUsedColor(),
             type: .highlight,
             note: nil,
             createdAt: Int64(Date().timeIntervalSince1970),
@@ -903,4 +894,51 @@ class IbarotTextView: NSTextView {
 struct CleanedTextResult {
     let text: String
     let coloredRanges: [NSRange]  // Range dalam string 'text'
+}
+
+extension IbarotTextView {
+
+    // MARK: - buildHighlightGroup (pengganti)
+
+    /// Mengembalikan satu NSMenuItem dengan view horizontal (warna + underline).
+    func buildHighlightGroup() -> [NSMenuItem] {
+        return [colorMenuItem, .separator()]
+    }
+
+    // MARK: - Actions dari AnnotationColorMenuView
+
+    /// Dipanggil saat tombol warna ditekan di menu.
+    /// sender.tag = index warna di UserDefaults.recentHighlightColors
+    @objc func menuDidSelectColor(_ sender: NSButton) {
+        // Tutup menu dulu
+        dismissMenu(sender)
+
+        let colors = UserDefaults.standard.recentHighlightColors
+        guard sender.tag < colors.count else { return }
+        let color = colors[sender.tag]
+
+        applyHighlightWithColor(color)
+    }
+
+    /// Dipanggil saat tombol underline ditekan di menu.
+    @objc func menuDidSelectUnderline(_ sender: NSButton) {
+        dismissMenu(sender)
+        let colors = UserDefaults.standard.recentHighlightColors
+        guard sender.tag < colors.count else { return }
+
+        underlineSelection(sender)
+    }
+
+    private func dismissMenu(_ sender: NSView) {
+        var current: NSView? = sender
+        while let superview = current?.superview {
+            if let menuItem = current?.enclosingMenuItem,
+                let menu = menuItem.menu
+            {
+                menu.cancelTracking()  // Tutup paksa di sini
+                break
+            }
+            current = superview
+        }
+    }
 }

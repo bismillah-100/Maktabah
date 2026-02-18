@@ -19,6 +19,7 @@
 		4B03D9D72F42DD6D004E0FDB /* ReaderStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */; };
 		4B04ED292EF3706D0011955B /* LoadCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B04ED282EF3706D0011955B /* LoadCoordinator.swift */; };
 		4B0EED392EFAB38800585C31 /* QuranTafseerVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0EED382EFAB38800585C31 /* QuranTafseerVC.swift */; };
+		4B18185E2F45377200AFFAEE /* AnnotationColorMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */; };
 		4B20DB792EE7D1BB00B97126 /* ReusableFunc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B20DB782EE7D1BB00B97126 /* ReusableFunc.swift */; };
 		4B20DB7B2EE7D81B00B97126 /* FolderCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B20DB7A2EE7D81B00B97126 /* FolderCellView.xib */; };
 		4B20DB7D2EE7D84100B97126 /* ResultCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B20DB7C2EE7D84100B97126 /* ResultCellView.xib */; };
@@ -158,6 +159,7 @@
 		4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderStateManager.swift; sourceTree = "<group>"; };
 		4B04ED282EF3706D0011955B /* LoadCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadCoordinator.swift; sourceTree = "<group>"; };
 		4B0EED382EFAB38800585C31 /* QuranTafseerVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuranTafseerVC.swift; sourceTree = "<group>"; };
+		4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationColorMenuView.swift; sourceTree = "<group>"; };
 		4B20DB782EE7D1BB00B97126 /* ReusableFunc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableFunc.swift; sourceTree = "<group>"; };
 		4B20DB7A2EE7D81B00B97126 /* FolderCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FolderCellView.xib; sourceTree = "<group>"; };
 		4B20DB7C2EE7D84100B97126 /* ResultCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ResultCellView.xib; sourceTree = "<group>"; };
@@ -514,6 +516,7 @@
 		4B5695572EEFDA8000ABEB48 /* Annotations */ = {
 			isa = PBXGroup;
 			children = (
+				4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */,
 				4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */,
 				4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */,
 				4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */,
@@ -841,6 +844,7 @@
 				4B5DF93B2EDC43FB0082DE7F /* UserDefaults.swift in Sources */,
 				4B6AF22F2EE5692A002EBFFC /* AppMode.swift in Sources */,
 				4B3202492EDB10FA003B95D1 /* Protocols.swift in Sources */,
+				4B18185E2F45377200AFFAEE /* AnnotationColorMenuView.swift in Sources */,
 				4B6100EB2EFA769200CCBED6 /* QuranDataManager.swift in Sources */,
 				4B9DDA892EFC343F0003A9FF /* QuranWindow.swift in Sources */,
 				4BEC35912F34BA330038FC0F /* DatabaseError.swift in Sources */,
@@ -1161,7 +1165,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
@@ -1215,7 +1219,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;

@@ -5,7 +5,8 @@
 //  Created by MacBook on 30/11/25.
 //
 
-import Foundation
+import AppKit
+
 private let key = "LastAppMode"
 
 extension UserDefaults {
@@ -118,6 +119,45 @@ extension UserDefaults {
             set(newValue.rawValue, forKey: key)
         }
     }
+
+    // MARK: - COLOR HIGHLIGHTS
+
+    static let recentColorsKey = "recentHighlightColors"
+    static let maxRecentColors = 5
+
+    static let defaultHighlightColors: [NSColor] = [
+        .systemYellow, .systemGreen, .highlightBlue, .systemPink, .systemPurple,
+    ]
+
+    /// Warna highlight terbaru. Index 0 = paling baru. Maks 5.
+    /// Fallback ke warna default jika belum pernah diisi.
+    var recentHighlightColors: [NSColor] {
+        get {
+            guard
+                let dataArray = array(forKey: Self.recentColorsKey) as? [Data],
+                !dataArray.isEmpty
+            else {
+                return Self.defaultHighlightColors
+            }
+            let colors = dataArray.compactMap {
+                try? NSKeyedUnarchiver.unarchivedObject(
+                    ofClass: NSColor.self,
+                    from: $0
+                )
+            }
+            return colors.isEmpty ? Self.defaultHighlightColors : colors
+        }
+        set {
+            let data = newValue.compactMap {
+                try? NSKeyedArchiver.archivedData(
+                    withRootObject: $0,
+                    requiringSecureCoding: false
+                )
+            }
+            set(data, forKey: Self.recentColorsKey)
+        }
+    }
+
     enum TextViewKeys {
         static let fontSize = "textViewFontSize"
         static let fontName = "textViewFontName"

@@ -40,14 +40,14 @@ class TextViewState: ObservableObject {
 
     @Published private(set) var fontSize: CGFloat {
         didSet {
-            defaults.set(Float(fontSize), forKey: UserDefaults.TextViewKeys.fontSize)
+            defaults.textViewFontSize = Float(fontSize)
             NotificationCenter.default.post(name: .didChangeFont, object: nil, userInfo: ["redraw": false])
         }
     }
 
     @Published private(set) var fontName: String {
         didSet {
-            defaults.set(fontName, forKey: UserDefaults.TextViewKeys.fontName)
+            defaults.textViewFontName = fontName
             let shouldRedraw = needsRedraw(oldFont: oldValue, newFont: fontName)
             NotificationCenter.default.post(name: .didChangeFont, object: nil, userInfo: ["redraw": shouldRedraw])
         }
@@ -55,7 +55,7 @@ class TextViewState: ObservableObject {
     
     @Published private(set) var clickableAnnotation: Bool {
         didSet {
-            defaults.set(clickableAnnotation, forKey: UserDefaults.TextViewKeys.annotationClick)
+            defaults.enableAnnotationClick = clickableAnnotation
             NotificationCenter.default.post(name: .didChangeClickableAnnotation, object: nil,
                                             userInfo: ["enable": clickableAnnotation])
         }
@@ -91,10 +91,10 @@ class TextViewState: ObservableObject {
         self.showHarakat = defaults.textViewShowHarakat
         self.lineHeight = defaults.lineHeight
 
-        let savedSize = defaults.float(forKey: UserDefaults.TextViewKeys.fontSize)
+        let savedSize = defaults.textViewFontSize
         self.fontSize = savedSize > 0 ? CGFloat(savedSize) : 19.0
 
-        self.fontName = defaults.string(forKey: UserDefaults.TextViewKeys.fontName) ?? "KFGQPC Uthman Taha Naskh"
+        self.fontName = defaults.textViewFontName
         self.clickableAnnotation = defaults.enableAnnotationClick
     }
 
@@ -120,6 +120,29 @@ class TextViewState: ObservableObject {
     
     func setClickableAnnotation(_ enable: Bool) {
         clickableAnnotation = enable
+    }
+
+    /// Masukkan warna baru ke indeks 0. Duplikat dipindah ke depan. Maks 5.
+    func pushRecentHighlightColor(_ color: NSColor) {
+        var list = defaults.recentHighlightColors
+        list.removeAll { colorApproxEqual($0, color) }
+        list.insert(color, at: 0)
+        defaults.recentHighlightColors = Array(list.prefix(UserDefaults.maxRecentColors))
+    }
+
+    private func colorApproxEqual(_ a: NSColor, _ b: NSColor) -> Bool {
+        guard let ar = a.usingColorSpace(.deviceRGB),
+            let br = b.usingColorSpace(.deviceRGB)
+        else { return false }
+        let t: CGFloat = 0.01
+        return abs(ar.redComponent - br.redComponent) < t
+            && abs(ar.greenComponent - br.greenComponent) < t
+            && abs(ar.blueComponent - br.blueComponent) < t
+    }
+
+    func lastUsedColor() -> String {
+        let color = defaults.recentHighlightColors.first
+        return color?.hexString() ?? "#FF9300"
     }
 
     // MARK: - Helpers

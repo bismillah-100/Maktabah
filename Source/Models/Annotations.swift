@@ -64,23 +64,15 @@ extension NSColor {
         let r = CGFloat((hexNum & 0xFF0000) >> 16) / 255.0
         let g = CGFloat((hexNum & 0x00FF00) >> 8) / 255.0
         let b = CGFloat(hexNum & 0x0000FF) / 255.0
-        self.init(calibratedRed: r, green: g, blue: b, alpha: 1.0)
+        self.init(srgbRed: r, green: g, blue: b, alpha: 1.0)
     }
-}
 
-extension NSImage {
-    static func coloredCircle(color: NSColor, diameter: CGFloat = 14) -> NSImage {
-        let size = NSSize(width: diameter, height: diameter)
-        let image = NSImage(size: size)
-        guard let alphaColor = color.highlight(withLevel: 0.5) else {
-            return image
-        }
-        image.lockFocus()
-        alphaColor.setFill()
-        let rect = NSRect(origin: .zero, size: size)
-        let path = NSBezierPath(ovalIn: rect)
-        path.fill()
-        image.unlockFocus()
-        return image
+    func hexString() -> String {
+        let defaultColor = "#FF9300"
+        guard let rgb = self.usingColorSpace(.deviceRGB) else { return defaultColor }
+        let r = Int(round(rgb.redComponent * 255))
+        let g = Int(round(rgb.greenComponent * 255))
+        let b = Int(round(rgb.blueComponent * 255))
+        return String(format: "#%02X%02X%02X", r, g, b)
     }
 }
