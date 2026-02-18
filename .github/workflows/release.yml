@@ -53,6 +53,11 @@ jobs:
           git log -1 --oneline
           echo "Tag: ${{ steps.tag.outputs.TAG_NAME }}"
 
+      # Install fonts
+      - name: Install fonts
+        run: |
+          cp "Source/Managers/App Config/Fonts/KFGQPC Uthman Taha Naskh Regular.ttf" ~/Library/Fonts/
+
       # Build archive macOS
       - name: Build archive
         run: |
