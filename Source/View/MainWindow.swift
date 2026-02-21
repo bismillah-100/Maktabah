@@ -54,6 +54,7 @@ class MainWindow: NSWindow {
         if !restoreState {
             splitVC.setupForMode(currentMode)
             splitVC.setupAutoSave()
+            splitVC.stateManager.setState(ReaderState(), for: currentMode)
         }
         contentViewController = splitVC
         splitVC.currentMode = currentMode
