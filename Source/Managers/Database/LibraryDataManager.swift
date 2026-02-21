@@ -16,6 +16,7 @@ class LibraryDataManager {
 
     private(set) lazy var booksById: [Int: BooksData] = [:]
     private(set) lazy var archives: [Int: ArchiveInfo] = [:]
+    private var archivesBuiltFromFullData: Bool = false
 
     private(set) var searchIsRunning: Bool = false
 
@@ -102,7 +103,8 @@ class LibraryDataManager {
     }
 
     func buildArchive() async {
-        if !archives.isEmpty { return }
+        if archivesBuiltFromFullData { return }
+        guard isDataLoaded else { return }
         // gunakan var lokal agar thread-safe selama build
         var archives: [Int: ArchiveInfo] = [:]
         var seenTables = Set<String>() // untuk menghindari duplikat
@@ -149,6 +151,7 @@ class LibraryDataManager {
 
         // assign ke property jika Anda mau menyimpan hasil build
         self.archives = archives
+        archivesBuiltFromFullData = true
     }
 
     private func createConnections(dbPath: String, count: Int = 4) -> [DBConnectionType] {
