@@ -461,6 +461,28 @@
         }
       }
     },
+    "Download phase completed (%lld/%lld). Starting processing..." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اكتملت مرحلة التنزيل (%1$lld/%2$lld). بدء المعالجة..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Download phase completed (%1$lld/%2$lld). Starting processing..."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fase unduhan selesai (%1$lld/%2$lld). Memulai proses…"
+          }
+        }
+      }
+    },
     "Download Update" : {
       "localizations" : {
         "ar" : {
@@ -477,24 +499,40 @@
         }
       }
     },
-    "Downloading: %@ (%lld/%lld)" : {
+    "Downloaded" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "جارٍ التنزيل: %1$@ (%2$lld/%3$lld)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading: %1$@ (%2$lld/%3$lld)"
+            "value" : "تم تنزيله"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mengunduh: %1$@ (%2$lld/%3$lld)"
+            "value" : "Diunduh"
+          }
+        }
+      }
+    },
+    "Downloading books... (%lld/%lld)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنزيل الكتب... (%1$lld/%2$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Downloading books... (%1$lld/%2$lld)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mengunduh kitab… (%1$lld/%2$lld)"
           }
         }
       }
@@ -1350,6 +1388,28 @@
         }
       }
     },
+    "Processing: %@ (%lld/%lld)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المعالجة: %1$@ (%2$lld/%3$lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Processing: %1$@ (%2$lld/%3$lld)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memproses: %1$@ (%2$lld/%3$lld)"
+          }
+        }
+      }
+    },
     "Processing..." : {
       "localizations" : {
         "ar" : {
@@ -1755,7 +1815,7 @@
       }
     },
     "v? → v%lld" : {
-
+      "shouldTranslate" : false
     },
     "v%lld → v%lld" : {
       "localizations" : {

@@ -60,6 +60,7 @@ enum UpdateStatus: Equatable {
     case needsUpdate  // Perlu update
     case upToDate  // Sudah terbaru
     case downloading  // Sedang download
+    case downloaded  // Download selesai, menunggu proses
     case processing  // Sedang memproses
     case completed  // Selesai
     case failed(String)  // Gagal dengan pesan error
@@ -73,6 +74,7 @@ enum UpdateStatus: Equatable {
         case .needsUpdate: return String(localized: "Needs update")
         case .upToDate: return String(localized: "Already updated")
         case .downloading: return String(localized: "Downloading...")
+        case .downloaded: return String(localized: "Downloaded")
         case .processing: return String(localized: "Processing...")
         case .completed: return String(localized: "Done")
         case .failed(let msg): return String(localized: "Failed: \(msg)")

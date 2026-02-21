@@ -114,7 +114,6 @@ class BookUpdateViewModel: ObservableObject {
             guard let self else { return }
 
             do {
-                // Download auth index sekali saja
                 let authEntries = try await BookUpdateManager.shared
                     .fetchAuthIndexEntriesIfNeeded(
                         from: authCSVURL
@@ -123,19 +122,11 @@ class BookUpdateViewModel: ObservableObject {
                     uniqueKeysWithValues: authEntries.map { ($0.authId, $0) }
                 )
 
-                var completedCount = 0
-                var updatedBookIds = Set<Int>()
-
-                for item in selectedItems {
-                    // Update status
-                    item.status = .downloading
-                    progressMessage = String(localized:
-                        "Downloading: \(item.bookName) (\(completedCount + 1)/\(selectedItems.count))"
-                    )
-
-                    do {
-                        // Buat entry dari item
-                        let entry = BookIndexEntry(
+                let selectedContexts = selectedItems.enumerated().map { index, item in
+                    SelectedBookContext(
+                        index: index,
+                        item: item,
+                        entry: BookIndexEntry(
                             bkid: item.id,
                             bk: item.bookName,
                             category: item.category,
@@ -143,34 +134,57 @@ class BookUpdateViewModel: ObservableObject {
                             downloadURL: item.downloadURL,
                             fileSize: item.fileSize
                         )
+                    )
+                }
 
-                        item.status = .processing
+                for context in selectedContexts {
+                    context.item.status = .downloading
+                }
 
-                        // Process single book
-                        if let result = try await BookUpdateManager.shared
-                            .processSingleBook(
-                                entry,
-                                authIndex: authIndexMap
-                            )
-                        {
-                            updateResults.append(result)
-                            item.currentVersion = item.newVersion
-                            item.isSelected = false
-                            item.status = .completed
+                let stagedUpdates = await downloadSelectedBooksInParallel(
+                    selectedContexts: selectedContexts,
+                    authIndexMap: authIndexMap,
+                    maxConcurrentDownloads: 3
+                )
+
+                progressMessage = String(localized:
+                    "Download phase completed (\(stagedUpdates.count)/\(selectedItems.count)). Starting processing..."
+                )
+
+                var completedCount = 0
+                var processingCount = 0
+
+                for context in selectedContexts {
+                    guard let stagedUpdate = stagedUpdates[context.index] else {
+                        continue
+                    }
+
+                    context.item.status = .processing
+                    processingCount += 1
+                    progressMessage = String(localized:
+                        "Processing: \(context.item.bookName) (\(processingCount)/\(selectedItems.count))"
+                    )
+
+                    do {
+                        let result = try await BookUpdateManager.shared
+                            .applyStagedBookUpdate(stagedUpdate)
+                        updateResults.append(result)
+
+                        switch result.action {
+                        case .inserted, .updated:
+                            context.item.currentVersion = context.item.newVersion
+                            context.item.isSelected = false
+                            context.item.status = .completed
                             completedCount += 1
-
-                            // Collect updated book ID
-                            updatedBookIds.insert(item.id)
-                        } else {
-                            item.status = .skipped
+                        case .skipped:
+                            context.item.status = .skipped
                         }
-
                     } catch {
-                        item.status = .failed(error.localizedDescription)
+                        context.item.status = .failed(error.localizedDescription)
                         refreshAvailableUpdatesState()
                         #if DEBUG
                             print(
-                                "❌ [Update] Failed to update book \(item.id): \(error)"
+                                "[Update] Failed to update book \(context.item.id): \(error)"
                             )
                         #endif
                     }
@@ -188,9 +202,94 @@ class BookUpdateViewModel: ObservableObject {
                     print("❌ [Perform Updates] Error: \(error)")
                 #endif
             }
-
-            isUpdating = false
         }
+    }
+
+    private struct SelectedBookContext {
+        let index: Int
+        let item: BookUpdateItem
+        let entry: BookIndexEntry
+    }
+
+    private struct DownloadTaskInput {
+        let index: Int
+        let entry: BookIndexEntry
+    }
+
+    private struct DownloadTaskOutput {
+        let index: Int
+        let stagedUpdate: BookUpdateManager.StagedBookUpdate?
+        let error: Error?
+    }
+
+    @MainActor
+    private func downloadSelectedBooksInParallel(
+        selectedContexts: [SelectedBookContext],
+        authIndexMap: [Int: AuthIndexEntry],
+        maxConcurrentDownloads: Int
+    ) async -> [Int: BookUpdateManager.StagedBookUpdate] {
+        var stagedUpdates: [Int: BookUpdateManager.StagedBookUpdate] = [:]
+        let taskInputs = selectedContexts.map {
+            DownloadTaskInput(index: $0.index, entry: $0.entry)
+        }
+
+        var completedDownloads = 0
+
+        for chunkStart in stride(
+            from: 0,
+            to: taskInputs.count,
+            by: maxConcurrentDownloads
+        ) {
+            let chunkEnd = min(chunkStart + maxConcurrentDownloads, taskInputs.count)
+            let chunk = Array(taskInputs[chunkStart..<chunkEnd])
+
+            await withTaskGroup(of: DownloadTaskOutput.self) { group in
+                for taskInput in chunk {
+                    group.addTask {
+                        do {
+                            let stagedUpdate = try await BookUpdateManager.shared
+                                .stageBookDownload(
+                                    taskInput.entry,
+                                    authIndex: authIndexMap
+                                )
+                            return DownloadTaskOutput(
+                                index: taskInput.index,
+                                stagedUpdate: stagedUpdate,
+                                error: nil
+                            )
+                        } catch {
+                            return DownloadTaskOutput(
+                                index: taskInput.index,
+                                stagedUpdate: nil,
+                                error: error
+                            )
+                        }
+                    }
+                }
+
+                for await output in group {
+                    completedDownloads += 1
+                    let item = selectedContexts[output.index].item
+                    if let stagedUpdate = output.stagedUpdate {
+                        stagedUpdates[output.index] = stagedUpdate
+                        item.status = .downloaded
+                    } else if let error = output.error {
+                        item.status = .failed(error.localizedDescription)
+                        #if DEBUG
+                            print(
+                                "[Download] Failed to download book \(item.id): \(error)"
+                            )
+                        #endif
+                    }
+
+                    progressMessage = String(localized:
+                        "Downloading books... (\(completedDownloads)/\(selectedContexts.count))"
+                    )
+                }
+            }
+        }
+
+        return stagedUpdates
     }
 
     private func refreshAvailableUpdatesState() {

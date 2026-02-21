@@ -25,6 +25,21 @@ final class BookUpdateManager {
 
     private init() {}
 
+    struct StagedBookUpdate {
+        let entry: BookIndexEntry
+        let metadata: BookMetadata
+        let downloadedBookURL: URL
+        let ftsSourceURL: URL
+        let authorContext: AuthorContext?
+        let workingDirectory: URL
+    }
+
+    struct AuthorContext {
+        let authId: Int
+        let versionName: Int64
+        let downloadURL: URL
+    }
+
     private enum BookVersionState {
         case notInLibrary
         case unknownVersion
@@ -158,21 +173,7 @@ final class BookUpdateManager {
         return .version(sqlite3_column_int64(stmt, 0))
     }
 
-    // MARK: - Process Single Book (untuk selective download)
-
-    /// Memproses satu buku saja (digunakan saat download selektif)
-    func processSingleBook(
-        _ entry: BookIndexEntry,
-        authIndex: [Int: AuthIndexEntry]
-    ) async throws -> BookUpdateResult? {
-
-        #if DEBUG
-            print("🔄 [Process Single] Starting process for book \(entry.bkid)")
-        #endif
-
-        // Gunakan method process yang sudah ada
-        return try await process(entry, authIndex: authIndex)
-    }
+    // MARK: - Fetch data yang diperlukan dari internet.
 
     func fetchIndexEntries(from url: URL) async throws -> [BookIndexEntry] {
         let (data, _) = try await URLSession.shared.data(from: url)
@@ -252,35 +253,31 @@ final class BookUpdateManager {
         }
     }
 
-    private func process(
+    func stageBookDownload(
         _ entry: BookIndexEntry,
         authIndex: [Int: AuthIndexEntry]
-    ) async throws -> BookUpdateResult? {
-        let exists = try bookExists(id: entry.bkid)
-        let needsUpdate = try bookNeedsUpdate(
-            id: entry.bkid,
-            newVersion: entry.versionName
-        )
-
-        if exists, !needsUpdate {
-            return BookUpdateResult(
-                bookId: entry.bkid,
-                catId: entry.category,
-                action: .skipped
-            )
-        }
-
+    ) async throws -> StagedBookUpdate {
         guard
             let downloadURL = URL(
                 string: entry.downloadURL
             )
-        else { return nil }
+        else {
+            throw NSError(
+                domain: "BookUpdate",
+                code: -8,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Download URL metadata tidak valid untuk buku \(entry.bkid)."
+                ]
+            )
+        }
 
         let workingDirectory = try makeWorkingDirectory()
         let downloadedMetadataURL = try await downloadFile(
             from: downloadURL,
             to: workingDirectory,
-            SQLite: true
+            SQLite: true,
+            filePrefix: "metadata_\(entry.bkid)"
         )
 
         defer {
@@ -303,60 +300,121 @@ final class BookUpdateManager {
             )
         }
 
-        if let authId = metadata.authno, let authEntry = authIndex[authId],
-            let downloadURL = URL(
-                string: authEntry.downloadURL
-            )
-        {
-            try await ensureAuthor(
-                authId: authId,
-                downloadURL: downloadURL,
-                workingDirectory: workingDirectory,
-                newVersion: authEntry.versionName
-            )
-        }
-
         guard let link = metadata.link,
             let bookURL = URL(
                 string: BookUpdateViewModel.driveLink + link
             )
-        else { return nil }
+        else {
+            throw NSError(
+                domain: "BookUpdate",
+                code: -9,
+                userInfo: [
+                    NSLocalizedDescriptionKey:
+                        "Link download buku tidak tersedia untuk buku \(entry.bkid)."
+                ]
+            )
+        }
 
         let newWorkingDirectory = try makeWorkingDirectory()
         let downloadedBookURL = try await downloadFile(
             from: bookURL,
             to: newWorkingDirectory,
-            SQLite: true
+            SQLite: true,
+            filePrefix: "book_\(metadata.bkid)"
         )
 
         let ftsSourceURL = newWorkingDirectory.appendingPathComponent(
-            "b\(metadata.bkid)_fts_source.sqlite"
+            "b\(metadata.bkid)_fts_source_\(UUID().uuidString).sqlite"
         )
-        if FileManager.default.fileExists(atPath: ftsSourceURL.path) {
-            try FileManager.default.removeItem(at: ftsSourceURL)
-        }
-        try FileManager.default.copyItem(at: downloadedBookURL, to: ftsSourceURL)
-        defer {
+        do {
+            if FileManager.default.fileExists(atPath: ftsSourceURL.path) {
+                try FileManager.default.removeItem(at: ftsSourceURL)
+            }
+            try FileManager.default.copyItem(at: downloadedBookURL, to: ftsSourceURL)
+        } catch {
             try? FileManager.default.removeItem(at: ftsSourceURL)
+            try? FileManager.default.removeItem(at: downloadedBookURL)
+            throw error
         }
 
-        try convertBookDatabase(at: downloadedBookURL, bookId: metadata.bkid)
+        var authorContext: AuthorContext?
+        if let authId = metadata.authno, let authEntry = authIndex[authId],
+            let authDownloadURL = URL(string: authEntry.downloadURL)
+        {
+            authorContext = AuthorContext(
+                authId: authId,
+                versionName: authEntry.versionName,
+                downloadURL: authDownloadURL
+            )
+        }
+
+        return StagedBookUpdate(
+            entry: entry,
+            metadata: metadata,
+            downloadedBookURL: downloadedBookURL,
+            ftsSourceURL: ftsSourceURL,
+            authorContext: authorContext,
+            workingDirectory: workingDirectory
+        )
+    }
+
+    func applyStagedBookUpdate(
+        _ stagedUpdate: StagedBookUpdate,
+        knownExists: Bool? = nil
+    ) async throws -> BookUpdateResult {
+        defer {
+            try? FileManager.default.removeItem(at: stagedUpdate.ftsSourceURL)
+            try? FileManager.default.removeItem(at: stagedUpdate.downloadedBookURL)
+        }
+
+        let exists: Bool
+        if let knownExists {
+            exists = knownExists
+        } else {
+            exists = try bookExists(id: stagedUpdate.metadata.bkid)
+        }
+        let needsUpdate = try bookNeedsUpdate(
+            id: stagedUpdate.metadata.bkid,
+            newVersion: stagedUpdate.entry.versionName
+        )
+
+        if exists, !needsUpdate {
+            return BookUpdateResult(
+                bookId: stagedUpdate.metadata.bkid,
+                catId: stagedUpdate.entry.category,
+                action: .skipped
+            )
+        }
+
+        if let authorContext = stagedUpdate.authorContext {
+            try await ensureAuthor(
+                authId: authorContext.authId,
+                downloadURL: authorContext.downloadURL,
+                workingDirectory: stagedUpdate.workingDirectory,
+                newVersion: authorContext.versionName
+            )
+        }
+
+        try convertBookDatabase(
+            at: stagedUpdate.downloadedBookURL,
+            bookId: stagedUpdate.metadata.bkid
+        )
         try replaceArchiveDatabase(
-            with: downloadedBookURL,
-            archiveId: metadata.archive,
-            bookId: metadata.bkid,
-            ftsSourceURL: ftsSourceURL
+            with: stagedUpdate.downloadedBookURL,
+            archiveId: stagedUpdate.metadata.archive,
+            bookId: stagedUpdate.metadata.bkid,
+            ftsSourceURL: stagedUpdate.ftsSourceURL
         )
 
         if !exists {
-            try insertBookMetadata(metadata)
+            try insertBookMetadata(stagedUpdate.metadata)
         } else {
-            try updateBookVersion(metadata)
+            try updateBookVersion(stagedUpdate.metadata)
         }
 
         return BookUpdateResult(
-            bookId: metadata.bkid,
-            catId: entry.category,
+            bookId: stagedUpdate.metadata.bkid,
+            catId: stagedUpdate.entry.category,
             action: exists ? .updated : .inserted
         )
     }
@@ -950,26 +1008,29 @@ final class BookUpdateManager {
     private func downloadFile(
         from url: URL,
         to directory: URL,
-        SQLite: Bool = false
+        SQLite: Bool = false,
+        filePrefix: String? = nil
     ) async throws
         -> URL
     {
         let (tempURL, _) = try await URLSession.shared.download(from: url)
+        let defaultName =
+            url.lastPathComponent.isEmpty ? "download" : url.lastPathComponent
+        let cleanedPrefix = filePrefix?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let nameSeed = cleanedPrefix.flatMap { $0.isEmpty ? nil : $0 } ?? defaultName
         var destination = directory.appendingPathComponent(
-            url.lastPathComponent
+            "\(nameSeed)_\(UUID().uuidString)"
         )
 
         if SQLite {
-            destination = URL(string: destination.absoluteString + ".sqlite")!
+            destination.appendPathExtension("sqlite")
         }
 
         #if DEBUG
             print("destination:", destination)
         #endif
-
-        if FileManager.default.fileExists(atPath: destination.path) {
-            try FileManager.default.removeItem(at: destination)
-        }
 
         try FileManager.default.moveItem(at: tempURL, to: destination)
         return destination

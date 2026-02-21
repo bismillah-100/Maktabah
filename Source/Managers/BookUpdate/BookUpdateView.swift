@@ -300,6 +300,9 @@ struct BookUpdateRow: View {
                     .foregroundColor(.secondary)
             }
 
+        case .downloaded:
+            statusBadge(text: item.status.displayText, color: .blue)
+
         case .new:
             statusBadge(text: item.status.displayText, color: .blue)
 
