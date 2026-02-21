@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 // MARK: - CSV Entry dengan informasi lengkap
 struct BookIndexEntry: Codable {
@@ -85,7 +86,8 @@ class BookUpdateItem: ObservableObject, Identifiable {
     let id: Int
     let bookName: String
     let category: Int
-    let currentVersion: Int64?
+    let existsInLibrary: Bool
+    @Published var currentVersion: Int64?
     let newVersion: Int64
     let fileSize: Int64
     let downloadURL: String
@@ -95,12 +97,13 @@ class BookUpdateItem: ObservableObject, Identifiable {
     // @Published var progress: Double = 0.0
 
     var needsUpdate: Bool {
+        guard existsInLibrary else { return true }
         guard let current = currentVersion else { return true }
         return current != newVersion
     }
 
     var newBook: Bool {
-        currentVersion == nil
+        !existsInLibrary
     }
 
     var fileSizeFormatted: String {
@@ -115,6 +118,7 @@ class BookUpdateItem: ObservableObject, Identifiable {
         id: Int,
         bookName: String,
         category: Int,
+        existsInLibrary: Bool,
         currentVersion: Int64?,
         newVersion: Int64,
         fileSize: Int64,
@@ -123,6 +127,7 @@ class BookUpdateItem: ObservableObject, Identifiable {
         self.id = id
         self.bookName = bookName
         self.category = category
+        self.existsInLibrary = existsInLibrary
         self.currentVersion = currentVersion
         self.newVersion = newVersion
         self.fileSize = fileSize

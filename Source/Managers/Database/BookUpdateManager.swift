@@ -25,6 +25,30 @@ final class BookUpdateManager {
 
     private init() {}
 
+    private enum BookVersionState {
+        case notInLibrary
+        case unknownVersion
+        case version(Int64)
+
+        var existsInLibrary: Bool {
+            switch self {
+            case .notInLibrary:
+                return false
+            case .unknownVersion, .version:
+                return true
+            }
+        }
+
+        var currentVersion: Int64? {
+            switch self {
+            case .version(let value):
+                return value
+            case .notInLibrary, .unknownVersion:
+                return nil
+            }
+        }
+    }
+
     // MARK: - Fetch Available Updates (untuk UI)
 
     /// Mengambil daftar buku yang tersedia dengan informasi versi
@@ -53,13 +77,16 @@ final class BookUpdateManager {
             LibraryDataManager.shared.getBook([entry.bkid]).first?.book
                 ?? entry.bk
 
-            // Periksa versi saat ini di database
-            let currentVersion = try? getCurrentVersion(bookId: entry.bkid)
+            // Periksa status versi saat ini di database
+            let versionState = (try? getBookVersionState(bookId: entry.bkid))
+                ?? .unknownVersion
+            let currentVersion = versionState.currentVersion
 
             let item = BookUpdateItem(
                 id: entry.bkid,
                 bookName: bookName,
                 category: entry.category,
+                existsInLibrary: versionState.existsInLibrary,
                 currentVersion: currentVersion,
                 newVersion: entry.versionName,
                 fileSize: entry.fileSize,
@@ -79,8 +106,10 @@ final class BookUpdateManager {
 
             #if DEBUG
                 if item.needsUpdate {
+                    let currentVersionText = currentVersion.map(String.init) ??
+                        (item.newBook ? "NEW" : "NULL")
                     print(
-                        "🔄 [Fetch Updates] Book \(entry.bkid) needs update: \(currentVersion ?? -1) → \(entry.versionName)"
+                        "🔄 [Fetch Updates] Book \(entry.bkid) needs update: \(currentVersionText) → \(entry.versionName)"
                     )
                 }
             #endif
@@ -96,37 +125,37 @@ final class BookUpdateManager {
         return items
     }
 
-    private func getCurrentVersion(bookId: Int) throws -> Int64? {
+    private func getBookVersionState(bookId: Int) throws -> BookVersionState {
         guard let basePath = DatabaseManager.shared.basePath else {
-            return nil
+            return .unknownVersion
         }
         let mainPath = "\(basePath)/Files/main.sqlite"
         let db = try openDatabase(path: mainPath)
         defer { sqlite3_close(db) }
 
         guard let versionColumn = resolveVersionColumn(in: db) else {
-            return nil
+            return .unknownVersion
         }
 
         let sql =
             "SELECT `\(versionColumn)` FROM `0bok` WHERE `bkid` = ? LIMIT 1;"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            return nil
+            return .unknownVersion
         }
         defer { sqlite3_finalize(stmt) }
 
         sqlite3_bind_int64(stmt, 1, Int64(bookId))
 
         guard sqlite3_step(stmt) == SQLITE_ROW else {
-            return nil  // Book not found
+            return .notInLibrary
         }
 
         if sqlite3_column_type(stmt, 0) == SQLITE_NULL {
-            return nil  // NULL version
+            return .unknownVersion
         }
 
-        return sqlite3_column_int64(stmt, 0)
+        return .version(sqlite3_column_int64(stmt, 0))
     }
 
     // MARK: - Process Single Book (untuk selective download)

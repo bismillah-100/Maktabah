@@ -1754,6 +1754,9 @@
         }
       }
     },
+    "v? → v%lld" : {
+
+    },
     "v%lld → v%lld" : {
       "localizations" : {
         "en" : {

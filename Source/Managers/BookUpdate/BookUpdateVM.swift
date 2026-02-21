@@ -154,6 +154,8 @@ class BookUpdateViewModel: ObservableObject {
                             )
                         {
                             updateResults.append(result)
+                            item.currentVersion = item.newVersion
+                            item.isSelected = false
                             item.status = .completed
                             completedCount += 1
 
@@ -165,6 +167,7 @@ class BookUpdateViewModel: ObservableObject {
 
                     } catch {
                         item.status = .failed(error.localizedDescription)
+                        refreshAvailableUpdatesState()
                         #if DEBUG
                             print(
                                 "❌ [Update] Failed to update book \(item.id): \(error)"
@@ -178,7 +181,7 @@ class BookUpdateViewModel: ObservableObject {
                 )
 
                 try await LibraryDataManager.shared.processBookUpdates(updateResults)
-
+                refreshAvailableUpdatesState()
             } catch {
                 progressMessage = "Error: \(error.localizedDescription)"
                 #if DEBUG
@@ -188,5 +191,10 @@ class BookUpdateViewModel: ObservableObject {
 
             isUpdating = false
         }
+    }
+
+    private func refreshAvailableUpdatesState() {
+        // Reassign array agar computed property di SwiftUI ikut refresh
+        availableUpdates = availableUpdates
     }
 }

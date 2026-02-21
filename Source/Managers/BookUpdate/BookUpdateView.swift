@@ -260,9 +260,15 @@ struct BookUpdateRow: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     } else {
-                        Text("v\(item.newVersion) " + "new".localized)
-                            .font(.caption)
-                            .foregroundColor(.green)
+                        if item.newBook {
+                            Text("v\(item.newVersion) " + "new".localized)
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        } else {
+                            Text("v? → v\(item.newVersion)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
 
                     Text(item.fileSizeFormatted)
