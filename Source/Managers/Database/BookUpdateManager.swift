@@ -321,6 +321,8 @@ final class BookUpdateManager {
 
         if !exists {
             try insertBookMetadata(metadata)
+        } else {
+            try updateBookVersion(metadata)
         }
 
         return BookUpdateResult(
@@ -439,6 +441,20 @@ final class BookUpdateManager {
         )
 
         try db.run(insert)
+    }
+
+    private func updateBookVersion(_ metadata: BookMetadata) throws {
+        guard let db = DatabaseManager.shared.db else { return }
+
+        let manager = DatabaseManager.shared
+        let query = manager.booksTable.filter(
+            manager.bokId == metadata.bkid
+        )
+        
+        try db.run(query.update(manager.bVer <- metadata.bVer))
+        #if DEBUG
+            print("[Update Version] bVer berhasil diperbarui ke \(metadata.bVer ?? 0) untuk book \(metadata.bkid)")
+        #endif
     }
 
     private func ensureAuthor(
