@@ -300,17 +300,23 @@ final class BookUpdateManager {
             SQLite: true
         )
 
-        try rebuildFTS(
-            with: downloadedBookURL,
-            archiveId: metadata.archive,
-            bookId: metadata.bkid
+        let ftsSourceURL = newWorkingDirectory.appendingPathComponent(
+            "b\(metadata.bkid)_fts_source.sqlite"
         )
+        if FileManager.default.fileExists(atPath: ftsSourceURL.path) {
+            try FileManager.default.removeItem(at: ftsSourceURL)
+        }
+        try FileManager.default.copyItem(at: downloadedBookURL, to: ftsSourceURL)
+        defer {
+            try? FileManager.default.removeItem(at: ftsSourceURL)
+        }
 
         try convertBookDatabase(at: downloadedBookURL, bookId: metadata.bkid)
         try replaceArchiveDatabase(
             with: downloadedBookURL,
             archiveId: metadata.archive,
-            bookId: metadata.bkid
+            bookId: metadata.bkid,
+            ftsSourceURL: ftsSourceURL
         )
 
         if !exists {
@@ -675,105 +681,151 @@ final class BookUpdateManager {
         let tempTable = "\(tableName)_zstd"
         let columns = try loadTableColumns(tableName: tableName, db: db)
 
-        try exec(db, "DROP TABLE IF EXISTS \(tempTable);")
-        let createSQL = makeCreateTableSQL(
-            tableName: tempTable,
-            columns: columns
-        )
-        try exec(db, createSQL)
+        try withTransaction(db) {
+            try exec(db, "DROP TABLE IF EXISTS \(tempTable);")
+            let createSQL = makeCreateTableSQL(
+                tableName: tempTable,
+                columns: columns
+            )
+            try exec(db, createSQL)
 
-        let columnNames = columns.map { $0.name }
-        let selectSQL =
-            "SELECT \(columnNames.joined(separator: ", ")) FROM \(tableName);"
-        let insertSQL =
-            "INSERT INTO \(tempTable) (\(columnNames.joined(separator: ", "))) VALUES (\(columnNames.map { _ in "?" }.joined(separator: ", ")));"
+            let columnNames = columns.map { $0.name }
+            let selectSQL =
+                "SELECT \(columnNames.joined(separator: ", ")) FROM \(tableName);"
+            let insertSQL =
+                "INSERT INTO \(tempTable) (\(columnNames.joined(separator: ", "))) VALUES (\(columnNames.map { _ in "?" }.joined(separator: ", ")));"
 
-        var selectStmt: OpaquePointer?
-        var insertStmt: OpaquePointer?
+            var selectStmt: OpaquePointer?
+            var insertStmt: OpaquePointer?
 
-        guard
-            sqlite3_prepare_v2(db, selectSQL, -1, &selectStmt, nil) == SQLITE_OK
-        else {
-            throw sqliteError(db, message: "Gagal prepare SELECT konversi.")
-        }
-        defer { sqlite3_finalize(selectStmt) }
+            guard
+                sqlite3_prepare_v2(
+                    db,
+                    selectSQL,
+                    -1,
+                    &selectStmt,
+                    nil
+                ) == SQLITE_OK
+            else {
+                throw sqliteError(db, message: "Gagal prepare SELECT konversi.")
+            }
+            defer { sqlite3_finalize(selectStmt) }
 
-        guard
-            sqlite3_prepare_v2(db, insertSQL, -1, &insertStmt, nil) == SQLITE_OK
-        else {
-            throw sqliteError(db, message: "Gagal prepare INSERT konversi.")
-        }
-        defer { sqlite3_finalize(insertStmt) }
+            guard
+                sqlite3_prepare_v2(
+                    db,
+                    insertSQL,
+                    -1,
+                    &insertStmt,
+                    nil
+                ) == SQLITE_OK
+            else {
+                throw sqliteError(db, message: "Gagal prepare INSERT konversi.")
+            }
+            defer { sqlite3_finalize(insertStmt) }
 
-        while sqlite3_step(selectStmt) == SQLITE_ROW {
-            sqlite3_reset(insertStmt)
+            while sqlite3_step(selectStmt) == SQLITE_ROW {
+                sqlite3_reset(insertStmt)
 
-            for (index, column) in columns.enumerated() {
-                let colIndex = Int32(index)
-                if column.name.lowercased() == "nass" {
-                    if let textPtr = sqlite3_column_text(selectStmt, colIndex) {
-                        let text = String(cString: textPtr)
-                        if let compressed = ReusableFunc.compressData(text) {
-                            _ = compressed.withUnsafeBytes { bytes in
-                                sqlite3_bind_blob(
-                                    insertStmt,
-                                    colIndex + 1,
-                                    bytes.baseAddress,
-                                    Int32(compressed.count),
-                                    sqliteTransient
-                                )
+                for (index, column) in columns.enumerated() {
+                    let colIndex = Int32(index)
+                    if column.name.lowercased() == "nass" {
+                        if let textPtr = sqlite3_column_text(selectStmt, colIndex)
+                        {
+                            let text = String(cString: textPtr)
+                            if let compressed = ReusableFunc.compressData(text) {
+                                _ = compressed.withUnsafeBytes { bytes in
+                                    sqlite3_bind_blob(
+                                        insertStmt,
+                                        colIndex + 1,
+                                        bytes.baseAddress,
+                                        Int32(compressed.count),
+                                        sqliteTransient
+                                    )
+                                }
+                            } else {
+                                sqlite3_bind_null(insertStmt, colIndex + 1)
                             }
                         } else {
                             sqlite3_bind_null(insertStmt, colIndex + 1)
                         }
                     } else {
-                        sqlite3_bind_null(insertStmt, colIndex + 1)
+                        if let selectStmt, let insertStmt {
+                            bindColumnValue(
+                                from: selectStmt,
+                                to: insertStmt,
+                                columnIndex: colIndex
+                            )
+                        }
                     }
-                } else {
-                    if let selectStmt, let insertStmt {
-                        bindColumnValue(
-                            from: selectStmt,
-                            to: insertStmt,
-                            columnIndex: colIndex
-                        )
-                    }
+                }
+
+                if sqlite3_step(insertStmt) != SQLITE_DONE {
+                    throw sqliteError(db, message: "Gagal insert konversi.")
                 }
             }
 
-            if sqlite3_step(insertStmt) != SQLITE_DONE {
-                throw sqliteError(db, message: "Gagal insert konversi.")
-            }
+            try exec(db, "DROP TABLE \(tableName);")
+            try exec(db, "ALTER TABLE \(tempTable) RENAME TO \(tableName);")
         }
-
-        try exec(db, "DROP TABLE \(tableName);")
-        try exec(db, "ALTER TABLE \(tempTable) RENAME TO \(tableName);")
     }
 
     private func replaceArchiveDatabase(
         with sourceURL: URL,
         archiveId: Int,
-        bookId: Int
+        bookId: Int,
+        ftsSourceURL: URL
     ) throws {
         guard let basePath = DatabaseManager.shared.basePath else { return }
         let targetPath = "\(basePath)/\(archiveId).sqlite"
+        let ftsDBPath = "\(basePath)/\(archiveId)_fts.sqlite"
         let db = try openDatabase(path: targetPath)
         defer { sqlite3_close(db) }
-        let attachSQL = "ATTACH DATABASE '\(sourceURL.path)' AS source_db;"
-        try exec(db, attachSQL)
 
-        try replaceTable(
-            db: db,
-            tableName: "b\(bookId)",
-            sourceSchema: "source_db"
+        registerNormalizeFunction(db: db)
+
+        try exec(db, "ATTACH DATABASE '\(sourceURL.path)' AS source_db;")
+        try exec(
+            db,
+            "ATTACH DATABASE '\(ftsSourceURL.path)' AS fts_source_db;"
         )
+        try exec(db, "ATTACH DATABASE '\(ftsDBPath)' AS fts_db;")
+        defer {
+            try? exec(db, "DETACH DATABASE fts_db;")
+            try? exec(db, "DETACH DATABASE fts_source_db;")
+            try? exec(db, "DETACH DATABASE source_db;")
+        }
 
-        try replaceTable(
-            db: db,
-            tableName: "t\(bookId)",
-            sourceSchema: "source_db"
-        )
+        try withTransaction(db) {
+            try replaceTable(
+                db: db,
+                tableName: "b\(bookId)",
+                sourceSchema: "source_db"
+            )
 
-        try exec(db, "DETACH DATABASE source_db;")
+            try replaceTable(
+                db: db,
+                tableName: "t\(bookId)",
+                sourceSchema: "source_db"
+            )
+
+            let tableName = "b\(bookId)"
+            let ftsTable = "\(tableName)_fts"
+            try exec(db, "DROP TABLE IF EXISTS fts_db.\(ftsTable);")
+            try exec(
+                db,
+                "CREATE VIRTUAL TABLE fts_db.\(ftsTable) USING fts5(nass_clean, content='', tokenize='unicode61');"
+            )
+
+            let insertFTS = """
+                INSERT INTO fts_db.\(ftsTable)(rowid, nass_clean)
+                SELECT id, normalize_arabic(nass)
+                FROM fts_source_db.\(tableName)
+                WHERE nass IS NOT NULL AND nass != '';
+            """
+            try exec(db, insertFTS)
+        }
+
         try exec(db, "VACUUM;")
     }
 
@@ -823,50 +875,6 @@ final class BookUpdateManager {
             nil,
             nil
         )
-    }
-
-    private func rebuildFTS(
-        with contentDBPath: URL,
-        archiveId: Int,
-        bookId: Int
-    ) throws {
-        guard let basePath = DatabaseManager.shared.basePath else { return }
-        let ftsDBPath = "\(basePath)/\(archiveId)_fts.sqlite"
-
-        var db: OpaquePointer?
-        // Gunakan file yang di-download sebagai database UTAMA (main)
-        if sqlite3_open(contentDBPath.path, &db) != SQLITE_OK {
-            throw sqliteError(db, message: "Gagal membuka DB konten")
-        }
-        defer { sqlite3_close(db) }
-
-        registerNormalizeFunction(db: db)
-
-        // Attach database FTS eksternal
-        let attachSQL = "ATTACH DATABASE '\(ftsDBPath)' AS fts_db;"
-        try exec(db!, attachSQL)
-
-        let tableName = "b\(bookId)"
-        let ftsTable = "\(tableName)_fts"
-
-        // Gunakan DROP & CREATE untuk contentless table agar tidak error
-        try exec(db!, "DROP TABLE IF EXISTS fts_db.\(ftsTable);")
-        let createFTS =
-            "CREATE VIRTUAL TABLE fts_db.\(ftsTable) USING fts5(nass_clean, content='', tokenize='unicode61');"
-        try exec(db!, createFTS)
-
-        // SEKARANG INSERT:
-        // Kita baca dari 'main' (yaitu file download yang masih berisi TEXT)
-        // Kita tulis ke 'fts_db'
-        let insertSQL = """
-                INSERT INTO fts_db.\(ftsTable)(rowid, nass_clean)
-                SELECT id, normalize_arabic(nass)
-                FROM main.\(tableName) -- 'main' di sini adalah file contentDBPath
-                WHERE nass IS NOT NULL AND nass != '';
-            """
-        try exec(db!, insertSQL)
-
-        try exec(db!, "DETACH DATABASE fts_db;")
     }
 
     private func makeWorkingDirectory() throws -> URL {
@@ -985,6 +993,21 @@ final class BookUpdateManager {
     private func exec(_ db: OpaquePointer, _ sql: String) throws {
         if sqlite3_exec(db, sql, nil, nil, nil) != SQLITE_OK {
             throw sqliteError(db, message: "SQL gagal dieksekusi.")
+        }
+    }
+
+    private func withTransaction(
+        _ db: OpaquePointer,
+        mode: String = "IMMEDIATE",
+        _ work: () throws -> Void
+    ) throws {
+        try exec(db, "BEGIN \(mode) TRANSACTION;")
+        do {
+            try work()
+            try exec(db, "COMMIT;")
+        } catch {
+            try? exec(db, "ROLLBACK;")
+            throw error
         }
     }
 
