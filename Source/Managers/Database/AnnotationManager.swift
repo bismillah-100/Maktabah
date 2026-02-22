@@ -76,6 +76,7 @@ final class AnnotationManager {
 
         if let ann = annotation {
             userInfo[AnnotationNotificationKeys.annotation] = ann
+            if type != .deleted { pushRecentColor(ann) }
         }
         if let id = annotationId {
             userInfo[AnnotationNotificationKeys.annotationId] = id
@@ -588,6 +589,14 @@ final class AnnotationManager {
     func invalidateTree() {
         treeQueue.async { [weak self] in
             self?._rootNode = nil
+        }
+    }
+
+    // MARK: - Helper TextViewState
+    fileprivate func pushRecentColor(_ annotation: Annotation) {
+        if annotation.type == .highlight,
+           let color = NSColor(hex: annotation.colorHex) {
+            TextViewState.shared.pushRecentHighlightColor(color)
         }
     }
 }

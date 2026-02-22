@@ -685,7 +685,6 @@ class IbarotTextView: NSTextView {
             )
 
             try AnnotationManager.shared.updateAnnotation(updated)
-            state.pushRecentHighlightColor(color)
 
             // Segarkan UI untuk menghapus atribut lama (seperti underline jika berubah)
             refreshAnnotations()
@@ -705,8 +704,6 @@ class IbarotTextView: NSTextView {
             showHarakat: state.showHarakat,
             mode: mode
         )
-
-        state.pushRecentHighlightColor(color)
 
         // Apply ke UI
         if state.clickableAnnotation {

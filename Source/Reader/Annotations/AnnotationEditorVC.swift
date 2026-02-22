@@ -98,7 +98,6 @@ class AnnotationEditorVC: NSViewController {
             partArb: annotation.partArb
         )
 
-        TextViewState.shared.pushRecentHighlightColor(colorWell.color)
         // Persist ke DB
         delegate?.annotationEditorDidSave(updated)
         cancelTapped()
