@@ -43,6 +43,9 @@ class QuranSplitVC: NSSplitViewController {
     }
 
     func setupLayout() {
+        let customSplitView = CustomSplitView()
+        splitView = customSplitView
+        splitView.isVertical = true
         sidebarSurahItem.minimumThickness = 115
         sidebarSurahItem.holdingPriority = NSLayoutConstraint.Priority(260)
         tafseerItem.minimumThickness = 150
@@ -61,6 +64,7 @@ class QuranSplitVC: NSSplitViewController {
         }
 
         sidebarSurah.delegate = textVC
+        customSplitView.updateDividerColor(to: .sepia)
         splitView.autosaveName = "QuranSplitView"
     }
 

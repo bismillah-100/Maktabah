@@ -132,8 +132,8 @@ Gw
                     <constraints>
                         <constraint firstItem="y6P-iD-BOi" firstAttribute="leading" secondItem="B5E-i9-M7f" secondAttribute="leading" constant="4" id="25e-oU-2zo"/>
                         <constraint firstAttribute="height" constant="30" id="6tZ-Dg-jf1"/>
-                        <constraint firstItem="y6P-iD-BOi" firstAttribute="top" secondItem="B5E-i9-M7f" secondAttribute="top" constant="4" id="GDj-A3-SjQ"/>
-                        <constraint firstItem="B5E-i9-M7f" firstAttribute="bottom" secondItem="y6P-iD-BOi" secondAttribute="bottom" constant="4" id="k5q-XP-TOa"/>
+                        <constraint firstItem="y6P-iD-BOi" firstAttribute="top" secondItem="hbV-qX-hTf" secondAttribute="top" constant="4" id="GDj-A3-SjQ"/>
+                        <constraint firstAttribute="bottom" secondItem="y6P-iD-BOi" secondAttribute="bottom" constant="4" id="k5q-XP-TOa"/>
                         <constraint firstItem="B5E-i9-M7f" firstAttribute="trailing" secondItem="y6P-iD-BOi" secondAttribute="trailing" constant="4" id="p8A-hw-vMu"/>
                     </constraints>
                     <viewLayoutGuide key="safeArea" id="B5E-i9-M7f"/>

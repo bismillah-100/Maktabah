@@ -357,4 +357,12 @@ class ReusableFunc {
         // Tampilkan popover, relatif terhadap tombol (sender)
         searchHelpPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minX)
     }
+    
+    // MARK: - NSIMAGE
+    static func systemImage(named name: String) -> NSImage {
+        guard let image = NSImage(systemSymbolName: name,
+                                  accessibilityDescription: nil)
+        else { return NSImage() }
+        return image
+    }
 }

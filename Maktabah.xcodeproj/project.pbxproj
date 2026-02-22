@@ -60,11 +60,9 @@
 		4B5EC2992EE334C600991F39 /* ResultsHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5EC2982EE334C600991F39 /* ResultsHandler.swift */; };
 		4B5EC29E2EE33E3200991F39 /* ResultWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5EC29C2EE33E3200991F39 /* ResultWriter.swift */; };
 		4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100E42EFA73DD00CCBED6 /* QuranSplitVC.swift */; };
-		4B6100E72EFA73DD00CCBED6 /* QuranSplitVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B6100E52EFA73DD00CCBED6 /* QuranSplitVC.xib */; };
 		4B6100E92EFA740B00CCBED6 /* QuranSidebarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100E82EFA740B00CCBED6 /* QuranSidebarVC.swift */; };
 		4B6100EB2EFA769200CCBED6 /* QuranDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100EA2EFA769200CCBED6 /* QuranDataManager.swift */; };
 		4B6100ED2EFA773C00CCBED6 /* Quran.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100EC2EFA773C00CCBED6 /* Quran.swift */; };
-		4B6100EF2EFA871F00CCBED6 /* QuranWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B6100EE2EFA871F00CCBED6 /* QuranWindow.xib */; };
 		4B6100F22EFA8C7F00CCBED6 /* QuranNashVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100F02EFA8C7F00CCBED6 /* QuranNashVC.swift */; };
 		4B6100F32EFA8C7F00CCBED6 /* QuranNashVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B6100F12EFA8C7F00CCBED6 /* QuranNashVC.xib */; };
 		4B63E1D92EE9408800D58F3B /* Header.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B63E1D82EE9408800D58F3B /* Header.xib */; };
@@ -110,7 +108,6 @@
 		4BAB8A492F28682200732FC9 /* ArabicTextRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAB8A482F28682200732FC9 /* ArabicTextRenderer.swift */; };
 		4BAB8A4C2F286C8A00732FC9 /* AnnotationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAB8A4B2F286C8A00732FC9 /* AnnotationCoordinator.swift */; };
 		4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB174412F1AFAFF00BF1A2F /* ScreenTimeManager.swift */; };
-		4BD6C3382EE681D6008684E3 /* WindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4BD6C3372EE681D6008684E3 /* WindowController.xib */; };
 		4BD6C33C2EE6AA7F008684E3 /* MainWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD6C33B2EE6AA7F008684E3 /* MainWindow.swift */; };
 		4BD728232EE44C5500ACEB7C /* IbarotTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */; };
 		4BD728252EE4544C00ACEB7C /* StringExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD728242EE4544C00ACEB7C /* StringExt.swift */; };
@@ -204,11 +201,9 @@
 		4B5EC2982EE334C600991F39 /* ResultsHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsHandler.swift; sourceTree = "<group>"; };
 		4B5EC29C2EE33E3200991F39 /* ResultWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultWriter.swift; sourceTree = "<group>"; };
 		4B6100E42EFA73DD00CCBED6 /* QuranSplitVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuranSplitVC.swift; sourceTree = "<group>"; };
-		4B6100E52EFA73DD00CCBED6 /* QuranSplitVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = QuranSplitVC.xib; sourceTree = "<group>"; };
 		4B6100E82EFA740B00CCBED6 /* QuranSidebarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuranSidebarVC.swift; sourceTree = "<group>"; };
 		4B6100EA2EFA769200CCBED6 /* QuranDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuranDataManager.swift; sourceTree = "<group>"; };
 		4B6100EC2EFA773C00CCBED6 /* Quran.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quran.swift; sourceTree = "<group>"; };
-		4B6100EE2EFA871F00CCBED6 /* QuranWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = QuranWindow.xib; sourceTree = "<group>"; };
 		4B6100F02EFA8C7F00CCBED6 /* QuranNashVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuranNashVC.swift; sourceTree = "<group>"; };
 		4B6100F12EFA8C7F00CCBED6 /* QuranNashVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = QuranNashVC.xib; sourceTree = "<group>"; };
 		4B63E1D82EE9408800D58F3B /* Header.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Header.xib; sourceTree = "<group>"; };
@@ -260,7 +255,6 @@
 		4BAB8A482F28682200732FC9 /* ArabicTextRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArabicTextRenderer.swift; sourceTree = "<group>"; };
 		4BAB8A4B2F286C8A00732FC9 /* AnnotationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationCoordinator.swift; sourceTree = "<group>"; };
 		4BB174412F1AFAFF00BF1A2F /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
-		4BD6C3372EE681D6008684E3 /* WindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = WindowController.xib; sourceTree = "<group>"; };
 		4BD6C33B2EE6AA7F008684E3 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
 		4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IbarotTextView.swift; sourceTree = "<group>"; };
 		4BD728242EE4544C00ACEB7C /* StringExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExt.swift; sourceTree = "<group>"; };
@@ -480,7 +474,6 @@
 				4BF392C12EFC9AB800460756 /* SearchSidebarVC.xib */,
 				4BA7269C2EFC760C003CA0ED /* SidebarVC.xib */,
 				4BA726A02EFC76C0003CA0ED /* ViewOptions.xib */,
-				4BD6C3372EE681D6008684E3 /* WindowController.xib */,
 			);
 			path = XIB;
 			sourceTree = "<group>";
@@ -553,9 +546,7 @@
 				4B6100E42EFA73DD00CCBED6 /* QuranSplitVC.swift */,
 				4B6100E82EFA740B00CCBED6 /* QuranSidebarVC.swift */,
 				4B0EED382EFAB38800585C31 /* QuranTafseerVC.swift */,
-				4B6100E52EFA73DD00CCBED6 /* QuranSplitVC.xib */,
 				4B9DDA882EFC343F0003A9FF /* QuranWindow.swift */,
-				4B6100EE2EFA871F00CCBED6 /* QuranWindow.xib */,
 				4B6100F02EFA8C7F00CCBED6 /* QuranNashVC.swift */,
 				4B6100F12EFA8C7F00CCBED6 /* QuranNashVC.xib */,
 			);
@@ -770,7 +761,6 @@
 				4B5DF9402EDC498B0082DE7F /* KFGQPC Uthman Taha Naskh Regular.ttf in Resources */,
 				4BA7269A2EFC760C003CA0ED /* SidebarVC.xib in Resources */,
 				4BA726922EFC714F003CA0ED /* BookInfo.xib in Resources */,
-				4B6100EF2EFA871F00CCBED6 /* QuranWindow.xib in Resources */,
 				4BF392BF2EFC9AB800460756 /* SearchSidebarVC.xib in Resources */,
 				4B32022E2EDAFE88003B95D1 /* Assets.xcassets in Resources */,
 				F349073F2F3064A10036CDAF /* IconMaktabah.icon in Resources */,
@@ -778,7 +768,6 @@
 				4BA726A62EFC7B38003CA0ED /* OptionSearchVC.xib in Resources */,
 				4BF392B72EFC97C500460756 /* AnnotationsVC.xib in Resources */,
 				4BA726AA2EFC7E9D003CA0ED /* SavedResults.xib in Resources */,
-				4B6100E72EFA73DD00CCBED6 /* QuranSplitVC.xib in Resources */,
 				F3C449562F2B12E200DA7032 /* SearchCellView.xib in Resources */,
 				4BF392B32EFC924400460756 /* ResultWriter.xib in Resources */,
 				4B20DB7B2EE7D81B00B97126 /* FolderCellView.xib in Resources */,
@@ -796,7 +785,6 @@
 				4BFCD8502F10746600E41F8A /* Lateef-Bold.ttf in Resources */,
 				4BF392EC2EFCC15700460756 /* Localizable.xcstrings in Resources */,
 				4B63E1D92EE9408800D58F3B /* Header.xib in Resources */,
-				4BD6C3382EE681D6008684E3 /* WindowController.xib in Resources */,
 				4B63E1DB2EE940D200D58F3B /* Data.xib in Resources */,
 				4BF392BB2EFC98E900460756 /* AnnotationEditorVC.xib in Resources */,
 				4BA7269E2EFC76C0003CA0ED /* ViewOptions.xib in Resources */,

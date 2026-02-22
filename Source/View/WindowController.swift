@@ -10,20 +10,48 @@ import Cocoa
 
 class WindowController: NSWindowController {
 
-    override func windowDidLoad() {
-        super.windowDidLoad()
-        window?.toolbar?.delegate = self
+    init() {
+        super.init(window: nil)
+        loadWindow()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    override func loadWindow() {
+        let rect = NSRect(x: 335, y: 390, width: 1000, height: 600)
+        let style: NSWindow.StyleMask = [
+            .titled,
+            .closable,
+            .miniaturizable,
+            .resizable,
+            .fullSizeContentView
+        ]
+        let window = MainWindow(
+            contentRect: rect,
+            styleMask: style,
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "المكتبة"
+        window.subtitle = ""
+        window.setFrameAutosaveName("MainWindow")
+        window.animationBehavior = .default
+        if #available(macOS 11.0, *) {
+            window.toolbarStyle = .unified
+        }
+        self.window = window
     }
     
     @IBAction override func newWindowForTab(_ sender: Any?) {
         // PERBAIKAN: Instance otomatis disimpan di windowDidLoad
-        let newWindowController = WindowController(windowNibName: "WindowController")
+        let newWindowController = WindowController()
 
         // Tambahkan sebagai tab
         if let newWindow = newWindowController.window as? MainWindow {
             window?.addTabbedWindow(newWindow, ordered: .above)
             newWindow.setupContentView(restoreState: false)
-            newWindow.setupView()
             newWindow.makeKeyAndOrderFront(nil)
         }
     }
@@ -40,80 +68,5 @@ class WindowController: NSWindowController {
         #if DEBUG
         print("WindowController deinit - This should only happen on close")
         #endif
-    }
-}
-
-
-extension WindowController: NSToolbarDelegate {
-/*
-    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [
-            .modeSelector,
-            .sidebarTrackingSeparator,
-            .sidebarLeading,
-            .searchSidebarLeadingContent,
-            .bookInfo,
-            .navSegment,
-            .copyDetails,
-            .displayNotations,
-            .searchField,
-            .pageSlider,
-            .textViewOptions,
-            .trackingSeparator,
-            .searchContents,
-            .sidebarTrailing
-        ]
-    }
-*/
-
-    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [
-            .sidebarLeading,
-            .searchSidebarLeadingContent,
-            .sidebarTrackingSeparator,
-            .modeSelector,
-            .bookInfo,
-            .textViewOptions,
-            .copyDetails,
-            .navSegment,
-            .searchField,
-            .pageSlider,
-            .displayNotations,
-            .trackingSeparator,
-            .searchContents,
-            .sidebarTrailing
-        ]
-    }
-
-    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
-        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-
-        switch itemIdentifier {
-        case .trackingSeparator:
-
-            guard flag else {
-                return NSToolbarItem(itemIdentifier: itemIdentifier)
-            }
-
-            guard let mainWindow = window as? MainWindow,
-                  let rootSplitVC = mainWindow.contentViewController as? SplitVC else {
-                return NSToolbarItem(itemIdentifier: itemIdentifier)
-            }
-
-            let viewerContainer = rootSplitVC.viewerSplitVC
-            // ViewerSplitVC punya 2 items (IbarotTextVC dan SidebarVC)
-            // Jadi hanya ada 1 divider di index 0
-            let trackingSeparator = NSTrackingSeparatorToolbarItem(
-                identifier: itemIdentifier,
-                splitView: viewerContainer.splitView,
-                dividerIndex: 0  // Index 0 untuk divider antara item pertama dan kedua
-            )
-
-            return trackingSeparator
-        default:
-            break
-        }
-
-        return item
     }
 }

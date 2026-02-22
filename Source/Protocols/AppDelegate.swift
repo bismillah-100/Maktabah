@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         UserDefaults.standard.register(defaults: ["AplFirstLaunch": true])
-        let wc = WindowController(windowNibName: "WindowController")
+        let wc = WindowController()
         mainWindowController = wc
         guard let window = wc.window else { return }
         window.makeKeyAndOrderFront(nil)
@@ -533,32 +533,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(sender)
             return
         }
-
-        var topLevel: NSArray?
-
-        Bundle.main.loadNibNamed(
-            "QuranWindow",
-            owner: self,
-            topLevelObjects: &topLevel
-        )
-
-        guard
-            let objects = topLevel as? [Any],
-            let window = objects.first(where: { $0 is NSWindow }) as? QuranWindow
-        else {
-            return
-        }
-
-        quranWindow = window
-
-        // optional: style mask tambahan
-        window.styleMask.insert([
+        let rect = NSRect(x: 196, y: 240, width: 480, height: 270)
+        let style: NSWindow.StyleMask = [
             .titled,
             .closable,
             .resizable,
             .miniaturizable,
+            .fullSizeContentView,
             .utilityWindow
-        ])
+        ]
+
+        let window = QuranWindow(
+            contentRect: rect,
+            styleMask: style,
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "القرآن الكريم"
+        window.titlebarAppearsTransparent = true
+        window.tabbingMode = .disallowed
+        window.toolbarStyle = .unifiedCompact
+        window.appearance = NSAppearance(named: .vibrantLight)
+
+        quranWindow = window
 
         let vc = QuranSplitVC()
         window.contentViewController = vc
@@ -586,7 +583,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @IBAction func newWindow(_ sender: Any) {
-        let wc = WindowController(windowNibName: "WindowController")
+        let wc = WindowController()
         wc.window?.setFrameAutosaveName("MainWindow")
 
         guard let w = wc.window as? MainWindow else { return }
