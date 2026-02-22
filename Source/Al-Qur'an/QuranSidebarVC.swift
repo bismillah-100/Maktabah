@@ -149,7 +149,7 @@ class QuranSidebarVC: NSViewController {
         }
     }
 
-    func selectNode(aya: Int, surah: Int) {
+    func selectNode(aya: Int, surah: Int, delegate: Bool = false) {
         // 1. Ambil SurahNode (114 item masih sangat cepat pakai first)
         guard let surahNode = surahNodes.first(where: { $0.id == surah }),
               // 2. Ambil AyaNode INSTAN (O(1))
@@ -166,7 +166,7 @@ class QuranSidebarVC: NSViewController {
         let row = outlineView.row(forItem: ayaNode)
         guard row != -1 else { return }
 
-        enableDelegate = false
+        enableDelegate = delegate
         outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
         outlineView.scrollRowToVisible(row)
         enableDelegate = true

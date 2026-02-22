@@ -97,7 +97,7 @@ class QuranSplitVC: NSSplitViewController {
                 return
             }
 
-            sidebarSurah.selectNode(aya: aya, surah: surah)
+            sidebarSurah.selectNode(aya: aya, surah: surah, delegate: true)
         }
     }
 
