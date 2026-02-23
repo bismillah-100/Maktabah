@@ -3,7 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
-//  Add Sorting Options
+//  Granular UI Update
 //
 
 import Cocoa
@@ -87,7 +87,6 @@ class AnnotationsVC: NSViewController {
         outlineView.delegate = dataSource
         outlineView.usesAutomaticRowHeights = true
         dataSource.updateSorting(field: selectedSortField, isAscending: selectedSortAscending)
-        outlineView.reloadData()
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {

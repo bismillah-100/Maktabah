@@ -3,7 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
-//  Add Sorting Options
+//  Granular UI Update
 //
 
 import Cocoa
@@ -21,6 +21,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     }
 
     private var treeObserver: NSObjectProtocol?
+    private var annotationChangeObserver: NSObjectProtocol?
 
     // Cache Formatter
     private let calendar = Calendar.current
@@ -58,6 +59,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     override init() {
         super.init()
         setupTreeObserver()
+        setupAnnotationChangeObserver()
         paragraphStyle.alignment = .right
     }
 
@@ -68,6 +70,10 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
         if let treeObserver {
             NotificationCenter.default.removeObserver(treeObserver)
+        }
+
+        if let annotationChangeObserver {
+            NotificationCenter.default.removeObserver(annotationChangeObserver)
         }
     }
 
@@ -90,6 +96,154 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
         // Reload outline view
         outlineView?.reloadData()
+    }
+
+    private func setupAnnotationChangeObserver() {
+        annotationChangeObserver = NotificationCenter.default.addObserver(
+            forName: .annotationDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleAnnotationChange(notification)
+        }
+    }
+
+    private func handleAnnotationChange(_ notification: Notification) {
+        guard
+            let userInfo = notification.userInfo,
+            let changeTypeRaw = userInfo[AnnotationNotificationKeys.changeType] as? String,
+            let changeType = AnnotationChangeType(rawValue: changeTypeRaw)
+        else { return }
+
+        if let searchText = currentSearchText, !searchText.isEmpty {
+            applySearchFilter(text: searchText)
+            outlineView?.reloadData()
+            return
+        }
+
+        let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
+        let annotationId = (userInfo[AnnotationNotificationKeys.annotationId] as? Int64) ?? annotation?.id
+
+        guard let annotationId else {
+            outlineView?.reloadData()
+            return
+        }
+
+        switch changeType {
+        case .added:
+            handleAddedAnnotation(annotationId: annotationId)
+        case .updated:
+            handleUpdatedAnnotation(annotationId: annotationId)
+        case .deleted:
+            handleDeletedAnnotation(annotationId: annotationId)
+        }
+    }
+
+    private func handleAddedAnnotation(annotationId: Int64) {
+        guard let outlineView else { return }
+        guard
+            let location = findAnnotationLocation(in: AnnotationManager.shared.rootNode, annotationId: annotationId)
+        else {
+            outlineView.reloadData()
+            return
+        }
+
+        let bookRow = outlineView.row(forItem: location.bookNode)
+        if bookRow == -1 {
+            outlineView.insertItems(
+                at: IndexSet(integer: location.bookIndex),
+                inParent: nil,
+                withAnimation: .slideDown
+            )
+            return
+        }
+
+        if outlineView.isItemExpanded(location.bookNode) {
+            outlineView.insertItems(
+                at: IndexSet(integer: location.annotationIndex),
+                inParent: location.bookNode,
+                withAnimation: .slideDown
+            )
+        } else {
+            outlineView.reloadItem(location.bookNode, reloadChildren: false)
+        }
+    }
+
+    private func handleUpdatedAnnotation(annotationId: Int64) {
+        guard let outlineView else { return }
+        guard let row = rowIndex(forAnnotationId: annotationId) else {
+            outlineView.reloadData()
+            return
+        }
+
+        let columns = IndexSet(integersIn: 0..<outlineView.numberOfColumns)
+        outlineView.reloadData(
+            forRowIndexes: IndexSet(integer: row),
+            columnIndexes: columns
+        )
+    }
+
+    private func handleDeletedAnnotation(annotationId: Int64) {
+        guard let outlineView else { return }
+        guard let row = rowIndex(forAnnotationId: annotationId),
+              let item = outlineView.item(atRow: row) as? AnnotationNode else {
+            outlineView.reloadData()
+            return
+        }
+
+        let parent = outlineView.parent(forItem: item)
+        let childIndex = outlineView.childIndex(forItem: item)
+        if childIndex != -1 {
+            outlineView.removeItems(
+                at: IndexSet(integer: childIndex),
+                inParent: parent,
+                withAnimation: .slideUp
+            )
+        } else {
+            outlineView.reloadItem(
+                parent, 
+                reloadChildren: true
+            )
+        }
+
+        if let parentNode = parent as? AnnotationNode,
+           parentNode.children.isEmpty,
+           !(AnnotationManager.shared.rootNode?.children.contains { $0 === parentNode } ?? false) {
+            let parentIndex = outlineView.childIndex(forItem: parentNode)
+            if parentIndex != -1 {
+                outlineView.removeItems(
+                    at: IndexSet(integer: parentIndex),
+                    inParent: nil,
+                    withAnimation: .slideUp
+                )
+            }
+        }
+    }
+
+    private func rowIndex(forAnnotationId annotationId: Int64) -> Int? {
+        guard let outlineView else { return nil }
+        for row in 0..<outlineView.numberOfRows {
+            guard let node = outlineView.item(atRow: row) as? AnnotationNode else { continue }
+            if node.annotation?.id == annotationId {
+                return row
+            }
+        }
+        return nil
+    }
+
+    private func findAnnotationLocation(in root: AnnotationNode?, annotationId: Int64) -> (
+        bookNode: AnnotationNode,
+        bookIndex: Int,
+        annotationIndex: Int
+    )? {
+        guard let root else { return nil }
+
+        for (bookIndex, bookNode) in root.children.enumerated() {
+            if let annotationIndex = bookNode.children.firstIndex(where: { $0.annotation?.id == annotationId }) {
+                return (bookNode, bookIndex, annotationIndex)
+            }
+        }
+        return nil
     }
 
     // MARK: - Public Methods

@@ -3,10 +3,99 @@
 //  annotations
 //
 //  Created by MacBook on 13/12/25.
-//  Add Sorting Options
+//  Granular UI Update
 //
 
 import Cocoa
+
+// MARK: - Sortable Protocol & Helpers
+
+/// Sebuah protokol untuk tipe-tipe yang dapat diurutkan secara dinamis menggunakan `NSSortDescriptor`
+/// melalui `KeyPath` yang aman-tipe (type-safe).
+protocol SortableKey: AnyObject {
+    static var keyPathMap: [String: PartialKeyPath<Self>] { get }
+    static var secondaryKeyPaths: [PartialKeyPath<Self>] { get }
+}
+
+extension SortableKey {
+    static func createComparator(for keyPath: PartialKeyPath<Self>, ascending: Bool) -> ((Self, Self) -> ComparisonResult)? {
+        func compare<U: Comparable>(_ lhs: U, _ rhs: U, ascending: Bool) -> ComparisonResult {
+            if lhs < rhs {
+                return ascending ? .orderedAscending : .orderedDescending
+            } else if lhs > rhs {
+                return ascending ? .orderedDescending : .orderedAscending
+            } else {
+                return .orderedSame
+            }
+        }
+
+        func compareOptional<U: Comparable>(_ lhs: U?, _ rhs: U?, defaultValue: U, ascending: Bool) -> ComparisonResult {
+            let v1 = lhs ?? defaultValue
+            let v2 = rhs ?? defaultValue
+            return compare(v1, v2, ascending: ascending)
+        }
+
+        switch keyPath {
+        case let path as KeyPath<Self, String>:
+            return { compare($0[keyPath: path], $1[keyPath: path], ascending: ascending) }
+        case let path as KeyPath<Self, String?>:
+            return { compareOptional($0[keyPath: path], $1[keyPath: path], defaultValue: "", ascending: ascending) }
+        case let path as KeyPath<Self, Int64>:
+            return { compare($0[keyPath: path], $1[keyPath: path], ascending: ascending) }
+        case let path as KeyPath<Self, Int64?>:
+            return { compareOptional($0[keyPath: path], $1[keyPath: path], defaultValue: Int64.min, ascending: ascending) }
+        case let path as KeyPath<Self, Date>:
+            return { compare($0[keyPath: path], $1[keyPath: path], ascending: ascending) }
+        case let path as KeyPath<Self, Date?>:
+            return { compareOptional($0[keyPath: path], $1[keyPath: path], defaultValue: .distantPast, ascending: ascending) }
+        default:
+            return nil
+        }
+    }
+
+    static func comparator(from sortDescriptor: NSSortDescriptor) -> ((Self, Self) -> Bool)? {
+        guard let key = sortDescriptor.key, let path = keyPathMap[key] else { return nil }
+        let primaryComparator = createComparator(for: path, ascending: sortDescriptor.ascending)
+        let secondaryComparators = secondaryKeyPaths.compactMap { createComparator(for: $0, ascending: true) }
+
+        return { obj1, obj2 -> Bool in
+            if let primaryResult = primaryComparator?(obj1, obj2), primaryResult != .orderedSame {
+                return primaryResult == .orderedAscending
+            }
+            for secondaryCmp in secondaryComparators {
+                let secondaryResult = secondaryCmp(obj1, obj2)
+                if secondaryResult != .orderedSame {
+                    return secondaryResult == .orderedAscending
+                }
+            }
+            return ObjectIdentifier(obj1) < ObjectIdentifier(obj2)
+        }
+    }
+}
+
+extension RandomAccessCollection {
+    /// Menentukan indeks di mana sebuah elemen harus disisipkan ke dalam koleksi
+    /// yang sudah diurutkan agar urutan tetap terjaga. (O(log n))
+    func insertionIndex<T>(
+        for element: T,
+        using areInIncreasingOrder: (Element, T) -> Bool
+    ) -> Index {
+        var low = startIndex
+        var high = endIndex
+
+        while low < high {
+            let mid = index(low, offsetBy: distance(from: low, to: high) / 2)
+            if areInIncreasingOrder(self[mid], element) {
+                low = index(after: mid)
+            } else {
+                high = mid
+            }
+        }
+        return low
+    }
+}
+
+// MARK: - Models
 
 enum AnnotationSortField: Int {
     case createdAt
@@ -37,7 +126,7 @@ struct Annotation {
     var partArb: String?
 }
 
-class AnnotationNode {
+final class AnnotationNode: SortableKey {
     var title: String
     var children: [AnnotationNode] = []
     var annotation: Annotation? // optional, kalau node ini representasi annotation
@@ -46,6 +135,25 @@ class AnnotationNode {
         self.title = title
         self.annotation = annotation
     }
+
+    // Properti pembantu untuk SortableKey mapping
+    var createdAt: Int64 { annotation?.createdAt ?? 0 }
+    var context: String { annotation?.context ?? "" }
+    var page: Int64 { Int64(annotation?.page ?? 0) }
+    var part: Int64 { Int64(annotation?.part ?? 0) }
+
+    static var keyPathMap: [String : PartialKeyPath<AnnotationNode>] = [
+        "title": \AnnotationNode.title,
+        "createdAt": \AnnotationNode.createdAt,
+        "context": \AnnotationNode.context,
+        "page": \AnnotationNode.page,
+        "part": \AnnotationNode.part
+    ]
+
+    static var secondaryKeyPaths: [PartialKeyPath<AnnotationNode>] = [
+        \AnnotationNode.title,
+        \AnnotationNode.createdAt
+    ]
 }
 
 struct ContentKey: Hashable {

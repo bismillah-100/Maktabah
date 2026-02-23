@@ -3,7 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
-//  Add Sorting Options
+//  Granular UI Update
 //
 
 import Foundation
@@ -178,13 +178,12 @@ final class AnnotationManager {
             cacheById[rowId] = saved
             let key = ContentKey(bkId: saved.bkId, contentId: saved.contentId)
             var arr = cacheByContent[key] ?? []
-            arr.append(saved)
-            arr.sort { $0.range.location < $1.range.location }
+            // Optimization using insertionIndex helper for basic range sort
+            let idx = arr.insertionIndex(for: saved) { $0.range.location < $1.range.location }
+            arr.insert(saved, at: idx)
             cacheByContent[key] = arr
         }
 
-        // 🔔 Post notification
-        postChangeNotification(type: .added, annotation: saved)
         addAnnotationToTree(saved)
         return rowId
     }
@@ -208,14 +207,12 @@ final class AnnotationManager {
             if let idx = arr.firstIndex(where: { $0.id == id }) {
                 arr[idx] = annotation
             } else {
-                arr.append(annotation)
+                let idx = arr.insertionIndex(for: annotation) { $0.range.location < $1.range.location }
+                arr.insert(annotation, at: idx)
             }
-            arr.sort { $0.range.location < $1.range.location }
             cacheByContent[key] = arr
         }
 
-        // 🔔 Post notification
-        postChangeNotification(type: .updated, annotation: annotation)
         updateAnnotationInTree(annotation)
     }
 
@@ -241,9 +238,7 @@ final class AnnotationManager {
             }
         }
 
-        // 🔔 Post notification
-        postChangeNotification(type: .deleted, annotation: annotationToDelete, annotationId: id)
-        removeAnnotationFromTree(id: id)
+        removeAnnotationFromTree(id: id, deletedAnnotation: annotationToDelete)
     }
 
     // MARK: - Load annotations for a book content
@@ -335,8 +330,8 @@ final class AnnotationManager {
                     let key = ContentKey(bkId: ann.bkId, contentId: ann.contentId)
                     var arr = cacheByContent[key] ?? []
                     if !arr.contains(where: { $0.id == ann.id }) {
-                        arr.append(ann)
-                        arr.sort { $0.range.location < $1.range.location }
+                        let idx = arr.insertionIndex(for: ann) { $0.range.location < $1.range.location }
+                        arr.insert(ann, at: idx)
                         cacheByContent[key] = arr
                     }
                 }
@@ -512,7 +507,11 @@ final class AnnotationManager {
 
     func addAnnotationToTree(_ annotation: Annotation) {
         treeQueue.async { [weak self] in
-            guard let self = self, let root = self._rootNode else { return }
+            guard let self else { return }
+            guard let root = _rootNode else {
+                postChangeNotification(type: .added, annotation: annotation)
+                return
+            }
 
             let bookNode = self.findOrCreateBookNode(for: annotation.bkId, in: root)
 
@@ -524,26 +523,32 @@ final class AnnotationManager {
             }
 
             let annotationNode = AnnotationNode(title: displayTitle, annotation: annotation)
-            bookNode.children.append(annotationNode)
             
-            // Re-sort level yang terpengaruh
-            bookNode.children.sort(by: self.compareNodes)
-            root.children.sort(by: self.compareNodes)
-
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: .annotationTreeDidUpdate,
-                    object: self
-                )
+            // Optimization: Use insertionIndex instead of append + sort
+            let index = bookNode.children.insertionIndex(for: annotationNode, using: compareNodes)
+            bookNode.children.insert(annotationNode, at: index)
+            
+            // Jika sorting berdasarkan Date, posisi bookNode di root mungkin perlu bergeser
+            if sortOption.field == .createdAt {
+                if let oldIndex = root.children.firstIndex(where: { $0 === bookNode }) {
+                    root.children.remove(at: oldIndex)
+                }
+                let newIndex = root.children.insertionIndex(for: bookNode, using: compareNodes)
+                root.children.insert(bookNode, at: newIndex)
             }
+
+            postChangeNotification(type: .added, annotation: annotation)
         }
     }
 
     func updateAnnotationInTree(_ annotation: Annotation) {
         treeQueue.async { [weak self] in
-            guard let self = self,
-                  let annotationId = annotation.id,
-                  let node = self.findAnnotationNode(by: annotationId) else { return }
+            guard let self else { return }
+            guard let annotationId = annotation.id,
+                  let node = self.findAnnotationNode(by: annotationId) else {
+                postChangeNotification(type: .updated, annotation: annotation)
+                return
+            }
 
             if let note = annotation.note, !note.isEmpty {
                 node.title = note
@@ -552,18 +557,17 @@ final class AnnotationManager {
             }
             node.annotation = annotation
 
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: .annotationTreeDidUpdate,
-                    object: self
-                )
-            }
+            postChangeNotification(type: .updated, annotation: annotation)
         }
     }
 
-    func removeAnnotationFromTree(id: Int64) {
+    func removeAnnotationFromTree(id: Int64, deletedAnnotation: Annotation?) {
         treeQueue.async { [weak self] in
-            guard let self = self, let root = self._rootNode else { return }
+            guard let self else { return }
+            guard let root = _rootNode else {
+                postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id)
+                return
+            }
 
             for bookNode in root.children {
                 if let index = bookNode.children.firstIndex(where: { $0.annotation?.id == id }) {
@@ -578,12 +582,7 @@ final class AnnotationManager {
                 }
             }
 
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: .annotationTreeDidUpdate,
-                    object: self
-                )
-            }
+            postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id)
         }
     }
 
@@ -599,12 +598,16 @@ final class AnnotationManager {
 
         guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
             let fallbackNode = AnnotationNode(title: "Unknown Book")
-            root.children.append(fallbackNode)
+            // Optimization: Insert using insertionIndex
+            let idx = root.children.insertionIndex(for: fallbackNode, using: compareNodes)
+            root.children.insert(fallbackNode, at: idx)
             return fallbackNode
         }
 
         let bookNode = AnnotationNode(title: book.book)
-        root.children.append(bookNode)
+        // Optimization: Insert using insertionIndex
+        let idx = root.children.insertionIndex(for: bookNode, using: compareNodes)
+        root.children.insert(bookNode, at: idx)
 
         return bookNode
     }
