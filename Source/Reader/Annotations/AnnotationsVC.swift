@@ -3,7 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
-//  Fix Reveal In Finder after change personal data folder
+//  Add Sorting Options
 //
 
 import Cocoa
@@ -13,6 +13,7 @@ class AnnotationsVC: NSViewController {
     @IBOutlet weak var shareBtn: NSButton!
     @IBOutlet weak var windowBtn: NSButton!
     @IBOutlet weak var setting: NSPopUpButton!
+    @IBOutlet weak var sortingButton: NSPopUpButton!
     @IBOutlet weak var floatMenuItem: NSMenuItem!
     @IBOutlet weak var hideOnMenuItem: NSMenuItem!
     @IBOutlet weak var searchField: DSFSearchField!
@@ -36,9 +37,22 @@ class AnnotationsVC: NSViewController {
     var popover: Bool = true
     var isDataLoaded = false
 
+    private enum SortMenuTag {
+        static let fieldCreatedAt = 101
+        static let fieldContext = 102
+        static let fieldPage = 103
+        static let fieldPart = 104
+        static let ascending = 201
+        static let descending = 202
+    }
+
+    private var selectedSortField: AnnotationSortField = .createdAt
+    private var selectedSortAscending = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
         floatMenuItem.state = .on
+        setupSortMenu()
         ReusableFunc.setupSearchField(searchField)
     }
 
@@ -72,7 +86,8 @@ class AnnotationsVC: NSViewController {
         outlineView.dataSource = dataSource
         outlineView.delegate = dataSource
         outlineView.usesAutomaticRowHeights = true
-        // outlineView.reloadData()
+        dataSource.updateSorting(field: selectedSortField, isAscending: selectedSortAscending)
+        outlineView.reloadData()
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
@@ -92,6 +107,93 @@ class AnnotationsVC: NSViewController {
         }
 
         DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: workItem!)
+    }
+
+    private func setupSortMenu() {
+        guard let menu = sortingButton.menu else { return }
+
+        let items: [(String, Int, AnnotationSortField)] = [
+            ("Context".localized, SortMenuTag.fieldContext, .context),
+            ("Date Created".localized, SortMenuTag.fieldCreatedAt, .createdAt),
+            ("Page".localized, SortMenuTag.fieldPage, .page),
+            ("Part".localized, SortMenuTag.fieldPart, .part),
+        ]
+        for (title, tag, _) in items {
+            let item = NSMenuItem(
+                title: title,
+                action: #selector(selectSortField(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.tag = tag
+            menu.addItem(item)
+        }
+        menu.addItem(.separator())
+        let orders: [(String, Int)] = [
+            ("Ascending".localized, SortMenuTag.ascending),
+            ("Descending".localized, SortMenuTag.descending),
+        ]
+        for (title, tag) in orders {
+            let item = NSMenuItem(
+                title: title,
+                action: #selector(selectSortOrder(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.tag = tag
+            menu.addItem(item)
+        }
+        sortingButton.image = NSImage(
+            systemSymbolName: "arrow.up.arrow.down.circle",
+            accessibilityDescription: "Sort"
+        )
+        sortingButton.title = ""
+        updateSortMenuState()
+    }
+
+    @objc private func selectSortField(_ sender: NSMenuItem) {
+        switch sender.tag {
+        case SortMenuTag.fieldCreatedAt: selectedSortField = .createdAt
+        case SortMenuTag.fieldContext: selectedSortField = .context
+        case SortMenuTag.fieldPage: selectedSortField = .page
+        case SortMenuTag.fieldPart: selectedSortField = .part
+        default: return
+        }
+        applySorting()
+    }
+
+    @objc private func selectSortOrder(_ sender: NSMenuItem) {
+        selectedSortAscending = sender.tag == SortMenuTag.ascending
+        applySorting()
+    }
+
+    private func applySorting() {
+        dataSource.updateSorting(
+            field: selectedSortField,
+            isAscending: selectedSortAscending
+        )
+        if !searchField.stringValue.isEmpty {
+            outlineView.expandItem(nil, expandChildren: true)
+        }
+        updateSortMenuState()
+    }
+
+    private func updateSortMenuState() {
+        guard let menu = sortingButton.menu else { return }
+        for item in menu.items { item.state = .off }
+        menu.item(
+            withTag: selectedSortAscending
+                ? SortMenuTag.ascending : SortMenuTag.descending
+        )?.state = .on
+        let fieldTag: Int = {
+            switch selectedSortField {
+            case .createdAt: return SortMenuTag.fieldCreatedAt
+            case .context: return SortMenuTag.fieldContext
+            case .page: return SortMenuTag.fieldPage
+            case .part: return SortMenuTag.fieldPart
+            }
+        }()
+        menu.item(withTag: fieldTag)?.state = .on
     }
 
     @IBAction func saveRTFToFile(_ sender: Any?) {

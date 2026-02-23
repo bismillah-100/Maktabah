@@ -15,6 +15,7 @@
                 <outlet property="searchField" destination="VC9-sz-DwV" id="ZnG-PC-ykQ"/>
                 <outlet property="setting" destination="3wQ-kJ-eUz" id="W4E-Pa-szS"/>
                 <outlet property="shareBtn" destination="AQp-Mb-0ne" id="sgy-YE-SiA"/>
+                <outlet property="sortingButton" destination="srt-1A-2Bc" id="SRT-OU-TLT"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
                 <outlet property="windowBtn" destination="dpV-5f-sNh" id="l71-gb-dN2"/>
                 <outlet property="xBtn" destination="Ade-uD-gf7" id="8b8-5h-qct"/>
@@ -23,13 +24,13 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Hz6-mo-xeY">
-            <rect key="frame" x="0.0" y="0.0" width="344" height="413"/>
+            <rect key="frame" x="0.0" y="0.0" width="376" height="413"/>
             <subviews>
                 <stackView distribution="fill" orientation="vertical" alignment="centerX" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="un8-N4-Ho6">
-                    <rect key="frame" x="0.0" y="0.0" width="344" height="361"/>
+                    <rect key="frame" x="0.0" y="0.0" width="376" height="361"/>
                     <subviews>
                         <stackView distribution="equalSpacing" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eCu-j7-aef">
-                            <rect key="frame" x="0.0" y="338" width="344" height="24"/>
+                            <rect key="frame" x="0.0" y="338" width="376" height="24"/>
                             <subviews>
                                 <button wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Ade-uD-gf7">
                                     <rect key="frame" x="8" y="0.0" width="39" height="24"/>
@@ -57,12 +58,36 @@ Gw
                                         <action selector="searchFieldDidChange:" target="-2" id="bfD-xT-1kQ"/>
                                     </connections>
                                 </searchField>
+                                <button wantsLayer="YES" horizontalHuggingPriority="249" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dpV-5f-sNh">
+                                    <rect key="frame" x="261" y="5" width="28" height="15"/>
+                                    <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="buttonCell:hLf-Vs-iif:image" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="hLf-Vs-iif">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="system"/>
+                                    </buttonCell>
+                                    <color key="contentTintColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <connections>
+                                        <action selector="openInNewWindow:" target="-2" id="BaM-JA-AHH"/>
+                                    </connections>
+                                </button>
+                                <popUpButton toolTip="Sort Annotations" wantsLayer="YES" horizontalHuggingPriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="srt-1A-2Bc">
+                                    <rect key="frame" x="292" y="5" width="23" height="15"/>
+                                    <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" arrowPosition="noArrow" id="srt-ce-111">
+                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                        <font key="font" metaFont="message"/>
+                                        <menu key="menu" id="srt-mn-333">
+                                            <items>
+                                                <menuItem image="arrow.up.and.down" catalog="system" hidden="YES" id="srt-pl-444"/>
+                                            </items>
+                                        </menu>
+                                    </popUpButtonCell>
+                                </popUpButton>
                                 <button toolTip="Export Selected Annotation(s)" wantsLayer="YES" horizontalHuggingPriority="249" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="AQp-Mb-0ne">
-                                    <rect key="frame" x="261" y="5" width="18" height="18"/>
+                                    <rect key="frame" x="323" y="5" width="16" height="18"/>
                                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="buttonCell:3Yl-kw-27t:image" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="3Yl-kw-27t">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>
+                                    <color key="contentTintColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <connections>
                                         <action selector="saveRTFToFile:" target="-2" id="502-0s-Kp3"/>
                                         <binding destination="-2" name="enabled" keyPath="isRowUnselected" id="SP9-xo-FGW">
@@ -74,7 +99,7 @@ Gw
                                     </connections>
                                 </button>
                                 <popUpButton wantsLayer="YES" horizontalHuggingPriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="3wQ-kJ-eUz">
-                                    <rect key="frame" x="282" y="5" width="26" height="15"/>
+                                    <rect key="frame" x="342" y="5" width="26" height="15"/>
                                     <popUpButtonCell key="cell" type="smallSquare" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" pullsDown="YES" arrowPosition="noArrow" id="IB7-IX-Fhb">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="message"/>
@@ -110,16 +135,6 @@ Gw
                                         </menu>
                                     </popUpButtonCell>
                                 </popUpButton>
-                                <button wantsLayer="YES" horizontalHuggingPriority="249" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dpV-5f-sNh">
-                                    <rect key="frame" x="316" y="5" width="20" height="15"/>
-                                    <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="buttonCell:hLf-Vs-iif:image" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="hLf-Vs-iif">
-                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                        <font key="font" metaFont="system"/>
-                                    </buttonCell>
-                                    <connections>
-                                        <action selector="openInNewWindow:" target="-2" id="BaM-JA-AHH"/>
-                                    </connections>
-                                </button>
                             </subviews>
                             <edgeInsets key="edgeInsets" left="8" right="8" top="0.0" bottom="0.0"/>
                             <constraints>
@@ -131,8 +146,10 @@ Gw
                                 <integer value="1000"/>
                                 <integer value="1000"/>
                                 <integer value="1000"/>
+                                <integer value="1000"/>
                             </visibilityPriorities>
                             <customSpacing>
+                                <real value="3.4028234663852886e+38"/>
                                 <real value="3.4028234663852886e+38"/>
                                 <real value="3.4028234663852886e+38"/>
                                 <real value="3.4028234663852886e+38"/>
@@ -141,7 +158,7 @@ Gw
                             </customSpacing>
                         </stackView>
                         <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="MVO-3s-jjB">
-                            <rect key="frame" x="0.0" y="335" width="344" height="5"/>
+                            <rect key="frame" x="16" y="335" width="344" height="5"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="1" id="t2c-WF-2Po"/>
                             </constraints>
@@ -311,7 +328,7 @@ Gw
                                 <nil key="backgroundColor"/>
                             </clipView>
                             <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="LKa-cz-YDf">
-                                <rect key="frame" x="0.0" y="372" width="344" height="16"/>
+                                <rect key="frame" x="0.0" y="320" width="344" height="17"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="2t6-CK-LuD">
@@ -340,11 +357,12 @@ Gw
             </constraints>
             <viewLayoutGuide key="safeArea" id="ucq-aI-b3v"/>
             <viewLayoutGuide key="layoutMargins" id="dvQ-7i-tM0"/>
-            <point key="canvasLocation" x="-29" y="110.5"/>
+            <point key="canvasLocation" x="-29.5" y="110.5"/>
         </customView>
         <userDefaultsController representsSharedInstance="YES" id="nTl-LM-nTV"/>
     </objects>
     <resources>
+        <image name="arrow.up.and.down" catalog="system" width="12" height="15"/>
         <image name="buttonCell:3Yl-kw-27t:image" width="16" height="18">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05T

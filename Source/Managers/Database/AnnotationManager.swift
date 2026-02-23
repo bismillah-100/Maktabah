@@ -3,6 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
+//  Add Sorting Options
 //
 
 import Foundation
@@ -64,6 +65,9 @@ final class AnnotationManager {
             return treeQueue.sync { _rootNode }
         }
     }
+
+    // State Sorting
+    private(set) var sortOption: AnnotationSortOption = .init(field: .createdAt, isAscending: false)
 
     // Serial queue to protect caches
     private let cacheQueue = DispatchQueue(label: "com.maktab.annotationManager.cacheQueue", qos: .userInitiated)
@@ -352,18 +356,6 @@ final class AnnotationManager {
         }
     }
 
-    /*
-    func clearCache(for bkId: Int, contentId: Int) {
-        let key = ContentKey(bkId: bkId, contentId: contentId)
-        cacheQueue.sync {
-            if let anns = cacheByContent.removeValue(forKey: key) {
-                for a in anns { if let id = a.id { cacheById.removeValue(forKey: id) } }
-            }
-        }
-    }
-     */
-
-
     // MARK: - DISPLAY ALL ANNOTATIONS
     func loadAnnotations() -> [Annotation] {
         guard let db = db else { return [] }
@@ -407,26 +399,6 @@ final class AnnotationManager {
         }
         return result
     }
-    
-    /*
-    func buildAnnotationTree(for bkId: Int) -> AnnotationNode? {
-        guard let book = LibraryDataManager.shared.booksById[bkId] else { return nil }
-        let root = AnnotationNode(title: book.book)
-        let anns = AnnotationManager.shared.loadAnnotations()
-        for ann in anns {
-            let displayTitle: String
-            if let note = ann.note, !note.isEmpty {
-                displayTitle = note
-            } else {
-                displayTitle = ann.context
-            }
-            let child = AnnotationNode(title: displayTitle, annotation: ann)
-            root.children.append(child)
-        }
-        return root
-    }
-     */
-     
 
     // MARK: - Build Tree
     func buildAnnotationTree() {
@@ -438,15 +410,12 @@ final class AnnotationManager {
             let grouped = Dictionary(grouping: anns, by: { $0.bkId })
             let sortedBooks = grouped.keys
                 .compactMap { LibraryDataManager.shared.getBook([$0]).first }
-                .sorted { $0.book.localizedCaseInsensitiveCompare($1.book) == .orderedAscending }
 
             for book in sortedBooks {
                 let annsForBook = grouped[book.id] ?? []
                 let bookNode = AnnotationNode(title: book.book)
 
-                let sortedAnns = annsForBook.sorted { $0.createdAt > $1.createdAt }
-
-                for ann in sortedAnns {
+                for ann in annsForBook {
                     let displayTitle: String
                     if let note = ann.note, !note.isEmpty {
                         displayTitle = note
@@ -472,7 +441,75 @@ final class AnnotationManager {
         }
     }
 
-    // MARK: - Tree Manipulation (dipanggil dari notification handler)
+    // MARK: - Tree Manipulation
+    func updateSorting(field: AnnotationSortField, isAscending: Bool) {
+        treeQueue.async { [weak self] in
+            guard let self = self, let root = self._rootNode else { return }
+            self.sortOption = .init(field: field, isAscending: isAscending)
+            self.sortNodeChildren(root)
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .annotationTreeDidUpdate, object: self)
+            }
+        }
+    }
+
+    private func sortNodeChildren(_ node: AnnotationNode) {
+        if !node.children.isEmpty {
+            node.children.sort(by: compareNodes)
+        }
+        for child in node.children {
+            sortNodeChildren(child)
+        }
+    }
+
+    private func compareNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode) -> Bool {
+        // KASUS 1: Anotasi (Item di dalam buku)
+        if let left = lhs.annotation, let right = rhs.annotation {
+            let orderedAscending: Bool
+            switch sortOption.field {
+            case .createdAt:
+                orderedAscending = left.createdAt == right.createdAt 
+                    ? left.context.localizedCaseInsensitiveCompare(right.context) == .orderedAscending
+                    : left.createdAt < right.createdAt
+            case .context:
+                let contextOrder = left.context.localizedCaseInsensitiveCompare(right.context)
+                orderedAscending = contextOrder == .orderedSame 
+                    ? left.createdAt < right.createdAt 
+                    : contextOrder == .orderedAscending
+            case .page:
+                orderedAscending = left.page == right.page 
+                    ? left.createdAt < right.createdAt 
+                    : left.page < right.page
+            case .part:
+                if left.part == right.part {
+                    orderedAscending = left.page == right.page 
+                        ? left.createdAt < right.createdAt 
+                        : left.page < right.page
+                } else {
+                    orderedAscending = left.part < right.part
+                }
+            }
+            return sortOption.isAscending ? orderedAscending : !orderedAscending
+        }
+
+        // KASUS 2: Buku (Parent Nodes)
+        if lhs.annotation == nil && rhs.annotation == nil {
+            if sortOption.field == .createdAt {
+                let leftLatest = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                let rightLatest = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                if leftLatest != rightLatest {
+                    let orderedAscending = leftLatest < rightLatest
+                    return sortOption.isAscending ? orderedAscending : !orderedAscending
+                }
+            }
+            // Selain Date Created: SELALU urutkan Buku berdasarkan Judul A-Z
+            return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+        }
+
+        return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+    }
+
     func addAnnotationToTree(_ annotation: Annotation) {
         treeQueue.async { [weak self] in
             guard let self = self, let root = self._rootNode else { return }
@@ -488,11 +525,10 @@ final class AnnotationManager {
 
             let annotationNode = AnnotationNode(title: displayTitle, annotation: annotation)
             bookNode.children.append(annotationNode)
-
-            bookNode.children.sort { ann1, ann2 in
-                guard let a1 = ann1.annotation, let a2 = ann2.annotation else { return false }
-                return a1.createdAt > a2.createdAt
-            }
+            
+            // Re-sort level yang terpengaruh
+            bookNode.children.sort(by: self.compareNodes)
+            root.children.sort(by: self.compareNodes)
 
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
@@ -569,7 +605,6 @@ final class AnnotationManager {
 
         let bookNode = AnnotationNode(title: book.book)
         root.children.append(bookNode)
-        root.children.sort { $0.title < $1.title }
 
         return bookNode
     }

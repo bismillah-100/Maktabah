@@ -192,6 +192,30 @@
           }
         }
       }
+    },
+    "srt-1A-2Bc.ibShadowedToolTip" : {
+      "comment" : "Class = \"NSPopUpButton\"; ibShadowedToolTip = \"Sort Annotations\"; ObjectID = \"srt-1A-2Bc\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فرز التعليقات التوضيحية"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sort Annotations"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urutkan Anotasi"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

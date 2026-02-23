@@ -3,9 +3,22 @@
 //  annotations
 //
 //  Created by MacBook on 13/12/25.
+//  Add Sorting Options
 //
 
 import Cocoa
+
+enum AnnotationSortField: Int {
+    case createdAt
+    case context
+    case page
+    case part
+}
+
+struct AnnotationSortOption {
+    let field: AnnotationSortField
+    let isAscending: Bool
+}
 
 struct Annotation {
     var id: Int64?            // nil sebelum disimpan

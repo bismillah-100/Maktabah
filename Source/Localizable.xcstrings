@@ -167,6 +167,23 @@
         }
       }
     },
+    "Ascending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متصاعدا"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naik"
+          }
+        }
+      }
+    },
     "Blue" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -363,6 +380,23 @@
         }
       }
     },
+    "Context" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سياق"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konteks"
+          }
+        }
+      }
+    },
     "Create New Folder" : {
       "localizations" : {
         "ar" : {
@@ -391,6 +425,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Koneksi Database tidak tersedia."
+          }
+        }
+      }
+    },
+    "Date Created" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاريخ الإنشاء"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tgl. Dibuat"
           }
         }
       }
@@ -441,6 +492,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hapus Sorotan & Catatan"
+          }
+        }
+      }
+    },
+    "Descending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تَرْتيباً تَنازُليًّا حَسْبَ الأَوْلَويّةِ"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turun"
           }
         }
       }
@@ -1332,6 +1400,23 @@
         }
       }
     },
+    "Page" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصفحة"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halaman"
+          }
+        }
+      }
+    },
     "PageSlider" : {
       "localizations" : {
         "ar" : {
@@ -1344,6 +1429,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Slider Halaman"
+          }
+        }
+      }
+    },
+    "Part" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجزء"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juz"
           }
         }
       }

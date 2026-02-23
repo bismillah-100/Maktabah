@@ -3,6 +3,7 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
+//  Add Sorting Options
 //
 
 import Cocoa
@@ -39,9 +40,6 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     var onSelectItem: ((Int) -> Void)?
 
-    // 🔔 Observer untuk notification
-    private var annotationObserver: NSObjectProtocol?
-
     // Simpan search text untuk re-apply filter setelah perubahan
     private var currentSearchText: String?
 
@@ -67,9 +65,6 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         #if DEBUG
             print("Annotations Data Source deinit")
         #endif
-        if let observer = annotationObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
 
         if let treeObserver {
             NotificationCenter.default.removeObserver(treeObserver)
@@ -111,6 +106,10 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             menu.addItem(deleteMenuItem)
         }
         outlineView?.menu = menu
+    }
+
+    func updateSorting(field: AnnotationSortField, isAscending: Bool) {
+        AnnotationManager.shared.updateSorting(field: field, isAscending: isAscending)
     }
 
     // MARK: - Export RTF
