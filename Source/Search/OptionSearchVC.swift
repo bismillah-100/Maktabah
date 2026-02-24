@@ -559,7 +559,7 @@ extension OptionSearchVC: ResultsDelegate {
                     return
                 }
 
-                await bkConn.connect(archive: arc)
+                bkConn.connect(archive: arc)
 
                 for item in itemsInArchive {
                     guard !Task.isCancelled else { return }

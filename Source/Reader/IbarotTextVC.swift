@@ -551,9 +551,9 @@ extension IbarotTextVC: SidebarDelegate {
 
 extension IbarotTextVC: LibraryDelegate {
     func didSelectBook(for book: BooksData) async {
-        if currentBook?.id != book.id {
-            didChangeBook(book: book)
-        }
+        if currentBook?.id == book.id { return }
+
+        didChangeBook(book: book)
         bookDB.connect(archive: book.archive)
         fetchInitialBook()
     }

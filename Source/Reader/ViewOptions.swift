@@ -43,7 +43,6 @@ class ViewOptions: NSViewController {
         loadHarakatSetting()
         screenTimeCheckbox.state = screenTimeManager.isExtended() ? .on : .off
         loadAnnotationSetting()
-        view.layoutSubtreeIfNeeded()
     }
 
     override func viewDidAppear() {
@@ -213,9 +212,6 @@ class ViewOptions: NSViewController {
 
             hStack.addArrangedSubview(optionView)
         }
-
-        hStack.needsLayout = true
-        hStack.layoutSubtreeIfNeeded()
     }
 
     // Handler ketika salah satu opsi diklik

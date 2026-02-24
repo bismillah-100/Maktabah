@@ -244,23 +244,35 @@ class AnnotationsVC: NSViewController {
     }
 
     @IBAction func openInNewWindow(_ sender: Any) {
-        let panel = NSPanel()
-        panel.styleMask.insert([.utilityWindow, .resizable, .closable])
-        panel.title = "Annotations".localized
-        panel.delegate = self
-        shareBtn.isHidden = false
-        windowBtn.isHidden = true
-        setting.isHidden = false
-        floatMenuItem.isHidden = false
-        hideOnMenuItem.isHidden = false
-        floatMenuItem.state = floatPanel ? .on : .off
-        hideOnMenuItem.state = hideOnPanel ? .on : .off
-        panel.contentViewController = self
-        panel.isFloatingPanel = floatPanel
-        panel.hidesOnDeactivate = hideOnPanel
-        panel.makeKeyAndOrderFront(sender)
-        panel.setFrameAutosaveName("AnnotationsPanel")
-        Self.panel = panel
+        // Jika VC masih di popover, lepas first responder dulu lalu tutup popover.
+        // Re-parent view dilakukan di run loop berikutnya agar tidak bentrok window ownership.
+        if let window = view.window {
+            window.makeFirstResponder(nil)
+        }
+
+        SharedPopover.annotationsPopover.performClose(sender)
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+
+            let panel = NSPanel()
+            panel.styleMask.insert([.utilityWindow, .resizable, .closable])
+            panel.title = "Annotations".localized
+            panel.delegate = self
+            shareBtn.isHidden = false
+            windowBtn.isHidden = true
+            setting.isHidden = false
+            floatMenuItem.isHidden = false
+            hideOnMenuItem.isHidden = false
+            floatMenuItem.state = floatPanel ? .on : .off
+            hideOnMenuItem.state = hideOnPanel ? .on : .off
+            panel.contentViewController = self
+            panel.isFloatingPanel = floatPanel
+            panel.hidesOnDeactivate = hideOnPanel
+            panel.makeKeyAndOrderFront(sender)
+            panel.setFrameAutosaveName("AnnotationsPanel")
+            Self.panel = panel
+        }
     }
 
     deinit {
@@ -273,6 +285,8 @@ class AnnotationsVC: NSViewController {
 extension AnnotationsVC: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         SharedPopover.annotationsVC = nil
+        SharedPopover.annotationsPopover.contentViewController = nil
+        Self.panel?.delegate = nil
         Self.panel = nil
     }
 
