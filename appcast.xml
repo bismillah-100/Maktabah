@@ -4,11 +4,11 @@
         <title>Maktabah</title>
         <item>
             <title>2.0</title>
-            <pubDate>Mon, 06 Apr 2026 05:43:45 +0000</pubDate>
-            <sparkle:version>12</sparkle:version>
+            <pubDate>Mon, 06 Apr 2026 06:31:15 +0000</pubDate>
+            <sparkle:version>11</sparkle:version>
             <sparkle:shortVersionString>2.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.7.8</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v2.0/Maktabah-v2.0.zip" length="6110145" type="application/octet-stream" sparkle:edSignature="/S1HtANmdnDo9af3p5YJdP/DEoy8fjN7XMeLFF73JOR0YzaH2RxnOWVPUDBdv5WobJxAyKCRR/8KvX4ZCMzFBg=="/>
+            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v2.0/Maktabah-v2.0.zip" length="6110272" type="application/octet-stream" sparkle:edSignature="Rm2Mj/dN62oc6DzIpu48kOA4ow/Zmigpg+VGylcn2XbC8zI95avog6MbXhCGJQJhj1Kq7+HAX03xA41bmmRrCw=="/>
         </item>
     </channel>
 </rss>
