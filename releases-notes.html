@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    font-family: -apple-system, sans-serif;
+    font-size: 13px;
+    padding: 12px 16px;
+    color: #1c1c1e;
+    background-color: white;
+  }
+
+  h2 { font-size: 15px; margin: 0 0 4px 0; }
+  h3 { font-size: 12px; text-transform: uppercase; color: #888; margin: 12px 0 4px 0; letter-spacing: 0.5px; }
+  ul { margin: 0 0 8px 0; padding-left: 18px; }
+  li { margin-bottom: 2px; }
+  .version { color: #888; font-size: 11px; margin-bottom: 16px; }
+  hr { border: none; border-top: 1px solid #e5e5ea; margin: 16px 0; }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      color: #f2f2f7;
+      background-color: #111111;
+    }
+
+    h3 { color: #b0b0b8; }
+    .version { color: #a0a0aa; }
+    hr { border-top-color: #2f2f34; }
+  }
+</style>
+</head>
+<body>
+
+<h2>Version 2.1</h2>
+<p class="version">April 12, 2026</p>
+
+<h3>New</h3>
+<ul>
+  <li>Add tagging system to annotations with completion suggestions</li>
+</ul>
+
+<h3>Changes</h3>
+<ul>
+  <li>Highlight Arabic phrases and common symbols in text view</li>
+  <li>Refactor annotations panel to use titlebar accessory view</li>
+  <li>Refactor bulk download search field</li>
+</ul>
+
+<h3>Fixes</h3>
+<ul>
+  <li>Fix Quran verse reselection on tafseer change</li>
+  <li>Fix misplaced search query highlighting</li>
+  <li>Fix font remapping (Al Bayan, remove Al Nile)</li>
+  <li>Fix search field appearance in split view accessory</li>
+</ul>
+
+<hr>
+
+<h2>Version 2.0</h2>
+<p class="version">April 6, 2026</p>
+
+<h3>New</h3>
+<ul>
+  <li>Notarized Apple Developer</li>
+  <li>Direct in-app updates now supported</li>
+  <li>Full database are not required</li>
+  <li>Options to use installed font on system</li>
+  <li>Parse and highlight {}, [], and () ibarot ranges</li>
+  <li>On Demand Book Download</li>
+  <li>Download Multiple Books at once</li>
+  <li>App Settings Management</li>
+  <li>Place Sidebar SearchField into splitViewItemAccessory</li>
+</ul>
+
+<h3>Fixes</h3>
+<ul>
+  <li>Avoid adding .trackingSeparator into toolbar when using RTL locale</li>
+  <li>borderShape buttons in macOS Tahoe</li>
+  <li>Search on Current-Book after state restore</li>
+</ul>
+
+</body>
+</html>
