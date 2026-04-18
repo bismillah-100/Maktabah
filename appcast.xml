@@ -6,6 +6,7 @@
             <title>2.1.1</title>
             <pubDate>Sat, 18 Apr 2026 14:23:45 +0000</pubDate>
             <sparkle:version>18</sparkle:version>
+            <sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>
             <sparkle:shortVersionString>2.1.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.7.8</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v2.1.1/Maktabah-v2.1.1.zip" length="6172247" type="application/octet-stream" sparkle:edSignature="993qph1bZ3WrJZUPfkOT+lUWzDLW7py4siNTEAeA56Smzp3atvwQAu0+LUnHvohaNJcaKHJSD3tqFyhiXA7PBQ=="/>
