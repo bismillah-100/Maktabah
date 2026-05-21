@@ -2072,13 +2072,21 @@ final class AnnotationManager {
                         let remoteLastMod = ann.lastModified ?? 0
 
                         if remoteLastMod >= localLastMod {
-                            let updateSql = "UPDATE \(annotationsTable) SET \(colAnnColor) = ?, \(colAnnType) = ?, \(colAnnNote) = ?, \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;"
+                            let updateSql = "UPDATE \(annotationsTable) SET \(colAnnBkId) = ?, \(colAnnContentId) = ?, \(colAnnStart) = ?, \(colAnnLength) = ?, \(colAnnStartDiac) = ?, \(colAnnLengthDiac) = ?, \(colAnnColor) = ?, \(colAnnType) = ?, \(colAnnNote) = ?, \(colAnnLastModified) = ?, \(colAnnPart) = ?, \(colAnnPage) = ? WHERE \(colAnnId) = ?;"
 
                             let params: [Any] = [
+                                ann.bkId,
+                                ann.contentId,
+                                ann.range.location,
+                                ann.range.length,
+                                ann.rangeDiacritics.location,
+                                ann.rangeDiacritics.length,
                                 ann.colorHex,
                                 ann.type.rawValue,
                                 ann.note ?? NSNull(),
                                 ann.lastModified ?? 0,
+                                ann.part,
+                                ann.page,
                                 existingLocalId
                             ]
 

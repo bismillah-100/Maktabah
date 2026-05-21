@@ -776,9 +776,11 @@ struct OfflineImportFormView: View {
         do {
             // Phase 1: Operasi DB (changeBookId + updateAnnotations) di background thread.
             // updateAnnotationsBookId mengembalikan anotasi yang perlu di-upload.
-            let annotationsToSync = try await Task.detached(priority: .userInitiated) {
+            let (annotationsToSync, resultsToSync) = try await Task.detached(priority: .userInitiated) {
                 try BookUpdateManager.shared.changeBookId(oldId: oldId, newId: newId)
-                return try AnnotationManager.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
+                let annotations = try AnnotationManager.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
+                let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
+                return (annotations, results)
             }.value
 
             // Phase 2: Reload library cache SEBELUM upload ke CloudKit.
@@ -795,9 +797,14 @@ struct OfflineImportFormView: View {
             // Phase 3: Upload ke CloudKit SETELAH library data segar.
             // Urutan ini mencegah race condition di mana device lain menerima
             // anotasi dengan newId sebelum book newId terdaftar di library lokal.
-            if !annotationsToSync.isEmpty {
+            if !annotationsToSync.isEmpty || !resultsToSync.isEmpty {
                 DispatchQueue.global(qos: .background).async {
-                    CloudKitSyncManager.shared.upload(annotations: annotationsToSync)
+                    if !annotationsToSync.isEmpty {
+                        CloudKitSyncManager.shared.upload(annotations: annotationsToSync)
+                    }
+                    if !resultsToSync.isEmpty {
+                        CloudKitSyncManager.shared.uploadResultsData(folders: [], results: resultsToSync)
+                    }
                 }
             }
 

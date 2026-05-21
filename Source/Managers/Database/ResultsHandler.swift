@@ -54,6 +54,25 @@ class ResultsHandler {
     private let colResLastModified = "lastModified"
     private let colFolderCkRecordId = "folderCkRecordId"
 
+    func migrateBookId(from oldId: Int, to newId: Int) throws -> [SyncResult] {
+        guard let db else { return [] }
+        let now = Int64(Date().timeIntervalSince1970)
+        
+        let sql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colBkId) = ?"
+        try exec(sql, parameters: [newId, now, oldId])
+        
+        // Fetch updated results to upload
+        let fetchSql = "SELECT * FROM \(resultsTable) WHERE \(colBkId) = ?"
+        let updatedResults = try db.fetch(query: fetchSql, parameters: [newId]) { self.makeSyncResult(from: $0) }
+        
+        for res in updatedResults {
+            if let ckId = res.ckRecordId {
+                addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
+        return updatedResults
+    }
+
     func disconnect() {
         db?.checkpoint()
         db = nil
