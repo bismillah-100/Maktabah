@@ -5,10 +5,21 @@ struct iOSHistoryView: View {
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
 
     var body: some View {
+        let searchText = navigationManager.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedSearchText = searchText.normalizeArabic(true)
+
+        let filteredFavorites = viewModel.favoriteBooks.filter { book in
+            searchText.isEmpty || book.book.normalizeArabic(true).localizedStandardContains(normalizedSearchText)
+        }
+        
+        let filteredHistory = viewModel.historyBooks.filter { book in
+            searchText.isEmpty || book.book.normalizeArabic(true).localizedStandardContains(normalizedSearchText)
+        }
+
         List {
-            if !viewModel.favoriteBooks.isEmpty {
+            if !filteredFavorites.isEmpty {
                 Section(header: Text("Favorites")) {
-                    ForEach(viewModel.favoriteBooks, id: \.id) { book in
+                    ForEach(filteredFavorites, id: \.id) { book in
                         BookRowView(book: book, isFavorite: true, viewModel: viewModel) {
                             navigationManager.openBook(book, initialContentId: viewModel.lastContentId(for: book.id))
                         }
@@ -17,18 +28,23 @@ struct iOSHistoryView: View {
                 }
             }
 
-            if !viewModel.historyBooks.isEmpty {
+            if !filteredHistory.isEmpty {
                 Section(header: Text("History")) {
-                    ForEach(viewModel.historyBooks, id: \.id) { book in
+                    ForEach(filteredHistory, id: \.id) { book in
                         BookRowView(book: book, isFavorite: viewModel.favoriteBookIds.contains(book.id), viewModel: viewModel) {
                             navigationManager.openBook(book, initialContentId: viewModel.lastContentId(for: book.id))
                         }
                     }
                     .onDelete(perform: removeHistory)
                 }
-            } else if viewModel.favoriteBooks.isEmpty {
-                Text("No recent history")
-                    .foregroundColor(.secondary)
+            } else if filteredFavorites.isEmpty {
+                if !searchText.isEmpty {
+                    Text("No results found for \"\(searchText)\"")
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("No recent history")
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .listStyle(.insetGrouped)
