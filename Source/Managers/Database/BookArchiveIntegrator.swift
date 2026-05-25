@@ -250,14 +250,16 @@ final class BookArchiveIntegrator {
 
             // Hapus dari special.sqlite jika authid > 2515
             if book.muallif > 2515, let specialDbPath = AppConfig.specialDatabasePath {
-                do {
-                    let specialDb = try openDatabase(path: specialDbPath)
-                    try exec(specialDb, "DELETE FROM Auth WHERE authid = \(book.muallif);")
-                    sqlite3_close(specialDb)
-                } catch {
-                    #if DEBUG
-                    print("Error deleting author from special database: \(error)")
-                    #endif
+                if !DatabaseManager.shared.isAuthorUsed(authorId: book.muallif) {
+                    do {
+                        let specialDb = try openDatabase(path: specialDbPath)
+                        try exec(specialDb, "DELETE FROM Auth WHERE authid = \(book.muallif);")
+                        sqlite3_close(specialDb)
+                    } catch {
+                        #if DEBUG
+                        print("Error deleting author from special database: \(error)")
+                        #endif
+                    }
                 }
             }
 

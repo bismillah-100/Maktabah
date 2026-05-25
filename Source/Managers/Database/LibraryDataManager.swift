@@ -648,7 +648,9 @@ class LibraryDataManager {
             }
 
             if muallifId > 2515 {
-                _authorsCache.removeValue(forKey: muallifId)
+                if !db.isAuthorUsed(authorId: muallifId) {
+                    _authorsCache.removeValue(forKey: muallifId)
+                }
             }
         }
     }

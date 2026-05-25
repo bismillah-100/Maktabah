@@ -240,6 +240,15 @@ class DatabaseManager {
         return (try? db.fetch(query: sql, parameters: [id]) { _ in true }.first) ?? false
     }
 
+    func isAuthorUsed(authorId: Int) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let db else { return false }
+
+        let sql = "SELECT 1 FROM \(booksTableName) WHERE \(colBokMuallif) = ? LIMIT 1;"
+        return (try? db.fetch(query: sql, parameters: [authorId]) { _ in true }.first) ?? false
+    }
+
     func fetchBooksInfo(for bookData: BooksData) {
         lock.lock()
         defer { lock.unlock() }
