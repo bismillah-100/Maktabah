@@ -857,9 +857,38 @@ extension ResultsHandler {
                     }
                 }
 
-                // 2. Process Saves/Updates (Pass 1: Upsert Folders)
-                for folder in foldersToSave {
+                // 2. Sort folders topologically to ensure parents are inserted before children
+                var sortedFolders: [SyncFolder] = []
+                var pendingFolders = foldersToSave
+                var progress = true
+                
+                while !pendingFolders.isEmpty && progress {
+                    progress = false
+                    for i in (0..<pendingFolders.count).reversed() {
+                        let f = pendingFolders[i]
+                        let parentInPending = pendingFolders.contains { $0.ckRecordId == f.parentCkRecordId }
+                        if !parentInPending {
+                            sortedFolders.append(f)
+                            pendingFolders.remove(at: i)
+                            progress = true
+                        }
+                    }
+                }
+                // Append any remaining folders in case of circular dependencies
+                sortedFolders.append(contentsOf: pendingFolders)
+
+                // 3. Process Saves/Updates
+                for folder in sortedFolders {
                     guard let ckId = folder.ckRecordId else { continue }
+
+                    // Resolve parent locally
+                    var pLocalId: Int64? = nil
+                    if let pCkId = folder.parentCkRecordId {
+                        let findParentSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
+                        if let pid = try db.fetch(query: findParentSql, parameters: [pCkId], mapping: { $0.int64(at: 0) }).first {
+                            pLocalId = pid
+                        }
+                    }
 
                     var existingLocalId: Int64 = -1
                     var localLastMod: Int64 = 0
@@ -872,25 +901,12 @@ extension ResultsHandler {
                     if existingLocalId != -1 {
                         let remoteLastMod = folder.lastModified ?? 0
                         if remoteLastMod >= localLastMod {
-                            let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ? WHERE \(colId) = ?;"
-                            try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), existingLocalId])
+                            let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
+                            try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull(), existingLocalId])
                         }
                     } else {
-                        let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId)) VALUES (?, ?, ?, ?);"
-                        try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull()])
-                    }
-                }
-
-                // 3. Pass 2: Resolve Parent Pointers
-                for folder in foldersToSave {
-                    guard let ckId = folder.ckRecordId else { continue }
-                    if let pCkId = folder.parentCkRecordId {
-                        let findParentSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-                        if let pLocalId = try db.fetch(query: findParentSql, parameters: [pCkId], mapping: { $0.int64(at: 0) }).first {
-                            try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colCkRecordId) = ?;", parameters: [pLocalId, ckId])
-                        }
-                    } else {
-                        try exec("UPDATE \(foldersTable) SET \(colParent) = NULL WHERE \(colCkRecordId) = ?;", parameters: [ckId])
+                        let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId), \(colParent)) VALUES (?, ?, ?, ?, ?);"
+                        try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
                     }
                 }
             }
