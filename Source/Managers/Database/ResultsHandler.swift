@@ -901,12 +901,54 @@ extension ResultsHandler {
                     if existingLocalId != -1 {
                         let remoteLastMod = folder.lastModified ?? 0
                         if remoteLastMod >= localLastMod {
+                            let conflictSql: String
+                            let conflictParams: [Any]
+                            if let pid = pLocalId {
+                                conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                                conflictParams = [pid, folder.name, existingLocalId]
+                            } else {
+                                conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                                conflictParams = [folder.name, existingLocalId]
+                            }
+                            if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
+                                try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                            }
+
                             let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
                             try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull(), existingLocalId])
                         }
                     } else {
-                        let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId), \(colParent)) VALUES (?, ?, ?, ?, ?);"
-                        try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
+                        var conflictLocalId: Int64 = -1
+                        var conflictLastMod: Int64 = 0
+                        
+                        let conflictSql: String
+                        let conflictParams: [Any]
+                        if let pid = pLocalId {
+                            conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? LIMIT 1"
+                            conflictParams = [pid, folder.name]
+                        } else {
+                            conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? LIMIT 1"
+                            conflictParams = [folder.name]
+                        }
+                        
+                        if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                            conflictLocalId = row.0
+                            conflictLastMod = row.1
+                        }
+
+                        if conflictLocalId != -1 {
+                            let remoteLastMod = folder.lastModified ?? 0
+                            if remoteLastMod >= conflictLastMod {
+                                let upSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
+                                try db.execute(query: upSql, parameters: [ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull(), conflictLocalId])
+                            } else {
+                                let upCkIdSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ? WHERE \(colId) = ?"
+                                try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
+                            }
+                        } else {
+                            let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId), \(colParent)) VALUES (?, ?, ?, ?, ?);"
+                            try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
+                        }
                     }
                 }
             }
@@ -954,6 +996,19 @@ extension ResultsHandler {
                     if existingLocalId != -1 {
                         let remoteLastMod = res.lastModified ?? 0
                         if remoteLastMod >= localLastMod {
+                            let conflictSql: String
+                            let conflictParams: [Any]
+                            if let fid = fLocalId {
+                                conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
+                                conflictParams = [fid, res.name, res.bkId, existingLocalId]
+                            } else {
+                                conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
+                                conflictParams = [res.name, res.bkId, existingLocalId]
+                            }
+                            if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
+                                try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                            }
+
                             let upSql = """
                             UPDATE \(resultsTable) SET 
                             \(colFolderId) = ?, \(colName) = ?, \(colQuery) = ?, \(colArchive) = ?,
@@ -968,19 +1023,58 @@ extension ResultsHandler {
                             try db.execute(query: upSql, parameters: params)
                         }
                     } else {
-                        let insSql = """
-                        INSERT INTO \(resultsTable) (
-                            \(colFolderId), \(colName), \(colQuery), \(colArchive),
-                            \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
-                            \(colFolderCkRecordId)
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-                        """
-                        let params: [Any] = [
-                            fLocalId ?? NSNull(), res.name, res.query, res.archive,
-                            res.bkId, res.contentId, ckId, res.lastModified ?? 0,
-                            res.folderCkRecordId ?? NSNull()
-                        ]
-                        try db.execute(query: insSql, parameters: params)
+                        var conflictLocalId: Int64 = -1
+                        var conflictLastMod: Int64 = 0
+                        
+                        let conflictSql: String
+                        let conflictParams: [Any]
+                        if let fid = fLocalId {
+                            conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+                            conflictParams = [fid, res.name, res.bkId]
+                        } else {
+                            conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+                            conflictParams = [res.name, res.bkId]
+                        }
+                        
+                        if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                            conflictLocalId = row.0
+                            conflictLastMod = row.1
+                        }
+                        
+                        if conflictLocalId != -1 {
+                            let remoteLastMod = res.lastModified ?? 0
+                            if remoteLastMod >= conflictLastMod {
+                                let upSql = """
+                                UPDATE \(resultsTable) SET 
+                                \(colFolderId) = ?, \(colName) = ?, \(colQuery) = ?, \(colArchive) = ?,
+                                \(colBkId) = ?, \(colContentId) = ?, \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?
+                                WHERE \(colId) = ?;
+                                """
+                                let params: [Any] = [
+                                    fLocalId ?? NSNull(), res.name, res.query, res.archive,
+                                    res.bkId, res.contentId, ckId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
+                                    conflictLocalId
+                                ]
+                                try db.execute(query: upSql, parameters: params)
+                            } else {
+                                let upCkIdSql = "UPDATE \(resultsTable) SET \(colResCkRecordId) = ? WHERE \(colId) = ?"
+                                try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
+                            }
+                        } else {
+                            let insSql = """
+                            INSERT INTO \(resultsTable) (
+                                \(colFolderId), \(colName), \(colQuery), \(colArchive),
+                                \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
+                                \(colFolderCkRecordId)
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                            """
+                            let params: [Any] = [
+                                fLocalId ?? NSNull(), res.name, res.query, res.archive,
+                                res.bkId, res.contentId, ckId, res.lastModified ?? 0,
+                                res.folderCkRecordId ?? NSNull()
+                            ]
+                            try db.execute(query: insSql, parameters: params)
+                        }
                     }
                 }
             }
