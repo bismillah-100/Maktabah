@@ -143,14 +143,12 @@ struct iOSReaderView: View {
                 iOSReaderBottomToolbarView(viewModel: viewModel)
             }
         }
-        .onAppear {
-            if viewModel.contentText.isEmpty {
-                viewModel.loadInitialContent(initialContentId: initialContentId)
-            }
-        }
         .onChange(of: initialContentId) { _, newValue in
-            if let newValue {
-                viewModel.fetchContentById(newValue)
+            if viewModel.contentText.isEmpty {
+                viewModel.loadInitialContent()
+            } else if let savedScroll = viewModel.state.scrollPosition {
+                // Tab already has content - restore scroll position
+                viewModel.fetchScrollPosition = { savedScroll }
             }
         }
         .sheet(isPresented: $showingSearch) {

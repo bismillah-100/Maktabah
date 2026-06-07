@@ -414,14 +414,6 @@ struct iOSIbarotTextView: UIViewRepresentable {
         textView.onUnderline = { sourceRange, sourceText in
             onAddAnnotation?(sourceRange, .underline, sourceText, .black)
         }
-        
-        viewModel.fetchScrollPosition = { [weak textView] in
-            textView?.contentOffset
-        }
-        
-        viewModel.fetchSelectedRange = { [weak textView] in
-            textView?.selectedRange
-        }
 
         container.addSubview(textView)
 
@@ -459,6 +451,18 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {
         guard let textView = uiView.subviews.first as? iOSCustomIbarotTextView else { return }
+
+        /* NavigationStack di SwiftUI tidak selalu destroy+recreate secara sinkron. Ada kasus di mana updateUIView dipanggil lebih dulu dengan parent baru sebelum SwiftUI selesai memutuskan apakah akan recreate atau reuse — terutama karena `iOSReaderViewModel` adalah @Observable class (reference type). SwiftUI mungkin mendeteksi "view type sama, posisi sama" dan mencoba reuse dulu, trigger updateUIView, baru kemudian recreate. Jadi context.coordinator.parent = self di updateUIView itu memang defensive programming — dan karena terbukti memperbaiki bug nyata, berarti memang ada skenario di mana Coordinator di-reuse dengan parent stale.
+         */
+        context.coordinator.parent = self
+
+        viewModel.fetchScrollPosition = { [weak textView] in
+            textView?.contentOffset
+        }
+
+        viewModel.fetchSelectedRange = { [weak textView] in
+            textView?.selectedRange
+        }
 
         if isMultiLanguage {
             textView.textAlignment = .natural
