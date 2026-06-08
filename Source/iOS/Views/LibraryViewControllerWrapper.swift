@@ -30,6 +30,7 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
                 context.coordinator.viewModel._showOnlyDownloadedTracker = context.coordinator.viewModel.showOnlyDownloaded
                 let categories = context.coordinator.viewModel.displayedCategories
                 context.coordinator.lastUpdateTrigger = context.coordinator.viewModel.updateTrigger
+                context.coordinator.lastSelectionMode = context.coordinator.viewModel.isSelectionMode
                 vc.applyCategories(categories)
             }
         }
@@ -46,11 +47,14 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
 
         let categories = context.coordinator.viewModel.displayedCategories
         let currentTrigger = context.coordinator.viewModel.updateTrigger
+        let currentSelectionMode = context.coordinator.viewModel.isSelectionMode
 
         if currentTrigger != context.coordinator.lastUpdateTrigger {
             context.coordinator.lastUpdateTrigger = currentTrigger
+            context.coordinator.lastSelectionMode = currentSelectionMode
             uiViewController.applyCategories(categories)
-        } else {
+        } else if currentSelectionMode != context.coordinator.lastSelectionMode {
+            context.coordinator.lastSelectionMode = currentSelectionMode
             uiViewController.reloadVisibleItems()
         }
     }
@@ -59,6 +63,7 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
         let navigationManager: iOSNavigationManager
         let viewModel: iOSLibraryViewModel
         var lastUpdateTrigger: Int = -1
+        var lastSelectionMode: Bool = false
 
         init(navigationManager: iOSNavigationManager, viewModel: iOSLibraryViewModel) {
             self.navigationManager = navigationManager
