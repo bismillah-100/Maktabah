@@ -16,6 +16,8 @@ struct iOSReaderBottomToolbarView: View {
     @State private var showingAnnotationsList = false
     @State private var showingSearch = false
 
+    @Environment(\.layoutDirection) private var layoutDirection
+
     var isDarkMode: Bool {
         textViewState.isDarkMode
     }
@@ -33,37 +35,17 @@ struct iOSReaderBottomToolbarView: View {
 
         Spacer()
 
-        Button(action: {
-            showingOptions = true
-        }) {
-            Image(systemName: "textformat")
-        }
-        .accessibilityLabel(String(localized: "Text Options"))
-        .help(String(localized: "Text Options"))
-        .popover(isPresented: $showingOptions) {
-            ViewOptionsView()
-                .frame(width: 300, height: 500)
-                .presentationCompactAdaptation(.popover)
-                .preferredColorScheme(isDarkMode ? .dark : .light)
+        Group {
+            if layoutDirection == .rightToLeft {
+                prevButton
+                nextButton
+            } else {
+                nextButton
+                prevButton
+            }
         }
 
-        Button(action: {
-            showingTOC = true
-        }) {
-            Image(systemName: "list.bullet")
-        }
-        .accessibilityLabel(String(localized: "Table of Contents"))
-        .help(String(localized: "Table of Contents"))
-
-        Button(action: {
-            showingAnnotationsList = true
-        }) {
-            Image(systemName: "quote.closing")
-        }
-        .accessibilityLabel(String(localized: "Annotations"))
-        .help(String(localized: "Annotations"))
-
-        if MaktabahApp.isIpad { Spacer() }
+        Spacer()
 
         Button(action: {
             showingSearch = true
@@ -72,6 +54,40 @@ struct iOSReaderBottomToolbarView: View {
         }
         .accessibilityLabel(String(localized: "Search"))
         .help(String(localized: "Search"))
+
+        Menu {
+            Button(action: {
+                showingOptions = true
+            }) {
+                Label("View Options", systemImage: "textformat")
+            }
+            .accessibilityLabel(String(localized: "Text Options"))
+            .help(String(localized: "Text Options"))
+
+            Button(action: {
+                showingTOC = true
+            }) {
+                Label("Table of Contents", systemImage: "list.bullet")
+            }
+            .accessibilityLabel(String(localized: "Table of Contents"))
+            .help(String(localized: "Table of Contents"))
+
+            Button(action: {
+                showingAnnotationsList = true
+            }) {
+                Label("Annotations", systemImage: "quote.closing")
+            }
+            .accessibilityLabel(String(localized: "Annotations"))
+            .help(String(localized: "Annotations"))
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .popover(isPresented: $showingOptions) {
+            ViewOptionsView()
+                .frame(width: 300, height: 500)
+                .presentationCompactAdaptation(.popover)
+                .preferredColorScheme(isDarkMode ? .dark : .light)
+        }
         .sheet(isPresented: $showingSearch) {
             iOSBookSearchView(
                 book: viewModel.book,
@@ -108,6 +124,24 @@ struct iOSReaderBottomToolbarView: View {
                 }
             )
         }
+    }
+
+    private var nextButton: some View {
+        Button(action: { viewModel.goToNextPage() }) {
+            Image(systemName: "chevron.left")
+        }
+        .accessibilityLabel(String(localized: "Next Page"))
+        .help(String(localized: "Next Page"))
+        .keyboardShortcut(.leftArrow, modifiers: [])
+    }
+
+    private var prevButton: some View {
+        Button(action: { viewModel.goToPrevPage() }) {
+            Image(systemName: "chevron.right")
+        }
+        .accessibilityLabel(String(localized: "Previous Page"))
+        .help(String(localized: "Previous Page"))
+        .keyboardShortcut(.rightArrow, modifiers: [])
     }
 }
 

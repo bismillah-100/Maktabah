@@ -11,9 +11,11 @@ struct iOSReaderTabsPopoverView: View {
     @Environment(iOSNavigationManager.self) var bManager
     @Binding var isPresented: Bool
 
+    private let cardHeight: CGFloat = 50
+
     var body: some View {
         NavigationView {
-            ThemeList(bManager.openTabs, id: \.id, isGrouped: false) { tab in
+            ThemeList(bManager.openTabs, id: \.id) { tab in
                 Button(action: {
                     bManager.selectTab(id: tab.id)
                     isPresented = false
@@ -38,12 +40,28 @@ struct iOSReaderTabsPopoverView: View {
                                     ? .accentColor : .primary
                             )
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(height: cardHeight)
+                    .padding(.horizontal, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 30)
+                            .fill(Color.appCellBackground)
+                            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color(.secondarySystemFill), lineWidth: 0.3)
+                    )
                 }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 .swipeActions(content: {
                     Button(role: .destructive) {
-                        bManager.closeTab(id: tab.id)
-                        if bManager.openTabs.isEmpty {
-                            isPresented = false
+                        withAnimation {
+                            bManager.closeTab(id: tab.id)
+                            if bManager.openTabs.isEmpty {
+                                isPresented = false
+                            }
                         }
                     } label: {
                         Label("Close", systemImage: "xmark")
@@ -54,6 +72,7 @@ struct iOSReaderTabsPopoverView: View {
             .navigationTitle("Opened Books")
             .navigationBarTitleDisplayMode(.inline)
             .environment(\.layoutDirection, .rightToLeft)
+            .animation(.easeInOut(duration: 0.3), value: bManager.openTabs)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {

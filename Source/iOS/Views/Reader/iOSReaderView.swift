@@ -10,7 +10,6 @@ struct iOSReaderView: View {
     var viewModel: iOSReaderViewModel
     @State private var textViewState = TextViewState.shared
     @Environment(iOSNavigationManager.self) var bManager
-    @Environment(\.layoutDirection) private var layoutDirection
 
     @State private var showingTOC = false
     @State private var showingOptions = false
@@ -94,29 +93,13 @@ struct iOSReaderView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: {
-                    showingBookInfo = true
-                }) {
-                    Image(systemName: "info.circle")
-                }
-                .accessibilityLabel(String(localized: "Book Information"))
-                .help(String(localized: "Book Information"))
-                .popover(isPresented: $showingBookInfo) {
-                    iOSBookInfoView(book: book)
-                        .preferredColorScheme(isDarkMode ? .dark : .light)
-                        .presentationCompactAdaptation(.popover)
-                        .frame(maxWidth: 350, maxHeight: 450)
-                }
-            }
-
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if !ipad, bManager.openTabs.count > 1 {
                     Button {
                         showingTabsList.toggle()
                     } label: {
                         Text(viewModel.book.book)
-                            .frame(maxWidth: 110)
+                            .frame(maxWidth: 220)
                             .contentShape(Rectangle())
                     }
                     .popover(isPresented: $showingTabsList) {
@@ -129,13 +112,19 @@ struct iOSReaderView: View {
 
             CustomToolbarSpacer(placement: .topBarTrailing)
 
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if layoutDirection == .rightToLeft {
-                    prevButton
-                    nextButton
-                } else {
-                    nextButton
-                    prevButton
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: {
+                    showingBookInfo = true
+                }) {
+                    Image(systemName: "info.circle")
+                }
+                .accessibilityLabel(String(localized: "Book Information"))
+                .help(String(localized: "Book Information"))
+                .popover(isPresented: $showingBookInfo) {
+                    iOSBookInfoView(book: book)
+                        .preferredColorScheme(isDarkMode ? .dark : .light)
+                        .presentationCompactAdaptation(.popover)
+                        .frame(maxWidth: 350, maxHeight: 450)
                 }
             }
 
@@ -198,24 +187,6 @@ struct iOSReaderView: View {
                 .presentationDetents([.medium, .large])
             }
         }
-    }
-
-    private var nextButton: some View {
-        Button(action: { viewModel.goToNextPage() }) {
-            Image(systemName: "chevron.left")
-        }
-        .accessibilityLabel(String(localized: "Next Page"))
-        .help(String(localized: "Next Page"))
-        .keyboardShortcut(.leftArrow, modifiers: [])
-    }
-
-    private var prevButton: some View {
-        Button(action: { viewModel.goToPrevPage() }) {
-            Image(systemName: "chevron.right")
-        }
-        .accessibilityLabel(String(localized: "Previous Page"))
-        .help(String(localized: "Previous Page"))
-        .keyboardShortcut(.rightArrow, modifiers: [])
     }
 }
 
