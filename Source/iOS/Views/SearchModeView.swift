@@ -46,6 +46,7 @@ struct SearchModeView: View {
                 }
             )
             .themeTint()
+            .toolbarVisibility(isSearchFieldFocused ? .hidden : .visible, for: .tabBar)
             .ignoresSafeArea(edges: .vertical)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 bottomInputBar(viewModel: viewModel)
