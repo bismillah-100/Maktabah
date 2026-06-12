@@ -115,15 +115,40 @@ final class AnnotationManager {
 
     private init() {}
 
+    private var now: Int64 {
+        Int64(Date().timeIntervalSince1970)
+    }
+
     // MARK: - Private helper to post notification
 
-    private func postChangeNotification(type: AnnotationChangeType, annotation: Annotation? = nil, annotationId: Int64? = nil, diff: TagUpdateDiff? = nil, oldParentIndex: Int? = nil, newParentIndex: Int? = nil) {
+    private func postChangeNotification(
+        type: AnnotationChangeType,
+        annotation: Annotation? = nil,
+        annotationsToSync: [Annotation]? = nil,
+        annotationId: Int64? = nil,
+        diff: TagUpdateDiff? = nil,
+        oldParentIndex: Int? = nil,
+        newParentIndex: Int? = nil,
+        uploadToCloudKit: Bool = true
+    ) {
         var userInfo: [String: Any] = [AnnotationNotificationKeys.changeType: type.rawValue]
 
         if let ann = annotation {
             userInfo[AnnotationNotificationKeys.annotation] = ann
             if type != .deleted { pushRecentColor(ann) }
         }
+
+        if uploadToCloudKit {
+            if type == .added || type == .updated {
+                let toUpload = annotationsToSync ?? (annotation != nil ? [annotation!] : [])
+                if !toUpload.isEmpty {
+                    CloudKitSyncManager.shared.upload(annotations: toUpload)
+                }
+            } else if type == .deleted, let ann = annotation, let ckId = ann.ckRecordId {
+                CloudKitSyncManager.shared.delete(ckRecordIds: [ckId], target: .annotation)
+            }
+        }
+
         if let id = annotationId {
             userInfo[AnnotationNotificationKeys.annotationId] = id
         }
@@ -254,7 +279,6 @@ final class AnnotationManager {
 
         let sql = "SELECT \(colAnnId), \(colAnnBkId), \(colAnnContentId), \(colAnnStart), \(colAnnCreatedAt) FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IS NULL"
         var backfilledAnnotations: [Annotation] = []
-        let now = Int64(Date().timeIntervalSince1970)
 
         try transaction {
             let results = try db.fetch(query: sql) { row -> (Int64, Int, Int, Int, Int64) in
@@ -293,7 +317,6 @@ final class AnnotationManager {
 
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let db else { return }
-        let now = Int64(Date().timeIntervalSince1970)
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
         try? db.execute(query: sql, parameters: [ckRecordId, operation, now])
     }
@@ -438,9 +461,6 @@ final class AnnotationManager {
 
         addAnnotationToTree(saved)
 
-        // Trigger CloudKit Upload
-        CloudKitSyncManager.shared.upload(annotations: [saved])
-
         return rowId
     }
 
@@ -495,9 +515,6 @@ final class AnnotationManager {
         }
 
         updateAnnotationInTree(updatedAnnotation)
-
-        // Trigger CloudKit Upload
-        CloudKitSyncManager.shared.upload(annotations: [updatedAnnotation])
     }
 
     // MARK: - Rename Tag
@@ -553,10 +570,12 @@ final class AnnotationManager {
                         tags.append(trimmedNew)
                     }
                     ann.tags = sanitizeTagNames(tags)
+                    ann.lastModified = now
                     updatedAnnotations.append(ann)
 
                     let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES (?, ?);"
-                    try db.execute(query: insertRelSql, parameters: [annId, existingNewTagId])
+                    try exec(insertRelSql, parameters: [annId, existingNewTagId])
+                    try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
                 }
                 try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [oldTagId])
                 try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [oldTagId])
@@ -570,10 +589,12 @@ final class AnnotationManager {
                         normalizedTagName($0) == oldNormalized ? trimmedNew : $0
                     }
                     ann.tags = sanitizeTagNames(ann.tags)
+                    ann.lastModified = now
                     updatedAnnotations.append(ann)
+                    try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
                 }
                 let updateTagSql = "UPDATE \(tagsTable) SET \(colTagName) = ?, \(colTagNormalizedName) = ? WHERE \(colTagId) = ?;"
-                try db.execute(query: updateTagSql, parameters: [trimmedNew, newNormalized, oldTagId])
+                try exec(updateTagSql, parameters: [trimmedNew, newNormalized, oldTagId])
             }
         }
 
@@ -596,7 +617,9 @@ final class AnnotationManager {
                 guard mergedTags != annotation.tags else { continue }
                 try replaceTags(mergedTags, for: annotationID)
                 annotation.tags = mergedTags
+                annotation.lastModified = now
                 updatedAnnotations.append(annotation)
+                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annotationID])
             }
         }
 
@@ -622,7 +645,9 @@ final class AnnotationManager {
                 guard sanitizedTags != annotation.tags else { continue }
                 try replaceTags(sanitizedTags, for: annotationID)
                 annotation.tags = sanitizedTags
+                annotation.lastModified = now
                 updatedAnnotations.append(annotation)
+                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annotationID])
             }
         }
 
@@ -659,9 +684,6 @@ final class AnnotationManager {
 
         removeAnnotationFromTree(id: id, deletedAnnotation: annotationToDelete)
 
-        if let ckRecordId = annotationToDelete?.ckRecordId {
-            CloudKitSyncManager.shared.delete(ckRecordIds: [ckRecordId], target: .annotation)
-        }
     }
 
     // MARK: - Delete Tag (hapus tag dari semua anotasi)
@@ -686,8 +708,11 @@ final class AnnotationManager {
 
         // Hapus relasi & tag dari DB
         try transaction {
-            try db.execute(query: "DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [deletedTagId])
-            try db.execute(query: "DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
+            try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [deletedTagId])
+            try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
+            for annId in affectedIds {
+                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
+            }
         }
 
         // Update cache
@@ -697,6 +722,7 @@ final class AnnotationManager {
             for annId in affectedIds {
                 guard var ann = cacheById[annId] else { continue }
                 ann.tags = ann.tags.filter { normalizedTagName($0) != normalized }
+                ann.lastModified = now
                 cacheById[annId] = ann
                 cacheTagsByAnnotationId[annId] = ann.tags
 
@@ -826,7 +852,7 @@ final class AnnotationManager {
 
             // Post notifikasi untuk memicu handleTagModeUpdate di DataSource.
             let representativeId = updatedAnnotations.first?.id ?? -1
-            postChangeNotification(type: .updated, annotationId: representativeId, diff: diff)
+            postChangeNotification(type: .updated, annotation: updatedAnnotations.first, annotationsToSync: updatedAnnotations, annotationId: representativeId, diff: diff)
         }
     }
 
@@ -996,7 +1022,6 @@ final class AnnotationManager {
     @discardableResult
     func updateAnnotationsBookId(oldId: Int, newId: Int) throws -> [Annotation] {
         guard let db else { return [] }
-        let now = Int64(Date().timeIntervalSince1970)
 
         // 1. Fetch ID anotasi yang akan diupdate (untuk CloudKit sync)
         let fetchSql = """
@@ -1076,7 +1101,14 @@ final class AnnotationManager {
             guard let self else { return }
 
             let root = AnnotationNode(title: "All Annotations", kind: .root)
-            let anns = loadAnnotations()
+            var anns = loadAnnotations()
+            
+            if UserDefaults.standard.bool(forKey: "hideMissingBookAnnotations") {
+                let uniqueBkIds = Set(anns.map { $0.bkId })
+                let existingBkIds = Set(uniqueBkIds.filter { !LibraryDataManager.shared.getBook([$0]).isEmpty })
+                anns = anns.filter { existingBkIds.contains($0.bkId) }
+            }
+            
             switch groupingMode {
             case .book:
                 populateBookTree(root: root, annotations: anns)
@@ -1169,15 +1201,15 @@ final class AnnotationManager {
         return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
     }
 
-    func addAnnotationToTree(_ annotation: Annotation) {
+    func addAnnotationToTree(_ annotation: Annotation, uploadToCloudKit: Bool = true) {
         treeQueue.async { [weak self] in
             guard let self else { return }
             guard groupingMode == .book else {
-                addAnnotationToTagTree(annotation)
+                addAnnotationToTagTree(annotation, uploadToCloudKit: uploadToCloudKit)
                 return
             }
             guard let root = _rootNode else {
-                postChangeNotification(type: .added, annotation: annotation)
+                postChangeNotification(type: .added, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
                 return
             }
 
@@ -1213,21 +1245,21 @@ final class AnnotationManager {
                 newParentIdx = newIndex
             }
 
-            postChangeNotification(type: .added, annotation: annotation, oldParentIndex: oldParentIdx, newParentIndex: newParentIdx)
+            postChangeNotification(type: .added, annotation: annotation, oldParentIndex: oldParentIdx, newParentIndex: newParentIdx, uploadToCloudKit: uploadToCloudKit)
         }
     }
 
-    func updateAnnotationInTree(_ annotation: Annotation) {
+    func updateAnnotationInTree(_ annotation: Annotation, uploadToCloudKit: Bool = true) {
         treeQueue.async { [weak self] in
             guard let self else { return }
             guard groupingMode == .book else {
-                updateAnnotationInTagTree(annotation)
+                updateAnnotationInTagTree(annotation, uploadToCloudKit: uploadToCloudKit)
                 return
             }
             guard let annotationId = annotation.id,
                   let node = findAnnotationNode(by: annotationId)
             else {
-                postChangeNotification(type: .updated, annotation: annotation)
+                postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
                 return
             }
 
@@ -1238,20 +1270,20 @@ final class AnnotationManager {
             }
             node.annotation = annotation
 
-            postChangeNotification(type: .updated, annotation: annotation)
+            postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
         }
     }
 
-    func removeAnnotationFromTree(id: Int64, deletedAnnotation: Annotation?) {
+    func removeAnnotationFromTree(id: Int64, deletedAnnotation: Annotation?, uploadToCloudKit: Bool = true) {
         treeQueue.async { [weak self] in
             guard let self else { return }
             guard groupingMode == .book else {
                 let diff = removeAnnotationFromTagTree(id: id)
-                postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id, diff: diff)
+                postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id, diff: diff, uploadToCloudKit: uploadToCloudKit)
                 return
             }
             guard let root = _rootNode else {
-                postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id)
+                postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id, uploadToCloudKit: uploadToCloudKit)
                 return
             }
 
@@ -1276,20 +1308,20 @@ final class AnnotationManager {
                         newParentIdx = newIdx
                     }
 
-                    postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id, oldParentIndex: oldParentIdx, newParentIndex: newParentIdx)
+                    postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id, oldParentIndex: oldParentIdx, newParentIndex: newParentIdx, uploadToCloudKit: uploadToCloudKit)
                     return
                 }
             }
 
-            postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id)
+            postChangeNotification(type: .deleted, annotation: deletedAnnotation, annotationId: id, uploadToCloudKit: uploadToCloudKit)
         }
     }
 
     // MARK: - Tag Tree Manipulation (Granular)
 
-    private func addAnnotationToTagTree(_ annotation: Annotation) {
+    private func addAnnotationToTagTree(_ annotation: Annotation, uploadToCloudKit: Bool = true) {
         guard let root = _rootNode else {
-            postChangeNotification(type: .added, annotation: annotation)
+            postChangeNotification(type: .added, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
             return
         }
 
@@ -1359,7 +1391,7 @@ final class AnnotationManager {
         postChangeNotification(type: .added, annotation: annotation, diff: diff)
     }
 
-    private func updateAnnotationInTagTree(_ annotation: Annotation) {
+    private func updateAnnotationInTagTree(_ annotation: Annotation, uploadToCloudKit: Bool = true) {
         guard let id = annotation.id, let root = _rootNode else {
             buildAnnotationTree()
             return
@@ -1513,7 +1545,7 @@ final class AnnotationManager {
             added: addedEntries,
             updated: updatedNodes
         )
-        postChangeNotification(type: .updated, annotation: annotation, diff: diff)
+        postChangeNotification(type: .updated, annotation: annotation, diff: diff, uploadToCloudKit: uploadToCloudKit)
     }
 
     @discardableResult
@@ -1603,7 +1635,7 @@ final class AnnotationManager {
         buildAnnotationTree()
     }
 
-    private func applyBatchTagUpdates(_ annotations: [Annotation]) {
+    private func applyBatchTagUpdates(_ annotations: [Annotation], uploadToCloudKit: Bool = true) {
         guard !annotations.isEmpty else { return }
 
         cacheQueue.sync {
@@ -1643,7 +1675,7 @@ final class AnnotationManager {
                     guard let annotationId = annotation.id,
                           let node = self.findAnnotationNode(by: annotationId)
                     else {
-                        self.postChangeNotification(type: .updated, annotation: annotation)
+                        self.postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
                         continue
                     }
                     if let note = annotation.note, !note.isEmpty {
@@ -1652,15 +1684,15 @@ final class AnnotationManager {
                         node.title = annotation.context
                     }
                     node.annotation = annotation
-                    self.postChangeNotification(type: .updated, annotation: annotation)
+                    self.postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
                 }
             } else {
-                self.performBatchTagTreeUpdate(annotations)
+                self.performBatchTagTreeUpdate(annotations, uploadToCloudKit: uploadToCloudKit)
             }
         }
     }
 
-    private func performBatchTagTreeUpdate(_ annotations: [Annotation]) {
+    private func performBatchTagTreeUpdate(_ annotations: [Annotation], uploadToCloudKit: Bool = true) {
         guard let root = _rootNode else { return }
 
         var removedEntries: [TagUpdateDiff.RemovedEntry] = []
@@ -1778,7 +1810,7 @@ final class AnnotationManager {
                 updated: updatedNodes
             )
             let representativeId = annotations.first?.id ?? -1
-            postChangeNotification(type: .updated, annotation: annotations.first, annotationId: representativeId, diff: diff)
+            postChangeNotification(type: .updated, annotation: annotations.first, annotationsToSync: annotations, annotationId: representativeId, diff: diff, uploadToCloudKit: uploadToCloudKit)
         }
     }
 
@@ -2182,13 +2214,13 @@ final class AnnotationManager {
 
                 // Incremental Tree Update (UI)
                 for ann in deletedAnnotations {
-                    if let id = ann.id { removeAnnotationFromTree(id: id, deletedAnnotation: ann) }
+                    if let id = ann.id { removeAnnotationFromTree(id: id, deletedAnnotation: ann, uploadToCloudKit: false) }
                 }
                 for ann in addedAnnotations {
-                    addAnnotationToTree(ann)
+                    addAnnotationToTree(ann, uploadToCloudKit: false)
                 }
                 for ann in updatedAnnotations {
-                    updateAnnotationInTree(ann)
+                    updateAnnotationInTree(ann, uploadToCloudKit: false)
                 }
             } else if totalChanges >= 100 {
                 // Bulk Update: Reload Everything
