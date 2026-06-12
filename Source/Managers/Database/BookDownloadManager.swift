@@ -523,7 +523,10 @@ final class NetworkMonitor {
     private let queue = DispatchQueue(label: "maktabah.network.monitor")
     private let lock = NSLock()
     private var _isConnected = true
+
+    // Dua callback untuk dua kondisi berbeda
     var onConnectivityLost: (() -> Void)?
+    var onConnectivityRestored: (() -> Void)?
 
     var isConnected: Bool {
         lock.lock()
@@ -535,16 +538,28 @@ final class NetworkMonitor {
         monitor.pathUpdateHandler = { [weak self] path in
             guard let self else { return }
             let connected = (path.status == .satisfied)
-            var shouldNotify = false
+
+            var shouldNotifyLost = false
+            var shouldNotifyRestored = false
+
             lock.lock()
+            // Kondisi 1: Tadinya nyambung, sekarang putus
             if _isConnected && !connected {
-                shouldNotify = true
+                shouldNotifyLost = true
+            }
+            // Kondisi 2: Tadinya putus, sekarang nyambung kembali
+            else if !_isConnected && connected {
+                shouldNotifyRestored = true
             }
             _isConnected = connected
             lock.unlock()
 
-            if shouldNotify {
+            // Pemicu callback di luar lock agar tidak deadlock
+            if shouldNotifyLost {
                 onConnectivityLost?()
+            }
+            if shouldNotifyRestored {
+                onConnectivityRestored?()
             }
         }
         monitor.start(queue: queue)

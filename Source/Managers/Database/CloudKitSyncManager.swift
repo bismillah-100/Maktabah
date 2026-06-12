@@ -5,6 +5,7 @@
 
 import CloudKit
 import Foundation
+import Network
 
 final class CloudKitSyncManager {
     static let shared = CloudKitSyncManager()
@@ -24,6 +25,25 @@ final class CloudKitSyncManager {
 
     private init() {
         setupAccountChangeObserver()
+        setupNetworkMonitor()
+    }
+
+    // MARK: - Network Monitoring
+
+    private func setupNetworkMonitor() {
+        NetworkMonitor.shared.onConnectivityRestored = { [weak self] in
+            #if DEBUG
+            print("CloudKitSyncManager: Network restored, retrying pending operations")
+            #endif
+            self?.retryAllPendingOperations()
+        }
+    }
+
+    private func retryAllPendingOperations() {
+        syncQueue.async(flags: .barrier) { [weak self] in
+            self?.retryPendingUploads()
+            self?.retryPendingDeletes()
+        }
     }
 
     // MARK: - Pending Operations Tracking
@@ -535,11 +555,11 @@ final class CloudKitSyncManager {
         case .partialFailure:
             if let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
                 let conflicts = partialErrors.values.compactMap { $0 as? CKError }.filter { $0.code == .serverRecordChanged }
-                
+
                 if !conflicts.isEmpty {
                     let group = DispatchGroup()
                     var lastError: Error?
-                    
+
                     for conflict in conflicts {
                         group.enter()
                         resolveServerRecordConflict(ckError: conflict) { result in
@@ -552,12 +572,22 @@ final class CloudKitSyncManager {
                         completion?(lastError.map { .failure($0) } ?? .success(()))
                     }
                 } else {
+                    // Non-conflict partial failure - retry pending uploads
+                    self.retryPendingUploads()
                     completion?(.failure(error))
                 }
             } else {
+                // Partial failure without specific errors - retry pending uploads
+                self.retryPendingUploads()
                 completion?(.failure(error))
             }
+        case .networkUnavailable, .networkFailure:
+            // Network offline - retry pending uploads when connection returns
+            retryPendingUploads()
+            completion?(.failure(error))
         default:
+            // Other errors - retry pending uploads as safety net
+            retryPendingUploads()
             completion?(.failure(error))
         }
     }
@@ -575,11 +605,14 @@ final class CloudKitSyncManager {
                 DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) {
                     switch operationType {
                     case .fetchChanges: self.fetchChanges(retryCount: retryCount + 1)
-                    case .delete: self.retryPendingDeletes()
+                    case .delete, .upload: self.retryPendingDeletes()
                     default: break
                     }
                 }
             }
+        case .networkUnavailable, .networkFailure:
+            // Network offline - retry deletes when connection returns
+            retryPendingDeletes()
         case .zoneNotFound:
             initializeOnLaunch()
         case .serverRecordChanged:

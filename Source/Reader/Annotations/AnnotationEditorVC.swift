@@ -80,30 +80,15 @@ class AnnotationEditorVC: NSViewController {
 
     // MARK: - Actions
     @objc func saveTapped() {
-        // update annotation object
         let newNote = noteField.string
         let newColorHex = colorWell.color.hexString()
 
         var updated = annotation!
-        updated = Annotation(
-            id: annotation.id,
-            bkId: annotation.bkId,
-            contentId: annotation.contentId,
-            range: annotation.range, 
-            rangeDiacritics: annotation.rangeDiacritics,
-            colorHex: newColorHex,
-            type: annotation.type,
-            note: newNote.isEmpty ? nil : newNote,
-            createdAt: annotation.createdAt,
-            context: annotation.context,
-            page: annotation.page,
-            part: annotation.part,
-            pageArb: annotation.pageArb,
-            partArb: annotation.partArb,
-            tags: normalizedTags()
-        )
 
-        // Persist ke DB
+        updated.colorHex = newColorHex
+        updated.note = newNote.isEmpty ? nil : newNote
+        updated.tags = normalizedTags()
+
         do {
             if updated.id == nil {
                 try AnnotationManager.shared.addAnnotation(updated)
