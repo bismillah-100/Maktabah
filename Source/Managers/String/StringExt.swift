@@ -20,6 +20,8 @@ enum KutubMode {
 
 extension String {
 
+    static let sholawat = "صلى الله عليه وسلم"
+
     private var replacementL: String {
         if UserDefaults.standard.textViewFontName == ArabicFont.alBayan.rawValue ||
             UserDefaults.standard.textViewFontName == "DecoType Naskh" {

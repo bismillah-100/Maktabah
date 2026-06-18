@@ -82,7 +82,7 @@ class Rowi: Codable {
          death: String? = nil
     ) {
         self.id = id
-        self.name = name?.replacingOccurrences(of: "W", with: "ﷺ")
+        self.name = name?.replacingOccurrences(of: "W", with: String.sholawat)
         if let tabaqa {
             self.tabaqa = StringInterner.shared.intern(tabaqa)
         } else {
@@ -93,7 +93,7 @@ class Rowi: Codable {
         self.rZahbi = rZahbi
         self.sheok = sheok
         self.telmez = telmez
-        self.isoName = isoName.replacingOccurrences(of: "W", with: "ﷺ")
+        self.isoName = isoName.replacingOccurrences(of: "W", with: String.sholawat)
         self.who = who
         wulida = birth?.convertToArabicDigits()
         tuwuffi = death?.convertToArabicDigits()
@@ -181,7 +181,7 @@ class TabaqaGroup {
     static let replacementRowiMapping: [String: String] = [
         "C": "قال المزي في تهذيب الكمال ",
         "E": "قال الحافظ في تهذيب التهذيب ",
-        "W": "ﷺ",
+        "W": .sholawat,
         "#": "\n"
     ]
 
@@ -192,7 +192,7 @@ class TabaqaGroup {
         "E": "قال الحافظ في تهذيب التهذيب:",
         "D": "ذكر المزي في تهذيب الكمال:",
         "F": "",
-        "W": "ﷺ",
+        "W": .sholawat,
         "#": "\n"
     ]
 }

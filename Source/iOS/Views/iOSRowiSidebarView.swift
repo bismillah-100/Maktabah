@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 struct iOSRowiSidebarView: UIViewControllerRepresentable {
-    var viewModel: iOSAuthorViewModel
+    var viewModel: NarratorViewModel
     @Environment(\.isSearching) private var isSearching
     let searchQuery: String
 
@@ -14,7 +14,7 @@ struct iOSRowiSidebarView: UIViewControllerRepresentable {
         let vc = iOSRowiHierarchicalCollectionViewController()
 
         vc.onSelectRowi = { rowi in
-            context.coordinator.viewModel.selectedRowi = rowi
+            context.coordinator.viewModel.selectRowi(rowi)
         }
 
         vc.onLoadMore = { group in
@@ -34,10 +34,10 @@ struct iOSRowiSidebarView: UIViewControllerRepresentable {
     }
 
     class Coordinator {
-        let viewModel: iOSAuthorViewModel
+        let viewModel: NarratorViewModel
         var searchQuery: String = ""
 
-        init(viewModel: iOSAuthorViewModel) {
+        init(viewModel: NarratorViewModel) {
             self.viewModel = viewModel
         }
     }

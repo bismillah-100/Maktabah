@@ -299,7 +299,7 @@ class IbarotTextVC: NSViewController {
         viewModel.cleanUpState()
         windowTitle = ""
         windowSubtitle = ""
-        if splitVC?.currentMode != .author {
+        if splitVC?.currentMode != .narrator {
             setDefaultWindowTitle()
         }
     }

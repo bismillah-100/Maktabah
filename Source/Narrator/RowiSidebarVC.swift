@@ -22,9 +22,11 @@ class RowiSidebarVC: NSViewController {
         CellIViewIdentifier.resultAndOutlineChild.rawValue
     )
 
-    private let loadMoreIdentifier = NSUserInterfaceItemIdentifier("LoadMoreCell")
+    private let loadMoreIdentifier     = NSUserInterfaceItemIdentifier("LoadMoreCell")
 
-    private let dataManager = RowiDataManager.shared
+    // MARK: - ViewModel
+
+    var viewModel: NarratorViewModel!
 
     weak var delegate: RowiSidebarDelegate?
 
@@ -35,6 +37,8 @@ class RowiSidebarVC: NSViewController {
     override var nibName: NSNib.Name? {
         "LibraryVC"
     }
+
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -86,15 +90,12 @@ class RowiSidebarVC: NSViewController {
     }
 
     func loadData() async {
-        async let booksData: () = await LibraryDataManager.shared.loadData()
-        async let rowiData: () = await dataManager.loadData()
-
-        let _ = await (rowiData, booksData)
+        await viewModel.loadData()
         await MainActor.run { [weak self] in
             guard let self else { return }
-            self.outlineView.reloadData()
-            ReusableFunc.closeProgressWindow(self.view)
-            self.isDataLoaded = true
+            outlineView.reloadData()
+            ReusableFunc.closeProgressWindow(view)
+            isDataLoaded = true
         }
     }
 
@@ -104,7 +105,7 @@ class RowiSidebarVC: NSViewController {
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            dataManager.searchRowis(query: query)
+            viewModel.searchRowis(query: query)
 
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -133,7 +134,7 @@ class RowiSidebarVC: NSViewController {
         let startingIndex = group.displayedRowis.count
 
         // Panggil loadMore untuk memperbarui data model.
-        dataManager.loadMore(group) { [weak self] itemsLoadedCount in // itemsLoadedCount adalah data baru yang di-pass dari loadMore
+        viewModel.loadMore(group: group) { [weak self] itemsLoadedCount in // itemsLoadedCount adalah data baru yang di-pass dari loadMore
             guard let self, let itemsLoaded = itemsLoadedCount else { return }
 
             outlineView.beginUpdates()
@@ -168,7 +169,7 @@ extension RowiSidebarVC: NSOutlineViewDataSource {
         if let group = item as? TabaqaGroup {
             return group.displayedRowis.count + (group.hasMore ? 1 : 0)  // +1 untuk tombol
         }
-        return dataManager.tabaqaGroups.count
+        return viewModel.tabaqaGroups.count
     }
 
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
@@ -179,7 +180,7 @@ extension RowiSidebarVC: NSOutlineViewDataSource {
                 return "LoadMore"  // Marker untuk load more button
             }
         }
-        return dataManager.tabaqaGroups[index]
+        return viewModel.tabaqaGroups[index]
     }
 
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {

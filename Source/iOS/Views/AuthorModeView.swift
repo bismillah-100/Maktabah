@@ -8,7 +8,7 @@ struct AuthorModeView: View {
         let viewModel = navigationManager.authorViewModel
 
         Group {
-            if viewModel.isLoading {
+            if viewModel.state == .loading {
                 ProgressView("Loading Narrators...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .themeBackground()
@@ -16,7 +16,7 @@ struct AuthorModeView: View {
                 iOSRowiSidebarView(viewModel: viewModel, searchQuery: viewModel.lastSearchQuery)
                     .themeTint()
                     .ignoresSafeArea(edges: [.vertical])
-                    .onChange(of: viewModel.selectedRowi) { _, newRowi in
+                    .onChange(of: viewModel.currentRowi) { _, newRowi in
                         if newRowi != nil {
                             navigateToReader = true
                         }
@@ -24,7 +24,7 @@ struct AuthorModeView: View {
                     .navigationDestination(isPresented: $navigateToReader) {
                         iOSRowiReaderView(viewModel: viewModel)
                             .onDisappear {
-                                viewModel.selectedRowi = nil
+                                viewModel.currentRowi = nil
                             }
                     }
                     .withActiveIntegrationStates()
@@ -37,7 +37,7 @@ struct AuthorModeView: View {
 }
 
 struct iOSRowiReaderView: View {
-    @Bindable var viewModel: iOSAuthorViewModel
+    @Bindable var viewModel: NarratorViewModel
 
     var body: some View {
         ThemeScrollView {
@@ -49,9 +49,8 @@ struct iOSRowiReaderView: View {
         }
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
-                // Segmented Control Toolbar
                 Picker("Mode", selection: $viewModel.displayMode) {
-                    ForEach(iOSRowiDisplayMode.allCases) { mode in
+                    ForEach(RowiDisplayMode.allCases) { mode in
                         Text(mode.title).tag(mode)
                     }
                 }
@@ -59,7 +58,7 @@ struct iOSRowiReaderView: View {
             }
         }
         .toolbar(.hidden, for: .tabBar)
-        .navigationTitle(viewModel.selectedRowi?.isoName ?? "الراوي")
+        .navigationTitle(viewModel.currentRowi?.isoName ?? "الراوي")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

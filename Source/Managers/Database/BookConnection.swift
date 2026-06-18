@@ -306,16 +306,16 @@ extension BookConnection {
         quran: Bool = false
     ) -> BookContent? {
         guard
-            let content = getContentByPage(
+            let content = getContent(
                 bkid: "\(currentBook.id)",
-                idNumber: contentId + 1,
+                contentId: contentId + 1,
                 quran: quran
             )
         else {
             guard
-                let content = getContentByPage(
+                let content = getContent(
                     bkid: "\(currentBook.id)",
-                    idNumber: contentId + 2,
+                    contentId: contentId + 2,
                     quran: quran
                 )
             else { return nil }
@@ -332,16 +332,16 @@ extension BookConnection {
         quran: Bool = false
     ) -> BookContent? {
         guard
-            let content = getContentByPage(
+            let content = getContent(
                 bkid: "\(currentBook.id)",
-                idNumber: contentId - 1,
+                contentId: contentId - 1,
                 quran: quran
             )
         else {
             guard
-                let content = getContentByPage(
+                let content = getContent(
                     bkid: "\(currentBook.id)",
-                    idNumber: contentId - 2,
+                    contentId: contentId - 2,
                     quran: quran
                 )
             else { return nil }
@@ -366,60 +366,6 @@ extension BookConnection {
         FROM b\(bkid)
         WHERE id = ?
         """
-    }
-
-    /// UPDATED: getContentByPage
-    func getContentByPage(bkid: String, idNumber: Int, quran: Bool = false)
-        -> BookContent?
-    {
-        guard let db else { return nil }
-
-        if let cached = getCached(bkId: bkid, idContent: idNumber) {
-            #if DEBUG
-                print("return cached")
-            #endif
-            return cached
-        }
-
-        let querySQL = quran ? quranContentQuery(forBook: bkid) : contentQuery(forBook: bkid)
-
-        do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(idNumber)]) { row -> BookContent? in
-                if let nassBlob = row.blob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(nassBlob)
-
-                    let page = row.int64(at: 1)
-                    let id = row.int64(at: 2)
-                    let part = Int(row.int64(at: 3))
-
-                    let shortsMap = DatabaseManager.shared.loadShortsForBook(bkid)
-                    let finalNass = shortsMap.isEmpty ? decompressedNass : self.applyShortsMapping(to: decompressedNass, with: shortsMap)
-
-                    let newContent = BookContent(
-                        id: Int(id),
-                        nash: finalNass,
-                        page: Int(page),
-                        part: part
-                    )
-
-                    if quran {
-                        newContent.surah = Int(row.int64(at: 4))
-                        newContent.aya = Int(row.int64(at: 5))
-                    }
-                    return newContent
-                }
-                return nil
-            }.compactMap { $0 }
-
-            if let content = contents.first {
-                setCache(bkId: bkid, content: content)
-                return content
-            }
-        } catch {
-            print("getContentByPage error:", error)
-        }
-
-        return nil
     }
 
     /// Mendapatkan total jumlah juz/part dalam buku

@@ -173,7 +173,7 @@ extension iOSSearchFilterViewController: UICollectionViewDelegate {
 // MARK: - SwiftUI Wrapper
 
 struct SearchFilterUIKitView: UIViewControllerRepresentable {
-    @Bindable var viewModel: iOSSearchViewModel
+    @Bindable var viewModel: SearchViewModel
     var displayedCategories: [CategoryData]
     var updateTrigger: Int = 0
     var onTap: () -> Void = {}

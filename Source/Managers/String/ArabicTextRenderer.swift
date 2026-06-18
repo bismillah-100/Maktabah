@@ -376,7 +376,7 @@ private struct HonorificReplacementResult {
 private extension String {
     func replacingHonorificPhrasesIfSupported() -> HonorificReplacementResult {
         let replacements: [(phrase: String, glyph: String)] = [
-            ("صلى الله عليه وسلم", "\u{FDFA}"),
+            (.sholawat, "\u{FDFA}"),
             ("رحمهم الله", "\u{FD4F}"),
             ("رحمه الله", "\u{FD40}"),
             ("رضي الله عنهما", "\u{FD44}"),

@@ -35,7 +35,7 @@ enum iOSTab: Int, CaseIterable, Identifiable {
         switch self {
         case .viewer: .viewer
         case .search: .search
-        case .author: .author
+        case .author: .narrator
         case .annotations: .annotations
         case .history: .history
         }

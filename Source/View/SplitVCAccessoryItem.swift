@@ -18,7 +18,7 @@ class SplitVCAccessoryItem: NSSplitViewItemAccessoryViewController {
         return switch currentMode {
         case .viewer: librarySearchField
         case .search: searchSearchField
-        case .author: authorSearchField
+        case .narrator: authorSearchField
         default: librarySearchField
         }
     }

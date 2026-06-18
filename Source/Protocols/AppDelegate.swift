@@ -462,7 +462,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let author = buildMenu(
             NSLocalizedString("Rowi", comment: ""), image: "person.text.rectangle.fill",
-            representedObject: .author, keyEquivalent: "3"
+            representedObject: .narrator, keyEquivalent: "3"
         )
 
         let annotations = buildMenu(

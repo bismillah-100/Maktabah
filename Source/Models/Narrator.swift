@@ -1,5 +1,5 @@
 //
-//  Narrathor.swift
+//  Narrator.swift
 //  Maktabah
 //
 //  Created by MacBook on 20/01/26.

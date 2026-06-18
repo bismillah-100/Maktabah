@@ -10,7 +10,7 @@ import Foundation
 enum AppMode: Int {
     case viewer
     case search
-    case author
+    case narrator
     #if os(iOS)
     case annotations
     case history
