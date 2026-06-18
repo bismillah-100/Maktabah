@@ -508,9 +508,9 @@ final class SearchEngine {
         }
 
         searchTask = Task.detached(priority: .userInitiated) { [weak self, ftsQuery] in
-            guard let self = self else { return }
+            guard let self else { return }
             for worker in self.workers {
-                if self.isStopped { break }
+                if isStopped { break }
 
                 var completedTables = 0
 
@@ -532,21 +532,18 @@ final class SearchEngine {
                     // TAMBAHAN: Callback per table selesai
                     onTableComplete: {
                         completedTables += 1
-                        Task { @MainActor [completedTables] in
-                            onTableComplete(worker.archiveId, completedTables)
-                        }
+                        onTableComplete(worker.archiveId, completedTables)
                     },
                     pauseController: self.pauseController,
                     stopFlag: { [weak self] in
-                        guard let self = self else { return true }
-                        return self.isStopped
+                        guard let self else { return true }
+                        return isStopped
                     },
-                    onComplete: {
+                    onComplete: { [weak self] in
                         // Worker selesai
-                        self.progressLock.lock()
-                        self.completedWorkers += 1
-                        self.progressLock.unlock()
-                        self.progressLock.unlock()
+                        self?.progressLock.lock()
+                        self?.completedWorkers += 1
+                        self?.progressLock.unlock()
                     }
                 )
             }

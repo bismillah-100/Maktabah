@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import Combine
 
 class OptionSearchVC: NSViewController {
 
@@ -28,41 +29,40 @@ class OptionSearchVC: NSViewController {
         item.title = String(localized: "Copy")
         item.action = #selector(copy(_:))
         item.target = self
-        return item 
+        return item
     }()
 
-    // Array penampung hasil
-    var results: [SearchResultItem] = []
+    lazy var viewModel: SearchViewModel = {
+        .init()
+    }()
+
+    var results: [SearchResultItem] {
+        viewModel.results
+    }
 
     static var query: String = .init()
 
     var searchText: String = .init() {
         didSet {
             Self.query = searchText
+            viewModel.query = searchText
         }
     }
-
-    var searchOptions: SearchMode = .phrase
-
-    let bkConn: BookConnection = .init()
-
-    let ldm: LibraryDataManager = .shared
 
     weak var delegate: LibraryDelegate?
     weak var itemDelegate: OptionSearchDelegate?
     weak var libraryViewManager: LibraryViewManager?
 
-    var bkId: String = ""
+    var bkId: String = "" {
+        didSet { viewModel.targetBookId = bkId }
+    }
     var onSelectedItem: ((Int, String) -> Void)?
     var onCleanUp: (() -> Void)?
 
     var compactConfigured: Bool = false
 
-    // Mengganti DispatchWorkItem dengan Task untuk konsistensi konkurensi
+    private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
-
-    private(set) var isDataLoaded: Bool = false
-    private let searchEngine = SearchEngine()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -96,42 +96,62 @@ class OptionSearchVC: NSViewController {
 
         tableView.allowsMultipleSelection = true
 
-        NotificationCenter.default.addObserver(
-            forName: .libraryFolderChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            guard let self else { return }
-            isDataLoaded = false // Reset local flag
-            setupUI()
-        }
+        setupViewModelCallbacks()
+        bindViewModelPublishers()
     }
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        if viewModel.state == .loaded { return }
         setupUI()
     }
 
-    private func setupUI() {
-        if isDataLoaded { return }
-        setupIndeterminateProgress()
-        Task.detached(priority: .userInitiated) { [weak self] in
-            guard let self else { return }
-            await ldm.loadData()
-            await ldm.buildArchive()
-            await MainActor.run { [weak self] in
+    private func setupViewModelCallbacks() {
+        viewModel.searchDidReceiveResult
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
                 guard let self else { return }
-                if let libraryViewManager {
-                    if AppConfig.isUsingBundleMode {
-                        let filtered = ldm.filterIntegrated()
-                        libraryViewManager.setBaseCategories(filtered, reload: true)
-                    } else {
-                        libraryViewManager.prepareData()
-                    }
+                let newCount = viewModel.results.count
+                if newCount > tableView.numberOfRows {
+                    let indexSet = IndexSet(tableView.numberOfRows..<newCount)
+                    tableView.insertRows(at: indexSet)
                 }
-                isDataLoaded = true
-                resetIndeterminateProgress(true)
             }
+            .store(in: &cancellables)
+
+        viewModel.searchProgressDidUpdate
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] progress in
+                self?.progressTable.doubleValue = Double(progress.completed)
+            }
+            .store(in: &cancellables)
+
+        viewModel.searchDidComplete
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                updateStartButton(state: .off)
+                resetProgressBar()
+            }
+            .store(in: &cancellables)
+
+        viewModel.$state
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self else { return }
+                let loaded = state == .loaded
+                loaded
+                    ? resetIndeterminateProgress(loaded)
+                    : setupUI()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func setupUI() {
+        setupIndeterminateProgress()
+        viewModel.loadLibraryDataForDisplay(libraryViewManager: libraryViewManager) { [weak self] in
+            self?.resetIndeterminateProgress(true)
         }
     }
 
@@ -149,6 +169,69 @@ class OptionSearchVC: NSViewController {
         }
         tableView.sizeToFit()
         compactConfigured = true
+    }
+
+    private func bindViewModelPublishers() {
+        viewModel.searchDidInitialize
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] total in
+                guard let self else { return }
+                updateStartButton(systemSymbolName: "pause.fill", state: .on)
+
+                progressTable.maxValue = Double(total)
+                resetIndeterminateProgress(!bkId.isEmpty)
+                progressTable.maxValue = 1
+                progressTable.doubleValue = 0
+                progressRows.isHidden = false
+                progressRows.maxValue = 1
+                progressRows.doubleValue = 0
+
+                tableView.reloadData()
+                tableView.sortDescriptors.removeAll()
+            }
+            .store(in: &cancellables)
+
+        viewModel.searchDidReceiveResult
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                let prevCount = tableView.numberOfRows
+                progressRows.doubleValue = progressRows.maxValue
+                let newCount = viewModel.results.count
+                if newCount > prevCount {
+                    tableView.insertRows(at: IndexSet(prevCount..<newCount))
+                }
+            }
+            .store(in: &cancellables)
+
+        viewModel.searchProgressDidUpdate
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] progress in
+                guard let self else { return }
+                progressTable.maxValue = Double(progress.total)
+                progressTable.doubleValue = Double(progress.completed)
+            }
+            .store(in: &cancellables)
+
+        viewModel.rowProgressDidUpdate
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] progress in
+                guard let self else { return }
+                progressRows.maxValue = Double(progress.total)
+                progressRows.doubleValue = Double(progress.completed)
+            }
+            .store(in: &cancellables)
+
+        viewModel.searchDidComplete
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                progressTable.doubleValue = progressTable.maxValue
+                progressRows.doubleValue = progressRows.maxValue
+                updateStartButton(state: .off)
+                resetProgressBar()
+            }
+            .store(in: &cancellables)
     }
 
     private func setupTableView() {
@@ -178,7 +261,7 @@ class OptionSearchVC: NSViewController {
 
     @IBAction func cleanUp(_ sender: Any) {
         stopSearch(sender)
-        results.removeAll()
+        viewModel.clearResults()
         tableView.removeRows(
             at: IndexSet(
                 integersIn: 0..<tableView.numberOfRows
@@ -212,124 +295,14 @@ class OptionSearchVC: NSViewController {
         startButton.state = state
     }
 
-    func startSearchEngine(
-        currentMode: SearchMode,
-        isPaused: Bool,
-        isRunning: Bool
-    ) async {
-        if isPaused {
-            searchEngine.resume()
-            return
+    private func startSearchEngine() {
+        if let lvm = libraryViewManager {
+            viewModel.setSelectedBooks(lvm.viewModel.selectedBookIds)
+        } else if !bkId.isEmpty {
+            viewModel.setTargetBook(bkId)
         }
 
-        if isRunning {
-            searchEngine.pause()
-            return
-        }
-
-        guard !isRunning else { return }
-
-        // Reset UI
-        await MainActor.run { [weak self] in
-            guard let self else { return }
-            startButton.image = NSImage(
-                systemSymbolName: "pause.fill",
-                accessibilityDescription: .none
-            )
-            results.removeAll()
-            tableView.reloadData()
-            tableView.sortDescriptors.removeAll()
-        }
-
-        let tableToScan: Set<String>
-
-        if let libraryViewManager {
-            tableToScan = ldm.getCheckedTables(
-                libraryViewManager.displayedCategories
-            )
-        } else {
-            tableToScan = [bkId]
-        }
-
-        await ldm.performSearch(
-            tableToScan: tableToScan,
-            searchEngine: searchEngine,
-            query: searchText,
-            mode: currentMode,
-            onInitialize: { [weak self] totalTables in
-                guard let self = self else { return }
-
-                // Set maxValue dan tampilkan HANYA progressTable
-                resetIndeterminateProgress(!bkId.isEmpty)
-                progressTable.maxValue = Double(totalTables)
-                progressTable.doubleValue = 0
-
-                #if DEBUG
-                    print("📊 Total Tables: \(totalTables)")
-                #endif
-            },
-            onTableProgress: { [weak self] completedTables in
-                guard let self = self else { return }
-
-                // Update progress
-                progressTable.doubleValue = Double(completedTables)
-                #if DEBUG
-                    print(
-                        "📈 Progress: \(completedTables)/\(Int(progressTable.maxValue))"
-                    )
-                #endif
-            },
-            onRowProgress: {
-                [weak self] archiveId, tableName, current, total in
-                guard let self = self else { return }
-                // ✅ Update row progress
-                if progressRows.isHidden {
-                    progressRows.isHidden = false
-                    // labelCurrentTable.isHidden = false
-                }
-
-                progressRows.maxValue = Double(total)
-                progressRows.doubleValue = Double(current)
-
-                // ✅ Format info tabel yang sedang di-scan
-                // let bookId = Int(tableName.dropFirst()) ?? 0
-                // let bookTitle = ldm.booksById[bookId]?.book ?? tableName
-                // labelCurrentTable.stringValue = "Scanning: \(bookTitle) (\(current)/\(total) rows)"
-
-                #if DEBUG
-                    print(
-                        "🔍 Row Progress [\(tableName)]: \(current)/\(total)"
-                    )
-                #endif
-            },
-            completion: { [weak self] item in
-                guard let self = self else { return }
-                // Jika performa buruk dengan banyak hasil, pertimbangkan pembaruan batch di sini
-                // Untuk saat ini, asumsikan pembaruan per item masih dapat diterima
-                results.append(item)
-                tableView.insertRows(
-                    at: IndexSet(integer: results.count - 1)
-                )
-            },
-            onComplete: { [weak self] in
-                guard let self = self else { return }
-                searchEngine.stop()
-                progressTable.doubleValue = progressTable.maxValue
-                progressRows.doubleValue = progressRows.maxValue
-
-                Task { @MainActor [weak self] in
-                    guard let self = self else { return }
-                    // Hapus penundaan Task.sleep yang tidak perlu
-                    // try? await Task.sleep(nanoseconds: 955_000_000)
-                    updateStartButton(state: .off)
-                    resetProgressBar()
-                    // labelCurrentTable.isHidden = true
-                }
-                #if DEBUG
-                    print("🎉 Search Complete!")
-                #endif
-            }
-        )
+        viewModel.startSearch()
     }
 
     func resetProgressBar() {
@@ -352,52 +325,38 @@ class OptionSearchVC: NSViewController {
     }
 
     @IBAction func startSearch(_ sender: Any) {
-        if searchText.isEmpty || (compactConfigured && bkId.isEmpty) { return }
-        ReusableFunc.updateBuiltInRecents(with: searchText, in: searchField)
-        let isPaused = searchEngine.currentlyPaused()
-        let isRunning = searchEngine.isRunning()
+            if searchText.isEmpty || (compactConfigured && bkId.isEmpty) { return }
+            ReusableFunc.updateBuiltInRecents(with: searchText, in: searchField)
 
-        if !isRunning, !isPaused {
-            setupIndeterminateProgress()
-        }
+            let isPaused = viewModel.isPaused
+            let isRunning = viewModel.isSearching
 
-        if isPaused {
-            updateStartButton(systemSymbolName: "pause.fill", state: .on)
-        } else {
-            updateStartButton(state: .on)
-        }
+            if !isRunning, !isPaused {
+                setupIndeterminateProgress()
+            }
 
-        // Ambil mode dari computed property searchOptions
-        Task.detached { [weak self, isPaused, isRunning] in
-            guard let self else { return }
-            await startSearchEngine(
-                currentMode: searchOptions,
-                isPaused: isPaused,
-                isRunning: isRunning
-            )
+            startSearchEngine()
+
+            if isPaused {
+                updateStartButton(systemSymbolName: "pause.fill", state: .on)
+            } else {
+                updateStartButton(state: .on)
+            }
         }
-    }
 
     @IBAction func stopSearch(_ sender: Any?) {
-        searchEngine.stop()
+        viewModel.stopSearch()
         startButton.state = .off
         startButton.image = NSImage(
             systemSymbolName: "play.fill",
             accessibilityDescription: .none
         )
         resetProgressBar()
-        resultsLoadingTask?.cancel()  // Batalkan task jika sedang berjalan
+        resultsLoadingTask?.cancel()
     }
 
     @IBAction func optionsSegmentDidCange(_ sender: NSSegmentedControl) {
-        let selectedSegment = sender.selectedSegment
-        if selectedSegment == 0 {
-            searchOptions = .phrase
-        } else if selectedSegment == 1 {
-            searchOptions = .contains
-        } else if selectedSegment == 2 {
-            searchOptions = .or
-        }
+        viewModel.setSearchModeFromSegment(sender.selectedSegment)
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
@@ -418,9 +377,11 @@ class OptionSearchVC: NSViewController {
 
     deinit {
         #if DEBUG
-            print("deinit OptionSearchVC")
+        print("deinit OptionSearchVC")
         #endif
-        resultsLoadingTask?.cancel()  // Pastikan task dibatalkan saat deinit
+        cancellables.removeAll()
+        resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
     }
 }
 
@@ -476,7 +437,7 @@ extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
         guard let sd = tableView.sortDescriptors.first, let sdKey = sd.key,
               let key = SearchSortKey(rawValue: sdKey) else { return }
-        SearchResultsSorter.sort(&results, by: key, ascending: sd.ascending)
+        viewModel.sortResults(by: key, ascending: sd.ascending)
         tableView.reloadData()
     }
 
@@ -518,27 +479,12 @@ extension OptionSearchVC: NSSearchFieldDelegate {
 }
 
 extension OptionSearchVC: LibraryViewDelegate {
-    func didSelectItem(_ row: Int) async {  // Menjadikan ini async sesuai protokol
+    func didSelectItem(_ row: Int) async {
         let book = results[row]
 
-        let table: String
-
-        if book.tableName.first == "b" {
-            table = String(book.tableName.dropFirst())
-        } else {
-            table = book.tableName
-        }
-
-        guard let tableInt = Int(table) else {
+        guard let bookData = viewModel.resolveBook(from: book) else {
             #if DEBUG
-                print("error convert to int")
-            #endif
-            return
-        }
-
-        guard let bookData = ldm.getBook([tableInt]).first else {
-            #if DEBUG
-                print("bookData not cached")
+            print("bookData not cached")
             #endif
             return
         }
@@ -555,172 +501,57 @@ extension OptionSearchVC: LibraryViewDelegate {
 
 extension OptionSearchVC: ResultsDelegate {
     func didSelect(savedResults: [SavedResultsItem]) {
-        results.removeAll()
+        viewModel.clearResults()
         tableView.reloadData()
         stopSearch(nil)
-
         resultsLoadingTask?.cancel()
 
-        guard let firstResult = savedResults.first else { return }
+        guard !savedResults.isEmpty else { return }
 
-        searchText = firstResult.query
-        searchField.stringValue = firstResult.query
+        searchField.stringValue = savedResults.first?.query ?? ""
+        searchText = searchField.stringValue
 
-        resultsLoadingTask = Task.detached { [weak self] in
-            guard let self else { return }
-
-            await setupProgress(total: savedResults.count)
-
-            let groupedResults = Dictionary(
-                grouping: savedResults,
-                by: \.archive
-            )
-            var buffer = ResultBuffer()
-
-            for (archiveId, itemsInArchive) in groupedResults {
-                guard !Task.isCancelled, let arc = Int(archiveId) else {
-                    return
-                }
-
-                try? await bkConn.connect(archive: arc)
-
-                for item in itemsInArchive {
-                    guard !Task.isCancelled else { return }
-
-                    if let result = await processItem(item) {
-                        buffer.add(result)
-
-                        if buffer.isFull {
-                            await commitBuffer(&buffer)
-                        }
-                    }
+        resultsLoadingTask = viewModel.loadSavedResults(
+            savedResults,
+            onProgress: { [weak self] total in
+                self?.progressTable.isHidden = false
+                self?.progressTable.maxValue = total
+            },
+            onInsert: { [weak self] prev, newCount in
+                guard let self else { return }
+                progressTable.doubleValue += Double(newCount - prev)
+                tableView.insertRows(at: IndexSet(prev..<newCount))
+            },
+            onFinish: { [weak self] in
+                guard let self else { return }
+                progressTable.doubleValue = progressTable.maxValue
+                Task {
+                    try? await Task.sleep(nanoseconds: 955_000_000)
+                    self.resetProgressBar()
                 }
             }
-
-            // Commit sisa
-            if !buffer.isEmpty {
-                await commitBuffer(&buffer)
-            }
-
-            await finishProgress()
-        }
-    }
-
-    // MARK: - Helper Methods
-
-    private func setupProgress(total: Int) async {
-        await MainActor.run { [weak self] in
-            self?.progressTable.isHidden = false
-            self?.progressTable.maxValue = Double(total)
-        }
-    }
-
-    private func processItem(_ item: SavedResultsItem) async
-        -> SearchResultItem?
-    {
-        guard
-            let bookContent = bkConn.getContent(
-                bkid: item.tableName,
-                contentId: item.bookId
-            )
-        else {
-            return nil
-        }
-
-        let bookId = Int(item.tableName.dropFirst()) ?? 0
-        let book = LibraryDataManager.shared.booksById[bookId]
-        let isMultilingual = book?.isMultiLanguage ?? false
-
-        let normalizedNash = bookContent.nash.convertToArabicDigits(isMultilingual: isMultilingual)
-        let queryConverted = item.query.convertToArabicDigits(isMultilingual: isMultilingual)
-
-        let snippet = normalizedNash.snippetAround(
-            keywords: [queryConverted],
-            contextLength: 60
         )
-        let attribute = snippet.highlightedAttributedText(keywords: [queryConverted]
-        )
-
-        return SearchResultItem(
-            archive: item.archive,
-            tableName: item.tableName,
-            bookId: item.bookId,
-            bookTitle: item.bookTitle,
-            page: bookContent.page,
-            part: bookContent.part,
-            attributedText: attribute
-        )
-    }
-
-    private func commitBuffer(_ buffer: inout ResultBuffer) async {
-        let items = buffer.flush()
-        let startIndex = results.count
-
-        await MainActor.run { [weak self, items] in
-            guard let self else { return }
-            results.append(contentsOf: items)
-
-            let indexSet = IndexSet(startIndex..<self.results.count)
-            progressTable.doubleValue += Double(items.count)
-            tableView.insertRows(at: indexSet)
-        }
-    }
-
-    private func finishProgress() async {
-        await MainActor.run { [weak self] in
-            self?.progressTable.doubleValue = self?.progressTable.maxValue ?? 0
-        }
-
-        try? await Task.sleep(nanoseconds: 955_000_000)
-
-        await MainActor.run { [weak self] in
-            self?.resetProgressBar()
-        }
-    }
-}
-
-// MARK: - Result Buffer Helper
-private struct ResultBuffer {
-    private var items: [SearchResultItem] = []
-    private let batchSize = 10
-
-    var isEmpty: Bool { items.isEmpty }
-    var isFull: Bool { items.count >= batchSize }
-
-    mutating func add(_ item: SearchResultItem) {
-        items.append(item)
-    }
-
-    mutating func flush() -> [SearchResultItem] {
-        let flushed = items
-        items.removeAll(keepingCapacity: true)
-        return flushed
     }
 }
 
 extension OptionSearchVC: ReaderStateComponent {
     func updateState(_ state: inout ReaderState) {
-        state.searchResults = results
-        state.searchQuery = searchField.stringValue
+        viewModel.updateState(&state)
     }
 
     func restore(from state: ReaderState) {
-        // Hanya restore jika hasil saat ini kosong untuk menghindari overwrite saat pencarian aktif
-        guard results.isEmpty,
-              let savedResults = state.searchResults,
+        guard let savedResults = state.searchResults,
               !savedResults.isEmpty else { return }
 
-        results = savedResults
-        tableView.reloadData()
+        viewModel.restore(from: state)
 
-        if let query = state.searchQuery {
-            searchField.stringValue = query
-            searchText = query
-        }
+        tableView.reloadData()
+        searchField.stringValue = viewModel.query
+        searchText = viewModel.query
     }
 
     func cleanUpState() {
-        results.removeAll()
+        viewModel.cleanUpState()
         searchField.stringValue = ""
         searchText = ""
         tableView.reloadData()

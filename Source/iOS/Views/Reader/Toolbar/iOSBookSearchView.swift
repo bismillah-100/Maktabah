@@ -37,7 +37,7 @@ struct iOSBookSearchView: View {
                 )
             }
             .onAppear {
-                viewModel.selectedBookIds = [book.id]
+                viewModel.setSelectedBooks([book.id])
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 SearchProgressView(

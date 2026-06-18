@@ -182,7 +182,7 @@ struct SearchFilterUIKitView: UIViewControllerRepresentable {
         let vc = iOSSearchFilterViewController()
         vc.selectedBookIds = viewModel.selectedBookIds
         vc.onSelectionChanged = { ids in
-            viewModel.selectedBookIds = ids
+            viewModel.setSelectedBooks(ids)
         }
         vc.additionalSafeAreaInsets.bottom = 50
 

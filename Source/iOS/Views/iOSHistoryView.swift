@@ -46,7 +46,7 @@ struct iOSAddFavoriteSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: HistoryViewModel
     @State private var searchText = ""
-    @State private var searchViewModel = iOSSearchViewModel()
+    @State private var searchViewModel = SearchViewModel()
 
     var body: some View {
         NavigationStack {
@@ -64,7 +64,7 @@ struct iOSAddFavoriteSheet: View {
                 searchViewModel.updateDisplayedCategories()
             }
             .onAppear {
-                searchViewModel.selectedBookIds = Set(viewModel.favoriteBookIds)
+                searchViewModel.setSelectedBooks(Set(viewModel.favoriteBookIds))
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

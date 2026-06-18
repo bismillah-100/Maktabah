@@ -21,20 +21,16 @@ class SearchSidebarVC: NSViewController {
         dataVM = LibraryViewManager(outlineView: outlineView, searchField: searchField, searchView: true)
         outlineView.delegate = dataVM
         outlineView.dataSource = dataVM
-        searchField.delegate = dataVM
         ReusableFunc.setupSearchField(
             searchField,
             systemSymbolName: "line.3.horizontal.decrease.circle"
         )
     }
-    
+
     @IBAction func selectAllBook(_ sender: NSButton) {
         let newState = (sender.state == .on)
 
-        // Ambil semua root category yang sedang ditampilkan
-        for category in dataVM.displayedCategories {
-            dataVM.setCategoryChecked(category, state: newState)
-        }
+        dataVM.viewModel.selectAllBook(state: newState)
 
         outlineView.reloadData()
     }

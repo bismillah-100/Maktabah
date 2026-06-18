@@ -5,7 +5,7 @@ import SwiftUI
 struct SearchHistoryOverlay: View {
     @Environment(\.isSearching) var isSearching
     @Environment(\.dismissSearch) var dismissSearch
-    @Bindable var viewModel: iOSSearchViewModel
+    @Bindable var viewModel: SearchViewModel
     @State var inputBarHeight: CGFloat = 0
     @Binding var isVisible: Bool?
     @State private var showingHelp: Bool = false
@@ -147,7 +147,7 @@ struct SearchHistoryOverlay: View {
 // MARK: - Search Input Bar
 
 struct SearchInputBar: View {
-    @Bindable var viewModel: iOSSearchViewModel
+    @Bindable var viewModel: SearchViewModel
     @FocusState var isFocused: Bool
     @AppStorage("useDefaultTheme") private var useDefaultTheme: Bool = false
     var onSubmit: () -> Void
@@ -297,7 +297,7 @@ struct InputBarHeightReader: ViewModifier {
 // MARK: - Search Toolbar
 
 struct SearchToolbar: ToolbarContent {
-    @Bindable var viewModel: iOSSearchViewModel
+    @Bindable var viewModel: SearchViewModel
     var onLeadingAction: (() -> Void)?
     var conditionalLeadingButton: Bool = true
     var showSortMenu: Bool = false
@@ -401,7 +401,7 @@ struct SearchToolbar: ToolbarContent {
 // MARK: - Search Progress View
 
 struct SearchProgressView: View {
-    @Bindable var viewModel: iOSSearchViewModel
+    @Bindable var viewModel: SearchViewModel
     var showTablesProgress: Bool = false
     var showIntegrationState: Bool = true
     @Environment(iOSNavigationManager.self) var navigationManager: iOSNavigationManager

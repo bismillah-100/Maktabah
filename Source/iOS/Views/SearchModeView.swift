@@ -33,8 +33,7 @@ struct SearchModeView: View {
                 SearchToolbar(
                     viewModel: viewModel,
                     onLeadingAction: {
-                        viewModel.stopSearch()
-                        viewModel.results = []
+                        viewModel.clearResults()
                         viewModel.query = ""
                     },
                     showSortMenu: true,
@@ -62,7 +61,7 @@ struct SearchModeView: View {
 
     // MARK: - Sub-views
 
-    private func filterAndInputView(viewModel: iOSSearchViewModel) -> some View {
+    private func filterAndInputView(viewModel: SearchViewModel) -> some View {
         ZStack(alignment: .bottom) {
             SearchFilterUIKitView(
                 viewModel: viewModel,
@@ -98,7 +97,7 @@ struct SearchModeView: View {
         }
     }
 
-    private func searchResultsView(viewModel: iOSSearchViewModel) -> some View {
+    private func searchResultsView(viewModel: SearchViewModel) -> some View {
         var filtered: [SearchResultItem] = kitabFilter.isEmpty
             ? viewModel.results
             : viewModel.results.filter {
@@ -149,7 +148,7 @@ struct SearchModeView_Previews: PreviewProvider {
                 .environment(iOSNavigationManager())
                 .previewDisplayName("Search")
             NavigationStack {
-                let vm = iOSSearchViewModel()
+                let vm = SearchViewModel()
                 SearchFilterUIKitView(
                     viewModel: vm,
                     displayedCategories: vm.displayedCategories,
