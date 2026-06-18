@@ -381,11 +381,11 @@ class LibraryDataManager {
         searchEngine: SearchEngine,
         query: String,
         mode: SearchMode,
-        onInitialize: @escaping (Int) -> Void,  // totalTables
-        onTableProgress: @escaping (Int) -> Void,  // completedTables
-        onRowProgress: @escaping (String, String, Int, Int) -> Void,  // ✅ BARU
-        completion: @escaping (SearchResultItem) -> Void,
-        onComplete: @escaping () -> Void
+        onInitialize: @escaping @MainActor (Int) -> Void,
+        onTableProgress: @escaping @MainActor (Int) -> Void,
+        onRowProgress: @escaping @MainActor (String, String, Int, Int) -> Void,
+        completion: @escaping @MainActor (SearchResultItem) -> Void,
+        onComplete: @escaping @MainActor () -> Void
     ) async {
         let allowed = tableToScan
 
@@ -517,7 +517,9 @@ class LibraryDataManager {
                     }
                 },
                 onComplete: {
-                    onComplete()
+                    Task { @MainActor in
+                        onComplete()
+                    }
                 }
             )
         }

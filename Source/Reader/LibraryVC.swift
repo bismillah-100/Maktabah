@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import Combine
 
 class LibraryVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
@@ -17,13 +18,13 @@ class LibraryVC: NSViewController {
 
     var dataVM: LibraryViewManager!
 
-    var data: LibraryDataManager = .shared
-
     var searchFieldIsHidden: Bool = true
 
     weak var delegate: LibraryDelegate?
 
     var isDataLoaded: Bool = false
+
+    private var cancellables = Set<AnyCancellable>()
 
     weak var bg: NSView!
     private var filterSegment: NSSegmentedControl?
@@ -46,40 +47,60 @@ class LibraryVC: NSViewController {
         NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            guard let self else { return }
-            isDataLoaded = false  // Reset local flag
-            setupUI()
+            queue: .current
+        ) { _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                isDataLoaded = false
+                setupUI()
+            }
         }
+
+        setupViewModelSink()
     }
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        setupUI()
+        initialSetup()
     }
 
     deinit {
+        cancellables.removeAll()
         NotificationCenter.default.removeObserver(self)
     }
 
-    private func setupUI() {
+    private func initialSetup() {
         guard !isDataLoaded else { return }
-        searchField.delegate = dataVM
         ReusableFunc.showProgressWindow(view)
         Task.detached { [weak self] in
-            guard let self else { return }
-            await data.loadData()
-            await MainActor.run { [weak self] in
+            await self?.dataVM.prepareData { [weak self] in
                 guard let self else { return }
-                dataVM.prepareData()
-                outlineView.reloadData()
-                setupFilterSegment()
-                updateScrollViewConstraint(filterSegment: filterSegment != nil)
+                setupUI()
                 ReusableFunc.closeProgressWindow(view)
-                isDataLoaded = true
             }
         }
+    }
+
+    private func setupUI() {
+        setupFilterSegment()
+        updateScrollViewConstraint(filterSegment: filterSegment != nil)
+        isDataLoaded = true
+    }
+
+    private func setupViewModelSink() {
+        dataVM.viewModel.$state
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self else { return }
+                if state == .loading {
+                    ReusableFunc.showProgressWindow(view)
+                    setupUI()
+                } else {
+                    ReusableFunc.closeProgressWindow(view)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Filter Segment (Bundle Mode only)
@@ -89,7 +110,7 @@ class LibraryVC: NSViewController {
             sender.selectedSegment,
             forKey: LibraryViewManager.filterSegmentIndexKey
         )
-        dataVM.applyDownloadFilter(forSegmentIndex: sender.selectedSegment)
+        dataVM.viewModel.applyDownloadFilter(forSegmentIndex: sender.selectedSegment)
     }
 
     private func setupFilterSegment() {
@@ -158,7 +179,7 @@ class LibraryVC: NSViewController {
         }
 
         filterSegment = segment
-        dataVM.applyDownloadFilter(forSegmentIndex: segment.selectedSegment)
+        dataVM.viewModel.applyDownloadFilter(forSegmentIndex: segment.selectedSegment)
         updateScrollViewConstraint(filterSegment: true)
     }
 

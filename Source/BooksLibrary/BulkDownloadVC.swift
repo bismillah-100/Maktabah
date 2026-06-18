@@ -61,7 +61,7 @@ final class BulkDownloadVC: NSViewController {
     private let controlsStack = NSStackView()
 
     // MARK: Data
-    private var dataVM: LibraryViewManager?
+    private(set) var dataVM: LibraryViewManager?
     private let data = LibraryDataManager.shared
 
     /// Status per bookId — dipakai BulkDownloadModalCenter untuk update UI
@@ -323,12 +323,18 @@ final class BulkDownloadVC: NSViewController {
     }
 
     private func loadBooksData() async {
-        await data.loadData()
-        await MainActor.run { [weak self] in
+        let filtered = data.filterNotIntegrated()
+
+        await MainActor.run { [weak self, filtered] in
             guard let self else { return }
-            let filtered = data.filterNotIntegrated()
             setupLibraryViewManager(with: filtered)
-            updateDownloadButtonState()
+        }
+
+        await dataVM?.prepareData()
+
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            self?.updateDownloadButtonState()
         }
     }
 
@@ -336,10 +342,11 @@ final class BulkDownloadVC: NSViewController {
         let vm = LibraryViewManager(
             outlineView: outlineView,
             searchField: searchField,
-            searchView: true,
+            searchView: false,
             downloadView: true
         )
-        vm.setBaseCategories(categories, reload: false)
+        vm.viewModel.setBaseCategories(categories, reload: false)
+        vm.viewModel.updateDisplayedCategories()
         vm.checkBoxToggle = { [weak self] in
             self?.updateDownloadButtonState()
         }
@@ -348,8 +355,6 @@ final class BulkDownloadVC: NSViewController {
         outlineView.delegate = vm
         outlineView.dataSource = vm
         outlineView.reloadData()
-
-        updateSelectionSummary()
     }
 
     private func countBooks(in categories: [CategoryData]) -> Int {
@@ -370,7 +375,7 @@ final class BulkDownloadVC: NSViewController {
     private func selectionSummary() -> String {
         let selectedBooks = checkedBooks()
         let selectedCount = selectedBooks.count
-        let totalBooks = countBooks(in: dataVM?.displayedCategories ?? [])
+        let totalBooks = countBooks(in: dataVM?.viewModel.displayedCategories ?? [])
 
         guard selectedCount > 0 else {
             return String(localized: "\(totalBooks) books to download.")
@@ -483,14 +488,14 @@ final class BulkDownloadVC: NSViewController {
         var result: [BooksData] = []
         func traverse(_ cat: CategoryData) {
             for child in cat.children {
-                if let book = child as? BooksData, book.isChecked {
+                if let book = child as? BooksData, vm.viewModel.isBookSelected(book) {
                     result.append(book)
                 } else if let sub = child as? CategoryData {
                     traverse(sub)
                 }
             }
         }
-        vm.displayedCategories.forEach { traverse($0) }
+        vm.viewModel.displayedCategories.forEach { traverse($0) }
         return result
     }
 
@@ -498,9 +503,7 @@ final class BulkDownloadVC: NSViewController {
         guard let dataVM else { return }
         let newState = (sender.state == .on)
 
-        for category in dataVM.displayedCategories {
-            dataVM.setCategoryChecked(category, state: newState)
-        }
+        dataVM.viewModel.selectAllBook(state: newState)
 
         outlineView.reloadData()
         updateDownloadButtonState()

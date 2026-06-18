@@ -31,7 +31,7 @@ open class ViewModelBase {
         forName name: Notification.Name,
         object: Any? = nil,
         queue: OperationQueue? = .main,
-        handler: @escaping (Notification) -> Void
+        handler: @escaping @Sendable (Notification) -> Void
     ) -> NSObjectProtocol {
         let token = NotificationCenter.default.addObserver(
             forName: name,

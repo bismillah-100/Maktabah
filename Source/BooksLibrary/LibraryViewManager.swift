@@ -8,126 +8,143 @@
 import Cocoa
 import Combine
 
-enum LibraryFilterMode: Int {
-    case all = 0
-    case favorites = 1
-    case history = 2
-    case downloaded = 3
-}
 
+@MainActor
 class LibraryViewManager: NSObject {
     static let filterSegmentIndexKey = "LibraryFilterSegmentIndex"
 
     weak var outlineView: NSOutlineView!
     weak var delegate: LibraryViewDelegate?
-    let data: LibraryDataManager = .shared
 
     var searchView: Bool = false
     var downloadView: Bool = false
-    var showOnlyDownloaded: Bool = false
-
     var checkBoxToggle: (() -> Void)?
 
-    var displayedCategories: [CategoryData] = []
-    private var baseCategories: [CategoryData] = []
+    weak var searchField: DSFSearchField!
+    var viewModel: LibraryViewModel
+    var initialLoad: Bool = true
+    var isSetupComplete: Bool = false
 
-    private var filterMode: LibraryFilterMode = .all
-    private var isFlatMode: Bool = false
     private var cancellables = Set<AnyCancellable>()
 
-    weak var searchField: DSFSearchField!
-
-    private var selectedBookName: String?
-    private var bookLookup: [String: (category: CategoryData, book: BooksData)] = [:]
-
-    init(outlineView: NSOutlineView,
-         searchField: DSFSearchField,
-         searchView: Bool = false,
-         downloadView: Bool = false
+    init(
+        outlineView: NSOutlineView,
+        searchField: DSFSearchField,
+        searchView: Bool = false,
+        downloadView: Bool = false
     ) {
         self.outlineView = outlineView
+        self.viewModel = .init()
+        if searchView {
+            viewModel.showOnlyDownloaded = true
+        }
         self.searchView = searchView || downloadView
         self.downloadView = downloadView
         self.searchField = searchField
         super.init()
-        self.setupDSFSearchField()
-        setupNotificationObservers()
+        setupDSFSearchField()
         setupContextMenu()
-        setupHistoryObservers()
+        bindToViewModel()
     }
 
-    private func setupHistoryObservers() {
-        HistoryViewModel.shared.$historyBooks
+    private func bindToViewModel() {
+        viewModel.updateSubject
+            .filter({ [weak self] _ in
+                self?.isSetupComplete == true
+            })
             .receive(on: DispatchQueue.main)
-            .debounce(for: .seconds(3), scheduler: DispatchQueue.main)
-            .sink { [weak self] newBooks in
-                guard let self = self else { return }
-                if self.filterMode == .history {
-                    self.updateFlatListIncrementally(newBooks: newBooks)
+            .sink { [weak self] update in
+                guard let self else { return }
+                switch update {
+                case .reloadData:
+                    outlineView.reloadData()
+                    if viewModel.searchQuery.isEmpty {
+                        restoreSelection(byBookName: viewModel.selectedBookName)
+                    }
+                case .reloadItem(let item, let reloadChildren):
+                    outlineView.reloadItem(item, reloadChildren: reloadChildren)
+                case .expandItem(let item):
+                    if let category = item as? CategoryData {
+                        outlineView.expandItem(category, expandChildren: true)
+                    } else if let bookName = item as? String {
+                        restoreSelection(byBookName: bookName)
+                    } else {
+                        outlineView.expandItem(item, expandChildren: true)
+                    }
+                case .scrollRowToVisible(let item):
+                    let row = outlineView.row(forItem: item)
+                    if row >= 0 {
+                        outlineView.scrollRowToVisible(row)
+                    }
+                case .beginUpdates:
+                    outlineView.beginUpdates()
+                case .endUpdates:
+                    outlineView.endUpdates()
+                case .removeItems(let indexes, let parent):
+                    outlineView.removeItems(at: indexes, inParent: parent, withAnimation: [.slideUp])
+                case .insertItems(let indexes, let parent):
+                    outlineView.insertItems(at: indexes, inParent: parent, withAnimation: [.slideDown])
+                case .moveItem(let from, let to, let parent):
+                    outlineView.moveItem(at: from, inParent: parent, to: to, inParent: parent)
                 }
             }
             .store(in: &cancellables)
-
-        HistoryViewModel.shared.$favoriteBooks
-            .receive(on: DispatchQueue.main)
-            .debounce(for: .seconds(3), scheduler: DispatchQueue.main)
-            .sink { [weak self] newBooks in
-                guard let self = self else { return }
-                if self.filterMode == .favorites {
-                    self.updateFlatListIncrementally(newBooks: newBooks)
-                }
-            }
-            .store(in: &cancellables)
     }
 
-    private func updateFlatListIncrementally(newBooks: [BooksData]) {
-        guard isFlatMode, let firstCat = displayedCategories.first else {
-            applyFilter(filterMode)
-            return
+    // MARK: - Passthrough to ViewModel
+
+    func prepareData(completion: (@MainActor () -> Void)? = nil) async {
+        if isSetupComplete { return }
+        await viewModel.loadLibrary()
+        completion?()
+        await MainActor.run { [weak self] in
+            guard let self else { return }
+            reloadOutlineData()
+            isSetupComplete = true
         }
-
-        let oldBooks = firstCat.children as? [BooksData] ?? []
-
-        let oldIds = oldBooks.map { $0.id }
-        let newIds = newBooks.map { $0.id }
-
-        if oldIds == newIds { return } // Tidak ada perubahan urutan atau penambahan/pengurangan
-
-        var currentBooks = oldBooks
-        outlineView.beginUpdates()
-
-        // Hapus item lama yang sudah tidak ada
-        let newIdSet = Set(newIds)
-        for (index, oldBook) in currentBooks.enumerated().reversed() {
-            if !newIdSet.contains(oldBook.id) {
-                outlineView.removeItems(at: IndexSet(integer: index), inParent: nil, withAnimation: [.slideUp])
-                currentBooks.remove(at: index)
-            }
-        }
-
-        firstCat.children = currentBooks
-
-        // Insert dan Move item baru
-        for (newIndex, newBook) in newBooks.enumerated() {
-            if let oldIndex = currentBooks.firstIndex(where: { $0.id == newBook.id }) {
-                if oldIndex != newIndex {
-                    outlineView.moveItem(at: oldIndex, inParent: nil, to: newIndex, inParent: nil)
-                    let movedBook = currentBooks.remove(at: oldIndex)
-                    currentBooks.insert(movedBook, at: newIndex)
-                    firstCat.children = currentBooks
-                }
-            } else {
-                currentBooks.insert(newBook, at: newIndex)
-                firstCat.children = currentBooks
-                outlineView.insertItems(at: IndexSet(integer: newIndex), inParent: nil, withAnimation: [.slideDown])
-            }
-        }
-
-        firstCat.children = newBooks
-        outlineView.endUpdates()
-
-        buildBookLookup()
     }
+
+    func reloadOutlineData() {
+        if initialLoad, searchView {
+            viewModel.selectAllBook(state: true)
+            initialLoad = false
+        }
+        outlineView.reloadData()
+        let query = viewModel.searchQuery
+        if !query.isEmpty {
+            outlineView.expandItem(nil, expandChildren: true)
+        } else {
+            restoreSelection(byBookName: viewModel.selectedBookName)
+        }
+    }
+
+    func applyFilter(_ mode: LibraryFilterMode) {
+        viewModel.applyFilter(mode)
+        if mode == .favorites || mode == .history {
+            outlineView?.expandItem(nil, expandChildren: true)
+        }
+        if mode == .downloaded {
+            outlineView?.allowsMultipleSelection = true
+        } else {
+            outlineView?.allowsMultipleSelection = false
+        }
+    }
+
+    // MARK: - Selection Restore (UI)
+
+    func restoreSelection(byBookName bookName: String?) {
+        guard let bookName,
+              let (category, book) = viewModel.restoreSelectionEntry(byBookName: bookName)
+        else { return }
+        outlineView.expandItem(category)
+        let row = outlineView.row(forItem: book)
+        if row >= 0 {
+            outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+            outlineView.scrollRowToVisible(row)
+        }
+    }
+
+    // MARK: - Context Menu
 
     private func setupContextMenu() {
         let menu = NSMenu()
@@ -135,162 +152,66 @@ class LibraryViewManager: NSObject {
         outlineView.menu = menu
     }
 
-    func prepareData() {
-        setBaseCategories(data.allRootCategories, reload: true)
-    }
-
-    /// Filter tampilan berdasarkan segment
-    func applyFilter(_ mode: LibraryFilterMode) {
-        filterMode = mode
-        var filtered: [CategoryData] = []
-
-        switch mode {
-        case .all:
-            showOnlyDownloaded = false
-            isFlatMode = false
-            filtered = data.allRootCategories
-            outlineView?.allowsMultipleSelection = false
-        case .downloaded:
-            showOnlyDownloaded = true
-            isFlatMode = false
-            filtered = data.filterIntegrated()
-            outlineView?.allowsMultipleSelection = true
-        case .favorites:
-            showOnlyDownloaded = false
-            isFlatMode = true
-            let favBooks = HistoryViewModel.shared.favoriteBooks
-            let cat = CategoryData(id: -1, name: String(localized: "Favorites"), level: 1, order: 0)
-            cat.children = favBooks
-            filtered = favBooks.isEmpty ? [] : [cat]
-            outlineView?.allowsMultipleSelection = false
-        case .history:
-            showOnlyDownloaded = false
-            isFlatMode = true
-            let histBooks = HistoryViewModel.shared.historyBooks
-            let cat = CategoryData(id: -2, name: String(localized: "History"), level: 1, order: 0)
-            cat.children = histBooks
-            filtered = histBooks.isEmpty ? [] : [cat]
-            outlineView?.allowsMultipleSelection = false
-        }
-
-        setBaseCategories(filtered, reload: true)
-
-        if mode == .favorites || mode == .history {
-            outlineView?.expandItem(nil, expandChildren: true)
-        }
-    }
-
-    func applyDownloadFilter(forSegmentIndex index: Int) {
-        guard let mode = LibraryFilterMode(rawValue: index) else { return }
-        applyFilter(mode)
-    }
-
-    func buildBookLookup() {
-        bookLookup.removeAll()
-
-        func traverse(_ category: CategoryData) {
-            for child in category.children {
-                if let book = child as? BooksData {
-                    bookLookup[book.book] = (category, book)
-                } else if let subCategory = child as? CategoryData {
-                    traverse(subCategory)
-                }
-            }
-        }
-
-        for category in displayedCategories {
-            traverse(category)
-        }
-    }
-
-    func setBaseCategories(_ categories: [CategoryData], reload: Bool) {
-        baseCategories = categories
-        displayedCategories = categories
-        buildBookLookup()
-        if reload {
-            outlineView.reloadData()
-        }
-    }
-
     func setupDSFSearchField() {
-        // Di dalam LibraryViewManager atau View Controller Anda:
         searchField.searchTermChangeCallback = { [weak self] query in
-            // Panggil fungsi pencarian data yang sebenarnya di sini
-            self?.startSearch(query)
+            self?.viewModel.searchQuery = query
         }
     }
-
-    var searchWork: DispatchWorkItem?
 
     @objc func checkboxToggled(_ sender: NSButton) {
-        // Ambil row dari button
         let row = outlineView.row(for: sender)
         guard row != -1, let item = outlineView.item(atRow: row) else { return }
-
-        let newState = (sender.state == .on)
-
+        
         if let category = item as? CategoryData {
-            // Logic: Jika kategori dicentang, centang semua anak-anaknya (Cascade)
-            setCategoryChecked(category, state: newState)
-            // Reload item ini dan anak-anaknya agar visual update
+            viewModel.toggleCategorySelection(category)
             outlineView.reloadItem(category, reloadChildren: true)
+
+            var parent = outlineView.parent(forItem: category)
+            while let currentParent = parent {
+                outlineView.reloadItem(currentParent)
+                parent = outlineView.parent(forItem: currentParent)
+            }
         } else if let book = item as? BooksData {
-            book.isChecked = newState
+            viewModel.toggleBookSelection(book)
             ReusableFunc.updateBuiltInRecents(with: book.book, in: searchField)
-        }
 
-        checkBoxToggle?()
-    }
-
-    // Helper rekursif untuk mencentang category & children
-    func setCategoryChecked(_ category: CategoryData, state: Bool) {
-        category.isChecked = state
-        for child in category.children {
-            if let subCat = child as? CategoryData {
-                setCategoryChecked(subCat, state: state)
-            } else if let book = child as? BooksData {
-                book.isChecked = state
+            var parent = outlineView.parent(forItem: book)
+            while let currentParent = parent {
+                outlineView.reloadItem(currentParent)
+                parent = outlineView.parent(forItem: currentParent)
             }
         }
+        checkBoxToggle?()
     }
 }
 
+// MARK: - NSOutlineViewDataSource
 extension LibraryViewManager: NSOutlineViewDataSource {
 
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
         if item == nil {
-            if isFlatMode, let firstCat = displayedCategories.first {
+            if viewModel.isFlatMode, let firstCat = viewModel.displayedCategories.first {
                 return firstCat.children.count
             }
-            return displayedCategories.count
+            return viewModel.displayedCategories.count
         }
-
-        if let category = item as? CategoryData {
-            return category.children.count
-        }
-
+        if let category = item as? CategoryData { return category.children.count }
         return 0
     }
 
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
         if item == nil {
-            if isFlatMode, let firstCat = displayedCategories.first {
+            if viewModel.isFlatMode, let firstCat = viewModel.displayedCategories.first {
                 return firstCat.children[index]
             }
-            return displayedCategories[index]
+            return viewModel.displayedCategories[index]
         }
-
-        if let category = item as? CategoryData {
-            return category.children[index]
-        }
-
+        if let category = item as? CategoryData { return category.children[index] }
         return ""
     }
 
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
-        if let category = item as? CategoryData {
-            return !category.children.isEmpty
-        }
+        if let category = item as? CategoryData { return !category.children.isEmpty }
         return false
     }
 }
@@ -305,9 +226,10 @@ extension LibraryViewManager: NSOutlineViewDelegate {
         if let category = item as? CategoryData {
             guard let cell = outlineView.makeView(withIdentifier: headerIdentifier, owner: self) as? NSTableCellView else { return nil }
             cell.textField?.stringValue = category.name
-            if searchView,
-               let checkbox = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
-                checkbox.state = category.isChecked ? .on : .off
+            if searchView, let checkbox = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
+                let isSelected = viewModel.isCategorySelected(category)
+                let isPartial = viewModel.isCategoryPartiallySelected(category)
+                checkbox.state = isPartial ? .mixed : (isSelected ? .on : .off)
                 checkbox.target = self
                 checkbox.action = #selector(checkboxToggled(_:))
             }
@@ -315,60 +237,47 @@ extension LibraryViewManager: NSOutlineViewDelegate {
         } else if let book = item as? BooksData {
             guard let cell = outlineView.makeView(withIdentifier: cellIdentifier, owner: self) as? NSTableCellView else { return nil }
             cell.textField?.stringValue = book.book
-            if searchView,
-                let checkbox = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
-                checkbox.state = book.isChecked ? .on : .off
+            if searchView, let checkbox = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
+                checkbox.state = viewModel.isBookSelected(book) ? .on : .off
                 checkbox.target = self
                 checkbox.action = #selector(checkboxToggled(_:))
             }
             return cell
         }
-
         return nil
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
-        guard let outlineView = notification.object as? NSOutlineView else {
-            return
-        }
-
+        guard let outlineView = notification.object as? NSOutlineView else { return }
         if outlineView.selectedRowIndexes.count > 1 { return }
 
         let selectedRow = outlineView.selectedRow
-        Task {
-            await delegate?.didSelectItem(selectedRow)
-        }
+        Task { await delegate?.didSelectItem(selectedRow) }
 
         if let item = outlineView.item(atRow: selectedRow) as? BooksData {
             ReusableFunc.updateBuiltInRecents(with: item.book, in: searchField)
-            selectedBookName = item.book // Simpan nama buku
+            viewModel.handleBookSelection(book: item)
         }
 
         if selectedRow == -1 {
-            selectedBookName = nil
+            viewModel.selectedBookName = nil
         }
     }
 
-    func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
-        26
-    }
+    func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat { 26 }
 
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
-
         let alert = NSAlert()
         alert.messageText = NSLocalizedString("Delete Download", comment: "")
-        
         if books.count == 1 {
             alert.informativeText = String(localized: "Are you sure you want to delete the downloaded content for \"\(books[0].book)\"?")
         } else {
             alert.informativeText = String(localized: "Are you sure you want to delete the downloaded content for \(books.count) books?")
         }
-        
         alert.addButton(withTitle: NSLocalizedString("Delete", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
         alert.alertStyle = .warning
-
         if alert.runModal() == .alertFirstButtonReturn {
             Task {
                 for book in books {
@@ -379,13 +288,17 @@ extension LibraryViewManager: NSOutlineViewDelegate {
     }
 }
 
+// MARK: - NSMenuDelegate
 extension LibraryViewManager: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
         let clickedRow = outlineView.clickedRow
-        let rowsToProcess = ReusableFunc.resolveRowsToProcess(selectedRows: outlineView.selectedRowIndexes, clickedRow: clickedRow)
-        
+        let rowsToProcess = ReusableFunc.resolveRowsToProcess(
+            selectedRows: outlineView.selectedRowIndexes,
+            clickedRow: clickedRow
+        )
+
         var integratedBooks: [BooksData] = []
         for row in rowsToProcess {
             if let book = outlineView.item(atRow: row) as? BooksData,
@@ -399,22 +312,20 @@ extension LibraryViewManager: NSMenuDelegate {
             return
         }
 
-        let deleteItem = NSMenuItem(title: NSLocalizedString("Delete Download", comment: ""),
-                                    action: #selector(deleteBookAction(_:)),
-                                    keyEquivalent: "")
+        let deleteItem = NSMenuItem(
+            title: NSLocalizedString("Delete Download", comment: ""),
+            action: #selector(deleteBookAction(_:)),
+            keyEquivalent: ""
+        )
         deleteItem.target = self
         deleteItem.representedObject = integratedBooks
         menu.addItem(deleteItem)
-
         addFavoriteContextMenu(menu: menu, clickedRow: clickedRow)
     }
 
     private func addFavoriteContextMenu(menu: NSMenu, clickedRow: Int) {
         if clickedRow >= 0, let book = outlineView.item(atRow: clickedRow) as? BooksData {
-            if !menu.items.isEmpty {
-                menu.addItem(NSMenuItem.separator())
-            }
-
+            if !menu.items.isEmpty { menu.addItem(NSMenuItem.separator()) }
             let isFav = HistoryViewModel.shared.isFavorite(book.id)
             let title = isFav ? String(localized: "Remove Favorite") : String(localized: "Add Favorite")
             let favItem = NSMenuItem(title: title, action: #selector(toggleFavoriteAction(_:)), keyEquivalent: "")
@@ -427,407 +338,5 @@ extension LibraryViewManager: NSMenuDelegate {
     @objc func toggleFavoriteAction(_ sender: NSMenuItem) {
         guard let book = sender.representedObject as? BooksData else { return }
         HistoryViewModel.shared.toggleFavorite(book.id)
-    }
-}
-
-extension LibraryViewManager: NSSearchFieldDelegate {
-    func controlTextDidChange(_ obj: Notification) {
-        guard let searchField = obj.object as? NSSearchField else { return }
-        let query = searchField.stringValue
-        startSearch(query)
-    }
-
-    func startSearch(_ query: String) {
-        searchWork?.cancel()
-
-        let workItem = DispatchWorkItem { [weak self, query] in
-            guard let self else { return }
-            let base = baseCategories.isEmpty ? displayedCategories : baseCategories
-            let foundData = data.filterContent(
-                with: query,
-                displayedCategories: &displayedCategories,
-                baseCategories: base
-            )
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                outlineView.reloadData()
-
-                if foundData {
-                    outlineView.expandItem(nil, expandChildren: true)
-                }
-
-                // Restore seleksi jika query kosong
-                if query.isEmpty, let bookName = selectedBookName {
-                    self.restoreSelection(byBookName: bookName)
-                }
-            }
-        }
-
-        searchWork = workItem
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: workItem)
-    }
-
-    // Helper function untuk restore seleksi berdasarkan nama buku
-    func restoreSelection(byBookName bookName: String) {
-        guard let (category, book) = bookLookup[bookName] else { return }
-
-        outlineView.expandItem(category)
-        let row = outlineView.row(forItem: book)
-
-        if row >= 0 {
-            outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-            outlineView.scrollRowToVisible(row)
-        }
-    }
-}
-
-extension LibraryViewManager {
-
-    private func setupNotificationObservers() {
-        NotificationCenter.default.addObserver(
-            forName: .booksChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleBooksChanged(notification)
-        }
-
-        NotificationCenter.default.addObserver(
-            forName: .bookIntegrated,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let bookId = notification.object as? Int else { return }
-            self?.reloadParentCategory(ofBookId: bookId)
-        }
-    }
-
-    /// Dipanggil setelah kitab selesai diintegrasikan ke archive.
-    /// - `downloadView` (BulkDownloadVC): hapus kitab dari tree karena sudah tidak
-    ///   termasuk "belum didownload" lagi.
-    /// - Library biasa: reload parent category agar status/icon ter-update.
-    private func reloadParentCategory(ofBookId bookId: Int) {
-        if !downloadView {
-            handleIntegratedBookUpdate(bookId)
-            return
-        }
-
-        func findParent(in categories: [CategoryData]) -> CategoryData? {
-            for category in categories {
-                for child in category.children {
-                    if let b = child as? BooksData, b.id == bookId { return category }
-                    if let sub = child as? CategoryData,
-                       let found = findParent(in: [sub]) { return found }
-                }
-            }
-            return nil
-        }
-
-        guard let parent = findParent(in: displayedCategories) else { return }
-
-        // Hapus kitab dari children parent — kitab sudah terintegrasi,
-        // tidak perlu tampil lagi di daftar "belum didownload".
-        parent.children.removeAll { ($0 as? BooksData)?.id == bookId }
-
-        if parent.children.isEmpty {
-            // Parent kosong → hapus juga dari displayedCategories
-            displayedCategories.removeAll { $0 === parent }
-            baseCategories = displayedCategories
-            outlineView.reloadData()
-        } else {
-            outlineView.reloadItem(parent, reloadChildren: true)
-        }
-    }
-
-    private func handleIntegratedBookUpdate(_ bookId: Int) {
-        guard let book = data.booksById[bookId] else {
-            removeBookFromDisplayed(bookId: bookId)
-            return
-        }
-
-        if !downloadView {
-            if BookArchiveIntegrator.shared.isBookIntegrated(book) {
-                insertIntegratedBookIntoDisplayed(book)
-            } else {
-                if showOnlyDownloaded {
-                    removeBookFromDisplayed(bookId: bookId)
-                } else {
-                    let row = outlineView.row(forItem: book)
-                    if row >= 0 {
-                        outlineView.reloadItem(book)
-                    }
-                }
-            }
-            return
-        }
-
-        let row = outlineView.row(forItem: book)
-        if row >= 0 {
-            outlineView.reloadItem(book)
-            return
-        }
-
-        if let parent = findParentCategory(ofBookId: bookId, in: displayedCategories) {
-            outlineView.reloadItem(parent, reloadChildren: true)
-        }
-    }
-
-    private func removeBookFromDisplayed(bookId: Int) {
-        func findAndRemove(in list: inout [CategoryData]) -> Bool {
-            var anyChanged = false
-            for i in (0..<list.count).reversed() {
-                let category = list[i]
-                let initialCount = category.children.count
-                category.children.removeAll { ($0 as? BooksData)?.id == bookId }
-
-                if category.children.count < initialCount {
-                    anyChanged = true
-                    if category.children.isEmpty {
-                        list.remove(at: i)
-                    }
-                }
-
-                // Cek subkategori
-                var subChanged = false
-                for j in (0..<category.children.count).reversed() {
-                    if let sub = category.children[j] as? CategoryData {
-                        var subList = [sub]
-                        if findAndRemove(in: &subList) {
-                            if subList.isEmpty {
-                                category.children.remove(at: j)
-                            }
-                            subChanged = true
-                        }
-                    }
-                }
-
-                if subChanged {
-                    anyChanged = true
-                    if category.children.isEmpty {
-                        list.remove(at: i)
-                    }
-                }
-
-                if anyChanged {
-                    return true
-                }
-            }
-            return false
-        }
-
-        if findAndRemove(in: &displayedCategories) {
-            baseCategories = displayedCategories
-            outlineView.reloadData()
-        }
-    }
-
-    private func handleBooksChanged(_ notification: Notification) {
-        guard let payload = notification.object as? BooksChangedNotification else { return }
-
-        // Handle inserted books
-        for (categoryId, book) in payload.insertedBooks {
-            handleBookInserted(categoryId: categoryId, book: book)
-        }
-
-        // Handle updated books
-        if !payload.updatedBookIds.isEmpty {
-            reloadUpdatedBooks(payload.updatedBookIds)
-        }
-    }
-
-    private func findParentCategory(ofBookId bookId: Int, in categories: [CategoryData]) -> CategoryData? {
-        for category in categories {
-            for child in category.children {
-                if let b = child as? BooksData, b.id == bookId { return category }
-                if let sub = child as? CategoryData,
-                   let found = findParentCategory(ofBookId: bookId, in: [sub]) { return found }
-            }
-        }
-        return nil
-    }
-
-    private func findPathToBook(bookId: Int, in categories: [CategoryData]) -> [CategoryData]? {
-        for category in categories {
-            for child in category.children {
-                if let b = child as? BooksData, b.id == bookId {
-                    return [category]
-                }
-                if let sub = child as? CategoryData,
-                   let path = findPathToBook(bookId: bookId, in: [sub]) {
-                    return [category] + path
-                }
-            }
-        }
-        return nil
-    }
-
-    private func insertBook(
-        _ book: BooksData,
-        originalCategory: CategoryData,
-        targetCategory: CategoryData
-    ) {
-        if targetCategory.children.contains(where: { ($0 as? BooksData)?.id == book.id }) {
-            return
-        }
-
-        let originalIndex = originalCategory.children.firstIndex {
-            ($0 as? BooksData)?.id == book.id
-        } ?? originalCategory.children.count
-
-        let existingBooks = targetCategory.children.compactMap { $0 as? BooksData }
-        var insertBookIndex = 0
-        for existingBook in existingBooks {
-            let existingIndex = originalCategory.children.firstIndex {
-                ($0 as? BooksData)?.id == existingBook.id
-            } ?? originalCategory.children.count
-            if existingIndex > originalIndex {
-                break
-            }
-            insertBookIndex += 1
-        }
-
-        let firstBookIndex = targetCategory.children.firstIndex { $0 is BooksData } ?? targetCategory.children.count
-        let insertIndex = firstBookIndex + insertBookIndex
-        targetCategory.children.insert(book, at: insertIndex)
-    }
-
-    private func insertCategory(_ category: CategoryData, into list: inout [CategoryData]) {
-        let insertIndex = list.firstIndex { $0.order > category.order } ?? list.count
-        list.insert(category, at: insertIndex)
-    }
-
-    private func insertCategory(_ category: CategoryData, into children: inout [Any]) {
-        let firstBookIndex = children.firstIndex { $0 is BooksData } ?? children.count
-        let categoryIndex = children.enumerated().first { _, element in
-            guard let existing = element as? CategoryData else { return false }
-            return existing.order > category.order
-        }?.offset ?? firstBookIndex
-        let insertIndex = min(categoryIndex, firstBookIndex)
-        children.insert(category, at: insertIndex)
-    }
-
-    private func insertIntegratedBookIntoDisplayed(_ book: BooksData) {
-        guard let path = findPathToBook(bookId: book.id, in: data.allRootCategories),
-              let originalLeaf = path.last
-        else { return }
-
-        let rootId = path[0].id
-        let rootWasPresent = displayedCategories.contains { $0.id == rootId }
-
-        var currentParent: CategoryData?
-        for category in path {
-            if let parent = currentParent {
-                if let existing = parent.children.compactMap({ $0 as? CategoryData })
-                    .first(where: { $0.id == category.id }) {
-                    currentParent = existing
-                } else {
-                    let clone = category.copy() as! CategoryData
-                    clone.children = []
-                    insertCategory(clone, into: &parent.children)
-                    currentParent = clone
-                }
-            } else {
-                if let existing = displayedCategories.first(where: { $0.id == category.id }) {
-                    currentParent = existing
-                } else {
-                    let clone = category.copy() as! CategoryData
-                    clone.children = []
-                    insertCategory(clone, into: &displayedCategories)
-                    currentParent = clone
-                }
-            }
-        }
-
-        guard let leaf = currentParent else { return }
-        insertBook(book, originalCategory: originalLeaf, targetCategory: leaf)
-
-        if !rootWasPresent {
-            outlineView.reloadData()
-        } else if let root = displayedCategories.first(where: { $0.id == rootId }) {
-            outlineView.reloadItem(root, reloadChildren: true)
-        } else {
-            outlineView.reloadData()
-        }
-
-        if let bookName = selectedBookName {
-            restoreSelection(byBookName: bookName)
-        }
-    }
-
-    private func handleBookInserted(categoryId: Int, book: BooksData) {
-        // Update bookLookup
-        if let category = findCategoryInDisplayed(categoryId) {
-            bookLookup[book.book] = (category, book)
-
-            if searchField.stringValue.isEmpty {
-                // Expand category jika belum
-                if !outlineView.isItemExpanded(category) {
-                    outlineView.expandItem(category)
-                }
-
-                // Reload category dengan children
-                outlineView.reloadItem(category, reloadChildren: true)
-
-                // Optional: Scroll ke buku baru dan select
-                let row = outlineView.row(forItem: book)
-                if row >= 0 {
-                    outlineView.scrollRowToVisible(row)
-                }
-            } else {
-                // Re-apply filter
-                let currentQuery = searchField.stringValue
-                if !currentQuery.isEmpty {
-                    let base = baseCategories.isEmpty ? displayedCategories : baseCategories
-                    _ = data.filterContent(
-                        with: currentQuery,
-                        displayedCategories: &displayedCategories,
-                        baseCategories: base
-                    )
-                    outlineView.reloadData()
-                }
-            }
-        }
-    }
-
-    private func reloadUpdatedBooks(_ bookIds: Set<Int>) {
-        for bookId in bookIds {
-            guard let book = data.booksById[bookId] else { continue }
-
-            // Update bookLookup jika nama buku berubah
-            for (oldName, value) in bookLookup where value.book.id == bookId {
-                bookLookup.removeValue(forKey: oldName)
-                bookLookup[book.book] = (value.category, book)
-                break
-            }
-
-            // Reload item di OutlineView
-            let row = outlineView.row(forItem: book)
-            if row >= 0 {
-                outlineView.reloadItem(book)
-            }
-        }
-    }
-
-    private func findCategoryInDisplayed(_ categoryId: Int) -> CategoryData? {
-        func search(_ category: CategoryData) -> CategoryData? {
-            if category.id == categoryId {
-                return category
-            }
-            for child in category.children {
-                if let subCategory = child as? CategoryData,
-                   let found = search(subCategory) {
-                    return found
-                }
-            }
-            return nil
-        }
-
-        for rootCategory in displayedCategories {
-            if let found = search(rootCategory) {
-                return found
-            }
-        }
-        return nil
     }
 }

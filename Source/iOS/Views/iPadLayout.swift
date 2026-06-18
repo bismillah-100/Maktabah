@@ -138,7 +138,7 @@ struct iPadLayout: View {
             case .viewer:
                 iOSLibraryView()
                     .searchable(
-                        text: $libraryVM.searchText,
+                        text: $libraryVM.searchQuery,
                         placement: .navigationBarDrawer(displayMode: .always),
                         prompt: searchPrompt(for: tab).localized
                     )

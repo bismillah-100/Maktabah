@@ -340,7 +340,6 @@
 		F305778E2FA463B1005732C6 /* ViewOptionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F305777D2FA463B1005732C6 /* ViewOptionsView.swift */; };
 		F305778F2FA463B1005732C6 /* iOSIbarotTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577812FA463B1005732C6 /* iOSIbarotTextView.swift */; };
 		F30577902FA463B1005732C6 /* iOSNavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577722FA463B1005732C6 /* iOSNavigationManager.swift */; };
-		F30577912FA463B1005732C6 /* iOSLibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577712FA463B1005732C6 /* iOSLibraryViewModel.swift */; };
 		F30577922FA463B1005732C6 /* BookListWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577802FA463B1005732C6 /* BookListWrapper.swift */; };
 		F30577932FA4982A005732C6 /* TextViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BAB8A452F2867A200732FC9 /* TextViewState.swift */; };
 		F30577952FA4987B005732C6 /* NotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577942FA4987B005732C6 /* NotificationName.swift */; };
@@ -429,6 +428,9 @@
 		F3D02D512FE04D580054807F /* ViewModelProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D3B2FE04D580054807F /* ViewModelProtocols.swift */; };
 		F3D02D522FE04D580054807F /* ReaderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D412FE04D580054807F /* ReaderViewModel.swift */; };
 		F3D02D552FE04D580054807F /* ViewModelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D392FE04D580054807F /* ViewModelBase.swift */; };
+		F3D02D5D2FE05A650054807F /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */; };
+		F3D02D5E2FE05A650054807F /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */; };
+		F3D02D5F2FE05A650054807F /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */; };
 		F3D0815D2F9EFE5C00E017C7 /* Tag.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3D0815C2F9EFE5C00E017C7 /* Tag.xib */; };
 		F3D0815E2F9EFE5C00E017C7 /* Tag.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3D0815C2F9EFE5C00E017C7 /* Tag.xib */; };
 		F3D08C752FDC739900A0E733 /* AnnotationViewControllerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */; };
@@ -599,7 +601,6 @@
 		F300A2EB2F2DCE860095015E /* StorageError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageError.swift; sourceTree = "<group>"; };
 		F305776F2FA46222005732C6 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maktabah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F30577702FA463B1005732C6 /* iOSAnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAnnotationViewModel.swift; sourceTree = "<group>"; };
-		F30577712FA463B1005732C6 /* iOSLibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSLibraryViewModel.swift; sourceTree = "<group>"; };
 		F30577722FA463B1005732C6 /* iOSNavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSNavigationManager.swift; sourceTree = "<group>"; };
 		F30577752FA463B1005732C6 /* iOSReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSReaderView.swift; sourceTree = "<group>"; };
 		F30577772FA463B1005732C6 /* AnnotationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationListView.swift; sourceTree = "<group>"; };
@@ -670,6 +671,7 @@
 		F3D02D392FE04D580054807F /* ViewModelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelBase.swift; sourceTree = "<group>"; };
 		F3D02D3B2FE04D580054807F /* ViewModelProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelProtocols.swift; sourceTree = "<group>"; };
 		F3D02D412FE04D580054807F /* ReaderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewModel.swift; sourceTree = "<group>"; };
+		F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		F3D0815C2F9EFE5C00E017C7 /* Tag.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Tag.xib; sourceTree = "<group>"; };
 		F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewControllerWrapper.swift; sourceTree = "<group>"; };
 		F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryComponents.swift; sourceTree = "<group>"; };
@@ -1119,7 +1121,6 @@
 				F36382502FA6FA1E0006636C /* BootstrapManager.swift */,
 				F30577702FA463B1005732C6 /* iOSAnnotationViewModel.swift */,
 				F38FF4332FA820B3003E7B71 /* iOSAuthorViewModel.swift */,
-				F30577712FA463B1005732C6 /* iOSLibraryViewModel.swift */,
 				F30577722FA463B1005732C6 /* iOSNavigationManager.swift */,
 				6505EE880DD50A217DB489F1 /* iOSSearchViewModel.swift */,
 				F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */,
@@ -1299,6 +1300,7 @@
 				F3D02D3A2FE04D580054807F /* Base */,
 				F3D02D3C2FE04D580054807F /* Protocols */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
+				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
 			);
 			path = ViewModels;
@@ -1599,6 +1601,7 @@
 				4B63E1E92EE9671000D58F3B /* RowiModel.swift in Sources */,
 				4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
 				4B6AF2332EE57CCD002EBFFC /* Toolbar.swift in Sources */,
+				F3D02D5D2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				4B5E70692EF4FEFC00E7D351 /* SharedPopover.swift in Sources */,
 				4B56955B2EEFDAAE00ABEB48 /* Annotations.swift in Sources */,
 				4B6100E92EFA740B00CCBED6 /* QuranSidebarVC.swift in Sources */,
@@ -1697,6 +1700,7 @@
 				4B7C90D52F83494200454BE1 /* TOCLoader.swift in Sources */,
 				4B7C90D62F83494200454BE1 /* SearchMode.swift in Sources */,
 				4B7C90D72F83494200454BE1 /* LoadMoreCell.swift in Sources */,
+				F3D02D5F2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				4B7C90D82F83494200454BE1 /* RowiResultsVC.swift in Sources */,
 				4B7C90D92F83494200454BE1 /* CoreDownloadProgressView.swift in Sources */,
 				4B7C90DA2F83494200454BE1 /* BulkDownloadModalCenter.swift in Sources */,
@@ -1798,7 +1802,6 @@
 				F305778E2FA463B1005732C6 /* ViewOptionsView.swift in Sources */,
 				F305778F2FA463B1005732C6 /* iOSIbarotTextView.swift in Sources */,
 				F30577902FA463B1005732C6 /* iOSNavigationManager.swift in Sources */,
-				F30577912FA463B1005732C6 /* iOSLibraryViewModel.swift in Sources */,
 				F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */,
 				F321E02D2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */,
 				F30577922FA463B1005732C6 /* BookListWrapper.swift in Sources */,
@@ -1830,6 +1833,7 @@
 				F3BEC5682FD97AD600FA0400 /* AnnotationContentView.swift in Sources */,
 				F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */,
 				F305770A2FA46222005732C6 /* QuranDataManager.swift in Sources */,
+				F3D02D5E2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				F31111962FC00F060024B638 /* iOSResultWriterView.swift in Sources */,
 				F31111972FC00F060024B638 /* iOSSavedResultsView.swift in Sources */,
 				F305770C2FA46222005732C6 /* CopyableResult.swift in Sources */,

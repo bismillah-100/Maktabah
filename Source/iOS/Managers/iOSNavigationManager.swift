@@ -31,9 +31,9 @@ class iOSNavigationManager {
     var activeIntegrationStates: [BundleArchiveDownloadProgressState] = []
     var alertMessage: AlertMessage?
 
-    var libraryViewModel = iOSLibraryViewModel()
     var searchViewModel = iOSSearchViewModel()
     var authorViewModel = iOSAuthorViewModel()
+    var libraryViewModel = LibraryViewModel()
     var annotationViewModel = iOSAnnotationViewModel()
 
     var openTabs: [ReaderTab] = []

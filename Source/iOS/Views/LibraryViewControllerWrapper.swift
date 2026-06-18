@@ -3,7 +3,7 @@ import UIKit
 
 struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
     let navigationManager: iOSNavigationManager
-    let viewModel: iOSLibraryViewModel
+    let viewModel: LibraryViewModel
     @Binding var showOnlyDownloaded: Bool
     var onDeleteSingleBook: ((BooksData) -> Void)?
     var onDownloadSingleBook: ((BooksData) -> Void)?
@@ -54,7 +54,7 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
         uiViewController.showLoadMore = showLoadMore
         uiViewController.loadMoreCount = loadMoreCount
 
-        guard !context.coordinator.viewModel.isLoading else { return }
+        guard context.coordinator.viewModel.state != .loading else { return }
 
         let categories = context.coordinator.viewModel.displayedCategories
         let currentTrigger = context.coordinator.viewModel.updateTrigger
@@ -73,12 +73,12 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
 
     class Coordinator {
         let navigationManager: iOSNavigationManager
-        let viewModel: iOSLibraryViewModel
+        let viewModel: LibraryViewModel
         var lastUpdateTrigger: Int = -1
         var lastSelectionMode: Bool = false
         var lastShowLoadMore: Bool = false
 
-        init(navigationManager: iOSNavigationManager, viewModel: iOSLibraryViewModel) {
+        init(navigationManager: iOSNavigationManager, viewModel: LibraryViewModel) {
             self.navigationManager = navigationManager
             self.viewModel = viewModel
         }

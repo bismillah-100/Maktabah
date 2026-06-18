@@ -68,7 +68,7 @@ struct iOSLibraryView: View {
     }
 
     @ViewBuilder
-    private func mainZStack(viewModel: iOSLibraryViewModel) -> some View {
+    private func mainZStack(viewModel: LibraryViewModel) -> some View {
         ZStack {
             LibraryViewControllerWrapper(
                 navigationManager: navigationManager,
@@ -90,7 +90,7 @@ struct iOSLibraryView: View {
             .themeTint()
             .ignoresSafeArea(edges: [.vertical])
 
-            if viewModel.isLoading {
+            if viewModel.state == .loading {
                 ProgressView("Loading Library...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .themeBackground()
@@ -107,7 +107,7 @@ struct iOSLibraryView: View {
         }
     }
 
-    private func handleSelectionChange(viewModel: iOSLibraryViewModel) {
+    private func handleSelectionChange(viewModel: LibraryViewModel) {
         guard !viewModel.isBulkDownloading else { return }
 
         let downloadBooks = viewModel.selectedDownloadBooks
@@ -137,7 +137,7 @@ struct iOSLibraryView: View {
     }
 
     @ToolbarContentBuilder
-    private func toolbarContent(viewModel: iOSLibraryViewModel) -> some ToolbarContent {
+    private func toolbarContent(viewModel: LibraryViewModel) -> some ToolbarContent {
         if viewModel.isSelectionMode {
             ToolbarItem(placement: .topBarLeading) {
                 Button("Done") {
@@ -214,7 +214,7 @@ struct iOSLibraryView: View {
         }
     }
 
-    private func startSelectedDownloads(using viewModel: iOSLibraryViewModel) {
+    private func startSelectedDownloads(using viewModel: LibraryViewModel) {
         let state = BundleArchiveDownloadProgressState(
             title: NSLocalizedString(
                 "Download Book",

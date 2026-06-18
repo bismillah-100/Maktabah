@@ -152,7 +152,8 @@ final class BulkDownloadModalCenter {
                         bookId: bookId,
                         status: .failed(error.localizedDescription)
                     )
-                    if isNetworkFailure(error) || error is CancellationError {
+                    if error is CancellationError ||
+                        vc.dataVM?.viewModel.isNetworkFailure(error) == true {
                         shouldStopDownloads = true
                         group.cancelAll()
                     }
@@ -239,25 +240,6 @@ final class BulkDownloadModalCenter {
         } else {
             vc.statusLabel.stringValue = String(localized: "All \(completedIntegrations) books processed successfully.", comment: "Status message when all tasks finished successfully")
         }
-    }
-
-    private func isNetworkFailure(_ error: Error) -> Bool {
-        if let bookError = error as? BookDownloadError {
-            if case .networkUnavailable = bookError { return true }
-        }
-        if let urlError = error as? URLError {
-            switch urlError.code {
-            case .notConnectedToInternet,
-                 .networkConnectionLost,
-                 .cannotFindHost,
-                 .cannotConnectToHost,
-                 .timedOut:
-                return true
-            default:
-                return false
-            }
-        }
-        return false
     }
 }
 

@@ -5,7 +5,7 @@ import UIKit
 
 @MainActor
 class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
-    var viewModel: iOSLibraryViewModel?
+    var viewModel: LibraryViewModel?
     var onBookSelected: ((BooksData) -> Void)?
     var onSelectionChanged: (() -> Void)?
     var onDeleteBook: ((BooksData) -> Void)?
