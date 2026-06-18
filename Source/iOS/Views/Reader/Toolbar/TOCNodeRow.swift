@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct TOCNodeRow: View {
-    let item: iOSIdentifiableTOCNode
+    let item: TOCNode
     let selectedId: Int?
     let onSelect: (Int) -> Void
     @Binding var expandedPaths: Set<ObjectIdentifier>
 
     var isExpanded: Binding<Bool> {
         Binding(
-            get: { expandedPaths.contains(item.id) },
+            get: { expandedPaths.contains(ObjectIdentifier(item)) },
             set: { isExpanding in
                 if isExpanding {
-                    expandedPaths.insert(item.id)
+                    expandedPaths.insert(ObjectIdentifier(item))
                 } else {
-                    expandedPaths.remove(item.id)
+                    expandedPaths.remove(ObjectIdentifier(item))
                 }
             }
         )
@@ -35,13 +35,13 @@ struct TOCNodeRow: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
                 // Custom panah di sebelah kiri teks jika memiliki sub-bab
-                if let children = item.children, !children.isEmpty {
+                if !item.children.isEmpty {
                     Button(action: {
                         withAnimation {
                             if isExpanded.wrappedValue {
-                                expandedPaths.remove(item.id)
+                                expandedPaths.remove(ObjectIdentifier(item))
                             } else {
-                                expandedPaths.insert(item.id)
+                                expandedPaths.insert(ObjectIdentifier(item))
                             }
                         }
                     }) {
@@ -60,13 +60,13 @@ struct TOCNodeRow: View {
                 }
             }
             // Berikan indentasi di sebelah kanan berdasarkan level (RTL: leading = kanan)
-            .padding(.leading, CGFloat(max(0, item.node.level - 1)) * 24)
-            .id(item.id)
+            .padding(.leading, CGFloat(max(0, item.level - 1)) * 24)
+            .id(ObjectIdentifier(item))
             .environment(\.layoutDirection, .rightToLeft)
             
             // Rekursif untuk menampilkan sub-bab di bawahnya jika sedang diekspansi
-            if isExpanded.wrappedValue, let children = item.children, !children.isEmpty {
-                ForEach(children) { child in
+            if isExpanded.wrappedValue, !item.children.isEmpty {
+                ForEach(item.children) { child in
                     TOCNodeRow(
                         item: child,
                         selectedId: selectedId,
@@ -80,12 +80,12 @@ struct TOCNodeRow: View {
 
     var nodeLabel: some View {
         Button(action: {
-            onSelect(item.node.id)
+            onSelect(item.id)
         }) {
-            Text(item.node.bab)
-                .font(iOSReaderViewModel.kfgqpcTitle)
+            Text(item.bab)
+                .font(ReaderViewModel.kfgqpcTitle)
                 .foregroundColor(
-                    item.node.id == selectedId ? .accentColor : .primary
+                    item.id == selectedId ? .accentColor : .primary
                 )
         }
     }
@@ -93,13 +93,12 @@ struct TOCNodeRow: View {
 
 #Preview {
     let mockNode = TOCNode(from: TOC(bab: "Chapter 1", level: 1, sub: 0, id: 1))
-    let item = iOSIdentifiableTOCNode(mockNode)
     
     return TOCNodeRow(
-        item: item,
+        item: mockNode,
         selectedId: 1,
         onSelect: { _ in },
-        expandedPaths: .constant(Set([item.id]))
+        expandedPaths: .constant(Set([ObjectIdentifier(mockNode)]))
     )
     .padding()
 }

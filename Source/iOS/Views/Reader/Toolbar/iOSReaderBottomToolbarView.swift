@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct iOSReaderBottomToolbarView: View {
-    @Bindable var viewModel: iOSReaderViewModel
+    @Bindable var viewModel: ReaderViewModel
     @State private var textViewState = TextViewState.shared
     @State private var showingNavigation = false
     @State private var showingOptions = false
@@ -89,22 +89,24 @@ struct iOSReaderBottomToolbarView: View {
                 .preferredColorScheme(isDarkMode ? .dark : .light)
         }
         .sheet(isPresented: $showingSearch) {
-            iOSBookSearchView(
-                book: viewModel.book,
-                onSelect: { contentId, query in
-                    viewModel.searchText = query
-                    viewModel.fetchContentById(contentId)
-                    showingSearch = false
-                },
-                viewModel: viewModel.searchViewModel
-            )
+            if let book = viewModel.currentBook {
+                iOSBookSearchView(
+                    book: book,
+                    onSelect: { contentId, query in
+                        viewModel.searchText = query
+                        viewModel.fetchContentById(contentId)
+                        showingSearch = false
+                    },
+                    viewModel: viewModel.searchViewModel
+                )
+            }
         }
         .sheet(isPresented: $showingTOC) {
             iOSTOCView(
-                nodes: viewModel.tocNodes,
-                selectedId: viewModel.findNodeId(
-                    forContentId: viewModel.currentContentId
-                ),
+                tocViewModel: viewModel.tocViewModel,
+                selectedId: viewModel.tocViewModel.findNodeById(
+                    viewModel.currentContentId
+                )?.id,
                 onSelect: { id in
                     viewModel.searchText = ""
                     viewModel.targetAnnotation = nil
@@ -114,15 +116,17 @@ struct iOSReaderBottomToolbarView: View {
             )
         }
         .sheet(isPresented: $showingAnnotationsList) {
-            iOSBookAnnotationsView(
-                bookId: viewModel.book.id,
-                annotations: viewModel.currentAnnotations,
-                onSelect: { ann in
-                    viewModel.targetAnnotation = ann
-                    viewModel.fetchContentById(Int(ann.contentId))
-                    showingAnnotationsList = false
-                }
-            )
+            if let book = viewModel.currentBook {
+                iOSBookAnnotationsView(
+                    bookId: book.id,
+                    annotations: viewModel.currentAnnotations,
+                    onSelect: { ann in
+                        viewModel.targetAnnotation = ann
+                        viewModel.fetchContentById(Int(ann.contentId))
+                        showingAnnotationsList = false
+                    }
+                )
+            }
         }
     }
 
@@ -152,6 +156,6 @@ struct iOSReaderBottomToolbarView: View {
         archive: 0,
         muallif: 1
     )
-    let mockViewModel = iOSReaderViewModel(book: mockBook)
+    let mockViewModel = ReaderViewModel(book: mockBook)
     return iOSReaderBottomToolbarView(viewModel: mockViewModel)
 }

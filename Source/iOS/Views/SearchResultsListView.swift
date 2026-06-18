@@ -26,7 +26,7 @@ struct SearchResultRow: View {
             HStack {
                 if showsBookTitle {
                     Text(item.bookTitle)
-                        .font(iOSReaderViewModel.kfgqpcTitle)
+                        .font(ReaderViewModel.kfgqpcTitle)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
 
@@ -43,7 +43,7 @@ struct SearchResultRow: View {
             }
 
             Text(AttributedString(item.attributedText))
-                .font(iOSReaderViewModel.kfgqpc)
+                .font(ReaderViewModel.kfgqpc)
                 .lineLimit(3)
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.leading)

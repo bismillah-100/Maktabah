@@ -98,8 +98,8 @@ struct ReaderTabItemView: View {
     let mockBook1 = BooksData(id: 1, book: "صحيح البخاري", archive: 0, muallif: 1)
     let mockBook2 = BooksData(id: 2, book: "صحيح المسلم", archive: 0, muallif: 2)
     
-    let mockViewModel1 = iOSReaderViewModel(book: mockBook1)
-    let mockViewModel2 = iOSReaderViewModel(book: mockBook2)
+    let mockViewModel1 = ReaderViewModel(book: mockBook1)
+    let mockViewModel2 = ReaderViewModel(book: mockBook2)
     
     let mockTab1 = iOSNavigationManager.ReaderTab(id: UUID(), book: mockBook1, initialContentId: nil, viewModel: mockViewModel1)
     let mockTab2 = iOSNavigationManager.ReaderTab(id: UUID(), book: mockBook2, initialContentId: nil, viewModel: mockViewModel2)

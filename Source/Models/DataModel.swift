@@ -12,7 +12,7 @@ import Foundation
 
 // MARK: - TOC dengan Children (untuk NSOutlineView)
 
-class TOCNode {
+class TOCNode: Identifiable {
     let bab: String
     let level: Int
     let sub: Int

@@ -6,19 +6,27 @@
 //
 
 import Cocoa
+import Combine
 
 class IbarotTextVC: NSViewController {
+    // MARK: - IBOutlets
+
     @IBOutlet weak var textView: IbarotTextView!
 
-    private let defaultFontSize: CGFloat = 18.0
-
-    var bookDB: BookConnection = .init()
+    // MARK: - Properties
 
     var sidebarVC: SidebarVC?
     var libraryVC: LibraryVC?
 
-    let defaultTitle: String = "المكتبة الإسلامية"
-    let subtitle: String = "لتيسر البحث العبارة"
+    /// ViewModel - manages all reader business logic
+    let viewModel: ReaderViewModel = .init()
+
+    private let defaultFontSize: CGFloat = 18.0
+
+    // MARK: - Window Title Properties
+
+    private let defaultTitle: String = "المكتبة الإسلامية"
+    private let subtitle: String = "لتيسر البحث العبارة"
 
     var windowTitle: String = .init() {
         didSet {
@@ -34,16 +42,109 @@ class IbarotTextVC: NSViewController {
         }
     }
 
+    // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupBindings()
+        setupNotificationObservers()
+    }
+
+    // MARK: - Setup
+
+    private func setupBindings() {
+        textView.viewModel = viewModel
+        // Bind content text changes
+        viewModel.bind(viewModel.$contentText) { [weak self] text in
+            guard let self, !text.isEmpty else { return }
+            textView.loadIbarotText(
+                text,
+                color: NSColor.header,
+                isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
+                isImported: viewModel.currentBook?.isImported ?? false
+            )
+        }
+
+        // Bind window title changes
+        viewModel.onWindowTitleChanged = { [weak self] title, subtitle in
+            self?.windowTitle = title
+            self?.windowSubtitle = subtitle
+        }
+
+        // Bind content changed callback
+        viewModel.onContentChanged = { [weak self] content in
+            guard let self else { return }
+            handleNavigationToContent(content)
+        }
+
+        // Setup textView annotation callbacks
+        textView.onAddAnnotation = { [weak self] range, color, mode, sourceText in
+            do {
+                try self?.viewModel.addAnnotation(
+                    in: range,
+                    mode: mode,
+                    sourceText: sourceText,
+                    color: color
+                )
+            } catch {
+                print("Failed to add annotation: \(error)")
+            }
+        }
+
+        textView.onUpdateAnnotation = { [weak self] annotation in
+            do {
+                try self?.viewModel.updateAnnotation(annotation)
+            } catch {
+                print("Failed to update annotation: \(error)")
+            }
+        }
+
+        textView.onDeleteAnnotation = { [weak self] id in
+            do {
+                try self?.viewModel.deleteAnnotation(id: id)
+            } catch {
+                print("Failed to delete annotation: \(error)")
+            }
+        }
+
+        // Bind scroll to top callback
+        viewModel.onNeedScrollToTop = { [weak self] in
+            self?.textView.scrollToBeginningOfDocument(nil)
+        }
+
+        // Bind error callback
+        viewModel.onError = { error in
+            ReusableFunc.showAlert(
+                title: "Error",
+                message: error.localizedDescription,
+                style: .critical
+            )
+        }
+
+        // Bind TOC events
+        viewModel.tocViewModel.onTOCLoadingStateChanged = { [weak self] isLoading in
+            guard let self = self, let sidebarView = self.sidebarVC?.view else { return }
+            if isLoading {
+                ReusableFunc.showProgressWindow(sidebarView)
+            } else {
+                ReusableFunc.closeProgressWindow(sidebarView)
+            }
+        }
+
+        viewModel.tocViewModel.onTOCLoaded = { [weak self] nodes in
+            self?.sidebarVC?.updateTOC(nodes)
+        }
+    }
+
+    private func setupNotificationObservers() {
         NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
             queue: .current
         ) { [weak self] _ in
             guard let self else { return }
-            bookDB = .init()
-            sidebarVC?.setupLoader(bookConnection: bookDB)
+            viewModel.cleanUpState()
+            viewModel.tocViewModel.cleanUp()
         }
 
         NotificationCenter.default.addObserver(
@@ -52,315 +153,17 @@ class IbarotTextVC: NSViewController {
             queue: .main
         ) { [weak self] notification in
             guard let self, let bookId = notification.object as? Int else { return }
-            if let currentBook = self.currentBook, currentBook.id == bookId {
-                if !BookArchiveIntegrator.shared.isBookIntegrated(currentBook) {
-                    self.clearUI()
+            if viewModel.currentBook?.id == bookId {
+                if !BookArchiveIntegrator.shared.isBookIntegrated(viewModel.currentBook!) {
+                    clearUI()
                 }
             }
         }
     }
 
-    override func viewDidAppear() {
-        super.viewDidAppear()
-        //        guard let window = view.window,
-        //              let guide = window.contentLayoutGuide as? NSLayoutGuide
-        //        else { return }
-        //
-        //        let ve = NSVisualEffectView()
-        //        ve.material = .fullScreenUI
-        //        ve.blendingMode = .withinWindow
-        //        ve.state = .active
-        //        ve.translatesAutoresizingMaskIntoConstraints = false
-        //        view.addSubview(ve, positioned: .above, relativeTo: textView)
-        //
-        //        NSLayoutConstraint.activate([
-        //            ve.topAnchor.constraint(equalTo: view.topAnchor),
-        //            ve.bottomAnchor.constraint(equalTo: guide.topAnchor),
-        //            ve.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-        //            ve.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        //        ])
-    }
+    // MARK: - State Accessors
 
-    func restoreWindowTitleAfterModeSwitch(
-        oldTitle: String,
-        oldSubtitle: String
-    ) {
-        guard !windowTitle.isEmpty,
-              !windowSubtitle.isEmpty
-        else { return }
-
-        guard oldTitle != defaultTitle,
-              oldSubtitle != subtitle
-        else { return }
-
-        setDefaultWindowTitle()
-    }
-
-    fileprivate func setDefaultWindowTitle() {
-        view.window?.title = defaultTitle
-        view.window?.subtitle = subtitle
-    }
-
-    func didChangeBook(
-        book: BooksData,
-        loadSidebar: Bool = true
-    ) {
-        if let sidebarVC, loadSidebar {
-            Task { @MainActor in
-                await sidebarVC.reloadBook(book: book)
-            }
-        }
-
-        currentBook = book
-        updateWindowTitle(id: book.id)
-
-        /// Pilih kitab di `LibraryVC`
-        libraryVC?.dataVM.restoreSelection(byBookName: book.book)
-    }
-
-    func updateLibraryReference(for mode: AppMode, library: LibraryVC?) {
-        libraryVC = (mode == .viewer) ? library : nil
-    }
-
-    func fetchInitialBook() {
-        guard let id = currentBook?.id else { return }
-        
-        // Restore posisi terakhir baca dari History
-        if let lastContentId = HistoryViewModel.shared.entriesByBookId[id]?.lastContentId,
-           let content = bookDB.getContent(bkid: "\(id)", contentId: lastContentId) {
-            didChangePage(content: content)
-            didNavigateToContent(content)
-            return
-        }
-
-        // Fallback ke halaman pertama jika belum pernah dibaca
-        guard let content = bookDB.getFirstContent(bkid: "\(id)") else { return }
-        didChangePage(content: content)
-        didNavigateToContent(content)
-    }
-
-    @MainActor
-    func updateWindowTitle(id: Int, part: Int? = nil, page: Int? = nil) {
-        guard let currentBook else { return }
-        if let page {
-            currentPage = page
-        } else {
-            currentPage = nil
-        }
-
-        currentID = id
-
-        let title = currentBook.book
-        let muallif = DatabaseManager.shared.getAuthor(currentBook.muallif)
-
-        if let page {
-            let pageString = String(page)
-            let pageArb = pageString.convertToArabicDigits()
-            if let part {
-                currentPart = part
-                let partString = String(part)
-                let partArb = partString.convertToArabicDigits()
-                windowTitle = title
-                windowSubtitle =
-                    "\(muallif?.nama ?? "") ・ الصفحة \(pageArb) ・ الجزء \(partArb)"
-            } else {
-                windowTitle = title
-                windowSubtitle = "\(muallif?.nama ?? "") ・ الصفحة \(pageArb)"
-            }
-        } else {
-            windowTitle = title
-            windowSubtitle = "\(muallif?.nama ?? "")"
-        }
-    }
-
-    func applyFont(_ redraw: Bool) {
-        if !redraw {
-            let defaults = UserDefaults.standard
-
-            var fontSize = CGFloat(defaults.textViewFontSize)
-            if fontSize == 0 { fontSize = defaultFontSize }
-
-            let fontName = defaults.textViewFontName
-
-            guard let baseFont = NSFont(name: fontName, size: fontSize),
-                  let textStorage = textView.textStorage
-            else { return }
-
-            let fullRange = NSRange(location: 0, length: textStorage.length)
-            let savedFootnoteRanges = textView.footnoteRanges
-
-            textStorage.beginEditing()
-            textStorage.addAttribute(.font, value: baseFont, range: fullRange)
-
-            if !savedFootnoteRanges.isEmpty {
-                let footnoteFont = NSFont(name: fontName, size: fontSize - 2) ?? baseFont.withSize(fontSize - 2)
-                for range in savedFootnoteRanges where range.location + range.length <= textStorage.length {
-                    textStorage.addAttribute(.font, value: footnoteFont, range: range)
-                }
-            }
-            textStorage.endEditing()
-            textView.typingAttributes[.font] = baseFont
-        } else {
-            refreshCurrentPage()
-        }
-    }
-
-    func toggleHarakat(_ on: Bool) {
-        refreshCurrentPage()
-    }
-
-    private func refreshCurrentPage() {
-        guard let currentID, let currentBook,
-            let content = bookDB.getContentByPage(
-                bkid: "\(currentBook.id)",
-                idNumber: currentID
-            )
-        else { return }
-
-        textView.loadIbarotText(
-            content.nash,
-            color: NSColor.header,
-            isImported: currentBook.isImported,
-            keepScrollPosition: true
-        )
-    }
-
-    func applyBackgroundColor(_ color: NSColor) {
-        textView.backgroundColor = color
-    }
-
-    @IBAction func previousPage(_ sender: Any?) {
-        guard let currentID, let currentBook,
-            let content = bookDB.getPrevPage(
-                from: currentBook,
-                contentId: currentID
-            )
-        else {
-            return
-        }
-
-        didChangePage(content: content)
-        didNavigateToContent(content)
-    }
-
-    @IBAction func nextPage(_ sender: Any?) {
-        guard let currentID, let currentBook,
-            let content = bookDB.getNextPage(
-                from: currentBook,
-                contentId: currentID
-            )
-        else {
-            return
-        }
-
-        didChangePage(content: content)
-        didNavigateToContent(content)
-    }
-
-    func didChangePage(content: BookContent) {
-        let id = content.id
-        let nash = content.nash
-        let page = content.page
-        let part = content.part
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            textView.bkId = currentBook?.id
-            textView.contentId = id
-            textView.part = part
-            textView.page = page
-
-            if let bookId = currentBook?.id {
-                HistoryViewModel.shared.updateLastContentId(id, for: bookId)
-            }
-
-            // Display content
-            textView?.loadIbarotText(
-                nash, color: NSColor.header,
-                isMultiLanguage: currentBook?.isMultiLanguage,
-                isImported: currentBook?.isImported ?? false
-            )
-
-            // Scroll to top
-            textView?.scrollToBeginningOfDocument(nil)
-
-            updateWindowTitle(id: id, part: part, page: page)
-        }
-    }
-
-    @IBAction func bookInfo(_ sender: Any) {
-        let dm = LibraryDataManager.shared
-        guard let currentBook else { return }
-        guard
-            let bookOnLibrary = dm.getBook(
-                [currentBook.id]).first
-        else { return }
-
-        self.currentBook = bookOnLibrary
-
-        dm.loadBookInfo(bookOnLibrary.id) { [weak self] in
-            let bookInf = BookInfo()
-            bookInf.bookData = bookOnLibrary
-            if let button = sender as? NSButton {
-                WindowController.showPopOver(
-                    sender: button,
-                    viewController: bookInf
-                )
-            } else {
-                bookInf.popOver = false
-                self?.presentAsSheet(bookInf)
-            }
-        }
-    }
-
-    @IBAction func copyWith(_ sender: Any? = nil) {
-        guard let currentBook,
-            let window = view.window
-        else { return }
-
-        // Ambil attributed string dari textView
-        let attributedText: NSAttributedString
-
-        attributedText = textView.selectedRange.length > 1
-            ? textView.attributedString()
-                .attributedSubstring(from: textView.selectedRange())
-            : textView.attributedString()
-
-        // Buat tambahan footer dengan style default (plain)
-        let footer =
-            "\n\n__________\n" + currentBook.book + " " + window.title + " - "
-            + window.subtitle
-        let footerAttr = NSAttributedString(string: footer)
-
-        // Gabungkan attributed text + footer
-        let combined = NSMutableAttributedString(
-            attributedString: attributedText
-        )
-        combined.append(footerAttr)
-
-        // Dapatkan pasteboard umum
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-
-        // Tulis attributed string ke pasteboard sebagai RTF (supaya style ikut)
-        if let rtfData = try? combined.data(
-            from: NSRange(location: 0, length: combined.length),
-            documentAttributes: [
-                .documentType: NSAttributedString.DocumentType.rtf
-            ]
-        ) {
-            pasteboard.setData(rtfData, forType: .rtf)
-        }
-
-        // Optional: juga tulis plain text untuk fallback
-        pasteboard.setString(combined.string, forType: .string)
-    }
-}
-
-extension IbarotTextVC {
-    /// Get SplitVC dari hierarchy
     private var splitVC: SplitVC? {
-        // Navigate up the view controller hierarchy
         var current: NSViewController? = self
         while let parent = current?.parent {
             if let unified = parent as? SplitVC {
@@ -371,523 +174,160 @@ extension IbarotTextVC {
         return nil
     }
 
-    // MARK: - State Properties (via SplitVC)
+    var currentBook: BooksData? { viewModel.currentBook }
 
-    /// Current book - reads/writes dari SplitVC state
-    var currentBook: BooksData? {
-        get {
-            splitVC?.currentState.currentBook
-        }
+    var currentPage: Int? { viewModel.currentPage }
+
+    var currentPart: Int? { viewModel.currentPart }
+
+    /// Alias ke viewModel.bookConnection untuk backward compatibility dengan SidebarVC
+    var bookDB: BookConnection { viewModel.bookConnection }
+
+    var currentRowi: Rowi? {
+        get { splitVC?.currentState.currentRowi }
         set {
-            if var state = splitVC?.currentState {
-                state.currentBook = newValue
-                splitVC?.currentState = state
+            guard var state = splitVC?.currentState else { return }
+            state.edit { $0.currentRowi = newValue }
+        }
+    }
+
+    // MARK: - Public Methods
+
+    func restoreWindowTitleAfterModeSwitch(oldTitle: String, oldSubtitle: String) {}
+
+    private func setDefaultWindowTitle() {
+        view.window?.title = defaultTitle
+        view.window?.subtitle = subtitle
+    }
+
+    func didChangeBook(book: BooksData, loadSidebar: Bool = true) {
+        viewModel.currentBook = book
+
+        // Update window title
+        viewModel.updateWindowTitle(
+            book: book, page: currentPage, part: currentPart
+        )
+
+        libraryVC?.dataVM.viewModel.selectedBookName = book.book
+        libraryVC?.dataVM.restoreSelection(byBookName: book.book)
+    }
+
+    func updateLibraryReference(for mode: AppMode, library: LibraryVC?) {
+        libraryVC = (mode == .viewer) ? library : nil
+    }
+
+    // MARK: - Font & Appearance
+
+    func applyFont(_ redraw: Bool) {
+        if !redraw {
+            let defaults = UserDefaults.standard
+            var fontSize = CGFloat(defaults.textViewFontSize)
+            if fontSize == 0 { fontSize = defaultFontSize }
+            let fontName = defaults.textViewFontName
+
+            textView.textStorage?.applyFont(
+                footnoteRanges: textView.footnoteRanges,
+                fontName: fontName,
+                fontSize: fontSize
+            )
+            textView.typingAttributes[.font] = NSFont(name: fontName, size: fontSize)
+        } else {
+            viewModel.refreshCurrentPage()
+        }
+    }
+
+    func toggleHarakat(_ on: Bool) {
+        viewModel.refreshCurrentPage()
+    }
+
+    func applyBackgroundColor(_ color: NSColor) {
+        textView.backgroundColor = color
+    }
+
+    // MARK: - Actions
+
+    @IBAction func previousPage(_ sender: Any?) {
+        viewModel.goToPrevPage()
+    }
+
+    @IBAction func nextPage(_ sender: Any?) {
+        viewModel.goToNextPage()
+    }
+
+    @IBAction func bookInfo(_ sender: Any) {
+        viewModel.fetchBookInfo { [weak self] bookData in
+            guard let self, let bookData else { return }
+            let bookInf = BookInfo()
+            bookInf.bookData = bookData
+            if let button = sender as? NSButton {
+                WindowController.showPopOver(sender: button, viewController: bookInf)
+            } else {
+                bookInf.popOver = false
+                self.presentAsSheet(bookInf)
             }
         }
     }
 
-    /// Current page
-    var currentPage: Int? {
-        get {
-            splitVC?.currentState.currentPage
+    @IBAction func copyWith(_ sender: Any? = nil) {
+        let attributedText: NSAttributedString
+        if textView.selectedRange.length > 1 {
+            attributedText = textView.attributedString().attributedSubstring(from: textView.selectedRange())
+        } else {
+            attributedText = textView.attributedString()
         }
-        set {
-            if var state = splitVC?.currentState {
-                state.currentPage = newValue
-                splitVC?.currentState = state
-            }
+
+        let combined = NSMutableAttributedString(attributedString: attributedText)
+        let formattedReference = viewModel.getCopyReference(for: "")
+        combined.append(NSAttributedString(string: formattedReference.replacingOccurrences(of: "\n\n", with: "")))
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        if let rtfData = try? combined.data(
+            from: NSRange(location: 0, length: combined.length),
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+        ) {
+            pasteboard.setData(rtfData, forType: .rtf)
         }
+        pasteboard.setString(combined.string, forType: .string)
     }
 
-    /// Current ID
-    var currentID: Int? {
-        get {
-            splitVC?.currentState.currentID
-        }
-        set {
-            if var state = splitVC?.currentState {
-                state.currentID = newValue
-                splitVC?.currentState = state
-            }
-        }
-    }
+    // MARK: - State Management
 
-    /// Current part
-    var currentPart: Int? {
-        get {
-            splitVC?.currentState.currentPart
-        }
-        set {
-            if var state = splitVC?.currentState {
-                state.currentPart = newValue
-                splitVC?.currentState = state
-            }
-        }
-    }
-
-    // MARK: - State Operations
-
-    /// Clear state (untuk close book)
     func clearUI() {
-        textView.bkId = nil
-        textView.page = nil
-        textView.part = nil
-        textView.contentId = nil
         textView.string.removeAll()
         sidebarVC?.cleanUpOutlineView()
-        bookDB = .init()
+        viewModel.cleanUpState()
         windowTitle = ""
         windowSubtitle = ""
         if splitVC?.currentMode != .author {
             setDefaultWindowTitle()
         }
     }
-}
-
-extension IbarotTextVC: NavigationDelegate {
-    @IBAction func navigationPage(_ sender: Any) {
-        let navVC = Navigation(nibName: "Navigation", bundle: nil)
-        navVC.bookDB = bookDB
-        navVC.currentBook = currentBook
-        navVC.delegate = self
-
-        if let button = sender as? NSButton {
-            WindowController.showPopOver(sender: button, viewController: navVC)
-        } else {
-            navVC.popover = false
-            presentAsSheet(navVC)
-        }
-
-        if let currentPage {
-            navVC.currentPage = currentPage
-        }
-
-        navVC.currentJuz = currentPart ?? 0
-    }
-
-    func sliderDidNavigateInto(content: BookContent) {
-        didChangePage(content: content)
-        didNavigateToContent(content)
-    }
-
-    func didNavigateToContent(_ content: BookContent) {
-        // Update sidebar selection jika perlu
-        if let sidebarVC {
-            sidebarVC.enableDelegate = false
-            Task.detached {
-                _ = await sidebarVC.loadingTask?.value
-                if let node = await sidebarVC.findNode(forPage: content.id) {
-                    await sidebarVC.selectNode(withId: node.id)
-                }
-                await MainActor.run {
-                    sidebarVC.enableDelegate = true
-                }
-            }
-        }
-    }
-
-    func displayBook(_ book: BooksData) async throws {
-        do {
-            try await connectBookWithBundleFallback(book)
-            didChangeBook(book: book)
-            fetchInitialBook()
-        } catch is CancellationError {
-            throw CancellationError()
-        } catch {
-            await MainActor.run {
-                ReusableFunc.showAlert(
-                    title: DatabaseError.bookNotFound(book.id).localizedDescription,
-                    message: error.localizedDescription,
-                    style: .critical
-                )
-            }
-        }
-    }
-
-    func handleDelegate(_ contentId: Int, fromResults: Bool = false) {
-        guard let currentBook,
-            let content = bookDB.getContent(
-                bkid: "\(currentBook.id)",
-                contentId: contentId
-            )
-        else {
-            Task { @MainActor in
-                textView?.string = "Konten tidak ditemukan"
-            }
-            return
-        }
-        didChangePage(content: content)
-        if fromResults {
-            Task {
-                didNavigateToContent(content)
-            }
-        }
-    }
-
-    @MainActor
-    func highlighAndScrollToAnns(_ ann: Annotation) {
-        let range = textView.displayedRange(for: ann)
-
-        textView.scrollRangeToVisible(range)
-        Task { [weak self] in
-            await Task.yield()
-            await Task.yield()
-            self?.textView.showFindIndicator(for: range)
-        }
-    }
-
-    @MainActor
-    func highlightAndScrollToText(_ searchText: String) {
-        guard let textStorage = textView.textStorage else { return }
-
-        let rawText = textStorage.string
-
-        // Bangun mapping: index di normalizedText → UTF-16 offset di rawText
-        // Karena NSRange pakai UTF-16 offset
-        var normalizedChars: [Character] = []
-        var indexMap: [Int] = []  // normalizedIndex → utf16 offset di rawText
-
-        let diacritics = CharacterSet(charactersIn: "\u{064B}\u{064C}\u{064D}\u{064E}\u{064F}\u{0650}\u{0651}\u{0652}\u{0670}\u{0653}\u{0654}\u{0655}")
-
-        var utf16Offset = 0
-        for char in rawText {
-            let scalars = char.unicodeScalars
-            let isDiacritic = scalars.count == 1 && diacritics.contains(scalars.first!)
-            let isTatweel = scalars.count == 1 && scalars.first!.value == 0x0640
-
-            if isDiacritic || isTatweel {
-                // karakter ini dihapus dalam normalisasi, skip dari map
-                utf16Offset += char.utf16.count
-                continue
-            }
-
-            // Alef variants → ا (1-to-1, panjang UTF-16 sama)
-            let alefVariants: Set<Unicode.Scalar> = ["أ", "إ", "آ", "ٱ"]
-            let normalizedChar: Character
-            if scalars.count == 1, let scalar = scalars.first, alefVariants.contains(scalar) {
-                normalizedChar = "ا"
-            } else {
-                normalizedChar = char
-            }
-
-            indexMap.append(utf16Offset)
-            normalizedChars.append(normalizedChar)
-            utf16Offset += char.utf16.count
-        }
-
-        let normalizedText = String(normalizedChars)
-
-        // Normalisasi search terms (sama: removeDiacritics = true)
-        let searchTerms = searchText
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-            .map { $0.normalizeArabic(true) }
-
-        guard !searchTerms.isEmpty else { return }
-
-        let colors: [NSColor] = [
-            .highlightText,
-            NSColor.magenta.withAlphaComponent(0.4),
-            NSColor.systemPink.withAlphaComponent(0.4),
-            NSColor.systemPurple.withAlphaComponent(0.4),
-            NSColor.systemIndigo.withAlphaComponent(0.4),
-        ]
-
-        var firstMatchRange: NSRange?
-
-        for (index, searchTerm) in searchTerms.enumerated() {
-            let color = colors[index % colors.count]
-            var searchStart = normalizedText.startIndex
-
-            while searchStart < normalizedText.endIndex,
-                  let found = normalizedText.range(
-                    of: searchTerm,
-                    options: [.diacriticInsensitive],
-                    range: searchStart..<normalizedText.endIndex
-                  )
-            {
-                // Konversi range di normalizedText → utf16 offset di rawText
-                let normStartIdx = normalizedText.distance(from: normalizedText.startIndex, to: found.lowerBound)
-                let normEndIdx   = normalizedText.distance(from: normalizedText.startIndex, to: found.upperBound)
-
-                guard normStartIdx < indexMap.count else { break }
-
-                let rawUtf16Start = indexMap[normStartIdx]
-                // rawUtf16End: ambil dari indexMap[normEndIdx] kalau ada,
-                // kalau normEndIdx tepat di ujung pakai total utf16 rawText
-                let rawUtf16End: Int
-                if normEndIdx < indexMap.count {
-                    rawUtf16End = indexMap[normEndIdx]
-                } else {
-                    rawUtf16End = rawText.utf16.count
-                }
-
-                let nsRange = NSRange(location: rawUtf16Start, length: rawUtf16End - rawUtf16Start)
-
-                if firstMatchRange == nil {
-                    firstMatchRange = nsRange
-                }
-
-                var hasBackground = false
-                textStorage.enumerateAttribute(.backgroundColor, in: nsRange, options: []) { value, _, stop in
-                    if value != nil { hasBackground = true; stop.pointee = true }
-                }
-
-                if !hasBackground {
-                    textStorage.addAttribute(.backgroundColor, value: color, range: nsRange)
-                }
-
-                searchStart = found.upperBound
-            }
-        }
-
-        if let firstRange = firstMatchRange {
-            Task { @MainActor [weak self, firstRange] in
-                self?.textView.scrollRangeToVisible(firstRange)
-                await Task.yield()
-                self?.textView.showFindIndicator(for: firstRange)
-            }
-        }
-    }
-}
-
-extension IbarotTextVC: SidebarDelegate {
-    func didSelectItem(_ id: Int) {
-        handleDelegate(id)
-    }
-}
-
-extension IbarotTextVC: LibraryDelegate {
-    func didSelectBook(for book: BooksData) async {
-        if currentBook?.id == book.id { return }
-        try? await displayBook(book)
-    }
-
-    func connectBookWithBundleFallback(_ book: BooksData) async throws {
-        if !AppConfig.isUsingBundleMode {
-            try bookDB.connect(archive: book.archive)
-            return
-        }
-
-        // Jika sudah terintegrasi, skip konfirmasi dan langsung connect
-        guard !BookArchiveIntegrator.shared.isBookIntegrated(book) else {
-            try bookDB.connect(archive: book.archive)
-            return
-        }
-
-        // Tampilkan konfirmasi dulu
-        let confirmed = await BookIntegrateModalCenter.shared
-            .presentAndWaitForConfirmation(book: book)
-        guard confirmed else { throw CancellationError() }
-
-        defer {
-            Task { @MainActor in
-                BookIntegrateModalCenter.shared.dismiss()
-            }
-        }
-
-        try await BookArchiveIntegrator.shared.ensureBookIntegrated(
-            book,
-            onIntegrating: {
-                await BookIntegrateModalCenter.shared.showIntegrating()
-            }
-        )
-
-        try bookDB.connect(archive: book.archive)
-    }
-}
-
-extension IbarotTextVC: OptionSearchDelegate {
-    func didSelectResult(for id: Int, highlightText: String) async {
-        handleDelegate(id, fromResults: true)
-        await MainActor.run {
-            highlightAndScrollToText(highlightText)
-        }
-    }
-}
-
-// MARK: - Author Mode Specific
-
-extension IbarotTextVC {
-
-    /// Current rowi (untuk Author mode)
-    var currentRowi: Rowi? {
-        get {
-            splitVC?.currentState.currentRowi
-        }
-        set {
-            guard var state = splitVC?.currentState else { return }
-            state.edit {
-                $0.currentRowi = newValue
-            }
-        }
-    }
-
-    func setRowiDisplayMode() {
-        guard var state = splitVC?.currentState else { return }
-        state.edit {
-            $0.authorDisplayMode = .bookContent
-        }
-    }
-
-    /// Set state untuk Rowi button display (dipanggil dari RowiResultsVC.buttonDidClick)
-    func setAuthorRowiDisplay(rowi: Rowi) {
-        var state = splitVC?.currentState ?? ReaderState()
-        state.edit{
-            $0.currentRowi = rowi
-            $0.authorDisplayMode = .rowiInfo
-        }
-
-        #if DEBUG
-            print("Author mode: display mode (\(String(describing: state.authorDisplayMode) ))")
-        #endif
-    }
-}
-
-extension IbarotTextVC: TarjamahBDelegate {
-    func didSelectRowi(rowi: Rowi) {
-        currentBook = nil
-        textView.bkId = nil
-        sidebarVC?.cleanUpOutlineView()
-        setAuthorRowiDisplay(rowi: rowi)
-    }
-
-    func didSelect(tarjamahB: TarjamahMen, query: String?) async {
-        guard
-            let bookData = LibraryDataManager
-                .shared.getBook([tarjamahB.bk]).first
-        else {
-            return
-        }
-
-        if currentBook?.id != bookData.id {
-            try? await displayBook(bookData)
-            try? bookDB.connect(archive: bookData.archive)
-        } else {
-            return
-        }
-
-        guard
-            let content = bookDB.getContentByPage(
-                bkid: "\(tarjamahB.bk)",
-                idNumber: tarjamahB.id
-            )
-        else {
-            #if DEBUG
-                print("unable to get content from tarjamahB")
-            #endif
-            return
-        }
-
-        didChangePage(content: content)
-        didNavigateToContent(content)
-        setRowiDisplayMode()
-
-        try? await Task.sleep(nanoseconds: 300_000_000)
-        await MainActor.run { [weak self] in
-            if let query {
-                self?.highlightAndScrollToText(query.normalizeArabic(true))
-            }
-        }
-    }
-}
-
-extension IbarotTextVC: ReaderStateComponent {
-    // MARK: - ReaderStateComponent
-
-    func updateState(_ state: inout ReaderState) {
-        // Update data buku
-        state.edit {
-             $0.currentBook = currentBook
-             $0.currentPage = currentPage
-             $0.currentID = currentID
-             $0.currentPart = currentPart
-             $0.currentRowi = currentRowi
-             $0.selectedRange = textView.selectedRange()
-        }
-
-        // Update UI (Scroll & Selection)
-        if let scrollView = textView.enclosingScrollView {
-            state.scrollPosition = scrollView.documentVisibleRect.origin
-        }
-
-        // Update Sidebar/TOC
-        if let sidebarVC = sidebarVC {
-            state.expandedNodeIDs = collectExpandedNodeIDs()
-            state.sidebarScrollPosition = sidebarVC.scrollView.documentVisibleRect.origin
-        }
-    }
-
-    func restore(from state: ReaderState) {
-        guard state.hasContent else {
-            clearUI()
-            return
-        }
-
-        // 1. Load data buku & halaman
-        if let book = state.currentBook {
-            try? bookDB.connect(archive: book.archive)
-            if AppConfig.isUsingBundleMode,
-               !BookArchiveIntegrator.shared.isBookIntegrated(book) {
-                currentBook = nil
-                return
-            } else if currentBook?.id != book.id {
-                didChangeBook(book: book, loadSidebar: false)
-            }
-
-            if let id = state.currentID,
-                let content = bookDB.getContent(bkid: String(book.id), contentId: id)
-            {
-                didChangePage(content: content)
-
-                // 2. Restore Sidebar (Async)
-                Task { @MainActor in
-                    if let sidebarVC = sidebarVC {
-                        await sidebarVC.reloadBook(book: book)
-                        didNavigateToContent(content)
-
-                        // Restore expanded items & scroll sidebar
-                        sidebarVC.enableDelegate = false
-                        for nodeID in state.expandedNodeIDs {
-                            if let node = sidebarVC.findNodeById(nodeID) {
-                                sidebarVC.outlineView.expandItem(node)
-                            }
-                        }
-                        if let pos = state.sidebarScrollPosition {
-                            sidebarVC.scrollView.documentView?.scroll(pos)
-                        }
-                        sidebarVC.enableDelegate = true
-                    }
-
-                    // 3. Restore Main Text Scroll & Selection
-                    if let scrollPos = state.scrollPosition {
-                        textView.enclosingScrollView?.documentView?.scroll(scrollPos)
-                    }
-
-                    if let range = state.selectedRange {
-                        textView.setSelectedRange(range)
-                        view.window?.makeFirstResponder(textView)
-                    }
-
-                    // 4. Spesifik untuk Search Mode highlight
-                    if let query = state.searchQuery {
-                        highlightAndScrollToText(query)
-                    }
-                }
-            }
-        }
-    }
-
-    func cleanUpState() {
-        clearUI()
-        var newState = ReaderState()
-        let collapsed = splitVC?.sidebarItem.isCollapsed ?? false
-        newState.isSidebarCollapsed = collapsed
-        splitVC?.currentState = newState
-    }
 
     // MARK: - Sidebar Helpers
+
+    private var lastSelectedContentIdFromSidebar: Int?
+
+    private func handleNavigationToContent(_ content: BookContent) {
+        guard let sidebarVC else { return }
+        
+        if lastSelectedContentIdFromSidebar == content.id {
+            lastSelectedContentIdFromSidebar = nil
+            return
+        }
+        
+        sidebarVC.enableDelegate = false
+        Task {
+            if let node = viewModel.tocViewModel.findNode(forContentId: content.id) {
+                let path = viewModel.tocViewModel.pathToNode(node)
+                await sidebarVC.selectNode(node, path: path)
+            }
+            await MainActor.run {
+                sidebarVC.enableDelegate = true
+            }
+        }
+    }
+
     private func collectExpandedNodeIDs() -> [Int] {
         guard let outlineView = sidebarVC?.outlineView else { return [] }
         var expandedIDs: [Int] = []
@@ -905,5 +345,230 @@ extension IbarotTextVC: ReaderStateComponent {
         }
         collectExpanded(item: nil)
         return expandedIDs
+    }
+}
+
+// MARK: - NavigationDelegate
+
+extension IbarotTextVC {
+    @IBAction func navigationPage(_ sender: Any) {
+        let navVC = Navigation(nibName: "Navigation", bundle: nil)
+        navVC.viewModel = viewModel
+
+        if let button = sender as? NSButton {
+            WindowController.showPopOver(sender: button, viewController: navVC)
+        } else {
+            navVC.popover = false
+            presentAsSheet(navVC)
+        }
+    }
+
+    func displayBook(_ book: BooksData) async throws {
+        do {
+            try await viewModel.connectBookWithBundleFallback(book)
+            didChangeBook(book: book)
+            viewModel.loadInitialContent()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            await MainActor.run {
+                ReusableFunc.showAlert(
+                    title: DatabaseError.bookNotFound(book.id).localizedDescription,
+                    message: error.localizedDescription,
+                    style: .critical
+                )
+            }
+        }
+    }
+
+    func handleDelegate(_ contentId: Int, fromResults: Bool = false) {
+        guard currentBook != nil else {
+            Task { @MainActor in
+                textView?.string = "Konten tidak ditemukan"
+            }
+            return
+        }
+
+        viewModel.fetchContentById(contentId)
+    }
+
+    @MainActor
+    func highlighAndScrollToAnns(_ ann: Annotation) {
+        let range = textView.displayedRange(for: ann)
+        textView.scrollRangeToVisible(range)
+        Task { [weak self] in
+            await Task.yield()
+            await Task.yield()
+            self?.textView.showFindIndicator(for: range)
+        }
+    }
+
+    @MainActor
+    func highlightAndScrollToText(_ searchText: String) {
+        guard let range = textView.textStorage?.highlightSearchText(
+            searchText: searchText,
+            baseColor: .highlightText
+        ) else { return }
+
+        Task { [weak textView] in
+            textView?.scrollRangeToVisible(range)
+            await Task.yield()
+            textView?.showFindIndicator(for: range)
+        }
+    }
+}
+
+// MARK: - SidebarDelegate
+
+extension IbarotTextVC: SidebarDelegate {
+    func didSelectItem(_ id: Int) {
+        lastSelectedContentIdFromSidebar = id
+        handleDelegate(id)
+    }
+}
+
+// MARK: - LibraryDelegate
+
+extension IbarotTextVC: LibraryDelegate {
+    func didSelectBook(for book: BooksData) async {
+        if viewModel.currentBook?.id == book.id { return }
+        try? await displayBook(book)
+    }
+}
+
+// MARK: - OptionSearchDelegate
+
+extension IbarotTextVC: OptionSearchDelegate {
+    func didSelectResult(for id: Int, highlightText: String) async {
+        handleDelegate(id, fromResults: true)
+        DispatchQueue.main.async { [weak self] in
+            self?.highlightAndScrollToText(highlightText)
+        }
+    }
+}
+
+// MARK: - Author Mode
+
+extension IbarotTextVC {
+    func setRowiDisplayMode() {
+        guard var state = splitVC?.currentState else { return }
+        state.edit { $0.authorDisplayMode = .bookContent }
+    }
+
+    func setAuthorRowiDisplay(rowi: Rowi) {
+        var state = splitVC?.currentState ?? ReaderState()
+        state.edit {
+            $0.currentRowi = rowi
+            $0.authorDisplayMode = .rowiInfo
+        }
+        #if DEBUG
+            print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
+        #endif
+    }
+}
+
+// MARK: - TarjamahBDelegate
+
+extension IbarotTextVC: TarjamahBDelegate {
+    func didSelectRowi(rowi: Rowi) {
+        viewModel.currentBook = nil
+        sidebarVC?.cleanUpOutlineView()
+        setAuthorRowiDisplay(rowi: rowi)
+    }
+
+    func didSelect(tarjamahB: TarjamahMen, query: String?) async {
+        guard let bookData = LibraryDataManager.shared.getBook([tarjamahB.bk]).first else { return }
+
+        if viewModel.currentBook?.id != bookData.id {
+            try? await displayBook(bookData)
+            try? viewModel.bookConnection.connect(archive: bookData.archive)
+        }
+
+        guard let content = viewModel.getContent(
+            bkId: tarjamahB.bk,
+            contentId: tarjamahB.id
+        ) else {
+            #if DEBUG
+                print("unable to get content from tarjamahB")
+            #endif
+            return
+        }
+
+        viewModel.updateContentState(with: content)
+        setRowiDisplayMode()
+
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        await MainActor.run { [weak self] in
+            if let query {
+                self?.highlightAndScrollToText(query.normalizeArabic(true))
+            }
+        }
+    }
+}
+
+// MARK: - ReaderStateComponent
+
+extension IbarotTextVC: ReaderStateComponent {
+    func updateState(_ state: inout ReaderState) {
+        state.selectedRange = textView.selectedRange()
+
+        if let scrollView = textView.enclosingScrollView {
+            state.scrollPosition = scrollView.documentVisibleRect.origin
+        }
+
+        if let sidebarVC = sidebarVC {
+            state.expandedNodeIDs = collectExpandedNodeIDs()
+            state.sidebarScrollPosition = sidebarVC.scrollView.documentVisibleRect.origin
+        }
+
+        viewModel.updateState(&state)
+    }
+
+    func restore(from state: ReaderState) {
+        guard state.hasContent, let book = state.currentBook
+        else { clearUI(); return }
+
+        try? viewModel.bookConnection.connect(archive: book.archive)
+
+        if AppConfig.isUsingBundleMode,
+           !BookArchiveIntegrator.shared.isBookIntegrated(book) {
+            viewModel.currentBook = nil
+            return
+        } else {
+        }
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            if viewModel.currentBook?.id != book.id {
+                viewModel.restore(from: state)
+            }
+
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+
+                if let range = state.selectedRange {
+                    textView.setSelectedRange(range)
+                    view.window?.makeFirstResponder(textView)
+                }
+
+                if let query = state.searchQuery {
+                    highlightAndScrollToText(query)
+                }
+
+                libraryVC?.dataVM.viewModel.selectedBookName = book.book
+
+                if let scrollPos = state.scrollPosition {
+                    textView.enclosingScrollView?.documentView?.scroll(scrollPos)
+                }
+            }
+        }
+    }
+
+    func cleanUpState() {
+        clearUI()
+        var newState = ReaderState()
+        newState.isSidebarCollapsed = splitVC?.sidebarItem.isCollapsed ?? false
+        splitVC?.currentState = newState
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import Combine
 
 class Navigation: NSViewController {
 
@@ -23,206 +24,96 @@ class Navigation: NSViewController {
 
     @IBOutlet weak var xBtn: NSButton!
 
-    weak var delegate: NavigationDelegate?
-
-    var bookDB: BookConnection?
-    var currentBook: BooksData?
+    var viewModel: ReaderViewModel!
     var popover: Bool = true
 
-    var workItem: DispatchWorkItem?
-    var juzWorkItem: DispatchWorkItem?
+    private var workItem: DispatchWorkItem?
+    private var juzWorkItem: DispatchWorkItem?
 
-    var currentJuz: Int = 0 {
-        didSet {
-            juzSlider.integerValue = currentJuz
-            juzCurrent.stringValue = "\(currentJuz)"
-        }
-    }
-
-    var currentPage: Int = 0 {
-        didSet {
-            pageSlider.integerValue = currentPage
-            pageCurrent.stringValue = "\(currentPage)"
-        }
-    }
+    private var cancellables = Set<AnyCancellable>()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         xBtn.isHidden = popover
+
+        Publishers.Merge3(
+            viewModel.$totalParts,
+            viewModel.$minPageInPart,
+            viewModel.$maxPageInPart
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] _ in
+            self?.syncSlidersWithViewModel()
+        }
+        .store(in: &cancellables)
     }
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        Task.detached(priority: .userInitiated) { [weak self] in
-            await self?.setupSliders()
-        }
+        viewModel.updateNavigationLimits()
     }
 
-    func setupSliders() async {
-        guard let currentBook = currentBook,
-            let bookDB = bookDB
-        else { return }
+    func syncSlidersWithViewModel() {
+        let totalJuz = max(1, viewModel.totalParts)
+        let currentJuz = viewModel.currentPart ?? 1
 
-        // Ambil total juz dari database
-        let totalJuz = bookDB.getTotalParts(bkid: "\(currentBook.id)")
+        juzMax.stringValue = "\(totalJuz)"
+        juzSlider.minValue = 1
+        juzSlider.maxValue = Double(totalJuz)
+        juzSlider.integerValue = currentJuz
+        juzCurrent.stringValue = "\(currentJuz)"
 
-        #if DEBUG
-            print(
-                "totalJuz:",
-                totalJuz,
-                "currentBook:",
-                currentBook.id,
-                "archive:",
-                currentBook.archive
-            )
-        #endif
-
-        await MainActor.run { [weak self] in
-            guard let self else { return }
-            // Setup juz slider
-            juzMax.stringValue = "\(totalJuz)"
-            juzSlider.minValue = 1
-            juzSlider.maxValue = Double(totalJuz)
+        if juzSlider.numberOfTickMarks != totalJuz {
             juzSlider.numberOfTickMarks = totalJuz
             juzSlider.allowsTickMarkValuesOnly = true
-            let shouldHide = juzSlider.minValue == juzSlider.maxValue
-            juzTextVStack.isHidden = shouldHide
-            juzSliderVStack.isHidden = shouldHide
-            hLine.isHidden = shouldHide
-            juzSlider.integerValue = currentJuz
-            rootStackView.layoutSubtreeIfNeeded()
         }
 
-        // Setup page slider berdasarkan juz saat ini
-        await updatePageSlider(forJuz: currentJuz)
+        let shouldHide = juzSlider.minValue == juzSlider.maxValue
+        juzTextVStack.isHidden = shouldHide
+        juzSliderVStack.isHidden = shouldHide
+        hLine.isHidden = shouldHide
 
-        await MainActor.run { [weak self] in
-            guard let self else { return }
-            pageSlider.integerValue = currentPage
-        }
-    }
+        let minPage = viewModel.minPageInPart
+        let maxPage = max(minPage, viewModel.maxPageInPart)
+        let currentPage = viewModel.currentPage ?? minPage
 
-    func updatePageSlider(forJuz juz: Int) async {
-        guard let currentBook = currentBook,
-            let bookDB = bookDB
-        else { return }
-
-        // Ambil total halaman untuk juz tertentu
-        let pagesInJuz = bookDB.getPagesInPart(
-            bkid: "\(currentBook.id)",
-            part: juz
-        )
-
-        await MainActor.run {
-            // Setup page slider
-            pageMax.stringValue = "\(pagesInJuz)"
-            getMinpage(juzNumber: juz)
-            pageSlider.isContinuous = true
-        }
+        pageMax.stringValue = "\(maxPage)"
+        pageSlider.minValue = Double(minPage)
+        pageSlider.maxValue = Double(maxPage)
+        pageSlider.integerValue = currentPage
+        pageCurrent.stringValue = "\(currentPage)"
+        pageSlider.isContinuous = true
+        
+        rootStackView.layoutSubtreeIfNeeded()
     }
 
     @IBAction func pageSliderChanged(_ sender: NSSlider) {
-        guard sender.integerValue != Int(pageCurrent.stringValue) else {
-            return
-        }
         let pageNumber = sender.integerValue
+        guard pageNumber != viewModel.currentPage else { return }
         pageCurrent.stringValue = "\(pageNumber)"
-        let juz = juzSlider.integerValue == 0 ? 1 : juzSlider.integerValue
-        navigateToPage(pageNumber, juzNumber: juz, debounced: false)
+
+        workItem?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.viewModel.jumpToPage(pageNumber)
+        }
+        workItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
     }
 
     @IBAction func juzSliderChanged(_ sender: NSSlider) {
-        guard sender.integerValue != Int(juzCurrent.stringValue) else { return }
         let juzNumber = sender.integerValue
+        guard juzNumber != viewModel.currentPart else { return }
         juzCurrent.stringValue = "\(juzNumber)"
 
         juzWorkItem?.cancel()
         let work = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            getMinpage(juzNumber: juzNumber, initial: false)
-            navigateToPage(pageSlider.integerValue, juzNumber: juzNumber)
+            self?.viewModel.jumpToPart(juzNumber)
         }
-
         juzWorkItem = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
     }
 
-    func getMinpage(juzNumber: Int, initial: Bool = true) {
-        if currentBook == nil {
-            if !initial { currentPage = -1 }
-            return
-        }
-
-        getMinpageAsync(juzNumber: juzNumber) { [weak self] minPage, maxPage in
-            guard let self else { return }
-            pageSlider.minValue = Double(minPage)
-            pageSlider.maxValue = Double(maxPage)
-            if !initial {
-                let clamped = max(minPage, min(currentPage, maxPage))
-                if clamped != currentPage {
-                    currentPage = clamped
-                }
-            }
-            if currentPage == 0 { currentPage = minPage }
-            pageMax.stringValue = String(maxPage)
-        }
-    }
-
-    func getMinpageAsync(
-        juzNumber: Int,
-        completion: @escaping (Int, Int) -> Void
-    ) {
-        guard let bookDB, let currentBook else {
-            completion(0, 0)
-            return
-        }
-
-        let juz = juzNumber == 0 ? 1 : juzNumber
-        let minPage = bookDB.getMinPagesInPart(
-            bkid: String(currentBook.id),
-            part: juz
-        )
-
-        let maxPage = bookDB.getPagesInPart(
-            bkid: String(currentBook.id),
-            part: juz
-        )
-
-        completion(minPage, maxPage)
-
-    }
-
-    func navigateToPage(
-        _ pageNumber: Int,
-        juzNumber: Int,
-        debounced: Bool = true
-    ) {
-        workItem?.cancel()
-
-        let item = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-
-            guard let currentBook = currentBook,
-                let bookDB = bookDB,
-                let content = bookDB.getContent(
-                    bkid: "\(currentBook.id)",
-                    part: juzNumber,
-                    page: pageNumber
-                )
-            else { return }
-
-            delegate?.sliderDidNavigateInto(content: content)
-        }
-
-        workItem = item
-
-        if !debounced {
-            DispatchQueue.global(qos: .userInteractive).asyncAfter(
-                deadline: .now() + 0.2,
-                execute: item
-            )
-        } else {
-            DispatchQueue.global(qos: .userInteractive).async(execute: item)
-        }
+    deinit {
+        cancellables.removeAll()
     }
 }

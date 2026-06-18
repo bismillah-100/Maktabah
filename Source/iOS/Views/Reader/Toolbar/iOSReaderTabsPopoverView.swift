@@ -33,7 +33,7 @@ struct iOSReaderTabsPopoverView: View {
                                 .frame(width: 10, height: 10)
                         }
                         Text(tab.book.book)
-                            .font(iOSReaderViewModel.kfgqpcTitle)
+                            .font(ReaderViewModel.kfgqpcTitle)
                             .lineLimit(1)
                             .foregroundColor(
                                 bManager.activeTabId == tab.id
@@ -99,9 +99,9 @@ struct iOSReaderTabsPopoverView: View {
         muallif: 1
     )
 
-    let mockViewModel = iOSReaderViewModel(book: mockBook)
+    let mockViewModel = ReaderViewModel(book: mockBook)
 
-    let mockViewModel1 = iOSReaderViewModel(book: mockBook1)
+    let mockViewModel1 = ReaderViewModel(book: mockBook1)
 
     let mockTab = iOSNavigationManager.ReaderTab(
         id: UUID(),

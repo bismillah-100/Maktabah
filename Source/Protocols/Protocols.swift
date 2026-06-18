@@ -19,9 +19,6 @@ protocol LibraryDelegate: AnyObject {
     func didSelectBook(for book: BooksData) async
 }
 
-protocol NavigationDelegate: AnyObject {
-    func sliderDidNavigateInto(content: BookContent)
-}
 
 protocol ResultsDelegate: AnyObject {
     func didSelect(savedResults: [SavedResultsItem])

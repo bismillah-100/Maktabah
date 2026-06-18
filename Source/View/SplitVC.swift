@@ -84,9 +84,6 @@ class SplitVC: NSSplitViewController {
 
     func switchToMode(_ mode: AppMode) {
         // Simpan title sebelum switch
-        let savedTitle = view.window?.title ?? ""
-        let savedSubtitle = view.window?.subtitle ?? ""
-
         stateManager.saveState(
             for: currentMode,
             components: components(for: currentMode)
@@ -111,8 +108,6 @@ class SplitVC: NSSplitViewController {
         setAnnotationsPanelDelegate()
 
         currentMode = mode
-
-        ibarotTextVC.restoreWindowTitleAfterModeSwitch(oldTitle: savedTitle, oldSubtitle: savedSubtitle)
     }
 
     func persistCurrentStateToDisk() {

@@ -7,7 +7,7 @@ struct iOSReaderView: View {
         MaktabahApp.isIpad
     }
 
-    var viewModel: iOSReaderViewModel
+    var viewModel: ReaderViewModel
     @State private var textViewState = TextViewState.shared
     @Environment(iOSNavigationManager.self) var bManager
 
@@ -25,12 +25,12 @@ struct iOSReaderView: View {
     @State private var isReading = false
 
     init(book: BooksData,
-         viewModel: iOSReaderViewModel? = nil,
+         viewModel: ReaderViewModel? = nil,
          initialContentId: Int? = nil)
     {
         self.book = book
         self.initialContentId = initialContentId
-        self.viewModel = viewModel ?? iOSReaderViewModel(book: book)
+        self.viewModel = viewModel ?? ReaderViewModel(book: book)
     }
 
     var backgroundColor: Color {
@@ -64,7 +64,12 @@ struct iOSReaderView: View {
             isImported: book.isImported,
             viewModel: viewModel,
             onAddAnnotation: { range, mode, sourceText, color in
-                viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
+                do {
+                    try viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                } catch {
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                }
             },
             onTapAnnotation: { annId in
                 tappedAnnotationId = annId
@@ -78,7 +83,7 @@ struct iOSReaderView: View {
         .legacyVisibleToolbarBackgrounds()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .preferredColorScheme(isDarkMode ? .dark : .light)
-        .navigationTitle(bManager.openTabs.count > 1 ? "" : viewModel.book.book)
+        .navigationTitle(bManager.openTabs.count > 1 ? "" : book.book)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .if(!MaktabahApp.isIpad) { view in
@@ -98,7 +103,7 @@ struct iOSReaderView: View {
                     Button {
                         showingTabsList.toggle()
                     } label: {
-                        Text(viewModel.book.book)
+                        Text(book.book)
                             .frame(maxWidth: 190)
                             .contentShape(Rectangle())
                     }
@@ -135,26 +140,26 @@ struct iOSReaderView: View {
         .onChange(of: initialContentId) { _, newValue in
             if viewModel.contentText.isEmpty {
                 viewModel.loadInitialContent()
-            } else if let savedScroll = viewModel.state.scrollPosition {
-                // Tab already has content - restore scroll position
-                viewModel.fetchScrollPosition = { savedScroll }
             }
+        }
+        .onAppear {
+            viewModel.needsScrollRestore = true
+        }
+        .onDisappear {
+            viewModel.saveCurrentState()
         }
         .sheet(isPresented: $showingSearch) {
             iOSBookSearchView(book: book, onSelect: { contentId, query in
-                viewModel.searchText = query
-                viewModel.fetchContentById(contentId)
+                viewModel.didSelectSearch(query: query, contentId: contentId)
                 showingSearch = false
             }, viewModel: viewModel.searchViewModel)
         }
         .sheet(isPresented: $showingTOC) {
             iOSTOCView(
-                nodes: viewModel.tocNodes,
-                selectedId: viewModel.findNodeId(forContentId: viewModel.currentContentId),
+                tocViewModel: viewModel.tocViewModel,
+                selectedId: viewModel.tocViewModel.findNode(forContentId: viewModel.currentContentId)?.id,
                 onSelect: { id in
-                    viewModel.searchText = ""
-                    viewModel.targetAnnotation = nil
-                    viewModel.fetchContentById(id)
+                    viewModel.didSelectTOCNode(id: id)
                     showingTOC = false
                 }
             )
@@ -164,8 +169,7 @@ struct iOSReaderView: View {
                 bookId: book.id,
                 annotations: viewModel.currentAnnotations,
                 onSelect: { ann in
-                    viewModel.targetAnnotation = ann
-                    viewModel.fetchContentById(Int(ann.contentId))
+                    viewModel.didSelectAnnotation(ann)
                     showingAnnotationsList = false
                 }
             )
@@ -178,10 +182,20 @@ struct iOSReaderView: View {
                 iOSAnnotationEditorSheet(
                     annotation: ann,
                     onSave: { updatedAnn in
-                        viewModel.updateAnnotation(updatedAnn)
+                        do {
+                            try viewModel.updateAnnotation(updatedAnn)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        } catch {
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        }
                     },
                     onDelete: { idToDelete in
-                        viewModel.deleteAnnotation(id: idToDelete)
+                        do {
+                            try viewModel.deleteAnnotation(id: idToDelete)
+                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                        } catch {
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        }
                     }
                 )
                 .presentationDetents([.medium, .large])

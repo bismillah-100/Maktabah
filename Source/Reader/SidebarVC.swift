@@ -19,16 +19,6 @@ class SidebarVC: NSViewController {
 
     var tocTree: [TOCNode] = []
     var idToRow: [Int: Int] = [:]
-    var ranges: [TOCRange] = [] {
-        didSet {
-            nodeIdCache.removeAll()
-            for r in ranges {
-                nodeIdCache[r.node.id] = r.node
-            }
-        }
-    }
-    private var nodeIdCache: [Int: TOCNode] = [:]
-    var tocLoader: TOCLoaderRefCount!
 
     var filteredTree: [TOCNode] = []
 
@@ -48,8 +38,6 @@ class SidebarVC: NSViewController {
         }
     }
 
-    private(set) var loadingTask: Task<Void, Never>?
-
     override func viewDidLoad() {
         super.viewDidLoad()
         xBtn.isEnabled = false
@@ -58,9 +46,6 @@ class SidebarVC: NSViewController {
         outlineView.allowsMultipleSelection = false
         outlineView.allowsEmptySelection = true
         ReusableFunc.setupSearchField(searchField)
-        tocLoader = TOCLoaderRefCount(connFactory: {
-            self.db
-        })
         ReusableFunc.setupSearchField(
             searchField,
             systemSymbolName: "line.3.horizontal.decrease.circle"
@@ -70,7 +55,6 @@ class SidebarVC: NSViewController {
             self?.startSearch(query)
         }
 
-        setupLoader(bookConnection: db)
         // Do view setup here.
     }
 
@@ -93,13 +77,6 @@ class SidebarVC: NSViewController {
 //            ve.leadingAnchor.constraint(equalTo: view.leadingAnchor),
 //            ve.trailingAnchor.constraint(equalTo: view.trailingAnchor)
 //        ])
-    }
-
-    func setupLoader(bookConnection: BookConnection) {
-        tocLoader = nil
-        tocLoader = TOCLoaderRefCount(connFactory: {
-            bookConnection
-        })
     }
 
     @IBAction func performFindPanelAction(_ sender: Any) {
@@ -145,78 +122,10 @@ class SidebarVC: NSViewController {
         }
     }
 
-    @MainActor
-    func reloadBook(book: BooksData) async {
-        loadingTask?.cancel()
-        loadingTask = Task { [weak self] in
-            guard let self = self else { return }
-            ReusableFunc.showProgressWindow(self.view)
-
-            // Acquire shared work
-            let taskHandle = await tocLoader.acquire(book: book)
-
-            // Pastikan release dipanggil saat keluar (sukses, error, atau cancel)
-            defer {
-                Task { [weak self] in
-                    await self?.tocLoader.release(bookId: book.id)
-                }
-            }
-
-            do {
-                let tree = try await taskHandle.value
-                if Task.isCancelled { await cleanupUI(); return }
-
-                self.tocTree = tree
-                await MainActor.run { self.outlineView.reloadData() }
-
-                let allNodes = await self.flattenNodes(tree)
-                if Task.isCancelled { await cleanupUI(); return }
-
-                await self.computeEndIDs(for: allNodes)
-                self.ranges = await self.buildRanges(from: allNodes)
-                await self.rebuildLookupCache()
-
-                await cleanupUI()
-            } catch {
-                // handle error (show message, log), lalu cleanup UI
-                await cleanupUI()
-            }
-        }
-
-        _ = await loadingTask?.value
-    }
-
-    @MainActor
-    private func cleanupUI() async {
-        ReusableFunc.closeProgressWindow(view)
-    }
-
-    func flattenNodes(_ roots: [TOCNode]) async -> [TOCNode] {
-        var result: [TOCNode] = []
-
-        func traverse(_ node: TOCNode) {
-            result.append(node)
-            for child in node.children {
-                traverse(child)
-            }
-        }
-
-        for r in roots {
-            traverse(r)
-        }
-
-        // Pastikan terurut berdasarkan ID
-        return result.sorted { $0.id < $1.id }
-    }
-
-    func computeEndIDs(for allNodes: [TOCNode]) async {
-        for (i, node) in allNodes.enumerated() {
-            if i < allNodes.count - 1 {
-                node.endID = allNodes[i+1].id - 1
-            } else {
-                node.endID = Int.max
-            }
-        }
+    func updateTOC(_ nodes: [TOCNode]) {
+        self.tocTree = nodes
+        self.outlineView.reloadData()
+        Task { await self.rebuildLookupCache() }
     }
 
     @IBAction func searchContents(_ sender: NSSearchField) {
@@ -228,8 +137,13 @@ class SidebarVC: NSViewController {
         if query.isEmpty {
             filteredTree = []
         } else {
-            // filter semua node (termasuk child)
-            let allNodes = ranges.map { $0.node }
+            var allNodes: [TOCNode] = []
+            func traverse(_ node: TOCNode) {
+                allNodes.append(node)
+                for child in node.children { traverse(child) }
+            }
+            for root in tocTree { traverse(root) }
+
             let matches = allNodes.filter { $0.bab.localizedStandardContains(query) }
 
             // bikin tree baru hanya dengan node yang cocok
@@ -239,18 +153,6 @@ class SidebarVC: NSViewController {
         outlineView.reloadData()
         outlineView.expandItem(nil, expandChildren: true) // supaya semua hasil terlihat
 
-    }
-    
-    struct TOCRange {
-        let start: Int
-        let end: Int
-        let node: TOCNode
-    }
-
-    func buildRanges(from nodes: [TOCNode]) async -> [TOCRange] {
-        return nodes.map { node in
-            TOCRange(start: node.id, end: node.endID, node: node)
-        }
     }
 
     @MainActor
@@ -265,44 +167,11 @@ class SidebarVC: NSViewController {
         }
     }
 
-    // MARK: — FIND / PATH
-    func findNode(forPage pageID: Int) -> TOCNode? {
-        // pilih node paling spesifik (range tersempit) yang mengandung pageID
-        let matches = ranges.filter { pageID >= $0.start && pageID <= $0.end }
-        return matches.min(by: { ($0.end - $0.start) < ($1.end - $1.start) })?.node
-    }
-
-    func findNodeById(_ id: Int) -> TOCNode? {
-        // pencarian O(1) menggunakan pre-computed dictionary cache
-        return nodeIdCache[id]
-    }
-
-    // cari path dari root ke node (termasuk node itu sendiri)
-    func pathToNode(_ target: TOCNode) -> [TOCNode]? {
-        for root in tocTree {
-            if let p = findPath(root, target) { return p }
-        }
-        return nil
-    }
-
-    private func findPath(_ current: TOCNode, _ target: TOCNode) -> [TOCNode]? {
-        if current.id == target.id { return [current] }
-        for child in current.children {
-            if let p = findPath(child, target) {
-                return [current] + p
-            }
-        }
-        return nil
-    }
-
     func cleanUpOutlineView() {
         filteredTree.removeAll()
         tocTree.removeAll()
         idToRow.removeAll()
-        ranges.removeAll()
         searchField.stringValue.removeAll()
-        loadingTask?.cancel()
-        loadingTask = nil
         outlineView.reloadData()
     }
 }
@@ -412,16 +281,13 @@ extension SidebarVC: NSOutlineViewDelegate {
 }
 
 extension SidebarVC {
-    func selectNode(withId id: Int) async {
-        // cari node langsung (node id) — kalau tidak ada, coba cari berdasar page range
-        let node = findNodeById(id) ?? findNode(forPage: id)
-
-        guard let node = node, let outlineView else { return }
+    func selectNode(_ node: TOCNode, path: [TOCNode]?) async {
+        guard let outlineView else { return }
 
         enableDelegate = false
 
         // 1) expand semua parent agar row ada di outlineView
-        if let path = pathToNode(node) {
+        if let path {
             // expand parents (exclude the node itself)
             for parent in path.dropLast() {
                 outlineView.expandItem(parent)

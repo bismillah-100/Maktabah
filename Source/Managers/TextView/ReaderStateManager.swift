@@ -6,18 +6,6 @@
 import Cocoa
 import Foundation
 
-/// Protokol untuk komponen UI yang bisa menyimpan dan memulihkan state ke ReaderState
-protocol ReaderStateComponent: AnyObject {
-    /// Memperbarui nilai pada `ReaderState` berdasarkan kondisi UI komponen ini.
-    /// - Parameter state: Referensi inout ke objek `ReaderState` yang akan diperbarui.
-    func updateState(_ state: inout ReaderState)
-    /// Memulihkan UI komponen ini dari data yang tersimpan pada `ReaderState`.
-    /// - Parameter state: Objek `ReaderState` sumber data untuk pemulihan.
-    func restore(from state: ReaderState)
-    /// Membersihkan state/UI komponen saat reset. Opsional untuk diimplementasikan.
-    func cleanUpState() 
-}
-
 class ReaderStateManager {
 
     // MARK: - State Storage

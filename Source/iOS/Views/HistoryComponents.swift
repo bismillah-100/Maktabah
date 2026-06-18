@@ -231,7 +231,7 @@ struct BookCard: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(book.book)
-                    .font(iOSReaderViewModel.kfgqpcList)
+                    .font(ReaderViewModel.kfgqpcList)
                     .foregroundColor(.primary)
                     .lineLimit(1)
 

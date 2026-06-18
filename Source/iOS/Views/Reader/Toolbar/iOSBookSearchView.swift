@@ -12,7 +12,7 @@ struct iOSBookSearchView: View {
     let onSelect: (Int, String) -> Void
     @Environment(\.presentationMode) var presentationMode
 
-    @Bindable var viewModel: iOSSearchViewModel
+    @Bindable var viewModel: SearchViewModel
 
     var body: some View {
         NavigationView {
@@ -68,7 +68,7 @@ struct iOSBookSearchView: View {
         archive: 0,
         muallif: 1
     )
-    let mockViewModel = iOSSearchViewModel()
+    let mockViewModel = SearchViewModel()
     return iOSBookSearchView(
         book: mockBook,
         onSelect: { _, _ in },

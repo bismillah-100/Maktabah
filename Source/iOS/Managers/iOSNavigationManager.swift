@@ -16,7 +16,7 @@ class iOSNavigationManager {
         let id: UUID
         let book: BooksData
         var initialContentId: Int?
-        var viewModel: iOSReaderViewModel
+        var viewModel: ReaderViewModel
 
         static func == (lhs: ReaderTab, rhs: ReaderTab) -> Bool {
             lhs.id == rhs.id
@@ -320,7 +320,7 @@ class iOSNavigationManager {
                 openTabs[existingTabIndex] = updatedTab
             }
         } else {
-            let viewModel = iOSReaderViewModel(book: book)
+            let viewModel = ReaderViewModel(book: book)
             viewModel.searchText = searchText ?? ""
             viewModel.targetAnnotation = targetAnnotation
             viewModel.loadInitialContent(initialContentId: initialContentId)

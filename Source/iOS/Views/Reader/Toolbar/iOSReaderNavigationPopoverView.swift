@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 
 struct iOSReaderNavigationPopoverView: View {
-    @Bindable var viewModel: iOSReaderViewModel
+    @Bindable var viewModel: ReaderViewModel
     @State private var textViewState = TextViewState.shared
 
     // Feedback and local slider states
@@ -158,7 +158,7 @@ struct iOSReaderNavigationPopoverView: View {
         archive: 0,
         muallif: 1
     )
-    let mockViewModel = iOSReaderViewModel(book: mockBook)
+    let mockViewModel = ReaderViewModel(book: mockBook)
     mockViewModel.totalParts = 5
     mockViewModel.minPageInPart = 1
     mockViewModel.maxPageInPart = 100

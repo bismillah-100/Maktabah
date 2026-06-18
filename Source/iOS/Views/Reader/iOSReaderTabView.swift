@@ -49,7 +49,7 @@ struct iOSReaderTabView: View {
                 {
                     ToolbarItem(placement: .principal) {
                         Text(activeTab.book.book)
-                            .font(iOSReaderViewModel.kfgqpc)
+                            .font(ReaderViewModel.kfgqpc)
                             .foregroundStyle(isDarkMode ? .white : .black)
                     }
                 }
@@ -74,8 +74,8 @@ struct iOSReaderTabView: View {
     let book1 = BooksData(id: 1, book: "صحيح البخاري", archive: 1, muallif: 1)
     let book2 = BooksData(id: 2, book: "صحيح المسلم", archive: 1, muallif: 2)
 
-    let tab1 = iOSNavigationManager.ReaderTab(id: UUID(), book: book1, initialContentId: nil, viewModel: iOSReaderViewModel(book: book1))
-    let tab2 = iOSNavigationManager.ReaderTab(id: UUID(), book: book2, initialContentId: nil, viewModel: iOSReaderViewModel(book: book2))
+    let tab1 = iOSNavigationManager.ReaderTab(id: UUID(), book: book1, initialContentId: nil, viewModel: ReaderViewModel(book: book1))
+    let tab2 = iOSNavigationManager.ReaderTab(id: UUID(), book: book2, initialContentId: nil, viewModel: ReaderViewModel(book: book2))
 
     bManager.openTabs = [tab1, tab2]
     bManager.activeTabId = tab1.id

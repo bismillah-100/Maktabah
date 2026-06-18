@@ -93,7 +93,7 @@ class AnnotationContentView: UIView, UIContentView {
     private func apply(_ config: AnnotationContentConfiguration) {
         guard let ann = config.annotation else { return }
 
-        // Arabic font dari iOSReaderViewModel
+        // Arabic font dari ReaderViewModel
         let arabicFont = UIFont(name: ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 18)
             ?? .preferredFont(forTextStyle: .body)
 

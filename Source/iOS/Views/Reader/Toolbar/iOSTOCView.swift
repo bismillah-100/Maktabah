@@ -8,30 +8,55 @@
 import SwiftUI
 
 struct iOSTOCView: View {
-    @State private var viewModel: iOSTOCViewModel
+    let tocViewModel: BookTOCViewModel
+    let selectedId: Int?
     let onSelect: (Int) -> Void
+
+    @State private var searchText = ""
+    @State private var expandedPaths: Set<ObjectIdentifier> = []
     @Environment(\.presentationMode) var presentationMode
 
-    init(nodes: [TOCNode], selectedId: Int?, onSelect: @escaping (Int) -> Void) {
-        self._viewModel = State(initialValue: iOSTOCViewModel(nodes: nodes, selectedId: selectedId))
+    init(tocViewModel: BookTOCViewModel, selectedId: Int?, onSelect: @escaping (Int) -> Void) {
+        self.tocViewModel = tocViewModel
+        self.selectedId = selectedId
         self.onSelect = onSelect
     }
 
+    var identifiableNodes: [TOCNode] {
+        if searchText.isEmpty {
+            return tocViewModel.tocNodes
+        } else {
+            let normalizedQuery = searchText.normalizeArabic(true)
+            let matches = tocViewModel.tocRanges.map(\.node).filter { 
+                $0.bab.normalizeArabic(true).localizedStandardContains(normalizedQuery)
+            }
+            return matches.map { 
+                TOCNode(from: TOC(bab: $0.bab, level: $0.level, sub: $0.sub, id: $0.id))
+            }
+        }
+    }
+
+    func computeExpandedPaths() {
+        guard let targetId = selectedId, let node = tocViewModel.findNodeById(targetId) else { return }
+        if let path = tocViewModel.pathToNode(node) {
+            expandedPaths = Set(path.map { ObjectIdentifier($0) })
+        }
+    }
+
     var body: some View {
-        @Bindable var viewModel = viewModel
         NavigationView {
             ScrollViewReader { proxy in
                 ThemeList(isGrouped: true) {
-                    ForEach(viewModel.identifiableNodes) { item in
+                    ForEach(identifiableNodes) { item in
                         TOCNodeRow(
                             item: item,
-                            selectedId: viewModel.selectedId,
+                            selectedId: selectedId,
                             onSelect: onSelect,
-                            expandedPaths: $viewModel.expandedPaths
+                            expandedPaths: $expandedPaths
                         )
                     }
                 }
-                .searchable(text: $viewModel.searchText, prompt: "Search Contents")
+                .searchable(text: $searchText, prompt: "Search Contents")
                 .navigationTitle("Table of Contents")
                 .navigationBarItems(
                     leading: Button("Close") {
@@ -39,8 +64,8 @@ struct iOSTOCView: View {
                     }
                 )
                 .onAppear {
-                    viewModel.computeExpandedPaths()
-                    if let selectedId = viewModel.selectedId {
+                    computeExpandedPaths()
+                    if let selectedId = selectedId {
                         Task {
                             try await Task.sleep(for: .seconds(0.5))
                             withAnimation {
@@ -68,8 +93,11 @@ struct iOSTOCView: View {
     
     let mockNodes = [node1, node2, node3]
     
+    let dummyVM = BookTOCViewModel(connFactory: { BookConnection() })
+    dummyVM.tocNodes = mockNodes
+
     return iOSTOCView(
-        nodes: mockNodes,
+        tocViewModel: dummyVM,
         selectedId: 3,
         onSelect: { selectedId in
             print("Selected ID: \(selectedId)")
