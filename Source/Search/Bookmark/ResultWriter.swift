@@ -124,77 +124,24 @@ class ResultWriter: NSViewController {
             return
         }
 
-        // Kamus untuk mengelompokkan data. Kunci = (archive, bkId)
-        var groupedResults: [String: GroupedResult] = [:]
-
-        for item in results {
-            let origTable = item.tableName.first == "b" ? String(item.tableName.dropFirst()) : item.tableName
-            // 1. Validasi dan Konversi
-            guard let arc = Int(item.archive),
-                  let table = Int(origTable)
-            else {
-                #if DEBUG
-                print("error converting table to Int:", item.tableName)
-                #endif
-                continue
-            }
-
-            let bookId = String(item.bookId)
-
-            // 2. Buat Kunci Pengelompokan
-            // Menggunakan string key untuk kemudahan karena tuple (arc, table) sulit dijadikan key dictionary
-            let key = "\(arc)_\(table)"
-
-            // 3. Kelompokkan bookId
-            if var existingGroup = groupedResults[key] {
-                // Jika grup sudah ada, tambahkan bookId ke array yang sudah ada
-                if !existingGroup.contentIds.contains(bookId) {
-                    existingGroup.contentIds.append(bookId)
-                }
-                groupedResults[key] = existingGroup
-            } else {
-                // Jika grup belum ada, buat grup baru
-                var newGroup = GroupedResult(archive: arc, bkId: table)
-                newGroup.contentIds.append(bookId)
-                groupedResults[key] = newGroup
-            }
-        }
-
-        var errorInsert: Bool = false
-        // Iterasi hasil yang sudah dikelompokkan dan masukkan ke database
-        for (_, group) in groupedResults {
-            guard !errorInsert else { break }
-            // Menggabungkan array contentIds menjadi string yang dipisahkan koma
-            let commaSeparatedContentIds = group.contentIds.joined(separator: ",")
-
-            // Memanggil fungsi insertResult yang dimodifikasi
-            do {
-                try db.insertResult(
-                    group.archive,
-                    bkId: group.bkId,
-                    contentId: commaSeparatedContentIds, // contentId sekarang adalah string yang dipisahkan koma
-                    folderId: folderId,
-                    query: query,
-                    name: name
-                )
-            } catch {
-                errorInsert = true
-                #if DEBUG
-                print(error)
-                #endif
-            }
-        }
-
-        if errorInsert {
+        do {
+            try viewModel.saveSearchResults(
+                results: results,
+                query: query,
+                folderId: folderId,
+                name: name
+            )
+            dismiss(nil)
+        } catch {
             ReusableFunc.showAlert(
                 title: ResultsViewManager.saveResultErrorTitle,
                 message: ResultsViewManager.saveResultErrorDesc,
                 style: .critical
             )
-            return
+            #if DEBUG
+            print(error)
+            #endif
         }
-
-        dismiss(nil)
     }
 
     override func dismiss(_ sender: Any?) {

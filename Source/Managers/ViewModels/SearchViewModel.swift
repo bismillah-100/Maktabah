@@ -70,6 +70,9 @@ final class SearchViewModel: ViewModelBase {
     let rowProgressDidUpdate = PassthroughSubject<(completed: Int, total: Int), Never>()
     /// Dikirim sekali saat search selesai sepenuhnya
     let searchDidComplete = PassthroughSubject<Void, Never>()
+    #endif
+
+    private let bkConn = BookConnection()
 
     // MARK: - Computed
 
@@ -293,6 +296,7 @@ final class SearchViewModel: ViewModelBase {
             }
         }
     }
+    #endif
 
     // MARK: - Bookmarked Search Results
 
@@ -300,24 +304,22 @@ final class SearchViewModel: ViewModelBase {
     @discardableResult
     func loadSavedResults(
         _ savedResults: [SavedResultsItem],
-        onProgress: @escaping @MainActor (Double) -> Void,
-        onInsert: @escaping @MainActor (Int, Int) -> Void, // (prevCount, newCount)
-        onFinish: @escaping @MainActor () -> Void
+        onProgress: (@MainActor (Double) -> Void)? = nil,
+        onInsert: (@MainActor (Int, Int) -> Void)? = nil, // (prevCount, newCount)
+        onFinish: (@MainActor () -> Void)? = nil
     ) -> Task<Void, Never> {
         clearResults()
         if let first = savedResults.first { query = first.query }
         results = []
-        isSearching = true
+        totalTables = 0
+        completedTables = 0
         completedRowsInTable = 0
         totalRowsInTable = 0
-        currentTable = ""
-        completedTables = 0
-        totalTables = savedResults.count
 
         let task = Task.detached { [weak self] in
             guard let self else { return }
 
-            await MainActor.run { onProgress(Double(savedResults.count)) }
+            await onProgress?(Double(savedResults.count))
 
             let grouped = Dictionary(grouping: savedResults, by: \.archive)
             var buffer = ResultBuffer()
@@ -353,11 +355,7 @@ final class SearchViewModel: ViewModelBase {
             if !buffer.isEmpty {
                 await flushBuffer(&buffer, onInsert: onInsert)
             }
-
-            await MainActor.run { [weak self] in
-                self?.isSearching = false
-                onFinish?()
-            }
+            await onFinish?()
         }
 
         searchWork = task
@@ -390,7 +388,7 @@ final class SearchViewModel: ViewModelBase {
 
     private func flushBuffer(
         _ buffer: inout ResultBuffer,
-        onInsert: @escaping @MainActor (Int, Int) -> Void
+        onInsert: (@MainActor (Int, Int) -> Void)?
     ) async {
         let items = buffer.flush()
         await MainActor.run { [weak self] in
@@ -399,10 +397,10 @@ final class SearchViewModel: ViewModelBase {
             else { return }
             let prev = results.count
             results.append(contentsOf: items)
-            onInsert(prev, results.count)
+            completedTables = prev + items.count
+            onInsert?(prev, results.count)
         }
     }
-    #endif
 
     // MARK: - Search
 

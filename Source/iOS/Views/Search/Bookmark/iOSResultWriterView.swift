@@ -86,50 +86,17 @@ struct iOSResultWriterView: View {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else { return }
 
-        var groupedResults: [String: GroupedResult] = [:]
-
-        for item in results {
-            let origTable = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
-            guard let arc = Int(item.archive),
-                  let table = Int(origTable) else { continue }
-
-            let bookId = String(item.bookId)
-            let key = "\(arc)_\(table)"
-
-            if var existingGroup = groupedResults[key] {
-                if !existingGroup.contentIds.contains(bookId) {
-                    existingGroup.contentIds.append(bookId)
-                }
-                groupedResults[key] = existingGroup
-            } else {
-                var newGroup = GroupedResult(archive: arc, bkId: table)
-                newGroup.contentIds.append(bookId)
-                groupedResults[key] = newGroup
-            }
-        }
-
-        var errorOccurred = false
-        for (_, group) in groupedResults {
-            let commaSeparatedContentIds = group.contentIds.joined(separator: ",")
-            do {
-                try db.insertResult(
-                    group.archive,
-                    bkId: group.bkId,
-                    contentId: commaSeparatedContentIds,
-                    folderId: selectedFolderId,
-                    query: query,
-                    name: trimmedName
-                )
-            } catch {
-                errorOccurred = true
-            }
-        }
-
-        if errorOccurred {
+        do {
+            try viewModel.saveSearchResults(
+                results: results,
+                query: query,
+                folderId: selectedFolderId,
+                name: trimmedName
+            )
+            dismiss()
+        } catch {
             alertMessage = "Failed to save some results."
             showAlert = true
-        } else {
-            dismiss()
         }
     }
 }

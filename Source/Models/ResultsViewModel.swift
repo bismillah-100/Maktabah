@@ -28,6 +28,20 @@ class ResultsViewModel {
     var parentById: [Int64: Int64?] = [:] // parentById[childId] = parentId (nil = root)
     var resultById: [Int64: ResultNode] = [:] // lookup ResultNode by id
 
+    var allFolders: [FolderNode] {
+        var list = [FolderNode]()
+        func walk(_ node: FolderNode) {
+            list.append(node)
+            for child in node.children { walk(child) }
+        }
+        for root in folderRoots { walk(root) }
+        return list
+    }
+
+    var allResults: [ResultNode] {
+        folderResults.values.flatMap { $0 }
+    }
+
     /// Dipanggil setelah setiap operasi yang mengubah data.
     /// Mac (`ResultsViewManager`) menggunakannya untuk reload `NSOutlineView`.
     var onTreeChange: ((BookmarkTreeChange) -> Void)?
@@ -319,6 +333,57 @@ class ResultsViewModel {
 
         if results.isEmpty {
             folderResults.removeValue(forKey: parentFolderId)
+        }
+    }
+
+    func saveSearchResults(results: [SearchResultItem], query: String, folderId: Int64?, name: String) throws {
+        var groupedResults: [String: GroupedResult] = [:]
+
+        for item in results {
+            let origTable = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
+            guard let arc = Int(item.archive),
+                  let table = Int(origTable) else { continue }
+
+            let bookId = String(item.bookId)
+            let key = "\(arc)_\(table)"
+
+            if var existingGroup = groupedResults[key] {
+                if !existingGroup.contentIds.contains(bookId) {
+                    existingGroup.contentIds.append(bookId)
+                }
+                groupedResults[key] = existingGroup
+            } else {
+                var newGroup = GroupedResult(archive: arc, bkId: table)
+                newGroup.contentIds.append(bookId)
+                groupedResults[key] = newGroup
+            }
+        }
+
+        var firstError: Error?
+
+        for (_, group) in groupedResults {
+            let commaSeparatedContentIds = group.contentIds.joined(separator: ",")
+            do {
+                try db.insertResult(
+                    group.archive,
+                    bkId: group.bkId,
+                    contentId: commaSeparatedContentIds,
+                    folderId: folderId,
+                    query: query,
+                    name: name
+                )
+            } catch {
+                if firstError == nil {
+                    firstError = error
+                }
+                #if DEBUG
+                print("Error saving result for group \(group):", error)
+                #endif
+            }
+        }
+
+        if let error = firstError {
+            throw error
         }
     }
 

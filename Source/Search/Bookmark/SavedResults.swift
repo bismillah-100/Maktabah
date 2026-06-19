@@ -81,37 +81,6 @@ class SavedResults: NSViewController {
     @IBAction func deleteFolder(_ sender: Any) {
         let row = outlineView.selectedRow
         if let item = outlineView.item(atRow: row) as? FolderNode {
-            let parentNode = outlineView.parent(forItem: item) as? FolderNode
-
-            // Tentukan parent yang benar (parent jika ada, atau root/nil)
-            let parentForViewUpdate: Any? = parentNode ?? nil
-
-            var indexToRemove: Int
-
-            if let parent = parentNode {
-                // --- KASUS: Item ada di dalam parent (Child Node) ---
-                guard let index = parent.children.firstIndex(where: { $0 === item }) else {
-                    print("Error: Item tidak ditemukan di array children parent.")
-                    return
-                }
-                indexToRemove = index
-                parent.children.remove(at: indexToRemove)
-            } else {
-                // --- KASUS: Item adalah Node Level Atas (Root Node) ---
-                guard let rootViewModel = resultsVM?.vm else { return }
-                guard let index = rootViewModel.folderRoots.firstIndex(where: { $0 === item }) else {
-                    print("Error: Item tidak ditemukan di array root.")
-                    return
-                }
-                indexToRemove = index
-            }
-
-            // Hapus dari tampilan sebelum deleteFolder (agar animasi mulus)
-            outlineView.removeItems(
-                at: IndexSet(integer: indexToRemove),
-                inParent: parentForViewUpdate
-            )
-            // deleteFolder memutasikan ViewModel + memanggil onDataChanged
             resultsVM.vm.deleteFolder(node: item)
             return
         }

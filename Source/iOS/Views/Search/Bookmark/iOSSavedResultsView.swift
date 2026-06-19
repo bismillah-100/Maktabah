@@ -138,7 +138,7 @@ struct iOSSavedResultsView: View {
 
     private var flattenedSearchList: some View {
         ThemeList {
-            let matchingFolders = allFolders.filter { $0.name.localizedStandardContains(searchText) }
+            let matchingFolders = viewModel.allFolders.filter { $0.name.localizedStandardContains(searchText) }
             if !matchingFolders.isEmpty {
                 Section("Folders") {
                     ForEach(matchingFolders) { folder in
@@ -160,7 +160,7 @@ struct iOSSavedResultsView: View {
                 }
             }
 
-            let matchingResults = allResults.filter {
+            let matchingResults = viewModel.allResults.filter {
                 $0.name.localizedStandardContains(searchText) ||
                 ($0.items.first?.query ?? "").localizedStandardContains(searchText)
             }
@@ -184,20 +184,6 @@ struct iOSSavedResultsView: View {
                 ContentUnavailableView.search(text: searchText)
             }
         }
-    }
-
-    private var allFolders: [FolderNode] {
-        var list = [FolderNode]()
-        func walk(_ node: FolderNode) {
-            list.append(node)
-            for child in node.children { walk(child) }
-        }
-        for root in viewModel.folderRoots { walk(root) }
-        return list
-    }
-
-    private var allResults: [ResultNode] {
-        viewModel.folderResults.values.flatMap { $0 }
     }
 
     // MARK: - Rename
@@ -226,65 +212,7 @@ struct iOSSavedResultsView: View {
 
     private func loadResult(_ resultNode: ResultNode) {
         dismiss()
-        Task {
-            await MainActor.run {
-                navigationManager.searchViewModel.query = resultNode.items.first?.query ?? ""
-                navigationManager.searchViewModel.results = []
-                navigationManager.searchViewModel.isSearching = true
-                navigationManager.searchViewModel.completedTables = 0
-                navigationManager.searchViewModel.totalTables = resultNode.items.count
-                navigationManager.searchViewModel.completedRowsInTable = 0
-                navigationManager.searchViewModel.totalRowsInTable = 0
-                navigationManager.searchViewModel.currentTable = ""
-            }
-
-            let groupedResults = Dictionary(grouping: resultNode.items, by: \.archive)
-            let bkConn = BookConnection()
-
-            for (archiveId, itemsInArchive) in groupedResults {
-                guard let arc = Int(archiveId) else { continue }
-                try? bkConn.connect(archive: arc)
-
-                for item in itemsInArchive {
-                    guard let bookContent = bkConn.getContent(
-                        bkid: item.tableName,
-                        contentId: item.bookId
-                    ) else {
-                        await MainActor.run { navigationManager.searchViewModel.completedTables += 1 }
-                        continue
-                    }
-
-                    let bookId = Int(item.tableName.dropFirst()) ?? 0
-                    let book = LibraryDataManager.shared.booksById[bookId]
-                    let isMultilingual = book?.isMultiLanguage ?? false
-
-                    let normalizedNash = bookContent.nash.convertToArabicDigits(isMultilingual: isMultilingual)
-                    let queryConverted = item.query.convertToArabicDigits(isMultilingual: isMultilingual)
-
-                    let snippet = normalizedNash.snippetAround(keywords: [queryConverted])
-                    let attribute = snippet.highlightedAttributedText(keywords: [queryConverted])
-
-                    let resultItem = SearchResultItem(
-                        archive: item.archive,
-                        tableName: item.tableName,
-                        bookId: item.bookId,
-                        bookTitle: item.bookTitle,
-                        page: bookContent.page,
-                        part: bookContent.part,
-                        attributedText: attribute
-                    )
-
-                    await MainActor.run {
-                        navigationManager.searchViewModel.results.append(resultItem)
-                        navigationManager.searchViewModel.completedTables += 1
-                    }
-                }
-            }
-
-            await MainActor.run {
-                navigationManager.searchViewModel.isSearching = false
-            }
-        }
+        navigationManager.searchViewModel.loadSavedResults(resultNode.items)
     }
 }
 
