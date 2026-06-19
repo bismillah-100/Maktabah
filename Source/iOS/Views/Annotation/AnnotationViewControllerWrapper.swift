@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
     let navigationManager: iOSNavigationManager
-    @Bindable var viewModel: iOSAnnotationViewModel
+    @Bindable var viewModel: AnnotationViewModel
 
     func makeUIViewController(context: Context) -> iOSAnnotationViewController {
         let vc = iOSAnnotationViewController()
@@ -18,7 +18,9 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
             context.coordinator.handleSelection(node)
         }
         vc.onAnnotationDeleted = { node in
-            viewModel.deleteAnnotation(node: node)
+            if let id = node.annotation?.id {
+                viewModel.deleteAnnotation(id: id)
+            }
         }
 
         vc.onNeedFullReload = { [weak viewModel] in
@@ -28,7 +30,7 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
             vc?.handleIncrementalUpdate(changeType: changeType, userInfo: userInfo)
         }
         viewModel.onTreeUpdate = { [weak vc] nodes, mode in
-            vc?.handleTreeUpdate(nodes: nodes, groupingMode: mode)
+            vc?.handleTreeUpdate(nodes: nodes.map { SwiftUIAnnotationNode(from: $0) }, groupingMode: mode)
         }
 
         return vc
@@ -39,7 +41,7 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
         if !context.coordinator.hasAppliedOnce {
             context.coordinator.hasAppliedOnce = true
             uiViewController.applyNodes(
-                viewModel.rootNodes,
+                viewModel.swiftUINodes,
                 groupingMode: viewModel.groupingMode,
                 animated: false
             )
@@ -58,7 +60,7 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
         }
 
         @MainActor
-        func handleSelection(_ node: iOSAnnotationNode) {
+        func handleSelection(_ node: SwiftUIAnnotationNode) {
             guard node.kind == .annotation, let ann = node.annotation else { return }
             if let book = LibraryDataManager.shared.getBook([ann.bkId]).first {
                 navigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)

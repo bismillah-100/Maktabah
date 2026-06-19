@@ -34,7 +34,7 @@ class iOSNavigationManager {
     var libraryViewModel = LibraryViewModel()
     var searchViewModel = SearchViewModel()
     var authorViewModel = NarratorViewModel()
-    var annotationViewModel = iOSAnnotationViewModel()
+    var annotationViewModel = AnnotationViewModel()
 
     var openTabs: [ReaderTab] = []
     var activeTabId: UUID?

@@ -183,8 +183,8 @@ struct AnnotationContentConfiguration: UIContentConfiguration {
 // MARK: - Item Types
 
 enum AnnotationItem: Hashable, @unchecked Sendable {
-    case group(iOSAnnotationNode)
-    case annotation(iOSAnnotationNode)
+    case group(SwiftUIAnnotationNode)
+    case annotation(SwiftUIAnnotationNode)
 
     func hash(into hasher: inout Hasher) {
         switch self {
@@ -222,8 +222,8 @@ enum AnnotationItem: Hashable, @unchecked Sendable {
 }
 
 extension AnnotationItem {
-    /// Mengambil data `iOSAnnotationNode` secara langsung tanpa perlu switch-case manual lagi.
-    var node: iOSAnnotationNode {
+    /// Mengambil data `SwiftUIAnnotationNode` secara langsung tanpa perlu switch-case manual lagi.
+    var node: SwiftUIAnnotationNode {
         switch self {
         case .group(let node), .annotation(let node):
             return node

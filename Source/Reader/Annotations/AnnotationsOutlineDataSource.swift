@@ -8,6 +8,7 @@
 
 import Cocoa
 
+@MainActor
 class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     weak var delegate: AnnotationDelegate?
     weak var outlineView: NSOutlineView?
@@ -16,47 +17,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     let paragraphStyle = NSMutableParagraphStyle()
 
-    private(set) var filteredRootNode: AnnotationNode?
-    private var cachedRootNode: AnnotationNode?
-
-    private var currentRootNode: AnnotationNode? {
-        if let cachedRootNode { return cachedRootNode }
-
-        let baseRoot = filteredRootNode ?? AnnotationManager.shared.rootNode
-        let hideMissing = UserDefaults.standard.bool(forKey: "hideMissingBookAnnotations")
-
-        if hideMissing, let base = baseRoot {
-            let newRoot = AnnotationNode(title: base.title, kind: base.kind, annotation: nil)
-            newRoot.children = filterOutMissingBooks(from: base.children)
-            cachedRootNode = newRoot
-            return newRoot
-        }
-
-        cachedRootNode = baseRoot
-        return baseRoot
-    }
-
-    private func filterOutMissingBooks(from nodes: [AnnotationNode]) -> [AnnotationNode] {
-        var result: [AnnotationNode] = []
-        for node in nodes {
-            if node.kind == .annotation, let ann = node.annotation {
-                if LibraryDataManager.shared.getBook([ann.bkId]).first != nil {
-                    result.append(node)
-                }
-            } else {
-                let filteredChildren = filterOutMissingBooks(from: node.children)
-                if !filteredChildren.isEmpty {
-                    let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: nil)
-                    copy.children = filteredChildren
-                    result.append(copy)
-                }
-            }
-        }
-        return result
-    }
-
-    private var treeObserver: NSObjectProtocol?
-    private var annotationChangeObserver: NSObjectProtocol?
+    let viewModel = AnnotationViewModel()
 
     /// Cache Formatter
     private let calendar = Calendar.current
@@ -76,9 +37,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     var onSelectItem: ((Int) -> Void)?
 
-    // Simpan search text untuk re-apply filter setelah perubahan
-    private var currentSearchText: String?
-    private(set) var groupingMode: AnnotationGroupingMode = .book
+    var groupingMode: AnnotationGroupingMode { viewModel.groupingMode }
 
     let menu = NSMenu()
 
@@ -136,87 +95,31 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     override init() {
         super.init()
-        setupTreeObserver()
-        setupAnnotationChangeObserver()
         paragraphStyle.alignment = .right
+        setupViewModelBindings()
+    }
+
+    private func setupViewModelBindings() {
+        viewModel.onTreeUpdate = { [weak self] _, _ in
+            guard let self, let outlineView else { return }
+            outlineView.reloadData()
+            if !viewModel.searchText.isEmpty {
+                outlineView.expandItem(nil, expandChildren: true)
+            }
+        }
+
+        viewModel.onIncrementalUpdate = { [weak self] changeType, userInfo in
+            self?.handleIncrementalChange(changeType: changeType, userInfo: userInfo)
+        }
     }
 
     deinit {
         #if DEBUG
             print("Annotations Data Source deinit")
         #endif
-
-        UserDefaults.standard.removeObserver(self, forKeyPath: "hideMissingBookAnnotations")
-
-        if let treeObserver {
-            NotificationCenter.default.removeObserver(treeObserver)
-        }
-
-        if let annotationChangeObserver {
-            NotificationCenter.default.removeObserver(annotationChangeObserver)
-        }
     }
 
-    // MARK: - Setup Notification Observer
-
-    private func setupTreeObserver() {
-        treeObserver = NotificationCenter.default.addObserver(
-            forName: .annotationTreeDidUpdate,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.handleTreeUpdate()
-        }
-    }
-
-    private func handleTreeUpdate() {
-        cachedRootNode = nil
-        // Re-apply filter jika ada
-        if let searchText = currentSearchText, !searchText.isEmpty {
-            applySearchFilter(text: searchText)
-        }
-
-        // Reload outline view
-        outlineView?.reloadData()
-    }
-
-    private func setupAnnotationChangeObserver() {
-        annotationChangeObserver = NotificationCenter.default.addObserver(
-            forName: .annotationDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleAnnotationChange(notification)
-        }
-
-        UserDefaults.standard.addObserver(self, forKeyPath: "hideMissingBookAnnotations", options: .new, context: nil)
-    }
-
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "hideMissingBookAnnotations" {
-            DispatchQueue.main.async { [weak self] in
-                self?.handleTreeUpdate()
-            }
-        }
-    }
-
-    private func handleAnnotationChange(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let changeTypeRaw = userInfo[AnnotationNotificationKeys.changeType] as? String,
-            let changeType = AnnotationChangeType(rawValue: changeTypeRaw)
-        else { return }
-
-        let hideMissing = UserDefaults.standard.bool(forKey: "hideMissingBookAnnotations")
-        if (currentSearchText != nil && !currentSearchText!.isEmpty) || hideMissing {
-            cachedRootNode = nil
-            if let searchText = currentSearchText, !searchText.isEmpty {
-                applySearchFilter(text: searchText)
-            }
-            outlineView?.reloadData()
-            return
-        }
-
+    private func handleIncrementalChange(changeType: AnnotationChangeType, userInfo: [AnyHashable: Any]) {
         let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
         let annotationId = (userInfo[AnnotationNotificationKeys.annotationId] as? Int64) ?? annotation?.id
         let oldParentIndex = userInfo[AnnotationNotificationKeys.oldParentIndex] as? Int
@@ -450,14 +353,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     // MARK: - Public Methods
 
     func reload() {
-        // Trigger build tree jika belum ada
-        //        if AnnotationManager.shared.rootNode == nil {
-        //            AnnotationManager.shared.buildAnnotationTree()
-        //        }
-
         AnnotationManager.shared.buildAnnotationTree()
-        filteredRootNode = nil
-        cachedRootNode = nil
     }
 
     func updateSorting(field: AnnotationSortField, isAscending: Bool) {
@@ -465,7 +361,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     }
 
     func updateGrouping(mode: AnnotationGroupingMode) {
-        groupingMode = mode
+        viewModel.groupingMode = mode
         AnnotationManager.shared.updateGroupingMode(mode)
     }
 
@@ -830,7 +726,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         numberOfChildrenOfItem item: Any?
     ) -> Int {
         if item == nil {
-            return currentRootNode?.children.count ?? 0
+            return viewModel.filteredNodes.count
         }
         if let node = item as? AnnotationNode {
             return node.children.count
@@ -853,10 +749,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         ofItem item: Any?
     ) -> Any {
         if item == nil {
-            guard let node = currentRootNode?.children[index] else {
-                fatalError("Item not found at root index \(index)")
-            }
-            return node
+            return viewModel.filteredNodes[index]
         }
         if let node = item as? AnnotationNode {
             return node.children[index]
@@ -1097,8 +990,6 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate,
     }
 }
 
-// MARK: - Search Extension
-
 extension AnnotationOutlineDataSource {
     private func measuredHeight(
         for text: String,
@@ -1129,94 +1020,6 @@ extension AnnotationOutlineDataSource {
         let maxHeight = lineHeight * CGFloat(max(lineLimit, 1))
 
         return max(lineHeight, min(ceil(measuredRect.height), maxHeight))
-    }
-
-    func applySearchFilter(text: String?) {
-        currentSearchText = text
-        cachedRootNode = nil
-
-        guard let originalRoot = AnnotationManager.shared.rootNode else {
-            filteredRootNode = nil
-            return
-        }
-
-        guard let searchText = text?.lowercased(), !searchText.isEmpty else {
-            filteredRootNode = nil
-            return
-        }
-
-        let newRoot = AnnotationNode(title: originalRoot.title)
-
-        for child in originalRoot.children {
-            if let copiedNode = copyMatchingPath(
-                sourceNode: child,
-                searchText: searchText
-            ) {
-                newRoot.children.append(copiedNode)
-            }
-        }
-
-        filteredRootNode = newRoot
-    }
-
-    private func copyMatchingPath(
-        sourceNode: AnnotationNode,
-        searchText: String
-    ) -> AnnotationNode? {
-        // 1. Cek apakah Title cocok
-        let titleMatches = sourceNode.title.removingHarakat().contains(
-            searchText
-        )
-
-        // 2. Cek apakah Context atau Note di dalam Annotation cocok
-        var annotationMatches = false
-        if let ann = sourceNode.annotation {
-            let contextMatches = ann.context.removingHarakat().contains(
-                searchText
-            )
-            let noteMatches =
-                ann.note?.removingHarakat().contains(searchText) ?? false
-            let tagMatches = ann.tags.contains {
-                $0.removingHarakat().localizedStandardContains(searchText)
-            }
-            annotationMatches = contextMatches || noteMatches || tagMatches
-        }
-
-        // Jika node ini sendiri cocok (baik title, context, atau note)
-        if titleMatches || annotationMatches {
-            let copiedNode = AnnotationNode(
-                title: sourceNode.title,
-                kind: sourceNode.kind,
-                annotation: sourceNode.annotation
-            )
-            // Jika node induk cocok, kita biasanya ingin menampilkan semua anaknya
-            copiedNode.children = sourceNode.children
-            return copiedNode
-        }
-
-        // 3. Jika node ini tidak cocok, cek apakah ada anaknya yang cocok (Recursive)
-        var matchingChildren: [AnnotationNode] = []
-        for child in sourceNode.children {
-            if let copiedChild = copyMatchingPath(
-                sourceNode: child,
-                searchText: searchText
-            ) {
-                matchingChildren.append(copiedChild)
-            }
-        }
-
-        // Jika ada anak yang cocok, kita tetap harus mengembalikan node ini (sebagai jalur/path)
-        if !matchingChildren.isEmpty {
-            let copiedNode = AnnotationNode(
-                title: sourceNode.title,
-                kind: sourceNode.kind,
-                annotation: sourceNode.annotation
-            )
-            copiedNode.children = matchingChildren
-            return copiedNode
-        }
-
-        return nil
     }
 }
 

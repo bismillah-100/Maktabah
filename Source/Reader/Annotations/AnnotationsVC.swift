@@ -38,7 +38,6 @@ class AnnotationsVC: NSViewController {
     static var panel: NSPanel?
 
     let dataSource: AnnotationOutlineDataSource = .init()
-    var workItem: DispatchWorkItem?
     private var tagPopover: NSPopover?
 
     var popover: Bool = true
@@ -133,22 +132,7 @@ class AnnotationsVC: NSViewController {
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
-        workItem?.cancel()
-        let query = sender.stringValue
-        workItem = DispatchWorkItem { [weak self, query] in
-            guard let self else { return }
-            dataSource.applySearchFilter(text: query)
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                outlineView.reloadData()
-                if !sender.stringValue.isEmpty {
-                    outlineView.expandItem(nil, expandChildren: true)
-                }
-                ReusableFunc.updateBuiltInRecents(with: sender.stringValue, in: searchField)
-            }
-        }
-
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.3, execute: workItem!)
+        dataSource.viewModel.searchText = sender.stringValue
     }
 
     @objc func contextMenuAction(_ sender: NSMenuItem) {

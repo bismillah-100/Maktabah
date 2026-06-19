@@ -12,6 +12,7 @@ import AppKit
 import UIKit
 #endif
 import Foundation
+import Combine
 import SQLite3
 
 // MARK: - Notification Names
@@ -113,10 +114,19 @@ final class AnnotationManager {
     /// Serial queue to protect caches
     private let cacheQueue = DispatchQueue(label: "com.maktab.annotationManager.cacheQueue", qos: .userInitiated)
 
-    private init() {}
+    private var cancellables = Set<AnyCancellable>()
 
     private var now: Int64 {
         Int64(Date().timeIntervalSince1970)
+    }
+
+    private init() {
+        UserDefaults.standard.publisher(for: \.hideMissingBookAnnotations)
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.buildAnnotationTree()
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Private helper to post notification
@@ -1103,7 +1113,7 @@ final class AnnotationManager {
             let root = AnnotationNode(title: "All Annotations", kind: .root)
             var anns = loadAnnotations()
             
-            if UserDefaults.standard.bool(forKey: "hideMissingBookAnnotations") {
+            if UserDefaults.standard.hideMissingBookAnnotations {
                 let uniqueBkIds = Set(anns.map { $0.bkId })
                 let existingBkIds = Set(uniqueBkIds.filter { !LibraryDataManager.shared.getBook([$0]).isEmpty })
                 anns = anns.filter { existingBkIds.contains($0.bkId) }

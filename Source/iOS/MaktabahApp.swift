@@ -39,6 +39,9 @@ struct MaktabahApp: App {
         CloudKitSyncManager.shared.initializeOnLaunch()
         // CoreDatabaseBootstrap.run()
         setupGlobalAppearances()
+        if UserDefaults.standard.data(forKey: AppConfig.annotationsAndResultsFolder) == nil {
+            UserDefaults.standard.register(defaults: [AppConfig.useICloudKey: true])
+        }
     }
 
     private func setupGlobalAppearances() {

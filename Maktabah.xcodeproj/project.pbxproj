@@ -328,7 +328,6 @@
 		F30577662FA46222005732C6 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4BF392EB2EFCC15700460756 /* Localizable.xcstrings */; };
 		F30577842FA463B1005732C6 /* iOSMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F305777A2FA463B1005732C6 /* iOSMainView.swift */; };
 		F30577852FA463B1005732C6 /* SearchModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F305777B2FA463B1005732C6 /* SearchModeView.swift */; };
-		F30577872FA463B1005732C6 /* iOSAnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577702FA463B1005732C6 /* iOSAnnotationViewModel.swift */; };
 		F30577882FA463B1005732C6 /* AuthorModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577782FA463B1005732C6 /* AuthorModeView.swift */; };
 		F30577892FA463B1005732C6 /* BookListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F305777F2FA463B1005732C6 /* BookListViewController.swift */; };
 		F305778B2FA463B1005732C6 /* iOSReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577752FA463B1005732C6 /* iOSReaderView.swift */; };
@@ -446,9 +445,12 @@
 		F3DD69E32FA4F76100BFEA0F /* ProgressBooksDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */; };
 		F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */; };
 		F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */; };
-		F3FF13662FE7468D00E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13652FE7468D00E74201 /* TextStorage.swift */; };
-		F3FF13672FE7468D00E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13652FE7468D00E74201 /* TextStorage.swift */; };
-		F3FF13682FE7468D00E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13652FE7468D00E74201 /* TextStorage.swift */; };
+		F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
+		F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
+		F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
+		F3FF136A2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
+		F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
+		F3FF136C2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		FB254BD29A50C530E907662A /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
 		FDB5242B5960EB1507BD74A6 /* iOSHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */; };
 /* End PBXBuildFile section */
@@ -603,7 +605,6 @@
 		C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncable.swift; sourceTree = "<group>"; };
 		F300A2EB2F2DCE860095015E /* StorageError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageError.swift; sourceTree = "<group>"; };
 		F305776F2FA46222005732C6 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maktabah.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F30577702FA463B1005732C6 /* iOSAnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAnnotationViewModel.swift; sourceTree = "<group>"; };
 		F30577722FA463B1005732C6 /* iOSNavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSNavigationManager.swift; sourceTree = "<group>"; };
 		F30577752FA463B1005732C6 /* iOSReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSReaderView.swift; sourceTree = "<group>"; };
 		F30577772FA463B1005732C6 /* AnnotationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationListView.swift; sourceTree = "<group>"; };
@@ -682,7 +683,8 @@
 		F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFavoriteSections.swift; sourceTree = "<group>"; };
 		F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUpdateAlert.swift; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
-		F3FF13652FE7468D00E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
+		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
+		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -926,7 +928,7 @@
 				4BAB8A482F28682200732FC9 /* ArabicTextRenderer.swift */,
 				4BD728242EE4544C00ACEB7C /* StringExt.swift */,
 				4B0139E32EEB2FDF00424CFA /* StringInterner.swift */,
-				F3FF13652FE7468D00E74201 /* TextStorage.swift */,
+				F3FF13692FE757B500E74201 /* TextStorage.swift */,
 			);
 			path = String;
 			sourceTree = "<group>";
@@ -1123,7 +1125,6 @@
 			isa = PBXGroup;
 			children = (
 				F36382502FA6FA1E0006636C /* BootstrapManager.swift */,
-				F30577702FA463B1005732C6 /* iOSAnnotationViewModel.swift */,
 				F30577722FA463B1005732C6 /* iOSNavigationManager.swift */,
 				F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */,
 			);
@@ -1301,6 +1302,7 @@
 			children = (
 				F3D02D3A2FE04D580054807F /* Base */,
 				F3D02D3C2FE04D580054807F /* Protocols */,
+				F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
 				F3D02D602FE0616B0054807F /* NarratorViewModel.swift */,
@@ -1529,7 +1531,6 @@
 				4B5695602EEFDAFB00ABEB48 /* AnnotationManager.swift in Sources */,
 				4B5EC2962EE331D500991F39 /* SavedResults.swift in Sources */,
 				4B58EDCB2EE3DBE800073495 /* ResultsViewManager.swift in Sources */,
-				F3FF13682FE7468D00E74201 /* TextStorage.swift in Sources */,
 				4B0139E92EEB3CB000424CFA /* InitProgress.swift in Sources */,
 				4BDAB98E2F69E957007D0945 /* SettingsActions.swift in Sources */,
 				4B0EED392EFAB38800585C31 /* QuranTafseerVC.swift in Sources */,
@@ -1560,6 +1561,7 @@
 				4B03D9D12F42DB5B004E0FDB /* ReaderState.swift in Sources */,
 				4B5DF93B2EDC43FB0082DE7F /* UserDefaults.swift in Sources */,
 				4B6AF22F2EE5692A002EBFFC /* AppMode.swift in Sources */,
+				F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				4B3202492EDB10FA003B95D1 /* Protocols.swift in Sources */,
 				4B18185E2F45377200AFFAEE /* AnnotationColorMenuView.swift in Sources */,
 				4B6100EB2EFA769200CCBED6 /* QuranDataManager.swift in Sources */,
@@ -1625,6 +1627,7 @@
 				F321E02A2FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F3D02D5A2FE0522E0054807F /* SearchViewModel.swift in Sources */,
 				F321E02B2FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
+				F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */,
 				4B65CCB82EE059B60085CEB4 /* OptionSearchVC.swift in Sources */,
 				4B0139E22EEB281C00424CFA /* BookPageCache.swift in Sources */,
 				4B0139E42EEB2FDF00424CFA /* StringInterner.swift in Sources */,
@@ -1672,6 +1675,7 @@
 				F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				4B7C90B92F83494200454BE1 /* ArabicTextRenderer.swift in Sources */,
 				4B7C90BA2F83494200454BE1 /* ReusableFunc.swift in Sources */,
+				F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				4B7C90BB2F83494200454BE1 /* BookUpdateManager.swift in Sources */,
 				F321672A2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
 				4B7C90BC2F83494200454BE1 /* AnnotationDelegate.swift in Sources */,
@@ -1721,10 +1725,10 @@
 				4B7C90DE2F83494200454BE1 /* CustomSplitView.swift in Sources */,
 				4B7C90DF2F83494200454BE1 /* BackgroundOptions.swift in Sources */,
 				4B7C90E02F83494200454BE1 /* AnnotationsVC.swift in Sources */,
-				F3FF13662FE7468D00E74201 /* TextStorage.swift in Sources */,
 				4B7C90E12F83494200454BE1 /* IbarotTextVC.swift in Sources */,
 				4B7C90E22F83494200454BE1 /* Narrator.swift in Sources */,
 				4B7C90E32F83494200454BE1 /* AnnotationEditorVC.swift in Sources */,
+				F3FF136C2FE757B500E74201 /* TextStorage.swift in Sources */,
 				4B7C90E42F83494200454BE1 /* BookUpdateView.swift in Sources */,
 				4B7C90E52F83494200454BE1 /* ProgressBooksDownload.swift in Sources */,
 				4B7C90E62F83494200454BE1 /* AppUpdate.swift in Sources */,
@@ -1785,14 +1789,12 @@
 				F30576E82FA46222005732C6 /* AnnotationManager.swift in Sources */,
 				F30576EC2FA46222005732C6 /* SettingsActions.swift in Sources */,
 				F30576EE2FA46222005732C6 /* RowiProtocols.swift in Sources */,
-				F3FF13672FE7468D00E74201 /* TextStorage.swift in Sources */,
 				F30576F22FA46222005732C6 /* ArchiveErrors.swift in Sources */,
 				F3B60E312FC8017D00A9EF58 /* iOSReaderTabsPopoverView.swift in Sources */,
 				F30577842FA463B1005732C6 /* iOSMainView.swift in Sources */,
 				F30577852FA463B1005732C6 /* SearchModeView.swift in Sources */,
 				F3D02D5B2FE0522E0054807F /* SearchViewModel.swift in Sources */,
 				F36382662FA761070006636C /* iOSSearchFilterViewController.swift in Sources */,
-				F30577872FA463B1005732C6 /* iOSAnnotationViewModel.swift in Sources */,
 				F30577882FA463B1005732C6 /* AuthorModeView.swift in Sources */,
 				F30577892FA463B1005732C6 /* BookListViewController.swift in Sources */,
 				F305778B2FA463B1005732C6 /* iOSReaderView.swift in Sources */,
@@ -1829,6 +1831,7 @@
 				F36382512FA6FA1E0006636C /* BootstrapManager.swift in Sources */,
 				F30576FE2FA46222005732C6 /* BookUpdateModels.swift in Sources */,
 				F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */,
+				F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				F30577012FA46222005732C6 /* StorageError.swift in Sources */,
 				F30577032FA46222005732C6 /* LibraryDataManager.swift in Sources */,
 				F34E11542FDAE84600E5A703 /* ListLayoutMetrics.swift in Sources */,
@@ -1882,6 +1885,7 @@
 				F30577342FA46222005732C6 /* Annotations.swift in Sources */,
 				F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */,
 				F3B60E282FC7CDCA00A9EF58 /* iOSReaderBottomToolbarView.swift in Sources */,
+				F3FF136A2FE757B500E74201 /* TextStorage.swift in Sources */,
 				F30577372FA46222005732C6 /* Quran.swift in Sources */,
 				F305773B2FA46222005732C6 /* ResultsHandler.swift in Sources */,
 				F305773C2FA46222005732C6 /* ZstdShim.swift in Sources */,

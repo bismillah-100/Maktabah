@@ -1,20 +1,27 @@
+//
+//  AnnotationViewModel.swift
+//  Maktabah
+//
+//  Created by Ghoys Mawahib on 19/06/26.
+//
+
+import Combine
 import Foundation
 import SwiftUI
-import Combine
 
-struct iOSAnnotationNode: Identifiable {
+struct SwiftUIAnnotationNode: Identifiable {
     let id: String
     let title: String
     let kind: AnnotationNodeKind
     let annotation: Annotation?
-    var children: [iOSAnnotationNode]?
-    
+    var children: [SwiftUIAnnotationNode]?
+
     init(
         id: String,
         title: String,
         kind: AnnotationNodeKind,
         annotation: Annotation?,
-        children: [iOSAnnotationNode]? = nil
+        children: [SwiftUIAnnotationNode]? = nil
     ) {
         self.id = id
         self.title = title
@@ -32,22 +39,40 @@ struct iOSAnnotationNode: Identifiable {
     
     /// Convert the core AppKit/Foundation AnnotationNode to SwiftUI identifiable node
     init(from node: AnnotationNode, parentId: String? = nil) {
-        let baseId = iOSAnnotationNode.id(from: node)
+        let baseId = SwiftUIAnnotationNode.id(from: node)
         id = (parentId != nil && node.kind == .annotation) ? "\(parentId!)-\(baseId)" : baseId
         title = node.title
         kind = node.kind
         annotation = node.annotation
         let currentId = id
-        children = node.children.isEmpty ? nil : node.children.map { iOSAnnotationNode(from: $0, parentId: currentId) }
+        children = node.children.isEmpty ? nil : node.children.map { SwiftUIAnnotationNode(from: $0, parentId: currentId) }
     }
 }
 
 
 @MainActor
+#if os(iOS)
 @Observable
-class iOSAnnotationViewModel {
-    var isLoading: Bool = true
-    var rootNodes: [iOSAnnotationNode] = []
+#endif
+class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
+    var state: ViewModelState = .loading
+
+    /// Cache untuk pencarian dan filter buku
+    private var cachedFilteredNodes: [AnnotationNode]?
+
+    /// Core AppKit/Foundation tree (Computed property)
+    var filteredNodes: [AnnotationNode] {
+        if let cached = cachedFilteredNodes {
+            return cached
+        }
+        return AnnotationManager.shared.rootNode?.children ?? []
+    }
+
+    /// SwiftUI tree
+    var swiftUINodes: [SwiftUIAnnotationNode] {
+        filteredNodes.map { SwiftUIAnnotationNode(from: $0) }
+    }
+
     var searchText: String = "" {
         didSet {
             if oldValue != searchText {
@@ -56,13 +81,12 @@ class iOSAnnotationViewModel {
         }
     }
 
-    private var cancellables = Set<AnyCancellable>()
     private let searchSubject = PassthroughSubject<String, Never>()
 
     var groupingMode: AnnotationGroupingMode = UserDefaults.standard.selectedAnnGroupingMode {
         didSet {
             guard oldValue != groupingMode else { return }
-            isLoading = true
+            state = .loading
             UserDefaults.standard.selectedAnnGroupingMode = groupingMode
             AnnotationManager.shared.updateGroupingMode(groupingMode)
         }
@@ -71,7 +95,7 @@ class iOSAnnotationViewModel {
     var sortField: AnnotationSortField = UserDefaults.standard.selectedAnnSortField {
         didSet {
             guard oldValue != sortField else { return }
-            isLoading = true
+            state = .loading
             UserDefaults.standard.selectedAnnSortField = sortField
             AnnotationManager.shared.updateSorting(field: sortField, isAscending: sortAscending)
         }
@@ -80,53 +104,53 @@ class iOSAnnotationViewModel {
     var sortAscending: Bool = UserDefaults.standard.selectedAnnAscending {
         didSet {
             guard oldValue != sortAscending else { return }
-            isLoading = true
+            state = .loading
             UserDefaults.standard.selectedAnnAscending = sortAscending
             AnnotationManager.shared.updateSorting(field: sortField, isAscending: sortAscending)
         }
     }
 
     // MARK: - Update Callbacks
-    // Controller implements these to apply changes
 
-    /// Called for incremental changes (add/update/delete)
+    /// Controller implements these to apply changes
     var onIncrementalUpdate: ((AnnotationChangeType, [AnyHashable: Any]) -> Void)? {
         didSet {
-            // Flush any buffered notifications when callback is set
             flushBufferedNotifications()
         }
     }
 
-    /// Called when tree needs full rebuild (grouping/sorting/search changes)
-    var onTreeUpdate: (([iOSAnnotationNode], AnnotationGroupingMode) -> Void)?
+    var onTreeUpdate: (([AnnotationNode], AnnotationGroupingMode) -> Void)?
 
-    /// Buffer for notifications that arrive before callback is set
-    private var bufferedNotifications: [(changeType: AnnotationChangeType, userInfo: [AnyHashable: Any])] = []
+    private var bufferedNotifications: [(
+        changeType: AnnotationChangeType,
+        userInfo: [AnyHashable: Any]
+    )] = []
 
-    init() {
-        searchSubject
-            .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.applyFilter()
-            }
-            .store(in: &cancellables)
+    override init() {
+        super.init()
+        Task { @MainActor in
+            searchSubject
+                .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
+                .sink { [weak self] _ in
+                    self?.applyFilter()
+                }
+                .store(in: &cancellables)
+        }
 
-        // Only listen for tree updates (full reload needed for search/grouping changes)
-        NotificationCenter.default.addObserver(
+        addObserver(
             forName: .annotationTreeDidUpdate,
             object: nil,
             queue: .current
-        ) { _ in
+        ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 reloadFromManager()
-                onTreeUpdate?(rootNodes, groupingMode)
-                isLoading = false
+                onTreeUpdate?(filteredNodes, groupingMode)
+                state = .loaded
             }
         }
 
-        // Listen for granular changes - notify controller directly
-        NotificationCenter.default.addObserver(
+        addObserver(
             forName: .annotationDidChange,
             object: nil,
             queue: .main
@@ -141,16 +165,22 @@ class iOSAnnotationViewModel {
         guard let userInfo = notification.userInfo,
               let rawType = userInfo[AnnotationNotificationKeys.changeType] as? String,
               let changeType = AnnotationChangeType(rawValue: rawType)
-        else {
-            return
-        }
+        else { return }
 
-        // When searching, we need full reload - skip incremental
         if !searchText.isEmpty {
+            applyFilter()
             return
         }
 
-        // If callback is set, send immediately; otherwise buffer
+        // Cek apakah anotasi yang diupdate merujuk ke buku yang tidak ada
+        // Jika tidak ada, cukup abaikan agar UI tetap sesuai filter.
+        if UserDefaults.standard.hideMissingBookAnnotations,
+           let annotationId = userInfo[AnnotationNotificationKeys.annotationId] as? Int64,
+           let annotation = AnnotationManager.shared.loadAnnotationById(annotationId),
+           LibraryDataManager.shared.getBook([annotation.bkId]).isEmpty {
+            return
+        }
+
         if let callback = onIncrementalUpdate {
             callback(changeType, userInfo)
         } else {
@@ -169,33 +199,36 @@ class iOSAnnotationViewModel {
     func loadAnnotations() async {
         Task.detached { [weak self] in
             guard let self else { return }
-            // Sinkronisasi status dari UserDefaults ke AnnotationManager sebelum memuat data
             await AnnotationManager.shared.updateGroupingMode(groupingMode)
             await AnnotationManager.shared.updateSorting(field: sortField, isAscending: sortAscending)
             await reloadFromManager()
         }
     }
 
+    func applyFilter() {
+        reloadFromManager()
+        onTreeUpdate?(filteredNodes, groupingMode)
+    }
+
     private func reloadFromManager() {
-        if let coreNodes = AnnotationManager.shared.rootNode?.children {
-            let hideMissing = UserDefaults.standard.bool(forKey: "hideMissingBookAnnotations")
+        guard let coreNodes = AnnotationManager.shared.rootNode?.children else { return }
 
-            var filteredCoreNodes = coreNodes
-            if hideMissing {
-                filteredCoreNodes = filterOutMissingBooks(from: coreNodes)
-            }
+        var isFiltered = false
+        var nodes = coreNodes
 
-            let mapped = filteredCoreNodes.map { iOSAnnotationNode(from: $0) }
-            if searchText.isEmpty {
-                rootNodes = mapped
-            } else {
-                rootNodes = filterNodes(mapped, with: searchText)
-            }
+        if !searchText.isEmpty {
+            nodes = filterNodes(nodes, with: searchText)
+            isFiltered = true
+        }
+
+        if isFiltered {
+            cachedFilteredNodes = nodes
+        } else {
+            cachedFilteredNodes = nil
         }
     }
 
     private func filterOutMissingBooks(from nodes: [AnnotationNode]) -> [AnnotationNode] {
-        // Batch: collect unique bkIds, query once per unique book instead of per annotation
         var uniqueBkIds: Set<Int> = []
         gatherBkIds(from: nodes, into: &uniqueBkIds)
         let existingBkIds = uniqueBkIds.filter { !LibraryDataManager.shared.getBook([$0]).isEmpty }
@@ -231,40 +264,50 @@ class iOSAnnotationViewModel {
         return result
     }
 
-    func applyFilter() {
-        reloadFromManager()
-        onTreeUpdate?(rootNodes, groupingMode)
-    }
-
-    private func filterNodes(_ nodes: [iOSAnnotationNode], with query: String) -> [iOSAnnotationNode] {
-        var result: [iOSAnnotationNode] = []
+    private func filterNodes(_ nodes: [AnnotationNode], with query: String) -> [AnnotationNode] {
+        var result: [AnnotationNode] = []
         let query = query.normalizeArabic(false)
 
         for node in nodes {
-            var matchingChildren: [iOSAnnotationNode] = []
-            if let children = node.children {
-                matchingChildren = filterNodes(children, with: query)
+            var matchingChildren: [AnnotationNode] = []
+            if !node.children.isEmpty {
+                matchingChildren = filterNodes(node.children, with: query)
             }
 
-            let matchesSelf = node.title.normalizeArabic(false).localizedStandardContains(query) ||
-                (node.annotation?.context.normalizeArabic(false).localizedStandardContains(query) == true)
+            let matchesSelf: Bool = {
+                if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
+                if let ann = node.annotation {
+                    if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }
+                    if let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) { return true }
+                    if ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) { return true }
+                }
+                return false
+            }()
 
-            if matchesSelf || !matchingChildren.isEmpty {
-                var copy = node
-                copy.children = matchingChildren.isEmpty && node.children == nil ? nil : matchingChildren
+            if matchesSelf {
+                let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: node.annotation)
+                copy.children = node.children
+                result.append(copy)
+            } else if !matchingChildren.isEmpty {
+                let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: node.annotation)
+                copy.children = matchingChildren
                 result.append(copy)
             }
         }
         return result
     }
 
-    func deleteAnnotation(node: iOSAnnotationNode) {
-        guard let id = node.annotation?.id else { return }
+    func deleteAnnotation(id: Int64) {
         do {
             try AnnotationManager.shared.deleteAnnotation(id: id)
-            // The notification .annotationTreeDidUpdate will trigger a reload automatically
         } catch {
             print("Failed to delete annotation: \(error.localizedDescription)")
         }
+    }
+}
+
+extension UserDefaults {
+    @objc dynamic var hideMissingBookAnnotations: Bool {
+        bool(forKey: "hideMissingBookAnnotations")
     }
 }

@@ -10,7 +10,7 @@ struct AnnotationListView: View {
         let viewModel = navigationManager.annotationViewModel
         annotationsVC(viewModel)
             .overlay {
-                if viewModel.isLoading {
+                if viewModel.state == .loading {
                     ProgressView()
                         .controlSize(.large)
                         .background(
@@ -25,7 +25,7 @@ struct AnnotationListView: View {
     }
 
     @ViewBuilder
-    private func annotationsVC(_ viewModel: iOSAnnotationViewModel) -> some View {
+    private func annotationsVC(_ viewModel: AnnotationViewModel) -> some View {
         @Bindable var viewModel = viewModel
         AnnotationViewControllerWrapper(
             navigationManager: navigationManager,
