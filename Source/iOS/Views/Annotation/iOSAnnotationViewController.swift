@@ -29,8 +29,6 @@ class iOSAnnotationViewController: UIViewController {
         top: 5, leading: ListLayoutMetrics.defaultPadding, bottom: 5, trailing: ListLayoutMetrics.defaultPadding
     )
 
-
-
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -38,8 +36,6 @@ class iOSAnnotationViewController: UIViewController {
         setupCollectionView()
         configureDataSource()
     }
-
-
 
     // MARK: - Full Rebuild (nodes passed from ViewModel)
 
@@ -100,7 +96,7 @@ class iOSAnnotationViewController: UIViewController {
     private func handleTagDiff(_ diff: TagUpdateDiff) {
         // 1. Process Removed
         for entry in diff.removed {
-            let sectionID = iOSAnnotationNode.id(from: entry.tagNode)
+            let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
             var sectionSnap = dataSource.snapshot(for: sectionID)
             let targetAnnotationId = entry.annotationNode.annotation?.id
 
@@ -124,7 +120,7 @@ class iOSAnnotationViewController: UIViewController {
 
         // 2. Process Added
         for entry in diff.added {
-            let sectionID = iOSAnnotationNode.id(from: entry.tagNode)
+            let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
 
             var rootSnap = dataSource.snapshot()
             if !rootSnap.sectionIdentifiers.contains(sectionID) {
@@ -143,7 +139,7 @@ class iOSAnnotationViewController: UIViewController {
             if let existing = existingGroupItem {
                 groupItem = existing
             } else {
-                let groupNode = iOSAnnotationNode(
+                let groupNode = SwiftUIAnnotationNode(
                     id: sectionID,
                     title: entry.tagNode.title,
                     kind: entry.tagNode.kind,
@@ -154,7 +150,7 @@ class iOSAnnotationViewController: UIViewController {
                 sectionSnap.append([groupItem])
             }
 
-            let newNode = iOSAnnotationNode(from: entry.annotationNode, parentId: sectionID)
+            let newNode = SwiftUIAnnotationNode(from: entry.annotationNode, parentId: sectionID)
             let newItem = AnnotationItem.annotation(newNode)
             
             if !sectionSnap.items.contains(where: { $0.node.annotation?.id == newNode.annotation?.id }) {
@@ -222,7 +218,7 @@ class iOSAnnotationViewController: UIViewController {
 
             if !oldItems.isEmpty {
                 for oldItem in oldItems {
-                    let updatedNode = iOSAnnotationNode(
+                    let updatedNode = SwiftUIAnnotationNode(
                         id: oldItem.node.id, // Pertahankan ID unik yang ada (termasuk parent ID)
                         title: updatedAnnotation.note?.isEmpty == false ? updatedAnnotation.note! : updatedAnnotation.context,
                         kind: .annotation,
