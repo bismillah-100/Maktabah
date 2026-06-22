@@ -398,6 +398,21 @@ struct iOSIbarotTextView: UIViewRepresentable {
             replacementEvents: renderResult.replacementEvents
         )
 
+        // Apply clickable links berdasarkan setting
+        if state.clickableAnnotation {
+            attributedString.enumerateAttribute(
+                NSAttributedString.Key("annotationID"),
+                in: NSRange(location: 0, length: attributedString.length)
+            ) { value, range, _ in
+                if let id = value as? Int64 {
+                    let urlString = "annotation://\(id)"
+                    if let url = URL(string: urlString) {
+                        attributedString.addAttribute(.link, value: url, range: range)
+                    }
+                }
+            }
+        }
+
         textView.attributedText = attributedString
         
         // Restore Scroll & Selection exactly once per content ID

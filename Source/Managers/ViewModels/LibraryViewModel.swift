@@ -31,6 +31,7 @@ final class LibraryViewModel: ViewModelBase {
     var selectedBookIds: Set<Int> = []
     var isSelectionMode = false
     var isBulkDownloading = false
+    var isDownloadModal = false
     var singleBookToDelete: BooksData?
 
     #if os(macOS)
@@ -795,18 +796,27 @@ final class LibraryViewModel: ViewModelBase {
             return
         }
         guard let parent = findParentCategory(ofBookId: bookId, in: displayedCategories) else { return }
-        parent.children.removeAll { ($0 as? BooksData)?.id == bookId }
-        if parent.children.isEmpty {
-            if let index = displayedCategories.firstIndex(where: { $0 === parent }) {
+        
+        if isDownloadModal {
+            parent.children.removeAll { ($0 as? BooksData)?.id == bookId }
+            if parent.children.isEmpty {
+                if let index = displayedCategories.firstIndex(where: { $0 === parent }) {
+                    #if os(macOS)
+                    updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
+                    #endif
+                    displayedCategories.remove(at: index)
+                }
+                baseCategories = displayedCategories
+            } else {
                 #if os(macOS)
-                updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
+                updateSubject.send(.reloadItem(parent, reloadChildren: true))
                 #endif
-                displayedCategories.remove(at: index)
             }
-            baseCategories = displayedCategories
         } else {
             #if os(macOS)
-            updateSubject.send(.reloadItem(parent, reloadChildren: true))
+            if let book = parent.children.first(where: { ($0 as? BooksData)?.id == bookId }) {
+                updateSubject.send(.reloadItem(book, reloadChildren: false))
+            }
             #endif
         }
     }

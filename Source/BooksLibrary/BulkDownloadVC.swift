@@ -330,8 +330,6 @@ final class BulkDownloadVC: NSViewController {
             setupLibraryViewManager(with: filtered)
         }
 
-        await dataVM?.prepareData()
-
         Task { @MainActor [weak self] in
             await Task.yield()
             self?.updateDownloadButtonState()
@@ -345,6 +343,7 @@ final class BulkDownloadVC: NSViewController {
             searchView: false,
             downloadView: true
         )
+        vm.viewModel.isDownloadModal = true
         vm.viewModel.setBaseCategories(categories, reload: false)
         vm.viewModel.updateDisplayedCategories()
         vm.checkBoxToggle = { [weak self] in
