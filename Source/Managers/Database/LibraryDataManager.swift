@@ -426,10 +426,11 @@ class LibraryDataManager {
         var totalTables = 0
 
         for archiveId in allowedByArchive.keys.sorted() {
+            if !searchIsRunning { return }
+
             guard let archiveInfo = archives[archiveId] else { continue }
             guard let dbPath = getDatabasePath(forArchive: archiveId) else {
-                stopSearch()
-                return
+                continue
             }
             let connections = createConnections(dbPath: dbPath, count: 4)
 
@@ -458,13 +459,13 @@ class LibraryDataManager {
             #endif
         }
 
-        if totalTables == 0 {
-            stopSearch()
+        if totalTables == 0 || !searchIsRunning {
             return
         }
 
         searchEngine.checkAndResumeIfNeeded { [weak self] resumed in
             guard let self, !resumed else { return }
+            if !searchIsRunning { return }
 
             var completedTablesGlobal = 0
 
