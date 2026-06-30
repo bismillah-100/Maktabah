@@ -378,11 +378,22 @@ struct AppConfig {
     }
 
     static let useICloudKey = "use_icloud_for_annotations"
+    static let useCrossPlatformSyncKey = "use_cross_platform_sync"
 
     // MARK: - iCloud Support
     static var useICloud: Bool {
         get { UserDefaults.standard.bool(forKey: useICloudKey) }
         set { UserDefaults.standard.set(newValue, forKey: useICloudKey) }
+    }
+
+    static var useCrossPlatformSync: Bool {
+        get { UserDefaults.standard.bool(forKey: useCrossPlatformSyncKey) }
+        set { UserDefaults.standard.set(newValue, forKey: useCrossPlatformSyncKey) }
+    }
+
+    static var customWorkerURL: String {
+        get { UserDefaults.standard.string(forKey: "custom_worker_url") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "custom_worker_url") }
     }
 
     static var iCloudFolderURL: URL? {

@@ -166,6 +166,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
      */
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
         ScreenTimeManager.shared.cancel()
         BookArchiveIntegrator.shared.vacuumPendingArchives()

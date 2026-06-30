@@ -62,7 +62,8 @@ jobs:
           -derivedDataPath build \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO \
-          ENABLE_TESTABILITY=NO
+          ENABLE_TESTABILITY=NO \
+          WORKER_URL="${{ secrets.WORKER_URL }}"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4

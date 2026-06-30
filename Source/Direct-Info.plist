@@ -8,5 +8,7 @@
 	<true/>
 	<key>SUPublicEDKey</key>
 	<string>0CmyvFiWdVbs95tlTGWmSQcEcknDNjYxJYUBJTnaO2A=</string>
+	<key>WorkerURL</key>
+	<string>$(WORKER_URL)</string>
 </dict>
 </plist>

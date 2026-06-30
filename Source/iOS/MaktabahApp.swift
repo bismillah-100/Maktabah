@@ -115,6 +115,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         CloudKitSyncManager.shared.fetchChanges()
         completionHandler(.newData)
     }
+    func applicationWillTerminate(_ application: UIApplication) {
+        CloudKitCoreManager.shared.syncWorker()
+    }
 }
 
 extension View {

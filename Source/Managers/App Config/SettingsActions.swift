@@ -389,6 +389,13 @@ enum SettingsActions {
         try AnnotationManager.shared.setupAnnotations(at: newURL)
         try ResultsHandler.shared.setupResultDatabase(at: newURL)
     }
+
+    static func setUseCrossPlatformSync(_ use: Bool) {
+        AppConfig.useCrossPlatformSync = use
+        if use {
+            CloudKitCoreManager.shared.notifyWorkerToSync()
+        }
+    }
 }
 
 #if os(iOS)

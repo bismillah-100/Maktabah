@@ -117,6 +117,7 @@ jobs:
             -archivePath "build/Maktabah.xcarchive" \
             -configuration Release \
             -destination "generic/platform=macOS" \
+            WORKER_URL="${{ secrets.WORKER_URL }}" \
             OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime"
 
       - name: Export Developer ID App

@@ -12,6 +12,8 @@ final class SettingsViewModel: ObservableObject {
     @Published var archiveFilesPath: String = "N/A"
     @Published var annotationsPath: String = "N/A"
     @Published var useICloud: Bool = AppConfig.useICloud
+    @Published var useCrossPlatformSync: Bool = AppConfig.useCrossPlatformSync
+    @Published var customWorkerURL: String = AppConfig.customWorkerURL
     @Published var isProcessingICloud = false
     @Published var showCollisionAlert = false
     @Published var hasBundledData: Bool = false
@@ -50,6 +52,8 @@ final class SettingsViewModel: ObservableObject {
                 .path ?? "N/A"
         isBundleMode = AppConfig.isUsingBundleMode
         useICloud = AppConfig.useICloud
+        useCrossPlatformSync = AppConfig.useCrossPlatformSync
+        customWorkerURL = AppConfig.customWorkerURL
         #if DIRECT_DISTRIBUTION
         autoCheckAppUpdates = UserDefaults.standard.autoCheckAppUpdates
         #endif
@@ -178,6 +182,16 @@ final class SettingsViewModel: ObservableObject {
         SettingsActions.downloadSelectiveLibrary()
     }
     #endif
+
+    func setCustomWorkerURL(_ url: String) {
+        customWorkerURL = url
+        AppConfig.customWorkerURL = url
+    }
+
+    func setCrossPlatformSync(_ enabled: Bool) {
+        useCrossPlatformSync = enabled
+        SettingsActions.setUseCrossPlatformSync(enabled)
+    }
 
     func setICloud(_ enabled: Bool) {
         if enabled {
@@ -467,6 +481,30 @@ extension SettingsView {
             }
             .controlSize(.regular)
             .disabled(viewModel.isProcessingICloud)
+
+            if viewModel.useICloud {
+                Toggle(isOn: Binding(
+                    get: { viewModel.useCrossPlatformSync },
+                    set: { viewModel.setCrossPlatformSync($0) }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Cross-Platform Sync")
+                        Text("Notify other platforms to sync when changes are made.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .controlSize(.regular)
+
+                #if DEBUG
+                TextField("Debug Worker URL", text: Binding(
+                    get: { viewModel.customWorkerURL },
+                    set: { viewModel.setCustomWorkerURL($0) }
+                ))
+                .font(.caption)
+                .controlSize(.regular)
+                #endif
+            }
 
             if !viewModel.useICloud {
                 PathRow(label: "Current Path", path: viewModel.annotationsPath)
