@@ -446,6 +446,7 @@ final class SearchEngine {
     private var searchTask: Task<Void, Never>?
     private var isStopped = false
     private let stopLock = NSLock()
+    private let workersLock = NSLock()
 
     private var completedWorkers: Int = 0
     private let progressLock = NSLock()
@@ -455,7 +456,9 @@ final class SearchEngine {
     func registerDB(archiveId: String, tables: [String], connections: [DBConnectionType], batchSize: Int = 200) {
         let pool = SQLiteConnectionPool(conns: connections)
         let worker = SearchWorker(archiveId: archiveId, tables: tables, pool: pool, batchSize: batchSize)
+        workersLock.lock()
         workers.append(worker)
+        workersLock.unlock()
     }
 
     func startSearch(
@@ -479,11 +482,15 @@ final class SearchEngine {
         completedWorkers = 0
         progressLock.unlock()
 
-        print("=== MEMULAI SEARCH: \(workers.count) workers ===")
+        workersLock.lock()
+        let currentWorkers = workers
+        workersLock.unlock()
+
+        print("=== MEMULAI SEARCH: \(currentWorkers.count) workers ===")
 
         // Kirim total workers ke UI
         Task { @MainActor in
-            onInitialize(workers.count)
+            onInitialize(currentWorkers.count)
         }
 
         // Normalisasi keywords
@@ -507,9 +514,9 @@ final class SearchEngine {
             // Result: "الحمد OR حمد"
         }
 
-        searchTask = Task.detached(priority: .userInitiated) { [weak self, ftsQuery] in
+        searchTask = Task.detached(priority: .userInitiated) { [weak self, ftsQuery, currentWorkers] in
             guard let self else { return }
-            for worker in self.workers {
+            for worker in currentWorkers {
                 if isStopped { break }
 
                 var completedTables = 0
@@ -593,7 +600,9 @@ final class SearchEngine {
     }
 
     func cleanup() {
+        workersLock.lock()
         workers.removeAll()
+        workersLock.unlock()
     }
 }
 
