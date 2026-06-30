@@ -33,6 +33,7 @@ final class LibraryViewModel: ViewModelBase {
     var isBulkDownloading = false
     var isDownloadModal = false
     var singleBookToDelete: BooksData?
+    var reloadTask: Task<Void, Never>?
 
     #if os(macOS)
     @Published var searchQuery: String = ""
@@ -645,7 +646,14 @@ final class LibraryViewModel: ViewModelBase {
 
         addObserver(
             forName: .libraryFolderChanged, object: nil, queue: .current
-        ) { [weak self] _ in Task { @MainActor in await self?.refreshLibrary() } }
+        ) { [weak self] _ in
+            guard let self, reloadTask == nil else { return }
+            reloadTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                await refreshLibrary()
+                reloadTask = nil
+            }
+        }
     }
 
     #if os(macOS)
