@@ -180,14 +180,16 @@ struct iOSLibraryView: View {
             }
 
             ToolbarItem(placement: .topBarTrailing) {
-                Toggle(isOn: Binding(
-                    get: { viewModel.showOnlyDownloaded },
-                    set: { viewModel.showOnlyDownloaded = $0 }
-                )) {
-                    Label("Downloaded", systemImage: "line.3.horizontal.decrease")
+                if AppConfig.isUsingBundleMode {
+                    Toggle(isOn: Binding(
+                        get: { viewModel.showOnlyDownloaded },
+                        set: { viewModel.showOnlyDownloaded = $0 }
+                    )) {
+                        Label("Downloaded", systemImage: "line.3.horizontal.decrease")
+                    }
+                    .labelStyle(.iconOnly)
+                    .toggleStyle(.button)
                 }
-                .labelStyle(.iconOnly)
-                .toggleStyle(.button)
             }
 
             CustomToolbarSpacer(placement: .topBarTrailing)

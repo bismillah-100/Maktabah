@@ -636,4 +636,5 @@ struct AppConfig {
 
 extension Notification.Name {
     static let libraryFolderChanged = Notification.Name("libraryFolderChanged")
+    static let requireCoreDownload = Notification.Name("requireCoreDownload")
 }

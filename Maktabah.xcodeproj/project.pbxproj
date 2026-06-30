@@ -381,7 +381,6 @@
 		F363824E2FA6C6150006636C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB98B2F69E860007D0945 /* SettingsView.swift */; };
 		F36382512FA6FA1E0006636C /* BootstrapManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382502FA6FA1E0006636C /* BootstrapManager.swift */; };
 		F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382522FA6FABF0006636C /* BootstrapView.swift */; };
-		F36382552FA6FAE10006636C /* CoreDownloaderGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382542FA6FAE10006636C /* CoreDownloaderGateView.swift */; };
 		F363825B2FA702A00006636C /* iPhoneLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = F363825A2FA702A00006636C /* iPhoneLayout.swift */; };
 		F363825D2FA702D10006636C /* iPadLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = F363825C2FA702D10006636C /* iPadLayout.swift */; };
 		F36382642FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382632FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift */; };
@@ -391,6 +390,7 @@
 		F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374C00B2FDD69A2009D6807 /* SearchComponents.swift */; };
+		F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */; };
 		F38FF42E2FA817D9003E7B71 /* iOSBookInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */; };
 		F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */; };
 		F38FF4322FA82059003E7B71 /* iOSRowiHierarchicalCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF4312FA82059003E7B71 /* iOSRowiHierarchicalCollectionViewController.swift */; };
@@ -641,7 +641,6 @@
 		F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTOCViewModel.swift; sourceTree = "<group>"; };
 		F36382502FA6FA1E0006636C /* BootstrapManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BootstrapManager.swift; sourceTree = "<group>"; };
 		F36382522FA6FABF0006636C /* BootstrapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BootstrapView.swift; sourceTree = "<group>"; };
-		F36382542FA6FAE10006636C /* CoreDownloaderGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDownloaderGateView.swift; sourceTree = "<group>"; };
 		F363825A2FA702A00006636C /* iPhoneLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPhoneLayout.swift; sourceTree = "<group>"; };
 		F363825C2FA702D10006636C /* iPadLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPadLayout.swift; sourceTree = "<group>"; };
 		F36382632FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSHierarchicalCollectionViewController.swift; sourceTree = "<group>"; };
@@ -1237,7 +1236,6 @@
 			children = (
 				F3A20B132FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift */,
 				F36382522FA6FABF0006636C /* BootstrapView.swift */,
-				F36382542FA6FAE10006636C /* CoreDownloaderGateView.swift */,
 			);
 			path = Bootstrap;
 			sourceTree = "<group>";
@@ -1807,6 +1805,7 @@
 				F3B60E2A2FC7CDE600A9EF58 /* ReaderTabItemView.swift in Sources */,
 				F305778D2FA463B1005732C8 /* LibraryViewControllerWrapper.swift in Sources */,
 				F321672B2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
+				F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */,
 				F363824E2FA6C6150006636C /* SettingsView.swift in Sources */,
 				F3D38A942FD4B2F200387BA4 /* HistoryFavoriteSections.swift in Sources */,
 				F305778E2FA463B1005732C6 /* ViewOptionsView.swift in Sources */,
@@ -1894,7 +1893,6 @@
 				F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */,
 				F30577432FA46222005732C6 /* ArabicFont.swift in Sources */,
 				F30577442FA46222005732C6 /* TarjamahDataManager.swift in Sources */,
-				F36382552FA6FAE10006636C /* CoreDownloaderGateView.swift in Sources */,
 				CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */,
 				F363825D2FA702D10006636C /* iPadLayout.swift in Sources */,
 				FDB5242B5960EB1507BD74A6 /* iOSHistoryView.swift in Sources */,

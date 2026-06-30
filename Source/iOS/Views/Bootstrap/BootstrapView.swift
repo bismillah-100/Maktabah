@@ -22,9 +22,11 @@ struct iOSBootstrapView: View {
                     if bootstrapManager.isChecking {
                         ProgressView("Preparing Library...")
                     } else {
-                        iOSCoreDownloadGateView(
+                        CoreDownloadProgressView(
                             state: bootstrapManager.coreDownloadState,
-                            onDownload: { bootstrapManager.startDownload() }
+                            onDownload: { bootstrapManager.startDownload() },
+                            onChooseFolder: { bootstrapManager.chooseLibraryFolder() },
+                            onQuit: { cancellation() }
                         )
                         .padding()
                     }
@@ -33,6 +35,10 @@ struct iOSBootstrapView: View {
         }
         .task {
             bootstrapManager.prepareIfNeeded()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requireCoreDownload)) { notification in
+            let isCancellable = notification.userInfo?["isCancellable"] as? Bool ?? false
+            bootstrapManager.reloadLibrary(isCancellable: isCancellable)
         }
         .overlay {
             if bootstrapManager.showCoreUpdateAlert {
@@ -57,6 +63,17 @@ struct iOSBootstrapView: View {
                     state: bootstrapManager.coreDownloadState
                 )
             }
+        }
+    }
+
+    private func cancellation() {
+        if bootstrapManager.isCancellable {
+            bootstrapManager.cancelDownload()
+        } else {
+            ReusableFunc.showAlert(
+                title: "core.modal.missingFiles.title".localized,
+                message: "Database File Needed".localized
+            )
         }
     }
 }

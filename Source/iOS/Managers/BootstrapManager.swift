@@ -16,6 +16,7 @@ final class iOSBootstrapManager {
     var coreDownloadState = CoreDownloadProgressState()
     var isChecking = true
     var isUpdating = false
+    var isCancellable = false
 
     // Core update alert state
     var showCoreUpdateAlert = false
@@ -28,7 +29,16 @@ final class iOSBootstrapManager {
         guard !didPrepare else { return }
         didPrepare = true
 
-        if downloader.areCoreFilesReady() || AppConfig.hasCustomDatabaseFolder() {
+        if AppConfig.hasCustomDatabaseFolder() {
+            if let mainPath = AppConfig.mainDatabasePath, FileManager.default.fileExists(atPath: mainPath) {
+                finishSetup()
+                return
+            } else {
+                AppConfig.resetCustomModeKey()
+            }
+        }
+
+        if downloader.areCoreFilesReady() {
             finishSetup()
             return
         }
@@ -69,8 +79,7 @@ final class iOSBootstrapManager {
     }
 
     private func finishSetup() {
-        DatabaseManager.shared.setupFolders()
-        TarjamahGlobalManager.shared.setupConnection()
+        DatabaseManager.shared.reloadConnectionAndLibrary()
         isChecking = false
         isReady = true
 
@@ -127,5 +136,28 @@ final class iOSBootstrapManager {
                 isUpdating = false
             }
         )
+    }
+
+    func reloadLibrary(isCancellable: Bool = false) {
+        self.isCancellable = isCancellable
+        didPrepare = false
+        isReady = false
+        prepareIfNeeded()
+    }
+
+    func cancelDownload() {
+        SettingsActions.cancelBundleModeSwitch()
+        isChecking = false
+        isReady = true
+    }
+
+    func chooseLibraryFolder() {
+        _ = SettingsActions.selectLibraryFolder(showSuccessAlert: false, shouldTerminateOnCancel: false) { [weak self] success in
+            if success {
+                Task { @MainActor in
+                    self?.finishSetup()
+                }
+            }
+        }
     }
 }

@@ -72,7 +72,6 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func checkBundledData() {
-        #if os(macOS)
         guard let path = AppConfig.archiveCachePath else {
             hasBundledData = false
             return
@@ -86,13 +85,9 @@ final class SettingsViewModel: ObservableObject {
         hasBundledData = items.contains { 
             $0.hasSuffix(".sqlite") || $0 == "index.json" || $0 == "integration_cache" || $0 == "Books"
         }
-        #else
-        hasBundledData = false
-        #endif
     }
 
     func cleanupBundledData() {
-        #if os(macOS)
         guard let path = AppConfig.archiveCachePath else { return }
         let url = URL(fileURLWithPath: path)
         let fm = FileManager.default
@@ -108,10 +103,8 @@ final class SettingsViewModel: ObservableObject {
             print("Failed to cleanup bundled data:", error)
             #endif
         }
-        #endif
     }
     
-    #if os(macOS)
     func setBundleMode(_ enabled: Bool) {
         if enabled {
             SettingsActions.switchToBundleMode(
@@ -131,7 +124,6 @@ final class SettingsViewModel: ObservableObject {
             }
         }
     }
-    #endif
 
     func chooseAnnotationsFolder(onCompletion: ((Bool) -> Void)? = nil) {
         SettingsActions.chooseAnnotationsAndResultsFolder(resolution: .ask) { [weak self] result in
@@ -177,11 +169,11 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-    #if os(macOS)
     func openFullLibraryDownload() {
         SettingsActions.openFullLibraryDownloadURL()
     }
 
+    #if os(macOS)
     func openSelectiveDownload() {
         SettingsActions.downloadSelectiveLibrary()
     }
@@ -304,7 +296,7 @@ extension SettingsView {
             libraryStorageSection
             annotationsSection
             downloadsSection
-            updatesSection
+            if shouldShowUpdatesSection { updatesSection }
         }
         .formStyle(.grouped)
         .controlSize(.large)
@@ -315,81 +307,6 @@ extension SettingsView {
             Text(.annotationsMoveFolderFileExistsDesc)
         }
     }
-
-    private var databaseModeSection: some View {
-        Section {
-            Toggle(isOn: Binding(
-                get: { viewModel.isBundleMode },
-                set: { viewModel.setBundleMode($0) }
-            )) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Bundle Mode")
-                    Text("Use the app's built-in database (read-only). For the Full Library, disable this and choose a custom folder.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }.controlSize(.regular)
-        } header: {
-            Text("Database Mode")
-        }
-    }
-
-    private var libraryStorageSection: some View {
-        Section {
-            if !viewModel.isBundleMode {
-                PathRow(label: "Database Files", path: viewModel.databaseFilesPath)
-                PathRow(label: "Archive Files", path: viewModel.archiveFilesPath)
-            }
-
-            HStack(spacing: 8) {
-                Button("Choose Library Folder…") {
-                    viewModel.chooseLibraryFolder()
-                }
-                Button("Switch to Bundle Mode") {
-                    viewModel.setBundleMode(true)
-                }
-                .disabled(viewModel.isBundleMode)
-            }
-
-            if !viewModel.isBundleMode && viewModel.hasBundledData {
-                VStack(alignment: .leading, spacing: 8) {
-                    Button("Cleanup Downloaded Data (Bundle Mode)") {
-                        viewModel.cleanupBundledData()
-                    }
-                    .foregroundColor(.red)
-
-                    Text("This will delete all downloaded SQLite files, index, and cache from the bundle mode storage.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-        } header: {
-            Text("Library Storage")
-        }
-    }
-
-    private var downloadsSection: some View {
-        Section {
-            HStack(spacing: 8) {
-                Button("Download Full Library (Google Drive)") {
-                    viewModel.openFullLibraryDownload()
-                }
-                Button("Download Selective Library…") {
-                    viewModel.openSelectiveDownload()
-                }
-            }
-            Label {
-                Text("Full Library will open the download link in your browser.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } icon: {
-                Image(systemName: "exclamationmark.circle")
-                    .foregroundColor(.accentColor)
-            }
-        } header: {
-            Text("Downloads")
-        }
-    }
 }
 #endif
 
@@ -398,17 +315,27 @@ extension SettingsView {
 extension SettingsView {
     private var iOSForm: some View {
         Form {
+            databaseModeSection
+                .listRowBackground(Color.appCellBackground)
+            libraryStorageSection
+                .listRowBackground(Color.appCellBackground)
             annotationsSection
                 .listRowBackground(Color.appCellBackground)
             appearanceSection
                 .listRowBackground(Color.appCellBackground)
-            
-            if viewModel.hasPendingVacuum || viewModel.isVacuuming {
+
+            if AppConfig.isUsingBundleMode,
+               viewModel.hasPendingVacuum || viewModel.isVacuuming {
                 optimizationSection
                     .listRowBackground(Color.appCellBackground)
             }
 
-            updatesSection
+            if shouldShowUpdatesSection {
+                updatesSection
+                    .listRowBackground(Color.appCellBackground)
+            }
+
+            downloadsSection
                 .listRowBackground(Color.appCellBackground)
         }
         .formStyle(.grouped)
@@ -467,6 +394,54 @@ extension SettingsView {
 
 // MARK: - Shared Sections
 extension SettingsView {
+    private var databaseModeSection: some View {
+        Section {
+            Toggle(isOn: Binding(
+                get: { viewModel.isBundleMode },
+                set: { viewModel.setBundleMode($0) }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Bundle Mode")
+                    Text("Use the app's built-in database (read-only). For the Full Library, disable this and choose a custom folder.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }.controlSize(.regular)
+        } header: {
+            Text("Database Mode")
+        }
+    }
+
+    private var libraryStorageSection: some View {
+        Section {
+            if !viewModel.isBundleMode {
+                PathRow(label: "Database Files", path: viewModel.databaseFilesPath)
+                PathRow(label: "Archive Files", path: viewModel.archiveFilesPath)
+            }
+
+            #if os(macOS)
+            HStack(spacing: 8) { libraryButtons }
+            #else
+            libraryButtons
+            #endif
+
+            if !viewModel.isBundleMode && viewModel.hasBundledData {
+                VStack(alignment: .leading, spacing: 8) {
+                    Button("Cleanup Downloaded Data (Bundle Mode)") {
+                        viewModel.cleanupBundledData()
+                    }
+                    .foregroundColor(.red)
+
+                    Text("This will delete all downloaded SQLite files, index, and cache from the bundle mode storage.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("Library Storage")
+        }
+    }
+
     private var annotationsSection: some View {
         Section {
             Toggle(isOn: $viewModel.hideMissingBookAnnotations) {
@@ -507,7 +482,19 @@ extension SettingsView {
             Text("Annotations & Search Results")
         }
     }
-    
+
+    @ViewBuilder
+    private var libraryButtons: some View {
+        Button("Choose Library Folder…") {
+            viewModel.chooseLibraryFolder()
+        }
+
+        Button("Switch to Bundle Mode") {
+            viewModel.setBundleMode(true)
+        }
+        .disabled(viewModel.isBundleMode)
+    }
+
     @ViewBuilder
     private var actionButtons: some View {
         Button("Choose Annotations Folder…") {
@@ -535,6 +522,16 @@ extension SettingsView {
         }
     }
 
+    private var shouldShowUpdatesSection: Bool {
+        #if os(macOS) && DIRECT_DISTRIBUTION
+        // Jika build macOS & Direct Distribution, Toggle pertama PASTI ada
+        return true
+        #else
+        // Jika build lain, tergantung pada runtime config ini
+        return AppConfig.isUsingBundleMode
+        #endif
+    }
+
     private var updatesSection: some View {
         Section {
             #if os(macOS) && DIRECT_DISTRIBUTION
@@ -551,23 +548,50 @@ extension SettingsView {
             }.controlSize(.regular)
             #endif
 
-            Toggle(isOn: Binding(
-                get: { viewModel.enableAutoCoreVersionCheck },
-                set: { viewModel.setEnableAutoCoreVersionCheck($0) }
-            )) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Library Update")
-                    Text("Semi-Annual Check")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("Bi-Annual Routine Check until toggled off and on again.")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            if AppConfig.isUsingBundleMode {
+                Toggle(isOn: Binding(
+                    get: { viewModel.enableAutoCoreVersionCheck },
+                    set: { viewModel.setEnableAutoCoreVersionCheck($0) }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Library Update")
+                        Text("Semi-Annual Check")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("Bi-Annual Routine Check until toggled off and on again.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .controlSize(.regular)
             }
-            .controlSize(.regular)
         } header: {
             Text("Updates")
+        }
+    }
+
+    private var downloadsSection: some View {
+        Section {
+            HStack(spacing: 8) {
+                Button("Download Full Library (Google Drive)") {
+                    viewModel.openFullLibraryDownload()
+                }
+                #if os(macOS)
+                Button("Download Selective Library…") {
+                    viewModel.openSelectiveDownload()
+                }
+                #endif
+            }
+            Label {
+                Text("Full Library will open the download link in your browser.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } icon: {
+                Image(systemName: "exclamationmark.circle")
+                    .foregroundColor(.accentColor)
+            }
+        } header: {
+            Text("Downloads")
         }
     }
 }

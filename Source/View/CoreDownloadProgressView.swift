@@ -8,7 +8,12 @@
 import SwiftUI
 
 struct CoreDownloadProgressView: View {
+    #if os(macOS)
     @ObservedObject var state: CoreDownloadProgressState
+    #else
+    var state: CoreDownloadProgressState
+    #endif
+
     let onDownload: () -> Void
     let onChooseFolder: () -> Void
     let onQuit: () -> Void
@@ -55,6 +60,7 @@ struct CoreDownloadProgressView: View {
             switch state.phase {
             case .confirmation:
                 confirmationButtons
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             case .downloading:
                 downloadingProgress
             case .error(let msg):
@@ -70,7 +76,11 @@ struct CoreDownloadProgressView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(.quaternary, lineWidth: 1)
         )
+        #if os(macOS)
         .frame(width: 400)
+        #else
+        .frame(maxWidth: 400)
+        #endif
         .fixedSize(horizontal: false, vertical: true)
         .animation(.easeInOut(duration: 0.2), value: state.phase)
         .animation(.linear(duration: 0.15), value: state.progress)
@@ -129,29 +139,42 @@ struct CoreDownloadProgressView: View {
     }
 
     private var confirmationButtons: some View {
-        HStack(spacing: 12) {
-            Button(
-                "Choose Library Folder…",
-                action: onChooseFolder
-            )
-            .buttonStyle(.bordered)
+        #if os(macOS)
+        HStack(spacing: 12) { actionButtons }
+        #else
+        actionButtons
+        #endif
+    }
 
-            Spacer()
-            Button(
-                String(localized:"Quit"),
-                action: onQuit
-            )
-            .buttonStyle(.bordered)
-            .keyboardShortcut(.cancelAction)
-
-            Button(
-                String(localized:"Download"),
-                action: onDownload
-            )
-            .buttonStyle(.borderedProminent)
-            .keyboardShortcut(.defaultAction)
+    @ViewBuilder
+    private var actionButtons: some View {
+        Button(action: onChooseFolder) {
+            Text("Choose Library Folder…")
+                .frame(maxWidth: .infinity)
         }
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
+        .buttonStyle(.bordered)
+
+        #if os(macOS)
+        Spacer()
+        #endif
+
+        Button(action: onQuit) {
+            Text("Quit")
+            #if os(iOS)
+                .frame(maxWidth: .infinity)
+            #endif
+        }
+        .buttonStyle(.bordered)
+        .keyboardShortcut(.cancelAction)
+
+        Button(action: onDownload) {
+            Text("Download")
+            #if os(iOS)
+                .frame(maxWidth: .infinity)
+            #endif
+        }
+        .buttonStyle(.borderedProminent)
+        .keyboardShortcut(.defaultAction)
     }
 
     private var downloadingProgress: some View {
@@ -181,19 +204,13 @@ struct CoreDownloadProgressView: View {
         HStack(spacing: 12) {
             Spacer()
             Button(
-                NSLocalizedString(
-                    "Quit",
-                    comment: ""
-                ),
+                "Quit",
                 action: onQuit
             )
             .buttonStyle(.bordered)
 
             Button(
-                NSLocalizedString(
-                    "Try Again",
-                    comment: ""
-                ),
+                "Try Again",
                 action: onDownload
             )
             .buttonStyle(.borderedProminent)

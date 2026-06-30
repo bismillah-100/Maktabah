@@ -1998,29 +1998,6 @@
         }
       }
     },
-    "Database File Needed" : {
-      "comment" : "Missing core files alert title",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ملف قاعدة البيانات مطلوب"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Database File Needed"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File Database Diperlukan"
-          }
-        }
-      }
-    },
     "Database Mode" : {
       "localizations" : {
         "ar" : {
@@ -6860,29 +6837,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pilihan Teks"
-          }
-        }
-      }
-    },
-    "The core database files are not ready yet. Finish the initial download first." : {
-      "comment" : "Missing core files alert message",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ملفات قاعدة البيانات الأساسية ليست جاهزة بعد. أكمل التنزيل الأولي أولاً."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The core database files are not ready yet. Finish the initial download first."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File database inti belum siap. Selesaikan unduhan awal terlebih dahulu."
           }
         }
       }

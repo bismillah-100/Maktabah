@@ -591,8 +591,12 @@ final class CoreDatabaseBootstrap {
     static func run() {
         // Custom mode: folder dipilih user, DatabaseManager langsung setup.
         if AppConfig.hasCustomDatabaseFolder() {
-            DatabaseManager.shared.setupFolders()
-            return
+            if let mainPath = AppConfig.mainDatabasePath, FileManager.default.fileExists(atPath: mainPath) {
+                DatabaseManager.shared.setupFolders()
+                return
+            } else {
+                AppConfig.resetCustomModeKey()
+            }
         }
 
         // Bundle mode: cek apakah core files sudah ada.
