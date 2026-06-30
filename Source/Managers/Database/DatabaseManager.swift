@@ -158,7 +158,7 @@ class DatabaseManager {
     }
 
     private func handleSetupError() {
-        UserDefaults.standard.removeObject(forKey: AppConfig.storageKey)
+        AppConfig.resetCustomModeKey()
         ReusableFunc.showAlert(
             title: NSLocalizedString("Folder Not Found", comment: ""),
             message: NSLocalizedString(
