@@ -480,10 +480,17 @@ struct AppConfig {
     /// Migrate ke Bundle Mode pada first launch
     static func migrateToBundleMode() {
         // Clear custom folder setting jika ada
-        UserDefaults.standard.removeObject(forKey: customDatabaseFolderKey)
+        resetCustomModeKey()
 
         // Setup bundle mode
         _ = setupBundleMode()
+    }
+
+    /// Reset semua key custom database di UserDefaults
+    static func resetCustomModeKey() {
+        isUsingBundleMode = true
+        UserDefaults.standard.removeObject(forKey: AppConfig.customDatabaseFolderKey)
+        UserDefaults.standard.removeObject(forKey: AppConfig.storageKey)
     }
 
     /// Migrate ke Custom Mode: Switch dari Bundle ke user-selected folder

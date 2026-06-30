@@ -52,6 +52,7 @@ class LibraryVC: NSViewController {
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 isDataLoaded = false
+                outlineView.deselectAll(nil)
                 setupUI()
             }
         }

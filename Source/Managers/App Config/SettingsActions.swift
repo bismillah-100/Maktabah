@@ -156,6 +156,7 @@ enum SettingsActions {
         let migrateSuccess = AppConfig.migrateToCustomMode(folderUrl: url)
 
         if !migrateSuccess {
+            AppConfig.resetCustomModeKey()
             ReusableFunc.showAlert(
                 title: String(localized: "migrationFailed"),
                 message: String(localized: "migrationFailedInfo")
