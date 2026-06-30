@@ -332,11 +332,24 @@ extension LibraryViewManager: NSMenuDelegate {
             favItem.target = self
             favItem.representedObject = book
             menu.addItem(favItem)
+            
+            let isHistory = HistoryViewModel.shared.historyBookIds.contains(book.id)
+            if isHistory {
+                let historyItem = NSMenuItem(title: String(localized: "Remove from History"), action: #selector(removeHistoryAction(_:)), keyEquivalent: "")
+                historyItem.target = self
+                historyItem.representedObject = book
+                menu.addItem(historyItem)
+            }
         }
     }
 
     @objc func toggleFavoriteAction(_ sender: NSMenuItem) {
         guard let book = sender.representedObject as? BooksData else { return }
         HistoryViewModel.shared.toggleFavorite(book.id)
+    }
+
+    @objc func removeHistoryAction(_ sender: NSMenuItem) {
+        guard let book = sender.representedObject as? BooksData else { return }
+        HistoryViewModel.shared.removeHistory(for: book.id)
     }
 }
