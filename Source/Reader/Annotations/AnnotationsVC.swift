@@ -43,6 +43,59 @@ class AnnotationsVC: NSViewController {
     var popover: Bool = true
     var isDataLoaded = false
 
+    private lazy var scopePanel: NSPanel = {
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 300, height: 40),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.hasShadow = true
+        panel.isOpaque = false
+        panel.backgroundColor = .windowBackgroundColor
+        panel.level = .popUpMenu
+
+        let contentView = NSView()
+        contentView.addSubview(scopeSegment)
+
+        scopeSegment.translatesAutoresizingMaskIntoConstraints = false
+        scopeSegment.trackingMode = .selectOne
+        if #available(macOS 26, *) { scopeSegment.borderShape = .capsule }
+
+        NSLayoutConstraint.activate([
+            scopeSegment.centerXAnchor.constraint(
+                equalTo: contentView.centerXAnchor
+            ),
+            scopeSegment.centerYAnchor.constraint(
+                equalTo: contentView.centerYAnchor
+            ),
+            scopeSegment.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: 8
+            ),
+            scopeSegment.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -8
+            )
+        ])
+
+        panel.contentView = contentView
+        return panel
+    }()
+
+    private lazy var scopeSegment: NSSegmentedControl = {
+        let scopes = AnnotationSearchScope.allCases
+        let segment = NSSegmentedControl(
+            labels: scopes.map { $0.title },
+            trackingMode: .selectOne, target: self,
+            action: #selector(searchScopeChanged(_:))
+        )
+        segment.segmentStyle = .roundRect
+        segment.controlSize = .small
+        segment.refusesFirstResponder = true
+        return segment
+    }()
+
     private enum SortMenuTag {
         static let fieldCreatedAt = 101
         static let fieldContext = 102
@@ -77,6 +130,7 @@ class AnnotationsVC: NSViewController {
         setupSortMenu()
         ReusableFunc.setupSearchField(searchField)
         outlineView.allowsMultipleSelection = true
+        searchField.delegate = self
         dataSource.onAddTagsRequested = { [weak self] annotationIDs, anchorRect in
             self?.presentTagPopover(
                 mode: .add,
@@ -115,6 +169,11 @@ class AnnotationsVC: NSViewController {
                 isDataLoaded = true
             }
         }
+    }
+
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
+        removeScopePanelFromWindow()
     }
 
     @IBAction func reloadAnnotations(_ sender: Any?) {
@@ -532,5 +591,60 @@ extension AnnotationsVC: NSWindowDelegate {
 
     func windowDidResignKey(_ notification: Notification) {
         outlineView.deselectAll(nil)
+        removeScopePanelFromWindow()
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        if !searchField.stringValue.isEmpty { updateAndShowScopePanel() }
+    }
+}
+
+extension AnnotationsVC: NSSearchFieldDelegate {
+    func controlTextDidChange(_ obj: Notification) {
+        guard let obj = obj.object as? DSFSearchField,
+              obj === searchField
+        else { return }
+
+        searchField.stringValue.isEmpty
+            ? removeScopePanelFromWindow()
+            : updateAndShowScopePanel()
+    }
+
+    private func updateAndShowScopePanel() {
+        guard !scopePanel.isVisible else { return }
+
+        scopeSegment.selectedSegment = dataSource.viewModel.searchScope.rawValue
+
+        let fittingSize = scopeSegment.fittingSize
+        let panelWidth = max(fittingSize.width + 16, searchField.bounds.width)
+        let panelHeight = fittingSize.height + 12
+
+        let bounds = searchField.bounds
+        let rectInWindow = searchField.convert(bounds, to: nil)
+        guard let screenRect = searchField.window?.convertToScreen(rectInWindow) else { return }
+
+        let x = MainWindow.rtl ? (screenRect.maxX - panelWidth) : screenRect.minX
+        let y = screenRect.minY - panelHeight - 8
+
+        scopePanel.setFrame(
+            NSRect(x: x, y: y, width: panelWidth, height: panelHeight),
+            display: true
+        )
+
+        view.window?.addChildWindow(scopePanel, ordered: .above)
+    }
+
+    @objc private func searchScopeChanged(_ sender: NSSegmentedControl) {
+        guard let scope = AnnotationSearchScope(rawValue: sender.selectedSegment) else { return }
+        dataSource.viewModel.searchScope = scope
+    }
+
+    private func removeScopePanelFromWindow() {
+        guard let window = view.window,
+              let windows = window.childWindows,
+              windows.contains(scopePanel)
+        else { return }
+        scopePanel.orderOut(nil)
+        window.removeChildWindow(scopePanel)
     }
 }

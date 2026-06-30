@@ -123,6 +123,11 @@ struct iPhoneLayout: View {
             placement: .toolbar,
             prompt: String(localized: "Search Annotations")
         )
+        .searchScopes(Bindable(bManager.annotationViewModel).searchScope) {
+            ForEach(AnnotationSearchScope.allCases) { scope in
+                Text(scope.title).tag(scope)
+            }
+        }
     }
 
     @ViewBuilder

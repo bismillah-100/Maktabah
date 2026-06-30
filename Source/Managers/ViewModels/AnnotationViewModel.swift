@@ -9,6 +9,26 @@ import Combine
 import Foundation
 import SwiftUI
 
+enum AnnotationSearchScope: Int, CaseIterable, Identifiable, Sendable {
+    case all = 0
+    case book = 1
+    case context = 2
+    case note = 3
+    case tag = 4
+
+    var id: Int { rawValue }
+    
+    var title: String {
+        switch self {
+        case .all: return "All".localized
+        case .book: return "Book".localized
+        case .context: return "Context".localized
+        case .note: return "Note".localized
+        case .tag: return "Tag".localized
+        }
+    }
+}
+
 struct SwiftUIAnnotationNode: Identifiable {
     let id: String
     let title: String
@@ -77,6 +97,15 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         didSet {
             if oldValue != searchText {
                 searchSubject.send(searchText)
+            }
+        }
+    }
+
+    var searchScope: AnnotationSearchScope = .all {
+        didSet {
+            guard oldValue != searchScope else { return }
+            if !searchText.isEmpty {
+                applyFilter()
             }
         }
     }
@@ -275,11 +304,20 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             }
 
             let matchesSelf: Bool = {
-                if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
+                if searchScope == .all || searchScope == .book {
+                    if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
+                }
+                
                 if let ann = node.annotation {
-                    if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }
-                    if let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) { return true }
-                    if ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) { return true }
+                    if searchScope == .all || searchScope == .context {
+                        if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }
+                    }
+                    if searchScope == .all || searchScope == .note {
+                        if let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) { return true }
+                    }
+                    if searchScope == .all || searchScope == .tag {
+                        if ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) { return true }
+                    }
                 }
                 return false
             }()

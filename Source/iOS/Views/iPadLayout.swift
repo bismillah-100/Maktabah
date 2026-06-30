@@ -163,6 +163,11 @@ struct iPadLayout: View {
                         placement: .navigationBarDrawer(displayMode: .always),
                         prompt: searchPrompt(for: tab).localized
                     )
+                    .searchScopes($annotationVM.searchScope) {
+                        ForEach(AnnotationSearchScope.allCases) { scope in
+                            Text(scope.title).tag(scope)
+                        }
+                    }
             case .history:
                 EmptyView()
             }
