@@ -21,6 +21,7 @@ class iOSCustomIbarotTextView: UITextView {
     }
 
     private func setupView() {
+        textLayoutManager?.delegate = self
         isEditable = false
         isSelectable = true
         textAlignment = .natural

@@ -437,6 +437,9 @@
 		F3D0815D2F9EFE5C00E017C7 /* Tag.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3D0815C2F9EFE5C00E017C7 /* Tag.xib */; };
 		F3D0815E2F9EFE5C00E017C7 /* Tag.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3D0815C2F9EFE5C00E017C7 /* Tag.xib */; };
 		F3D08C752FDC739900A0E733 /* AnnotationViewControllerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */; };
+		F3D122672FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
+		F3D122682FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
+		F3D122692FF55B2600F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
 		F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */; };
 		F3D38A942FD4B2F200387BA4 /* HistoryFavoriteSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */; };
 		F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
@@ -679,6 +682,7 @@
 		F3D02D602FE0616B0054807F /* NarratorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NarratorViewModel.swift; sourceTree = "<group>"; };
 		F3D0815C2F9EFE5C00E017C7 /* Tag.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Tag.xib; sourceTree = "<group>"; };
 		F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewControllerWrapper.swift; sourceTree = "<group>"; };
+		F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedArabicLayoutFragment.swift; sourceTree = "<group>"; };
 		F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryComponents.swift; sourceTree = "<group>"; };
 		F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFavoriteSections.swift; sourceTree = "<group>"; };
 		F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUpdateAlert.swift; sourceTree = "<group>"; };
@@ -869,6 +873,7 @@
 			isa = PBXGroup;
 			children = (
 				4BDAB9892F69E4E3007D0945 /* BulkDownloadModalCenter.swift */,
+				F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */,
 				4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */,
 				4B0139DF2EEAFC3000424CFA /* CustomSplitView.swift */,
 				4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */,
@@ -1612,6 +1617,7 @@
 				4B5E70692EF4FEFC00E7D351 /* SharedPopover.swift in Sources */,
 				4B56955B2EEFDAAE00ABEB48 /* Annotations.swift in Sources */,
 				4B6100E92EFA740B00CCBED6 /* QuranSidebarVC.swift in Sources */,
+				F3D122682FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
 				4B63E1E72EE965E800D58F3B /* RowiDataManager.swift in Sources */,
 				F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */,
 				4B6100ED2EFA773C00CCBED6 /* Quran.swift in Sources */,
@@ -1666,6 +1672,7 @@
 				4BCCCB632F9C41310027EC18 /* CopyableResult.swift in Sources */,
 				4B7C90B32F83494200454BE1 /* BundledArabicTextField.swift in Sources */,
 				4B7C90B42F83494200454BE1 /* BundledArabicButton.swift in Sources */,
+				F3D122672FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
 				4B7C90B52F83494200454BE1 /* ArchiveErrors.swift in Sources */,
 				F321E02C2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */,
 				4B7C90B62F83494200454BE1 /* AppDelegate.swift in Sources */,
@@ -1825,6 +1832,7 @@
 				F3D08C752FDC739900A0E733 /* AnnotationViewControllerWrapper.swift in Sources */,
 				F3D46E9D2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */,
 				F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */,
+				F3D122692FF55B2600F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
 				F30576F92FA46222005732C6 /* AnnotationDelegate.swift in Sources */,
 				F363825B2FA702A00006636C /* iPhoneLayout.swift in Sources */,
 				F30576FB2FA46222005732C6 /* AnnotationCoordinator.swift in Sources */,
