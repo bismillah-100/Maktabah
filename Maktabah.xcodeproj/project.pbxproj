@@ -440,6 +440,11 @@
 		F3D122672FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
 		F3D122682FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
 		F3D122692FF55B2600F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
+		F3D122762FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */; };
+		F3D122772FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */; };
+		F3D122792FF5C9A900F44E89 /* TextRenderable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122782FF5C9A900F44E89 /* TextRenderable.swift */; };
+		F3D1227A2FF5C9A900F44E89 /* TextRenderable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122782FF5C9A900F44E89 /* TextRenderable.swift */; };
+		F3D1227B2FF5C9A900F44E89 /* TextRenderable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122782FF5C9A900F44E89 /* TextRenderable.swift */; };
 		F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */; };
 		F3D38A942FD4B2F200387BA4 /* HistoryFavoriteSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */; };
 		F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
@@ -683,6 +688,8 @@
 		F3D0815C2F9EFE5C00E017C7 /* Tag.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Tag.xib; sourceTree = "<group>"; };
 		F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewControllerWrapper.swift; sourceTree = "<group>"; };
 		F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedArabicLayoutFragment.swift; sourceTree = "<group>"; };
+		F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialTaskQueue.swift; sourceTree = "<group>"; };
+		F3D122782FF5C9A900F44E89 /* TextRenderable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRenderable.swift; sourceTree = "<group>"; };
 		F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryComponents.swift; sourceTree = "<group>"; };
 		F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFavoriteSections.swift; sourceTree = "<group>"; };
 		F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUpdateAlert.swift; sourceTree = "<group>"; };
@@ -842,10 +849,11 @@
 			children = (
 				4B73BF462EF09D67001ED591 /* AnnotationDelegate.swift */,
 				4B32022B2EDAFE85003B95D1 /* AppDelegate.swift */,
+				C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */,
 				4BCCCB612F9C41310027EC18 /* CopyableResult.swift */,
 				4B3202482EDB10FA003B95D1 /* Protocols.swift */,
 				4B47F3982EE9A36D009A399F /* RowiProtocols.swift */,
-				C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */,
+				F3D122782FF5C9A900F44E89 /* TextRenderable.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -1028,6 +1036,7 @@
 				4B2FAD992EED472E008E933E /* TOCLoader.swift */,
 				4B65CCBF2EE0A10F0085CEB4 /* SearchEngine.swift */,
 				4B20DB7E2EE7EE1F00B97126 /* SearchMode.swift */,
+				F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -1538,6 +1547,7 @@
 				4B58EDCB2EE3DBE800073495 /* ResultsViewManager.swift in Sources */,
 				4B0139E92EEB3CB000424CFA /* InitProgress.swift in Sources */,
 				4BDAB98E2F69E957007D0945 /* SettingsActions.swift in Sources */,
+				F3D122772FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */,
 				4B0EED392EFAB38800585C31 /* QuranTafseerVC.swift in Sources */,
 				4B47F3992EE9A36D009A399F /* RowiProtocols.swift in Sources */,
 				4B6100F22EFA8C7F00CCBED6 /* QuranNashVC.swift in Sources */,
@@ -1583,6 +1593,7 @@
 				4B63E1ED2EE9758A00D58F3B /* LoadMoreCell.swift in Sources */,
 				F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */,
 				4B63E1E42EE9425400D58F3B /* RowiResultsVC.swift in Sources */,
+				F3D122792FF5C9A900F44E89 /* TextRenderable.swift in Sources */,
 				4BDAB9862F69C2A8007D0945 /* CoreDownloadProgressView.swift in Sources */,
 				F321672E2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,
 				4BDAB98A2F69E4E3007D0945 /* BulkDownloadModalCenter.swift in Sources */,
@@ -1756,10 +1767,12 @@
 				4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */,
 				4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */,
 				4B7C90F52F83494200454BE1 /* SharedPopover.swift in Sources */,
+				F3D122762FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */,
 				4B7C90F62F83494200454BE1 /* Annotations.swift in Sources */,
 				4B7C90F72F83494200454BE1 /* QuranSidebarVC.swift in Sources */,
 				4B7C90F82F83494200454BE1 /* RowiDataManager.swift in Sources */,
 				4B7C90F92F83494200454BE1 /* Quran.swift in Sources */,
+				F3D1227A2FF5C9A900F44E89 /* TextRenderable.swift in Sources */,
 				4B7C90FA2F83494200454BE1 /* SplitVCAccessoryItem.swift in Sources */,
 				4B7C90FB2F83494200454BE1 /* ResultsHandler.swift in Sources */,
 				4B7C90FC2F83494200454BE1 /* ZstdShim.swift in Sources */,
@@ -1891,6 +1904,7 @@
 				F321E0212FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0222FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F321E0232FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
+				F3D1227B2FF5C9A900F44E89 /* TextRenderable.swift in Sources */,
 				F30577342FA46222005732C6 /* Annotations.swift in Sources */,
 				F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */,
 				F3B60E282FC7CDCA00A9EF58 /* iOSReaderBottomToolbarView.swift in Sources */,

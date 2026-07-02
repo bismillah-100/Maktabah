@@ -22,7 +22,7 @@ class IbarotTextView: NSTextView {
     private(set) var currentRenderResult: ArabicRenderResult?
     private(set) var footnoteRanges: [NSRange] = []
     private var annotationClickSetting: NSObjectProtocol?
-    private var loadingWork: DispatchWorkItem?
+    private let taskQueue = SerialTaskQueue()
 
     override var string: String {
         didSet {
@@ -225,71 +225,6 @@ class IbarotTextView: NSTextView {
             attributes: state.defaultAttributes
         )
         textStorage?.setAttributedString(attributedString)
-    }
-
-    func loadIbarotText(
-        _ text: String,
-        color: NSColor = .header,
-        isMultiLanguage: Bool? = false,
-        isImported: Bool? = false,
-        keepScrollPosition: Bool = false
-    ) {
-        ReusableFunc.showProgressWindow(self)
-        loadingWork?.cancel()
-
-        var scrollPercentage: CGFloat = 0
-        var visibleRect: NSRect = .zero
-        if keepScrollPosition, let scrollView = enclosingScrollView {
-            visibleRect = scrollView.documentVisibleRect
-            let totalHeight = scrollView.documentView?.frame.size.height ?? 0
-            scrollPercentage = totalHeight > 0 ? (visibleRect.origin.y / totalHeight) : 0
-        }
-
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-
-            let renderResult = renderer.render(
-                text: text,
-                highlightColor: color,
-                showHarakat: self.state.showHarakat,
-                isMultiLanguage: isMultiLanguage ?? false,
-                isImported: isImported ?? false
-            )
-
-            let finalAttributedString = NSMutableAttributedString(attributedString: renderResult.attributedString)
-
-            currentRenderResult = renderResult
-            footnoteRanges = renderResult.footnoteRanges
-
-            DispatchQueue.main.async { [weak self] in
-                guard let self, let ts = textStorage else { return }
-
-                ts.beginEditing()
-                ts.setAttributedString(finalAttributedString)
-                renderer.applyAnnotations(
-                    annotations,
-                    to: ts,
-                    showHarakat: state.showHarakat,
-                    replacementEvents: renderResult.replacementEvents
-                )
-                ts.endEditing()
-
-                if keepScrollPosition, let scrollView = enclosingScrollView {
-                    let newTotalHeight = scrollView.documentView?.frame.size.height ?? 0
-                    let targetY = scrollPercentage * newTotalHeight
-                    let targetPoint = NSPoint(x: visibleRect.origin.x, y: targetY)
-                    scrollView.contentView.scroll(to: targetPoint)
-                    scrollView.reflectScrolledClipView(scrollView.contentView)
-                }
-
-                loadingWork = nil
-
-                ReusableFunc.closeProgressWindow(self)
-            }
-        }
-        loadingWork = workItem
-
-        DispatchQueue.global(qos: .userInteractive).async(execute: workItem)
     }
 
     func updateLineHeight() {
@@ -955,6 +890,117 @@ class IbarotTextView: NSTextView {
             ts.removeAttribute(NSAttributedString.Key("underlineColor"), range: range)
         }
         ts.endEditing()
+    }
+}
+
+extension IbarotTextView: TextViewRenderable {
+    func loadIbarotText(
+        _ text: String,
+        color: NSColor?,
+        isMultiLanguage: Bool?,
+        isImported: Bool?,
+        keepScrollPosition: Bool?
+    ) {
+        guard let scrollView = enclosingScrollView else { return }
+        ReusableFunc.showProgressWindow(scrollView.contentView)
+        taskQueue.cancelAll()
+
+        var scrollPercentage: CGFloat = 0
+        var visibleRect: NSRect = .zero
+        if keepScrollPosition == true {
+            visibleRect = scrollView.documentVisibleRect
+            let totalHeight = scrollView.documentView?.frame.size.height ?? 0
+            scrollPercentage = totalHeight > 0 ? (visibleRect.origin.y / totalHeight) : 0
+        }
+
+        taskQueue.enqueue { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+
+            let renderResult = await renderer.render(
+                text: text,
+                highlightColor: color ?? .header,
+                showHarakat: state.showHarakat,
+                isMultiLanguage: isMultiLanguage ?? false,
+                isImported: isImported ?? false
+            )
+
+            // render() sendiri CPU-bound & nggak preemptible, tapi minimal
+            // hasil stale nggak akan dipakai kalau sudah kadung di-cancel
+            if Task.isCancelled { return }
+
+            await MainActor.run { [weak self] in
+                defer { ReusableFunc.closeProgressWindow(scrollView.contentView) }
+                guard let self, !Task.isCancelled,
+                      let textStorage, let textLayoutManager
+                else { return }
+
+                currentRenderResult = renderResult
+                footnoteRanges = renderResult.footnoteRanges
+                let finalAttributedString = NSMutableAttributedString(
+                    attributedString: renderResult.attributedString
+                )
+
+                textStorage.beginEditing()
+                textStorage.setAttributedString(finalAttributedString)
+                renderer.applyAnnotations(
+                    annotations, to: textStorage,
+                    showHarakat: state.showHarakat,
+                    replacementEvents: renderResult.replacementEvents
+                )
+                textStorage.endEditing()
+
+                textLayoutManager.enumerateTextLayoutFragments(
+                    from: textLayoutManager.documentRange.location,
+                    options: [.ensuresLayout]
+                ) { _ in true }
+
+                if keepScrollPosition == true {
+                    let newTotalHeight = scrollView.documentView?.frame.size.height ?? 0
+                    let targetY = scrollPercentage * newTotalHeight
+                    scrollView.contentView.scroll(to: NSPoint(x: visibleRect.origin.x, y: targetY))
+                    scrollView.reflectScrolledClipView(scrollView.contentView)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func highlightAndScrollToAnns(_ ann: Annotation) async {
+        taskQueue.enqueue { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            let range = await displayedRange(for: ann)
+            await scrollRangeToVisible(range)
+            await enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+            await layoutSubtreeIfNeeded()
+            await showFindIndicator(for: range)
+        }
+    }
+    
+    @MainActor
+    func highlightAndScrollToText(_ searchText: String) async {
+        taskQueue.enqueue { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            let range: NSRange? = await MainActor.run { [weak self] in
+                guard let self, let r = textStorage?.highlightSearchText(
+                    searchText: searchText,
+                    baseColor: .highlightText
+                ) else { return nil }
+                scrollRangeToVisible(r)
+                enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                layoutSubtreeIfNeeded()
+                return r
+            }
+            guard let range else { return }
+            await showFindIndicator(for: range)
+        }
+    }
+
+    func scrollTo(_ scrollPos: CGPoint) async {
+        taskQueue.enqueue { [weak self] in
+            guard let self, let scrollView = await enclosingScrollView else { return }
+            await scrollView.contentView.scroll(to: NSPoint(x: .zero, y: scrollPos.y))
+            await scrollView.reflectScrolledClipView(scrollView.contentView)
+        }
     }
 }
 

@@ -26,20 +26,18 @@ extension IbarotTextVC: AnnotationDelegate {
             return
         }
 
-        Task.detached { [weak self, book, contentId, annotation] in
+        Task.detached { [weak self, contentId] in
             guard let self else { return }
 
             if await currentBook?.id != bkId {
-                do {
-                    try await displayBook(book)
-                    try await bookDB.connect(archive: book.archive)
-                } catch {
-                    return
-                }
+                await didChangeBook(book: book)
             }
 
-            await handleDelegate(contentId, fromResults: true)
-            await highlighAndScrollToAnns(annotation)
+            if await contentId != viewModel.currentContentId {
+                await handleDelegate(contentId)
+            }
+
+            await textDelegate?.highlightAndScrollToAnns(annotation)
         }
     }
 }
