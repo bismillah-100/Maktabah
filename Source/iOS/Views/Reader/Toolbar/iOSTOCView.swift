@@ -27,11 +27,14 @@ struct iOSTOCView: View {
             return tocViewModel.tocNodes
         } else {
             let normalizedQuery = searchText.normalizeArabic(true)
-            let matches = tocViewModel.tocRanges.map(\.node).filter { 
-                $0.bab.normalizeArabic(true).localizedStandardContains(normalizedQuery)
-            }
-            return matches.map { 
-                TOCNode(from: TOC(bab: $0.bab, level: $0.level, sub: $0.sub, id: $0.id))
+            // perf: Use a single compactMap pass instead of chaining .map().filter().map()
+            // to eliminate intermediate O(N) array allocations during real-time keystroke searches.
+            return tocViewModel.tocRanges.compactMap { range in
+                let node = range.node
+                if node.bab.normalizeArabic(true).localizedStandardContains(normalizedQuery) {
+                    return TOCNode(from: TOC(bab: node.bab, level: node.level, sub: node.sub, id: node.id))
+                }
+                return nil
             }
         }
     }
