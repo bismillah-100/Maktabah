@@ -95,10 +95,14 @@ final class BookDownloadManager {
     }()
 
     private init() {
-        networkMonitor.onConnectivityLost = { [weak self] in
-            Task {
-                await self?.cancelAllDownloads()
-            }
+        Task {
+            await networkMonitor.registerConnectivityCallbacks(
+                onLost: { [weak self] in
+                    Task {
+                        await self?.cancelAllDownloads()
+                    }
+                }
+            )
         }
     }
 
@@ -125,7 +129,7 @@ final class BookDownloadManager {
     }
 
     private func downloadBook(bookId: Int) async throws -> URL {
-        guard networkMonitor.isConnected else {
+        guard await networkMonitor.isConnected else {
             throw BookDownloadError.networkUnavailable
         }
         guard let destinationDir = AppConfig.bookFilesPath else {
@@ -144,7 +148,7 @@ final class BookDownloadManager {
         for candidate in candidates {
             do {
                 try Task.checkCancellation()
-                guard networkMonitor.isConnected else {
+                guard await networkMonitor.isConnected else {
                     throw BookDownloadError.networkUnavailable
                 }
                 let (tempURL, response) = try await urlSession.download(from: candidate)
@@ -514,54 +518,3 @@ actor BookDownloadIndexCache {
     }
 }
 
-// MARK: - Network Monitor
-
-final class NetworkMonitor {
-    static let shared = NetworkMonitor()
-
-    private let monitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "maktabah.network.monitor")
-    private let lock = NSLock()
-    private var _isConnected = true
-
-    // Dua callback untuk dua kondisi berbeda
-    var onConnectivityLost: (() -> Void)?
-    var onConnectivityRestored: (() -> Void)?
-
-    var isConnected: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return _isConnected
-    }
-
-    private init() {
-        monitor.pathUpdateHandler = { [weak self] path in
-            guard let self else { return }
-            let connected = (path.status == .satisfied)
-
-            var shouldNotifyLost = false
-            var shouldNotifyRestored = false
-
-            lock.lock()
-            // Kondisi 1: Tadinya nyambung, sekarang putus
-            if _isConnected && !connected {
-                shouldNotifyLost = true
-            }
-            // Kondisi 2: Tadinya putus, sekarang nyambung kembali
-            else if !_isConnected && connected {
-                shouldNotifyRestored = true
-            }
-            _isConnected = connected
-            lock.unlock()
-
-            // Pemicu callback di luar lock agar tidak deadlock
-            if shouldNotifyLost {
-                onConnectivityLost?()
-            }
-            if shouldNotifyRestored {
-                onConnectivityRestored?()
-            }
-        }
-        monitor.start(queue: queue)
-    }
-}

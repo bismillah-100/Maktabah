@@ -514,7 +514,7 @@ final class LibraryViewModel: ViewModelBase {
         var downloadResults: [Int: Result<URL, Error>] = [:]
         var stoppedByNetwork = false
 
-        if !NetworkMonitor.shared.isConnected {
+        if await !NetworkMonitor.shared.isConnected {
             stoppedByNetwork = true
         } else {
             await withTaskGroup(of: (Int, Result<URL, Error>).self) { group in

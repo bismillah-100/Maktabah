@@ -13,11 +13,8 @@ extension AppDelegate {
 
     @MainActor
     func checkAppUpdates(_ atLaunch: Bool = true) async {
-        guard
-            let isConnected =
-                try? await ReusableFunc.checkInternetConnectivityDirectly(),
-            isConnected
-        else { return }
+        let isConnected = await NetworkMonitor.shared.checkConnectivity()
+        guard isConnected else { return }
 
         let updater = updaterController.updater
 

@@ -196,39 +196,6 @@ class ReusableFunc {
     }
     #endif
 
-    // MARK: - Fungsi Pemeriksaan Koneksi Internet Langsung
-
-    /// Fungsi ini akan memeriksa ketersediaan internet secara asinkron.
-    /// - Returns: `true` jika internet tersedia, `false` jika internet offline.
-    static func checkInternetConnectivityDirectly() async throws -> Bool {
-        // Pilih URL yang Anda yakin selalu online, misal Google atau API server Anda.
-        let url = URL(string: "https://www.google.com")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "HEAD" // Minta hanya header, lebih cepat dan hemat bandwidth.
-        request.timeoutInterval = 5.0 // Batasi waktu respons menjadi 5 detik.
-
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request) // Gunakan async data(for:)
-
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                #if DEBUG
-                    print("Internet tersedia melalui koneksi langsung.")
-                #endif
-                return true
-            } else {
-                #if DEBUG
-                    print("Internet tidak tersedia melalui koneksi langsung. Status code: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
-                #endif
-                return false
-            }
-        } catch {
-            #if DEBUG
-                print("Gagal memeriksa koneksi internet. Error: \(error.localizedDescription)")
-            #endif
-            // Jika ada error (misal, tidak ada koneksi sama sekali, timeout), anggap tidak ada internet
-            return false
-        }
-    }
 
     static func decompressData(_ data: Data?) -> String {
         guard let compressed = data, !compressed.isEmpty else { return "" }

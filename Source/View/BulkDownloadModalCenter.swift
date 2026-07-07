@@ -30,8 +30,9 @@ final class BulkDownloadModalCenter {
 
     // MARK: - Modal presentation
 
-    func presentModal() {
-        guard NetworkMonitor.shared.isConnected else {
+    @MainActor
+    func presentModal() async {
+        guard await NetworkMonitor.shared.isConnected else {
             ReusableFunc.showAlert(
                 title: String(localized: "Connection Error"),
                 message: String(localized: "Please check your internet connection")
@@ -116,7 +117,7 @@ final class BulkDownloadModalCenter {
         // ── Fase 1: Download concurrent ──────────────────────────────────────
         var downloadResults: [Int: Result<URL, Error>] = [:]
 
-        if !NetworkMonitor.shared.isConnected {
+        if await !NetworkMonitor.shared.isConnected {
             shouldStopDownloads = true
             vc.statusLabel.stringValue = String(localized: "No internet connection. Skipping downloads.")
         }

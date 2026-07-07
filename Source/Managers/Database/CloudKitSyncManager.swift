@@ -31,11 +31,15 @@ final class CloudKitSyncManager {
     // MARK: - Network Monitoring
 
     private func setupNetworkMonitor() {
-        NetworkMonitor.shared.onConnectivityRestored = { [weak self] in
-            #if DEBUG
-            print("CloudKitSyncManager: Network restored, retrying pending operations")
-            #endif
-            self?.retryAllPendingOperations()
+        Task {
+            await NetworkMonitor.shared.registerConnectivityCallbacks(
+                onRestored: { [weak self] in
+                    #if DEBUG
+                    print("CloudKitSyncManager: Network restored, retrying pending operations")
+                    #endif
+                    self?.retryAllPendingOperations()
+                }
+            )
         }
     }
 

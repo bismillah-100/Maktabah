@@ -257,7 +257,7 @@ enum SettingsActions {
 
     #if os(macOS)
     static func downloadSelectiveLibrary() {
-        BulkDownloadModalCenter.shared.presentModal()
+        Task { await BulkDownloadModalCenter.shared.presentModal() }
     }
     #endif
 
