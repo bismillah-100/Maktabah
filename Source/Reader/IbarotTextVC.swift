@@ -17,6 +17,7 @@ class IbarotTextVC: NSViewController {
 
     var sidebarVC: SidebarVC?
     var libraryVC: LibraryVC?
+    weak var textDelegate: TextViewRenderable?
 
     /// ViewModel - manages all reader business logic
     let viewModel: ReaderViewModel = .init()
@@ -48,22 +49,26 @@ class IbarotTextVC: NSViewController {
         super.viewDidLoad()
         setupBindings()
         setupNotificationObservers()
+        textDelegate = textView
     }
 
     // MARK: - Setup
 
     private func setupBindings() {
         textView.viewModel = viewModel
-        // Bind content text changes
-        viewModel.bind(viewModel.$contentText) { [weak self] text in
-            guard let self, !text.isEmpty else { return }
-            textView.loadIbarotText(
-                text,
-                color: NSColor.header,
-                isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
-                isImported: viewModel.currentBook?.isImported ?? false
-            )
-        }
+        // Bind content text changes syncrhounously
+        viewModel.$contentText
+            .sink { [weak self] text in
+                guard let self, !text.isEmpty else { return }
+                textDelegate?.loadIbarotText(
+                    text,
+                    color: NSColor.header,
+                    isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
+                    isImported: viewModel.currentBook?.isImported ?? false,
+                    keepScrollPosition: false
+                )
+            }
+            .store(in: &viewModel.cancellables)
 
         // Bind window title changes
         viewModel.onWindowTitleChanged = { [weak self] title, subtitle in
@@ -391,31 +396,6 @@ extension IbarotTextVC {
 
         viewModel.fetchContentById(contentId)
     }
-
-    @MainActor
-    func highlighAndScrollToAnns(_ ann: Annotation) {
-        let range = textView.displayedRange(for: ann)
-        textView.scrollRangeToVisible(range)
-        Task { [weak self] in
-            await Task.yield()
-            await Task.yield()
-            self?.textView.showFindIndicator(for: range)
-        }
-    }
-
-    @MainActor
-    func highlightAndScrollToText(_ searchText: String) {
-        guard let range = textView.textStorage?.highlightSearchText(
-            searchText: searchText,
-            baseColor: .highlightText
-        ) else { return }
-
-        Task { [weak textView] in
-            textView?.scrollRangeToVisible(range)
-            await Task.yield()
-            textView?.showFindIndicator(for: range)
-        }
-    }
 }
 
 // MARK: - SidebarDelegate
@@ -440,10 +420,8 @@ extension IbarotTextVC: LibraryDelegate {
 
 extension IbarotTextVC: OptionSearchDelegate {
     func didSelectResult(for id: Int, highlightText: String) async {
-        handleDelegate(id, fromResults: true)
-        DispatchQueue.main.async { [weak self] in
-            self?.highlightAndScrollToText(highlightText)
-        }
+        if viewModel.currentContentId != id { handleDelegate(id) }
+        await textDelegate?.highlightAndScrollToText(highlightText)
     }
 }
 
@@ -498,10 +476,8 @@ extension IbarotTextVC: TarjamahBDelegate {
         setRowiDisplayMode()
 
         try? await Task.sleep(nanoseconds: 300_000_000)
-        await MainActor.run { [weak self] in
-            if let query {
-                self?.highlightAndScrollToText(query.normalizeArabic(true))
-            }
+        if let query {
+            await textDelegate?.highlightAndScrollToText(query.normalizeArabic(true))
         }
     }
 }
@@ -534,33 +510,32 @@ extension IbarotTextVC: ReaderStateComponent {
            !BookArchiveIntegrator.shared.isBookIntegrated(book) {
             viewModel.currentBook = nil
             return
-        } else {
         }
 
         Task { [weak self] in
             guard let self else { return }
 
-            if viewModel.currentBook?.id != book.id {
-                viewModel.restore(from: state)
-            }
-
             await MainActor.run { [weak self] in
                 guard let self else { return }
+
+                if viewModel.currentBook?.id != book.id {
+                    viewModel.restore(from: state)
+                }
 
                 if let range = state.selectedRange {
                     textView.setSelectedRange(range)
                     view.window?.makeFirstResponder(textView)
                 }
 
-                if let query = state.searchQuery {
-                    highlightAndScrollToText(query)
-                }
-
                 libraryVC?.dataVM.viewModel.selectedBookName = book.book
+            }
 
-                if let scrollPos = state.scrollPosition {
-                    textView.enclosingScrollView?.documentView?.scroll(scrollPos)
-                }
+            if let query = state.searchQuery {
+                await textDelegate?.highlightAndScrollToText(query)
+            }
+
+            if let scrollPos = state.scrollPosition {
+                await textDelegate?.scrollTo(scrollPos)
             }
         }
     }

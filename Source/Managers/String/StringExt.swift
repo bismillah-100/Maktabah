@@ -679,7 +679,11 @@ extension String {
 
             // 2. Akses value-nya, yang merupakan Substring, dan konversi ke String.
             // Metode .substring memungkinkan konversi yang aman.
-            let abbreviation = String(abbreviationOutput.substring!)
+            guard let substring = abbreviationOutput.substring else {
+                return ""
+            }
+            let abbreviation = String(substring)
+
             // ATAU, jika Anda menggunakan Swift 5.8+, Anda bisa mencoba:
             // let abbreviation = String(abbreviationOutput.value)
 

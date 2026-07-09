@@ -26,20 +26,28 @@ extension IbarotTextVC: AnnotationDelegate {
             return
         }
 
-        Task.detached { [weak self, book, contentId, annotation] in
+        Task.detached { [weak self, contentId] in
             guard let self else { return }
 
-            if await currentBook?.id != bkId {
-                do {
-                    try await displayBook(book)
-                    try await bookDB.connect(archive: book.archive)
-                } catch {
-                    return
+            do {
+                if await currentBook?.id != bkId {
+                    try await viewModel.connectBookWithBundleFallback(book)
+                    await didChangeBook(book: book)
                 }
+            } catch {
+                await MainActor.run {
+                    ReusableFunc.showAlert(
+                        title: DatabaseError.bookNotFound(bkId).localizedDescription,
+                        message: DatabaseError.noConnection.localizedDescription
+                    )
+                }
+                return
+            }
+            if await contentId != viewModel.currentContentId {
+                await handleDelegate(contentId)
             }
 
-            await handleDelegate(contentId, fromResults: true)
-            await highlighAndScrollToAnns(annotation)
+            await textDelegate?.highlightAndScrollToAnns(annotation)
         }
     }
 }

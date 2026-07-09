@@ -301,12 +301,13 @@ class ArabicTextRenderer {
 
             for range in ligatureRanges {
                 if range.location + range.length <= attributedString.length {
-                    let substring = (attributedString.string as NSString).substring(with: range)
-                    let unichars = Array(substring.utf16)
-                    var glyphs = [CGGlyph](repeating: 0, count: unichars.count)
-                    
-                    let hasGlyph = CTFontGetGlyphsForCharacters(ctFont, unichars, &glyphs, unichars.count)
-                    
+                    let nsString = attributedString.string as NSString
+                    let length = range.length
+                    var unichars = [unichar](repeating: 0, count: length)
+                    var glyphs = [CGGlyph](repeating: 0, count: length)
+                    nsString.getCharacters(&unichars, range: range)
+
+                    let hasGlyph = CTFontGetGlyphsForCharacters(ctFont, unichars, &glyphs, length)
                     if !hasGlyph {
                         attributedString.addAttribute(.font, value: fallbackFont, range: range)
                     }

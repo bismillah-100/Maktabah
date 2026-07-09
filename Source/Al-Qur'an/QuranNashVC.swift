@@ -21,10 +21,12 @@ class QuranNashVC: NSViewController {
 
     var optSearchPopover: NSPopover?
     var optSearch: OptionSearchVC?
+    weak var textDelegate: TextViewRenderable?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         textView.backgroundColor = .bgSepia
+        textDelegate = textView
         stackView.setCustomSpacing(0, after: hLine)
         // Do view setup here.
     }
@@ -109,8 +111,8 @@ class QuranNashVC: NSViewController {
             updateNotFoundString()
             return
         }
-        textView.loadIbarotText(content.nash)
-        didNavigateContent?(content)
+
+        loadText(content.nash, content: content)
     }
 
     @IBAction func previousPage(_ sender: Any?) {
@@ -118,57 +120,23 @@ class QuranNashVC: NSViewController {
             updateNotFoundString()
             return
         }
-        textView.loadIbarotText(content.nash)
-        didNavigateContent?(content)
+
+        loadText(content.nash, content: content)
     }
 
-    @MainActor
-    func highlightAndScrollToText(_ searchText: String) {
-        guard let textStorage = textView.textStorage else { return }
+    private func loadText(
+        _ text: String,
+        content: BookContent? = nil,
+        navigateToContent: Bool = false
+    ) {
+        textDelegate?.loadIbarotText(
+            text, color: .header,
+            isMultiLanguage: false, isImported: false,
+            keepScrollPosition: false
+        )
 
-        let fullText = textStorage.string
-            .normalizeArabic(false)
-            .replacingOccurrences(of: "\\n", with: "\n")
-
-        // Reset highlight
-        // let fullRange = NSRange(location: 0, length: textStorage.length)
-        // textStorage.removeAttribute(.backgroundColor, range: fullRange)
-
-        // Cari teks (case insensitive, diacritic insensitive untuk Arab)
-        // Menghindari alokasi memori O(N) dengan mencari langsung di string original
-        var searchRange = fullText.startIndex..<fullText.endIndex
-        var firstMatchRange: NSRange?
-
-        while let found = fullText.range(of: searchText, options: [.caseInsensitive, .diacriticInsensitive], range: searchRange) {
-            let nsRange = NSRange(found, in: fullText)
-
-            if firstMatchRange == nil {
-                firstMatchRange = nsRange
-            }
-
-            // Highlight
-            var hasBackground = false
-            textStorage.enumerateAttribute(.backgroundColor, in: nsRange, options: []) { value, _, stop in
-                if value != nil {
-                    hasBackground = true
-                    stop.pointee = true
-                }
-            }
-
-            // Tambah highlight hanya jika belum ada
-            if !hasBackground {
-                textStorage.addAttribute(.backgroundColor, value: NSColor.highlightText, range: nsRange)
-            }
-
-            searchRange = found.upperBound..<fullText.endIndex
-        }
-
-        // Scroll ke match pertama
-        if let firstRange = firstMatchRange {
-            Task { @MainActor [weak self, firstRange] in
-                self?.textView.scrollRangeToVisible(firstRange)
-                self?.textView.showFindIndicator(for: firstRange) // Animasi indicator (opsional)
-            }
+        if navigateToContent, let content {
+            didNavigateContent?(content)
         }
     }
 
@@ -179,7 +147,7 @@ extension QuranNashVC: QuranDelegate {
         ayahTextField.stringValue = aya.nass
 
         if let nash = manager.loadTafseer(for: aya.aya, in: surah.id) {
-            textView.loadIbarotText(nash)
+            loadText(nash)
         } else {
             #if DEBUG
             print("error load nash to textview")
@@ -196,14 +164,12 @@ extension QuranNashVC: OptionSearchDelegate {
             return
         }
 
-        await MainActor.run {
-            textView.loadIbarotText(content.nash)
-        }
+        loadText(content.nash)
 
         try? await Task.sleep(nanoseconds: 3_000_000)
 
+        await textDelegate?.highlightAndScrollToText(highlightText)
         await MainActor.run {
-            highlightAndScrollToText(highlightText)
             didNavigateContent?(content)
         }
     }

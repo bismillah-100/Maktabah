@@ -21,6 +21,7 @@ class SidebarVC: NSViewController {
     var idToRow: [Int: Int] = [:]
 
     var filteredTree: [TOCNode] = []
+    var flatNodes: [TOCNode] = []
 
     var isFiltering: Bool {
         !searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -124,6 +125,15 @@ class SidebarVC: NSViewController {
 
     func updateTOC(_ nodes: [TOCNode]) {
         self.tocTree = nodes
+        
+        var flat: [TOCNode] = []
+        func traverse(_ node: TOCNode) {
+            flat.append(node)
+            for child in node.children { traverse(child) }
+        }
+        for node in nodes { traverse(node) }
+        self.flatNodes = flat
+        
         self.outlineView.reloadData()
         Task { await self.rebuildLookupCache() }
     }
@@ -137,22 +147,11 @@ class SidebarVC: NSViewController {
         if query.isEmpty {
             filteredTree = []
         } else {
-            var allNodes: [TOCNode] = []
-            func traverse(_ node: TOCNode) {
-                allNodes.append(node)
-                for child in node.children { traverse(child) }
-            }
-            for root in tocTree { traverse(root) }
-
-            let matches = allNodes.filter { $0.bab.localizedStandardContains(query) }
-
-            // bikin tree baru hanya dengan node yang cocok
-            filteredTree = matches
+            // perf: Use a single-pass filter on pre-flattened nodes to avoid recursive tree traversals on each search keystroke
+            filteredTree = flatNodes.filter { $0.bab.localizedStandardContains(query) }
         }
-
         outlineView.reloadData()
         outlineView.expandItem(nil, expandChildren: true) // supaya semua hasil terlihat
-
     }
 
     @MainActor
@@ -170,6 +169,7 @@ class SidebarVC: NSViewController {
     func cleanUpOutlineView() {
         filteredTree.removeAll()
         tocTree.removeAll()
+        flatNodes.removeAll()
         idToRow.removeAll()
         searchField.stringValue.removeAll()
         outlineView.reloadData()
