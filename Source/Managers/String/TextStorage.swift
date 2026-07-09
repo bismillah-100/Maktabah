@@ -27,8 +27,8 @@ extension NSTextStorage {
         var utf16Offset = 0
         for char in rawText {
             let scalars = char.unicodeScalars
-            let isDiacritic = scalars.count == 1 && diacritics.contains(scalars.first!)
-            let isTatweel = scalars.count == 1 && scalars.first!.value == 0x0640
+            let isDiacritic = scalars.count == 1 && scalars.first.map { diacritics.contains($0) } ?? false
+            let isTatweel = scalars.count == 1 && scalars.first?.value == 0x0640
 
             if isDiacritic || isTatweel {
                 utf16Offset += char.utf16.count
