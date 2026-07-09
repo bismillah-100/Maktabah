@@ -444,7 +444,6 @@
 		F3D122772FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */; };
 		F3D122792FF5C9A900F44E89 /* TextRenderable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122782FF5C9A900F44E89 /* TextRenderable.swift */; };
 		F3D1227A2FF5C9A900F44E89 /* TextRenderable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122782FF5C9A900F44E89 /* TextRenderable.swift */; };
-		F3D1227B2FF5C9A900F44E89 /* TextRenderable.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122782FF5C9A900F44E89 /* TextRenderable.swift */; };
 		F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */; };
 		F3D38A942FD4B2F200387BA4 /* HistoryFavoriteSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */; };
 		F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
@@ -1904,7 +1903,6 @@
 				F321E0212FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0222FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F321E0232FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
-				F3D1227B2FF5C9A900F44E89 /* TextRenderable.swift in Sources */,
 				F30577342FA46222005732C6 /* Annotations.swift in Sources */,
 				F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */,
 				F3B60E282FC7CDCA00A9EF58 /* iOSReaderBottomToolbarView.swift in Sources */,
