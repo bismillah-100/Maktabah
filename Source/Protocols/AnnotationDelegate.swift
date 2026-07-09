@@ -29,10 +29,20 @@ extension IbarotTextVC: AnnotationDelegate {
         Task.detached { [weak self, contentId] in
             guard let self else { return }
 
-            if await currentBook?.id != bkId {
-                await didChangeBook(book: book)
+            do {
+                if await currentBook?.id != bkId {
+                    try await viewModel.connectBookWithBundleFallback(book)
+                    await didChangeBook(book: book)
+                }
+            } catch {
+                await MainActor.run {
+                    ReusableFunc.showAlert(
+                        title: DatabaseError.bookNotFound(bkId).localizedDescription,
+                        message: DatabaseError.noConnection.localizedDescription
+                    )
+                }
+                return
             }
-
             if await contentId != viewModel.currentContentId {
                 await handleDelegate(contentId)
             }
