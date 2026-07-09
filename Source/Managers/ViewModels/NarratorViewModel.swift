@@ -267,12 +267,12 @@ final class NarratorViewModel: ViewModelBase {
     }
 
     func pauseSearch() {
-        pauseController.pause()
+        Task { await pauseController.pause() }
         isPaused = true
     }
 
     func resumeSearch() {
-        pauseController.resume()
+        Task { await pauseController.resume() }
         isPaused = false
     }
 
@@ -282,7 +282,7 @@ final class NarratorViewModel: ViewModelBase {
         isPaused = false
         searchTask?.cancel()
         searchTask = nil
-        pauseController.resume()
+        Task { await pauseController.resume() }
     }
 
     // MARK: - Content Rendering

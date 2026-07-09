@@ -301,8 +301,7 @@ class OptionSearchVC: NSViewController {
         } else if !bkId.isEmpty {
             viewModel.setTargetBook(bkId)
         }
-
-        viewModel.startSearch()
+        Task { await viewModel.startSearch() }
     }
 
     func resetProgressBar() {

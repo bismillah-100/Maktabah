@@ -29,7 +29,7 @@ enum SQLValue {
 // ----------------------------------------
 // MARK: - PauseController (actor)
 // ----------------------------------------
-class PauseController {
+actor PauseController {
     private var isPaused = false
     private var continuations: [CheckedContinuation<Void, Never>] = []
 
@@ -50,7 +50,7 @@ class PauseController {
     }
 
     func waitIfPaused() async {
-        if !isPaused { return }
+        guard isPaused else { return }
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             continuations.append(continuation)
         }
@@ -559,44 +559,53 @@ final class SearchEngine {
     }
 
     func checkAndResumeIfNeeded(completion: @escaping (Bool) -> Void) {
-        let isPaused = currentlyPaused()
+        Task {
+            let isPaused = await currentlyPaused()
 
-        if isPaused {
-            print("Pencarian saat ini dijeda. Melanjutkan (Resuming)...")
-            self.resume()
-            // Kasus Resume: Kita sudah melanjutkan yang lama. Jangan panggil startSearch.
-            completion(true) // <-- Mengembalikan TRUE
-        } else {
-            print("Pencarian saat ini tidak dijeda. Memerlukan Start Baru.")
-            // Kasus Start Baru: Tidak ada yang dijeda, jadi kita perlu mulai baru.
-            completion(false) // <-- Mengembalikan FALSE
+            if isPaused {
+                print("Pencarian saat ini dijeda. Melanjutkan (Resuming)...")
+                self.resume()
+                // Kasus Resume: Kita sudah melanjutkan yang lama. Jangan panggil startSearch.
+                completion(true) // <-- Mengembalikan TRUE
+            } else {
+                print("Pencarian saat ini tidak dijeda. Memerlukan Start Baru.")
+                // Kasus Start Baru: Tidak ada yang dijeda, jadi kita perlu mulai baru.
+                completion(false) // <-- Mengembalikan FALSE
+            }
         }
     }
 
     func pause() {
-        pauseController.pause()
+        Task {
+            await pauseController.pause()
+        }
     }
 
     func resume() {
-        pauseController.resume()
+        Task {
+            await pauseController.resume()
+        }
     }
 
     func stop() {
         stopLock.lock()
         isStopped = true
         stopLock.unlock()
-        pauseController.stopAndResumeAll()
+        Task {
+            await pauseController.stopAndResumeAll()
+        }
         searchTask?.cancel()
         searchTask = nil
         cleanup()
     }
 
-    func isRunning() -> Bool {
-        !currentlyPaused() && searchTask != nil
+    func isRunning() async -> Bool {
+        let isPaused = await currentlyPaused()
+        return !isPaused && searchTask != nil
     }
 
-    func currentlyPaused() -> Bool {
-        return pauseController.currentlyPaused()
+    func currentlyPaused() async -> Bool {
+        return await pauseController.currentlyPaused()
     }
 
     func cleanup() {

@@ -57,7 +57,9 @@ struct iOSBookSearchView: View {
             placement: .toolbar,
             prompt: .searchInThisBook
         )
-        .onSubmit(of: .search, viewModel.startSearch)
+        .onSubmit(of: .search, {
+            Task { await viewModel.startSearch() }
+        })
     }
 }
 

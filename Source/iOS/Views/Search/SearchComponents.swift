@@ -80,10 +80,12 @@ struct SearchHistoryOverlay: View {
                 ForEach(Array(viewModel.searchHistory.enumerated()), id: \.element) { index, historyQuery in
                     VStack(spacing: 0) {
                         Button(action: {
-                            viewModel.query = historyQuery
-                            viewModel.addToHistory(historyQuery)
-                            viewModel.startSearch()
-                            isVisible = false
+                            Task {
+                                viewModel.query = historyQuery
+                                viewModel.addToHistory(historyQuery)
+                                await viewModel.startSearch()
+                                isVisible = false
+                            }
                         }) {
                             HStack {
                                 Image(systemName: "clock.arrow.circlepath")
@@ -331,7 +333,7 @@ struct SearchToolbar: ToolbarContent {
                     ? "pause" : "play",
                 isOn: Binding(
                     get: { viewModel.isSearching },
-                    set: { _, _ in viewModel.startSearch() }
+                    set: { _, _ in Task { await viewModel.startSearch() }}
                 )
             )
             .labelStyle(.iconOnly)

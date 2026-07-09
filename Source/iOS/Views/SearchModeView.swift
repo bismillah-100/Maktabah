@@ -76,9 +76,11 @@ struct SearchModeView: View {
                     viewModel: viewModel,
                     isFocused: _isSearchFieldFocused,
                     onSubmit: {
-                        viewModel.addToHistory(viewModel.query)
-                        viewModel.startSearch()
-                        isSearchFieldFocused = false
+                        Task {
+                            viewModel.addToHistory(viewModel.query)
+                            await viewModel.startSearch()
+                            isSearchFieldFocused = false
+                        }
                     }
                 )
             }

@@ -409,18 +409,18 @@ final class SearchViewModel: ViewModelBase {
     }
 
     @MainActor
-    func startSearch() {
+    func startSearch() async {
         if query.isEmpty { return }
 
-        if searchEngine.currentlyPaused() ||
-            isPaused {
+        let enginePaused = await searchEngine.currentlyPaused()
+        if enginePaused || isPaused {
             searchEngine.resume()
             isPaused = false
             return
         }
 
-        if searchEngine.isRunning() ||
-            isSearching {
+        let engineRunning = await searchEngine.isRunning()
+        if engineRunning || isSearching {
             searchEngine.pause()
             isPaused = true
             return
@@ -454,7 +454,7 @@ final class SearchViewModel: ViewModelBase {
 
         if tablesToScan.isEmpty { stopSearch(); return }
 
-        searchWork = Task.detached(priority: .userInitiated) { [weak self] in
+        searchWork = Task.detached(priority: .userInitiated) { [weak self, tablesToScan] in
             guard let self else { return }
 
             await ldm.performSearch(
