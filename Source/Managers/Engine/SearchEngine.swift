@@ -676,7 +676,8 @@ final class SQLiteConnection: DBConnectionType {
             let colCount = sqlite3_column_count(statement)
 
             for c in 0..<colCount {
-                let name = String(cString: sqlite3_column_name(statement, c))
+                let namePtr = sqlite3_column_name(statement, c)
+                let name = namePtr.flatMap { String(cString: $0) } ?? ""
                 let type = sqlite3_column_type(statement, c)
 
                 switch type {
