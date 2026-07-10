@@ -36,6 +36,40 @@
 </head>
 <body>
 
+<h2>Version 3.3</h2>
+<p class="version">July 10, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Added option to remove books from history on macOS</li>
+  <li>Cross-platform sync using CloudKit</li>
+  <li>Upgraded text engine to TextKit2 for better text rendering</li>
+  <li>Allowed multiple concurrent searches by removing the global lock</li>
+  <li>Added search scope support for annotations</li>
+  <li>Added sorting functionality to search results</li>
+  <li>Automated HTML tag stripping from imported books and clean search results</li>
+  <li>Fetch version.txt from GitHub before initial core database bootstrap</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Updated annotations on offline connections and upload flow on macOS</li>
+  <li>Rebuilt database archives after changing database mode to prevent search failures</li>
+  <li>Fixed textView text color updating on appearance changes</li>
+  <li>Resolved concurrent mutation crash in PauseController</li>
+  <li>Prevented fatal error on null C pointers during sqlite column access</li>
+  <li>Resolved database switching, userDefaults loop, and search crashes</li>
+  <li>Fixed author and book deletion methods in library</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Implemented async rendering pipeline, layout fragment caching, and TOC search optimization</li>
+  <li>Centralized network connectivity checks using NetworkMonitor</li>
+  <li>Unified view models and implemented MVVM architecture</li>
+  <li>Optimized array operations and intermediate allocations</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.2.2</h2>
 <p class="version">June 23, 2026</p>
 <h3>Fixes</h3>
