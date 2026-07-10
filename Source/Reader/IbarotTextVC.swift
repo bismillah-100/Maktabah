@@ -247,6 +247,9 @@ class IbarotTextVC: NSViewController {
 
     func applyBackgroundColor(_ color: NSColor) {
         textView.backgroundColor = color
+        if let textLayoutManager = textView.textLayoutManager {
+            textLayoutManager.invalidateLayout(for: textLayoutManager.documentRange)
+        }
     }
 
     // MARK: - Actions
