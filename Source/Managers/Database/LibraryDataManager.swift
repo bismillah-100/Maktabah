@@ -393,6 +393,7 @@ class LibraryDataManager {
         switch mode {
         case .phrase:
             if query.trimmingCharacters(in: .whitespaces).isEmpty {
+                await onComplete()
                 return
             }
             searchKeywords = [query.normalizeArabic()]
@@ -403,6 +404,7 @@ class LibraryDataManager {
         }
 
         if searchKeywords.isEmpty {
+            await onComplete()
             return
         }
 
@@ -459,6 +461,7 @@ class LibraryDataManager {
         }
 
         if totalTables == 0 || Task.isCancelled {
+            await onComplete()
             return
         }
 

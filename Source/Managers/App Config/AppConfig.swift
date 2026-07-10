@@ -351,10 +351,8 @@ struct AppConfig {
                 bookmarkDataIsStale: &isStale
             )
 
-            let startAccess = url.startAccessingSecurityScopedResource()
-            if startAccess {
-                return url
-            }
+            _ = url.startAccessingSecurityScopedResource()
+            return url
         } catch {
             print("Bookmark resolve error:", error)
         }

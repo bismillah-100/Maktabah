@@ -155,14 +155,15 @@ final class SearchViewModel: ViewModelBase {
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                stopSearch()
                 state = .loading
                 ldm.resetState()
                 await ldm.reloadAllData()
+                await ldm.buildArchive()
                 #if os(iOS)
-                loadLibraryData()
-                #elseif os(macOS)
-                state = .loaded
+                updateDisplayedCategories()
                 #endif
+                state = .loaded
             }
         }
     }
