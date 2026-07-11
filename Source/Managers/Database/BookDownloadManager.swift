@@ -254,10 +254,9 @@ final class BookDownloadManager {
             throw BookDownloadError.decompressionFailed(bookId: bookId, reason: "Empty file")
         }
 
-        let expectedSize = ZSTD_getFrameContentSize(
-            (compressed as NSData).bytes,
-            compressed.count
-        )
+        let expectedSize = compressed.withUnsafeBytes { ptr in
+            ZSTD_getFrameContentSize(ptr.baseAddress, compressed.count)
+        }
 
         if expectedSize == ZSTD_CONTENTSIZE_ERROR || expectedSize == ZSTD_CONTENTSIZE_UNKNOWN {
             throw BookDownloadError.decompressionFailed(bookId: bookId, reason: "Unknown content size")
