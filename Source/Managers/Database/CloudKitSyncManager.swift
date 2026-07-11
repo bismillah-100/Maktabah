@@ -52,49 +52,41 @@ final class CloudKitSyncManager {
 
     // MARK: - Pending Operations Tracking
     private func addPendingUploads(_ ids: [String], target: SyncTarget) {
-        syncQueue.async(flags: .barrier) {
-            for id in ids {
-                switch target {
-                case .annotation:
-                    AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
-                case .result:
-                    ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "upload")
-                case .history:
-                    HistoryViewModel.shared.addPendingSync(ckRecordId: id, operation: "upload")
-                }
+        for id in ids {
+            switch target {
+            case .annotation:
+                AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
+            case .result:
+                ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "upload")
+            case .history:
+                HistoryViewModel.shared.addPendingSync(ckRecordId: id, operation: "upload")
             }
         }
     }
 
     private func removePendingUploads(_ ids: [String]) {
-        syncQueue.async(flags: .barrier) {
-            AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
-            ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
-            HistoryViewModel.shared.removePendingSync(ckRecordIds: ids)
-        }
+        AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
+        ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
+        HistoryViewModel.shared.removePendingSync(ckRecordIds: ids)
     }
 
     private func addPendingDeletes(_ ids: [String], target: SyncTarget) {
-        syncQueue.async(flags: .barrier) {
-            for id in ids {
-                switch target {
-                case .annotation:
-                    AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
-                case .result:
-                    ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "delete")
-                case .history:
-                    HistoryViewModel.shared.addPendingSync(ckRecordId: id, operation: "delete")
-                }
+        for id in ids {
+            switch target {
+            case .annotation:
+                AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
+            case .result:
+                ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "delete")
+            case .history:
+                HistoryViewModel.shared.addPendingSync(ckRecordId: id, operation: "delete")
             }
         }
     }
 
     private func removePendingDeletes(_ ids: [String]) {
-        syncQueue.async(flags: .barrier) {
-            AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
-            ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
-            HistoryViewModel.shared.removePendingSync(ckRecordIds: ids)
-        }
+        AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
+        ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
+        HistoryViewModel.shared.removePendingSync(ckRecordIds: ids)
     }
 
     // MARK: - Retry Logic
@@ -576,22 +568,18 @@ final class CloudKitSyncManager {
                         completion?(lastError.map { .failure($0) } ?? .success(()))
                     }
                 } else {
-                    // Non-conflict partial failure - retry pending uploads
-                    self.retryPendingUploads()
+                    // Non-conflict partial failure - leave as pending to be retried later
                     completion?(.failure(error))
                 }
             } else {
-                // Partial failure without specific errors - retry pending uploads
-                self.retryPendingUploads()
+                // Partial failure without specific errors - leave as pending
                 completion?(.failure(error))
             }
         case .networkUnavailable, .networkFailure:
-            // Network offline - retry pending uploads when connection returns
-            retryPendingUploads()
+            // Network offline - network monitor will retry when connection returns
             completion?(.failure(error))
         default:
-            // Other errors - retry pending uploads as safety net
-            retryPendingUploads()
+            // Other errors - leave as pending
             completion?(.failure(error))
         }
     }
@@ -615,8 +603,8 @@ final class CloudKitSyncManager {
                 }
             }
         case .networkUnavailable, .networkFailure:
-            // Network offline - retry deletes when connection returns
-            retryPendingDeletes()
+            // Network offline - network monitor will retry deletes when connection returns
+            break
         case .zoneNotFound:
             initializeOnLaunch()
         case .serverRecordChanged:

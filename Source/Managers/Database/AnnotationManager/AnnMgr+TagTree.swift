@@ -62,7 +62,7 @@ extension AnnotationManager {
         }
 
         let diff = TagUpdateDiff(removed: [], added: addedEntries, updated: [])
-        postChangeNotification(type: .added, annotation: annotation, diff: diff)
+        postChangeNotification(type: .added, annotation: annotation, diff: diff, uploadToCloudKit: uploadToCloudKit)
     }
 
     // MARK: - Update in Tag Tree
