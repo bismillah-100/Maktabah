@@ -31,8 +31,7 @@ extension IbarotTextVC: AnnotationDelegate {
 
             do {
                 if await currentBook?.id != bkId {
-                    try await viewModel.connectBookWithBundleFallback(book)
-                    await didChangeBook(book: book)
+                    try await displayBook(book, loadContent: false)
                 }
             } catch {
                 await MainActor.run {

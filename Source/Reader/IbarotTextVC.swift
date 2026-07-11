@@ -371,11 +371,16 @@ extension IbarotTextVC {
         }
     }
 
-    func displayBook(_ book: BooksData) async throws {
+    func displayBook(
+        _ book: BooksData,
+        loadContent: Bool = true
+    ) async throws {
         do {
             try await viewModel.connectBookWithBundleFallback(book)
             didChangeBook(book: book)
-            viewModel.loadInitialContent()
+            loadContent
+                ? viewModel.loadInitialContent()
+                : viewModel.loadTOC(book: book)
         } catch is CancellationError {
             throw CancellationError()
         } catch {

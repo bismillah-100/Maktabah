@@ -191,9 +191,7 @@ class ReaderViewModel: ViewModelBase {
             contentText = DatabaseError.bookNotFound(book.archive).localizedDescription
         }
 
-        // Start loading TOC immediately for both platforms
-        tocViewModel.loadTOC(book: book)
-
+        loadTOC(book: book)
         guard let initialContentId else {
             loadFromHistory(for: book)
             return
@@ -207,6 +205,10 @@ class ReaderViewModel: ViewModelBase {
         } else {
             contentText = "Content ID not found."
         }
+    }
+
+    func loadTOC(book: BooksData) {
+        tocViewModel.loadTOC(book: book)
     }
 
     func getContent(bkId: Int, contentId: Int) -> BookContent? {
