@@ -415,6 +415,7 @@
 		F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
+		F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */; };
 		F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */; };
 		F38FF42E2FA817D9003E7B71 /* iOSBookInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */; };
 		F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */; };
@@ -1977,6 +1978,7 @@
 				F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */,
 				F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */,
 				F30577302FA46222005732C6 /* RowiModel.swift in Sources */,
+				F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,
 				F3B60E262FC7CDA400A9EF58 /* iOSReaderNavigationPopoverView.swift in Sources */,
 				F321E0202FC7050F00CB37DD /* CloudKitCoreManager.swift in Sources */,
 				F321E0212FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
@@ -2277,7 +2279,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 106;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
 				ENABLE_APP_SANDBOX = YES;
@@ -2306,7 +2308,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.3;
+				MARKETING_VERSION = 3.3.1;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2336,7 +2338,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 106;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
 				ENABLE_APP_SANDBOX = YES;
@@ -2366,7 +2368,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.3;
+				MARKETING_VERSION = 3.3.1;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2395,7 +2397,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 106;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
 				ENABLE_APP_SANDBOX = YES;
@@ -2424,7 +2426,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.3;
+				MARKETING_VERSION = 3.3.1;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;
@@ -2454,7 +2456,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 101;
+				CURRENT_PROJECT_VERSION = 106;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
 				ENABLE_APP_SANDBOX = YES;
@@ -2484,7 +2486,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.3;
+				MARKETING_VERSION = 3.3.1;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;
@@ -2513,7 +2515,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 104;
+				CURRENT_PROJECT_VERSION = 110;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -2529,7 +2531,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.2;
+				MARKETING_VERSION = 3.2.1;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;
@@ -2554,7 +2556,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 104;
+				CURRENT_PROJECT_VERSION = 110;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
 				GCC_OPTIMIZATION_LEVEL = 3;
@@ -2571,7 +2573,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.2;
+				MARKETING_VERSION = 3.2.1;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;

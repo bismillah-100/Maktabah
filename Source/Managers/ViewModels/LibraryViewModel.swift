@@ -107,6 +107,7 @@ final class LibraryViewModel: ViewModelBase {
 
     private var baseCategories: [CategoryData] = []
     private var bookLookup: [String: (category: CategoryData, book: BooksData)] = [:]
+    private let lookupQueue = SerialTaskQueue()
 
     private var hasLoadedLibrary = false
     private var _cachedDisplayedCategories: [CategoryData] = []
@@ -1035,15 +1036,23 @@ final class LibraryViewModel: ViewModelBase {
     // MARK: - General Helpers
 
     private func buildBookLookup() {
-        bookLookup.removeAll()
-        func traverse(_ category: CategoryData) {
-            for child in category.children {
-                if let book = child as? BooksData { bookLookup[book.book] = (category, book) }
-                else if let sub = child as? CategoryData { traverse(sub) }
+        lookupQueue.cancelAll()
+        lookupQueue.enqueue { [weak self] in
+            guard let self else { return }
+            var newLookup: [String: (category: CategoryData, book: BooksData)] = [:]
+            
+            func traverse(_ category: CategoryData) {
+                for child in category.children {
+                    if let book = child as? BooksData { newLookup[book.book] = (category, book) }
+                    else if let sub = child as? CategoryData { traverse(sub) }
+                }
             }
-        }
-        for category in displayedCategories {
-            traverse(category)
+            
+            for category in displayedCategories {
+                traverse(category)
+            }
+            
+            bookLookup = newLookup
         }
     }
 
