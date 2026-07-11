@@ -36,6 +36,19 @@
 </head>
 <body>
 
+<h2>Version 3.3.1</h2>
+<p class="version">July 11, 2026</p>
+<h3>Fixes</h3>
+<ul>
+  <li>Prevent concurrent access crash in library buildBookLookup by implementing SerialTaskQueue in LibraryViewModel</li>
+  <li>Prevent dangling pointer crash in zstd decompression by retaining NSData reference during ZSTD_getFrameContentSize</li>
+  <li>Fix book's TOC not changing/updating when selecting annotation from a different book</li>
+  <li>Resolve intermittent CloudKit upload failures and network infinite loops by securing write durability and relying on NetworkMonitor</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.3</h2>
 <p class="version">July 10, 2026</p>
 <h3>New</h3>
