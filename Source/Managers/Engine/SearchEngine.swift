@@ -15,7 +15,8 @@ struct ArchiveInfo {
 
 // ----------------------------------------
 // MARK: - Abstraction: DB connection
-// ----------------------------------------
+
+/// ----------------------------------------
 protocol DBConnectionType {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
 }
@@ -28,7 +29,8 @@ enum SQLValue {
 
 // ----------------------------------------
 // MARK: - PauseController (actor)
-// ----------------------------------------
+
+/// ----------------------------------------
 actor PauseController {
     private var isPaused = false
     private var continuations: [CheckedContinuation<Void, Never>] = []
@@ -42,7 +44,9 @@ actor PauseController {
         isPaused = false
         let conts = continuations
         continuations.removeAll()
-        for cont in conts { cont.resume() }
+        for cont in conts {
+            cont.resume()
+        }
     }
 
     func stopAndResumeAll() {
@@ -57,32 +61,33 @@ actor PauseController {
     }
 
     func currentlyPaused() -> Bool {
-        return isPaused
+        isPaused
     }
 }
 
 // ----------------------------------------
 // MARK: - Connection Pool per file (actor)
-// ----------------------------------------
+
+/// ----------------------------------------
 class SQLiteConnectionPool {
     private var connections: [DBConnectionType]
 
     init(conns: [DBConnectionType]) {
-        self.connections = conns
+        connections = conns
     }
 
     var connectionCount: Int {
-        return connections.count
+        connections.count
     }
 
     /// Ambil koneksi berdasarkan index
     func getConnection(at index: Int) -> DBConnectionType {
-        return connections[index % connections.count]
+        connections[index % connections.count]
     }
 
     /// Menjalankan read-operation pada koneksi tertentu
     func read<T>(at index: Int, _ body: @escaping (DBConnectionType) throws -> T) async throws -> T {
-        return try await Task.detached(priority: .userInitiated) {
+        try await Task.detached(priority: .userInitiated) {
             let conn = self.getConnection(at: index)
             return try body(conn)
         }.value
@@ -91,7 +96,8 @@ class SQLiteConnectionPool {
 
 // ----------------------------------------
 // MARK: - Worker per file
-// ----------------------------------------
+
+/// ----------------------------------------
 class SearchWorker {
     let archiveId: String
     let tables: [String]
@@ -129,7 +135,7 @@ class SearchWorker {
         for (index, tableName) in tablesToProcess.enumerated() {
             // ✅ CEK STOP sebelum mulai table
             if stopFlag() {
-                print("ℹ️ Archive \(archiveId): stop sebelum table \(index+1)/\(tablesToProcess.count)")
+                print("ℹ️ Archive \(archiveId): stop sebelum table \(index + 1)/\(tablesToProcess.count)")
                 return
             }
 
@@ -137,20 +143,20 @@ class SearchWorker {
 
             // ✅ CEK STOP setelah resume
             if stopFlag() {
-                print("ℹ️ Archive \(archiveId): stop setelah resume sebelum table \(index+1)")
+                print("ℹ️ Archive \(archiveId): stop setelah resume sebelum table \(index + 1)")
                 return
             }
 
-            print("  📄 [\(index+1)/\(tablesToProcess.count)] \(tableName)")
+            print("  📄 [\(index + 1)/\(tablesToProcess.count)] \(tableName)")
 
             // ✅ KUNCI: searchTableParallel sekarang bisa stop instan
             let tableResultCount = await searchTableParallel(
-                tableName: tableName, 
+                tableName: tableName,
                 ftsQuery: ftsQuery,
                 onResult: onResult,
                 pauseController: pauseController,
                 stopFlag: stopFlag,
-                progress: progress, 
+                progress: progress,
                 onRowProgress: { current, total in
                     onRowProgress(tableName, current, total)
                 }
@@ -159,7 +165,7 @@ class SearchWorker {
             // ✅ CEK STOP segera setelah searchTableParallel return
             if stopFlag() {
                 print("ℹ️ Archive \(archiveId): stop setelah table \(tableName) (partial: \(tableResultCount) hasil)")
-                return  // <-- KELUAR LANGSUNG!
+                return // <-- KELUAR LANGSUNG!
             }
 
             if tableResultCount > 0 {
@@ -240,7 +246,7 @@ class SearchWorker {
             }
 
             func getResultCount() -> Int {
-                return resultCount
+                resultCount
             }
         }
 
@@ -250,7 +256,7 @@ class SearchWorker {
         return await withTaskGroup(of: (Int, [BookContent]).self) { group -> Int in
             var processedRows = 0
             // Start workers
-            for workerIndex in 0..<connectionCount {
+            for workerIndex in 0 ..< connectionCount {
                 if stopFlag() {
                     print("    🛑 Skip worker \(workerIndex) - stop before start")
                     break
@@ -261,11 +267,11 @@ class SearchWorker {
                 if limit <= 0 { continue }
 
                 group.addTask { [weak self] in
-                    guard let self = self else { return (workerIndex, []) }
+                    guard let self else { return (workerIndex, []) }
 
-                    let results = await self.searchChunk(
+                    let results = await searchChunk(
                         tableName: tableName,
-                        ftsQuery: ftsQuery, 
+                        ftsQuery: ftsQuery,
                         offset: offset,
                         limit: limit,
                         connectionIndex: workerIndex,
@@ -285,8 +291,8 @@ class SearchWorker {
                 let shouldStop = await coordinator.checkCancel(stopFlag)
                 if shouldStop {
                     print("    🛑 CANCELLING TaskGroup - discarding worker \(workerIndex) (\(results.count) rows)")
-                    group.cancelAll()  // <-- Cancel semua worker
-                    break  // <-- Keluar dari loop SEGERA
+                    group.cancelAll() // <-- Cancel semua worker
+                    break // <-- Keluar dari loop SEGERA
                 }
 
                 // Process hasil dari worker ini
@@ -340,7 +346,6 @@ class SearchWorker {
         pauseController: PauseController,
         stopFlag: @escaping @Sendable () -> Bool
     ) async -> [BookContent] {
-
         var results: [BookContent] = []
         var currentOffset = offset
         let targetEnd = offset + limit
@@ -366,7 +371,7 @@ class SearchWorker {
             let queryParams: [SQLValue] = [
                 .text(ftsQuery),
                 .int(batchLimit),
-                .int(currentOffset)
+                .int(currentOffset),
             ]
 
             let rows: [[String: Any?]]
@@ -390,7 +395,7 @@ class SearchWorker {
             if rows.isEmpty { break }
 
             for (idx, row) in rows.enumerated() {
-                if idx % 10 == 0 && (stopFlag() || Task.isCancelled) {
+                if idx % 10 == 0, stopFlag() || Task.isCancelled {
                     return results
                 }
 
@@ -407,9 +412,9 @@ class SearchWorker {
                 // Normalize untuk phrase matching
                 // let normalizedNass = nass.normalizeArabic()
                 // if mode == .phrase, normalizedKeywords.count > 1 {
-                    // if !normalizedNass.contains(fullPhrase) {
-                        // continue
-                    // }
+                // if !normalizedNass.contains(fullPhrase) {
+                // continue
+                // }
                 // }
 
                 // Optimasi: Hilangkan bridging NSNumber, row mereturn Int murni
@@ -439,7 +444,8 @@ class SearchWorker {
 
 // ----------------------------------------
 // MARK: - SearchEngine (koordinator)
-// ----------------------------------------
+
+/// ----------------------------------------
 final class SearchEngine {
     private(set) var workers: [SearchWorker] = []
     private let pauseController = PauseController()
@@ -469,11 +475,10 @@ final class SearchEngine {
         onInitialize: @escaping (Int) -> Void,
         // Callback untuk setiap table selesai di-process
         onTableComplete: @escaping (String, Int) -> Void,
-        onRowProgress: @escaping (String, String, Int, Int) -> Void,  // ✅ BARU: (archiveId, tableName, current, total)
+        onRowProgress: @escaping (String, String, Int, Int) -> Void, // ✅ BARU: (archiveId, tableName, current, total)
         onResult: @escaping (String, String, BookContent) -> Void,
         onComplete: @escaping () -> Void
     ) {
-
         searchTask?.cancel()
         searchTask = nil
         isStopped = false
@@ -494,23 +499,22 @@ final class SearchEngine {
         }
 
         // Normalisasi keywords
-        let normalizedKeywords = keywords.map { ($0) }
+        let normalizedKeywords = keywords.map { $0 }
 
         // Buat FTS query - gunakan AND untuk multiple keywords
-        let ftsQuery: String
-        switch mode {
+        let ftsQuery: String = switch mode {
         case .phrase:
             // keywords.count == 1, karena tidak di-split
             // Wrap dengan quotes untuk phrase search
-            ftsQuery = "\"" + normalizedKeywords.joined(separator: " ") + "\""
-            // Result: "\"كتاب العلم النافع\""
+            "\"" + normalizedKeywords.joined(separator: " ") + "\""
+        // Result: "\"كتاب العلم النافع\""
         case .contains:
             // keywords.count bisa > 1, karena di-split pakai koma
             // Gunakan AND - semua keyword harus ada (tapi tidak harus bersebelahan)
-            ftsQuery = normalizedKeywords.joined(separator: " AND ")
-            // Result: "كتاب AND العلم AND النافع"
+            normalizedKeywords.joined(separator: " AND ")
+        // Result: "كتاب AND العلم AND النافع"
         case .or:
-            ftsQuery = normalizedKeywords.joined(separator: " OR ")
+            normalizedKeywords.joined(separator: " OR ")
             // Result: "الحمد OR حمد"
         }
 
@@ -529,7 +533,7 @@ final class SearchEngine {
                     },
                     progress: { count in
                         // Progress per hasil tidak perlu di sini
-                    }, 
+                    },
                     onRowProgress: { tableName, current, total in
                         onRowProgress(worker.archiveId, tableName, current, total)
                     },
@@ -541,7 +545,7 @@ final class SearchEngine {
                         completedTables += 1
                         onTableComplete(worker.archiveId, completedTables)
                     },
-                    pauseController: self.pauseController,
+                    pauseController: pauseController,
                     stopFlag: { [weak self] in
                         guard let self else { return true }
                         return isStopped
@@ -605,7 +609,7 @@ final class SearchEngine {
     }
 
     func currentlyPaused() async -> Bool {
-        return await pauseController.currentlyPaused()
+        await pauseController.currentlyPaused()
     }
 
     func cleanup() {
@@ -617,7 +621,8 @@ final class SearchEngine {
 
 // ----------------------------------------
 // MARK: - SQLite Connection Implementation
-// ----------------------------------------
+
+/// ----------------------------------------
 final class SQLiteConnection: DBConnectionType {
     private let db: OpaquePointer?
 
@@ -626,7 +631,7 @@ final class SQLiteConnection: DBConnectionType {
         if sqlite3_open(dbPath, &dbPtr) != SQLITE_OK {
             throw NSError(domain: "SQLite", code: Int(sqlite3_errcode(dbPtr)))
         }
-        self.db = dbPtr
+        db = dbPtr
 
         // Attach FTS database
         let ftsPath = dbPath.replacingOccurrences(of: ".sqlite", with: "_fts.sqlite")
@@ -636,7 +641,7 @@ final class SQLiteConnection: DBConnectionType {
 
     /// UPDATED: queryRows dengan support BLOB
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]] {
-        guard let db = db else {
+        guard let db else {
             throw NSError(
                 domain: "SQLite",
                 code: -1,
@@ -664,7 +669,7 @@ final class SQLiteConnection: DBConnectionType {
         for (i, param) in params.enumerated() {
             let idx = Int32(i + 1)
             switch param {
-            case .text(let s):
+            case let .text(s):
                 s.withCString { ptr in
                     let destructor = unsafeBitCast(
                         OpaquePointer(bitPattern: -1),
@@ -672,21 +677,28 @@ final class SQLiteConnection: DBConnectionType {
                     )
                     sqlite3_bind_text(statement, idx, ptr, -1, destructor)
                 }
-            case .int(let n):
+            case let .int(n):
                 sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
             case .null:
                 sqlite3_bind_null(statement, idx)
             }
         }
 
+        // Cache column names to prevent O(N) allocations
+        let colCount = sqlite3_column_count(statement)
+        var columnNames: [String] = []
+        for c in 0 ..< colCount {
+            let namePtr = sqlite3_column_name(statement, c)
+            let name = namePtr.flatMap { String(cString: $0) } ?? ""
+            columnNames.append(name)
+        }
+
         // Fetch rows
         while sqlite3_step(statement) == SQLITE_ROW {
             var row: [String: Any?] = [:]
-            let colCount = sqlite3_column_count(statement)
 
-            for c in 0..<colCount {
-                let namePtr = sqlite3_column_name(statement, c)
-                let name = namePtr.flatMap { String(cString: $0) } ?? ""
+            for c in 0 ..< colCount {
+                let name = columnNames[Int(c)]
                 let type = sqlite3_column_type(statement, c)
 
                 switch type {
@@ -728,7 +740,7 @@ final class SQLiteConnection: DBConnectionType {
     }
 
     deinit {
-        if let db = db {
+        if let db {
             sqlite3_close(db)
         }
     }
