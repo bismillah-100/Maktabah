@@ -679,14 +679,21 @@ final class SQLiteConnection: DBConnectionType {
             }
         }
 
+        // Cache column names to prevent O(N) allocations
+        let colCount = sqlite3_column_count(statement)
+        var columnNames: [String] = []
+        for c in 0 ..< colCount {
+            let namePtr = sqlite3_column_name(statement, c)
+            let name = namePtr.flatMap { String(cString: $0) } ?? ""
+            columnNames.append(name)
+        }
+
         // Fetch rows
         while sqlite3_step(statement) == SQLITE_ROW {
             var row: [String: Any?] = [:]
-            let colCount = sqlite3_column_count(statement)
 
             for c in 0..<colCount {
-                let namePtr = sqlite3_column_name(statement, c)
-                let name = namePtr.flatMap { String(cString: $0) } ?? ""
+                let name = columnNames[Int(c)]
                 let type = sqlite3_column_type(statement, c)
 
                 switch type {
