@@ -96,6 +96,9 @@ extension AnnotationManager {
         );
         """)
 
+        try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_ck_record_id ON sync_pending (ck_record_id);")
+        try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op_queued ON sync_pending (operation, queued_at);")
+
         try backfillCloudKitFieldsIfNeeded { backfilled in
             if !backfilled.isEmpty {
                 DispatchQueue.global(qos: .background).async {

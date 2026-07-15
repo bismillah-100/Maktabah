@@ -10,6 +10,12 @@ extension AnnotationManager {
 
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let _db else { return }
+        if operation == "upload" {
+            let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
+            if let count = try? _db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+                return // Delete wins
+            }
+        }
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
         try? _db.execute(query: sql, parameters: [ckRecordId, operation, now])
     }

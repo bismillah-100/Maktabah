@@ -195,7 +195,11 @@ final class CloudKitCoreManager {
     }
 
     func notifyWorkerToSync() {
-        notifyTask?.cancel()
+        /* Let the task run to collect events (throttle),
+         instead of resetting the time.
+         */
+        guard notifyTask == nil else { return }
+
         notifyTask = Task {
             try? await Task.sleep(for: .seconds(60))
             guard !Task.isCancelled else { return }

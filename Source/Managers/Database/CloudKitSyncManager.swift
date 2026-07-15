@@ -97,6 +97,8 @@ final class CloudKitSyncManager {
         
         guard !annPending.isEmpty || !resPending.isEmpty || !histPending.isEmpty else { return }
         
+        var orphans: [String] = []
+
         // Paginated or direct DB fetch is recommended here, but we keep existing logic compatible
         if !annPending.isEmpty {
             let allAnnotations = AnnotationManager.shared.loadAnnotations()
@@ -104,6 +106,9 @@ final class CloudKitSyncManager {
             if !toUploadAnn.isEmpty {
                 upload(annotations: toUploadAnn)
             }
+
+            let foundIds = Set(toUploadAnn.compactMap { $0.ckRecordId })
+            orphans.append(contentsOf: annPending.filter { !foundIds.contains($0) })
         }
         
         if !resPending.isEmpty {
@@ -116,6 +121,11 @@ final class CloudKitSyncManager {
             if !toUploadFolders.isEmpty || !toUploadResults.isEmpty {
                 uploadResultsData(folders: toUploadFolders, results: toUploadResults)
             }
+
+            let foundFolderIds = Set(toUploadFolders.compactMap { $0.ckRecordId })
+            let foundResultIds = Set(toUploadResults.compactMap { $0.ckRecordId })
+            let foundIds = foundFolderIds.union(foundResultIds)
+            orphans.append(contentsOf: resPending.filter { !foundIds.contains($0) })
         }
         
         if !histPending.isEmpty {
@@ -124,6 +134,13 @@ final class CloudKitSyncManager {
             if !toUploadHist.isEmpty {
                 uploadHistory(entries: toUploadHist)
             }
+
+            let foundIds = Set(toUploadHist.compactMap { $0.ckRecordId })
+            orphans.append(contentsOf: histPending.filter { !foundIds.contains($0) })
+        }
+
+        if !orphans.isEmpty {
+            removePendingUploads(orphans)
         }
     }
 
@@ -254,27 +271,74 @@ final class CloudKitSyncManager {
 
     // MARK: - Upload (Insert/Update)
 
+    private var annotationUploadBuffer: [String: Annotation] = [:]
+    private var annotationDebounceTask: DispatchWorkItem?
+    private var annotationDebounceCompletions: [((Result<Void, Error>) -> Void)] = []
+
     func upload(
         annotations: [Annotation],
         completion: ((Result<Void, Error>) -> Void)? = nil
     ) {
         guard AppConfig.useICloud else { completion?(.success(())); return }
 
-        let records = annotations.compactMap {
-            $0.toCKRecord(zoneID: core.zoneId)
+        // Guarantee immediate persistence into the sync_pending queue before any debounce delays
+        let pendingIds = annotations.compactMap { $0.ckRecordId }
+        if !pendingIds.isEmpty {
+            addPendingUploads(pendingIds, target: .annotation)
         }
-        guard !records.isEmpty else { completion?(.success(())); return }
 
-        let ids = records.map { $0.recordID.recordName }
-        addPendingUploads(ids, target: .annotation)
+        syncQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            for ann in annotations {
+                if let ckId = ann.ckRecordId {
+                    self.annotationUploadBuffer[ckId] = ann
+                }
+            }
 
-        core.upload(records: records) { [weak self] result in
-            self?.handleUploadResult(
-                result,
-                pendingIds: ids,
-                target: .annotation,
-                completion: completion
-            )
+            if let completion = completion {
+                self.annotationDebounceCompletions.append(completion)
+            }
+
+            self.annotationDebounceTask?.cancel()
+            let workItem = DispatchWorkItem { [weak self] in
+                self?.performDebouncedAnnotationUpload()
+            }
+            self.annotationDebounceTask = workItem
+            DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 2.0, execute: workItem)
+        }
+    }
+
+    private func performDebouncedAnnotationUpload() {
+        syncQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+
+            let annotationsToUpload = Array(self.annotationUploadBuffer.values)
+            self.annotationUploadBuffer.removeAll()
+
+            let records = annotationsToUpload.compactMap {
+                $0.toCKRecord(zoneID: self.core.zoneId)
+            }
+
+            let pendingCompletions = self.annotationDebounceCompletions
+            self.annotationDebounceCompletions.removeAll()
+
+            guard !records.isEmpty else {
+                pendingCompletions.forEach { $0(.success(())) }
+                return
+            }
+
+            let ids = records.map { $0.recordID.recordName }
+
+            self.core.upload(records: records) { [weak self] result in
+                self?.handleUploadResult(
+                    result,
+                    pendingIds: ids,
+                    target: .annotation,
+                    completion: { res in
+                        pendingCompletions.forEach { $0(res) }
+                    }
+                )
+            }
         }
     }
 
@@ -285,30 +349,36 @@ final class CloudKitSyncManager {
     ) {
         guard AppConfig.useICloud else { completion?(.success(())); return }
 
-        var records: [CKRecord] = []
-        records.append(
-            contentsOf: folders.compactMap {
-                $0.toCKRecord(zoneID: core.zoneId)
-            }
-        )
-        records.append(
-            contentsOf: results.compactMap {
-                $0.toCKRecord(zoneID: core.zoneId)
-            }
-        )
-
-        guard !records.isEmpty else { completion?(.success(())); return }
-
-        let ids = records.map { $0.recordID.recordName }
-        addPendingUploads(ids, target: .result)
-
-        core.upload(records: records) { [weak self] result in
-            self?.handleUploadResult(
-                result,
-                pendingIds: ids,
-                target: .result,
-                completion: completion
+        syncQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            var records: [CKRecord] = []
+            records.append(
+                contentsOf: folders.compactMap {
+                    $0.toCKRecord(zoneID: self.core.zoneId)
+                }
             )
+            records.append(
+                contentsOf: results.compactMap {
+                    $0.toCKRecord(zoneID: self.core.zoneId)
+                }
+            )
+
+            guard !records.isEmpty else {
+                completion?(.success(()))
+                return
+            }
+
+            let ids = records.map { $0.recordID.recordName }
+            self.addPendingUploads(ids, target: .result)
+
+            self.core.upload(records: records) { [weak self] result in
+                self?.handleUploadResult(
+                    result,
+                    pendingIds: ids,
+                    target: .result,
+                    completion: completion
+                )
+            }
         }
     }
 
@@ -318,19 +388,25 @@ final class CloudKitSyncManager {
     ) {
         guard AppConfig.useICloud else { completion?(.success(())); return }
 
-        let records = entries.compactMap { $0.toCKRecord(zoneID: core.zoneId) }
-        guard !records.isEmpty else { completion?(.success(())); return }
+        syncQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            let records = entries.compactMap { $0.toCKRecord(zoneID: self.core.zoneId) }
+            guard !records.isEmpty else {
+                completion?(.success(()))
+                return
+            }
 
-        let ids = records.map { $0.recordID.recordName }
-        addPendingUploads(ids, target: .history)
+            let ids = records.map { $0.recordID.recordName }
+            self.addPendingUploads(ids, target: .history)
 
-        core.upload(records: records) { [weak self] result in
-            self?.handleUploadResult(
-                result,
-                pendingIds: ids,
-                target: .history,
-                completion: completion
-            )
+            self.core.upload(records: records) { [weak self] result in
+                self?.handleUploadResult(
+                    result,
+                    pendingIds: ids,
+                    target: .history,
+                    completion: completion
+                )
+            }
         }
     }
 
@@ -517,7 +593,8 @@ final class CloudKitSyncManager {
         let serverLastModified = serverRecord["lastModified"] as? Int64 ?? 0
         let localLastModified = localRecord["lastModified"] as? Int64 ?? 0
 
-        if localLastModified >= serverLastModified {
+        // Clock drift allowance: prefer safe merge if timestamps are very close
+        if localLastModified >= serverLastModified || abs(localLastModified - serverLastModified) < 300 {
             for key in localRecord.allKeys() {
                 serverRecord[key] = localRecord[key]
             }
@@ -550,6 +627,9 @@ final class CloudKitSyncManager {
             resolveServerRecordConflict(ckError: ckError, pendingRecordIds: pendingRecordIds, completion: completion)
         case .partialFailure:
             if let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
+                let failedIds = Set(partialErrors.keys.map { $0.recordName })
+                let successfulIds = pendingRecordIds.filter { !failedIds.contains($0) }
+                if !successfulIds.isEmpty { self.removePendingUploads(successfulIds) }
                 let conflicts = partialErrors.values.compactMap { $0 as? CKError }.filter { $0.code == .serverRecordChanged }
 
                 if !conflicts.isEmpty {

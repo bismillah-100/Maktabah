@@ -174,6 +174,9 @@ class ResultsHandler {
             );
             """)
 
+            try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_ck_record_id ON sync_pending (ck_record_id);")
+            try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op_queued ON sync_pending (operation, queued_at);")
+
             // Migration for existing databases
             let folderCols = try listTableColumns(tableName: foldersTable)
             if !folderCols.contains(colCkRecordId) {
@@ -328,6 +331,12 @@ class ResultsHandler {
 
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let db else { return }
+        if operation == "upload" {
+            let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
+            if let count = try? db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+                return // Delete wins
+            }
+        }
         let now = Int64(Date().timeIntervalSince1970)
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
         try? db.execute(query: sql, parameters: [ckRecordId, operation, now])
