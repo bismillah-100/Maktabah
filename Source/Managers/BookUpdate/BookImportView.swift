@@ -857,11 +857,9 @@ struct OfflineImportFormView: View {
 
             selectedBookId = newId
 
-            #if !os(macOS)
             await MainActor.run {
                 HistoryViewModel.shared.migrateBookId(from: oldId, to: newId)
             }
-            #endif
 
             ReusableFunc.showAlert(
                 title: "Success",
