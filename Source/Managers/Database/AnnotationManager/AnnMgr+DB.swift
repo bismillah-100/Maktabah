@@ -1,5 +1,5 @@
 //
-//  AnnotationManager+DB.swift
+//  AnnMgr+DB.swift
 //  Maktabah
 //
 

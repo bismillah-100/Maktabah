@@ -1,5 +1,5 @@
 //
-//  AnnotationManager+CloudKit.swift
+//  AnnMgr+CloudKit.swift
 //  Maktabah
 //
 
@@ -109,7 +109,7 @@ extension AnnotationManager {
                                 ann.lastModified ?? 0,
                                 ann.part,
                                 ann.page,
-                                existingLocalId
+                                existingLocalId,
                             ]
 
                             try _db.execute(query: updateSql, parameters: params)
@@ -142,7 +142,7 @@ extension AnnotationManager {
                             ann.part,
                             ann.page,
                             ckId,
-                            ann.lastModified ?? 0
+                            ann.lastModified ?? 0,
                         ]
 
                         try _db.execute(query: insertSql, parameters: params)
@@ -215,10 +215,10 @@ extension AnnotationManager {
             } else if totalChanges >= 100 {
                 // Bulk Update: Reload Everything
                 DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
-                    self.clearAllCaches()
-                    self.invalidateTree()
-                    self.buildAnnotationTree()
+                    guard let self else { return }
+                    clearAllCaches()
+                    invalidateTree()
+                    buildAnnotationTree()
                 }
             }
         } catch {

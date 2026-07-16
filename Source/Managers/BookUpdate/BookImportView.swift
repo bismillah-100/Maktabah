@@ -1,5 +1,5 @@
 //
-//  OfflineImportFormView.swift
+//  BookImportView.swift
 //  Maktabah
 //
 
@@ -83,149 +83,149 @@ struct OfflineImportFormView: View {
         }
         .formStyle(.grouped)
         #if os(macOS)
-        .safeAreaInset(edge: .top, spacing: 0) {
-            topHeaderView
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomActionView
-        }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                topHeaderView
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomActionView
+            }
         #endif
-        .overlay {
-            #if !os(macOS)
-            if isImporting {
-                ZStack {
-                    Color.black.opacity(0.25)
-                        .ignoresSafeArea()
+            .overlay {
+                #if !os(macOS)
+                if isImporting {
+                    ZStack {
+                        Color.black.opacity(0.25)
+                            .ignoresSafeArea()
 
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .controlSize(.large)
-                        Text("Importing Book...")
-                            .font(.headline)
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .controlSize(.large)
+                            Text("Importing Book...")
+                                .font(.headline)
+                        }
+                        .padding(32)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(16)
+                        .shadow(radius: 10)
                     }
-                    .padding(32)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(16)
-                    .shadow(radius: 10)
+                    .transition(.opacity)
                 }
-                .transition(.opacity)
+                #endif
             }
-            #endif
-        }
-        .animation(.easeInOut, value: isImporting)
-        .sheet(isPresented: $showBookPicker) {
-            SearchSelectionView(
-                title: "Select Book to Replace",
-                items: books.map {
-                    SearchSelectionItem(id: $0.id, title: $0.book, subtitle: "ID: \($0.id)")
-                },
-                onSelect: { item in
-                    selectedBookId = item.id
-                    if let book = books.first(where: { $0.id == item.id }) {
-                        bookName = book.book
-                        archiveId = book.archive
-                        categoryId = book.catId ?? 0
+            .animation(.easeInOut, value: isImporting)
+            .sheet(isPresented: $showBookPicker) {
+                SearchSelectionView(
+                    title: "Select Book to Replace",
+                    items: books.map {
+                        SearchSelectionItem(id: $0.id, title: $0.book, subtitle: "ID: \($0.id)")
+                    },
+                    onSelect: { item in
+                        selectedBookId = item.id
+                        if let book = books.first(where: { $0.id == item.id }) {
+                            bookName = book.book
+                            archiveId = book.archive
+                            categoryId = book.catId ?? 0
+                        }
+                        showBookPicker = false
                     }
-                    showBookPicker = false
-                }
-            )
-        }
-        .sheet(isPresented: $showAuthorPicker) {
-            SearchSelectionView(
-                title: "Select Registered Author".localized,
-                items: authors.map {
-                    SearchSelectionItem(id: $0.id, title: $0.muallif.nama, subtitle: "ID: \($0.id)")
-                },
-                onSelect: { item in
-                    selectedAuthorId = item.id
-                    showAuthorPicker = false
-                }
-            )
-        }
-        .fileImporter(
-            isPresented: $showFilePicker,
-            allowedContentTypes: [.database, .data, .item],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let urls):
-                guard let selectedURL = urls.first else { return }
-
-                let shouldStopAccessing = selectedURL.startAccessingSecurityScopedResource()
-                defer {
-                    if shouldStopAccessing {
-                        selectedURL.stopAccessingSecurityScopedResource()
-                    }
-                }
-
-                do {
-                    let tempURL = FileManager.default.temporaryDirectory
-                        .appendingPathComponent(UUID().uuidString)
-                        .appendingPathExtension(selectedURL.pathExtension)
-
-                    if FileManager.default.fileExists(atPath: tempURL.path) {
-                        try FileManager.default.removeItem(at: tempURL)
-                    }
-
-                    try FileManager.default.copyItem(at: selectedURL, to: tempURL)
-                    sqliteURL = tempURL
-                } catch {
-                    print("Error copying file: \(error.localizedDescription)")
-                }
-
-            case .failure(let error):
-                print("Error picking file: \(error.localizedDescription)")
+                )
             }
-        }
-        .textFieldStyle(.roundedBorder)
+            .sheet(isPresented: $showAuthorPicker) {
+                SearchSelectionView(
+                    title: "Select Registered Author".localized,
+                    items: authors.map {
+                        SearchSelectionItem(id: $0.id, title: $0.muallif.nama, subtitle: "ID: \($0.id)")
+                    },
+                    onSelect: { item in
+                        selectedAuthorId = item.id
+                        showAuthorPicker = false
+                    }
+                )
+            }
+            .fileImporter(
+                isPresented: $showFilePicker,
+                allowedContentTypes: [.database, .data, .item],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case let .success(urls):
+                    guard let selectedURL = urls.first else { return }
+
+                    let shouldStopAccessing = selectedURL.startAccessingSecurityScopedResource()
+                    defer {
+                        if shouldStopAccessing {
+                            selectedURL.stopAccessingSecurityScopedResource()
+                        }
+                    }
+
+                    do {
+                        let tempURL = FileManager.default.temporaryDirectory
+                            .appendingPathComponent(UUID().uuidString)
+                            .appendingPathExtension(selectedURL.pathExtension)
+
+                        if FileManager.default.fileExists(atPath: tempURL.path) {
+                            try FileManager.default.removeItem(at: tempURL)
+                        }
+
+                        try FileManager.default.copyItem(at: selectedURL, to: tempURL)
+                        sqliteURL = tempURL
+                    } catch {
+                        print("Error copying file: \(error.localizedDescription)")
+                    }
+
+                case let .failure(error):
+                    print("Error picking file: \(error.localizedDescription)")
+                }
+            }
+            .textFieldStyle(.roundedBorder)
         #if os(iOS)
-        .scrollContentBackground(.hidden)
-        .background(Color.appBackground)
-        .onChange(of: importMode) { _, newMode in
-            if newMode == 2, let selectedBookId {
-                customBookIdText = "\(selectedBookId)"
-            }
-            updateAnnotationCount()
-        }
-        .onChange(of: selectedBookId) { _, newId in
-            if importMode == 2, let newId {
-                customBookIdText = "\(newId)"
-            }
-            updateAnnotationCount()
-        }
-        .onChange(of: customBookIdText) { _, newValue in
-            let filtered = newValue.filter { $0.isNumber }
-            if filtered != newValue {
-                customBookIdText = filtered
-            } else {
+            .scrollContentBackground(.hidden)
+            .background(Color.appBackground)
+            .onChange(of: importMode) { _, newMode in
+                if newMode == 2, let selectedBookId {
+                    customBookIdText = "\(selectedBookId)"
+                }
                 updateAnnotationCount()
             }
-        }
+            .onChange(of: selectedBookId) { _, newId in
+                if importMode == 2, let newId {
+                    customBookIdText = "\(newId)"
+                }
+                updateAnnotationCount()
+            }
+            .onChange(of: customBookIdText) { _, newValue in
+                let filtered = newValue.filter(\.isNumber)
+                if filtered != newValue {
+                    customBookIdText = filtered
+                } else {
+                    updateAnnotationCount()
+                }
+            }
         #elseif os(macOS)
-        .onChange(of: importMode, perform: { newMode in
-            if newMode == 2, let selectedBookId {
-                customBookIdText = "\(selectedBookId)"
-            }
-            updateAnnotationCount()
-        })
-        .onChange(of: selectedBookId, perform: { newId in
-            if importMode == 2, let newId {
-                customBookIdText = "\(newId)"
-            }
-            updateAnnotationCount()
-        })
-        .onChange(of: customBookIdText, perform: { newValue in
-            let filtered = newValue.filter { $0.isNumber }
-            if filtered != newValue {
-                customBookIdText = filtered
-            } else {
+            .onChange(of: importMode, perform: { newMode in
+                if newMode == 2, let selectedBookId {
+                    customBookIdText = "\(selectedBookId)"
+                }
                 updateAnnotationCount()
-            }
-        })
+            })
+            .onChange(of: selectedBookId, perform: { newId in
+                if importMode == 2, let newId {
+                    customBookIdText = "\(newId)"
+                }
+                updateAnnotationCount()
+            })
+            .onChange(of: customBookIdText, perform: { newValue in
+                let filtered = newValue.filter(\.isNumber)
+                if filtered != newValue {
+                    customBookIdText = filtered
+                } else {
+                    updateAnnotationCount()
+                }
+            })
         #endif
-        .task(priority: .userInitiated) {
-            await setupData()
-        }
+            .task(priority: .userInitiated) {
+                await setupData()
+            }
     }
 
     // MARK: - Extracted UI Components
@@ -283,7 +283,7 @@ struct OfflineImportFormView: View {
                 if isBookIdTaken {
                     if let id = Int(customBookIdText) {
                         let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-                        let system = coreVersion < 1.0 ? id <= 32792 : id <= 151203
+                        let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
                         statusBadge(
                             text: system
                                 ? "ID reserved by system".localized
@@ -367,13 +367,13 @@ struct OfflineImportFormView: View {
     private var targetBookIdForAnnotationCheck: Int? {
         switch importMode {
         case 0:
-            return Int(customBookIdText)
+            Int(customBookIdText)
         case 1:
-            return selectedBookId
+            selectedBookId
         case 2:
-            return Int(customBookIdText)
+            Int(customBookIdText)
         default:
-            return nil
+            nil
         }
     }
 
@@ -528,7 +528,6 @@ struct OfflineImportFormView: View {
         }
     }
 
-    @ViewBuilder
     private var headerContent: some View {
         HStack {
             if importMode == 2 {
@@ -602,7 +601,7 @@ struct OfflineImportFormView: View {
             guard let id = Int(customBookIdText), id > 0 else { return false }
             if isBookIdTaken {
                 let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-                let system = coreVersion < 1.0 ? id <= 32792 : id <= 151203
+                let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
                 if system { return false }
             }
         } else {
@@ -677,10 +676,10 @@ struct OfflineImportFormView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 #if !os(macOS)
-                .tint(.brown)
-                .buttonBorderShape(.capsule)
+                    .tint(.brown)
+                    .buttonBorderShape(.capsule)
                 #else
-                .controlSize(.large)
+                    .controlSize(.large)
                 #endif
             }
             .padding()
@@ -724,10 +723,10 @@ struct OfflineImportFormView: View {
         .tint(.red)
         .disabled(isImporting)
         #if !os(macOS)
-        .frame(maxWidth: .infinity)
-        .buttonBorderShape(.capsule)
+            .frame(maxWidth: .infinity)
+            .buttonBorderShape(.capsule)
         #else
-        .controlSize(.large)
+            .controlSize(.large)
         #endif
     }
 
@@ -749,18 +748,18 @@ struct OfflineImportFormView: View {
                 }
             } label: {
                 Text(importMode == 2 ? "Change Book ID" : "Import Now")
-                    #if !os(macOS)
+                #if !os(macOS)
                     .frame(maxWidth: .infinity)
-                    #endif
+                #endif
             }
             .buttonStyle(.borderedProminent)
             .disabled(!isValid || isImporting)
             #if !os(macOS)
-            .tint(.green)
-            .buttonBorderShape(.capsule)
-            .frame(maxWidth: .infinity)
+                .tint(.green)
+                .buttonBorderShape(.capsule)
+                .frame(maxWidth: .infinity)
             #else
-            .controlSize(.large)
+                .controlSize(.large)
             #endif
         }
         #if !os(macOS)

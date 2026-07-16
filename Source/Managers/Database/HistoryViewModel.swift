@@ -329,7 +329,7 @@ class HistoryViewModel: ObservableObject {
     // MARK: - CloudKit Migration & Sync Support
 
     func getAllEntries() -> [ReadingEntry] {
-        return Array(entriesByBookId.values)
+        Array(entriesByBookId.values)
     }
 
     func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) {
@@ -373,7 +373,7 @@ class HistoryViewModel: ObservableObject {
                 let validHistoryEntries = entriesByBookId.values.filter { $0.lastOpenedAt != nil }
                 let sortedIds = validHistoryEntries
                     .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
-                    .map { $0.bookId }
+                    .map(\.bookId)
                 historyOrder = Array(sortedIds.prefix(maxHistoryCount))
 
                 pruneOrphanedEntries()
@@ -391,52 +391,52 @@ class HistoryViewModel: ObservableObject {
 
     func addPendingSync(ckRecordId: String, operation: String) {
         pendingQueue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             if operation == "upload" {
-                if !self.pendingDeletes.contains(ckRecordId) {
-                    self.pendingUploads.insert(ckRecordId)
+                if !pendingDeletes.contains(ckRecordId) {
+                    pendingUploads.insert(ckRecordId)
                 }
             } else {
-                self.pendingDeletes.insert(ckRecordId)
-                self.pendingUploads.remove(ckRecordId)
+                pendingDeletes.insert(ckRecordId)
+                pendingUploads.remove(ckRecordId)
             }
-            self.savePendingSync()
+            savePendingSync()
         }
     }
 
     func removePendingSync(ckRecordIds: [String]) {
         pendingQueue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             for id in ckRecordIds {
-                self.pendingUploads.remove(id)
-                self.pendingDeletes.remove(id)
+                pendingUploads.remove(id)
+                pendingDeletes.remove(id)
             }
-            self.savePendingSync()
+            savePendingSync()
         }
     }
 
     func fetchPendingSync(operation: String) -> [String] {
-        return pendingQueue.sync {
+        pendingQueue.sync {
             if operation == "upload" {
-                return Array(pendingUploads)
+                Array(pendingUploads)
             } else {
-                return Array(pendingDeletes)
+                Array(pendingDeletes)
             }
         }
     }
 
     private func loadPendingSync() {
         pendingQueue.async(flags: .barrier) { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             if let upData = UserDefaults.standard.data(forKey: "HistoryPendingUploads"),
                let upList = try? JSONDecoder().decode([String].self, from: upData)
             {
-                self.pendingUploads = Set(upList)
+                pendingUploads = Set(upList)
             }
             if let delData = UserDefaults.standard.data(forKey: "HistoryPendingDeletes"),
                let delList = try? JSONDecoder().decode([String].self, from: delData)
             {
-                self.pendingDeletes = Set(delList)
+                pendingDeletes = Set(delList)
             }
         }
     }

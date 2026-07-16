@@ -42,7 +42,7 @@ final class CloudKitCoreManager {
     // MARK: - Save Token
 
     func saveToken(_ token: CKServerChangeToken?) {
-        guard let token = token else { return }
+        guard let token else { return }
         if let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true) {
             UserDefaults.standard.set(data, forKey: changeTokenKey)
         }
@@ -123,7 +123,7 @@ final class CloudKitCoreManager {
 
         operation.recordZoneFetchResultBlock = { _, result in
             switch result {
-            case .success(let successData):
+            case let .success(successData):
                 finalToken = successData.serverChangeToken
                 moreComing = successData.moreComing
             case .failure:
@@ -135,7 +135,7 @@ final class CloudKitCoreManager {
             switch result {
             case .success:
                 completion(.success((finalToken, moreComing)))
-            case .failure(let error):
+            case let .failure(error):
                 completion(.failure(error))
             }
         }
@@ -173,7 +173,7 @@ final class CloudKitCoreManager {
 
     /// Sync `HTTP POST` ke cloudFlare worker dengan DispatchSemaphore timeout 3 detik.
     func syncWorker() {
-        guard notifyTask != nil,  let request = makeWorker() else { return }
+        guard notifyTask != nil, let request = makeWorker() else { return }
         let semaphore = DispatchSemaphore(value: 0)
         var requestError: Error?
         URLSession.shared.dataTask(with: request) { _, _, error in
