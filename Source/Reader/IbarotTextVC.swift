@@ -526,9 +526,7 @@ extension IbarotTextVC: ReaderStateComponent {
             await MainActor.run { [weak self] in
                 guard let self else { return }
 
-                if viewModel.currentBook?.id != book.id {
-                    viewModel.restore(from: state)
-                }
+                viewModel.restore(from: state)
 
                 if let range = state.selectedRange {
                     textView.setSelectedRange(range)

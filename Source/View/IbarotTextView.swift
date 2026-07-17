@@ -968,10 +968,16 @@ extension IbarotTextView: TextViewRenderable {
     func highlightAndScrollToAnns(_ ann: Annotation) async {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
-            let range = await displayedRange(for: ann)
-            await scrollRangeToVisible(range)
-            await enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-            await layoutSubtreeIfNeeded()
+            let range: NSRange? = await MainActor.run { [weak self] in
+                guard let self else { return nil }
+                let r = displayedRange(for: ann)
+                needsLayout = true
+                scrollRangeToVisible(r)
+                enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                layoutSubtreeIfNeeded()
+                return r
+            }
+            guard let range else { return }
             await showFindIndicator(for: range)
         }
     }
@@ -985,6 +991,7 @@ extension IbarotTextView: TextViewRenderable {
                     searchText: searchText,
                     baseColor: .highlightText
                 ) else { return nil }
+                needsLayout = true
                 scrollRangeToVisible(r)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
                 layoutSubtreeIfNeeded()

@@ -341,7 +341,7 @@ class ArabicTextRenderer {
     }
 }
 
-private struct HonorificReplacementResult {
+struct HonorificReplacementResult {
     let sourceText: String
     let text: String
     let events: [HonorificReplacementEvent]
@@ -374,7 +374,7 @@ private struct HonorificReplacementResult {
     }
 }
 
-private extension String {
+extension String {
     func replacingHonorificPhrasesIfSupported() -> HonorificReplacementResult {
         let replacements: [(phrase: String, glyph: String)] = [
             (.sholawat, "\u{FDFA}"),
@@ -489,7 +489,7 @@ private extension String {
     }
 }
 
-private struct NormalizedArabicSearchText {
+struct NormalizedArabicSearchText {
     let text: String
     let normalizedToOriginalOffsets: [Int]
 

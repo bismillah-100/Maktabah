@@ -53,7 +53,7 @@ extension NSTextStorage {
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
-            .map { $0.normalizeArabic() }
+            .map { $0.replacingHonorificPhrasesIfSupported().text.normalizeArabic() }
 
         guard !searchTerms.isEmpty else { return nil }
 
