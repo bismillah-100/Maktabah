@@ -36,6 +36,32 @@
 </head>
 <body>
 
+<h2>Version 3.3.2</h2>
+<p class="version">July 17, 2026</p>
+<h3>Fixes</h3>
+<ul>
+  <li>Stabilized find indicator to ensure it displays correctly within the active viewport</li>
+  <li>Fixed state restoration failure when consecutively loading the same book and page/part</li>
+  <li>Fixed history de-sync on macOS by enabling history migration during book ID changes</li>
+  <li>Utilized honorific replacement on TextStorage to match text ranges correctly on the text view</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Optimized CloudKit synchronization queue logic and conflict resolution</li>
+  <li>Handled partial CloudKit sync failures to unblock valid records</li>
+  <li>Implemented safe conflict resolution considering client clock drift</li>
+  <li>Offloaded heavy serialization workloads to background threads</li>
+  <li>Debounced high-frequency annotation uploads to prevent rate-limiting</li>
+  <li>Added orphan operation pruning during retry cycles</li>
+  <li>Ensured "Delete Wins" over simultaneous uploads to prevent zombie records</li>
+  <li>Added database index idx_sync_pending_op_queued to speed up operations lookups</li>
+  <li>Reduced C interop and ZSTD decompression overhead via thread-local context caching</li>
+  <li>Cached SQLite column names in SearchEngine to reduce memory allocations</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.3.1</h2>
 <p class="version">July 11, 2026</p>
 <h3>Fixes</h3>
