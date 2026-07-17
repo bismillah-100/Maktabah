@@ -477,6 +477,9 @@
 		F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
 		F3D46E9C2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
 		F3D46E9D2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
+		F3D9CB1F3009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */; };
+		F3D9CB203009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */; };
+		F3D9CB213009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */; };
 		F3DD69E32FA4F76100BFEA0F /* ProgressBooksDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */; };
 		F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */; };
 		F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */; };
@@ -729,6 +732,7 @@
 		F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryComponents.swift; sourceTree = "<group>"; };
 		F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFavoriteSections.swift; sourceTree = "<group>"; };
 		F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUpdateAlert.swift; sourceTree = "<group>"; };
+		F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZSTDContextWrapper.swift; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
 		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
@@ -787,6 +791,7 @@
 				4B5DF93A2EDC43FB0082DE7F /* UserDefaults.swift */,
 				4BDAB98D2F69E957007D0945 /* SettingsActions.swift */,
 				F300A2EB2F2DCE860095015E /* StorageError.swift */,
+				F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */,
 				4B9C83052F7EAE1C00CE1800 /* ZstdShim.swift */,
 			);
 			path = "App Config";
@@ -1695,6 +1700,7 @@
 				4B6100ED2EFA773C00CCBED6 /* Quran.swift in Sources */,
 				4BBCC9962F72C8870020D3CA /* SplitVCAccessoryItem.swift in Sources */,
 				F3902E8D2F9EE1CA004BA5D1 /* AnnotationTagVC.swift in Sources */,
+				F3D9CB1F3009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
 				F3902EB02F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */,
 				4B5EC2992EE334C600991F39 /* ResultsHandler.swift in Sources */,
 				F35A7AC72FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
@@ -1757,6 +1763,7 @@
 				F321E02C2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */,
 				4B7C90B62F83494200454BE1 /* AppDelegate.swift in Sources */,
 				4B7C90B72F83494200454BE1 /* LibraryViewManager.swift in Sources */,
+				F3D9CB203009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
 				F30577962FA4987B005732C6 /* NotificationName.swift in Sources */,
 				4B7C90B82F83494200454BE1 /* StringExt.swift in Sources */,
 				F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
@@ -1898,6 +1905,7 @@
 				F3B60E2A2FC7CDE600A9EF58 /* ReaderTabItemView.swift in Sources */,
 				F305778D2FA463B1005732C8 /* LibraryViewControllerWrapper.swift in Sources */,
 				F321672B2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
+				F3D9CB213009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
 				F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */,
 				F363824E2FA6C6150006636C /* SettingsView.swift in Sources */,
 				F3D38A942FD4B2F200387BA4 /* HistoryFavoriteSections.swift in Sources */,

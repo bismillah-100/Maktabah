@@ -26,8 +26,10 @@ struct SQLiteRow {
     }
 
     func string(at index: Int32) -> String? {
-        guard let cString = sqlite3_column_text(stmt, index) else { return nil }
-        return String(cString: cString)
+        guard let textPtr = sqlite3_column_text(stmt, index) else { return nil }
+        let bytes = sqlite3_column_bytes(stmt, index)
+        let buffer = UnsafeBufferPointer(start: textPtr, count: Int(bytes))
+        return String(decoding: buffer, as: UTF8.self)
     }
 
     func double(at index: Int32) -> Double {

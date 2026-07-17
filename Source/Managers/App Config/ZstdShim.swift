@@ -39,3 +39,18 @@ func ZSTD_compress(
     _ srcSize: Int,
     _ compressionLevel: Int32
 ) -> Int
+
+@_silgen_name("ZSTD_createDCtx")
+func ZSTD_createDCtx() -> OpaquePointer?
+
+@_silgen_name("ZSTD_freeDCtx") @discardableResult
+func ZSTD_freeDCtx(_ cctx: OpaquePointer?) -> Int
+
+@_silgen_name("ZSTD_decompressDCtx")
+func ZSTD_decompressDCtx(
+    _ dctx: OpaquePointer?,
+    _ dst: UnsafeMutableRawPointer?,
+    _ dstCapacity: Int,
+    _ src: UnsafeRawPointer?,
+    _ srcSize: Int
+) -> Int

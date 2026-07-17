@@ -688,9 +688,11 @@ final class SQLiteConnection: DBConnectionType {
         let colCount = sqlite3_column_count(statement)
         var columnNames: [String] = []
         for c in 0 ..< colCount {
-            let namePtr = sqlite3_column_name(statement, c)
-            let name = namePtr.flatMap { String(cString: $0) } ?? ""
-            columnNames.append(name)
+            if let namePtr = sqlite3_column_name(statement, c) {
+                columnNames.append(String(cString: namePtr))
+            } else {
+                columnNames.append("")
+            }
         }
 
         // Fetch rows
@@ -710,7 +712,9 @@ final class SQLiteConnection: DBConnectionType {
 
                 case SQLITE_TEXT:
                     if let txt = sqlite3_column_text(statement, c) {
-                        row[name] = String(cString: txt)
+                        let bytes = sqlite3_column_bytes(statement, c)
+                        let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
+                        row[name] = String(decoding: buffer, as: UTF8.self)
                     } else {
                         row[name] = nil
                     }
@@ -719,8 +723,7 @@ final class SQLiteConnection: DBConnectionType {
                     // ✅ HANDLE BLOB: Convert ke Data
                     if let blobPointer = sqlite3_column_blob(statement, c) {
                         let blobSize = Int(sqlite3_column_bytes(statement, c))
-                        let data = Data(bytes: blobPointer, count: blobSize)
-                        row[name] = data
+                        row[name] = Data(bytes: blobPointer, count: blobSize)
                     } else {
                         row[name] = nil
                     }

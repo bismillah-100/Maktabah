@@ -215,7 +215,18 @@ class ReusableFunc {
 
             var outputBuffer = Data(count: Int(expectedSize))
             let decompressedSize = outputBuffer.withUnsafeMutableBytes { (outPtr: UnsafeMutableRawBufferPointer) -> Int in
-                return ZSTD_decompress(
+                let dict = Thread.current.threadDictionary
+                let dctx: OpaquePointer
+                if let wrapper = dict["Maktabah.ZSTDDCtx"] as? ZSTDContextWrapper {
+                    dctx = wrapper.dctx
+                } else {
+                    let wrapper = ZSTDContextWrapper()
+                    dict["Maktabah.ZSTDDCtx"] = wrapper
+                    dctx = wrapper.dctx
+                }
+
+                return ZSTD_decompressDCtx(
+                    dctx,
                     outPtr.baseAddress,
                     Int(expectedSize),
                     ptr.baseAddress,
