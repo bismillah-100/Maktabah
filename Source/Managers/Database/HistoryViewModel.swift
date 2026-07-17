@@ -58,6 +58,7 @@ class HistoryViewModel: ObservableObject {
     // Pending sync queue
     private var pendingUploads: Set<String> = []
     private var pendingDeletes: Set<String> = []
+    private let pendingQueue = DispatchQueue(label: "com.maktabah.history.pendingQueue", attributes: .concurrent)
 
     /// Debounce upload saat navigasi halaman
     private var contentUpdateWorkItem: DispatchWorkItem?
@@ -328,7 +329,7 @@ class HistoryViewModel: ObservableObject {
     // MARK: - CloudKit Migration & Sync Support
 
     func getAllEntries() -> [ReadingEntry] {
-        return Array(entriesByBookId.values)
+        Array(entriesByBookId.values)
     }
 
     func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) {
@@ -372,7 +373,7 @@ class HistoryViewModel: ObservableObject {
                 let validHistoryEntries = entriesByBookId.values.filter { $0.lastOpenedAt != nil }
                 let sortedIds = validHistoryEntries
                     .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
-                    .map { $0.bookId }
+                    .map(\.bookId)
                 historyOrder = Array(sortedIds.prefix(maxHistoryCount))
 
                 pruneOrphanedEntries()
@@ -389,40 +390,54 @@ class HistoryViewModel: ObservableObject {
     // MARK: - Pending Sync Handling
 
     func addPendingSync(ckRecordId: String, operation: String) {
-        if operation == "upload" {
-            pendingUploads.insert(ckRecordId)
-        } else {
-            pendingDeletes.insert(ckRecordId)
+        pendingQueue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            if operation == "upload" {
+                if !pendingDeletes.contains(ckRecordId) {
+                    pendingUploads.insert(ckRecordId)
+                }
+            } else {
+                pendingDeletes.insert(ckRecordId)
+                pendingUploads.remove(ckRecordId)
+            }
+            savePendingSync()
         }
-        savePendingSync()
     }
 
     func removePendingSync(ckRecordIds: [String]) {
-        for id in ckRecordIds {
-            pendingUploads.remove(id)
-            pendingDeletes.remove(id)
+        pendingQueue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            for id in ckRecordIds {
+                pendingUploads.remove(id)
+                pendingDeletes.remove(id)
+            }
+            savePendingSync()
         }
-        savePendingSync()
     }
 
     func fetchPendingSync(operation: String) -> [String] {
-        if operation == "upload" {
-            return Array(pendingUploads)
-        } else {
-            return Array(pendingDeletes)
+        pendingQueue.sync {
+            if operation == "upload" {
+                Array(pendingUploads)
+            } else {
+                Array(pendingDeletes)
+            }
         }
     }
 
     private func loadPendingSync() {
-        if let upData = UserDefaults.standard.data(forKey: "HistoryPendingUploads"),
-           let upList = try? JSONDecoder().decode([String].self, from: upData)
-        {
-            pendingUploads = Set(upList)
-        }
-        if let delData = UserDefaults.standard.data(forKey: "HistoryPendingDeletes"),
-           let delList = try? JSONDecoder().decode([String].self, from: delData)
-        {
-            pendingDeletes = Set(delList)
+        pendingQueue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            if let upData = UserDefaults.standard.data(forKey: "HistoryPendingUploads"),
+               let upList = try? JSONDecoder().decode([String].self, from: upData)
+            {
+                pendingUploads = Set(upList)
+            }
+            if let delData = UserDefaults.standard.data(forKey: "HistoryPendingDeletes"),
+               let delList = try? JSONDecoder().decode([String].self, from: delData)
+            {
+                pendingDeletes = Set(delList)
+            }
         }
     }
 

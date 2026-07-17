@@ -1,5 +1,5 @@
 //
-//  AnnotationManager+CloudKit.swift
+//  AnnMgr+CloudKit.swift
 //  Maktabah
 //
 
@@ -10,6 +10,12 @@ extension AnnotationManager {
 
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let _db else { return }
+        if operation == "upload" {
+            let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
+            if let count = try? _db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+                return // Delete wins
+            }
+        }
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
         try? _db.execute(query: sql, parameters: [ckRecordId, operation, now])
     }
@@ -103,7 +109,7 @@ extension AnnotationManager {
                                 ann.lastModified ?? 0,
                                 ann.part,
                                 ann.page,
-                                existingLocalId
+                                existingLocalId,
                             ]
 
                             try _db.execute(query: updateSql, parameters: params)
@@ -136,7 +142,7 @@ extension AnnotationManager {
                             ann.part,
                             ann.page,
                             ckId,
-                            ann.lastModified ?? 0
+                            ann.lastModified ?? 0,
                         ]
 
                         try _db.execute(query: insertSql, parameters: params)
@@ -209,10 +215,10 @@ extension AnnotationManager {
             } else if totalChanges >= 100 {
                 // Bulk Update: Reload Everything
                 DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
-                    self.clearAllCaches()
-                    self.invalidateTree()
-                    self.buildAnnotationTree()
+                    guard let self else { return }
+                    clearAllCaches()
+                    invalidateTree()
+                    buildAnnotationTree()
                 }
             }
         } catch {

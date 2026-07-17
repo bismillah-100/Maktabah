@@ -61,14 +61,14 @@ class ResultsHandler {
     func migrateBookId(from oldId: Int, to newId: Int) throws -> [SyncResult] {
         guard let db else { return [] }
         let now = Int64(Date().timeIntervalSince1970)
-        
+
         let sql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colBkId) = ?"
         try exec(sql, parameters: [newId, now, oldId])
-        
+
         // Fetch updated results to upload
         let fetchSql = "SELECT * FROM \(resultsTable) WHERE \(colBkId) = ?"
         let updatedResults = try db.fetch(query: fetchSql, parameters: [newId]) { self.makeSyncResult(from: $0) }
-        
+
         for res in updatedResults {
             if let ckId = res.ckRecordId {
                 addPendingSync(ckRecordId: ckId, operation: "upload")
@@ -85,7 +85,7 @@ class ResultsHandler {
     private init() {}
 
     func setupResultDatabase(at folderURL: URL?) throws {
-        guard let folderURL = folderURL else { throw NSError(domain: "maktabah", code: 404) }
+        guard let folderURL else { throw NSError(domain: "maktabah", code: 404) }
         let url = folderURL.appendingPathComponent("SearchResults.sqlite")
 
         let fm = FileManager.default
@@ -174,6 +174,9 @@ class ResultsHandler {
             );
             """)
 
+            try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_ck_record_id ON sync_pending (ck_record_id);")
+            try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op_queued ON sync_pending (operation, queued_at);")
+
             // Migration for existing databases
             let folderCols = try listTableColumns(tableName: foldersTable)
             if !folderCols.contains(colCkRecordId) {
@@ -200,9 +203,9 @@ class ResultsHandler {
             try backfillResultsCloudKitFieldsIfNeeded()
 
         } catch {
-#if DEBUG
+            #if DEBUG
             print("Error creating tables: \(error)")
-#endif
+            #endif
         }
 
         createUniqueIndex()
@@ -328,6 +331,12 @@ class ResultsHandler {
 
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let db else { return }
+        if operation == "upload" {
+            let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
+            if let count = try? db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+                return // Delete wins
+            }
+        }
         let now = Int64(Date().timeIntervalSince1970)
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
         try? db.execute(query: sql, parameters: [ckRecordId, operation, now])
@@ -352,9 +361,9 @@ class ResultsHandler {
                 try exec("DELETE FROM \(resultsTable);")
                 try exec("DELETE FROM \(foldersTable);")
             }
-#if DEBUG
+            #if DEBUG
             print("ResultsHandler: Local database purged.")
-#endif
+            #endif
         } catch {
             print("ResultsHandler: Failed to purge database - \(error)")
         }
@@ -394,9 +403,9 @@ class ResultsHandler {
             try exec("DROP INDEX IF EXISTS idx_results_folder_name")
             try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_results_folder_name_bk ON results (COALESCE(folder_id, 0), name, bkId)")
         } catch {
-#if DEBUG
+            #if DEBUG
             print("Create index error:", error)
-#endif
+            #endif
         }
     }
 }
@@ -434,7 +443,7 @@ extension ResultsHandler {
 
         let sql = "INSERT INTO \(foldersTable) (\(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId)) VALUES (?, ?, ?, ?, ?);"
         var params: [Any] = [name, parentNode.id, cId, now]
-        if let pCkId = pCkId {
+        if let pCkId {
             params.append(pCkId)
         } else {
             params.append(NSNull())
@@ -644,7 +653,7 @@ extension ResultsHandler {
             contentId,
             cId,
             now,
-            fCkId ?? NSNull()
+            fCkId ?? NSNull(),
         ]
 
         try db.execute(query: sql, parameters: params)
@@ -865,10 +874,10 @@ extension ResultsHandler {
                 var sortedFolders: [SyncFolder] = []
                 var pendingFolders = foldersToSave
                 var progress = true
-                
-                while !pendingFolders.isEmpty && progress {
+
+                while !pendingFolders.isEmpty, progress {
                     progress = false
-                    for i in (0..<pendingFolders.count).reversed() {
+                    for i in (0 ..< pendingFolders.count).reversed() {
                         let f = pendingFolders[i]
                         let parentInPending = pendingFolders.contains { $0.ckRecordId == f.parentCkRecordId }
                         if !parentInPending {
@@ -924,7 +933,7 @@ extension ResultsHandler {
                     } else {
                         var conflictLocalId: Int64 = -1
                         var conflictLastMod: Int64 = 0
-                        
+
                         let conflictSql: String
                         let conflictParams: [Any]
                         if let pid = pLocalId {
@@ -934,7 +943,7 @@ extension ResultsHandler {
                             conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? LIMIT 1"
                             conflictParams = [folder.name]
                         }
-                        
+
                         if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
                             conflictLocalId = row.0
                             conflictLastMod = row.1
@@ -1022,14 +1031,14 @@ extension ResultsHandler {
                             let params: [Any] = [
                                 fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
-                                existingLocalId
+                                existingLocalId,
                             ]
                             try db.execute(query: upSql, parameters: params)
                         }
                     } else {
                         var conflictLocalId: Int64 = -1
                         var conflictLastMod: Int64 = 0
-                        
+
                         let conflictSql: String
                         let conflictParams: [Any]
                         if let fid = fLocalId {
@@ -1039,12 +1048,12 @@ extension ResultsHandler {
                             conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
                             conflictParams = [res.name, res.bkId]
                         }
-                        
+
                         if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
                             conflictLocalId = row.0
                             conflictLastMod = row.1
                         }
-                        
+
                         if conflictLocalId != -1 {
                             let remoteLastMod = res.lastModified ?? 0
                             if remoteLastMod >= conflictLastMod {
@@ -1057,7 +1066,7 @@ extension ResultsHandler {
                                 let params: [Any] = [
                                     fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                     res.bkId, res.contentId, ckId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
-                                    conflictLocalId
+                                    conflictLocalId,
                                 ]
                                 try db.execute(query: upSql, parameters: params)
                             } else {
@@ -1075,7 +1084,7 @@ extension ResultsHandler {
                             let params: [Any] = [
                                 fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, ckId, res.lastModified ?? 0,
-                                res.folderCkRecordId ?? NSNull()
+                                res.folderCkRecordId ?? NSNull(),
                             ]
                             try db.execute(query: insSql, parameters: params)
                         }
