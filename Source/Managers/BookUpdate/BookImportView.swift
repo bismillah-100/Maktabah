@@ -858,6 +858,11 @@ struct OfflineImportFormView: View {
 
             await MainActor.run {
                 HistoryViewModel.shared.migrateBookId(from: oldId, to: newId)
+                NotificationCenter.default.post(
+                    name: .bookIdMigrated,
+                    object: nil,
+                    userInfo: ["oldId": oldId, "newId": newId]
+                )
             }
 
             ReusableFunc.showAlert(

@@ -58,6 +58,7 @@ final class LibraryViewModel: ViewModelBase {
             updateDisplayedCategories()
         }
     }
+
     var _showOnlyDownloadedTracker: Bool = false
     var searchQuery: String = "" {
         didSet {
@@ -66,6 +67,7 @@ final class LibraryViewModel: ViewModelBase {
             }
         }
     }
+
     var showingDeleteConfirmation = false
     var showingImportSheet = false
     var importErrorMessage: String?
@@ -293,6 +295,29 @@ final class LibraryViewModel: ViewModelBase {
             updateSubject.send(.expandItem(nil))
         }
         #endif
+    }
+
+    // MARK: - Migration Support
+
+    func migrateBookId(from oldId: Int, to newId: Int) {
+        if selectedBookIds.contains(oldId) {
+            selectedBookIds.remove(oldId)
+            selectedBookIds.insert(newId)
+        }
+        if singleBookToDelete?.id == oldId {
+            singleBookToDelete = dataManager.getBook([newId]).first
+        }
+
+        // Reload all data references from the database manager (which was already reloaded in LibraryDataManager)
+        rootCategories = dataManager.allRootCategories
+        _hasBuiltAuthorHierarchy = false
+        if viewMode == .author {
+            _authorHierarchy = dataManager.buildAuthorHierarchy()
+            _hasBuiltAuthorHierarchy = true
+        }
+
+        // Apply the filter to rebuild baseCategories, displayedCategories, and bookLookup
+        applyFilter(filterMode)
     }
 
     // MARK: - Authors Pagination (Unified)
@@ -646,6 +671,18 @@ final class LibraryViewModel: ViewModelBase {
         }
 
         addObserver(
+            forName: .bookIdMigrated, object: nil, queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                guard let self,
+                      let userInfo = notification.userInfo,
+                      let oldId = userInfo["oldId"] as? Int,
+                      let newId = userInfo["newId"] as? Int else { return }
+                migrateBookId(from: oldId, to: newId)
+            }
+        }
+
+        addObserver(
             forName: .libraryFolderChanged, object: nil, queue: .current
         ) { [weak self] _ in
             guard let self, reloadTask == nil else { return }
@@ -806,7 +843,7 @@ final class LibraryViewModel: ViewModelBase {
             return
         }
         guard let parent = findParentCategory(ofBookId: bookId, in: displayedCategories) else { return }
-        
+
         if isDownloadModal {
             parent.children.removeAll { ($0 as? BooksData)?.id == bookId }
             if parent.children.isEmpty {
@@ -1040,18 +1077,18 @@ final class LibraryViewModel: ViewModelBase {
         lookupQueue.enqueue { [weak self] in
             guard let self else { return }
             var newLookup: [String: (category: CategoryData, book: BooksData)] = [:]
-            
+
             func traverse(_ category: CategoryData) {
                 for child in category.children {
                     if let book = child as? BooksData { newLookup[book.book] = (category, book) }
                     else if let sub = child as? CategoryData { traverse(sub) }
                 }
             }
-            
+
             for category in displayedCategories {
                 traverse(category)
             }
-            
+
             bookLookup = newLookup
         }
     }

@@ -982,6 +982,7 @@ extension LibraryDataManager {
 extension Notification.Name {
     static let booksChanged = Notification.Name("booksChanged")
     static let bookIntegrated = Notification.Name("bookIntegrated")
+    static let bookIdMigrated = Notification.Name("bookIdMigrated")
 }
 
 // MARK: - Type-safe Posting Helper
