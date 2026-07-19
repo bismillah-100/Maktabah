@@ -166,8 +166,19 @@ extension AnnotationManager {
         try transaction {
             try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [deletedTagId])
             try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
-            for annId in affectedIds {
-                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
+
+            let chunkSize = 500
+            for chunkStart in stride(from: 0, to: affectedIds.count, by: chunkSize) {
+                let chunkEnd = min(chunkStart + chunkSize, affectedIds.count)
+                let chunk = Array(affectedIds[chunkStart..<chunkEnd])
+
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
+
+                var parameters: [Any] = [now]
+                parameters.append(contentsOf: chunk)
+
+                try exec(updateSql, parameters: parameters)
             }
         }
 
