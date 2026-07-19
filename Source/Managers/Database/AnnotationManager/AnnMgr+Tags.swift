@@ -60,11 +60,14 @@ extension AnnotationManager {
                     ann.tags = sanitizeTagNames(tags)
                     ann.lastModified = now
                     updatedAnnotations.append(ann)
-
-                    let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES (?, ?);"
-                    try exec(insertRelSql, parameters: [annId, existingNewTagId])
-                    try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
                 }
+
+                let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) SELECT \(colAnnotationTagAnnotationId), ? FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;"
+                try exec(insertRelSql, parameters: [existingNewTagId, oldTagId])
+
+                let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
+                try exec(updateAnnSql, parameters: [now, oldTagId])
+
                 try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [oldTagId])
                 try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [oldTagId])
             }
@@ -79,8 +82,11 @@ extension AnnotationManager {
                     ann.tags = sanitizeTagNames(ann.tags)
                     ann.lastModified = now
                     updatedAnnotations.append(ann)
-                    try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
                 }
+
+                let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
+                try exec(updateAnnSql, parameters: [now, oldTagId])
+
                 let updateTagSql = "UPDATE \(tagsTable) SET \(colTagName) = ?, \(colTagNormalizedName) = ? WHERE \(colTagId) = ?;"
                 try exec(updateTagSql, parameters: [trimmedNew, newNormalized, oldTagId])
             }
