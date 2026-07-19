@@ -144,7 +144,11 @@ final class CloudKitSyncManager {
         }
 
         if !orphans.isEmpty {
+            // Orphan & Desync Cleanup: Prune record IDs from pending uploads if the local item no longer exists
             removePendingUploads(orphans)
+            AnnotationManager.shared.removePendingSync(ckRecordIds: orphans)
+            ResultsHandler.shared.removePendingSync(ckRecordIds: orphans)
+            HistoryViewModel.shared.removePendingSync(ckRecordIds: orphans)
         }
     }
 
@@ -449,6 +453,16 @@ final class CloudKitSyncManager {
             case .success:
                 self?.removePendingDeletes(ckRecordIds)
             case let .failure(error):
+                if let ckError = error as? CKError, ckError.code == .partialFailure,
+                   let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
+                    let failedIds = Set(partialErrors.keys.map(\.recordName))
+                    let successfulIds = ckRecordIds.filter { !failedIds.contains($0) }
+                    if !successfulIds.isEmpty {
+                        self?.removePendingDeletes(successfulIds)
+                    }
+                } else if let ckError = error as? CKError, ckError.code == .serverRecordChanged {
+                    self?.removePendingDeletes(ckRecordIds)
+                }
                 self?.handleCloudKitError(error, operationType: .delete)
             }
         }
@@ -490,14 +504,15 @@ final class CloudKitSyncManager {
                     let records = fetchStateQueue.sync { changedRecords }
                     let deletes = fetchStateQueue.sync { deletedRecordIds }
 
+                    var applySuccess = true
                     if !records.isEmpty || !deletes.isEmpty {
-                        applyChangesLocally(
+                        applySuccess = self.applyChangesLocally(
                             recordsToSave: records,
                             recordIDsToDelete: deletes
                         )
                     }
 
-                    if let token = finalToken {
+                    if let token = finalToken, applySuccess {
                         core.saveToken(token)
                     }
 
@@ -518,10 +533,10 @@ final class CloudKitSyncManager {
         )
     }
 
-    private func applyChangesLocally(
+    @discardableResult private func applyChangesLocally(
         recordsToSave: [CKRecord],
         recordIDsToDelete: [CKRecord.ID]
-    ) {
+    ) -> Bool {
         var annotations: [Annotation] = []
         var folders: [SyncFolder] = []
         var searchResults: [SyncResult] = []
@@ -549,33 +564,41 @@ final class CloudKitSyncManager {
 
         let idsToDelete = recordIDsToDelete.map(\.recordName)
 
+        var success = true
+
         if !annotations.isEmpty || !idsToDelete.isEmpty {
-            AnnotationManager.shared.applyCloudKitChanges(
+            let annSuccess = AnnotationManager.shared.applyCloudKitChanges(
                 annotationsToSave: annotations,
                 recordIdsToDelete: idsToDelete
             )
+            success = success && annSuccess
         }
 
         if !folders.isEmpty || !idsToDelete.isEmpty {
-            ResultsHandler.shared.applyCloudKitFolderChanges(
+            let fldSuccess = ResultsHandler.shared.applyCloudKitFolderChanges(
                 foldersToSave: folders,
                 recordIdsToDelete: idsToDelete
             )
+            success = success && fldSuccess
         }
 
         if !searchResults.isEmpty || !idsToDelete.isEmpty {
-            ResultsHandler.shared.applyCloudKitResultChanges(
+            let resSuccess = ResultsHandler.shared.applyCloudKitResultChanges(
                 resultsToSave: searchResults,
                 recordIdsToDelete: idsToDelete
             )
+            success = success && resSuccess
         }
 
         if !historyEntries.isEmpty || !idsToDelete.isEmpty {
-            HistoryViewModel.shared.applyCloudKitChanges(
+            let histSuccess = HistoryViewModel.shared.applyCloudKitChanges(
                 entriesToSave: historyEntries,
                 recordIdsToDelete: idsToDelete
             )
+            success = success && histSuccess
         }
+
+        return success
     }
 
     // MARK: - Error Handling
@@ -613,8 +636,9 @@ final class CloudKitSyncManager {
                 completion?(result)
             }
         } else {
-            applyChangesLocally(recordsToSave: [serverRecord], recordIDsToDelete: [])
-            removePendingUploads([recordId])
+            if applyChangesLocally(recordsToSave: [serverRecord], recordIDsToDelete: []) {
+                removePendingUploads([recordId])
+            }
             completion?(.success(()))
         }
     }

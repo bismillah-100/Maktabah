@@ -336,6 +336,9 @@ class ResultsHandler {
             if let count = try? db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
                 return // Delete wins
             }
+        } else if operation == "delete" {
+            let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';"
+            try? db.execute(query: delSql, parameters: [ckRecordId])
         }
         let now = Int64(Date().timeIntervalSince1970)
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
@@ -853,8 +856,8 @@ extension ResultsHandler {
 // MARK: - CloudKit Sync Apply
 
 extension ResultsHandler {
-    func applyCloudKitFolderChanges(foldersToSave: [SyncFolder], recordIdsToDelete: [String]) {
-        guard let db else { return }
+    @discardableResult func applyCloudKitFolderChanges(foldersToSave: [SyncFolder], recordIdsToDelete: [String]) -> Bool {
+        guard let db else { return false }
 
         do {
             try transaction {
@@ -972,11 +975,13 @@ extension ResultsHandler {
             }
         } catch {
             print("ResultsHandler: Failed to apply folder changes - \(error)")
+            return false
         }
+        return true
     }
 
-    func applyCloudKitResultChanges(resultsToSave: [SyncResult], recordIdsToDelete: [String]) {
-        guard let db else { return }
+    @discardableResult func applyCloudKitResultChanges(resultsToSave: [SyncResult], recordIdsToDelete: [String]) -> Bool {
+        guard let db else { return false }
 
         do {
             try transaction {
@@ -1097,6 +1102,8 @@ extension ResultsHandler {
             }
         } catch {
             print("ResultsHandler: Failed to apply result changes - \(error)")
+            return false
         }
+        return true
     }
 }
