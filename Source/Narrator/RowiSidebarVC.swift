@@ -87,6 +87,8 @@ class RowiSidebarVC: NSViewController {
         outlineView.dataSource = self
         outlineView.delegate = self
         searchField.delegate = self
+        outlineView.target = self
+        outlineView.doubleAction = #selector(onDoubleClick(_:))
     }
 
     func loadData() async {
@@ -159,6 +161,18 @@ class RowiSidebarVC: NSViewController {
                 self.outlineView.removeItems(at: IndexSet(integer: endIndex), inParent: group)
             }
             outlineView.endUpdates()
+        }
+    }
+
+    @objc private func onDoubleClick(_ sender: AnyObject) {
+        let clickedRow = outlineView.clickedRow
+        guard clickedRow != -1, let item = outlineView.item(atRow: clickedRow) else { return }
+        if item is TabaqaGroup {
+            if outlineView.isItemExpanded(item) {
+                outlineView.collapseItem(item)
+            } else {
+                outlineView.expandItem(item)
+            }
         }
     }
 }

@@ -66,6 +66,8 @@ class QuranSidebarVC: NSViewController {
         outlineView.delegate = self
         outlineView.dataSource = self
         outlineView.allowsMultipleSelection = false
+        outlineView.target = self
+        outlineView.doubleAction = #selector(onDoubleClick(_:))
     }
 
     func loadData() {
@@ -170,6 +172,18 @@ class QuranSidebarVC: NSViewController {
         outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
         outlineView.scrollRowToVisible(row)
         enableDelegate = true
+    }
+
+    @objc private func onDoubleClick(_ sender: AnyObject) {
+        let clickedRow = outlineView.clickedRow
+        guard clickedRow != -1, let item = outlineView.item(atRow: clickedRow) else { return }
+        if item is SurahNode {
+            if outlineView.isItemExpanded(item) {
+                outlineView.collapseItem(item)
+            } else {
+                outlineView.expandItem(item)
+            }
+        }
     }
 }
 

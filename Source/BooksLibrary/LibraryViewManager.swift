@@ -45,6 +45,9 @@ class LibraryViewManager: NSObject {
         setupDSFSearchField()
         setupContextMenu()
         bindToViewModel()
+
+        outlineView.target = self
+        outlineView.doubleAction = #selector(onDoubleClick(_:))
     }
 
     private func bindToViewModel() {
@@ -182,6 +185,18 @@ class LibraryViewManager: NSObject {
             }
         }
         checkBoxToggle?()
+    }
+
+    @objc private func onDoubleClick(_ sender: AnyObject) {
+        let clickedRow = outlineView.clickedRow
+        guard clickedRow != -1, let item = outlineView.item(atRow: clickedRow) else { return }
+        if item is CategoryData {
+            if outlineView.isItemExpanded(item) {
+                outlineView.collapseItem(item)
+            } else {
+                outlineView.expandItem(item)
+            }
+        }
     }
 }
 

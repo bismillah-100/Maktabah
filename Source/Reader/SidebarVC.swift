@@ -52,6 +52,9 @@ class SidebarVC: NSViewController {
             systemSymbolName: "line.3.horizontal.decrease.circle"
         )
 
+        outlineView.target = self
+        outlineView.doubleAction = #selector(onDoubleClick(_:))
+
         searchField.searchSubmitCallback = { [weak self] query in
             self?.startSearch(query)
         }
@@ -308,5 +311,17 @@ extension SidebarVC {
         }
 
         enableDelegate = true
+    }
+
+    @objc private func onDoubleClick(_ sender: AnyObject) {
+        let clickedRow = outlineView.clickedRow
+        guard clickedRow != -1, let item = outlineView.item(atRow: clickedRow) as? TOCNode else { return }
+        if !item.children.isEmpty {
+            if outlineView.isItemExpanded(item) {
+                outlineView.collapseItem(item)
+            } else {
+                outlineView.expandItem(item)
+            }
+        }
     }
 }

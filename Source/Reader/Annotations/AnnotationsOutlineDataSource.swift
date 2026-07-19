@@ -11,7 +11,12 @@ import Cocoa
 @MainActor
 class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     weak var delegate: AnnotationDelegate?
-    weak var outlineView: NSOutlineView?
+    weak var outlineView: NSOutlineView? {
+        didSet {
+            outlineView?.target = self
+            outlineView?.doubleAction = #selector(onDoubleClick(_:))
+        }
+    }
     var onAddTagsRequested: (([Int64], NSRect) -> Void)?
     var onRemoveTagsRequested: (([Int64], NSRect) -> Void)?
 
@@ -755,6 +760,19 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             return node.children[index]
         }
         fatalError("Invalid item or index.")
+    }
+
+    @objc private func onDoubleClick(_ sender: AnyObject) {
+        guard let outlineView else { return }
+        let clickedRow = outlineView.clickedRow
+        guard clickedRow != -1, let item = outlineView.item(atRow: clickedRow) as? AnnotationNode else { return }
+        if !item.children.isEmpty {
+            if outlineView.isItemExpanded(item) {
+                outlineView.collapseItem(item)
+            } else {
+                outlineView.expandItem(item)
+            }
+        }
     }
 }
 
