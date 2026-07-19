@@ -23,7 +23,7 @@ private struct StoredReadingEntries: Codable {
     let entries: [ReadingEntry]
 }
 
-class HistoryViewModel: ObservableObject {
+class HistoryViewModel: ViewModelBase, ObservableObject {
     static let shared = HistoryViewModel()
 
     @Published private(set) var entriesByBookId: [Int: ReadingEntry] = [:]
@@ -87,7 +87,8 @@ class HistoryViewModel: ObservableObject {
             .map(\.bookId)
     }
 
-    private init() {
+    override init() {
+        super.init()
         loadFromUserDefaults()
         loadPendingSync()
 
@@ -99,6 +100,16 @@ class HistoryViewModel: ObservableObject {
 
         // Backfill missing CloudKit fields and upload to CloudKit
         backfillCloudKitFieldsIfNeeded()
+
+        addObserver(
+            forName: .bookIntegrated,
+            object: nil, queue: .main
+        ) { [weak self] _ in self?.loadBooksData() }
+
+        addObserver(
+            forName: .booksChanged,
+            object: nil, queue: .main
+        ) { [weak self] _ in self?.loadBooksData() }
     }
 
     // MARK: - Core Operations
