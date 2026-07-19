@@ -134,14 +134,6 @@ final class SearchViewModel: ViewModelBase {
         }
 
         addObserver(
-            forName: .bookIntegrated, object: nil, queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.refreshSubject.send(())
-            }
-        }
-
-        addObserver(
             forName: .booksChanged, object: nil, queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in

@@ -164,6 +164,26 @@ class IbarotTextVC: NSViewController {
                 }
             }
         }
+
+        NotificationCenter.default.addObserver(
+            forName: .bookIdMigrated,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let userInfo = notification.userInfo,
+                  let oldId = userInfo["oldId"] as? Int,
+                  let newId = userInfo["newId"] as? Int else { return }
+
+            if viewModel.currentBook?.id == oldId {
+                // ReaderViewModel handleBookIdMigrated will update its currentBook.
+                // We just need to make sure IbarotTextVC doesn't crash or holds onto stale state.
+                // Re-rendering or updating title can be triggered here if necessary.
+                if let newBookData = LibraryDataManager.shared.booksById[newId] {
+                    viewModel.currentBook = newBookData
+                }
+            }
+        }
     }
 
     // MARK: - State Accessors

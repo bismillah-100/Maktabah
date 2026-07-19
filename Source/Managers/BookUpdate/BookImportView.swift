@@ -850,8 +850,6 @@ struct OfflineImportFormView: View {
             }
 
             // Update UI
-            NotificationCenter.default.post(name: .bookIntegrated, object: oldId)
-            NotificationCenter.default.post(name: .bookIntegrated, object: newId)
             await setupData()
 
             selectedBookId = newId
