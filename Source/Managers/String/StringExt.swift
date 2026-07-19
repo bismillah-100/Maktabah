@@ -53,6 +53,8 @@ extension String {
 
         let removableCharacters: Set<Character> = ["¬", "§"]
         var index = startIndex
+        let replL = replacementL
+        let replR = replacementR
 
         struct DeltaEvent {
             let oldOffset: Int
@@ -90,14 +92,14 @@ extension String {
                 switch character {
                 case "{":
                     let symbolStart = finalString.utf16.count
-                    finalString += replacementL
-                    nextDelta += (replacementL.utf16.count - charLen)
-                    coloredRanges.append(NSRange(location: symbolStart, length: replacementL.utf16.count))
+                    finalString += replL
+                    nextDelta += (replL.utf16.count - charLen)
+                    coloredRanges.append(NSRange(location: symbolStart, length: replL.utf16.count))
                 case "}":
                     let symbolStart = finalString.utf16.count
-                    finalString += replacementR
-                    nextDelta += (replacementR.utf16.count - charLen)
-                    coloredRanges.append(NSRange(location: symbolStart, length: replacementR.utf16.count))
+                    finalString += replR
+                    nextDelta += (replR.utf16.count - charLen)
+                    coloredRanges.append(NSRange(location: symbolStart, length: replR.utf16.count))
                 case "(", ")", "[", "]", "«", "»", ".", "،", ",", ":", "!", "/", "؟", "?", "\"", ";", "؛", "|":
                     // Simbol yang selalu di-highlight di mana saja
                     let symbolStart = finalString.utf16.count
@@ -392,66 +394,37 @@ extension String {
         return (colored, footnote)
     }
 
+    /// Versi ringan: hanya string bersih tanpa menghitung ranges maupun highlight.
+    /// Gunakan ini jika tidak butuh coloredRanges (misal: AnnotationCoordinator).
     func cleanedText() -> String {
-        var cleaned = self
+        let replL = replacementL
+        let replR = replacementR
+        let removable: Set<Character> = ["¬", "§"]
 
-        // --- Langkah 1: Ganti literal "\\n" dengan newline '\n' ---
-        // Operasi ini harus dilakukan terlebih dahulu secara terpisah atau dengan regex terpisah
-        // agar tidak bentrok dengan karakter '\' yang mungkin digunakan di regex lain.
-        cleaned = cleaned.replacingOccurrences(of: "\\n", with: "\n")
+        var result = ""
+        result.reserveCapacity(self.count)
 
-        // Hapus karakter "¬" dan "§" dalam SATU operasi pemindaian
-        let charactersToRemove: Set<Character> = ["¬", "§"]
-        cleaned.removeAll { charactersToRemove.contains($0) }
-
-        // --- Langkah 2: Gabungkan penggantian Kurung Kurawal dengan satu Regex ---
-        // Pola: Mencocokkan '{' atau '}'
-        let bracketPattern = "[{}]"
-
-        do {
-            let regex = try NSRegularExpression(pattern: bracketPattern, options: [])
-            let range = NSRange(cleaned.startIndex..., in: cleaned)
-            // let nsString = cleaned as NSString
-
-            // Menggunakan enumerateMatches untuk memproses penggantian yang berbeda secara manual
-            var finalString = cleaned
-            var offset = 0 // Untuk melacak perubahan panjang string
-
-            regex.enumerateMatches(in: cleaned, options: [], range: range) { (match, flags, stop) in
-                guard let match = match else { return }
-
-                guard let originalRange = Range(match.range, in: cleaned) else { return }
-                let matchedCharacter = String(cleaned[originalRange])
-                let replacement: String
-
-                // Menentukan string pengganti
-                switch matchedCharacter {
-                case "{":
-                    replacement = " ﴿" // Panjang: 3 karakter
-                case "}":
-                    replacement = "﴾ " // Panjang: 3 karakter
-                default:
-                    return
+        var index = startIndex
+        while index < endIndex {
+            let ch = self[index]
+            if removable.contains(ch) {
+                index = self.index(after: index)
+            } else if ch == "\\",
+                      let next = self.index(index, offsetBy: 1, limitedBy: endIndex),
+                      next < endIndex,
+                      self[next] == "n" {
+                result.append("\n")
+                index = self.index(after: next)
+            } else {
+                switch ch {
+                case "{": result += replL
+                case "}": result += replR
+                default:  result.append(ch)
                 }
-
-                // Menghitung range (jangkauan) penggantian yang sudah diimbangi (offset)
-                let adjustedRange = NSRange(location: match.range.location + offset, length: match.range.length)
-
-                if let swiftRange = Range(adjustedRange, in: finalString) {
-                    finalString.replaceSubrange(swiftRange, with: replacement)
-
-                    // Update offset berdasarkan perubahan panjang string
-                    // 3 karakter (replacement) - 1 karakter (original) = +2
-                    offset += (replacement.count - matchedCharacter.count)
-                }
+                index = self.index(after: index)
             }
-
-            return finalString
-
-        } catch {
-            print("Error compiling regex:", error)
-            return cleaned // Jika regex gagal, kembalikan string setelah Langkah 1
         }
+        return result
     }
 
     /// Mengambil potongan teks di sekitar keyword yang ditemukan.
@@ -633,6 +606,19 @@ extension Character {
     }
 }
 
+private struct StringExtCache {
+    static let numberFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "ar")
+        return formatter
+    }()
+
+    static let tabaqaRegex: NSRegularExpression? = {
+        let pattern = #"(W)|([FGHIJKLMNOP])|([0-9]+)"#
+        return try? NSRegularExpression(pattern: pattern)
+    }()
+}
+
 extension String {
     // --- Langkah 1: Penggantian Kode Kutub (yang ada di dalam kurung) ---
     func replaceKutubCodes(with mapping: [String: String], mode: KutubMode = .normal) -> String {
@@ -667,28 +653,27 @@ extension String {
      */
     private func replaceSingleAbbreviations(with mapping: [String: String]) -> String {
         guard !mapping.isEmpty else { return self }
-        let keys = mapping.keys.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
-        guard let regex = try? Regex("(\(keys))") else { return self }
 
-        // Lakukan penggantian single-pass
-        return self.replacing(regex) { (match: Regex<AnyRegexOutput>.Match) in
+        var result = ""
+        var currentIndex = self.startIndex
 
-            // 1. Ambil Capture Group 1 (indeks 1).
-            // Hasilnya adalah tipe yang sesuai, yang kita gunakan untuk inisialisasi String.
-            let abbreviationOutput = match.output[1]
-
-            // 2. Akses value-nya, yang merupakan Substring, dan konversi ke String.
-            // Metode .substring memungkinkan konversi yang aman.
-            guard let substring = abbreviationOutput.substring else {
-                return ""
+        while currentIndex < self.endIndex {
+            var matchFound = false
+            for (key, value) in mapping {
+                if self[currentIndex...].hasPrefix(key) {
+                    result += value
+                    currentIndex = self.index(currentIndex, offsetBy: key.count)
+                    matchFound = true
+                    break // Hanya apply 1 match di posisi ini
+                }
             }
-            let abbreviation = String(substring)
-
-            // ATAU, jika Anda menggunakan Swift 5.8+, Anda bisa mencoba:
-            // let abbreviation = String(abbreviationOutput.value)
-
-            return mapping[abbreviation] ?? abbreviation
+            if !matchFound {
+                result.append(self[currentIndex])
+                currentIndex = self.index(after: currentIndex)
+            }
         }
+
+        return result
     }
 
     // --- Fungsi Utama yang Menggabungkan Kedua Langkah ---
@@ -705,11 +690,8 @@ extension String {
     }
 
     func convertedTabaqa() -> String {
-        let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "ar")
-
-        let pattern = #"(W)|([FGHIJKLMNOP])|([0-9]+)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return self }
+        let formatter = StringExtCache.numberFormatter
+        guard let regex = StringExtCache.tabaqaRegex else { return self }
 
         let ns = self as NSString
         let matches = regex.matches(in: self, range: NSRange(location: 0, length: ns.length))
