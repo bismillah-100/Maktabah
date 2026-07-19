@@ -343,8 +343,8 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         Array(entriesByBookId.values)
     }
 
-    func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) {
-        DispatchQueue.main.async { [weak self] in
+    @discardableResult func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) -> Bool {
+        let block = { [weak self] in
             guard let self else { return }
             var didChange = false
 
@@ -395,7 +395,17 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 }
                 loadBooksData()
             }
+            _ = didChange
         }
+
+        if Thread.isMainThread {
+            block()
+        } else {
+            DispatchQueue.main.sync {
+                block()
+            }
+        }
+        return true // Operations on UserDefaults and memory dictionaries cannot 'fail' like a SQLite transaction lock, so we always report success
     }
 
     // MARK: - Pending Sync Handling

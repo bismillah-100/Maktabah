@@ -15,6 +15,9 @@ extension AnnotationManager {
             if let count = try? _db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
                 return // Delete wins
             }
+        } else if operation == "delete" {
+            let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';"
+            try? _db.execute(query: delSql, parameters: [ckRecordId])
         }
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
         try? _db.execute(query: sql, parameters: [ckRecordId, operation, now])
@@ -54,8 +57,8 @@ extension AnnotationManager {
 
     // MARK: - Apply CloudKit Changes
 
-    func applyCloudKitChanges(annotationsToSave: [Annotation], recordIdsToDelete: [String]) {
-        guard let _db else { return }
+    @discardableResult func applyCloudKitChanges(annotationsToSave: [Annotation], recordIdsToDelete: [String]) -> Bool {
+        guard let _db else { return false }
 
         var addedAnnotations: [Annotation] = []
         var updatedAnnotations: [Annotation] = []
@@ -223,6 +226,8 @@ extension AnnotationManager {
             }
         } catch {
             print("AnnotationManager: Failed to apply CloudKit changes - \(error)")
+            return false
         }
+        return true
     }
 }
