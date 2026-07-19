@@ -64,6 +64,42 @@ class iOSNavigationManager {
                 self?.clearAllTabs()
             }
         }
+
+        NotificationCenter.default.addObserver(
+            forName: .bookIdMigrated,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self,
+                  let userInfo = notification.userInfo,
+                  let oldId = userInfo["oldId"] as? Int,
+                  let newId = userInfo["newId"] as? Int else { return }
+            Task { @MainActor in
+                self.handleBookIdMigrated(oldId: oldId, newId: newId)
+            }
+        }
+    }
+
+    private func handleBookIdMigrated(oldId: Int, newId: Int) {
+        let ldm = LibraryDataManager.shared
+        guard let newBookData = ldm.booksById[newId] else { return }
+
+        for i in 0 ..< openTabs.count {
+            if openTabs[i].book.id == oldId {
+                let oldTab = openTabs[i]
+                openTabs[i] = ReaderTab(
+                    id: oldTab.id,
+                    book: newBookData,
+                    initialContentId: oldTab.initialContentId,
+                    viewModel: oldTab.viewModel
+                )
+                openTabs[i].viewModel.currentBook = newBookData
+            }
+        }
+
+        if selectedBook?.id == oldId {
+            selectedBook = newBookData
+        }
     }
 
     private func handleBookIntegrationChanged(bookId: Int) {
@@ -152,7 +188,7 @@ class iOSNavigationManager {
                 }
             }
 
-        case .single(let book, let initialContentId):
+        case let .single(book, initialContentId):
             state.mode = .downloading
             state.message = NSLocalizedString(
                 "Downloading book file from server...",
@@ -173,7 +209,7 @@ class iOSNavigationManager {
                     )
 
                     await MainActor.run {
-                        if !MaktabahApp.isIpad && self.selectedBook != nil {
+                        if !MaktabahApp.isIpad, self.selectedBook != nil {
                             // Do not automatically push a new book if there is already an active reader on iPhone
                         } else {
                             self.presentReader(book, initialContentId: initialContentId)
@@ -217,7 +253,7 @@ class iOSNavigationManager {
         await Task.yield()
 
         HistoryViewModel.shared.addBookToHistory(book.id)
-        if let initialContentId = initialContentId {
+        if let initialContentId {
             HistoryViewModel.shared.updateLastContentId(initialContentId, for: book.id)
         }
     }
@@ -228,7 +264,7 @@ class iOSNavigationManager {
     ) {
         // Prevent duplicate confirmation for the same book
         if activeIntegrationStates.contains(where: {
-            if case .single(let b, _) = $0.pendingData { return b.id == book.id }
+            if case let .single(b, _) = $0.pendingData { return b.id == book.id }
             return false
         }) {
             return

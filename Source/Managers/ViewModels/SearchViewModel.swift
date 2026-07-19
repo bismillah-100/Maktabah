@@ -134,21 +134,27 @@ final class SearchViewModel: ViewModelBase {
         }
 
         addObserver(
-            forName: .bookIntegrated, object: nil, queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.refreshSubject.send(())
-            }
-        }
-
-        addObserver(
             forName: .booksChanged, object: nil, queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.refreshSubject.send(())
             }
         }
+
         #endif
+
+        addObserver(
+            forName: .bookIdMigrated, object: nil, queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor [weak self] in
+                guard let self = self,
+                      let userInfo = notification.userInfo,
+                      let oldId = userInfo["oldId"] as? Int,
+                      let newId = userInfo["newId"] as? Int else { return }
+
+                self.migrateBookId(from: oldId, to: newId)
+            }
+        }
 
         addObserver(
             forName: .libraryFolderChanged, object: nil, queue: .current
@@ -166,6 +172,36 @@ final class SearchViewModel: ViewModelBase {
                 state = .loaded
             }
         }
+    }
+
+    // MARK: - Migration Support
+
+    func migrateBookId(from oldId: Int, to newId: Int) {
+        if selectedBookIds.contains(oldId) {
+            selectedBookIds.remove(oldId)
+            selectedBookIds.insert(newId)
+        }
+
+        for i in 0..<results.count {
+            if results[i].bookId == oldId {
+                let oldItem = results[i]
+                results[i] = SearchResultItem(
+                    archive: oldItem.archive,
+                    tableName: "b\(newId)",
+                    bookId: newId,
+                    bookTitle: oldItem.bookTitle,
+                    page: oldItem.page,
+                    part: oldItem.part,
+                    attributedText: oldItem.attributedText
+                )
+            }
+        }
+
+        #if os(macOS)
+        if targetBookId == String(oldId) {
+            targetBookId = String(newId)
+        }
+        #endif
     }
 
     // MARK: - Library
