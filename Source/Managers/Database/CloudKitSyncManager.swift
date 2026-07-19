@@ -455,12 +455,20 @@ final class CloudKitSyncManager {
             case let .failure(error):
                 if let ckError = error as? CKError, ckError.code == .partialFailure,
                    let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
-                    let failedIds = Set(partialErrors.keys.map(\.recordName))
-                    let successfulIds = ckRecordIds.filter { !failedIds.contains($0) }
-                    if !successfulIds.isEmpty {
-                        self?.removePendingDeletes(successfulIds)
+                    var idsToRemove = ckRecordIds.filter { !partialErrors.keys.map(\.recordName).contains($0) }
+                    for (recordID, itemError) in partialErrors {
+                        if let itemCKError = itemError as? CKError {
+                            if itemCKError.code == .unknownItem || itemCKError.code == .serverRecordChanged {
+                                idsToRemove.append(recordID.recordName)
+                            }
+                        }
+                    }
+                    if !idsToRemove.isEmpty {
+                        self?.removePendingDeletes(idsToRemove)
                     }
                 } else if let ckError = error as? CKError, ckError.code == .serverRecordChanged {
+                    self?.removePendingDeletes(ckRecordIds)
+                } else if let ckError = error as? CKError, ckError.code == .unknownItem {
                     self?.removePendingDeletes(ckRecordIds)
                 }
                 self?.handleCloudKitError(error, operationType: .delete)
