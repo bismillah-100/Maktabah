@@ -36,6 +36,30 @@
 </head>
 <body>
 
+<h2>Version 3.3.3</h2>
+<p class="version">July 20, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Double-click outline view sections to expand or collapse them (Table of Contents, Library categories, Quran Surahs, narrator Tabaqa, and folders).</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Resolved infinite retry loop on CloudKit partial failures during batch deletion.</li>
+  <li>Added main-thread debounce and batching for rapid history deletions to prevent CloudKit rate limiting.</li>
+  <li>Fixed rate-limit retry logic to process both pending uploads and deletes.</li>
+  <li>Fixed abrupt UI closures during book ID migrations by adding precise state update observers.</li>
+  <li>Optimized book ID migration notifications to prevent redundant full-UI rebuilds.</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Replaced iterative SQL loops with chunked batch operations for tag rename and deletion.</li>
+  <li>Optimized String extensions formatting and regex replacements.</li>
+  <li>Removed unused properties and actor methods in SearchEngine.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.3.2</h2>
 <p class="version">July 17, 2026</p>
 <h3>Fixes</h3>
