@@ -60,11 +60,14 @@ extension AnnotationManager {
                     ann.tags = sanitizeTagNames(tags)
                     ann.lastModified = now
                     updatedAnnotations.append(ann)
-
-                    let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES (?, ?);"
-                    try exec(insertRelSql, parameters: [annId, existingNewTagId])
-                    try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
                 }
+
+                let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) SELECT \(colAnnotationTagAnnotationId), ? FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;"
+                try exec(insertRelSql, parameters: [existingNewTagId, oldTagId])
+
+                let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
+                try exec(updateAnnSql, parameters: [now, oldTagId])
+
                 try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [oldTagId])
                 try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [oldTagId])
             }
@@ -79,8 +82,11 @@ extension AnnotationManager {
                     ann.tags = sanitizeTagNames(ann.tags)
                     ann.lastModified = now
                     updatedAnnotations.append(ann)
-                    try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
                 }
+
+                let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
+                try exec(updateAnnSql, parameters: [now, oldTagId])
+
                 let updateTagSql = "UPDATE \(tagsTable) SET \(colTagName) = ?, \(colTagNormalizedName) = ? WHERE \(colTagId) = ?;"
                 try exec(updateTagSql, parameters: [trimmedNew, newNormalized, oldTagId])
             }
@@ -166,8 +172,19 @@ extension AnnotationManager {
         try transaction {
             try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [deletedTagId])
             try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
-            for annId in affectedIds {
-                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annId])
+
+            let chunkSize = 500
+            for chunkStart in stride(from: 0, to: affectedIds.count, by: chunkSize) {
+                let chunkEnd = min(chunkStart + chunkSize, affectedIds.count)
+                let chunk = Array(affectedIds[chunkStart..<chunkEnd])
+
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
+
+                var parameters: [Any] = [now]
+                parameters.append(contentsOf: chunk)
+
+                try exec(updateSql, parameters: parameters)
             }
         }
 

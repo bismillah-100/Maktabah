@@ -231,7 +231,6 @@ class SearchWorker {
         // ✅ KUNCI: Gunakan actor untuk koordinasi cancel
         actor CancelCoordinator {
             var shouldCancel = false
-            var resultCount = 0
 
             func checkCancel(_ stopFlag: @escaping @Sendable () -> Bool) -> Bool {
                 if stopFlag() || shouldCancel {
@@ -241,13 +240,7 @@ class SearchWorker {
                 return false
             }
 
-            func incrementResult() {
-                resultCount += 1
-            }
 
-            func getResultCount() -> Int {
-                resultCount
-            }
         }
 
         let coordinator = CancelCoordinator()
@@ -454,8 +447,6 @@ final class SearchEngine {
     private let stopLock = NSLock()
     private let workersLock = NSLock()
 
-    private var completedWorkers: Int = 0
-    private let progressLock = NSLock()
 
     init() {}
 
@@ -483,9 +474,6 @@ final class SearchEngine {
         searchTask = nil
         isStopped = false
 
-        progressLock.lock()
-        completedWorkers = 0
-        progressLock.unlock()
 
         workersLock.lock()
         let currentWorkers = workers
@@ -550,11 +538,8 @@ final class SearchEngine {
                         guard let self else { return true }
                         return isStopped
                     },
-                    onComplete: { [weak self] in
+                    onComplete: {
                         // Worker selesai
-                        self?.progressLock.lock()
-                        self?.completedWorkers += 1
-                        self?.progressLock.unlock()
                     }
                 )
             }
