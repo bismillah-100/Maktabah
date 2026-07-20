@@ -551,7 +551,9 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             // Upload semua entry hasil migrasi ke CloudKit (satu kali, batch)
             let migratedEntries = Array(entriesByBookId.values).filter { $0.ckRecordId != nil }
             if !migratedEntries.isEmpty {
-                CloudKitSyncManager.shared.uploadHistory(entries: migratedEntries)
+                Task {
+                    CloudKitSyncManager.shared.uploadHistory(entries: migratedEntries)
+                }
             }
         }
 

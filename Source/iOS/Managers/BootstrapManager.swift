@@ -152,12 +152,16 @@ final class iOSBootstrapManager {
     }
 
     func chooseLibraryFolder() {
-        _ = SettingsActions.selectLibraryFolder(showSuccessAlert: false, shouldTerminateOnCancel: false) { [weak self] success in
-            if success {
-                Task { @MainActor in
-                    self?.finishSetup()
+        SettingsActions.selectLibraryFolder(
+            showSuccessAlert: false,
+            shouldTerminateOnCancel: false,
+            onCompletion: { [weak self] success in
+                if success {
+                    Task { @MainActor in
+                        self?.finishSetup()
+                    }
                 }
             }
-        }
+        )
     }
 }

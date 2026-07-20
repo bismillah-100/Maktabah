@@ -85,9 +85,11 @@ enum SettingsActions {
         #endif
     }
 
+    @discardableResult
     static func selectLibraryFolder(
         showSuccessAlert: Bool,
         shouldTerminateOnCancel: Bool,
+        validate: ((URL) -> Error?)? = nil,
         onCompletion: ((Bool) -> Void)? = nil
     ) -> Bool {
         #if os(macOS)
@@ -102,6 +104,11 @@ enum SettingsActions {
         let response = panel.runModal()
 
         if response == .OK, let url = panel.url {
+            if let error = validate?(url) {
+                ReusableFunc.showAlert(title: "Error", message: error.localizedDescription)
+                onCompletion?(false)
+                return false
+            }
             let success = performLibraryFolderMigration(url: url, showSuccessAlert: showSuccessAlert)
             onCompletion?(success)
             return success
@@ -120,6 +127,12 @@ enum SettingsActions {
             picker.allowsMultipleSelection = false
             
             documentPickerCoordinator = DocumentPickerCoordinator(onPick: { url in
+                if let error = validate?(url) {
+                    ReusableFunc.showAlert(title: "Error", message: error.localizedDescription)
+                    onCompletion?(false)
+                    documentPickerCoordinator = nil
+                    return
+                }
                 let success = performLibraryFolderMigration(url: url, showSuccessAlert: showSuccessAlert)
                 onCompletion?(success)
                 documentPickerCoordinator = nil

@@ -169,18 +169,22 @@ class ReusableFunc {
     /// Menampilkan jendela peringatan standar kepada pengguna.
     #if os(macOS)
     static func showAlert(title: String, message: String, style: NSAlert.Style = .warning) {
-        let alert = NSAlert()
-        alert.alertStyle = style
-        alert.messageText = title
-        alert.informativeText = message
-        alert.runModal()
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.alertStyle = style
+            alert.messageText = title
+            alert.informativeText = message
+            alert.runModal()
+        }
     }
     #else
     static func showAlert(title: String, message: String) {
-        guard let topVC = getTopViewController() else { return }
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        topVC.present(alert, animated: true)
+        DispatchQueue.main.async {
+            guard let topVC = getTopViewController() else { return }
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            topVC.present(alert, animated: true)
+        }
     }
 
     static func getTopViewController() -> UIViewController? {
