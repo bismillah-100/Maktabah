@@ -231,7 +231,7 @@ class ResultsHandler {
         }
     }
 
-    func backfillResultsCloudKitFieldsIfNeeded() throws {
+    func backfillResultsCloudKitFieldsIfNeeded(uploadIfNeeded: Bool = true) throws {
         guard let db else { return }
         let now = Int64(Date().timeIntervalSince1970)
 
@@ -321,6 +321,7 @@ class ResultsHandler {
         }
 
         if !foldersToUpload.isEmpty || !resultsToUpload.isEmpty {
+            guard uploadIfNeeded else { return }
             DispatchQueue.global(qos: .background).async {
                 CloudKitSyncManager.shared.uploadResultsData(folders: foldersToUpload, results: resultsToUpload)
             }

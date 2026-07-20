@@ -46,6 +46,7 @@ final class CloudKitSyncManager {
     }
 
     private func retryAllPendingOperations() {
+        guard AppConfig.useICloud else { return }
         syncQueue.async(flags: .barrier) { [weak self] in
             self?.retryPendingUploads()
             self?.retryPendingDeletes()
@@ -205,21 +206,27 @@ final class CloudKitSyncManager {
     }
 
     private func performInitialUploadCheck() {
+        // Jika initial upload belum pernah dilakukan, backfill hanya assign ckRecordId
+        // tanpa upload — uploadAllLocalData yang akan handle semuanya sekaligus.
+        // Jika initial upload sudah selesai (re-enable), backfill sekaligus upload
+        // agar data yang dibuat saat CloudKit off tidak terlewat.
+        let isInitialUpload = !UserDefaults.standard.bool(forKey: "CloudKitSyncManager_InitialUploadDone")
+
         if let _ = AnnotationManager.shared.db {
             try? AnnotationManager.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
-                if !backfilled.isEmpty { self?.upload(annotations: backfilled) }
+                if !isInitialUpload, !backfilled.isEmpty { self?.upload(annotations: backfilled) }
             }
         }
 
         if let _ = ResultsHandler.shared.db {
-            try? ResultsHandler.shared.backfillResultsCloudKitFieldsIfNeeded()
+            try? ResultsHandler.shared.backfillResultsCloudKitFieldsIfNeeded(uploadIfNeeded: !isInitialUpload)
         }
 
         HistoryViewModel.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
-            if !backfilled.isEmpty { self?.uploadHistory(entries: backfilled) }
+            if !isInitialUpload, !backfilled.isEmpty { self?.uploadHistory(entries: backfilled) }
         }
 
-        if !UserDefaults.standard.bool(forKey: "CloudKitSyncManager_InitialUploadDone") {
+        if isInitialUpload {
             uploadAllLocalData { success in
                 if success {
                     UserDefaults.standard.set(true, forKey: "CloudKitSyncManager_InitialUploadDone")
