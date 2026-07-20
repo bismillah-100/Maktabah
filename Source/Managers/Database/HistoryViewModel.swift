@@ -63,6 +63,10 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     /// Debounce upload saat navigasi halaman
     private var contentUpdateWorkItem: DispatchWorkItem?
 
+    /// Debounce for batched CloudKit deletions
+    private var pendingCloudKitDeletes: Set<String> = []
+    private var deleteDebounceTask: Task<Void, Never>?
+
     var historyBookIds: [Int] {
         get { historyOrder }
         set {
@@ -221,7 +225,20 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 entriesByBookId.removeValue(forKey: bookId)
                 persistAndReload(uploadEntry: nil)
                 if let ckId {
-                    CloudKitSyncManager.shared.delete(ckRecordIds: [ckId], target: .history)
+                    pendingCloudKitDeletes.insert(ckId)
+
+                    deleteDebounceTask?.cancel()
+                    deleteDebounceTask = Task {
+                        try? await Task.sleep(for: .seconds(3))
+                        guard !Task.isCancelled else { return }
+
+                        await MainActor.run { [weak self] in
+                            guard let self, !pendingCloudKitDeletes.isEmpty else { return }
+                            let idsToDelete = Array(pendingCloudKitDeletes)
+                            pendingCloudKitDeletes.removeAll()
+                            CloudKitSyncManager.shared.delete(ckRecordIds: idsToDelete, target: .history)
+                        }
+                    }
                 }
             }
         }
@@ -411,22 +428,21 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     // MARK: - Pending Sync Handling
 
     func addPendingSync(ckRecordId: String, operation: String) {
-        pendingQueue.async(flags: .barrier) { [weak self] in
+        pendingQueue.sync(flags: .barrier) { [weak self] in
             guard let self else { return }
             if operation == "upload" {
-                if !pendingDeletes.contains(ckRecordId) {
-                    pendingUploads.insert(ckRecordId)
-                }
+                pendingDeletes.remove(ckRecordId)
+                pendingUploads.insert(ckRecordId)
             } else {
-                pendingDeletes.insert(ckRecordId)
                 pendingUploads.remove(ckRecordId)
+                pendingDeletes.insert(ckRecordId)
             }
             savePendingSync()
         }
     }
 
     func removePendingSync(ckRecordIds: [String]) {
-        pendingQueue.async(flags: .barrier) { [weak self] in
+        pendingQueue.sync(flags: .barrier) { [weak self] in
             guard let self else { return }
             for id in ckRecordIds {
                 pendingUploads.remove(id)

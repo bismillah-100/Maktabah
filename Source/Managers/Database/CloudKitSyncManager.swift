@@ -716,7 +716,7 @@ final class CloudKitSyncManager {
                 DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) {
                     switch operationType {
                     case .fetchChanges: self.fetchChanges(retryCount: retryCount + 1)
-                    case .delete, .upload: self.retryPendingDeletes()
+                    case .delete, .upload: self.retryAllPendingOperations()
                     default: break
                     }
                 }

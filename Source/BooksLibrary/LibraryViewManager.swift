@@ -273,10 +273,8 @@ extension LibraryViewManager: NSOutlineViewDelegate {
             ReusableFunc.updateBuiltInRecents(with: item.book, in: searchField)
             viewModel.handleBookSelection(book: item)
         }
-
-        if selectedRow == -1 {
-            viewModel.selectedBookName = nil
-        }
+        // Do not set viewModel.selectedBookName = nil when selectedRow is -1
+        // as this breaks selection restoration during data reloads/updates.
     }
 
     func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat { 26 }

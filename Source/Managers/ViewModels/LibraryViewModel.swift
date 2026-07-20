@@ -34,6 +34,7 @@ final class LibraryViewModel: ViewModelBase {
     var isDownloadModal = false
     var singleBookToDelete: BooksData?
     var reloadTask: Task<Void, Never>?
+    private var historySelectionTask: Task<Void, Never>?
 
     #if os(macOS)
     @Published var searchQuery: String = ""
@@ -367,7 +368,15 @@ final class LibraryViewModel: ViewModelBase {
     func handleBookSelection(book: BooksData) {
         if selectedBookName == book.book { return }
         selectedBookName = book.book
-        historyManager.addBookToHistory(book.id)
+
+        historySelectionTask?.cancel()
+        historySelectionTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { [weak self] in
+                self?.historyManager.addBookToHistory(book.id)
+            }
+        }
     }
 
     var selectedDownloadBooks: [BooksData] {
