@@ -430,4 +430,53 @@ class DatabaseManager {
         lock.unlock()
         IntegrationCache.shared.invalidate(archiveId: archiveId)
     }
+
+    static func validateDatabaseFolder(_ url: URL) -> Error? {
+        let fm = FileManager.default
+        let mainFolder = url.appendingPathComponent("Files", isDirectory: true)
+
+        var isDir: ObjCBool = false
+        guard fm.fileExists(atPath: mainFolder.path, isDirectory: &isDir), isDir.boolValue else {
+            return NSError(domain: "Maktabah", code: 1, userInfo: [NSLocalizedDescriptionKey: "Folder 'Files' is missing."])
+        }
+
+        let mainSqlite = mainFolder.appendingPathComponent("main.sqlite")
+        let specialSqlite = mainFolder.appendingPathComponent("special.sqlite")
+
+        guard fm.fileExists(atPath: mainSqlite.path), fm.fileExists(atPath: specialSqlite.path) else {
+            return NSError(domain: "Maktabah", code: 2, userInfo: [NSLocalizedDescriptionKey: "main.sqlite or special.sqlite is missing in the 'Files' folder."])
+        }
+
+        let mainSize = (try? fm.attributesOfItem(atPath: mainSqlite.path)[.size] as? NSNumber)?.int64Value ?? 0
+        let specialSize = (try? fm.attributesOfItem(atPath: specialSqlite.path)[.size] as? NSNumber)?.int64Value ?? 0
+
+        guard mainSize > 0, specialSize > 0 else {
+            return NSError(domain: "Maktabah", code: 3, userInfo: [NSLocalizedDescriptionKey: "Database files are empty."])
+        }
+
+        do {
+            let dbMain = try SQLiteDatabase(path: mainSqlite.path, flags: SQLITE_OPEN_READONLY)
+            let dbSpecial = try SQLiteDatabase(path: specialSqlite.path, flags: SQLITE_OPEN_READONLY)
+
+            let checkTable = { (db: SQLiteDatabase, table: String) throws in
+                var exists = false
+                let query = "SELECT name FROM sqlite_master WHERE type='table' AND name='\(table)'"
+                try db.fetch(query: query) { _ in exists = true }
+                if !exists {
+                    throw NSError(domain: "Maktabah", code: 4, userInfo: [NSLocalizedDescriptionKey: "Table '\(table)' is missing in database."])
+                }
+            }
+
+            try checkTable(dbMain, "0bok")
+            try checkTable(dbMain, "0cat")
+            try checkTable(dbMain, "v")
+
+            try checkTable(dbSpecial, "Auth")
+            try checkTable(dbSpecial, "shorts")
+        } catch {
+            return error
+        }
+
+        return nil
+    }
 }
