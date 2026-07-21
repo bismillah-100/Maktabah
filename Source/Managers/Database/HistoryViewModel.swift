@@ -114,6 +114,16 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             forName: .booksChanged,
             object: nil, queue: .main
         ) { [weak self] _ in self?.loadBooksData() }
+
+        addObserver(
+            forName: .bookIdMigrated,
+            object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let userInfo = notification.userInfo,
+                  let oldId = userInfo["oldId"] as? Int,
+                  let newId = userInfo["newId"] as? Int else { return }
+            self?.migrateBookId(from: oldId, to: newId)
+        }
     }
 
     // MARK: - Core Operations

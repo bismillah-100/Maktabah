@@ -387,6 +387,9 @@
 		F36382642FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382632FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift */; };
 		F36382662FA761070006636C /* iOSSearchFilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382652FA761070006636C /* iOSSearchFilterViewController.swift */; };
 		F36382692FA7BFB40006636C /* iOSAnnotationEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382682FA7BFB40006636C /* iOSAnnotationEditorSheet.swift */; };
+		F364898930131EAE00B9285B /* NotificationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364898830131EAE00B9285B /* NotificationToken.swift */; };
+		F364898A30131EAE00B9285B /* NotificationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364898830131EAE00B9285B /* NotificationToken.swift */; };
+		F364898B30131EAE00B9285B /* NotificationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364898830131EAE00B9285B /* NotificationToken.swift */; };
 		F36D684C2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
@@ -688,6 +691,7 @@
 		F36382632FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSHierarchicalCollectionViewController.swift; sourceTree = "<group>"; };
 		F36382652FA761070006636C /* iOSSearchFilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSSearchFilterViewController.swift; sourceTree = "<group>"; };
 		F36382682FA7BFB40006636C /* iOSAnnotationEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAnnotationEditorSheet.swift; sourceTree = "<group>"; };
+		F364898830131EAE00B9285B /* NotificationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationToken.swift; sourceTree = "<group>"; };
 		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
 		F37F1C2D300268E3002B5618 /* AnnotationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationManager.swift; sourceTree = "<group>"; };
@@ -916,6 +920,7 @@
 				4B32024F2EDB1B5A003B95D1 /* DataModel.swift */,
 				4B4C97112F1F026C0051503E /* Narrator.swift */,
 				F30577942FA4987B005732C6 /* NotificationName.swift */,
+				F364898830131EAE00B9285B /* NotificationToken.swift */,
 				4B6100EC2EFA773C00CCBED6 /* Quran.swift */,
 				4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */,
 				4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */,
@@ -1729,6 +1734,7 @@
 				4B20DB822EE7EEE400B97126 /* BookInfo.swift in Sources */,
 				4B65CCB42EE059700085CEB4 /* SearchSidebarVC.swift in Sources */,
 				F3D02D4A2FE04D580054807F /* ViewModelProtocols.swift in Sources */,
+				F364898A30131EAE00B9285B /* NotificationToken.swift in Sources */,
 				F3D02D4B2FE04D580054807F /* ReaderViewModel.swift in Sources */,
 				F3D02D4E2FE04D580054807F /* ViewModelBase.swift in Sources */,
 				CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */,
@@ -1790,6 +1796,7 @@
 				4B7C90C32F83494200454BE1 /* CellIViewIdentifier.swift in Sources */,
 				4B7C90C42F83494200454BE1 /* StorageError.swift in Sources */,
 				F36D684C2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */,
+				F364898B30131EAE00B9285B /* NotificationToken.swift in Sources */,
 				4B7C90C52F83494200454BE1 /* SidebarVC.swift in Sources */,
 				4B7C90C62F83494200454BE1 /* LibraryDataManager.swift in Sources */,
 				F3D02D622FE0616B0054807F /* NarratorViewModel.swift in Sources */,
@@ -1933,6 +1940,7 @@
 				F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */,
 				F3D122692FF55B2600F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
 				F30576F92FA46222005732C6 /* AnnotationDelegate.swift in Sources */,
+				F364898930131EAE00B9285B /* NotificationToken.swift in Sources */,
 				F363825B2FA702A00006636C /* iPhoneLayout.swift in Sources */,
 				F30576FB2FA46222005732C6 /* AnnotationCoordinator.swift in Sources */,
 				F30576FC2FA46222005732C6 /* BookConnection.swift in Sources */,

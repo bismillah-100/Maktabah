@@ -39,6 +39,8 @@ class iOSNavigationManager {
     var openTabs: [ReaderTab] = []
     var activeTabId: UUID?
 
+    private var observerTokens: [NotificationToken] = []
+
     init() {
         setupObservers()
     }
@@ -47,44 +49,57 @@ class iOSNavigationManager {
         NotificationCenter.default.removeObserver(self)
     }
 
-    /* we dont need observer tokens here. as we use @MainActor
-     and cannot remove tokens on deinit method. */
     private func setupObservers() {
-        NotificationCenter.default.addObserver(
-            forName: .bookIntegrated,
-            object: nil,
-            queue: .main
-        ) { notification in
-            guard let bookId = notification.object as? Int else { return }
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                self.handleBookIntegrationChanged(bookId: bookId)
-            }
-        }
+        observerTokens.append(
+            NotificationToken(
+                token: NotificationCenter.default.addObserver(
+                    forName: .bookIntegrated,
+                    object: nil,
+                    queue: .main
+                ) { notification in
+                    guard let bookId = notification.object as? Int else {
+                        return
+                    }
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        self.handleBookIntegrationChanged(bookId: bookId)
+                    }
+                }
+            )
+        )
 
-        NotificationCenter.default.addObserver(
-            forName: .libraryFolderChanged,
-            object: nil,
-            queue: .main
-        ) { _ in
-            Task { @MainActor [weak self] in
-                self?.clearAllTabs()
-            }
-        }
+        observerTokens.append(
+            NotificationToken(
+                token: NotificationCenter.default.addObserver(
+                    forName: .libraryFolderChanged,
+                    object: nil,
+                    queue: .main
+                ) { _ in
+                    Task { @MainActor [weak self] in
+                        self?.clearAllTabs()
+                    }
+                }
+            )
+        )
 
-        NotificationCenter.default.addObserver(
-            forName: .bookIdMigrated,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let userInfo = notification.userInfo,
-                  let oldId = userInfo["oldId"] as? Int,
-                  let newId = userInfo["newId"] as? Int else { return }
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                handleBookIdMigrated(oldId: oldId, newId: newId)
-            }
-        }
+        observerTokens.append(
+            NotificationToken(
+                token: NotificationCenter.default.addObserver(
+                    forName: .bookIdMigrated,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] notification in
+                    guard let userInfo = notification.userInfo,
+                        let oldId = userInfo["oldId"] as? Int,
+                        let newId = userInfo["newId"] as? Int
+                    else { return }
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        handleBookIdMigrated(oldId: oldId, newId: newId)
+                    }
+                }
+            )
+        )
     }
 
     private func handleBookIdMigrated(oldId: Int, newId: Int) {
