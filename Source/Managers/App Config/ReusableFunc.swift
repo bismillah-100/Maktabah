@@ -248,7 +248,7 @@ class ReusableFunc {
                 outputBuffer.removeSubrange(decompressedSize..<outputBuffer.count)
             }
 
-            return String(data: outputBuffer, encoding: .utf8) ?? ""
+            return String(decoding: outputBuffer, as: UTF8.self)
         }
     }
 
