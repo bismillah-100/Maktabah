@@ -30,16 +30,7 @@ final class BulkDownloadModalCenter {
 
     // MARK: - Modal presentation
 
-    @MainActor
-    func presentModal() async {
-        guard await NetworkMonitor.shared.isConnected else {
-            ReusableFunc.showAlert(
-                title: String(localized: "Connection Error"),
-                message: String(localized: "Please check your internet connection")
-            )
-            return
-        }
-
+    func presentModal() {
         if let existing = window {
             existing.makeKeyAndOrderFront(nil)
             return
@@ -251,7 +242,10 @@ private final class WindowCloseDelegate: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         BulkDownloadModalCenter.shared.stop()
-        Task { @MainActor in
+        if NSApp.modalWindow != nil {
+            NSApp.stopModal()
+        }
+        DispatchQueue.main.async {
             BulkDownloadModalCenter.shared.dismissModal()
         }
     }

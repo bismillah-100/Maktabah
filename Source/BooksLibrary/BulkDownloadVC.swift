@@ -93,7 +93,7 @@ final class BulkDownloadVC: NSViewController {
 
         Task.detached { [weak self] in
             guard let self else { return }
-            await self.loadBooksData()
+            await loadBooksData()
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 progressBar.stopAnimation(nil)
@@ -354,6 +354,8 @@ final class BulkDownloadVC: NSViewController {
         outlineView.delegate = vm
         outlineView.dataSource = vm
         outlineView.reloadData()
+
+        updateSelectionSummary()
     }
 
     private func countBooks(in categories: [CategoryData]) -> Int {
