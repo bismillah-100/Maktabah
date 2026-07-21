@@ -94,7 +94,9 @@ enum ArchiveDatabaseTools {
 
         while sqlite3_step(selectStmt) == SQLITE_ROW {
             guard let textPtr = sqlite3_column_text(selectStmt, 1) else { continue }
-            let normalized = String(cString: textPtr)
+            let textBytes = sqlite3_column_bytes(selectStmt, 1)
+            let textBuffer = UnsafeBufferPointer(start: textPtr, count: Int(textBytes))
+            let normalized = String(decoding: textBuffer, as: UTF8.self)
                 .replacingOccurrences(of: "\n", with: " ")
                 .normalizeArabic()
             guard !normalized.isEmpty else { continue }

@@ -1335,7 +1335,9 @@ final class BookUpdateManager {
                     if column.name.lowercased() == "nass" {
                         if let textPtr = sqlite3_column_text(selectStmt, colIndex)
                         {
-                            let text = String(cString: textPtr)
+                            let bytes = sqlite3_column_bytes(selectStmt, colIndex)
+                            let buffer = UnsafeBufferPointer(start: textPtr, count: Int(bytes))
+                            let text = String(decoding: buffer, as: UTF8.self)
                             if let compressed = ReusableFunc.compressData(text) {
                                 _ = compressed.withUnsafeBytes { bytes in
                                     sqlite3_bind_blob(
@@ -1689,7 +1691,9 @@ final class BookUpdateManager {
         guard let stmt, let textPtr = sqlite3_column_text(stmt, index) else {
             return ""
         }
-        return String(cString: textPtr)
+        let bytes = sqlite3_column_bytes(stmt, index)
+        let buffer = UnsafeBufferPointer(start: textPtr, count: Int(bytes))
+        return String(decoding: buffer, as: UTF8.self)
     }
 }
 
