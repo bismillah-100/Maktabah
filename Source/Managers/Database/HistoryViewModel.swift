@@ -431,7 +431,9 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         pendingQueue.sync(flags: .barrier) { [weak self] in
             guard let self else { return }
             if operation == "upload" {
-                pendingDeletes.remove(ckRecordId)
+                if pendingDeletes.contains(ckRecordId) {
+                    return // Delete wins
+                }
                 pendingUploads.insert(ckRecordId)
             } else {
                 pendingUploads.remove(ckRecordId)

@@ -335,8 +335,10 @@ class ResultsHandler {
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let db else { return }
         if operation == "upload" {
-            let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
-            try? db.execute(query: delSql, parameters: [ckRecordId])
+            let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
+            if let count = try? db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+                return // Delete wins
+            }
         } else if operation == "delete" {
             let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';"
             try? db.execute(query: delSql, parameters: [ckRecordId])
