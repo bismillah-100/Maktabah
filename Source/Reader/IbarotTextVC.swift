@@ -141,8 +141,16 @@ class IbarotTextVC: NSViewController {
         }
     }
 
+    private var observerTokens: [NSObjectProtocol] = []
+
+    deinit {
+        for token in observerTokens {
+            NotificationCenter.default.removeObserver(token)
+        }
+    }
+
     private func setupNotificationObservers() {
-        NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
             queue: .current
@@ -150,9 +158,9 @@ class IbarotTextVC: NSViewController {
             guard let self else { return }
             viewModel.cleanUpState()
             viewModel.tocViewModel.cleanUp()
-        }
+        })
 
-        NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationCenter.default.addObserver(
             forName: .bookIntegrated,
             object: nil,
             queue: .main
@@ -163,9 +171,9 @@ class IbarotTextVC: NSViewController {
                     clearUI()
                 }
             }
-        }
+        })
 
-        NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationCenter.default.addObserver(
             forName: .bookIdMigrated,
             object: nil,
             queue: .main
@@ -183,7 +191,7 @@ class IbarotTextVC: NSViewController {
                     viewModel.currentBook = newBookData
                 }
             }
-        }
+        })
     }
 
     // MARK: - State Accessors

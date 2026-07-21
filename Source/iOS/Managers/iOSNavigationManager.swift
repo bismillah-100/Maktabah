@@ -43,14 +43,21 @@ class iOSNavigationManager {
         setupObservers()
     }
 
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    /* we dont need observer tokens here. as we use @MainActor
+     and cannot remove tokens on deinit method. */
     private func setupObservers() {
         NotificationCenter.default.addObserver(
             forName: .bookIntegrated,
             object: nil,
             queue: .main
-        ) { [weak self] notification in
-            guard let self, let bookId = notification.object as? Int else { return }
-            Task { @MainActor in
+        ) { notification in
+            guard let bookId = notification.object as? Int else { return }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.handleBookIntegrationChanged(bookId: bookId)
             }
         }
@@ -59,8 +66,8 @@ class iOSNavigationManager {
             forName: .libraryFolderChanged,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
+        ) { _ in
+            Task { @MainActor [weak self] in
                 self?.clearAllTabs()
             }
         }
@@ -70,12 +77,12 @@ class iOSNavigationManager {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            guard let self,
-                  let userInfo = notification.userInfo,
+            guard let userInfo = notification.userInfo,
                   let oldId = userInfo["oldId"] as? Int,
                   let newId = userInfo["newId"] as? Int else { return }
-            Task { @MainActor in
-                self.handleBookIdMigrated(oldId: oldId, newId: newId)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                handleBookIdMigrated(oldId: oldId, newId: newId)
             }
         }
     }
