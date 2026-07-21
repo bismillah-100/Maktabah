@@ -40,6 +40,11 @@ struct iOSBootstrapView: View {
             let isCancellable = notification.userInfo?["isCancellable"] as? Bool ?? false
             bootstrapManager.reloadLibrary(isCancellable: isCancellable)
         }
+        .onChange(of: bootstrapManager.isReady) { oldValue, newValue in
+            if newValue {
+                CloudKitSyncManager.shared.fetchChanges()
+            }
+        }
         .overlay {
             if bootstrapManager.showCoreUpdateAlert {
                 ZStack {

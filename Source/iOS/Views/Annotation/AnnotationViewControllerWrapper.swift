@@ -22,6 +22,13 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
                 viewModel.deleteAnnotation(id: id)
             }
         }
+        
+        vc.onRefreshRequested = { [weak vc] in
+            CloudKitSyncManager.shared.fetchChanges()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                vc?.endRefreshing()
+            }
+        }
 
         vc.onNeedFullReload = { [weak viewModel] in
             viewModel?.applyFilter()

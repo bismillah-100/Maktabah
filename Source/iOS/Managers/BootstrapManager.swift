@@ -30,9 +30,15 @@ final class iOSBootstrapManager {
         didPrepare = true
 
         if AppConfig.hasCustomDatabaseFolder() {
-            if let mainPath = AppConfig.mainDatabasePath, FileManager.default.fileExists(atPath: mainPath) {
-                finishSetup()
-                return
+            if let customPath = AppConfig.databaseFilesPath {
+                let customUrl = URL(fileURLWithPath: customPath)
+                let parentUrl = customUrl.deletingLastPathComponent()
+                if DatabaseManager.validateDatabaseFolder(parentUrl) == nil {
+                    finishSetup()
+                    return
+                } else {
+                    AppConfig.resetCustomModeKey()
+                }
             } else {
                 AppConfig.resetCustomModeKey()
             }

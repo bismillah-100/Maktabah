@@ -101,6 +101,8 @@ class ResultsHandler {
         }
 
         createTables()
+        resolveOrphanFolders()
+        resolveOrphanResults()
 
         if isNewDatabase {
             CloudKitSyncManager.shared.resetChangeToken()
@@ -231,7 +233,7 @@ class ResultsHandler {
         }
     }
 
-    func backfillResultsCloudKitFieldsIfNeeded() throws {
+    func backfillResultsCloudKitFieldsIfNeeded(uploadIfNeeded: Bool = true) throws {
         guard let db else { return }
         let now = Int64(Date().timeIntervalSince1970)
 
@@ -321,6 +323,7 @@ class ResultsHandler {
         }
 
         if !foldersToUpload.isEmpty || !resultsToUpload.isEmpty {
+            guard uploadIfNeeded else { return }
             DispatchQueue.global(qos: .background).async {
                 CloudKitSyncManager.shared.uploadResultsData(folders: foldersToUpload, results: resultsToUpload)
             }
@@ -332,8 +335,10 @@ class ResultsHandler {
     func addPendingSync(ckRecordId: String, operation: String) {
         guard let db else { return }
         if operation == "upload" {
-            let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
-            try? db.execute(query: delSql, parameters: [ckRecordId])
+            let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
+            if let count = try? db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+                return // Delete wins
+            }
         } else if operation == "delete" {
             let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';"
             try? db.execute(query: delSql, parameters: [ckRecordId])
@@ -906,48 +911,59 @@ extension ResultsHandler {
 
                     var existingLocalId: Int64 = -1
                     var localLastMod: Int64 = 0
-                    let findSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-                    if let row = try db.fetch(query: findSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                    var existingParentId: Int64? = nil
+                    let findSql = "SELECT \(colId), \(colLastModified), \(colParent) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
+                    if let row = try db.fetch(query: findSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1), !$0.isNull(at: 2) ? $0.int64(at: 2) : nil) }).first {
                         existingLocalId = row.0
                         localLastMod = row.1
+                        existingParentId = row.2
                     }
 
                     if existingLocalId != -1 {
                         let remoteLastMod = folder.lastModified ?? 0
                         if remoteLastMod >= localLastMod {
-                            let conflictSql: String
-                            let conflictParams: [Any]
-                            if let pid = pLocalId {
-                                conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
-                                conflictParams = [pid, folder.name, existingLocalId]
-                            } else {
-                                conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? AND \(colId) != ? LIMIT 1"
-                                conflictParams = [folder.name, existingLocalId]
-                            }
-                            if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
-                                try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                            let isOrphan = folder.parentCkRecordId != nil && pLocalId == nil
+                            let newParentForDb = isOrphan ? existingParentId : pLocalId
+
+                            if !isOrphan || newParentForDb != nil {
+                                let conflictSql: String
+                                let conflictParams: [Any]
+                                if let pid = newParentForDb {
+                                    conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                                    conflictParams = [pid, folder.name, existingLocalId]
+                                } else {
+                                    conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                                    conflictParams = [folder.name, existingLocalId]
+                                }
+                                if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
+                                    try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                                }
                             }
 
                             let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
-                            try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull(), existingLocalId])
+                            try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), newParentForDb ?? NSNull(), existingLocalId])
                         }
                     } else {
                         var conflictLocalId: Int64 = -1
                         var conflictLastMod: Int64 = 0
 
-                        let conflictSql: String
-                        let conflictParams: [Any]
-                        if let pid = pLocalId {
-                            conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? LIMIT 1"
-                            conflictParams = [pid, folder.name]
-                        } else {
-                            conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? LIMIT 1"
-                            conflictParams = [folder.name]
-                        }
+                        let isOrphan = folder.parentCkRecordId != nil && pLocalId == nil
+                        
+                        if !isOrphan {
+                            let conflictSql: String
+                            let conflictParams: [Any]
+                            if let pid = pLocalId {
+                                conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? LIMIT 1"
+                                conflictParams = [pid, folder.name]
+                            } else {
+                                conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? LIMIT 1"
+                                conflictParams = [folder.name]
+                            }
 
-                        if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
-                            conflictLocalId = row.0
-                            conflictLastMod = row.1
+                            if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                                conflictLocalId = row.0
+                                conflictLastMod = row.1
+                            }
                         }
 
                         if conflictLocalId != -1 {
@@ -966,6 +982,8 @@ extension ResultsHandler {
                     }
                 }
             }
+
+            resolveOrphanFolders()
 
             // Post notification for UI refresh
             DispatchQueue.main.async {
@@ -1003,26 +1021,33 @@ extension ResultsHandler {
 
                     var existingLocalId: Int64 = -1
                     var localLastMod: Int64 = 0
-                    let findResSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colResCkRecordId) = ? LIMIT 1"
-                    if let row = try db.fetch(query: findResSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                    var existingFolderId: Int64? = nil
+                    let findResSql = "SELECT \(colId), \(colResLastModified), \(colFolderId) FROM \(resultsTable) WHERE \(colResCkRecordId) = ? LIMIT 1"
+                    if let row = try db.fetch(query: findResSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1), !$0.isNull(at: 2) ? $0.int64(at: 2) : nil) }).first {
                         existingLocalId = row.0
                         localLastMod = row.1
+                        existingFolderId = row.2
                     }
 
                     if existingLocalId != -1 {
                         let remoteLastMod = res.lastModified ?? 0
                         if remoteLastMod >= localLastMod {
-                            let conflictSql: String
-                            let conflictParams: [Any]
-                            if let fid = fLocalId {
-                                conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
-                                conflictParams = [fid, res.name, res.bkId, existingLocalId]
-                            } else {
-                                conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
-                                conflictParams = [res.name, res.bkId, existingLocalId]
-                            }
-                            if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
-                                try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                            let isOrphan = res.folderCkRecordId != nil && fLocalId == nil
+                            let newFolderForDb = isOrphan ? existingFolderId : fLocalId
+
+                            if !isOrphan || newFolderForDb != nil {
+                                let conflictSql: String
+                                let conflictParams: [Any]
+                                if let fid = newFolderForDb {
+                                    conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
+                                    conflictParams = [fid, res.name, res.bkId, existingLocalId]
+                                } else {
+                                    conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
+                                    conflictParams = [res.name, res.bkId, existingLocalId]
+                                }
+                                if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
+                                    try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                                }
                             }
 
                             let upSql = """
@@ -1032,7 +1057,7 @@ extension ResultsHandler {
                             WHERE \(colId) = ?;
                             """
                             let params: [Any] = [
-                                fLocalId ?? NSNull(), res.name, res.query, res.archive,
+                                newFolderForDb ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
                                 existingLocalId,
                             ]
@@ -1042,19 +1067,23 @@ extension ResultsHandler {
                         var conflictLocalId: Int64 = -1
                         var conflictLastMod: Int64 = 0
 
-                        let conflictSql: String
-                        let conflictParams: [Any]
-                        if let fid = fLocalId {
-                            conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
-                            conflictParams = [fid, res.name, res.bkId]
-                        } else {
-                            conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
-                            conflictParams = [res.name, res.bkId]
-                        }
+                        let isOrphan = res.folderCkRecordId != nil && fLocalId == nil
 
-                        if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
-                            conflictLocalId = row.0
-                            conflictLastMod = row.1
+                        if !isOrphan {
+                            let conflictSql: String
+                            let conflictParams: [Any]
+                            if let fid = fLocalId {
+                                conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+                                conflictParams = [fid, res.name, res.bkId]
+                            } else {
+                                conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+                                conflictParams = [res.name, res.bkId]
+                            }
+
+                            if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                                conflictLocalId = row.0
+                                conflictLastMod = row.1
+                            }
                         }
 
                         if conflictLocalId != -1 {
@@ -1095,6 +1124,8 @@ extension ResultsHandler {
                 }
             }
 
+            resolveOrphanResults()
+
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
             }
@@ -1103,5 +1134,87 @@ extension ResultsHandler {
             return false
         }
         return true
+    }
+
+    func resolveOrphanFolders() {
+        guard let db else { return }
+        do {
+            try transaction {
+                // Find folders where parentCkRecordId is not null, but parent doesn't match
+                let sql = """
+                SELECT f1.\(colId), f1.\(colName), f1.\(colParentCkRecordId), f2.\(colId) as expected_parent
+                FROM \(foldersTable) f1
+                LEFT JOIN \(foldersTable) f2 ON f1.\(colParentCkRecordId) = f2.\(colCkRecordId)
+                WHERE f1.\(colParentCkRecordId) IS NOT NULL 
+                AND COALESCE(f1.\(colParent), -1) != COALESCE(f2.\(colId), -1)
+                """
+                
+                let orphans = try db.fetch(query: sql) { row -> (id: Int64, name: String, expectedParent: Int64?) in
+                    return (
+                        row.int64(at: 0),
+                        row.string(at: 1) ?? "",
+                        !row.isNull(at: 3) ? row.int64(at: 3) : nil
+                    )
+                }
+                
+                for orphan in orphans {
+                    guard let newParentId = orphan.expectedParent else { continue }
+                    
+                    // Check if unique constraint would be violated
+                    let conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                    if let conflictId = try db.fetch(query: conflictSql, parameters: [newParentId, orphan.name, orphan.id], mapping: { $0.int64(at: 0) }).first {
+                        // Merge orphan into existing folder
+                        try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colFolderId) = ?;", parameters: [conflictId, orphan.id])
+                        try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colParent) = ?;", parameters: [conflictId, orphan.id])
+                        try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [orphan.id])
+                    } else {
+                        // Safe to reparent
+                        try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colId) = ?;", parameters: [newParentId, orphan.id])
+                    }
+                }
+            }
+        } catch {
+            print("ResultsHandler: Failed to resolve orphan folders - \\(error)")
+        }
+    }
+
+    func resolveOrphanResults() {
+        guard let db else { return }
+        do {
+            try transaction {
+                let sql = """
+                SELECT r.\(colId), r.\(colName), r.\(colBkId), f.\(colId) as expected_folder
+                FROM \(resultsTable) r
+                LEFT JOIN \(foldersTable) f ON r.\(colFolderCkRecordId) = f.\(colCkRecordId)
+                WHERE r.\(colFolderCkRecordId) IS NOT NULL
+                AND COALESCE(r.\(colFolderId), -1) != COALESCE(f.\(colId), -1)
+                """
+                
+                let orphans = try db.fetch(query: sql) { row -> (id: Int64, name: String, bkId: Int, expectedFolder: Int64?) in
+                    return (
+                        row.int64(at: 0),
+                        row.string(at: 1) ?? "",
+                        row.int(at: 2),
+                        !row.isNull(at: 3) ? row.int64(at: 3) : nil
+                    )
+                }
+                
+                for orphan in orphans {
+                    guard let newFolderId = orphan.expectedFolder else { continue }
+                    
+                    // Check if unique constraint would be violated
+                    let conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
+                    if let _ = try db.fetch(query: conflictSql, parameters: [newFolderId, orphan.name, orphan.bkId, orphan.id], mapping: { $0.int64(at: 0) }).first {
+                        // Conflict: just delete the orphan since it's a leaf node duplicate
+                        try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [orphan.id])
+                    } else {
+                        // Safe to reparent
+                        try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colId) = ?;", parameters: [newFolderId, orphan.id])
+                    }
+                }
+            }
+        } catch {
+            print("ResultsHandler: Failed to resolve orphan results - \\(error)")
+        }
     }
 }

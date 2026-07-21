@@ -35,13 +35,13 @@ struct MaktabahApp: App {
         AppConfig.initializeMode()
         ArabicFont.registerCustomFonts()
         UserFontManager.shared.registerUserFonts()
+        if UserDefaults.standard.data(forKey: AppConfig.annotationsAndResultsFolder) == nil {
+            UserDefaults.standard.register(defaults: [AppConfig.useICloudKey: true])
+        }
         AppConfig.setupAnnotationsAndResults()
         CloudKitSyncManager.shared.initializeOnLaunch()
         // CoreDatabaseBootstrap.run()
         setupGlobalAppearances()
-        if UserDefaults.standard.data(forKey: AppConfig.annotationsAndResultsFolder) == nil {
-            UserDefaults.standard.register(defaults: [AppConfig.useICloudKey: true])
-        }
     }
 
     private func setupGlobalAppearances() {

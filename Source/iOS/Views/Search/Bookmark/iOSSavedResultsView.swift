@@ -88,44 +88,44 @@ struct iOSSavedResultsView: View {
                     }
                 }
             }
-            // Sheet & Alerts
-            .sheet(item: $itemToMove) { target in
-                iOSMoveItemView(target: target)
+        }
+        // Sheet & Alerts
+        .sheet(item: $itemToMove) { target in
+            iOSMoveItemView(target: target)
+        }
+        .alert(
+            "Delete Folder",
+            isPresented: Binding(
+                get: { folderToDelete != nil },
+                set: { if !$0 { folderToDelete = nil } }
+            ),
+            presenting: folderToDelete
+        ) { folder in
+            Button("Delete", role: .destructive) {
+                viewModel.deleteFolder(node: folder)
             }
-            .alert(
-                "Delete Folder",
-                isPresented: Binding(
-                    get: { folderToDelete != nil },
-                    set: { if !$0 { folderToDelete = nil } }
-                ),
-                presenting: folderToDelete
-            ) { folder in
-                Button("Delete", role: .destructive) {
-                    viewModel.deleteFolder(node: folder)
+            Button("Cancel", role: .cancel) {}
+        } message: { folder in
+            Text("\"\(folder.name)\" and all its contents will be permanently deleted.")
+        }
+        .alert(
+            itemToRename?.alertTitle ?? "",
+            isPresented: Binding(
+                get: { itemToRename != nil },
+                set: { if !$0 { itemToRename = nil } }
+            )
+        ) {
+            TextField("Name", text: Binding(
+                get: { itemToRename?.draftName ?? "" },
+                set: { itemToRename?.draftName = $0 }
+            ))
+            Button("Save") {
+                if let target = itemToRename {
+                    commitRename(target)
                 }
-                Button("Cancel", role: .cancel) {}
-            } message: { folder in
-                Text("\"\(folder.name)\" and all its contents will be permanently deleted.")
             }
-            .alert(
-                itemToRename?.alertTitle ?? "",
-                isPresented: Binding(
-                    get: { itemToRename != nil },
-                    set: { if !$0 { itemToRename = nil } }
-                )
-            ) {
-                TextField("Name", text: Binding(
-                    get: { itemToRename?.draftName ?? "" },
-                    set: { itemToRename?.draftName = $0 }
-                ))
-                Button("Save") {
-                    if let target = itemToRename {
-                        commitRename(target)
-                    }
-                }
-                .disabled((itemToRename?.draftName ?? "").trimmingCharacters(in: .whitespaces).isEmpty)
-                Button("Cancel", role: .cancel) {}
-            }
+            .disabled((itemToRename?.draftName ?? "").trimmingCharacters(in: .whitespaces).isEmpty)
+            Button("Cancel", role: .cancel) {}
         }
         .task {
             await viewModel.getFolders()
@@ -230,9 +230,14 @@ struct iOSFolderContentList: View {
 
     let viewModel: ResultsViewModel = .shared
 
+    private var currentFolder: FolderNode? {
+        guard let folder else { return nil }
+        return viewModel.folderById[folder.id] ?? folder
+    }
+
     private var children: [FolderNode] {
-        if let folder {
-            return folder.children
+        if let currentFolder {
+            return currentFolder.children
         } else {
             return viewModel.folderRoots
         }

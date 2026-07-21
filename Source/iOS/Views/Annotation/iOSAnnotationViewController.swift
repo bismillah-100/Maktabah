@@ -13,6 +13,7 @@ class iOSAnnotationViewController: UIViewController {
     var onAnnotationSelected: ((SwiftUIAnnotationNode) -> Void)?
     var onAnnotationDeleted: ((SwiftUIAnnotationNode) -> Void)?
     var onNeedFullReload: (() -> Void)?
+    var onRefreshRequested: (() -> Void)?
 
     // MARK: - Private
 
@@ -307,6 +308,11 @@ class iOSAnnotationViewController: UIViewController {
         collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.semanticContentAttribute = .forceLeftToRight
         collectionView.delegate = self
+        
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        collectionView.refreshControl = refreshControl
+        
         view.addSubview(collectionView)
 
         NSLayoutConstraint.activate([
@@ -467,6 +473,14 @@ class iOSAnnotationViewController: UIViewController {
         item.isGroup
             ? ListLayoutMetrics.separatorTrailingOffset(isRoot: true, indentationLevel: 0)
             : ListLayoutMetrics.defaultPadding * 2
+    }
+    
+    @objc private func handleRefresh() {
+        onRefreshRequested?()
+    }
+    
+    func endRefreshing() {
+        collectionView.refreshControl?.endRefreshing()
     }
 }
 

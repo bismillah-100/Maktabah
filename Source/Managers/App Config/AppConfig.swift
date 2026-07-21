@@ -638,6 +638,10 @@ struct AppConfig {
             setupAnnotationsAndResults()
 
             CloudKitSyncManager.shared.setupAndInitialSync()
+        } else {
+            // Reset flag agar saat re-enable, uploadAllLocalData jalan kembali
+            // sehingga data yang dibuat saat CloudKit off tidak terlewat
+            UserDefaults.standard.removeObject(forKey: "CloudKitSyncManager_InitialUploadDone")
         }
         DispatchQueue.main.async { completion(nil) }
     }
