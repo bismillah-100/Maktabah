@@ -346,6 +346,7 @@ final class BulkDownloadVC: NSViewController {
         vm.viewModel.isDownloadModal = true
         vm.viewModel.setBaseCategories(categories, reload: false)
         vm.viewModel.updateDisplayedCategories()
+        vm.isSetupComplete = true
         vm.checkBoxToggle = { [weak self] in
             self?.updateDownloadButtonState()
         }
