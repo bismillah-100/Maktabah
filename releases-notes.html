@@ -36,6 +36,35 @@
 </head>
 <body>
 
+<h2>Version 3.3.4</h2>
+<p class="version">July 21, 2026</p>
+<h3>Changes</h3>
+<ul>
+  <li>Add database folder schema validation on launch and custom folder selection</li>
+  <li>Add pull-to-refresh on iOS Annotations view to manually trigger CloudKit sync</li>
+  <li>Trigger automatic CloudKit sync after core database download finishes on fresh install</li>
+  <li>Refactor SettingsViewModel out of SettingsView.swift for improved architecture</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Fix SIGABRT crash caused by calling ReusableFunc.showAlert from background thread</li>
+  <li>Fix SIGTRAP crash on iOS when database folder is missing</li>
+  <li>Fix deadlock during HistoryViewModel initialization when uploading CloudKit history</li>
+  <li>Fix CloudKit orphaned folders/results jumping to root level during out-of-order sync</li>
+  <li>Fix UI state detachment on iOS Saved Results view where NavigationStack held stale folder instances</li>
+  <li>Fix macOS app freezing when opening Bulk Download modal window</li>
+  <li>Fix NotificationCenter memory leaks in IbarotTextVC and iOSNavigationManager</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Optimize SQLite string extraction using sqlite3_column_bytes and zero-copy UTF-8 decoding</li>
+  <li>Optimize ZSTD decompressed string initialization</li>
+  <li>Optimize CloudKit queue performance and convert retryPendingUploads lookups to O(1)</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.3.3</h2>
 <p class="version">July 20, 2026</p>
 <h3>New</h3>
