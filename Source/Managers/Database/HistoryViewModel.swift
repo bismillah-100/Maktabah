@@ -174,6 +174,10 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             // Hanya simpan ke disk — tidak reload UI library (tidak ada perubahan visible)
             persistToDiskOnly()
 
+        if let ckId = entry.ckRecordId {
+            addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
+
             // Debounce upload ke CloudKit: tunggu 3 detik idle sebelum kirim
             let capturedEntry = entry
             contentUpdateWorkItem?.cancel()
@@ -235,6 +239,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 entriesByBookId.removeValue(forKey: bookId)
                 persistAndReload(uploadEntry: nil)
                 if let ckId {
+                    addPendingSync(ckRecordId: ckId, operation: "delete")
                     pendingCloudKitDeletes.insert(ckId)
 
                     deleteDebounceTask?.cancel()
