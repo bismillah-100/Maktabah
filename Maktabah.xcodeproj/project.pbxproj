@@ -368,6 +368,9 @@
 		F321E02C2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		F321E02D2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		F323BCA22F2EE70200EFD4F4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
+		F32BA47B300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
+		F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
+		F32BA47D300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33214392FC2750E006EC214 /* ThemeComponents.swift */; };
 		F349073F2F3064A10036CDAF /* IconMaktabah.icon in Resources */ = {isa = PBXBuildFile; fileRef = F349073E2F3064A10036CDAF /* IconMaktabah.icon */; };
 		F34B708C2FC87BFF00BBE904 /* UserFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */; };
@@ -671,6 +674,7 @@
 		F323BCA12F2EE70200EFD4F4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F323BCA32F2EE71800EFD4F4 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F323BCA42F2EE71A00EFD4F4 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		F33214392FC2750E006EC214 /* ThemeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeComponents.swift; sourceTree = "<group>"; };
 		F349073E2F3064A10036CDAF /* IconMaktabah.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = IconMaktabah.icon; sourceTree = "<group>"; };
 		F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFontManager.swift; sourceTree = "<group>"; };
@@ -1380,6 +1384,7 @@
 				F3D02D602FE0616B0054807F /* NarratorViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
 				F3D02D582FE0522E0054807F /* SearchViewModel.swift */,
+				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -1674,6 +1679,7 @@
 				4B313A212F9A0FC60061FCC1 /* ResultCellView.swift in Sources */,
 				4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */,
 				4B96D3432F3612D50018D902 /* BookUpdateView.swift in Sources */,
+				F32BA47D300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
 				4B8C9DE42F6995EE0049E4EF /* ProgressBooksDownload.swift in Sources */,
 				4B65CCC02EE0A10F0085CEB4 /* SearchEngine.swift in Sources */,
 				4B3202502EDB1B5A003B95D1 /* DataModel.swift in Sources */,
@@ -1862,6 +1868,7 @@
 				4B7C91022F83494200454BE1 /* ViewOptions.swift in Sources */,
 				4B7C91032F83494200454BE1 /* ArabicFont.swift in Sources */,
 				4B7C91042F83494200454BE1 /* TarjamahDataManager.swift in Sources */,
+				F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
 				4B7C91052F83494200454BE1 /* BookInfo.swift in Sources */,
 				4B7C91062F83494200454BE1 /* SearchSidebarVC.swift in Sources */,
 				FB254BD29A50C530E907662A /* CloudKitSyncManager.swift in Sources */,
@@ -2004,6 +2011,7 @@
 				F30577402FA46222005732C6 /* StringInterner.swift in Sources */,
 				F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */,
 				F30577432FA46222005732C6 /* ArabicFont.swift in Sources */,
+				F32BA47B300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
 				F30577442FA46222005732C6 /* TarjamahDataManager.swift in Sources */,
 				CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */,
 				F363825D2FA702D10006636C /* iPadLayout.swift in Sources */,

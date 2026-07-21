@@ -159,6 +159,10 @@ class DatabaseManager {
 
     private func handleSetupError() {
         AppConfig.resetCustomModeKey()
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return
+        }
+        #if os(macOS)
         ReusableFunc.showAlert(
             title: NSLocalizedString("Folder Not Found", comment: ""),
             message: NSLocalizedString(
@@ -166,13 +170,9 @@ class DatabaseManager {
                 comment: ""
             )
         )
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            return
-        }
-        #if os(macOS)
         NSApp.terminate(nil)
         #else
-        fatalError("Application Terminated: Folder Location Not Found")
+        return
         #endif
     }
 

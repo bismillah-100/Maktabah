@@ -854,18 +854,31 @@ final class LibraryViewModel: ViewModelBase {
         guard let parent = findParentCategory(ofBookId: bookId, in: displayedCategories) else { return }
 
         if isDownloadModal {
-            parent.children.removeAll { ($0 as? BooksData)?.id == bookId }
-            if parent.children.isEmpty {
-                if let index = displayedCategories.firstIndex(where: { $0 === parent }) {
-                    #if os(macOS)
-                    updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
-                    #endif
-                    displayedCategories.remove(at: index)
-                }
-                baseCategories = displayedCategories
-            } else {
+            if let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
                 #if os(macOS)
-                updateSubject.send(.reloadItem(parent, reloadChildren: true))
+                updateSubject.send(.beginUpdates)
+                #endif
+
+                if parent.children.count == 1 {
+                    parent.children.remove(at: childIndex)
+                    selectedBookIds.remove(bookId)
+                    if let index = displayedCategories.firstIndex(where: { $0 === parent }) {
+                        displayedCategories.remove(at: index)
+                        #if os(macOS)
+                        updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
+                        #endif
+                    }
+                    baseCategories = displayedCategories
+                } else {
+                    parent.children.remove(at: childIndex)
+                    #if os(macOS)
+                    updateSubject.send(.removeItems(IndexSet(integer: childIndex), parent: parent))
+                    #endif
+                }
+
+                #if os(macOS)
+                updateSubject.send(.endUpdates)
+                updateSubject.send(.reloadItem(parent, reloadChildren: false))
                 #endif
             }
         } else {

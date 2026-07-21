@@ -1442,22 +1442,6 @@
         }
       }
     },
-    "Connection Error" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خطأ في الاتصال"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koneksi Error"
-          }
-        }
-      }
-    },
     "Contents" : {
       "localizations" : {
         "ar" : {
