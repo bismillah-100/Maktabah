@@ -63,8 +63,7 @@ struct iOSMoveItemView: View {
     private var isRootDisabled: Bool {
         switch target {
         case .folder(let node):
-            return disabledFolderIds.contains(node.id) ||
-                   (viewModel.parentById[node.id] ?? nil) == nil
+            return (viewModel.parentById[node.id] ?? nil) == nil
         case .result(let node):
             return node.parentId == nil
         }
