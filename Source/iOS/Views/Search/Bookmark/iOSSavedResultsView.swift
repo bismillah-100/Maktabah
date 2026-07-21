@@ -230,9 +230,14 @@ struct iOSFolderContentList: View {
 
     let viewModel: ResultsViewModel = .shared
 
+    private var currentFolder: FolderNode? {
+        guard let folder else { return nil }
+        return viewModel.folderById[folder.id] ?? folder
+    }
+
     private var children: [FolderNode] {
-        if let folder {
-            return folder.children
+        if let currentFolder {
+            return currentFolder.children
         } else {
             return viewModel.folderRoots
         }
