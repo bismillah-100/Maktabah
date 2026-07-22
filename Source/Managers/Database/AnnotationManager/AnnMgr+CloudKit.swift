@@ -67,14 +67,26 @@ extension AnnotationManager {
         do {
             try transaction {
                 // Process Deletions
-                for ckId in recordIdsToDelete {
-                    let findSql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnCkRecordId) = ? LIMIT 1"
-                    if let row = try _db.fetch(query: findSql, parameters: [ckId], mapping: { ($0.int64(at: 0), self.makeAnnotation(from: $0)) }).first {
-                        let localId = row.0
-                        let ann = row.1
-                        deletedAnnotations.append(ann)
-                        try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) = ?;", parameters: [localId])
-                        try exec("DELETE FROM \(annotationsTable) WHERE \(colAnnId) = ?;", parameters: [localId])
+                if !recordIdsToDelete.isEmpty {
+                    let chunkSize = 500
+                    for chunkStart in stride(from: 0, to: recordIdsToDelete.count, by: chunkSize) {
+                        let chunkEnd = min(chunkStart + chunkSize, recordIdsToDelete.count)
+                        let chunk = Array(recordIdsToDelete[chunkStart..<chunkEnd])
+
+                        let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                        let findSql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IN (\(placeholders))"
+
+                        let rows = try _db.fetch(query: findSql, parameters: chunk, mapping: { ($0.int64(at: 0), self.makeAnnotation(from: $0)) })
+
+                        if !rows.isEmpty {
+                            let localIds = rows.map { $0.0 }
+                            let anns = rows.map { $0.1 }
+                            deletedAnnotations.append(contentsOf: anns)
+
+                            let idPlaceholders = String(repeating: "?,", count: localIds.count).dropLast()
+                            try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) IN (\(idPlaceholders));", parameters: localIds)
+                            try exec("DELETE FROM \(annotationsTable) WHERE \(colAnnId) IN (\(idPlaceholders));", parameters: localIds)
+                        }
                     }
                 }
 
