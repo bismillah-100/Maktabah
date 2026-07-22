@@ -301,16 +301,30 @@ extension AnnotationManager {
 
         try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) = ?;", parameters: [annotationId])
 
+        var existingTags: [String: (id: Int64, name: String)] = [:]
+
+        if !tags.isEmpty {
+            let normalizedTags = tags.map { normalizedTagName($0) }
+            let placeholders = Array(repeating: "?", count: normalizedTags.count).joined(separator: ",")
+
+            let findSql = "SELECT \(colTagId), \(colTagName), \(colTagNormalizedName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(placeholders))"
+            let fetchedExisting = try _db.fetch(query: findSql, parameters: normalizedTags) { row -> (Int64, String, String) in
+                return (row.int64(at: 0), row.string(at: 1) ?? "", row.string(at: 2) ?? "")
+            }
+            for (id, name, normalized) in fetchedExisting {
+                existingTags[normalized] = (id, name)
+            }
+        }
+
         for tag in tags {
             let normalized = normalizedTagName(tag)
 
             var existingTagId: Int64 = -1
             var existingTagName = ""
 
-            let findSql = "SELECT \(colTagId), \(colTagName) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1"
-            if let row = try _db.fetch(query: findSql, parameters: [normalized], mapping: { ($0.int64(at: 0), $0.string(at: 1) ?? "") }).first {
-                existingTagId = row.0
-                existingTagName = row.1
+            if let existing = existingTags[normalized] {
+                existingTagId = existing.id
+                existingTagName = existing.name
             }
 
             let currentTagId: Int64
@@ -320,11 +334,13 @@ extension AnnotationManager {
                 if existingTagName != tag {
                     let updateSql = "UPDATE \(tagsTable) SET \(colTagName) = ? WHERE \(colTagId) = ?;"
                     try _db.execute(query: updateSql, parameters: [tag, currentTagId])
+                    existingTags[normalized] = (currentTagId, tag)
                 }
             } else {
                 let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES (?, ?);"
                 try _db.execute(query: insertSql, parameters: [tag, normalized])
                 currentTagId = _db.lastInsertRowId()
+                existingTags[normalized] = (currentTagId, tag)
             }
 
             if currentTagId != -1 {
