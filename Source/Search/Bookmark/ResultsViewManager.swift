@@ -395,36 +395,95 @@ extension ResultsViewManager: NSOutlineViewDataSource {
 }
 
 extension ResultsViewManager: NSOutlineViewDelegate {
-    func outlineView(
+        func outlineView(
         _ outlineView: NSOutlineView,
         viewFor tableColumn: NSTableColumn?,
         item: Any
     ) -> NSView? {
 
+        if tableColumn?.identifier.rawValue == "query", let result = item as? ResultNode {
+            let cellIdentifier = NSUserInterfaceItemIdentifier("queryCell")
+            var cell = outlineView.makeView(withIdentifier: cellIdentifier, owner: self) as? NSTableCellView
+            if cell == nil {
+                cell = NSTableCellView()
+                cell?.identifier = cellIdentifier
+                let textField = NSTextField(labelWithString: "")
+                textField.translatesAutoresizingMaskIntoConstraints = false
+                textField.lineBreakMode = .byTruncatingTail
+                cell?.addSubview(textField)
+                cell?.textField = textField
+                NSLayoutConstraint.activate([
+                    textField.leadingAnchor.constraint(equalTo: cell!.leadingAnchor, constant: 2),
+                    textField.trailingAnchor.constraint(equalTo: cell!.trailingAnchor, constant: -2),
+                    textField.centerYAnchor.constraint(equalTo: cell!.centerYAnchor)
+                ])
+            }
+            if let query = result.items.first?.query, !query.isEmpty {
+                cell?.textField?.stringValue = query
+            } else {
+                cell?.textField?.stringValue = ""
+            }
+            return cell
+        }
+
+        if tableColumn?.identifier.rawValue == "modifiedDate", let result = item as? ResultNode {
+            let cellIdentifier = NSUserInterfaceItemIdentifier("dateCell")
+            var cell = outlineView.makeView(withIdentifier: cellIdentifier, owner: self) as? NSTableCellView
+            if cell == nil {
+                cell = NSTableCellView()
+                cell?.identifier = cellIdentifier
+                let textField = NSTextField(labelWithString: "")
+                textField.translatesAutoresizingMaskIntoConstraints = false
+                textField.textColor = .secondaryLabelColor
+                textField.lineBreakMode = .byTruncatingTail
+                cell?.addSubview(textField)
+                cell?.textField = textField
+                NSLayoutConstraint.activate([
+                    textField.leadingAnchor.constraint(equalTo: cell!.leadingAnchor, constant: 2),
+                    textField.trailingAnchor.constraint(equalTo: cell!.trailingAnchor, constant: -2),
+                    textField.centerYAnchor.constraint(equalTo: cell!.centerYAnchor)
+                ])
+            }
+            if let timestamp = result.lastModified {
+                let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+                let formatter = DateFormatter()
+                formatter.dateStyle = .medium
+                formatter.timeStyle = .short
+                cell?.textField?.stringValue = formatter.string(from: date)
+            } else {
+                cell?.textField?.stringValue = "-"
+            }
+            return cell
+        }
+
         if let result = item as? ResultNode,
-            let cell = outlineView.makeView(
+           tableColumn?.identifier.rawValue == "AutomaticTableColumnIdentifier.0" {
+            if let cell = outlineView.makeView(
                 withIdentifier: resultCellIdentifier,
                 owner: self
             ) as? NSTableCellView,
             let textField = cell.textField
-        {
-            textField.stringValue = "\(result.name)"
-            textField.delegate = self
-            textField.isEditable = true
-            return cell
+            {
+                textField.stringValue = "\(result.name)"
+                textField.delegate = self
+                textField.isEditable = true
+                return cell
+            }
         }
 
         if let folder = item as? FolderNode,
-            let cell = outlineView.makeView(
+            tableColumn?.identifier.rawValue == "AutomaticTableColumnIdentifier.0" {
+            if let cell = outlineView.makeView(
                 withIdentifier: folderCellIdentifier,
                 owner: self
             ) as? NSTableCellView,
             let textField = cell.textField
-        {
-            textField.stringValue = "\(folder.name)"
-            textField.delegate = self
-            textField.isEditable = true
-            return cell
+            {
+                textField.stringValue = "\(folder.name)"
+                textField.delegate = self
+                textField.isEditable = true
+                return cell
+            }
         }
         return nil
     }
@@ -630,4 +689,48 @@ extension ResultsViewManager: NSTextFieldDelegate {
 extension NSPasteboard.PasteboardType {
     static let folderNode = NSPasteboard.PasteboardType("com.maktab.folderNode")
     static let resultNode = NSPasteboard.PasteboardType("com.maktab.resultNode")
+}
+
+extension ResultsViewManager: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        guard let outlineView = outlineView else { return }
+
+        for column in outlineView.tableColumns {
+            let title: String
+            if column.identifier.rawValue == "AutomaticTableColumnIdentifier.0" {
+                title = "Title".localized
+            } else if column.identifier.rawValue == "query" {
+                title = "Query".localized
+            } else if column.identifier.rawValue == "modifiedDate" {
+                title = "Date Modified".localized
+            } else if !column.title.isEmpty {
+                title = column.title
+            } else {
+                title = column.identifier.rawValue
+            }
+
+            let menuItem = NSMenuItem(
+                title: title,
+                action: #selector(toggleColumnVisibility(_:)),
+                keyEquivalent: ""
+            )
+            menuItem.target = self
+            menuItem.representedObject = column
+            menuItem.state = column.isHidden ? .off : .on
+
+            if column.identifier.rawValue == "AutomaticTableColumnIdentifier.0" || column == outlineView.outlineTableColumn {
+                menuItem.isEnabled = false
+            } else {
+                menuItem.isEnabled = true
+            }
+
+            menu.addItem(menuItem)
+        }
+    }
+
+    @objc private func toggleColumnVisibility(_ sender: NSMenuItem) {
+        guard let column = sender.representedObject as? NSTableColumn else { return }
+        column.isHidden = !column.isHidden
+    }
 }

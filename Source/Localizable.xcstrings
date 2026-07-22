@@ -2031,6 +2031,23 @@
         }
       }
     },
+    "Date Modified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاريخ التعديل"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tangal Dimodifikasi"
+          }
+        }
+      }
+    },
     "Death Year" : {
       "localizations" : {
         "ar" : {
@@ -5273,6 +5290,23 @@
         }
       }
     },
+    "Query" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استعلام"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kueri"
+          }
+        }
+      }
+    },
     "Query: %@" : {
       "localizations" : {
         "ar" : {
@@ -6888,6 +6922,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ini akan menghapus semua file SQLite yang diunduh, indeks, dan cache dari penyimpanan mode bundel."
+          }
+        }
+      }
+    },
+    "Title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عنوان"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Judul"
           }
         }
       }

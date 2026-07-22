@@ -23,12 +23,12 @@ class SavedResults: NSViewController {
             delegate: delegate,
             writer: false
         )
-        outlineView.dataSource = resultsVM
-        outlineView.delegate = resultsVM
+
         if #available(macOS 26.0, *) {
             xButton.borderShape = .capsule
         }
-        // Do view setup here.
+
+        setupOutlineView()
     }
 
     override func viewDidAppear() {
@@ -42,6 +42,35 @@ class SavedResults: NSViewController {
                 ReusableFunc.closeProgressWindow(self.view)
             }
         }
+    }
+
+    func setupOutlineView() {
+        outlineView.delegate = resultsVM
+        outlineView.dataSource = resultsVM
+        outlineView.headerView = .init()
+
+        if let titleCol = outlineView.tableColumn(
+            withIdentifier: NSUserInterfaceItemIdentifier(
+                rawValue: "AutomaticTableColumnIdentifier.0"
+            )
+        ) {
+            titleCol.title = "Title".localized
+        }
+
+        let queryCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("query"))
+        queryCol.title = "Query".localized
+        outlineView.addTableColumn(queryCol)
+
+        let dateCol = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("modifiedDate"))
+        dateCol.title = "Date Modified".localized
+        outlineView.addTableColumn(dateCol)
+
+        outlineView.autosaveTableColumns = true
+        outlineView.autosaveName = "searchResultsOutlineView"
+
+        let headerMenu = NSMenu()
+        headerMenu.delegate = resultsVM
+        outlineView.headerView?.menu = headerMenu
     }
 
     @IBAction func search(_ sender: NSSearchField) {

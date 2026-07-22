@@ -471,17 +471,18 @@ extension ResultsHandler {
         var nodes: [Int64: FolderNode] = [:]
         var roots: [FolderNode] = []
 
-        let sql = "SELECT \(colId), \(colName), \(colParent) FROM \(foldersTable)"
+        let sql = "SELECT \(colId), \(colName), \(colParent), \(colLastModified) FROM \(foldersTable)"
         do {
-            let rows = try db.fetch(query: sql) { row -> (id: Int64, name: String, parent: Int64?) in
+            let rows = try db.fetch(query: sql) { row -> (id: Int64, name: String, parent: Int64?, lastModified: Int64?) in
                 let fid = row.int64(at: 0)
                 let fname = row.string(at: 1) ?? ""
                 let fparent = !row.isNull(at: 2) ? row.int64(at: 2) : nil
-                return (id: fid, name: fname, parent: fparent)
+                let flastMod = !row.isNull(at: 3) ? row.int64(at: 3) : nil
+                return (id: fid, name: fname, parent: fparent, lastModified: flastMod)
             }
 
             for row in rows {
-                let node = FolderNode(id: row.id, name: row.name)
+                let node = FolderNode(id: row.id, name: row.name, lastModified: row.lastModified)
                 nodes[row.id] = node
             }
 
@@ -673,19 +674,19 @@ extension ResultsHandler {
 
     func fetchResults(forFolder folderId: Int64?) -> [ResultNode] {
         guard let db else { return [] }
-        var groupedResults: [String: (id: Int64, parentId: Int64?, items: [SavedResultsItem])] = [:]
+        var groupedResults: [String: (id: Int64, parentId: Int64?, lastModified: Int64?, items: [SavedResultsItem])] = [:]
 
         let sql: String
         var params: [Any] = []
         if let fid = folderId {
-            sql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) = ?"
+            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ?"
             params = [fid]
         } else {
-            sql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) IS NULL"
+            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL"
         }
 
         do {
-            let results = try db.fetch(query: sql, parameters: params) { row -> (Int64, Int64?, String, String, Int, Int, String) in
+            let results = try db.fetch(query: sql, parameters: params) { row -> (Int64, Int64?, String, String, Int, Int, String, Int64?) in
                 return (
                     row.int64(at: 0),
                     !row.isNull(at: 1) ? row.int64(at: 1) : nil,
@@ -693,7 +694,8 @@ extension ResultsHandler {
                     row.string(at: 3) ?? "",
                     row.int(at: 4),
                     row.int(at: 5),
-                    row.string(at: 6) ?? ""
+                    row.string(at: 6) ?? "",
+                    !row.isNull(at: 8) ? row.int64(at: 8) : nil
                 )
             }
 
@@ -705,6 +707,7 @@ extension ResultsHandler {
                 let rArchive = res.4
                 let rBkId = res.5
                 let rContentId = res.6
+                let rLastModified = res.7
 
                 let contentsId = rContentId.components(separatedBy: ",")
 
@@ -722,7 +725,7 @@ extension ResultsHandler {
                     )
 
                     if groupedResults[savedName] == nil {
-                        groupedResults[savedName] = (id: resultId, parentId: parentId, items: [])
+                        groupedResults[savedName] = (id: resultId, parentId: parentId, lastModified: rLastModified, items: [])
                     }
 
                     groupedResults[savedName]?.items.append(item)
@@ -737,6 +740,7 @@ extension ResultsHandler {
                 id: $0.value.id,
                 parentId: $0.value.parentId,
                 name: $0.key,
+                lastModified: $0.value.lastModified,
                 items: $0.value.items
             )
         }
