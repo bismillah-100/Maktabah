@@ -446,10 +446,12 @@ extension ResultsViewManager: NSOutlineViewDelegate {
             }
             if let timestamp = result.lastModified {
                 let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
-                let formatter = DateFormatter()
-                formatter.dateStyle = .medium
-                formatter.timeStyle = .short
-                cell?.textField?.stringValue = formatter.string(from: date)
+                let formattedString: String = if Calendar.current.isDateInToday(date) {
+                    RelativeDateTimeFormatter.shared.localizedString(for: date, relativeTo: Date())
+                } else {
+                    DateFormatter.mediumDate.string(from: date)
+                }
+                cell?.textField?.stringValue = formattedString
             } else {
                 cell?.textField?.stringValue = "-"
             }

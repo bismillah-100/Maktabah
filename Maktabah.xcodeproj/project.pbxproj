@@ -53,6 +53,7 @@
 		4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		4B58EDCB2EE3DBE800073495 /* ResultsViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */; };
 		4B58EDCE2EE3DDEE00073495 /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */; };
+		4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
 		4B5B4BA22EE8404C000C22D5 /* BackgroundOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */; };
 		4B5DF9342EDC2FE60082DE7F /* LibraryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5DF9322EDC2FE60082DE7F /* LibraryVC.swift */; };
 		4B5DF9382EDC3DBF0082DE7F /* ViewOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5DF9362EDC3DBF0082DE7F /* ViewOptions.swift */; };
@@ -160,6 +161,7 @@
 		4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */; };
 		4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100E42EFA73DD00CCBED6 /* QuranSplitVC.swift */; };
 		4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
+		4B7C90F12F83494200454BE2 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
 		4B7C90F22F83494200454BE1 /* RowiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E82EE9671000D58F3B /* RowiModel.swift */; };
 		4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB174412F1AFAFF00BF1A2F /* ScreenTimeManager.swift */; };
 		4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6AF2322EE57CCD002EBFFC /* Toolbar.swift */; };
@@ -304,6 +306,7 @@
 		F305772B2FA46222005732C6 /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */; };
 		F305772D2FA46222005732C6 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */; };
 		F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
+		F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
 		F30577302FA46222005732C6 /* RowiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E82EE9671000D58F3B /* RowiModel.swift */; };
 		F30577342FA46222005732C6 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotations.swift */; };
 		F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */; };
@@ -547,6 +550,7 @@
 		4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkModel.swift; sourceTree = "<group>"; };
 		4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewManager.swift; sourceTree = "<group>"; };
 		4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewModel.swift; sourceTree = "<group>"; };
+		4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
 		4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundOptions.swift; sourceTree = "<group>"; };
 		4B5DF9322EDC2FE60082DE7F /* LibraryVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryVC.swift; sourceTree = "<group>"; };
 		4B5DF9362EDC3DBF0082DE7F /* ViewOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewOptions.swift; sourceTree = "<group>"; };
@@ -912,6 +916,7 @@
 				4B8C9DD82F6985210049E4EF /* ArchiveErrors.swift */,
 				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
 				4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */,
+				4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */,
 				4B96D3522F3675290018D902 /* BookUpdateModels.swift */,
 				4B32024F2EDB1B5A003B95D1 /* DataModel.swift */,
 				4B4C97112F1F026C0051503E /* Narrator.swift */,
@@ -1693,6 +1698,7 @@
 				4B32024E2EDB13C0003B95D1 /* DatabaseManager.swift in Sources */,
 				4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */,
 				4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */,
+				4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */,
 				4B63E1E92EE9671000D58F3B /* RowiModel.swift in Sources */,
 				4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
 				4B6AF2332EE57CCD002EBFFC /* Toolbar.swift in Sources */,
@@ -1846,6 +1852,7 @@
 				4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */,
 				4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */,
 				4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */,
+				4B7C90F12F83494200454BE2 /* DateFormatter.swift in Sources */,
 				4B7C90F22F83494200454BE1 /* RowiModel.swift in Sources */,
 				F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */,
 				4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */,
@@ -1991,6 +1998,7 @@
 				F35A7AC82FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				F321672D2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,
 				F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */,
+				F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */,
 				F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */,
 				F30577302FA46222005732C6 /* RowiModel.swift in Sources */,
 				F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,

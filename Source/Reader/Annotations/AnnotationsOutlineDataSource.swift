@@ -27,19 +27,6 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     /// Cache Formatter
     private let calendar = Calendar.current
 
-    private lazy var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }()
-
-    private lazy var relativeFormatter: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter
-    }()
-
     var onSelectItem: ((Int) -> Void)?
 
     var groupingMode: AnnotationGroupingMode { viewModel.groupingMode }
@@ -599,11 +586,11 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                 )
                 let dateString =
                     calendar.isDateInToday(targetDate)
-                        ? relativeFormatter.localizedString(
+                        ? RelativeDateTimeFormatter.shared.localizedString(
                             for: targetDate,
                             relativeTo: Date()
                         )
-                        : dateFormatter.string(from: targetDate)
+                        : DateFormatter.mediumDateShortTime.string(from: targetDate)
 
                 let kitab = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book ?? "<Unknown Book>"
                 let metaText =
@@ -870,12 +857,12 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate,
         )
 
         let formattedString: String = if calendar.isDateInToday(targetDate) {
-            relativeFormatter.localizedString(
+            RelativeDateTimeFormatter.shared.localizedString(
                 for: targetDate,
                 relativeTo: Date()
             )
         } else {
-            dateFormatter.string(from: targetDate)
+            DateFormatter.mediumDateShortTime.string(from: targetDate)
         }
 
         cell.date.stringValue = formattedString
