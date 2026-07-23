@@ -407,8 +407,12 @@ final class SearchViewModel: ViewModelBase {
         let book = ldm.booksById[bookId]
         let isMultilingual = book?.isMultiLanguage ?? false
 
-        let normalized = bookContent.nash.convertToArabicDigits(isMultilingual: isMultilingual)
-        let queryConverted = item.query.convertToArabicDigits(isMultilingual: isMultilingual)
+        let normalized = bookContent.nash
+            .convertToArabicDigits(isMultilingual: isMultilingual)
+            .normalizeArabic()
+        let queryConverted = item
+            .query.convertToArabicDigits(isMultilingual: isMultilingual)
+            .normalizeArabic()
         let snippet = normalized.snippetAround(keywords: [queryConverted], contextLength: 60)
         let attributed = snippet.highlightedAttributedText(keywords: [queryConverted])
 
