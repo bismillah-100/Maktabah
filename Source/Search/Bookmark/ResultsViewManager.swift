@@ -123,9 +123,21 @@ class ResultsViewManager: NSObject {
         // Subscribe ke onTreeChange agar NSOutlineView bisa update inkremental
         super.init()
 
+        setupOutlineView()
+
         vm.onTreeChange = { [weak self] change in
             self?.applyTreeChange(change)
         }
+    }
+
+    private func setupOutlineView() {
+        guard let outlineView = outlineView else { return }
+        outlineView.target = self
+        outlineView.doubleAction = #selector(onDoubleClick(_:))
+
+        let itemMenu = NSMenu()
+        itemMenu.delegate = self
+        outlineView.menu = itemMenu
     }
 
     func applyTreeChange(_ change: BookmarkTreeChange) {
@@ -490,14 +502,20 @@ extension ResultsViewManager: NSOutlineViewDelegate {
         return nil
     }
 
-    func outlineViewSelectionDidChange(_ notification: Notification) {
-        let row = outlineView.selectedRow
-        guard row >= 0,
-            let result = outlineView.item(atRow: row) as? ResultNode
-        else { return }
+    @objc private func onDoubleClick(_ sender: AnyObject) {
+        guard let outlineView = outlineView else { return }
+        let clickedRow = outlineView.clickedRow
+        guard clickedRow >= 0, let item = outlineView.item(atRow: clickedRow) else { return }
 
-        // Tampilkan hasil pencarian
-        delegate?.didSelect(savedResults: result.items)
+        if let folder = item as? FolderNode {
+            if outlineView.isItemExpanded(folder) {
+                outlineView.collapseItem(folder)
+            } else {
+                outlineView.expandItem(folder)
+            }
+        } else if let result = item as? ResultNode {
+            delegate?.didSelect(savedResults: result.items)
+        }
     }
 }
 
@@ -698,6 +716,14 @@ extension ResultsViewManager: NSMenuDelegate {
         menu.removeAllItems()
         guard let outlineView = outlineView else { return }
 
+        if menu == outlineView.headerView?.menu {
+            updateHeaderMenu(menu, outlineView: outlineView)
+        } else if menu == outlineView.menu {
+            updateItemContextMenu(menu, outlineView: outlineView)
+        }
+    }
+
+    private func updateHeaderMenu(_ menu: NSMenu, outlineView: NSOutlineView) {
         for column in outlineView.tableColumns {
             let title: String
             if column.identifier.rawValue == "AutomaticTableColumnIdentifier.0" {
@@ -731,8 +757,65 @@ extension ResultsViewManager: NSMenuDelegate {
         }
     }
 
+    private func updateItemContextMenu(_ menu: NSMenu, outlineView: NSOutlineView) {
+        let rows = outlineView.effectiveRows()
+        guard !rows.isEmpty else { return }
+
+        let items = rows.compactMap { outlineView.item(atRow: $0) }
+        guard !items.isEmpty else { return }
+
+        if items.count == 1 {
+            let renameItem = NSMenuItem(
+                title: "Rename".localized,
+                action: #selector(renameSelectedItem(_:)),
+                keyEquivalent: ""
+            )
+            renameItem.target = self
+            renameItem.image = NSImage(
+                systemSymbolName: "pencil",
+                accessibilityDescription: ""
+            )
+            menu.addItem(renameItem)
+        }
+
+        let deleteItem = NSMenuItem(
+            title: "Delete".localized,
+            action: #selector(deleteSelectedItems(_:)),
+            keyEquivalent: ""
+        )
+        deleteItem.target = self
+        deleteItem.image = NSImage(
+            systemSymbolName: "trash",
+            accessibilityDescription: ""
+        )
+        menu.addItem(deleteItem)
+    }
+
     @objc private func toggleColumnVisibility(_ sender: NSMenuItem) {
         guard let column = sender.representedObject as? NSTableColumn else { return }
         column.isHidden = !column.isHidden
+    }
+
+    @objc private func renameSelectedItem(_ sender: NSMenuItem) {
+        guard let outlineView = outlineView else { return }
+        let rows = outlineView.effectiveRows()
+        guard let firstRow = rows.first, firstRow >= 0 else { return }
+        outlineView.editColumn(0, row: firstRow, with: nil, select: true)
+    }
+
+    @objc private func deleteSelectedItems(_ sender: NSMenuItem) {
+        guard let outlineView = outlineView else { return }
+        let rows = outlineView.effectiveRows()
+        let items = rows.compactMap { outlineView.item(atRow: $0) }
+        guard !items.isEmpty else { return }
+
+        for item in items {
+            if let folder = item as? FolderNode {
+                vm.deleteFolder(node: folder)
+            } else if let result = item as? ResultNode {
+                let parent = outlineView.parent(forItem: result) as? FolderNode
+                vm.deleteResult(parent?.id, name: result.name)
+            }
+        }
     }
 }

@@ -3,7 +3,6 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
-//  Handle offline imported books
 //
 
 import Cocoa
@@ -369,13 +368,13 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     @objc private func addTagClicked(_: NSMenuItem) {
         let annotationIDs = prepareContextMenuSelection()
         guard !annotationIDs.isEmpty else { return }
-        onAddTagsRequested?(annotationIDs, contextMenuAnchorRect())
+        onAddTagsRequested?(annotationIDs, outlineView?.contextMenuAnchorRect() ?? .zero)
     }
 
     @objc private func removeTagClicked(_: NSMenuItem) {
         let annotationIDs = prepareContextMenuSelection()
         guard !annotationIDs.isEmpty else { return }
-        onRemoveTagsRequested?(annotationIDs, contextMenuAnchorRect())
+        onRemoveTagsRequested?(annotationIDs, outlineView?.contextMenuAnchorRect() ?? .zero)
     }
 
     @objc private func renameTagClicked(_ sender: NSMenuItem) {
@@ -1114,16 +1113,8 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
 }
 
 private extension AnnotationOutlineDataSource {
-    private func effectiveRows(for outlineView: NSOutlineView) -> IndexSet {
-        let clickedRow = outlineView.clickedRow
-        if clickedRow == -1 { return outlineView.selectedRowIndexes }
-        return outlineView.selectedRowIndexes.contains(clickedRow)
-            ? outlineView.selectedRowIndexes
-            : IndexSet(integer: clickedRow)
-    }
-
     private func effectiveNodes(for outlineView: NSOutlineView) -> [AnnotationNode] {
-        effectiveRows(for: outlineView).compactMap {
+        outlineView.effectiveRows().compactMap {
             outlineView.item(atRow: $0) as? AnnotationNode
         }
     }
@@ -1134,14 +1125,5 @@ private extension AnnotationOutlineDataSource {
         // Kembalikan kosong jika ada node yang bukan annotation
         guard nodes.allSatisfy({ $0.annotation != nil }) else { return [] }
         return nodes.compactMap { $0.annotation?.id }
-    }
-
-    func contextMenuAnchorRect() -> NSRect {
-        guard let outlineView else { return .zero }
-        let anchorRow = outlineView.clickedRow >= 0
-            ? outlineView.clickedRow
-            : outlineView.selectedRow
-        guard anchorRow >= 0 else { return outlineView.bounds }
-        return outlineView.rect(ofRow: anchorRow)
     }
 }
