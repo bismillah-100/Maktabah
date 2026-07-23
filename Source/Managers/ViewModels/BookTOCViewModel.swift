@@ -134,6 +134,16 @@ class BookTOCViewModel {
         nodeIdCache[id]
     }
 
+    /// Mencari path lengkap dari root ke node terdalam yang mencakup contentId.
+    /// Menggunakan tocRanges (endID yang sudah benar) lalu pathToNode untuk full path.
+    func deepestPath(forContentId contentId: Int) -> [TOCNode]? {
+        let matches = tocRanges.filter { contentId >= $0.start && contentId <= $0.end }
+        guard let deepest = matches.min(by: { ($0.end - $0.start) < ($1.end - $1.start) })?.node else {
+            return nil
+        }
+        return pathToNode(deepest)
+    }
+
     func pathToNode(_ target: TOCNode) -> [TOCNode]? {
         for root in tocNodes {
             if let p = findPath(root, target) { return p }

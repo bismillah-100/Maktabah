@@ -312,9 +312,22 @@ class IbarotTextVC: NSViewController {
             attributedText = textView.attributedString()
         }
 
-        let combined = NSMutableAttributedString(attributedString: attributedText)
-        let formattedReference = viewModel.getCopyReference(for: "")
-        combined.append(NSAttributedString(string: formattedReference.replacingOccurrences(of: "\n\n", with: "")))
+        let header = viewModel.getCopyHeader()
+        let pageInfo = viewModel.getCopyPageInfo()
+
+        let rtlStyle = NSMutableParagraphStyle()
+        rtlStyle.baseWritingDirection = .rightToLeft
+        rtlStyle.alignment = .right
+        let rtlAttributes: [NSAttributedString.Key: Any] = [.paragraphStyle: rtlStyle]
+
+        let combined = NSMutableAttributedString()
+        if !header.isEmpty {
+            combined.append(NSAttributedString(string: header + "\n", attributes: rtlAttributes))
+        }
+        combined.append(attributedText)
+        if !pageInfo.isEmpty {
+            combined.append(NSAttributedString(string: "\n" + pageInfo, attributes: rtlAttributes))
+        }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()

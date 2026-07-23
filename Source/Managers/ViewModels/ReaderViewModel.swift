@@ -121,39 +121,6 @@ class ReaderViewModel: ViewModelBase {
         )?.nash ?? ""
     }
 
-    /// Helper for copy functionality
-    func getCopyReference(for selectedText: String) -> String {
-        let bookName = currentBook?.book ?? ""
-        var referencePage: [String] = []
-
-        if let part = currentPart, part != -1 {
-            referencePage.append("ج: \(part)".convertToArabicDigits())
-        }
-
-        if let page = currentPage {
-            referencePage.append("ص: \(page)".convertToArabicDigits())
-        }
-
-        let referenceLines = "~ \(bookName) - \(referencePage.joined(separator: " • "))"
-        return "\(selectedText)\n\n__________\n\(referenceLines)"
-    }
-
-    /// Helper for share functionality
-    func getShareReference(for selectedText: String) -> String {
-        let bookName = currentBook?.book ?? ""
-        var referencePage: [String] = []
-
-        if let part = currentPart, part != -1 {
-            referencePage.append("ج: \(part)".convertToArabicDigits())
-        }
-
-        if let page = currentPage {
-            referencePage.append("ص: \(page)".convertToArabicDigits())
-        }
-
-        let referenceLines = "~ \(bookName) - \(referencePage.joined(separator: " • "))"
-        return "\(selectedText)\n\n\(referenceLines)"
-    }
 
     // MARK: - Dependencies
 
@@ -561,6 +528,52 @@ class ReaderViewModel: ViewModelBase {
         fetchContentById(Int(ann.contentId))
     }
     #endif
+
+    // MARK: - Shared: Copy References
+
+    /// Helper for copy functionality
+    func getCopyReference(for selectedText: String) -> String {
+        buildReference(for: selectedText)
+    }
+
+    /// Helper for share functionality
+    func getShareReference(for selectedText: String) -> String {
+        buildReference(for: selectedText)
+    }
+
+    func getCopyHeader() -> String {
+        let bookName = currentBook?.book ?? ""
+        var headerParts: [String] = []
+        if !bookName.isEmpty {
+            headerParts.append(bookName)
+        }
+        if let path = tocViewModel
+            .deepestPath(forContentId: currentContentId),
+           !path.isEmpty {
+            headerParts += path.map(\.bab)
+        }
+        let result = headerParts.joined(separator: " • ")
+    }
+
+    func getCopyPageInfo() -> String {
+        var pageParts: [String] = []
+        if let page = currentPage {
+            pageParts.append("ص \(page)".convertToArabicDigits())
+        }
+        if let part = currentPart, part != -1 {
+            pageParts.append("ج \(part)".convertToArabicDigits())
+        }
+        let result = pageParts.joined(separator: " • ")
+    }
+
+    private func buildReference(for selectedText: String) -> String {
+        let header = getCopyHeader()
+        let pageInfo = getCopyPageInfo()
+
+        return [header, selectedText, pageInfo]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+    }
 
     // MARK: - Shared: Annotations
 
