@@ -260,6 +260,30 @@ struct SearchResultsSorter {
 }
 
 extension NSAttributedString {
+    func trimmingCharacters(in set: CharacterSet) -> NSAttributedString {
+        let nsString = string as NSString
+        var start = 0
+        var length = nsString.length
+
+        while start < length {
+            let charCode = nsString.character(at: start)
+            guard let scalar = UnicodeScalar(charCode), set.contains(scalar) else {
+                break
+            }
+            start += 1
+        }
+
+        while length > start {
+            let charCode = nsString.character(at: length - 1)
+            guard let scalar = UnicodeScalar(charCode), set.contains(scalar) else {
+                break
+            }
+            length -= 1
+        }
+
+        return attributedSubstring(from: NSRange(location: start, length: length - start))
+    }
+
     var contentSortKey: String {
         let plain = string.trimmingCharacters(in: .whitespacesAndNewlines)
         // 2 kalimat = split by ". " atau ".\n", ambil 2 elemen pertama

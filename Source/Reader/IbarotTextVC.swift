@@ -305,12 +305,13 @@ class IbarotTextVC: NSViewController {
     }
 
     @IBAction func copyWith(_ sender: Any? = nil) {
-        let attributedText: NSAttributedString
+        let rawAttributedText: NSAttributedString
         if textView.selectedRange.length > 1 {
-            attributedText = textView.attributedString().attributedSubstring(from: textView.selectedRange())
+            rawAttributedText = textView.attributedString().attributedSubstring(from: textView.selectedRange())
         } else {
-            attributedText = textView.attributedString()
+            rawAttributedText = textView.attributedString()
         }
+        let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let header = viewModel.getCopyHeader()
         let pageInfo = viewModel.getCopyPageInfo()

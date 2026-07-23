@@ -121,6 +121,7 @@ class ReaderViewModel: ViewModelBase {
         )?.nash ?? ""
     }
 
+    private let rtlMark: String = .init("\u{200F}")
 
     // MARK: - Dependencies
 
@@ -553,6 +554,7 @@ class ReaderViewModel: ViewModelBase {
             headerParts += path.map(\.bab)
         }
         let result = headerParts.joined(separator: " • ")
+        return result.isEmpty ? "" : rtlMark + result
     }
 
     func getCopyPageInfo() -> String {
@@ -564,13 +566,19 @@ class ReaderViewModel: ViewModelBase {
             pageParts.append("ج \(part)".convertToArabicDigits())
         }
         let result = pageParts.joined(separator: " • ")
+        return result.isEmpty ? "" : rtlMark + result
     }
 
     private func buildReference(for selectedText: String) -> String {
         let header = getCopyHeader()
         let pageInfo = getCopyPageInfo()
+        var trimmedText = selectedText
+        #if os(iOS)
+        trimmedText = selectedText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        #endif
 
-        return [header, selectedText, pageInfo]
+        return [header, trimmedText, pageInfo]
             .filter { !$0.isEmpty }
             .joined(separator: "\n")
     }
