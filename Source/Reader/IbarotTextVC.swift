@@ -128,7 +128,7 @@ class IbarotTextVC: NSViewController {
 
         // Bind TOC events
         viewModel.tocViewModel.onTOCLoadingStateChanged = { [weak self] isLoading in
-            guard let self = self, let sidebarView = self.sidebarVC?.view else { return }
+            guard let self, let sidebarView = sidebarVC?.view else { return }
             if isLoading {
                 ReusableFunc.showProgressWindow(sidebarView)
             } else {
@@ -137,7 +137,17 @@ class IbarotTextVC: NSViewController {
         }
 
         viewModel.tocViewModel.onTOCLoaded = { [weak self] nodes in
-            self?.sidebarVC?.updateTOC(nodes)
+            guard let self else { return }
+            sidebarVC?.updateTOC(nodes)
+            // Auto-expand TOC ke konten yang sedang aktif begitu TOC selesai di-load di background
+            if viewModel.currentContentId > 0,
+               let bookId = viewModel.currentBook?.id,
+               let content = viewModel.getContent(
+                   bkId: bookId, contentId: viewModel.currentContentId
+               )
+            {
+                handleNavigationToContent(content)
+            }
         }
     }
 
@@ -207,14 +217,22 @@ class IbarotTextVC: NSViewController {
         return nil
     }
 
-    var currentBook: BooksData? { viewModel.currentBook }
+    var currentBook: BooksData? {
+        viewModel.currentBook
+    }
 
-    var currentPage: Int? { viewModel.currentPage }
+    var currentPage: Int? {
+        viewModel.currentPage
+    }
 
-    var currentPart: Int? { viewModel.currentPart }
+    var currentPart: Int? {
+        viewModel.currentPart
+    }
 
     /// Alias ke viewModel.bookConnection untuk backward compatibility dengan SidebarVC
-    var bookDB: BookConnection { viewModel.bookConnection }
+    var bookDB: BookConnection {
+        viewModel.bookConnection
+    }
 
     var currentRowi: Rowi? {
         get { splitVC?.currentState.currentRowi }
@@ -234,6 +252,9 @@ class IbarotTextVC: NSViewController {
     }
 
     func didChangeBook(book: BooksData, loadSidebar: Bool = true) {
+        if viewModel.currentBook?.id != book.id {
+            viewModel.resetContentState()
+        }
         viewModel.currentBook = book
 
         // Update window title
@@ -299,17 +320,16 @@ class IbarotTextVC: NSViewController {
                 WindowController.showPopOver(sender: button, viewController: bookInf)
             } else {
                 bookInf.popOver = false
-                self.presentAsSheet(bookInf)
+                presentAsSheet(bookInf)
             }
         }
     }
 
     @IBAction func copyWith(_ sender: Any? = nil) {
-        let rawAttributedText: NSAttributedString
-        if textView.selectedRange.length > 1 {
-            rawAttributedText = textView.attributedString().attributedSubstring(from: textView.selectedRange())
+        let rawAttributedText: NSAttributedString = if textView.selectedRange.length > 1 {
+            textView.attributedString().attributedSubstring(from: textView.selectedRange())
         } else {
-            rawAttributedText = textView.attributedString()
+            textView.attributedString()
         }
         let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -360,12 +380,12 @@ class IbarotTextVC: NSViewController {
 
     private func handleNavigationToContent(_ content: BookContent) {
         guard let sidebarVC else { return }
-        
+
         if lastSelectedContentIdFromSidebar == content.id {
             lastSelectedContentIdFromSidebar = nil
             return
         }
-        
+
         sidebarVC.enableDelegate = false
         Task {
             if let node = viewModel.tocViewModel.findNode(forContentId: content.id) {
@@ -383,7 +403,7 @@ class IbarotTextVC: NSViewController {
         var expandedIDs: [Int] = []
         func collectExpanded(item: Any?) {
             let childCount = outlineView.numberOfChildren(ofItem: item)
-            for i in 0..<childCount {
+            for i in 0 ..< childCount {
                 let child = outlineView.child(i, ofItem: item)
                 if let node = child as? TOCNode {
                     if outlineView.isItemExpanded(child) {
@@ -460,9 +480,9 @@ extension IbarotTextVC: SidebarDelegate {
 // MARK: - LibraryDelegate
 
 extension IbarotTextVC: LibraryDelegate {
-    func didSelectBook(for book: BooksData) async {
+    func didSelectBook(for book: BooksData, loadContent: Bool) async {
         if viewModel.currentBook?.id == book.id { return }
-        try? await displayBook(book)
+        try? await displayBook(book, loadContent: loadContent)
     }
 }
 
@@ -490,7 +510,7 @@ extension IbarotTextVC {
             $0.authorDisplayMode = .rowiInfo
         }
         #if DEBUG
-            print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
+        print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
         #endif
     }
 }
@@ -517,7 +537,7 @@ extension IbarotTextVC: TarjamahBDelegate {
             contentId: tarjamahB.id
         ) else {
             #if DEBUG
-                print("unable to get content from tarjamahB")
+            print("unable to get content from tarjamahB")
             #endif
             return
         }
@@ -542,7 +562,7 @@ extension IbarotTextVC: ReaderStateComponent {
             state.scrollPosition = scrollView.documentVisibleRect.origin
         }
 
-        if let sidebarVC = sidebarVC {
+        if let sidebarVC {
             state.expandedNodeIDs = collectExpandedNodeIDs()
             state.sidebarScrollPosition = sidebarVC.scrollView.documentVisibleRect.origin
         }
@@ -557,7 +577,8 @@ extension IbarotTextVC: ReaderStateComponent {
         try? viewModel.bookConnection.connect(archive: book.archive)
 
         if AppConfig.isUsingBundleMode,
-           !BookArchiveIntegrator.shared.isBookIntegrated(book) {
+           !BookArchiveIntegrator.shared.isBookIntegrated(book)
+        {
             viewModel.currentBook = nil
             return
         }

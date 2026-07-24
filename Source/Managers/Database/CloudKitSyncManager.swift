@@ -476,7 +476,8 @@ final class CloudKitSyncManager {
             case let .failure(error):
                 if let ckError = error as? CKError, ckError.code == .partialFailure,
                    let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
-                    var idsToRemove = ckRecordIds.filter { !partialErrors.keys.map(\.recordName).contains($0) }
+                    let failedRecordNames = Set(partialErrors.keys.map(\.recordName))
+                    var idsToRemove = ckRecordIds.filter { !failedRecordNames.contains($0) }
                     for (recordID, itemError) in partialErrors {
                         if let itemCKError = itemError as? CKError {
                             if itemCKError.code == .unknownItem || itemCKError.code == .serverRecordChanged {

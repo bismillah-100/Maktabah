@@ -25,6 +25,19 @@
         }
       }
     },
+    "38Z-Pt-JIP.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Query\"; ObjectID = \"38Z-Pt-JIP\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Query"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
     "hzi-Hq-2hc.title" : {
       "comment" : "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"hzi-Hq-2hc\";",
       "extractionState" : "extracted_with_value",

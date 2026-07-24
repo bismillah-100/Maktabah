@@ -29,6 +29,8 @@ class LibraryVC: NSViewController {
     weak var bg: NSView!
     private var filterSegment: NSSegmentedControl?
 
+    private var observerTokens: [NotificationToken] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
         dataVM = LibraryViewManager(
@@ -44,7 +46,7 @@ class LibraryVC: NSViewController {
             systemSymbolName: "line.3.horizontal.decrease.circle"
         )
 
-        NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
             queue: .current
@@ -55,7 +57,7 @@ class LibraryVC: NSViewController {
                 outlineView.deselectAll(nil)
                 setupUI()
             }
-        }
+        } ))
 
         setupViewModelSink()
     }
@@ -242,7 +244,8 @@ class LibraryVC: NSViewController {
         ReusableFunc.unhideSearchField(
             searchFieldIsHidden: searchFieldIsHidden,
             searchField: searchField,
-            scrollViewTopConstraint: scrollViewTopConstraint)
+            scrollViewTopConstraint: scrollViewTopConstraint
+        )
     }
 }
 
@@ -252,7 +255,7 @@ extension LibraryVC: LibraryViewDelegate {
             let item = outlineView.item(atRow: row)
             if let book = item as? BooksData {
                 HistoryViewModel.shared.addBookToHistory(book.id)
-                await delegate?.didSelectBook(for: book)
+                await delegate?.didSelectBook(for: book, loadContent: true)
             }
         }
     }

@@ -359,32 +359,12 @@ class ResultsViewModel {
             }
         }
 
-        var firstError: Error?
-
-        for (_, group) in groupedResults {
-            let commaSeparatedContentIds = group.contentIds.joined(separator: ",")
-            do {
-                try db.insertResult(
-                    group.archive,
-                    bkId: group.bkId,
-                    contentId: commaSeparatedContentIds,
-                    folderId: folderId,
-                    query: query,
-                    name: name
-                )
-            } catch {
-                if firstError == nil {
-                    firstError = error
-                }
-                #if DEBUG
-                print("Error saving result for group \(group):", error)
-                #endif
-            }
-        }
-
-        if let error = firstError {
-            throw error
-        }
+        try db.insertResults(
+            groupedResults,
+            folderId: folderId,
+            query: query,
+            name: name
+        )
     }
 
     // MARK: - Move folder / move result

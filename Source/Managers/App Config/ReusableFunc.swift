@@ -203,10 +203,14 @@ class ReusableFunc {
 
     static func decompressData(_ data: Data?) -> String {
         guard let compressed = data, !compressed.isEmpty else { return "" }
+        return compressed.withUnsafeBytes { ptr in decompressData(from: ptr) }
+    }
 
-        return compressed.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) -> String in
-            // 1. Ambil ukuran asli dari frame ZSTD
-            let expectedSize = ZSTD_getFrameContentSize(ptr.baseAddress, compressed.count)
+    static func decompressData(from ptr: UnsafeRawBufferPointer?) -> String {
+        guard let ptr = ptr, ptr.count > 0 else { return "" }
+
+        // 1. Ambil ukuran asli dari frame ZSTD
+        let expectedSize = ZSTD_getFrameContentSize(ptr.baseAddress, ptr.count)
 
             // Cek jika ukuran tidak valid atau error
             if expectedSize == ZSTD_CONTENTSIZE_ERROR || expectedSize == ZSTD_CONTENTSIZE_UNKNOWN {
@@ -234,7 +238,7 @@ class ReusableFunc {
                     outPtr.baseAddress,
                     Int(expectedSize),
                     ptr.baseAddress,
-                    compressed.count
+                    ptr.count
                 )
             }
 
@@ -249,7 +253,6 @@ class ReusableFunc {
             }
 
             return String(decoding: outputBuffer, as: UTF8.self)
-        }
     }
 
     static func compressData(_ text: String, level: Int32 = 10) -> Data? {
@@ -395,3 +398,20 @@ class ReusableFunc {
     }
     #endif
 }
+
+#if os(macOS)
+extension NSOutlineView {
+    func effectiveRows() -> IndexSet {
+        if clickedRow == -1 { return selectedRowIndexes }
+        return selectedRowIndexes.contains(clickedRow)
+            ? selectedRowIndexes
+            : IndexSet(integer: clickedRow)
+    }
+
+    func contextMenuAnchorRect() -> NSRect {
+        let anchorRow = clickedRow >= 0 ? clickedRow : selectedRow
+        guard anchorRow >= 0 else { return bounds }
+        return rect(ofRow: anchorRow)
+    }
+}
+#endif

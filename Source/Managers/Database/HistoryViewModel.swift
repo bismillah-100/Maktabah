@@ -114,6 +114,16 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             forName: .booksChanged,
             object: nil, queue: .main
         ) { [weak self] _ in self?.loadBooksData() }
+
+        addObserver(
+            forName: .bookIdMigrated,
+            object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let userInfo = notification.userInfo,
+                  let oldId = userInfo["oldId"] as? Int,
+                  let newId = userInfo["newId"] as? Int else { return }
+            self?.migrateBookId(from: oldId, to: newId)
+        }
     }
 
     // MARK: - Core Operations
@@ -163,6 +173,10 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
             // Hanya simpan ke disk — tidak reload UI library (tidak ada perubahan visible)
             persistToDiskOnly()
+
+        if let ckId = entry.ckRecordId {
+            addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
 
             // Debounce upload ke CloudKit: tunggu 3 detik idle sebelum kirim
             let capturedEntry = entry
@@ -225,6 +239,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 entriesByBookId.removeValue(forKey: bookId)
                 persistAndReload(uploadEntry: nil)
                 if let ckId {
+                    addPendingSync(ckRecordId: ckId, operation: "delete")
                     pendingCloudKitDeletes.insert(ckId)
 
                     deleteDebounceTask?.cancel()
