@@ -104,13 +104,18 @@ class BookTOCViewModel {
         for r in roots {
             traverse(r)
         }
-        return result.sorted { $0.id < $1.id }
+        return result.sorted {
+            if $0.id != $1.id {
+                return $0.id < $1.id
+            }
+            return $0.level < $1.level
+        }
     }
 
     private func computeEndIDs(for allNodes: [TOCNode]) {
         for (i, node) in allNodes.enumerated() {
-            if i < allNodes.count - 1 {
-                node.endID = allNodes[i + 1].id - 1
+            if let nextDiffNode = allNodes[(i + 1)...].first(where: { $0.id > node.id }) {
+                node.endID = nextDiffNode.id - 1
             } else {
                 node.endID = Int.max
             }
@@ -127,7 +132,14 @@ class BookTOCViewModel {
 
     func findNode(forContentId contentId: Int) -> TOCNode? {
         let matches = tocRanges.filter { contentId >= $0.start && contentId <= $0.end }
-        return matches.min(by: { ($0.end - $0.start) < ($1.end - $1.start) })?.node
+        return matches.min(by: {
+            let r0 = $0.end - $0.start
+            let r1 = $1.end - $1.start
+            if r0 != r1 {
+                return r0 < r1
+            }
+            return $0.node.level > $1.node.level
+        })?.node
     }
 
     func findNodeById(_ id: Int) -> TOCNode? {
@@ -138,7 +150,14 @@ class BookTOCViewModel {
     /// Menggunakan tocRanges (endID yang sudah benar) lalu pathToNode untuk full path.
     func deepestPath(forContentId contentId: Int) -> [TOCNode]? {
         let matches = tocRanges.filter { contentId >= $0.start && contentId <= $0.end }
-        guard let deepest = matches.min(by: { ($0.end - $0.start) < ($1.end - $1.start) })?.node else {
+        guard let deepest = matches.min(by: {
+            let r0 = $0.end - $0.start
+            let r1 = $1.end - $1.start
+            if r0 != r1 {
+                return r0 < r1
+            }
+            return $0.node.level > $1.node.level
+        })?.node else {
             return nil
         }
         return pathToNode(deepest)
@@ -152,7 +171,7 @@ class BookTOCViewModel {
     }
 
     private func findPath(_ current: TOCNode, _ target: TOCNode) -> [TOCNode]? {
-        if current.id == target.id { return [current] }
+        if current === target { return [current] }
         for child in current.children {
             if let p = findPath(child, target) {
                 return [current] + p
