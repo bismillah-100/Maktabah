@@ -546,18 +546,26 @@ class ReaderViewModel: ViewModelBase {
         buildReference(for: selectedText)
     }
 
-    func getCopyHeader() -> String {
+    func getCopyBookAndPage() -> String {
         let bookName = currentBook?.book ?? ""
-        var headerParts: [String] = []
+        let pageInfo = getCopyPageInfo()
+        var parts: [String] = []
         if !bookName.isEmpty {
-            headerParts.append(bookName)
+            parts.append(bookName)
         }
-        if let path = tocViewModel
-            .deepestPath(forContentId: currentContentId),
-           !path.isEmpty {
-            headerParts += path.map(\.bab)
+        if !pageInfo.isEmpty {
+            parts.append(pageInfo)
         }
-        let result = headerParts.joined(separator: " • ")
+        let result = parts.joined(separator: " • ")
+        return result.isEmpty ? "" : rtlMark + result
+    }
+
+    func getCopyBabPath() -> String {
+        guard let path = tocViewModel.deepestPath(forContentId: currentContentId),
+              !path.isEmpty else {
+            return ""
+        }
+        let result = path.map(\.bab).joined(separator: " • ")
         return result.isEmpty ? "" : rtlMark + result
     }
 
@@ -569,20 +577,19 @@ class ReaderViewModel: ViewModelBase {
         if let part = currentPart, part != -1 {
             pageParts.append("ج \(part)".convertToArabicDigits())
         }
-        let result = pageParts.joined(separator: " • ")
-        return result.isEmpty ? "" : rtlMark + result
+        return pageParts.joined(separator: " • ")
     }
 
     private func buildReference(for selectedText: String) -> String {
-        let header = getCopyHeader()
-        let pageInfo = getCopyPageInfo()
+        let bookAndPage = getCopyBookAndPage()
+        let babPath = getCopyBabPath()
         var trimmedText = selectedText
         #if os(iOS)
         trimmedText = selectedText
             .trimmingCharacters(in: .whitespacesAndNewlines)
         #endif
 
-        return [header, trimmedText, pageInfo]
+        return [bookAndPage, babPath, trimmedText]
             .filter { !$0.isEmpty }
             .joined(separator: "\n")
     }

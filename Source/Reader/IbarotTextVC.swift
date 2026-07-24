@@ -333,8 +333,8 @@ class IbarotTextVC: NSViewController {
         }
         let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let header = viewModel.getCopyHeader()
-        let pageInfo = viewModel.getCopyPageInfo()
+        let bookAndPage = viewModel.getCopyBookAndPage()
+        let babPath = viewModel.getCopyBabPath()
 
         let rtlStyle = NSMutableParagraphStyle()
         rtlStyle.baseWritingDirection = .rightToLeft
@@ -342,13 +342,13 @@ class IbarotTextVC: NSViewController {
         let rtlAttributes: [NSAttributedString.Key: Any] = [.paragraphStyle: rtlStyle]
 
         let combined = NSMutableAttributedString()
-        if !header.isEmpty {
-            combined.append(NSAttributedString(string: header + "\n", attributes: rtlAttributes))
+        if !bookAndPage.isEmpty {
+            combined.append(NSAttributedString(string: bookAndPage + "\n", attributes: rtlAttributes))
+        }
+        if !babPath.isEmpty {
+            combined.append(NSAttributedString(string: babPath + "\n", attributes: rtlAttributes))
         }
         combined.append(attributedText)
-        if !pageInfo.isEmpty {
-            combined.append(NSAttributedString(string: "\n" + pageInfo, attributes: rtlAttributes))
-        }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
