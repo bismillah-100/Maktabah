@@ -137,7 +137,17 @@ class IbarotTextVC: NSViewController {
         }
 
         viewModel.tocViewModel.onTOCLoaded = { [weak self] nodes in
-            self?.sidebarVC?.updateTOC(nodes)
+            guard let self else { return }
+            sidebarVC?.updateTOC(nodes)
+            // Auto-expand TOC ke konten yang sedang aktif begitu TOC selesai di-load di background
+            if viewModel.currentContentId > 0,
+               let bookId = viewModel.currentBook?.id,
+               let content = viewModel.getContent(
+                   bkId: bookId, contentId: viewModel.currentContentId
+               )
+            {
+                handleNavigationToContent(content)
+            }
         }
     }
 
@@ -346,12 +356,12 @@ class IbarotTextVC: NSViewController {
 
     private func handleNavigationToContent(_ content: BookContent) {
         guard let sidebarVC else { return }
-        
+
         if lastSelectedContentIdFromSidebar == content.id {
             lastSelectedContentIdFromSidebar = nil
             return
         }
-        
+
         sidebarVC.enableDelegate = false
         Task {
             if let node = viewModel.tocViewModel.findNode(forContentId: content.id) {
@@ -369,7 +379,7 @@ class IbarotTextVC: NSViewController {
         var expandedIDs: [Int] = []
         func collectExpanded(item: Any?) {
             let childCount = outlineView.numberOfChildren(ofItem: item)
-            for i in 0..<childCount {
+            for i in 0 ..< childCount {
                 let child = outlineView.child(i, ofItem: item)
                 if let node = child as? TOCNode {
                     if outlineView.isItemExpanded(child) {
@@ -476,7 +486,7 @@ extension IbarotTextVC {
             $0.authorDisplayMode = .rowiInfo
         }
         #if DEBUG
-            print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
+        print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
         #endif
     }
 }
@@ -503,7 +513,7 @@ extension IbarotTextVC: TarjamahBDelegate {
             contentId: tarjamahB.id
         ) else {
             #if DEBUG
-                print("unable to get content from tarjamahB")
+            print("unable to get content from tarjamahB")
             #endif
             return
         }
