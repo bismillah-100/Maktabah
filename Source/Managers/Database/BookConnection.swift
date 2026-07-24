@@ -82,8 +82,8 @@ class BookConnection {
                 let page = row.int64(at: 2)
                 let part = row.int64(at: 3)
 
-                if let nassBlob = row.blob(at: 1) {
-                    let nass = ReusableFunc.decompressData(nassBlob)
+                if let nassBlob = row.rawBlob(at: 1) {
+                    let nass = ReusableFunc.decompressData(from: nassBlob)
 
                     return BookContent(
                         id: Int(id),
@@ -177,8 +177,8 @@ extension BookConnection {
 
         do {
             let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { row -> BookContent? in
-                if let nassBlob = row.blob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(nassBlob)
+                if let nassBlob = row.rawBlob(at: 0) {
+                    let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
 
                     let page = row.int64(at: 1)
                     let id = row.int64(at: 2)
@@ -226,8 +226,8 @@ extension BookConnection {
 
         do {
             let contents = try db.fetch(query: querySQL) { row -> BookContent? in
-                if let nassBlob = row.blob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(nassBlob)
+                if let nassBlob = row.rawBlob(at: 0) {
+                    let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
 
                     let page = row.int64(at: 1)
                     let id = row.int64(at: 2)
@@ -270,8 +270,8 @@ extension BookConnection {
 
         do {
             let contents = try db.fetch(query: querySQL, parameters: [String(part), String(page)]) { row -> BookContent? in
-                if let nassBlob = row.blob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(nassBlob)
+                if let nassBlob = row.rawBlob(at: 0) {
+                    let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
 
                     let id = row.int64(at: 2)
                     let partValue = self.parsePartValue(row: row, column: 3)
