@@ -395,3 +395,20 @@ class ReusableFunc {
     }
     #endif
 }
+
+#if os(macOS)
+extension NSOutlineView {
+    func effectiveRows() -> IndexSet {
+        if clickedRow == -1 { return selectedRowIndexes }
+        return selectedRowIndexes.contains(clickedRow)
+            ? selectedRowIndexes
+            : IndexSet(integer: clickedRow)
+    }
+
+    func contextMenuAnchorRect() -> NSRect {
+        let anchorRow = clickedRow >= 0 ? clickedRow : selectedRow
+        guard anchorRow >= 0 else { return bounds }
+        return rect(ofRow: anchorRow)
+    }
+}
+#endif

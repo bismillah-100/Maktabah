@@ -8,6 +8,7 @@
 import Cocoa
 
 class ResultWriter: NSViewController {
+    @IBOutlet weak var queryTextField: NSTextField!
     @IBOutlet weak var textField: NSTextField!
     @IBOutlet weak var okButton: NSButton!
     @IBOutlet weak var xButton: NSButton!
@@ -44,12 +45,14 @@ class ResultWriter: NSViewController {
         super.viewDidAppear()
         ReusableFunc.showProgressWindow(view)
         textField.stringValue = query
+        queryTextField.stringValue = query
         Task.detached() { [weak self] in
             await self?.viewModel.getFolders()
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 outlineView.reloadData()
                 ReusableFunc.closeProgressWindow(view)
+                view.window?.makeFirstResponder(textField)
             }
         }
         okButton.action = #selector(saveClicked(_:))
