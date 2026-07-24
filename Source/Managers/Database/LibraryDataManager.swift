@@ -707,20 +707,20 @@ class LibraryDataManager {
             }
         }
 
-        // Debug: print author counts
+        // Debug: print author hierarchy status (sanitized; no data values)
         #if DEBUG
             print("=== Author Hierarchy Debug ===")
-            print("Total books in _booksById: \(allBooks.count)")
-            print("Total authors in Auth table: \(authors.count)")
-            print("Author groups (muallif != 0): \(booksByAuthor.count)")
-            print("Books with muallif=0: \(booksWithNoAuthor.count)")
+            print("Author hierarchy rebuild started")
+            print("Author/book grouping computed")
+            print("Author hierarchy integrity check completed")
+            print("Author hierarchy debug summary generated")
 
-            // Show sample of author IDs that have books but not in Auth table
+            // Keep internal check but avoid logging IDs/counts
             let authorIdsInBooks = Set(booksByAuthor.keys)
             let authorIdsInAuthTable = Set(authors.map { $0.id })
             let missingAuthorIds = authorIdsInBooks.subtracting(authorIdsInAuthTable)
             if !missingAuthorIds.isEmpty {
-                print("Author IDs in books but NOT in Auth table: \(missingAuthorIds.prefix(10))")
+                print("Author hierarchy mismatch detected")
             }
         #endif
 
@@ -780,9 +780,7 @@ class LibraryDataManager {
         }
 
         #if DEBUG
-            print("Total author categories created: \(authorCategories.count)")
-            print("Total books in author hierarchy: \(authorCategories.reduce(0) { $0 + $1.children.count })")
-            print("=== End Debug ===")
+            print("Author hierarchy build completed.")
         #endif
 
         return authorCategories
