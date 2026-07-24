@@ -332,10 +332,12 @@ struct ResultRow: View {
                 Image(systemName: "doc.text.magnifyingglass")
                     .accessibilityHidden(true)
                 VStack(alignment: .leading) {
+                    Text(result.name)
+                        .foregroundStyle(.primary)
                     if let query = result.items.first?.query, !query.isEmpty {
-                        Text("\(result.name) \u{2022} \(query)")
-                    } else {
-                        Text(result.name)
+                        Text(query)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
