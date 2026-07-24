@@ -383,13 +383,17 @@ class ReaderViewModel: ViewModelBase {
         return nil
     }
 
-    func cleanUpState() {
+    func resetContentState() {
         contentText = ""
-        currentBook = nil
         currentPage = nil
         currentPart = nil
         currentID = nil
         currentContentId = 0
+    }
+
+    func cleanUpState() {
+        resetContentState()
+        currentBook = nil
         windowTitle = ""
         windowSubtitle = ""
         bookConnection = .init()

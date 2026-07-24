@@ -252,6 +252,9 @@ class IbarotTextVC: NSViewController {
     }
 
     func didChangeBook(book: BooksData, loadSidebar: Bool = true) {
+        if viewModel.currentBook?.id != book.id {
+            viewModel.resetContentState()
+        }
         viewModel.currentBook = book
 
         // Update window title
