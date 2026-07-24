@@ -672,6 +672,65 @@ extension ResultsHandler {
         }
     }
 
+    func insertResults(
+        _ groupedResults: [String: GroupedResult],
+        folderId: Int64?,
+        query: String,
+        name: String
+    ) throws {
+        guard let db else { return }
+        let now = Int64(Date().timeIntervalSince1970)
+
+        var fCkId: String? = nil
+        if let fid = folderId {
+            let findFolderSql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+            if let fetchedCkId = try db.fetch(query: findFolderSql, parameters: [fid], mapping: { $0.string(at: 0) }).compactMap({ $0 }).first {
+                fCkId = fetchedCkId
+            }
+        }
+
+        var reloadedResults: [SyncResult] = []
+
+        try db.transaction {
+            for (_, group) in groupedResults {
+                let cId = UUID().uuidString
+                let commaSeparatedContentIds = group.contentIds.joined(separator: ",")
+
+                let sql = """
+                INSERT INTO \(resultsTable) (
+                    \(colFolderId), \(colName), \(colQuery), \(colArchive),
+                    \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
+                    \(colFolderCkRecordId)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """
+
+                let params: [Any] = [
+                    folderId ?? NSNull(),
+                    name,
+                    query,
+                    group.archive,
+                    group.bkId,
+                    commaSeparatedContentIds,
+                    cId,
+                    now,
+                    fCkId ?? NSNull(),
+                ]
+
+                try db.execute(query: sql, parameters: params)
+                let rowId = db.lastInsertRowId()
+
+                let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
+                if let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncResult(from: $0) }).first {
+                    reloadedResults.append(reloaded)
+                }
+            }
+        }
+
+        if !reloadedResults.isEmpty {
+            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: reloadedResults)
+        }
+    }
+
     func fetchResults(forFolder folderId: Int64?) -> [ResultNode] {
         guard let db else { return [] }
         var groupedResults: [String: (id: Int64, parentId: Int64?, lastModified: Int64?, items: [SavedResultsItem])] = [:]

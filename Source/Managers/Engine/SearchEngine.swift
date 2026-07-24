@@ -19,6 +19,7 @@ struct ArchiveInfo {
 /// ----------------------------------------
 protocol DBConnectionType {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
+    func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent]
 }
 
 enum SQLValue {
@@ -367,10 +368,10 @@ class SearchWorker {
                 .int(currentOffset),
             ]
 
-            let rows: [[String: Any?]]
+            let fetchedContents: [BookContent]
             do {
-                rows = try await pool.read(at: connectionIndex) { conn in
-                    try conn.queryRows(sql: sql, params: queryParams)
+                fetchedContents = try await pool.read(at: connectionIndex) { conn in
+                    try conn.queryContents(sql: sql, params: queryParams)
                 }
             } catch {
                 let nsError = error as NSError
@@ -385,48 +386,18 @@ class SearchWorker {
                 return results
             }
 
-            if rows.isEmpty { break }
+            if fetchedContents.isEmpty { break }
 
-            for (idx, row) in rows.enumerated() {
+            for (idx, content) in fetchedContents.enumerated() {
                 if idx % 10 == 0, stopFlag() || Task.isCancelled {
                     return results
                 }
-
-                // ✅ PERBAIKAN: Handle nass sebagai BLOB atau String
-                var nass = ""
-                if let blobData = row["nass"] as? Data {
-                    // Jika BLOB, decompress
-                    nass = ReusableFunc.decompressData(blobData)
-                } else if let textData = row["nass"] as? String {
-                    // Fallback: jika masih TEXT (untuk tabel yang belum dikompress)
-                    nass = textData
-                }
-
-                // Normalize untuk phrase matching
-                // let normalizedNass = nass.normalizeArabic()
-                // if mode == .phrase, normalizedKeywords.count > 1 {
-                // if !normalizedNass.contains(fullPhrase) {
-                // continue
-                // }
-                // }
-
-                // Optimasi: Hilangkan bridging NSNumber, row mereturn Int murni
-                let page = (row["page"] as? Int) ?? 0
-                let id = (row["id"] as? Int) ?? 0
-                let part = (row["part"] as? Int) ?? 0
-
-                let content = BookContent(
-                    id: id,
-                    nash: nass,
-                    page: page,
-                    part: part
-                )
                 results.append(content)
             }
 
-            currentOffset += rows.count
+            currentOffset += fetchedContents.count
 
-            if rows.count < batchLimit {
+            if fetchedContents.count < batchLimit {
                 break
             }
         }
@@ -724,6 +695,57 @@ final class SQLiteConnection: DBConnectionType {
             results.append(row)
         }
 
+        return results
+    }
+
+    func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent] {
+        guard let db else { throw NSError(domain: "SQLite", code: -1, userInfo: nil) }
+        var statement: OpaquePointer?
+        var results: [BookContent] = []
+
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+            throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+        }
+        defer { sqlite3_finalize(statement) }
+
+        for (i, param) in params.enumerated() {
+            let idx = Int32(i + 1)
+            switch param {
+            case let .text(s):
+                s.withCString { ptr in
+                    let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                }
+            case let .int(n):
+                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+            case .null:
+                sqlite3_bind_null(statement, idx)
+            }
+        }
+
+        while sqlite3_step(statement) == SQLITE_ROW {
+            var nass = ""
+            let type = sqlite3_column_type(statement, 0)
+
+            if type == SQLITE_TEXT {
+                if let txt = sqlite3_column_text(statement, 0) {
+                    let bytes = sqlite3_column_bytes(statement, 0)
+                    let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
+                    nass = String(decoding: buffer, as: UTF8.self)
+                }
+            } else if type == SQLITE_BLOB {
+                if let blobPointer = sqlite3_column_blob(statement, 0) {
+                    let blobSize = Int(sqlite3_column_bytes(statement, 0))
+                    let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
+                    nass = ReusableFunc.decompressData(from: buffer)
+                }
+            }
+
+            let page = Int(sqlite3_column_int64(statement, 1))
+            let id = Int(sqlite3_column_int64(statement, 2))
+            let part = Int(sqlite3_column_int64(statement, 3))
+            results.append(BookContent(id: id, nash: nass, page: page, part: part))
+        }
         return results
     }
 

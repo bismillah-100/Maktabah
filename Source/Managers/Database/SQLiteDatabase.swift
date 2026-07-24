@@ -42,6 +42,12 @@ struct SQLiteRow {
         return Data(bytes: blobPtr, count: Int(blobSize))
     }
 
+    func rawBlob(at index: Int32) -> UnsafeRawBufferPointer? {
+        guard let blobPtr = sqlite3_column_blob(stmt, index) else { return nil }
+        let blobSize = sqlite3_column_bytes(stmt, index)
+        return UnsafeRawBufferPointer(start: blobPtr, count: Int(blobSize))
+    }
+
     func isNull(at index: Int32) -> Bool {
         return sqlite3_column_type(stmt, index) == SQLITE_NULL
     }
