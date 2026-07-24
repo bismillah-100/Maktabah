@@ -780,9 +780,7 @@ class LibraryDataManager {
         }
 
         #if DEBUG
-            print("Total author categories created: \(authorCategories.count)")
-            print("Total books in author hierarchy: \(authorCategories.reduce(0) { $0 + $1.children.count })")
-            print("=== End Debug ===")
+            print("Author hierarchy build completed.")
         #endif
 
         return authorCategories
