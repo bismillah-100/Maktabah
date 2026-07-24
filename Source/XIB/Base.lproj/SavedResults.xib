@@ -21,13 +21,13 @@
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="21" horizontalPageScroll="10" verticalLineScroll="21" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="OvM-41-fTH">
-                    <rect key="frame" x="0.0" y="0.0" width="411" height="215"/>
+                    <rect key="frame" x="0.0" y="0.0" width="411" height="219"/>
                     <clipView key="contentView" id="qMN-5W-eV7">
-                        <rect key="frame" x="0.0" y="0.0" width="411" height="215"/>
+                        <rect key="frame" x="0.0" y="0.0" width="411" height="219"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="21" viewBased="YES" indentationPerLevel="13" outlineTableColumn="pJ0-gg-RJJ" id="150-Co-PSP">
-                                <rect key="frame" x="0.0" y="0.0" width="411" height="215"/>
+                            <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="21" headerView="Kg6-f1-xrF" viewBased="YES" indentationPerLevel="13" outlineTableColumn="pJ0-gg-RJJ" id="150-Co-PSP">
+                                <rect key="frame" x="0.0" y="0.0" width="411" height="191"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <size key="intercellSpacing" width="17" height="0.0"/>
                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -57,9 +57,13 @@
                         <rect key="frame" x="224" y="17" width="15" height="102"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
+                    <tableHeaderView key="headerView" wantsLayer="YES" id="Kg6-f1-xrF">
+                        <rect key="frame" x="0.0" y="0.0" width="411" height="28"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </tableHeaderView>
                 </scrollView>
-                <searchField wantsLayer="YES" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aHS-ie-CAO">
-                    <rect key="frame" x="167" y="229" width="224" height="24"/>
+                <searchField wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aHS-ie-CAO">
+                    <rect key="frame" x="167" y="233" width="224" height="22"/>
                     <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" maximumRecents="10" id="Gza-BD-SFf">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -70,7 +74,7 @@
                     </connections>
                 </searchField>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="y0b-nO-oHn">
-                    <rect key="frame" x="137" y="227" width="24" height="31"/>
+                    <rect key="frame" x="137" y="231" width="24" height="29"/>
                     <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="folder.fill.badge.plus" catalog="system" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="Iwa-A7-CJQ">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                         <font key="font" metaFont="systemBold" size="12"/>
@@ -84,7 +88,7 @@
                     </connections>
                 </button>
                 <button toolTip="Delete Selected" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="WLf-A0-49K">
-                    <rect key="frame" x="115" y="226" width="15" height="31"/>
+                    <rect key="frame" x="115" y="230" width="15" height="29"/>
                     <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="eraser.fill" catalog="system" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="HHm-ax-v8J">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                         <font key="font" metaFont="systemBold" size="12"/>
@@ -95,7 +99,7 @@
                     </connections>
                 </button>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="OsB-cN-YV4">
-                    <rect key="frame" x="20" y="229" width="70" height="24"/>
+                    <rect key="frame" x="13" y="226" width="84" height="32"/>
                     <buttonCell key="cell" type="push" title="Done" bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="zOc-bj-81M">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>

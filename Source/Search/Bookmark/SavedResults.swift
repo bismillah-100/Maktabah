@@ -47,7 +47,6 @@ class SavedResults: NSViewController {
     func setupOutlineView() {
         outlineView.delegate = resultsVM
         outlineView.dataSource = resultsVM
-        outlineView.headerView = .init()
 
         if let titleCol = outlineView.tableColumn(
             withIdentifier: NSUserInterfaceItemIdentifier(
