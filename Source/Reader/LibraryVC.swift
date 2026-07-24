@@ -242,7 +242,8 @@ class LibraryVC: NSViewController {
         ReusableFunc.unhideSearchField(
             searchFieldIsHidden: searchFieldIsHidden,
             searchField: searchField,
-            scrollViewTopConstraint: scrollViewTopConstraint)
+            scrollViewTopConstraint: scrollViewTopConstraint
+        )
     }
 }
 

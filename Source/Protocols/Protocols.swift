@@ -42,7 +42,7 @@ protocol SearchableLibrarySidebar: AnyObject {
     func connectSearchField(_ field: DSFSearchField)
 }
 
-// LibraryVC
+/// LibraryVC
 extension LibraryVC: SearchableLibrarySidebar {
     func connectSearchField(_ field: DSFSearchField) {
         guard let searchField else {
@@ -60,7 +60,7 @@ extension LibraryVC: SearchableLibrarySidebar {
     }
 }
 
-// SearchSidebarVC
+/// SearchSidebarVC
 extension SearchSidebarVC: SearchableLibrarySidebar {
     func connectSearchField(_ field: DSFSearchField) {
         guard let searchField else {
@@ -79,7 +79,7 @@ extension SearchSidebarVC: SearchableLibrarySidebar {
     }
 }
 
-// atau buat computed var yang wrap-nya
+/// atau buat computed var yang wrap-nya
 extension RowiSidebarVC: SearchableLibrarySidebar {
     func connectSearchField(_ field: DSFSearchField) {
         guard let searchField else {
@@ -94,4 +94,3 @@ extension RowiSidebarVC: SearchableLibrarySidebar {
     }
 }
 #endif
-

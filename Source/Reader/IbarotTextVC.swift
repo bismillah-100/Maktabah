@@ -217,14 +217,22 @@ class IbarotTextVC: NSViewController {
         return nil
     }
 
-    var currentBook: BooksData? { viewModel.currentBook }
+    var currentBook: BooksData? {
+        viewModel.currentBook
+    }
 
-    var currentPage: Int? { viewModel.currentPage }
+    var currentPage: Int? {
+        viewModel.currentPage
+    }
 
-    var currentPart: Int? { viewModel.currentPart }
+    var currentPart: Int? {
+        viewModel.currentPart
+    }
 
     /// Alias ke viewModel.bookConnection untuk backward compatibility dengan SidebarVC
-    var bookDB: BookConnection { viewModel.bookConnection }
+    var bookDB: BookConnection {
+        viewModel.bookConnection
+    }
 
     var currentRowi: Rowi? {
         get { splitVC?.currentState.currentRowi }
@@ -309,17 +317,16 @@ class IbarotTextVC: NSViewController {
                 WindowController.showPopOver(sender: button, viewController: bookInf)
             } else {
                 bookInf.popOver = false
-                self.presentAsSheet(bookInf)
+                presentAsSheet(bookInf)
             }
         }
     }
 
     @IBAction func copyWith(_ sender: Any? = nil) {
-        let attributedText: NSAttributedString
-        if textView.selectedRange.length > 1 {
-            attributedText = textView.attributedString().attributedSubstring(from: textView.selectedRange())
+        let attributedText: NSAttributedString = if textView.selectedRange.length > 1 {
+            textView.attributedString().attributedSubstring(from: textView.selectedRange())
         } else {
-            attributedText = textView.attributedString()
+            textView.attributedString()
         }
 
         let combined = NSMutableAttributedString(attributedString: attributedText)
@@ -538,7 +545,7 @@ extension IbarotTextVC: ReaderStateComponent {
             state.scrollPosition = scrollView.documentVisibleRect.origin
         }
 
-        if let sidebarVC = sidebarVC {
+        if let sidebarVC {
             state.expandedNodeIDs = collectExpandedNodeIDs()
             state.sidebarScrollPosition = sidebarVC.scrollView.documentVisibleRect.origin
         }
@@ -553,7 +560,8 @@ extension IbarotTextVC: ReaderStateComponent {
         try? viewModel.bookConnection.connect(archive: book.archive)
 
         if AppConfig.isUsingBundleMode,
-           !BookArchiveIntegrator.shared.isBookIntegrated(book) {
+           !BookArchiveIntegrator.shared.isBookIntegrated(book)
+        {
             viewModel.currentBook = nil
             return
         }
