@@ -9,7 +9,6 @@ import Cocoa
 import Combine
 
 class OptionSearchVC: NSViewController {
-
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var progressTable: NSProgressIndicator!
     @IBOutlet weak var progressRows: NSProgressIndicator!
@@ -25,16 +24,14 @@ class OptionSearchVC: NSViewController {
 
     /// Menu Item Copy
     lazy var copyMenuItem: NSMenuItem = {
-       let item = NSMenuItem()
+        let item = NSMenuItem()
         item.title = String(localized: "Copy")
         item.action = #selector(copy(_:))
         item.target = self
         return item
     }()
 
-    lazy var viewModel: SearchViewModel = {
-        .init()
-    }()
+    lazy var viewModel: SearchViewModel = .init()
 
     var results: [SearchResultItem] {
         viewModel.results
@@ -56,6 +53,7 @@ class OptionSearchVC: NSViewController {
     var bkId: String = "" {
         didSet { viewModel.targetBookId = bkId }
     }
+
     var onSelectedItem: ((Int, String) -> Void)?
     var onCleanUp: (() -> Void)?
 
@@ -81,7 +79,7 @@ class OptionSearchVC: NSViewController {
                 cleanUpButton, startButton, stopButton, insertNewResults,
                 displayResults,
             ]
-            btn.forEach { button in
+            for button in btn {
                 button?.borderShape = .capsule
             }
         } else {
@@ -113,7 +111,7 @@ class OptionSearchVC: NSViewController {
                 guard let self else { return }
                 let newCount = viewModel.results.count
                 if newCount > tableView.numberOfRows {
-                    let indexSet = IndexSet(tableView.numberOfRows..<newCount)
+                    let indexSet = IndexSet(tableView.numberOfRows ..< newCount)
                     tableView.insertRows(at: indexSet)
                 }
             }
@@ -199,7 +197,7 @@ class OptionSearchVC: NSViewController {
                 progressRows.doubleValue = progressRows.maxValue
                 let newCount = viewModel.results.count
                 if newCount > prevCount {
-                    tableView.insertRows(at: IndexSet(prevCount..<newCount))
+                    tableView.insertRows(at: IndexSet(prevCount ..< newCount))
                 }
             }
             .store(in: &cancellables)
@@ -240,8 +238,8 @@ class OptionSearchVC: NSViewController {
         tableView.target = self
         ReusableFunc.registerNib(
             tableView: tableView,
-            nibName: .resultNib,  // CellIViewIdentifier.resultNib
-            cellIdentifier: .resultAndOutlineChild  // CellIViewIdentifier.resultAndOutlineChild
+            nibName: .resultNib, // CellIViewIdentifier.resultNib
+            cellIdentifier: .resultAndOutlineChild // CellIViewIdentifier.resultAndOutlineChild
         )
     }
 
@@ -264,7 +262,7 @@ class OptionSearchVC: NSViewController {
         viewModel.clearResults()
         tableView.removeRows(
             at: IndexSet(
-                integersIn: 0..<tableView.numberOfRows
+                integersIn: 0 ..< tableView.numberOfRows
             )
         )
         tableView.sortDescriptors.removeAll()
@@ -324,24 +322,24 @@ class OptionSearchVC: NSViewController {
     }
 
     @IBAction func startSearch(_ sender: Any) {
-            if searchText.isEmpty || (compactConfigured && bkId.isEmpty) { return }
-            ReusableFunc.updateBuiltInRecents(with: searchText, in: searchField)
+        if searchText.isEmpty || (compactConfigured && bkId.isEmpty) { return }
+        ReusableFunc.updateBuiltInRecents(with: searchText, in: searchField)
 
-            let isPaused = viewModel.isPaused
-            let isRunning = viewModel.isSearching
+        let isPaused = viewModel.isPaused
+        let isRunning = viewModel.isSearching
 
-            if !isRunning, !isPaused {
-                setupIndeterminateProgress()
-            }
-
-            startSearchEngine()
-
-            if isPaused {
-                updateStartButton(systemSymbolName: "pause.fill", state: .on)
-            } else {
-                updateStartButton(state: .on)
-            }
+        if !isRunning, !isPaused {
+            setupIndeterminateProgress()
         }
+
+        startSearchEngine()
+
+        if isPaused {
+            updateStartButton(systemSymbolName: "pause.fill", state: .on)
+        } else {
+            updateStartButton(state: .on)
+        }
+    }
 
     @IBAction func stopSearch(_ sender: Any?) {
         viewModel.stopSearch()
@@ -385,10 +383,10 @@ class OptionSearchVC: NSViewController {
 }
 
 // MARK: - NSTableViewDataSource & Delegate
-extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
 
+extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return results.count
+        results.count
     }
 
     func tableView(
@@ -444,7 +442,7 @@ extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
         let row = tableView.selectedRow
         guard row >= 0, row < results.count else {
             #if DEBUG
-                print("result out of range")
+            print("result out of range")
             #endif
             return
         }
@@ -458,7 +456,6 @@ extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         24
     }
-
 }
 
 extension OptionSearchVC: NSSearchFieldDelegate {
@@ -469,7 +466,7 @@ extension OptionSearchVC: NSSearchFieldDelegate {
     ) -> Bool {
         switch commandSelector {
         case #selector(NSResponder.insertNewline(_:)),
-            #selector(NSResponder.insertLineBreak(_:)):
+             #selector(NSResponder.insertLineBreak(_:)):
             startSearch(commandSelector)
             return true
         default: return false
@@ -489,7 +486,7 @@ extension OptionSearchVC: LibraryViewDelegate {
         }
 
         // Penggunaan Task sudah benar di sini, tidak perlu Task.detached lagi
-        await delegate?.didSelectBook(for: bookData)
+        await delegate?.didSelectBook(for: bookData, loadContent: false)
         await itemDelegate?.didSelectResult(
             for: book.bookId,
             highlightText: searchText
@@ -519,7 +516,7 @@ extension OptionSearchVC: ResultsDelegate {
             onInsert: { [weak self] prev, newCount in
                 guard let self else { return }
                 progressTable.doubleValue += Double(newCount - prev)
-                tableView.insertRows(at: IndexSet(prev..<newCount))
+                tableView.insertRows(at: IndexSet(prev ..< newCount))
             },
             onFinish: { [weak self] in
                 guard let self else { return }
@@ -556,7 +553,6 @@ extension OptionSearchVC: ReaderStateComponent {
         tableView.reloadData()
     }
 }
-
 
 extension OptionSearchVC: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
