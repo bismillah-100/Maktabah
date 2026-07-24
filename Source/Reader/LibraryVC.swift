@@ -252,7 +252,7 @@ extension LibraryVC: LibraryViewDelegate {
             let item = outlineView.item(atRow: row)
             if let book = item as? BooksData {
                 HistoryViewModel.shared.addBookToHistory(book.id)
-                await delegate?.didSelectBook(for: book)
+                await delegate?.didSelectBook(for: book, loadContent: true)
             }
         }
     }

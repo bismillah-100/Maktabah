@@ -489,7 +489,7 @@ extension OptionSearchVC: LibraryViewDelegate {
         }
 
         // Penggunaan Task sudah benar di sini, tidak perlu Task.detached lagi
-        await delegate?.didSelectBook(for: bookData)
+        await delegate?.didSelectBook(for: bookData, loadContent: false)
         await itemDelegate?.didSelectResult(
             for: book.bookId,
             highlightText: searchText

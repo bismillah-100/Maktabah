@@ -16,9 +16,8 @@ protocol SidebarDelegate: AnyObject {
 }
 
 protocol LibraryDelegate: AnyObject {
-    func didSelectBook(for book: BooksData) async
+    func didSelectBook(for book: BooksData, loadContent: Bool) async
 }
-
 
 protocol ResultsDelegate: AnyObject {
     func didSelect(savedResults: [SavedResultsItem])

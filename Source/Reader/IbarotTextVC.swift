@@ -128,7 +128,7 @@ class IbarotTextVC: NSViewController {
 
         // Bind TOC events
         viewModel.tocViewModel.onTOCLoadingStateChanged = { [weak self] isLoading in
-            guard let self = self, let sidebarView = self.sidebarVC?.view else { return }
+            guard let self, let sidebarView = sidebarVC?.view else { return }
             if isLoading {
                 ReusableFunc.showProgressWindow(sidebarView)
             } else {
@@ -456,9 +456,9 @@ extension IbarotTextVC: SidebarDelegate {
 // MARK: - LibraryDelegate
 
 extension IbarotTextVC: LibraryDelegate {
-    func didSelectBook(for book: BooksData) async {
+    func didSelectBook(for book: BooksData, loadContent: Bool) async {
         if viewModel.currentBook?.id == book.id { return }
-        try? await displayBook(book)
+        try? await displayBook(book, loadContent: loadContent)
     }
 }
 
