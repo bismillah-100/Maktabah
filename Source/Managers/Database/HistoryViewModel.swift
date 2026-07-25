@@ -61,7 +61,6 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     private let pendingQueue = DispatchQueue(label: "com.maktabah.history.pendingQueue", attributes: .concurrent)
 
     /// Debounce upload saat navigasi halaman
-    private var contentUpdateWorkItem: DispatchWorkItem?
 
     /// Debounce for batched CloudKit deletions
     private var pendingCloudKitDeletes: Set<String> = []
@@ -177,19 +176,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         if let ckId = entry.ckRecordId {
             addPendingSync(ckRecordId: ckId, operation: "upload")
         }
-
-            // Debounce upload ke CloudKit: tunggu 3 detik idle sebelum kirim
-            let capturedEntry = entry
-            contentUpdateWorkItem?.cancel()
-            let workItem = DispatchWorkItem { [weak self] in
-                guard self != nil else { return }
-                #if DEBUG
-                print("HistoryViewModel: debounced upload posisi buku \(bookId)")
-                #endif
-                CloudKitSyncManager.shared.uploadHistory(entries: [capturedEntry])
-            }
-            contentUpdateWorkItem = workItem
-            DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 3.0, execute: workItem)
+        CloudKitSyncManager.shared.uploadHistory(entries: [entry])
         } else {
             addBookToHistory(bookId)
             updateLastContentId(contentId, for: bookId)

@@ -346,17 +346,39 @@ final class CloudKitSyncManager {
                 return
             }
 
-            let ids = records.map(\.recordID.recordName)
+            let batchSize = 300
+            let group = DispatchGroup()
+            let errorLock = NSLock()
+            var lastError: Error?
 
-            core.upload(records: records) { [weak self] result in
-                self?.handleUploadResult(
-                    result,
-                    pendingIds: ids,
-                    target: .annotation,
-                    completion: { res in
-                        pendingCompletions.forEach { $0(res) }
-                    }
-                )
+            for i in stride(from: 0, to: records.count, by: batchSize) {
+                let batch = Array(records[i ..< min(i + batchSize, records.count)])
+                let ids = batch.map(\.recordID.recordName)
+
+                group.enter()
+                self.core.upload(records: batch) { [weak self] result in
+                    self?.handleUploadResult(
+                        result,
+                        pendingIds: ids,
+                        target: .annotation,
+                        completion: { res in
+                            if case let .failure(err) = res {
+                                errorLock.lock()
+                                lastError = err
+                                errorLock.unlock()
+                            }
+                            group.leave()
+                        }
+                    )
+                }
+            }
+
+            group.notify(queue: .main) {
+                if let error = lastError {
+                    pendingCompletions.forEach { $0(.failure(error)) }
+                } else {
+                    pendingCompletions.forEach { $0(.success(())) }
+                }
             }
         }
     }
@@ -395,18 +417,46 @@ final class CloudKitSyncManager {
                 return
             }
 
-            let ids = records.map(\.recordID.recordName)
+            let batchSize = 300
+            let group = DispatchGroup()
+            let errorLock = NSLock()
+            var lastError: Error?
 
-            core.upload(records: records) { [weak self] result in
-                self?.handleUploadResult(
-                    result,
-                    pendingIds: ids,
-                    target: .result,
-                    completion: completion
-                )
+            for i in stride(from: 0, to: records.count, by: batchSize) {
+                let batch = Array(records[i ..< min(i + batchSize, records.count)])
+                let ids = batch.map(\.recordID.recordName)
+
+                group.enter()
+                self.core.upload(records: batch) { [weak self] result in
+                    self?.handleUploadResult(
+                        result,
+                        pendingIds: ids,
+                        target: .result,
+                        completion: { res in
+                            if case let .failure(err) = res {
+                                errorLock.lock()
+                                lastError = err
+                                errorLock.unlock()
+                            }
+                            group.leave()
+                        }
+                    )
+                }
+            }
+
+            group.notify(queue: .main) {
+                if let error = lastError {
+                    completion?(.failure(error))
+                } else {
+                    completion?(.success(()))
+                }
             }
         }
     }
+
+    private var historyUploadBuffer: [String: ReadingEntry] = [:]
+    private var historyDebounceTask: DispatchWorkItem?
+    private var historyDebounceCompletions: [(Result<Void, Error>) -> Void] = []
 
     func uploadHistory(
         entries: [ReadingEntry],
@@ -421,21 +471,77 @@ final class CloudKitSyncManager {
 
         syncQueue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            let records = entries.compactMap { $0.toCKRecord(zoneID: self.core.zoneId) }
+            for entry in entries {
+                if let ckId = entry.ckRecordId {
+                    historyUploadBuffer[ckId] = entry
+                }
+            }
+
+            if let completion {
+                historyDebounceCompletions.append(completion)
+            }
+
+            historyDebounceTask?.cancel()
+            let workItem = DispatchWorkItem { [weak self] in
+                self?.performDebouncedHistoryUpload()
+            }
+            historyDebounceTask = workItem
+            DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 2.0, execute: workItem)
+        }
+    }
+
+    private func performDebouncedHistoryUpload() {
+        syncQueue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+
+            let entriesToUpload = Array(historyUploadBuffer.values)
+            historyUploadBuffer.removeAll()
+
+            let records = entriesToUpload.compactMap {
+                $0.toCKRecord(zoneID: self.core.zoneId)
+            }
+
+            let pendingCompletions = historyDebounceCompletions
+            historyDebounceCompletions.removeAll()
+
             guard !records.isEmpty else {
-                completion?(.success(()))
+                pendingCompletions.forEach { $0(.success(())) }
                 return
             }
 
-            let ids = records.map(\.recordID.recordName)
+            let batchSize = 300
+            let group = DispatchGroup()
+            let errorLock = NSLock()
+            var lastError: Error?
 
-            core.upload(records: records) { [weak self] result in
-                self?.handleUploadResult(
-                    result,
-                    pendingIds: ids,
-                    target: .history,
-                    completion: completion
-                )
+            for i in stride(from: 0, to: records.count, by: batchSize) {
+                let batch = Array(records[i ..< min(i + batchSize, records.count)])
+                let ids = batch.map(\.recordID.recordName)
+
+                group.enter()
+                self.core.upload(records: batch) { [weak self] result in
+                    self?.handleUploadResult(
+                        result,
+                        pendingIds: ids,
+                        target: .history,
+                        completion: { res in
+                            if case let .failure(err) = res {
+                                errorLock.lock()
+                                lastError = err
+                                errorLock.unlock()
+                            }
+                            group.leave()
+                        }
+                    )
+                }
+            }
+
+            group.notify(queue: .main) {
+                if let error = lastError {
+                    pendingCompletions.forEach { $0(.failure(error)) }
+                } else {
+                    pendingCompletions.forEach { $0(.success(())) }
+                }
             }
         }
     }
@@ -469,31 +575,38 @@ final class CloudKitSyncManager {
 
         let recordIds = ckRecordIds.map { CKRecord.ID(recordName: $0, zoneID: core.zoneId) }
 
-        core.delete(recordIds: recordIds) { [weak self] result in
-            switch result {
-            case .success:
-                self?.removePendingDeletes(ckRecordIds)
-            case let .failure(error):
-                if let ckError = error as? CKError, ckError.code == .partialFailure,
-                   let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
-                    let failedRecordNames = Set(partialErrors.keys.map(\.recordName))
-                    var idsToRemove = ckRecordIds.filter { !failedRecordNames.contains($0) }
-                    for (recordID, itemError) in partialErrors {
-                        if let itemCKError = itemError as? CKError {
-                            if itemCKError.code == .unknownItem || itemCKError.code == .serverRecordChanged {
-                                idsToRemove.append(recordID.recordName)
+        let batchSize = 300
+
+        for i in stride(from: 0, to: recordIds.count, by: batchSize) {
+            let batch = Array(recordIds[i ..< min(i + batchSize, recordIds.count)])
+            let batchStrIds = batch.map(\.recordName)
+
+            self.core.delete(recordIds: batch) { [weak self] result in
+                switch result {
+                case .success:
+                    self?.removePendingDeletes(batchStrIds)
+                case let .failure(error):
+                    if let ckError = error as? CKError, ckError.code == .partialFailure,
+                       let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
+                        let failedRecordNames = Set(partialErrors.keys.map(\.recordName))
+                        var idsToRemove = batchStrIds.filter { !failedRecordNames.contains($0) }
+                        for (recordID, itemError) in partialErrors {
+                            if let itemCKError = itemError as? CKError {
+                                if itemCKError.code == .unknownItem || itemCKError.code == .serverRecordChanged {
+                                    idsToRemove.append(recordID.recordName)
+                                }
                             }
                         }
+                        if !idsToRemove.isEmpty {
+                            self?.removePendingDeletes(idsToRemove)
+                        }
+                    } else if let ckError = error as? CKError, ckError.code == .serverRecordChanged {
+                        self?.removePendingDeletes(batchStrIds)
+                    } else if let ckError = error as? CKError, ckError.code == .unknownItem {
+                        self?.removePendingDeletes(batchStrIds)
                     }
-                    if !idsToRemove.isEmpty {
-                        self?.removePendingDeletes(idsToRemove)
-                    }
-                } else if let ckError = error as? CKError, ckError.code == .serverRecordChanged {
-                    self?.removePendingDeletes(ckRecordIds)
-                } else if let ckError = error as? CKError, ckError.code == .unknownItem {
-                    self?.removePendingDeletes(ckRecordIds)
+                    self?.handleCloudKitError(error, operationType: .delete)
                 }
-                self?.handleCloudKitError(error, operationType: .delete)
             }
         }
     }
@@ -699,12 +812,15 @@ final class CloudKitSyncManager {
 
                 if !conflicts.isEmpty {
                     let group = DispatchGroup()
-                    var lastError: Error?
+                    let errorLock = NSLock()
+            var lastError: Error?
 
                     for conflict in conflicts {
                         group.enter()
                         resolveServerRecordConflict(ckError: conflict) { result in
-                            if case let .failure(err) = result { lastError = err }
+                            if case let .failure(err) = result { errorLock.lock()
+                                lastError = err
+                                errorLock.unlock() }
                             group.leave()
                         }
                     }
