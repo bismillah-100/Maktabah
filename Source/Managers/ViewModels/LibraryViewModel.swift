@@ -77,7 +77,6 @@ final class LibraryViewModel: ViewModelBase {
     var viewMode: LibraryViewMode {
         didSet {
             UserDefaults.standard.set(viewMode.rawValue, forKey: "libraryViewMode")
-            _viewModeTracker += 1
             if viewMode == .author, !_hasBuiltAuthorHierarchy {
                 _authorHierarchy = dataManager.buildAuthorHierarchy()
                 _hasBuiltAuthorHierarchy = true
@@ -91,15 +90,12 @@ final class LibraryViewModel: ViewModelBase {
     // MARK: - Internal Trackers & Subscriptions
 
     #if os(iOS)
-    var _authorFilterTracker: Int = 0
-    var _viewModeTracker: Int = 0
     var updateTrigger: Int = 0
     #endif
 
     var selectedAuthorId: Int? {
         didSet {
             #if os(iOS)
-            _authorFilterTracker += 1
             #endif
             resetAuthorPagination()
             updateDisplayedCategories()
