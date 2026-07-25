@@ -1,0 +1,33 @@
+name: Jules PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: jules-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+      statuses: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Jules PR Reviewer
+        uses: thalesraymond/jules-pr-reviewer@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          enable_suggestions: true
+          rules_file: .github/jules-review-rules.md
+          ignored_paths: "*.lock, Packages/**"
+          extra_instructions: |
+            [PROJECT CONTEXT]
+            - macOS/iOS hybrid app using AppKit, UIKit, and SwiftUI.
+            - AppKit (e.g. NSOutlineView) is deliberately used over SwiftUI in high-performance UI components.
