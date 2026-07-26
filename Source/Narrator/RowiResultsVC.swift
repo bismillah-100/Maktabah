@@ -36,6 +36,8 @@ class RowiResultsVC: NSViewController {
     var rowiMode: RowiMode = .sidebar
     var shouldClickButton: Bool = true
 
+    private var rebuildTask: Task<Void, Never>?
+
     // MARK: - ViewModel
 
     var viewModel: NarratorViewModel!
@@ -125,12 +127,11 @@ class RowiResultsVC: NSViewController {
 
         viewModel.onSearchBatchAppended = { [weak self] startIndex, count in
             let indices = IndexSet(integersIn: startIndex..<(startIndex + count))
-            guard let self else { return }
-            tableView.insertRows(at: indices, withAnimation: .effectFade)
+            self?.tableView.insertRows(at: indices, withAnimation: .effectFade)
         }
 
         viewModel.onSearchComplete = { [weak self] in
-            self?.updateStartButton(isPaused: false, isActive: false, state: .off)
+            self?.stopSearch(nil)
         }
     }
 
@@ -172,8 +173,6 @@ class RowiResultsVC: NSViewController {
 
     func startNewSearch() {
         let query = searchField.stringValue
-            .normalizeArabic()
-            .trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty else { return }
 
         ReusableFunc.updateBuiltInRecents(with: query, in: searchField)
@@ -187,10 +186,21 @@ class RowiResultsVC: NSViewController {
         updateStartButton(isPaused: false, isActive: false, state: .off)
     }
 
-    @IBAction func searchBtnDidClick(_ sender: NSSegmentedControl) {
+    @IBAction func switchRowiMode(_ sender: NSSegmentedControl) {
         switch sender.selectedSegment {
         case 0: hideStackUtils()
-        case 1: hideRowiUtils()
+        case 1: 
+            hideRowiUtils()
+            if rebuildTask != nil { return }
+            ReusableFunc.showProgressWindow(view)
+            rebuildTask = Task.detached {
+                TarjamahGlobalManager.shared.optimizeSpecialDatabaseIfNeeded()
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    ReusableFunc.closeProgressWindow(view)
+                    rebuildTask = nil
+                }
+            }
         default: break
         }
         tableView.reloadData()
