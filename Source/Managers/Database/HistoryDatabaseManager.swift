@@ -129,8 +129,51 @@ class HistoryDatabaseManager {
         try? _db?.execute(query: sql, parameters: params)
     }
 
+    func upsertEntries(_ entries: [ReadingEntry]) {
+        guard let _db, !entries.isEmpty else { return }
+        let chunkSize = 50 // SQLite max params is 999. We have 8 params per entry. 50 * 8 = 400.
+        
+        for i in stride(from: 0, to: entries.count, by: chunkSize) {
+            let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
+            let placeholders = chunk.map { _ in "(?, ?, ?, ?, ?, ?, ?, ?)" }.joined(separator: ",")
+            let sql = """
+            INSERT OR REPLACE INTO reading_entries
+            (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
+            VALUES \(placeholders);
+            """
+            
+            var params = [Any]()
+            for entry in chunk {
+                params.append(contentsOf: [
+                    entry.bookId,
+                    entry.lastContentId as Any? ?? NSNull(),
+                    entry.lastOpenedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                    entry.favoritedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                    entry.positionUpdatedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                    entry.updatedAt.timeIntervalSince1970,
+                    entry.isFavorite ? 1 : 0,
+                    entry.ckRecordId as Any? ?? NSNull()
+                ])
+            }
+            try? _db.execute(query: sql, parameters: params)
+        }
+    }
+
     func deleteEntry(bookId: Int) {
         try? exec("DELETE FROM reading_entries WHERE book_id = ?;", parameters: [bookId])
+    }
+
+    func deleteEntries(bookIds: [Int]) {
+        guard let _db, !bookIds.isEmpty else { return }
+        let chunkSize = 500
+        for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
+            let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
+            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            try? _db.execute(
+                query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
+                parameters: chunk
+            )
+        }
     }
 
     func saveHistoryOrder(_ order: [Int]) {
@@ -246,28 +289,42 @@ class HistoryDatabaseManager {
 
         // Migrate pending sync
         if let upData = UserDefaults.standard.data(forKey: legacyPendingUploadsKey),
-           let upList = try? JSONDecoder().decode([String].self, from: upData)
+           let upList = try? JSONDecoder().decode([String].self, from: upData), !upList.isEmpty
         {
             let now = Int64(Date().timeIntervalSince1970)
             try? transaction {
-                for ckId in upList {
-                    try? _db.execute(
-                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, 'upload', ?);",
-                        parameters: [ckId, now]
+                let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
+                for i in stride(from: 0, to: upList.count, by: chunkSize) {
+                    let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
+                    let placeholders = chunk.map { _ in "(?, 'upload', ?)" }.joined(separator: ",")
+                    var params = [Any]()
+                    for ckId in chunk {
+                        params.append(contentsOf: [ckId, now])
+                    }
+                    try _db.execute(
+                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                        parameters: params
                     )
                 }
             }
         }
 
         if let delData = UserDefaults.standard.data(forKey: legacyPendingDeletesKey),
-           let delList = try? JSONDecoder().decode([String].self, from: delData)
+           let delList = try? JSONDecoder().decode([String].self, from: delData), !delList.isEmpty
         {
             let now = Int64(Date().timeIntervalSince1970)
             try? transaction {
-                for ckId in delList {
-                    try? _db.execute(
-                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, 'delete', ?);",
-                        parameters: [ckId, now]
+                let chunkSize = 300 // 3 params per entry
+                for i in stride(from: 0, to: delList.count, by: chunkSize) {
+                    let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
+                    let placeholders = chunk.map { _ in "(?, 'delete', ?)" }.joined(separator: ",")
+                    var params = [Any]()
+                    for ckId in chunk {
+                        params.append(contentsOf: [ckId, now])
+                    }
+                    try _db.execute(
+                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                        parameters: params
                     )
                 }
             }
