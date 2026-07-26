@@ -231,20 +231,23 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 if let ckId {
                     HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                     pendingCloudKitDeletes.insert(ckId)
-
-                    deleteDebounceTask?.cancel()
-                    deleteDebounceTask = Task {
-                        try? await Task.sleep(for: .seconds(3))
-                        guard !Task.isCancelled else { return }
-
-                        await MainActor.run { [weak self] in
-                            guard let self, !pendingCloudKitDeletes.isEmpty else { return }
-                            let idsToDelete = Array(pendingCloudKitDeletes)
-                            pendingCloudKitDeletes.removeAll()
-                            CloudKitSyncManager.shared.delete(ckRecordIds: idsToDelete, target: .history)
-                        }
-                    }
+                    triggerDeleteDebounce()
                 }
+            }
+        }
+    }
+
+    private func triggerDeleteDebounce() {
+        deleteDebounceTask?.cancel()
+        deleteDebounceTask = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run { [weak self] in
+                guard let self, !pendingCloudKitDeletes.isEmpty else { return }
+                let idsToDelete = Array(pendingCloudKitDeletes)
+                pendingCloudKitDeletes.removeAll()
+                CloudKitSyncManager.shared.delete(ckRecordIds: idsToDelete, target: .history)
             }
         }
     }
@@ -296,6 +299,12 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         }
         var removedIds = [Int]()
         for bookId in toRemove {
+            if let ckId = entriesByBookId[bookId]?.ckRecordId {
+                HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                pendingCloudKitDeletes.insert(ckId)
+                triggerDeleteDebounce()
+            }
+            
             entriesByBookId.removeValue(forKey: bookId)
             removedIds.append(bookId)
             if deleteFromDB {
