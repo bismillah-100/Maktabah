@@ -14,6 +14,10 @@ actor TarjamahDatabaseActor {
 
     init(dbPath: String) throws {
         self.conn = try SQLiteConnection(dbPath: dbPath)
+        let ftsPath = dbPath.replacingOccurrences(of: "special.sqlite", with: "special_fts.sqlite")
+        if FileManager.default.fileExists(atPath: ftsPath) {
+            try? self.conn.execute(query: "ATTACH DATABASE '\(ftsPath)' AS fts_db")
+        }
     }
 
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]] {
@@ -44,8 +48,227 @@ class TarjamahGlobalManager {
 
     func setupConnection() {
         guard let specialPath = AppConfig.specialDatabasePath else { return }
+        
+        optimizeSpecialDatabase(mainDbPath: specialPath)
+        
         // Inisialisasi actor
         dbActor = try? TarjamahDatabaseActor(dbPath: specialPath)
+    }
+
+    private func optimizeSpecialDatabase(mainDbPath: String) {
+        let ftsPath = mainDbPath.replacingOccurrences(of: "special.sqlite", with: "special_fts.sqlite")
+        
+        let fm = FileManager.default
+        var needsOptimization = false
+        
+        if !fm.fileExists(atPath: ftsPath) {
+            needsOptimization = true
+        } else if let attr = try? fm.attributesOfItem(atPath: ftsPath), let size = attr[.size] as? Int64, size == 0 {
+            needsOptimization = true
+        }
+        
+        guard needsOptimization else { return }
+        
+        print("🔄 Memulai optimasi special.sqlite (FTS & ZSTD Compression)...")
+        
+        try? fm.removeItem(atPath: ftsPath)
+        
+        var db: OpaquePointer?
+        guard sqlite3_open(mainDbPath, &db) == SQLITE_OK else {
+            print("❌ Gagal buka db")
+            return
+        }
+        defer { sqlite3_close(db) }
+        
+        // 1. COMPRESS men_u
+        sqlite3_exec(db, "BEGIN", nil, nil, nil)
+        
+        let renameResult = sqlite3_exec(db, "ALTER TABLE men_u RENAME TO old_men_u", nil, nil, nil)
+        if renameResult == SQLITE_OK {
+            let createSql = """
+                CREATE TABLE men_u (
+                    Name    BLOB,
+                    IsoName BLOB,
+                    Bk      INTEGER,
+                    Id      INTEGER,
+                    uId     INTEGER
+                )
+            """
+            sqlite3_exec(db, createSql, nil, nil, nil)
+            
+            var readStmt: OpaquePointer?
+            sqlite3_prepare_v2(db, "SELECT Name, IsoName, Bk, Id, uId FROM old_men_u", -1, &readStmt, nil)
+            
+            var insertStmt: OpaquePointer?
+            sqlite3_prepare_v2(db, "INSERT INTO men_u (Name, IsoName, Bk, Id, uId) VALUES (?, ?, ?, ?, ?)", -1, &insertStmt, nil)
+            
+            let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+            
+            while sqlite3_step(readStmt) == SQLITE_ROW {
+                // Name
+                if let namePtr = sqlite3_column_text(readStmt, 0) {
+                    let nameStr = String(cString: namePtr)
+                    if let compressed = ReusableFunc.compressData(nameStr, level: 10) {
+                        _ = compressed.withUnsafeBytes { ptr in
+                            sqlite3_bind_blob(
+                                insertStmt, 1,
+                                ptr.baseAddress,
+                                Int32(compressed.count),
+                                SQLITE_TRANSIENT
+                            )
+                        }
+                    } else {
+                        sqlite3_bind_null(insertStmt, 1)
+                    }
+                } else {
+                    sqlite3_bind_null(insertStmt, 1)
+                }
+                
+                // IsoName
+                if let isoPtr = sqlite3_column_text(readStmt, 1) {
+                    let isoStr = String(cString: isoPtr)
+                    if let compressed = ReusableFunc.compressData(isoStr, level: 10) {
+                        _ = compressed.withUnsafeBytes { ptr in
+                            sqlite3_bind_blob(
+                                insertStmt, 2,
+                                ptr.baseAddress,
+                                Int32(compressed.count),
+                                SQLITE_TRANSIENT
+                            )
+                        }
+                    } else {
+                        sqlite3_bind_null(insertStmt, 2)
+                    }
+                } else {
+                    sqlite3_bind_null(insertStmt, 2)
+                }
+                
+                sqlite3_bind_int(insertStmt, 3, sqlite3_column_int(readStmt, 2))
+                sqlite3_bind_int(insertStmt, 4, sqlite3_column_int(readStmt, 3))
+                sqlite3_bind_int(insertStmt, 5, sqlite3_column_int(readStmt, 4))
+                
+                sqlite3_step(insertStmt)
+                sqlite3_reset(insertStmt)
+            }
+            sqlite3_finalize(readStmt)
+            sqlite3_finalize(insertStmt)
+            
+            sqlite3_exec(db, "DROP TABLE old_men_u", nil, nil, nil)
+            sqlite3_exec(db, "COMMIT", nil, nil, nil)
+            print("✅ men_u selesai dikompres")
+        } else {
+            sqlite3_exec(db, "ROLLBACK", nil, nil, nil)
+            print("⚠️ Tabel men_u mungkin sudah dikompres atau gagal rename.")
+        }
+        
+        // 2. CREATE FTS DB
+        let attachSql = "ATTACH DATABASE '\(ftsPath)' AS fts_db"
+        sqlite3_exec(db, attachSql, nil, nil, nil)
+        
+        let createFtsSql = """
+        CREATE VIRTUAL TABLE IF NOT EXISTS fts_db.men_u_fts
+        USING fts5(
+            IsoName_clean,
+            content='',
+            tokenize='unicode61'
+        )
+        """
+        sqlite3_exec(db, createFtsSql, nil, nil, nil)
+        
+        let createFtsBSql = """
+        CREATE VIRTUAL TABLE IF NOT EXISTS fts_db.men_b_fts
+        USING fts5(
+            Name_clean,
+            content='',
+            tokenize='unicode61'
+        )
+        """
+        sqlite3_exec(db, createFtsBSql, nil, nil, nil)
+        
+        sqlite3_exec(db, "BEGIN", nil, nil, nil)
+        
+        var readFtsStmt: OpaquePointer?
+        sqlite3_prepare_v2(db, "SELECT uId, IsoName FROM men_u WHERE IsoName IS NOT NULL", -1, &readFtsStmt, nil)
+        
+        var insertFtsStmt: OpaquePointer?
+        sqlite3_prepare_v2(db, "INSERT INTO fts_db.men_u_fts(rowid, IsoName_clean) VALUES (?, ?)", -1, &insertFtsStmt, nil)
+        
+        let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+        
+        while sqlite3_step(readFtsStmt) == SQLITE_ROW {
+            let uid = sqlite3_column_int(readFtsStmt, 0)
+            var isoNameClean = ""
+            
+            if sqlite3_column_type(readFtsStmt, 1) == SQLITE_BLOB {
+                if let blob = sqlite3_column_blob(readFtsStmt, 1) {
+                    let bytes = sqlite3_column_bytes(readFtsStmt, 1)
+                    let buffer = UnsafeRawBufferPointer(start: blob, count: Int(bytes))
+                    let decompressed = ReusableFunc.decompressData(from: buffer)
+                    isoNameClean = decompressed.normalizeArabic(false)
+                }
+            } else if sqlite3_column_type(readFtsStmt, 1) == SQLITE_TEXT {
+                if let text = sqlite3_column_text(readFtsStmt, 1) {
+                    isoNameClean = String(cString: text).normalizeArabic(false)
+                }
+            }
+            
+            if !isoNameClean.isEmpty {
+                sqlite3_bind_int(insertFtsStmt, 1, uid)
+                _ = isoNameClean.withCString { ptr in
+                    sqlite3_bind_text(insertFtsStmt, 2, ptr, -1, SQLITE_TRANSIENT)
+                }
+                sqlite3_step(insertFtsStmt)
+                sqlite3_reset(insertFtsStmt)
+            }
+        }
+        
+        sqlite3_finalize(readFtsStmt)
+        sqlite3_finalize(insertFtsStmt)
+        
+        // MARK: Populate men_b_fts
+        var readFtsBStmt: OpaquePointer?
+        sqlite3_prepare_v2(db, "SELECT Id, Name FROM men_b WHERE Name IS NOT NULL AND Name != ''", -1, &readFtsBStmt, nil)
+        
+        var insertFtsBStmt: OpaquePointer?
+        sqlite3_prepare_v2(db, "INSERT INTO fts_db.men_b_fts(rowid, Name_clean) VALUES (?, ?)", -1, &insertFtsBStmt, nil)
+        
+        while sqlite3_step(readFtsBStmt) == SQLITE_ROW {
+            let uid = sqlite3_column_int(readFtsBStmt, 0)
+            var nameClean = ""
+            
+            if let text = sqlite3_column_text(readFtsBStmt, 1) {
+                nameClean = String(cString: text).normalizeArabic(false)
+            }
+            
+            if !nameClean.isEmpty {
+                sqlite3_bind_int(insertFtsBStmt, 1, uid)
+                _ = nameClean.withCString { ptr in
+                    sqlite3_bind_text(insertFtsBStmt, 2, ptr, -1, SQLITE_TRANSIENT)
+                }
+                sqlite3_step(insertFtsBStmt)
+                sqlite3_reset(insertFtsBStmt)
+            }
+        }
+        
+        sqlite3_finalize(readFtsBStmt)
+        sqlite3_finalize(insertFtsBStmt)
+        
+        sqlite3_exec(db, "COMMIT", nil, nil, nil)
+        
+        // 3. VACUUM
+        print("🚀 VACUUM...")
+        sqlite3_exec(db, "VACUUM main", nil, nil, nil)
+        sqlite3_exec(db, "VACUUM fts_db", nil, nil, nil)
+        
+        sqlite3_exec(db, "DETACH DATABASE fts_db", nil, nil, nil)
+        print("✅ DONE: FTS created and optimized")
+        
+        // RE-INIT dbActor so it attaches the newly created fts_db
+        self.dbActor = try? TarjamahDatabaseActor(dbPath: mainDbPath)
+    }
+
+    func ftsPrepareIfNeeded() {
+
     }
 
     // MARK: - 1. Global Search (String) with Pause & Streaming
