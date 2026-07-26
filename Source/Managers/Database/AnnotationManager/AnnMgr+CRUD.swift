@@ -219,6 +219,28 @@ extension AnnotationManager {
         return nil
     }
 
+    func fetchAnnotations(byCkRecordIds ckRecordIds: [String]) -> [Annotation] {
+        guard let _db else { return [] }
+        var annotations: [Annotation] = []
+        let chunkSize = 500
+        for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
+            let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let sql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IN (\(placeholders))"
+
+            if var fetched = try? _db.fetch(query: sql, parameters: chunk, mapping: { self.makeAnnotation(from: $0) }) {
+                let tagsMap = fetchTagsForAnnotations(fetched)
+                for j in 0..<fetched.count {
+                    if let id = fetched[j].id {
+                        fetched[j].tags = tagsMap[id] ?? []
+                    }
+                }
+                annotations.append(contentsOf: fetched)
+            }
+        }
+        return annotations
+    }
+
     func loadAnnotations() -> [Annotation] {
         guard let _db else { return [] }
         var result: [Annotation] = []

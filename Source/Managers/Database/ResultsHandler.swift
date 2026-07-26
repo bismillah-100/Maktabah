@@ -896,6 +896,36 @@ extension ResultsHandler {
         return ids
     }
 
+    func fetchFolders(byCkRecordIds ckRecordIds: [String]) -> [SyncFolder] {
+        guard let db else { return [] }
+        var folders: [SyncFolder] = []
+        let chunkSize = 500
+        for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
+            let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let sql = "SELECT * FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+            if let fetched = try? db.fetch(query: sql, parameters: chunk, mapping: { self.makeSyncFolder(from: $0) }) {
+                folders.append(contentsOf: fetched)
+            }
+        }
+        return folders
+    }
+
+    func fetchResults(byCkRecordIds ckRecordIds: [String]) -> [SyncResult] {
+        guard let db else { return [] }
+        var results: [SyncResult] = []
+        let chunkSize = 500
+        for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
+            let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let sql = "SELECT * FROM \(resultsTable) WHERE \(colResCkRecordId) IN (\(placeholders))"
+            if let fetched = try? db.fetch(query: sql, parameters: chunk, mapping: { self.makeSyncResult(from: $0) }) {
+                results.append(contentsOf: fetched)
+            }
+        }
+        return results
+    }
+
     func fetchAllSyncFolders() -> [SyncFolder] {
         guard let db else { return [] }
         let sql = "SELECT * FROM \(foldersTable)"
