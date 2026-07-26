@@ -921,6 +921,7 @@ final class CloudKitSyncManager {
             completion?(.failure(error))
         default:
             // Other errors - leave as pending
+            handleCloudKitError(error, operationType: .upload)
             completion?(.failure(error))
         }
     }
