@@ -54,7 +54,8 @@ class TarjamahGlobalManager {
 
     // MARK: - 1. Global Search (String) with Pause & Streaming
 
-    /// Pencarian text global (men_b LIKE & men_u FTS) dengan fitur Pause & Streaming
+    /// Pencarian text global (`men_b` LIKE & `men_u` FTS) dengan fitur Pause & Streaming.
+    /// Fungsi ini sudah menormalisasi query dengan func `normalizedArabic()`.
     func searchTarjamah(
         query: String,
         limit: Int = 50,
@@ -64,7 +65,7 @@ class TarjamahGlobalManager {
         onComplete: @escaping () -> Void
     ) async {
 
-        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedQuery = query.normalizeArabic()
         guard !normalizedQuery.isEmpty else {
             onComplete()
             return
