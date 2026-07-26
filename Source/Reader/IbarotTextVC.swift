@@ -326,15 +326,26 @@ class IbarotTextVC: NSViewController {
     }
 
     @IBAction func copyWith(_ sender: Any? = nil) {
-        let attributedText: NSAttributedString = if textView.selectedRange.length > 1 {
+        let rawAttributedText: NSAttributedString = if textView.selectedRange.length > 1 {
             textView.attributedString().attributedSubstring(from: textView.selectedRange())
         } else {
             textView.attributedString()
         }
+        let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let combined = NSMutableAttributedString(attributedString: attributedText)
-        let formattedReference = viewModel.getCopyReference(for: "")
-        combined.append(NSAttributedString(string: formattedReference.replacingOccurrences(of: "\n\n", with: "")))
+        let rtlStyle = NSMutableParagraphStyle()
+        rtlStyle.baseWritingDirection = .rightToLeft
+        rtlStyle.alignment = .right
+        let rtlAttributes: [NSAttributedString.Key: Any] = [.paragraphStyle: rtlStyle]
+
+        let combined = NSMutableAttributedString()
+        combined.append(attributedText)
+        combined.append(NSAttributedString(string: "\n\n", attributes: rtlAttributes))
+
+        let citation = viewModel.getCopyCitation()
+        if !citation.isEmpty {
+            combined.append(NSAttributedString(string: citation, attributes: rtlAttributes))
+        }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()

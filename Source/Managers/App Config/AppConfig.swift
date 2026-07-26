@@ -522,9 +522,9 @@ struct AppConfig {
             if let bundlePath = archiveCachePath {
                 let mainSqFile = "main.sqlite"
                 let specialSqFile = "special.sqlite"
-                // let specialFtsSqFile = "special_fts.sqlite"
+                 let specialFtsSqFile = "special_fts.sqlite"
 
-                for fileName in [mainSqFile, specialSqFile] {
+                for fileName in [mainSqFile, specialSqFile, specialFtsSqFile] {
                     let sourcePath = "\(bundlePath)/\(fileName)"
                     let destPath = filesDir.appendingPathComponent(fileName).path
 
