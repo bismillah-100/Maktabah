@@ -928,121 +928,14 @@ extension ResultsHandler {
         do {
             try transaction {
                 // 1. Process Deletions
-                for ckId in recordIdsToDelete {
-                    let findSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-                    if let localId = try db.fetch(query: findSql, parameters: [ckId], mapping: { $0.int64(at: 0) }).first {
-                        let allLocalIds = getAllDescendantIds(of: localId)
-                        for fId in allLocalIds {
-                            try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) = ?;", parameters: [fId])
-                            try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [fId])
-                        }
-                    }
-                }
+                try processFolderDeletions(recordIdsToDelete: recordIdsToDelete, db: db)
 
                 // 2. Sort folders topologically to ensure parents are inserted before children
-                var sortedFolders: [SyncFolder] = []
-                var pendingFolders = foldersToSave
-                var progress = true
-
-                while !pendingFolders.isEmpty, progress {
-                    progress = false
-                    for i in (0 ..< pendingFolders.count).reversed() {
-                        let f = pendingFolders[i]
-                        let parentInPending = pendingFolders.contains { $0.ckRecordId == f.parentCkRecordId }
-                        if !parentInPending {
-                            sortedFolders.append(f)
-                            pendingFolders.remove(at: i)
-                            progress = true
-                        }
-                    }
-                }
-                // Append any remaining folders in case of circular dependencies
-                sortedFolders.append(contentsOf: pendingFolders)
+                let sortedFolders = sortFoldersTopologically(folders: foldersToSave)
 
                 // 3. Process Saves/Updates
                 for folder in sortedFolders {
-                    guard let ckId = folder.ckRecordId else { continue }
-
-                    // Resolve parent locally
-                    var pLocalId: Int64? = nil
-                    if let pCkId = folder.parentCkRecordId {
-                        let findParentSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-                        if let pid = try db.fetch(query: findParentSql, parameters: [pCkId], mapping: { $0.int64(at: 0) }).first {
-                            pLocalId = pid
-                        }
-                    }
-
-                    var existingLocalId: Int64 = -1
-                    var localLastMod: Int64 = 0
-                    var existingParentId: Int64? = nil
-                    let findSql = "SELECT \(colId), \(colLastModified), \(colParent) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-                    if let row = try db.fetch(query: findSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1), !$0.isNull(at: 2) ? $0.int64(at: 2) : nil) }).first {
-                        existingLocalId = row.0
-                        localLastMod = row.1
-                        existingParentId = row.2
-                    }
-
-                    if existingLocalId != -1 {
-                        let remoteLastMod = folder.lastModified ?? 0
-                        if remoteLastMod >= localLastMod {
-                            let isOrphan = folder.parentCkRecordId != nil && pLocalId == nil
-                            let newParentForDb = isOrphan ? existingParentId : pLocalId
-
-                            if !isOrphan || newParentForDb != nil {
-                                let conflictSql: String
-                                let conflictParams: [Any]
-                                if let pid = newParentForDb {
-                                    conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
-                                    conflictParams = [pid, folder.name, existingLocalId]
-                                } else {
-                                    conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? AND \(colId) != ? LIMIT 1"
-                                    conflictParams = [folder.name, existingLocalId]
-                                }
-                                if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
-                                    try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [conflictId])
-                                }
-                            }
-
-                            let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
-                            try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), newParentForDb ?? NSNull(), existingLocalId])
-                        }
-                    } else {
-                        var conflictLocalId: Int64 = -1
-                        var conflictLastMod: Int64 = 0
-
-                        let isOrphan = folder.parentCkRecordId != nil && pLocalId == nil
-                        
-                        if !isOrphan {
-                            let conflictSql: String
-                            let conflictParams: [Any]
-                            if let pid = pLocalId {
-                                conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? LIMIT 1"
-                                conflictParams = [pid, folder.name]
-                            } else {
-                                conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? LIMIT 1"
-                                conflictParams = [folder.name]
-                            }
-
-                            if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
-                                conflictLocalId = row.0
-                                conflictLastMod = row.1
-                            }
-                        }
-
-                        if conflictLocalId != -1 {
-                            let remoteLastMod = folder.lastModified ?? 0
-                            if remoteLastMod >= conflictLastMod {
-                                let upSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
-                                try db.execute(query: upSql, parameters: [ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull(), conflictLocalId])
-                            } else {
-                                let upCkIdSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ? WHERE \(colId) = ?"
-                                try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
-                            }
-                        } else {
-                            let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId), \(colParent)) VALUES (?, ?, ?, ?, ?);"
-                            try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
-                        }
-                    }
+                    try processSingleFolderSave(folder, db: db)
                 }
             }
 
@@ -1057,6 +950,126 @@ extension ResultsHandler {
             return false
         }
         return true
+    }
+
+    private func processFolderDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws {
+        for ckId in recordIdsToDelete {
+            let findSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
+            if let localId = try db.fetch(query: findSql, parameters: [ckId], mapping: { $0.int64(at: 0) }).first {
+                let allLocalIds = getAllDescendantIds(of: localId)
+                for fId in allLocalIds {
+                    try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) = ?;", parameters: [fId])
+                    try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [fId])
+                }
+            }
+        }
+    }
+
+    private func sortFoldersTopologically(folders: [SyncFolder]) -> [SyncFolder] {
+        var sortedFolders: [SyncFolder] = []
+        var pendingFolders = folders
+        var progress = true
+
+        while !pendingFolders.isEmpty, progress {
+            progress = false
+            for i in (0 ..< pendingFolders.count).reversed() {
+                let f = pendingFolders[i]
+                let parentInPending = pendingFolders.contains { $0.ckRecordId == f.parentCkRecordId }
+                if !parentInPending {
+                    sortedFolders.append(f)
+                    pendingFolders.remove(at: i)
+                    progress = true
+                }
+            }
+        }
+        // Append any remaining folders in case of circular dependencies
+        sortedFolders.append(contentsOf: pendingFolders)
+        return sortedFolders
+    }
+
+    private func processSingleFolderSave(_ folder: SyncFolder, db: SQLiteDatabase) throws {
+        guard let ckId = folder.ckRecordId else { return }
+
+        // Resolve parent locally
+        var pLocalId: Int64? = nil
+        if let pCkId = folder.parentCkRecordId {
+            let findParentSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
+            if let pid = try db.fetch(query: findParentSql, parameters: [pCkId], mapping: { $0.int64(at: 0) }).first {
+                pLocalId = pid
+            }
+        }
+
+        var existingLocalId: Int64 = -1
+        var localLastMod: Int64 = 0
+        var existingParentId: Int64? = nil
+        let findSql = "SELECT \(colId), \(colLastModified), \(colParent) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
+        if let row = try db.fetch(query: findSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1), !$0.isNull(at: 2) ? $0.int64(at: 2) : nil) }).first {
+            existingLocalId = row.0
+            localLastMod = row.1
+            existingParentId = row.2
+        }
+
+        if existingLocalId != -1 {
+            let remoteLastMod = folder.lastModified ?? 0
+            if remoteLastMod >= localLastMod {
+                let isOrphan = folder.parentCkRecordId != nil && pLocalId == nil
+                let newParentForDb = isOrphan ? existingParentId : pLocalId
+
+                if !isOrphan || newParentForDb != nil {
+                    let conflictSql: String
+                    let conflictParams: [Any]
+                    if let pid = newParentForDb {
+                        conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                        conflictParams = [pid, folder.name, existingLocalId]
+                    } else {
+                        conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? AND \(colId) != ? LIMIT 1"
+                        conflictParams = [folder.name, existingLocalId]
+                    }
+                    if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
+                        try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                    }
+                }
+
+                let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
+                try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), newParentForDb ?? NSNull(), existingLocalId])
+            }
+        } else {
+            var conflictLocalId: Int64 = -1
+            var conflictLastMod: Int64 = 0
+
+            let isOrphan = folder.parentCkRecordId != nil && pLocalId == nil
+
+            if !isOrphan {
+                let conflictSql: String
+                let conflictParams: [Any]
+                if let pid = pLocalId {
+                    conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? LIMIT 1"
+                    conflictParams = [pid, folder.name]
+                } else {
+                    conflictSql = "SELECT \(colId), \(colLastModified) FROM \(foldersTable) WHERE \(colParent) IS NULL AND \(colName) = ? LIMIT 1"
+                    conflictParams = [folder.name]
+                }
+
+                if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
+                    conflictLocalId = row.0
+                    conflictLastMod = row.1
+                }
+            }
+
+            if conflictLocalId != -1 {
+                let remoteLastMod = folder.lastModified ?? 0
+                if remoteLastMod >= conflictLastMod {
+                    let upSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
+                    try db.execute(query: upSql, parameters: [ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull(), conflictLocalId])
+                } else {
+                    let upCkIdSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ? WHERE \(colId) = ?"
+                    try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
+                }
+            } else {
+                let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId), \(colParent)) VALUES (?, ?, ?, ?, ?);"
+                try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
+            }
+        }
     }
 
     @discardableResult func applyCloudKitResultChanges(resultsToSave: [SyncResult], recordIdsToDelete: [String]) -> Bool {

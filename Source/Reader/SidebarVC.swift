@@ -64,23 +64,6 @@ class SidebarVC: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-//        guard let window = view.window,
-//              let guide = window.contentLayoutGuide as? NSLayoutGuide
-//        else { return }
-//
-//        let ve = NSVisualEffectView()
-//        ve.material = .fullScreenUI
-//        ve.blendingMode = .withinWindow
-//        ve.state = .active
-//        ve.translatesAutoresizingMaskIntoConstraints = false
-//        view.addSubview(ve, positioned: .above, relativeTo: outlineView)
-//
-//        NSLayoutConstraint.activate([
-//            ve.topAnchor.constraint(equalTo: view.topAnchor),
-//            ve.bottomAnchor.constraint(equalTo: guide.topAnchor),
-//            ve.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-//            ve.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-//        ])
     }
 
     @IBAction func performFindPanelAction(_ sender: Any) {

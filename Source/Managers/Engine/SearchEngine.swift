@@ -346,7 +346,6 @@ class SearchWorker {
         var results: [BookContent] = []
         var currentOffset = offset
         let targetEnd = offset + limit
-        // let fullPhrase = normalizedKeywords.joined(separator: " ")
 
         while currentOffset < targetEnd {
             await pauseController.waitIfPaused()

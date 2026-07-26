@@ -326,8 +326,6 @@ struct Muallif: Decodable {
     let namaLengkap: String // Opsional, tergantung penggunaannya
 
     // Properti tambahan yang sering ada di Syamilah (tapi tidak di kueri Anda)
-    // let tahunWafatHijriah: Int? // (higriAD)
-    // let tahunWafatMasehi: Int? // (AD)
 
     // MARK: - CodingKeys (Jika nama properti Swift berbeda dari nama Kolom SQL)
     private enum CodingKeys: String, CodingKey {
