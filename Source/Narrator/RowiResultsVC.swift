@@ -123,12 +123,10 @@ class RowiResultsVC: NSViewController {
             self?.tableView.reloadData()
         }
 
-        viewModel.onSearchBatchAppended = { startIndex, count in
+        viewModel.onSearchBatchAppended = { [weak self] startIndex, count in
             let indices = IndexSet(integersIn: startIndex..<(startIndex + count))
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                tableView.insertRows(at: indices, withAnimation: .effectFade)
-            }
+            guard let self else { return }
+            tableView.insertRows(at: indices, withAnimation: .effectFade)
         }
 
         viewModel.onSearchComplete = { [weak self] in
@@ -173,7 +171,9 @@ class RowiResultsVC: NSViewController {
     }
 
     func startNewSearch() {
-        let query = searchField.stringValue.trimmingCharacters(in: .whitespaces)
+        let query = searchField.stringValue
+            .normalizeArabic()
+            .trimmingCharacters(in: .whitespaces)
         guard !query.isEmpty else { return }
 
         ReusableFunc.updateBuiltInRecents(with: query, in: searchField)
