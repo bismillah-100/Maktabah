@@ -28,3 +28,6 @@ jobs:
             [PROJECT CONTEXT]
             - macOS/iOS hybrid app using AppKit, UIKit, and SwiftUI.
             - AppKit (e.g. NSOutlineView) is deliberately used over SwiftUI in high-performance UI components.
+            
+            [CRITICAL INSTRUCTION]
+            - You MUST output ONLY valid JSON. Do not include any conversational text, greetings, or explanations before or after the JSON block.
