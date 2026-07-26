@@ -892,12 +892,12 @@
 				F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */,
 				4BEC35902F34BA330038FC0F /* DatabaseError.swift */,
 				4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */,
+				F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */,
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
 				4B6100EA2EFA769200CCBED6 /* QuranDataManager.swift */,
 				4B5EC2982EE334C600991F39 /* ResultsHandler.swift */,
 				F321672C2FBB2C0D00601DB3 /* SQLiteDatabase.swift */,
-				F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */,
 			);
 			path = Database;
 			sourceTree = "<group>";
