@@ -324,14 +324,15 @@ class TarjamahGlobalManager {
     ) async {
         defer { onComplete() }
 
-        let normalizedQuery = query
+        let sanitizedQuery = query
+            .filter { $0.isLetter || $0.isNumber || $0.isWhitespace }
             .normalizeArabic()
-            .trimmingCharacters(in: .whitespaces)
-        guard !normalizedQuery.isEmpty else { return }
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sanitizedQuery.isEmpty else { return }
 
         // 1. Cek Cache dulu
-        if let cached = searchStringCache[normalizedQuery] {
-            print("📦 Cache Hit for query: \(normalizedQuery)")
+        if let cached = searchStringCache[sanitizedQuery] {
+            print("📦 Cache Hit for query: \(sanitizedQuery)")
             await onBatchResult(cached) // Kirim semua langsung
             return
         }
@@ -361,7 +362,7 @@ class TarjamahGlobalManager {
             if stopFlag() || Task.isCancelled { return }
             await pauseController?.waitIfPaused()
 
-            let ftsQuery = "\"\(normalizedQuery)\" *"   // phrase + prefix
+            let ftsQuery = "\"\(sanitizedQuery)\" *"   // phrase + prefix
 
             let sqlB = """
             SELECT main.Name, '', main.Bk, main.Id, main.ManId, main.bId
@@ -414,7 +415,7 @@ class TarjamahGlobalManager {
             if stopFlag() { return }
             await pauseController?.waitIfPaused()
 
-            let ftsQuery = "\"\(normalizedQuery)\" *" // Phrase + Prefix
+            let ftsQuery = "\"\(sanitizedQuery)\" *" // Phrase + Prefix
 
             let sqlU = """
             SELECT main.Name, main.IsoName, main.Bk, main.Id, main.uId
@@ -453,9 +454,7 @@ class TarjamahGlobalManager {
         }
 
         await flushBuffer() // Sisa buffer akhir
-        searchStringCache[normalizedQuery] = allResults
-
-        onComplete()
+        searchStringCache[sanitizedQuery] = allResults
     }
 
     // MARK: - 2. Rowa Lookup (Search by ID) - Merged from MenBManager
@@ -527,10 +526,7 @@ class TarjamahGlobalManager {
             await pauseController?.waitIfPaused()
 
             do {
-                let contentTask = Task {
-                    try await loadTarjamahContent(tarjamah)
-                }
-                guard let result = try await contentTask.value else {
+                guard let result = try await loadTarjamahContent(tarjamah) else {
                     continue 
                 }
                 batchBuffer.append(result)
