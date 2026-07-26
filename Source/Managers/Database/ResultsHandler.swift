@@ -471,14 +471,15 @@ extension ResultsHandler {
         var nodes: [Int64: FolderNode] = [:]
         var roots: [FolderNode] = []
 
-        let sql = "SELECT \(colId), \(colName), \(colParent), \(colLastModified) FROM \(foldersTable)"
+        let sql = "SELECT \(colId), \(colName), \(colParent), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable)"
         do {
-            let rows = try db.fetch(query: sql) { row -> (id: Int64, name: String, parent: Int64?, lastModified: Int64?) in
+            let rows = try db.fetch(query: sql) { row -> (id: Int64, name: String, parent: Int64?, lastModified: Int64?, parentCkId: String?) in
                 let fid = row.int64(at: 0)
                 let fname = row.string(at: 1) ?? ""
                 let fparent = !row.isNull(at: 2) ? row.int64(at: 2) : nil
                 let flastMod = !row.isNull(at: 3) ? row.int64(at: 3) : nil
-                return (id: fid, name: fname, parent: fparent, lastModified: flastMod)
+                let fparentCkId = row.string(at: 4)
+                return (id: fid, name: fname, parent: fparent, lastModified: flastMod, parentCkId: fparentCkId)
             }
 
             for row in rows {
@@ -489,7 +490,8 @@ extension ResultsHandler {
             for row in rows {
                 if let parentId = row.parent, let parentNode = nodes[parentId] {
                     parentNode.children.append(nodes[row.id]!)
-                } else {
+                } else if row.parentCkId == nil {
+                    // Hide orphan folders from root until their parent arrives
                     roots.append(nodes[row.id]!)
                 }
             }
@@ -741,7 +743,7 @@ extension ResultsHandler {
             sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ?"
             params = [fid]
         } else {
-            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL"
+            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colFolderCkRecordId) IS NULL"
         }
 
         do {
