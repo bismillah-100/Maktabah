@@ -101,9 +101,7 @@ extension AnnotationManager {
 
         try backfillCloudKitFieldsIfNeeded { backfilled in
             if !backfilled.isEmpty {
-                DispatchQueue.global(qos: .background).async {
-                    CloudKitSyncManager.shared.upload(annotations: backfilled)
-                }
+                CloudKitSyncManager.shared.upload(annotations: backfilled, debounce: false)
             }
         }
     }
