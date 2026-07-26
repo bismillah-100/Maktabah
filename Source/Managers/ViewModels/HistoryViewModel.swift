@@ -377,8 +377,8 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
                 DispatchQueue.global(qos: .background).async {
                     try? HistoryDatabaseManager.shared.transaction {
-                        HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
-                        HistoryDatabaseManager.shared.upsertEntries(upsertedEntries)
+                        try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
+                        try HistoryDatabaseManager.shared.upsertEntries(upsertedEntries)
                         HistoryDatabaseManager.shared.saveHistoryOrder(finalOrder)
                     }
                 }
@@ -415,7 +415,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         if didChange {
             DispatchQueue.global(qos: .background).async {
                 try? HistoryDatabaseManager.shared.transaction {
-                    HistoryDatabaseManager.shared.upsertEntries(toUpdateDb)
+                    try HistoryDatabaseManager.shared.upsertEntries(toUpdateDb)
                 }
             }
             loadBooksData()
@@ -465,7 +465,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
             DispatchQueue.global(qos: .background).async {
                 try? HistoryDatabaseManager.shared.transaction {
-                    HistoryDatabaseManager.shared.upsertEntries(newEntries)
+                    try HistoryDatabaseManager.shared.upsertEntries(newEntries)
                     HistoryDatabaseManager.shared.saveHistoryOrder(finalOrder)
                 }
                 

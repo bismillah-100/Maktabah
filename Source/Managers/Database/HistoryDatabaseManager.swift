@@ -129,7 +129,7 @@ class HistoryDatabaseManager {
         try? _db?.execute(query: sql, parameters: params)
     }
 
-    func upsertEntries(_ entries: [ReadingEntry]) {
+    func upsertEntries(_ entries: [ReadingEntry]) throws {
         guard let _db, !entries.isEmpty else { return }
         let chunkSize = 50 // SQLite max params is 999. We have 8 params per entry. 50 * 8 = 400.
         
@@ -155,7 +155,7 @@ class HistoryDatabaseManager {
                     entry.ckRecordId as Any? ?? NSNull()
                 ])
             }
-            try? _db.execute(query: sql, parameters: params)
+            try _db.execute(query: sql, parameters: params)
         }
     }
 
@@ -163,13 +163,13 @@ class HistoryDatabaseManager {
         try? exec("DELETE FROM reading_entries WHERE book_id = ?;", parameters: [bookId])
     }
 
-    func deleteEntries(bookIds: [Int]) {
+    func deleteEntries(bookIds: [Int]) throws {
         guard let _db, !bookIds.isEmpty else { return }
         let chunkSize = 500
         for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
             let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
             let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
-            try? _db.execute(
+            try _db.execute(
                 query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
                 parameters: chunk
             )
