@@ -16,9 +16,6 @@ jobs:
       contents: read
       statuses: write
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Jules PR Reviewer
         uses: thalesraymond/jules-pr-reviewer@v1
         with:

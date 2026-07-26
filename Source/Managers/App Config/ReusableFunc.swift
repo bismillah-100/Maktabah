@@ -221,8 +221,8 @@ class ReusableFunc {
                 return ""
             }
 
-            var outputBuffer = Data(count: Int(expectedSize))
-            let decompressedSize = outputBuffer.withUnsafeMutableBytes { (outPtr: UnsafeMutableRawBufferPointer) -> Int in
+            let expectedSizeInt = Int(expectedSize)
+            return String(unsafeUninitializedCapacity: expectedSizeInt) { outBuffer in
                 let dict = Thread.current.threadDictionary
                 let dctx: OpaquePointer
                 if let wrapper = dict["Maktabah.ZSTDDCtx"] as? ZSTDContextWrapper {
@@ -233,26 +233,24 @@ class ReusableFunc {
                     dctx = wrapper.dctx
                 }
 
-                return ZSTD_decompressDCtx(
+                let decompressedSize = ZSTD_decompressDCtx(
                     dctx,
-                    outPtr.baseAddress,
-                    Int(expectedSize),
+                    outBuffer.baseAddress,
+                    expectedSizeInt,
                     ptr.baseAddress,
                     ptr.count
                 )
-            }
 
-            if ZSTD_isError(decompressedSize) != 0 {
-                let errorName = String(cString: ZSTD_getErrorName(decompressedSize))
-                print("❌ Zstd Error: \(errorName)")
-                return ""
-            }
+                if ZSTD_isError(decompressedSize) != 0 {
+                    let errorName = String(cString: ZSTD_getErrorName(decompressedSize))
+                    #if DEBUG
+                    print("❌ Zstd Error: \(errorName)")
+                    #endif
+                    return 0
+                }
 
-            if decompressedSize < Int(expectedSize) {
-                outputBuffer.removeSubrange(decompressedSize..<outputBuffer.count)
+                return decompressedSize
             }
-
-            return String(decoding: outputBuffer, as: UTF8.self)
     }
 
     static func compressData(_ text: String, level: Int32 = 10) -> Data? {

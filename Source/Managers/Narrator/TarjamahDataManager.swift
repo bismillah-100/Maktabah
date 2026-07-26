@@ -23,6 +23,10 @@ actor TarjamahDatabaseActor {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]] {
         return try conn.queryRows(sql: sql, params: params)
     }
+
+    func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen] {
+        return try conn.queryTarjamah(sql: sql, params: params, isIsoName: isIsoName)
+    }
 }
 
 class TarjamahGlobalManager {
@@ -360,7 +364,7 @@ class TarjamahGlobalManager {
             let ftsQuery = "\"\(normalizedQuery)\" *"   // phrase + prefix
 
             let sqlB = """
-            SELECT main.Name, main.Bk, main.Id, main.ManId, main.bId
+            SELECT main.Name, '', main.Bk, main.Id, main.ManId, main.bId
             FROM men_b AS main
             JOIN men_b_fts AS fts ON main.Id = fts.rowid
             WHERE fts.Name_clean MATCH ?
@@ -421,34 +425,21 @@ class TarjamahGlobalManager {
             LIMIT ?
             """
 
-            let rowsU = try await conn.queryRows(
-                sql: sqlU, params: [.text(ftsQuery), .int(limit)]
-            )
+            let tarjamahsU = try await conn.queryTarjamah(sql: sqlU, params: [.text(ftsQuery), .int(limit)], isIsoName: true)
 
-            for (index, r) in rowsU.enumerated() {
+            for (index, t) in tarjamahsU.enumerated() {
+                var tVar = t
                 if index % 10 == 0 {
                     if stopFlag() || Task.isCancelled { return }
                     await pauseController?.waitIfPaused()
                 }
 
-                // Handle Blob Decompression
-                var isoStr = ""
-                if let data = r["IsoName"] as? Data {
-                    isoStr = ReusableFunc.decompressData(data)
-                } else if let s = r["IsoName"] as? String {
-                    isoStr = s
-                }
-
-                let bk = (r["Bk"] as? Int) ?? 0
-                let id = (r["Id"] as? Int) ?? 0
-
-                var t = TarjamahMen(name: isoStr, bk: bk, id: id) // manid nil di men_u
-
-                if let bookData = LibraryDataManager.shared.getBook([bk]).first {
-                    t.bookTitle = bookData.book
-                    t.archive = bookData.archive
-                    allResults.append(t)
-                    batchBuffer.append(t)
+                if let bookData = LibraryDataManager.shared.getBook([tVar.bk]).first {
+                    tVar.bookTitle = bookData.book
+                    tVar.archive = bookData.archive
+                    
+                    allResults.append(tVar)
+                    batchBuffer.append(tVar)
 
                     if batchBuffer.count >= 5 {
                         await flushBuffer()
@@ -482,26 +473,21 @@ class TarjamahGlobalManager {
 
         do {
             let sql = """
-            SELECT Name, Bk, Id, ManId
+            SELECT Name, '', Bk, Id, ManId
             FROM men_b
             WHERE Manid = ?
             ORDER BY Bk, Id
             """
 
-            let rows = try await conn.queryRows(sql: sql, params: [.int(rowaId)])
+            let tarjamahs = try await conn.queryTarjamah(sql: sql, params: [.int(rowaId)], isIsoName: false)
 
-            for r in rows {
-                let name = r["Name"] as? String ?? ""
-                let bk   = (r["Bk"] as? Int) ?? 0
-                let id   = (r["Id"] as? Int) ?? 0
-
-                var t = TarjamahMen(name: name, bk: bk, id: id)
-
-                if let bookData = LibraryDataManager.shared.getBook([bk]).first {
-                    t.bookTitle = bookData.book
-                    t.archive = bookData.archive
+            for t in tarjamahs {
+                var tVar = t
+                if let bookData = LibraryDataManager.shared.getBook([tVar.bk]).first {
+                    tVar.bookTitle = bookData.book
+                    tVar.archive = bookData.archive
                 }
-                results.append(t)
+                results.append(tVar)
             }
 
             // 2. Simpan ke Cache
@@ -574,20 +560,12 @@ class TarjamahGlobalManager {
 
         let sql = "SELECT nass FROM \(tableName) WHERE id = ? LIMIT 1"
 
-        let rows = try await pool.read(at: 0) { conn in
-            try conn.queryRows(sql: sql, params: [.int(tarjamah.id)])
+        let nass = try await pool.read(at: 0) { conn in
+            try conn.querySingleNass(sql: sql, params: [.int(tarjamah.id)])
         }
 
-        guard let firstRow = rows.first else {
+        guard let nass = nass else {
             throw NSError(domain: "Tarjamah", code: -2, userInfo: [NSLocalizedDescriptionKey: "Not found"])
-        }
-
-        var nass = ""
-        // Handle BLOB (Compressed) or TEXT
-        if let blobData = firstRow["nass"] as? Data {
-            nass = ReusableFunc.decompressData(blobData)
-        } else if let textData = firstRow["nass"] as? String {
-            nass = textData
         }
 
         // Buat snippet

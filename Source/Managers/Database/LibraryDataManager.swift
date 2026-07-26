@@ -559,7 +559,7 @@ class LibraryDataManager {
     /// Filter hierarchy untuk search (category mode)
     func filterCategory(_ category: CategoryData, searchText: String) -> CategoryData? {
         let normalizedSearch = searchText.normalizeArabic(false)
-        let categoryMatches = category.name.normalizeArabic(false).localizedStandardContains(normalizedSearch)
+        let categoryMatches = category.normalizedName.contains(normalizedSearch)
 
         // Jika kategori sendiri cocok, tampilkan semua children-nya tanpa filter
         // (misalnya: author "Imam Nawawi" cocok → semua bukunya ditampilkan)
@@ -574,7 +574,7 @@ class LibraryDataManager {
             if let childCategory = child as? CategoryData {
                 return filterCategory(childCategory, searchText: normalizedSearch)
             } else if let book = child as? BooksData {
-                if book.book.normalizeArabic(false).localizedStandardContains(normalizedSearch) {
+                if book.normalizedBook.contains(normalizedSearch) {
                     return book
                 }
             }
@@ -599,7 +599,7 @@ class LibraryDataManager {
         var matchedAuthors: [CategoryData] = []
 
         for category in categories {
-            if category.name.normalizeArabic(false).localizedStandardContains(normalizedSearch) {
+            if category.normalizedName.contains(normalizedSearch) {
                 // Author name matches - return ALL books under this author
                 let cloned = category.copy() as! CategoryData
                 cloned.children = category.children
@@ -617,7 +617,7 @@ class LibraryDataManager {
         for category in categories {
             let matchingBooks = category.children.compactMap { child -> Any? in
                 if let book = child as? BooksData {
-                    if book.book.normalizeArabic(false).localizedStandardContains(normalizedSearch) {
+                    if book.normalizedBook.contains(normalizedSearch) {
                         return book
                     }
                 }
