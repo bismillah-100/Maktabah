@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
+		2519CB6A1E669FBF7124993E /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
 		4B0139E02EEAFC3000424CFA /* CustomSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139DF2EEAFC3000424CFA /* CustomSplitView.swift */; };
 		4B0139E22EEB281C00424CFA /* BookPageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E12EEB281C00424CFA /* BookPageCache.swift */; };
 		4B0139E42EEB2FDF00424CFA /* StringInterner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E32EEB2FDF00424CFA /* StringInterner.swift */; };
@@ -267,6 +268,8 @@
 		4BFCD84C2F10744800E41F8A /* ScheherazadeNew-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84B2F10744800E41F8A /* ScheherazadeNew-Regular.ttf */; };
 		4BFCD84F2F10746600E41F8A /* Lateef-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84D2F10746600E41F8A /* Lateef-Regular.ttf */; };
 		4BFCD8502F10746600E41F8A /* Lateef-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84E2F10746600E41F8A /* Lateef-Bold.ttf */; };
+		61FB988FFF20432B9CEAB7E2 /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
+		B483563522A5498E6D6452ED /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
 		CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C09DE835C53C6EFC0748C3 /* MaktabahApp.swift */; };
 		CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
@@ -748,6 +751,7 @@
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
 		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
+		F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HistoryDatabaseManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -888,7 +892,7 @@
 				F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */,
 				4BEC35902F34BA330038FC0F /* DatabaseError.swift */,
 				4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */,
-				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
+				F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */,
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
 				4B6100EA2EFA769200CCBED6 /* QuranDataManager.swift */,
@@ -1390,6 +1394,7 @@
 				F3D02D3C2FE04D580054807F /* Protocols */,
 				F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
+				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
 				F3D02D602FE0616B0054807F /* NarratorViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
@@ -1746,6 +1751,7 @@
 				CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */,
 				CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */,
 				DB899712AF55D9ABF944D61F /* NetworkMonitor.swift in Sources */,
+				61FB988FFF20432B9CEAB7E2 /* HistoryDatabaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1891,6 +1897,7 @@
 				F321E0252FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0262FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F321E0272FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
+				2519CB6A1E669FBF7124993E /* HistoryDatabaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2036,6 +2043,7 @@
 				F3D02D612FE0616B0054807F /* NarratorViewModel.swift in Sources */,
 				F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */,
 				240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */,
+				B483563522A5498E6D6452ED /* HistoryDatabaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
