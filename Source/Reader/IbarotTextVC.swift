@@ -333,22 +333,19 @@ class IbarotTextVC: NSViewController {
         }
         let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let bookAndPage = viewModel.getCopyBookAndPage()
-        let babPath = viewModel.getCopyBabPath()
-
         let rtlStyle = NSMutableParagraphStyle()
         rtlStyle.baseWritingDirection = .rightToLeft
         rtlStyle.alignment = .right
         let rtlAttributes: [NSAttributedString.Key: Any] = [.paragraphStyle: rtlStyle]
 
         let combined = NSMutableAttributedString()
-        if !bookAndPage.isEmpty {
-            combined.append(NSAttributedString(string: bookAndPage + "\n", attributes: rtlAttributes))
-        }
-        if !babPath.isEmpty {
-            combined.append(NSAttributedString(string: babPath + "\n", attributes: rtlAttributes))
-        }
         combined.append(attributedText)
+        combined.append(NSAttributedString(string: "\n\n", attributes: rtlAttributes))
+
+        let citation = viewModel.getCopyCitation()
+        if !citation.isEmpty {
+            combined.append(NSAttributedString(string: citation, attributes: rtlAttributes))
+        }
 
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
