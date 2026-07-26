@@ -20,6 +20,8 @@ struct ArchiveInfo {
 protocol DBConnectionType {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
     func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent]
+    func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen]
+    func querySingleNass(sql: String, params: [SQLValue]) throws -> String?
 }
 
 enum SQLValue {
@@ -747,6 +749,102 @@ final class SQLiteConnection: DBConnectionType {
             results.append(BookContent(id: id, nash: nass, page: page, part: part))
         }
         return results
+    }
+
+    func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen] {
+        guard let db else { throw NSError(domain: "SQLite", code: -1, userInfo: nil) }
+        var statement: OpaquePointer?
+        var results: [TarjamahMen] = []
+
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+            throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+        }
+        defer { sqlite3_finalize(statement) }
+
+        for (i, param) in params.enumerated() {
+            let idx = Int32(i + 1)
+            switch param {
+            case let .text(s):
+                s.withCString { ptr in
+                    let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                }
+            case let .int(n):
+                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+            case .null:
+                sqlite3_bind_null(statement, idx)
+            }
+        }
+
+        let nameIndex: Int32 = isIsoName ? 1 : 0
+
+        while sqlite3_step(statement) == SQLITE_ROW {
+            var nameStr = ""
+            let type = sqlite3_column_type(statement, nameIndex)
+
+            if type == SQLITE_TEXT {
+                if let txt = sqlite3_column_text(statement, nameIndex) {
+                    let bytes = sqlite3_column_bytes(statement, nameIndex)
+                    let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
+                    nameStr = String(decoding: buffer, as: UTF8.self)
+                }
+            } else if type == SQLITE_BLOB {
+                if let blobPointer = sqlite3_column_blob(statement, nameIndex) {
+                    let blobSize = Int(sqlite3_column_bytes(statement, nameIndex))
+                    let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
+                    nameStr = ReusableFunc.decompressData(from: buffer)
+                }
+            }
+
+            let bk = Int(sqlite3_column_int64(statement, 2))
+            let id = Int(sqlite3_column_int64(statement, 3))
+
+            results.append(TarjamahMen(name: nameStr, bk: bk, id: id))
+        }
+        return results
+    }
+
+    func querySingleNass(sql: String, params: [SQLValue]) throws -> String? {
+        guard let db else { throw NSError(domain: "SQLite", code: -1, userInfo: nil) }
+        var statement: OpaquePointer?
+
+        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+            throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+        }
+        defer { sqlite3_finalize(statement) }
+
+        for (i, param) in params.enumerated() {
+            let idx = Int32(i + 1)
+            switch param {
+            case let .text(s):
+                s.withCString { ptr in
+                    let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                }
+            case let .int(n):
+                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+            case .null:
+                sqlite3_bind_null(statement, idx)
+            }
+        }
+
+        if sqlite3_step(statement) == SQLITE_ROW {
+            let type = sqlite3_column_type(statement, 0)
+            if type == SQLITE_TEXT {
+                if let txt = sqlite3_column_text(statement, 0) {
+                    let bytes = sqlite3_column_bytes(statement, 0)
+                    let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
+                    return String(decoding: buffer, as: UTF8.self)
+                }
+            } else if type == SQLITE_BLOB {
+                if let blobPointer = sqlite3_column_blob(statement, 0) {
+                    let blobSize = Int(sqlite3_column_bytes(statement, 0))
+                    let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
+                    return ReusableFunc.decompressData(from: buffer)
+                }
+            }
+        }
+        return nil
     }
 
     deinit {
