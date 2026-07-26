@@ -63,7 +63,7 @@ final class CloudKitSyncManager {
             case .result:
                 ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "upload")
             case .history:
-                HistoryViewModel.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
             }
         }
     }
@@ -71,7 +71,7 @@ final class CloudKitSyncManager {
     private func removePendingUploads(_ ids: [String]) {
         AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
         ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
-        HistoryViewModel.shared.removePendingSync(ckRecordIds: ids)
+        HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: ids)
     }
 
     private func addPendingDeletes(_ ids: [String], target: SyncTarget) {
@@ -82,7 +82,7 @@ final class CloudKitSyncManager {
             case .result:
                 ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "delete")
             case .history:
-                HistoryViewModel.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
             }
         }
     }
@@ -90,7 +90,7 @@ final class CloudKitSyncManager {
     private func removePendingDeletes(_ ids: [String]) {
         AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
         ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
-        HistoryViewModel.shared.removePendingSync(ckRecordIds: ids)
+        HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: ids)
     }
 
     // MARK: - Retry Logic
@@ -98,7 +98,7 @@ final class CloudKitSyncManager {
     private func retryPendingUploads() {
         let annPending = AnnotationManager.shared.fetchPendingSync(operation: "upload")
         let resPending = ResultsHandler.shared.fetchPendingSync(operation: "upload")
-        let histPending = HistoryViewModel.shared.fetchPendingSync(operation: "upload")
+        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: "upload")
 
         guard !annPending.isEmpty || !resPending.isEmpty || !histPending.isEmpty else { return }
 
@@ -152,14 +152,14 @@ final class CloudKitSyncManager {
             removePendingUploads(orphans)
             AnnotationManager.shared.removePendingSync(ckRecordIds: orphans)
             ResultsHandler.shared.removePendingSync(ckRecordIds: orphans)
-            HistoryViewModel.shared.removePendingSync(ckRecordIds: orphans)
+            HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: orphans)
         }
     }
 
     private func retryPendingDeletes() {
         let pending = AnnotationManager.shared.fetchPendingSync(operation: "delete") +
             ResultsHandler.shared.fetchPendingSync(operation: "delete") +
-            HistoryViewModel.shared.fetchPendingSync(operation: "delete")
+            HistoryDatabaseManager.shared.fetchPendingSync(operation: "delete")
 
         guard !pending.isEmpty else { return }
         delete(ckRecordIds: pending, trackPending: false)
