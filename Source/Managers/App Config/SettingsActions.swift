@@ -359,7 +359,7 @@ enum SettingsActions {
         ResultsHandler.shared.disconnect()
 
         if let oldURL, fm.fileExists(atPath: oldURL.path) {
-            let filesToMove = ["Annotations.sqlite", "SearchResults.sqlite", "Annotations.sqlite-wal", "Annotations.sqlite-shm", "SearchResults.sqlite-wal", "SearchResults.sqlite-shm"]
+            let filesToMove = ["Annotations.sqlite", "SearchResults.sqlite", "History.sqlite", "Annotations.sqlite-wal", "Annotations.sqlite-shm", "SearchResults.sqlite-wal", "SearchResults.sqlite-shm", "History.sqlite-wal", "History.sqlite-shm"]
 
             // Phase 1: Check for collisions
             if resolution == .ask {

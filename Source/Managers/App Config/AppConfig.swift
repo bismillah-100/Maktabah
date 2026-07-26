@@ -593,7 +593,7 @@ struct AppConfig {
 
     private static func migrateFiles(from sourceURL: URL, to destURL: URL) {
         let fm = FileManager.default
-        let files = ["Annotations.sqlite", "SearchResults.sqlite"]
+        let files = ["Annotations.sqlite", "SearchResults.sqlite", "History.sqlite"]
         let exts = ["", "-wal", "-shm"]
 
         for file in files {
