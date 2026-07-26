@@ -53,58 +53,81 @@ class TarjamahGlobalManager {
         dbActor = try? TarjamahDatabaseActor(dbPath: specialPath)
     }
 
-#if os(macOS)
+    #if os(macOS)
     func optimizeSpecialDatabaseIfNeeded() {
         guard let mainDbPath = AppConfig.specialDatabasePath else { return }
-        let ftsPath = mainDbPath.replacingOccurrences(of: "special.sqlite", with: "special_fts.sqlite")
+        let ftsPath = mainDbPath.replacingOccurrences(
+            of: "special.sqlite",
+            with: "special_fts.sqlite"
+        )
 
-        
         let fm = FileManager.default
         var needsOptimization = false
-        
+
+        // 0. Ensure index exists to prevent extremely slow FTS JOIN queries
+        if let db = try? SQLiteConnection(dbPath: mainDbPath) {
+            try? db.execute(query: "CREATE INDEX IF NOT EXISTS idx_men_u_uid ON men_u(uId);")
+            try? db.execute(query: "CREATE INDEX IF NOT EXISTS idx_men_b_id ON men_b(Id);")
+        }
+
         if !fm.fileExists(atPath: ftsPath) {
             needsOptimization = true
-        } else if let attr = try? fm.attributesOfItem(atPath: ftsPath), let size = attr[.size] as? Int64, size == 0 {
+        } else if let attr = try? fm.attributesOfItem(atPath: ftsPath),
+                  let size = attr[.size] as? Int64, size == 0 {
             needsOptimization = true
         }
-        
+
         guard needsOptimization else { return }
-        
-        print("🔄 Memulai optimasi special.sqlite (FTS & ZSTD Compression)...")
-        
+
+        print("Memulai optimasi special.sqlite (FTS & ZSTD Compression)...")
+
         try? fm.removeItem(atPath: ftsPath)
-        
+
         var db: OpaquePointer?
         guard sqlite3_open(mainDbPath, &db) == SQLITE_OK else {
             print("❌ Gagal buka db")
             return
         }
         defer { sqlite3_close(db) }
-        
+
         // 1. COMPRESS men_u
         sqlite3_exec(db, "BEGIN", nil, nil, nil)
-        
-        let renameResult = sqlite3_exec(db, "ALTER TABLE men_u RENAME TO old_men_u", nil, nil, nil)
+
+        let renameResult = sqlite3_exec(
+            db, "ALTER TABLE men_u RENAME TO old_men_u",
+            nil, nil, nil
+        )
         if renameResult == SQLITE_OK {
             let createSql = """
                 CREATE TABLE men_u (
-                    Name    BLOB,
+                    Name BLOB,
                     IsoName BLOB,
-                    Bk      INTEGER,
-                    Id      INTEGER,
-                    uId     INTEGER
+                    Bk INTEGER,
+                    Id INTEGER,
+                    uId INTEGER
                 )
             """
             sqlite3_exec(db, createSql, nil, nil, nil)
-            
+
             var readStmt: OpaquePointer?
-            sqlite3_prepare_v2(db, "SELECT Name, IsoName, Bk, Id, uId FROM old_men_u", -1, &readStmt, nil)
-            
+            sqlite3_prepare_v2(
+                db,
+                "SELECT Name, IsoName, Bk, Id, uId FROM old_men_u",
+                -1, &readStmt, nil
+            )
+
             var insertStmt: OpaquePointer?
-            sqlite3_prepare_v2(db, "INSERT INTO men_u (Name, IsoName, Bk, Id, uId) VALUES (?, ?, ?, ?, ?)", -1, &insertStmt, nil)
-            
-            let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
-            
+            sqlite3_prepare_v2(
+                db,
+                "INSERT INTO men_u (Name, IsoName, Bk, Id, uId) VALUES (?, ?, ?, ?, ?)",
+                -1, &insertStmt, nil
+            )
+
+            let SQLITE_TRANSIENT = unsafeBitCast(
+                OpaquePointer(bitPattern: -1),
+                to: sqlite3_destructor_type.self
+            )
+
             while sqlite3_step(readStmt) == SQLITE_ROW {
                 // Name
                 if let namePtr = sqlite3_column_text(readStmt, 0) {
@@ -124,7 +147,7 @@ class TarjamahGlobalManager {
                 } else {
                     sqlite3_bind_null(insertStmt, 1)
                 }
-                
+
                 // IsoName
                 if let isoPtr = sqlite3_column_text(readStmt, 1) {
                     let isoStr = String(cString: isoPtr)
@@ -143,29 +166,29 @@ class TarjamahGlobalManager {
                 } else {
                     sqlite3_bind_null(insertStmt, 2)
                 }
-                
+
                 sqlite3_bind_int(insertStmt, 3, sqlite3_column_int(readStmt, 2))
                 sqlite3_bind_int(insertStmt, 4, sqlite3_column_int(readStmt, 3))
                 sqlite3_bind_int(insertStmt, 5, sqlite3_column_int(readStmt, 4))
-                
+
                 sqlite3_step(insertStmt)
                 sqlite3_reset(insertStmt)
             }
             sqlite3_finalize(readStmt)
             sqlite3_finalize(insertStmt)
-            
+
             sqlite3_exec(db, "DROP TABLE old_men_u", nil, nil, nil)
             sqlite3_exec(db, "COMMIT", nil, nil, nil)
-            print("✅ men_u selesai dikompres")
+            print("men_u selesai dikompres")
         } else {
             sqlite3_exec(db, "ROLLBACK", nil, nil, nil)
-            print("⚠️ Tabel men_u mungkin sudah dikompres atau gagal rename.")
+            print("Tabel men_u mungkin sudah dikompres atau gagal rename.")
         }
-        
+
         // 2. CREATE FTS DB
         let attachSql = "ATTACH DATABASE '\(ftsPath)' AS fts_db"
         sqlite3_exec(db, attachSql, nil, nil, nil)
-        
+
         let createFtsSql = """
         CREATE VIRTUAL TABLE IF NOT EXISTS fts_db.men_u_fts
         USING fts5(
@@ -175,7 +198,7 @@ class TarjamahGlobalManager {
         )
         """
         sqlite3_exec(db, createFtsSql, nil, nil, nil)
-        
+
         let createFtsBSql = """
         CREATE VIRTUAL TABLE IF NOT EXISTS fts_db.men_b_fts
         USING fts5(
@@ -185,21 +208,30 @@ class TarjamahGlobalManager {
         )
         """
         sqlite3_exec(db, createFtsBSql, nil, nil, nil)
-        
+
         sqlite3_exec(db, "BEGIN", nil, nil, nil)
-        
+
         var readFtsStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "SELECT uId, IsoName FROM men_u WHERE IsoName IS NOT NULL", -1, &readFtsStmt, nil)
-        
+        sqlite3_prepare_v2(
+            db, "SELECT uId, IsoName FROM men_u WHERE IsoName IS NOT NULL",
+            -1, &readFtsStmt, nil
+        )
+
         var insertFtsStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT INTO fts_db.men_u_fts(rowid, IsoName_clean) VALUES (?, ?)", -1, &insertFtsStmt, nil)
-        
-        let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
-        
+        sqlite3_prepare_v2(
+            db, "INSERT INTO fts_db.men_u_fts(rowid, IsoName_clean) VALUES (?, ?)",
+            -1, &insertFtsStmt, nil
+        )
+
+        let SQLITE_TRANSIENT = unsafeBitCast(
+            OpaquePointer(bitPattern: -1),
+            to: sqlite3_destructor_type.self
+        )
+
         while sqlite3_step(readFtsStmt) == SQLITE_ROW {
             let uid = sqlite3_column_int(readFtsStmt, 0)
             var isoNameClean = ""
-            
+
             if sqlite3_column_type(readFtsStmt, 1) == SQLITE_BLOB {
                 if let blob = sqlite3_column_blob(readFtsStmt, 1) {
                     let bytes = sqlite3_column_bytes(readFtsStmt, 1)
@@ -212,7 +244,7 @@ class TarjamahGlobalManager {
                     isoNameClean = String(cString: text).normalizeArabic(false)
                 }
             }
-            
+
             if !isoNameClean.isEmpty {
                 sqlite3_bind_int(insertFtsStmt, 1, uid)
                 _ = isoNameClean.withCString { ptr in
@@ -222,25 +254,31 @@ class TarjamahGlobalManager {
                 sqlite3_reset(insertFtsStmt)
             }
         }
-        
+
         sqlite3_finalize(readFtsStmt)
         sqlite3_finalize(insertFtsStmt)
-        
+
         // MARK: Populate men_b_fts
+
         var readFtsBStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "SELECT Id, Name FROM men_b WHERE Name IS NOT NULL AND Name != ''", -1, &readFtsBStmt, nil)
-        
+        sqlite3_prepare_v2(
+            db, "SELECT Id, Name FROM men_b WHERE Name IS NOT NULL AND Name != ''",
+            -1, &readFtsBStmt, nil
+        )
+
         var insertFtsBStmt: OpaquePointer?
-        sqlite3_prepare_v2(db, "INSERT INTO fts_db.men_b_fts(rowid, Name_clean) VALUES (?, ?)", -1, &insertFtsBStmt, nil)
-        
+        sqlite3_prepare_v2(
+            db, "INSERT INTO fts_db.men_b_fts(rowid, Name_clean) VALUES (?, ?)",
+            -1, &insertFtsBStmt, nil)
+
         while sqlite3_step(readFtsBStmt) == SQLITE_ROW {
             let uid = sqlite3_column_int(readFtsBStmt, 0)
             var nameClean = ""
-            
+
             if let text = sqlite3_column_text(readFtsBStmt, 1) {
                 nameClean = String(cString: text).normalizeArabic(false)
             }
-            
+
             if !nameClean.isEmpty {
                 sqlite3_bind_int(insertFtsBStmt, 1, uid)
                 _ = nameClean.withCString { ptr in
@@ -250,28 +288,24 @@ class TarjamahGlobalManager {
                 sqlite3_reset(insertFtsBStmt)
             }
         }
-        
+
         sqlite3_finalize(readFtsBStmt)
         sqlite3_finalize(insertFtsBStmt)
-        
+
         sqlite3_exec(db, "COMMIT", nil, nil, nil)
-        
+
         // 3. VACUUM
-        print("🚀 VACUUM...")
+        print("VACUUM...")
         sqlite3_exec(db, "VACUUM main", nil, nil, nil)
         sqlite3_exec(db, "VACUUM fts_db", nil, nil, nil)
-        
+
         sqlite3_exec(db, "DETACH DATABASE fts_db", nil, nil, nil)
-        print("✅ DONE: FTS created and optimized")
-        
+        print("DONE: FTS created and optimized")
+
         // RE-INIT dbActor so it attaches the newly created fts_db
         self.dbActor = try? TarjamahDatabaseActor(dbPath: mainDbPath)
     }
-#endif
-
-    func ftsPrepareIfNeeded() {
-
-    }
+    #endif
 
     // MARK: - 1. Global Search (String) with Pause & Streaming
 
@@ -284,24 +318,22 @@ class TarjamahGlobalManager {
         onBatchResult: @escaping @Sendable ([TarjamahMen]) async -> Void, // Ubah jadi async
         onComplete: @escaping () -> Void
     ) async {
+        defer { onComplete() }
 
-        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalizedQuery.isEmpty else {
-            onComplete()
-            return
-        }
+        let normalizedQuery = query
+            .normalizeArabic()
+            .trimmingCharacters(in: .whitespaces)
+        guard !normalizedQuery.isEmpty else { return }
 
         // 1. Cek Cache dulu
         if let cached = searchStringCache[normalizedQuery] {
             print("📦 Cache Hit for query: \(normalizedQuery)")
             await onBatchResult(cached) // Kirim semua langsung
-            onComplete()
             return
         }
 
         guard let conn = dbActor else {
             print("❌ Connection error")
-            onComplete()
             return
         }
 
@@ -322,7 +354,7 @@ class TarjamahGlobalManager {
         // A. Search di men_b (LIKE)
         // ---------------------------------------------------------
         do {
-            if stopFlag() { return }
+            if stopFlag() || Task.isCancelled { return }
             await pauseController?.waitIfPaused()
 
             let ftsQuery = "\"\(normalizedQuery)\" *"   // phrase + prefix
@@ -343,7 +375,7 @@ class TarjamahGlobalManager {
 
             for (index, r) in rowsB.enumerated() {
                 if index % 10 == 0 {
-                    if stopFlag() { return }
+                    if stopFlag() || Task.isCancelled { return }
                     await pauseController?.waitIfPaused()
                 }
 
@@ -389,11 +421,13 @@ class TarjamahGlobalManager {
             LIMIT ?
             """
 
-            let rowsU = try await conn.queryRows(sql: sqlU, params: [.text(ftsQuery), .int(limit)])
+            let rowsU = try await conn.queryRows(
+                sql: sqlU, params: [.text(ftsQuery), .int(limit)]
+            )
 
             for (index, r) in rowsU.enumerated() {
                 if index % 10 == 0 {
-                    if stopFlag() { return }
+                    if stopFlag() || Task.isCancelled { return }
                     await pauseController?.waitIfPaused()
                 }
 
@@ -413,13 +447,14 @@ class TarjamahGlobalManager {
                 if let bookData = LibraryDataManager.shared.getBook([bk]).first {
                     t.bookTitle = bookData.book
                     t.archive = bookData.archive
-                }
+                    allResults.append(t)
+                    batchBuffer.append(t)
 
-                allResults.append(t)
-                batchBuffer.append(t)
-
-                if batchBuffer.count >= 5 {
-                    await flushBuffer()
+                    if batchBuffer.count >= 5 {
+                        await flushBuffer()
+                    }
+                } else {
+                    continue
                 }
             }
         } catch {
@@ -427,8 +462,6 @@ class TarjamahGlobalManager {
         }
 
         await flushBuffer() // Sisa buffer akhir
-
-        // Simpan ke cache untuk query ini
         searchStringCache[normalizedQuery] = allResults
 
         onComplete()
@@ -490,17 +523,16 @@ class TarjamahGlobalManager {
         _ tarjamahList: [TarjamahMen],
         pauseController: PauseController?,
         stopFlag: @escaping () -> Bool,
-        onBatchResult: @escaping ([TarjamahResult]) -> Void,
         onProgress: @escaping (Int, Int) -> Void
-    ) async {
+    ) async -> [TarjamahResult] {
 
-        guard !tarjamahList.isEmpty else { return }
+        guard !tarjamahList.isEmpty else { return [] }
 
         var batchBuffer: [TarjamahResult] = []
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             // Cek Stop
-            if stopFlag() {
+            if stopFlag() || Task.isCancelled {
                 print("🛑 Loading stopped at index \(index)")
                 break
             }
@@ -509,19 +541,16 @@ class TarjamahGlobalManager {
             await pauseController?.waitIfPaused()
 
             do {
-                guard let result = try await loadTarjamahContent(tarjamah) else { break }
+                let contentTask = Task {
+                    try await loadTarjamahContent(tarjamah)
+                }
+                guard let result = try await contentTask.value else {
+                    continue 
+                }
                 batchBuffer.append(result)
 
-                // Stream setiap 5 item selesai
-                if batchBuffer.count >= 5 {
-                    let chunk = batchBuffer
-                    batchBuffer.removeAll()
-                    await MainActor.run {
-                        onBatchResult(chunk)
-                    }
-                }
 
-                // Update progress UI
+
                 await MainActor.run {
                     onProgress(index + 1, tarjamahList.count)
                 }
@@ -531,13 +560,7 @@ class TarjamahGlobalManager {
             }
         }
 
-        // Flush sisa buffer
-        if !batchBuffer.isEmpty {
-            let chunk = batchBuffer
-            await MainActor.run {
-                onBatchResult(chunk)
-            }
-        }
+        return batchBuffer
     }
 
     /// Load konten single (Atomic operation)
@@ -593,7 +616,7 @@ class TarjamahGlobalManager {
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             do {
-                guard let result = try await loadTarjamahContent(tarjamah) else { break }
+                guard let result = try await loadTarjamahContent(tarjamah) else { continue }
                 results.append(result)
 
                 await MainActor.run {
