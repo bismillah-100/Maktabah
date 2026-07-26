@@ -39,6 +39,8 @@ struct TOC {
 class BooksData: Codable, Identifiable {
     let id: Int
     let book: String
+    let normalizedBook: String
+
     let archive: Int
     let muallif: Int
     var catId: Int?
@@ -67,6 +69,7 @@ class BooksData: Codable, Identifiable {
     init(id: Int, book: String, archive: Int, muallif: Int, bithoqoh: String = "", info: String = "") {
         self.id = id
         self.book = StringInterner.shared.intern(book)
+        self.normalizedBook = book.normalizeArabic(false)
         self.archive = archive
         self.muallif = muallif
         self.bithoqoh = bithoqoh
@@ -77,6 +80,7 @@ class BooksData: Codable, Identifiable {
 class CategoryData: NSCopying {
     let id: Int
     let name: String
+    let normalizedName: String
     let level: Int
     let order: Int
     var isChecked: Bool = true
@@ -85,6 +89,7 @@ class CategoryData: NSCopying {
     init(id: Int, name: String, level: Int, order: Int) {
         self.id = id
         self.name = StringInterner.shared.intern(name)
+        self.normalizedName = name.normalizeArabic(false)
         self.level = level
         self.order = order
     }
