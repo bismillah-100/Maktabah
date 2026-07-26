@@ -49,14 +49,15 @@ class TarjamahGlobalManager {
     func setupConnection() {
         guard let specialPath = AppConfig.specialDatabasePath else { return }
         
-        optimizeSpecialDatabase(mainDbPath: specialPath)
-        
         // Inisialisasi actor
         dbActor = try? TarjamahDatabaseActor(dbPath: specialPath)
     }
 
-    private func optimizeSpecialDatabase(mainDbPath: String) {
+#if os(macOS)
+    func optimizeSpecialDatabaseIfNeeded() {
+        guard let mainDbPath = AppConfig.specialDatabasePath else { return }
         let ftsPath = mainDbPath.replacingOccurrences(of: "special.sqlite", with: "special_fts.sqlite")
+
         
         let fm = FileManager.default
         var needsOptimization = false
@@ -266,6 +267,7 @@ class TarjamahGlobalManager {
         // RE-INIT dbActor so it attaches the newly created fts_db
         self.dbActor = try? TarjamahDatabaseActor(dbPath: mainDbPath)
     }
+#endif
 
     func ftsPrepareIfNeeded() {
 

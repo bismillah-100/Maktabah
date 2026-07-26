@@ -187,10 +187,14 @@ class RowiResultsVC: NSViewController {
         updateStartButton(isPaused: false, isActive: false, state: .off)
     }
 
-    @IBAction func searchBtnDidClick(_ sender: NSSegmentedControl) {
+    @IBAction func switchRowiMode(_ sender: NSSegmentedControl) {
         switch sender.selectedSegment {
         case 0: hideStackUtils()
-        case 1: hideRowiUtils()
+        case 1: 
+            hideRowiUtils()
+            Task.detached {
+                TarjamahGlobalManager.shared.optimizeSpecialDatabaseIfNeeded()
+            }
         default: break
         }
         tableView.reloadData()
