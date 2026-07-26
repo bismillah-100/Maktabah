@@ -36,6 +36,8 @@ class RowiResultsVC: NSViewController {
     var rowiMode: RowiMode = .sidebar
     var shouldClickButton: Bool = true
 
+    private var rebuildTask: Task<Void, Never>?
+
     // MARK: - ViewModel
 
     var viewModel: NarratorViewModel!
@@ -192,8 +194,15 @@ class RowiResultsVC: NSViewController {
         case 0: hideStackUtils()
         case 1: 
             hideRowiUtils()
-            Task.detached {
+            if rebuildTask != nil { return }
+            ReusableFunc.showProgressWindow(view)
+            rebuildTask = Task.detached {
                 TarjamahGlobalManager.shared.optimizeSpecialDatabaseIfNeeded()
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    ReusableFunc.closeProgressWindow(view)
+                    rebuildTask = nil
+                }
             }
         default: break
         }
