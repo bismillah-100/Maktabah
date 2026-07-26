@@ -19,6 +19,10 @@ actor TarjamahDatabaseActor {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]] {
         return try conn.queryRows(sql: sql, params: params)
     }
+
+    func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen] {
+        return try conn.queryTarjamah(sql: sql, params: params, isIsoName: isIsoName)
+    }
 }
 
 class TarjamahGlobalManager {

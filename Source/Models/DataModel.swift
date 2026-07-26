@@ -66,42 +66,7 @@ class BooksData: Codable, Identifiable {
     }
     var isChecked: Bool = true
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case book
-        case archive
-        case muallif
-        case catId
-        case downloadFilename
-        case compressedDownloadSize
-        case tafseerNam
-        case pdfCs
-        case bithoqoh
-        case info
-        case isChecked
-    }
-
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(Int.self, forKey: .id)
-        let bookStr = try container.decode(String.self, forKey: .book)
-        self.book = StringInterner.shared.intern(bookStr)
-        self.normalizedBook = bookStr.normalizeArabic(false)
-        self.archive = try container.decode(Int.self, forKey: .archive)
-        self.muallif = try container.decode(Int.self, forKey: .muallif)
-        self.catId = try container.decodeIfPresent(Int.self, forKey: .catId)
-        self.downloadFilename = try container.decodeIfPresent(String.self, forKey: .downloadFilename)
-        self.compressedDownloadSize = try container.decodeIfPresent(Int64.self, forKey: .compressedDownloadSize)
-        self.tafseerNam = try container.decodeIfPresent(String.self, forKey: .tafseerNam)
-        self.pdfCs = try container.decodeIfPresent(Int.self, forKey: .pdfCs)
-        self.bithoqoh = try container.decodeIfPresent(String.self, forKey: .bithoqoh) ?? ""
-        self.info = try container.decodeIfPresent(String.self, forKey: .info) ?? ""
-        self.isChecked = try container.decodeIfPresent(Bool.self, forKey: .isChecked) ?? true
-    }
-
     init(id: Int, book: String, archive: Int, muallif: Int, bithoqoh: String = "", info: String = "") {
-
         self.id = id
         self.book = StringInterner.shared.intern(book)
         self.normalizedBook = book.normalizeArabic(false)
