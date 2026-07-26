@@ -103,7 +103,7 @@ class HistoryDatabaseManager {
         try _db.execute(query: sql, parameters: parameters)
     }
 
-    private func transaction(_ block: () throws -> Void) throws {
+    func transaction(_ block: () throws -> Void) throws {
         guard let _db else { return }
         try _db.transaction(block)
     }
@@ -197,11 +197,15 @@ class HistoryDatabaseManager {
 
     func removePendingSync(ckRecordIds: [String]) {
         guard let _db, !ckRecordIds.isEmpty else { return }
-        let placeholders = ckRecordIds.map { _ in "?" }.joined(separator: ",")
-        try? _db.execute(
-            query: "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));",
-            parameters: ckRecordIds
-        )
+        let chunkSize = 500
+        for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
+            let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
+            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            try? _db.execute(
+                query: "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));",
+                parameters: chunk
+            )
+        }
     }
 
     func fetchPendingSync(operation: String) -> [String] {
@@ -245,11 +249,13 @@ class HistoryDatabaseManager {
            let upList = try? JSONDecoder().decode([String].self, from: upData)
         {
             let now = Int64(Date().timeIntervalSince1970)
-            for ckId in upList {
-                try? _db.execute(
-                    query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, 'upload', ?);",
-                    parameters: [ckId, now]
-                )
+            try? transaction {
+                for ckId in upList {
+                    try? _db.execute(
+                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, 'upload', ?);",
+                        parameters: [ckId, now]
+                    )
+                }
             }
         }
 
@@ -257,11 +263,13 @@ class HistoryDatabaseManager {
            let delList = try? JSONDecoder().decode([String].self, from: delData)
         {
             let now = Int64(Date().timeIntervalSince1970)
-            for ckId in delList {
-                try? _db.execute(
-                    query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, 'delete', ?);",
-                    parameters: [ckId, now]
-                )
+            try? transaction {
+                for ckId in delList {
+                    try? _db.execute(
+                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, 'delete', ?);",
+                        parameters: [ckId, now]
+                    )
+                }
             }
         }
 

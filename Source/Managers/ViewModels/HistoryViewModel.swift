@@ -285,7 +285,8 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
     // MARK: - Pruning
 
-    private func pruneOrphanedEntries() {
+    @discardableResult
+    private func pruneOrphanedEntries(deleteFromDB: Bool = true) -> [Int] {
         let historySet = Set(historyOrder)
         let toRemove = entriesByBookId.keys.filter { bookId in
             let entry = entriesByBookId[bookId]
@@ -293,10 +294,15 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             let hasHistory = historySet.contains(bookId)
             return !isFav && !hasHistory
         }
+        var removedIds = [Int]()
         for bookId in toRemove {
             entriesByBookId.removeValue(forKey: bookId)
-            HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
+            removedIds.append(bookId)
+            if deleteFromDB {
+                HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
+            }
         }
+        return removedIds
     }
 
     private func loadBooksData() {
@@ -321,7 +327,6 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         let block = { [weak self] in
             guard let self else { return }
             var didChange = false
-
             // Deletions
             let bookIdsToDelete = entriesByBookId.values
                 .compactMap { entry -> Int? in
@@ -329,14 +334,16 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                     return entry.bookId
                 }
 
+            var deletedIds = [Int]()
             for bookId in bookIdsToDelete {
                 entriesByBookId.removeValue(forKey: bookId)
-                HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
                 historyOrder.removeAll(where: { $0 == bookId })
+                deletedIds.append(bookId)
                 didChange = true
             }
 
             // Updates/Insertions
+            var upsertedEntries = [ReadingEntry]()
             for remoteEntry in entriesToSave {
                 if let localEntry = entriesByBookId[remoteEntry.bookId] {
                     let localModified = localEntry.updatedAt.timeIntervalSince1970
@@ -344,12 +351,12 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
                     if remoteModified > localModified {
                         entriesByBookId[remoteEntry.bookId] = remoteEntry
-                        HistoryDatabaseManager.shared.upsertEntry(remoteEntry)
+                        upsertedEntries.append(remoteEntry)
                         didChange = true
                     }
                 } else {
                     entriesByBookId[remoteEntry.bookId] = remoteEntry
-                    HistoryDatabaseManager.shared.upsertEntry(remoteEntry)
+                    upsertedEntries.append(remoteEntry)
                     didChange = true
                 }
             }
@@ -362,9 +369,23 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                     .map(\.bookId)
                 historyOrder = Array(sortedIds.prefix(maxHistoryCount))
 
-                pruneOrphanedEntries()
-                HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
+                let prunedIds = pruneOrphanedEntries(deleteFromDB: false)
+                deletedIds.append(contentsOf: prunedIds)
+
+                let finalOrder = historyOrder
                 loadBooksData()
+
+                DispatchQueue.global(qos: .background).async {
+                    try? HistoryDatabaseManager.shared.transaction {
+                        for bookId in deletedIds {
+                            HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
+                        }
+                        for entry in upsertedEntries {
+                            HistoryDatabaseManager.shared.upsertEntry(entry)
+                        }
+                        HistoryDatabaseManager.shared.saveHistoryOrder(finalOrder)
+                    }
+                }
             }
         }
 
@@ -390,12 +411,19 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 updated.ckRecordId = String(bookId)
                 entriesByBookId[bookId] = updated
                 backfilled.append(updated)
-                HistoryDatabaseManager.shared.upsertEntry(updated)
                 didChange = true
             }
         }
 
+        let toUpdateDb = backfilled
         if didChange {
+            DispatchQueue.global(qos: .background).async {
+                try? HistoryDatabaseManager.shared.transaction {
+                    for entry in toUpdateDb {
+                        HistoryDatabaseManager.shared.upsertEntry(entry)
+                    }
+                }
+            }
             loadBooksData()
         }
 
@@ -422,12 +450,13 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             // Load current state from DB first
             loadFromDatabase()
 
+            var newEntries = [ReadingEntry]()
             for entry in legacy.entries {
                 if entriesByBookId[entry.bookId] == nil {
                     var migrated = entry
                     migrated.ckRecordId = String(entry.bookId)
                     entriesByBookId[entry.bookId] = migrated
-                    HistoryDatabaseManager.shared.upsertEntry(migrated)
+                    newEntries.append(migrated)
                 }
             }
 
@@ -437,12 +466,18 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 }
             }
 
-            HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
-
-            // Upload semua entry hasil migrasi ke CloudKit (satu kali, batch)
+            let finalOrder = historyOrder
             let migratedEntries = Array(entriesByBookId.values).filter { $0.ckRecordId != nil }
-            if !migratedEntries.isEmpty {
-                Task {
+
+            DispatchQueue.global(qos: .background).async {
+                try? HistoryDatabaseManager.shared.transaction {
+                    for entry in newEntries {
+                        HistoryDatabaseManager.shared.upsertEntry(entry)
+                    }
+                    HistoryDatabaseManager.shared.saveHistoryOrder(finalOrder)
+                }
+                
+                if !migratedEntries.isEmpty {
                     CloudKitSyncManager.shared.uploadHistory(entries: migratedEntries, debounce: false)
                 }
             }
