@@ -19,6 +19,7 @@ struct ArchiveInfo {
 /// ----------------------------------------
 protocol DBConnectionType {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
+    func execute(query: String) throws
     func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent]
     func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen]
     func querySingleNass(sql: String, params: [SQLValue]) throws -> String?
@@ -595,6 +596,18 @@ final class SQLiteConnection: DBConnectionType {
         let ftsPath = dbPath.replacingOccurrences(of: ".sqlite", with: "_fts.sqlite")
         let attachSQL = "ATTACH DATABASE '\(ftsPath)' AS fts_db;"
         sqlite3_exec(db, attachSQL, nil, nil, nil)
+    }
+
+    func execute(query: String) throws {
+        guard let db else {
+            throw NSError(domain: "SQLite", code: -1, userInfo: [NSLocalizedDescriptionKey: "Database is closed"])
+        }
+        var errMsg: UnsafeMutablePointer<Int8>?
+        if sqlite3_exec(db, query, nil, nil, &errMsg) != SQLITE_OK {
+            let errorString = errMsg != nil ? String(cString: errMsg!) : "Unknown error"
+            sqlite3_free(errMsg)
+            throw NSError(domain: "SQLite", code: Int(sqlite3_errcode(db)), userInfo: [NSLocalizedDescriptionKey: errorString])
+        }
     }
 
     /// UPDATED: queryRows dengan support BLOB
