@@ -7,6 +7,7 @@
 
 import Cocoa
 import Combine
+import SwiftUI
 
 class OptionSearchVC: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
@@ -61,6 +62,7 @@ class OptionSearchVC: NSViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
+    private var migrationButton: NSButton?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -102,6 +104,37 @@ class OptionSearchVC: NSViewController {
         super.viewDidAppear()
         if viewModel.state == .loaded { return }
         setupUI()
+    }
+
+    private func setupMigrationButtonIfNeeded() {
+        FtsMigrationManager.shared.checkNeedsMigration()
+        if FtsMigrationManager.shared.needsMigration && migrationButton == nil {
+            guard let stackView = optionsSegment.superview as? NSStackView else { return }
+
+            let title = bkId.isEmpty
+            ? "Perbarui Indeks (\(FtsMigrationManager.shared.totalArchivesToMigrate))"
+            : "Perbarui Indeks Buku Ini"
+
+            let btn = NSButton(
+                title: title,
+                target: self, action: #selector(startMigration(_:))
+            )
+            btn.bezelColor = NSColor.controlAccentColor
+            stackView.insertArrangedSubview(btn, at: 0)
+            migrationButton = btn
+        }
+    }
+
+    @objc private func startMigration(_ sender: NSButton) {
+        let archiveId: Int? = !bkId.isEmpty
+            ? Int(bkId).flatMap { try? DatabaseManager.shared.fetchBook(byId: $0) }?.archive
+            : nil
+
+        SettingsActions.showFtsMigrationModal(archiveId: archiveId) { [weak self] in
+            sender.isHidden = true
+            sender.removeFromSuperview()
+            self?.migrationButton = nil
+        }
     }
 
     private func setupViewModelCallbacks() {
@@ -150,6 +183,7 @@ class OptionSearchVC: NSViewController {
         setupIndeterminateProgress()
         viewModel.loadLibraryDataForDisplay(libraryViewManager: libraryViewManager) { [weak self] in
             self?.resetIndeterminateProgress(true)
+            self?.setupMigrationButtonIfNeeded()
         }
     }
 

@@ -387,6 +387,14 @@ class LibraryDataManager {
         completion: @escaping @MainActor (SearchResultItem) -> Void,
         onComplete: @escaping @MainActor () -> Void
     ) async {
+        if FtsMigrationManager.shared.isMigrating {
+            await MainActor.run {
+                ReusableFunc.showAlert(
+                    title: String(localized: .ftsIsMigratingAlert), message: ""
+                )
+            }
+            return
+        }
         let allowed = tableToScan
 
         let searchKeywords: [String]

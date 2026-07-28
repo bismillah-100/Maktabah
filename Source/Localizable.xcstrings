@@ -27,6 +27,305 @@
         }
       }
     },
+    ".ftsMigrationAvailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث البحث FTS (Light10 Stemming) متاح."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FTS Search Upgrade (Light10 Stemming) is available."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peningkatan pencarian FTS (Light10 Stemming) tersedia."
+          }
+        }
+      }
+    },
+    ".ftsMigrationHideBannerBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تظهر مرة أخرى"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't show again"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jangan tampilkan lagi"
+          }
+        }
+      }
+    },
+    ".ftsMigrationAvailableBook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث البحث متاح لهذا الكتاب."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search upgrade is available for this book."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peningkatan pencarian tersedia untuk buku ini."
+          }
+        }
+      }
+    },
+    ".ftsMigrationCancelBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إلغاء"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batal"
+          }
+        }
+      }
+    },
+    ".ftsMigrationDesc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقدم هذه الترقية تقنية Light10 Stemming، مما يتيح لك البحث في النص العربي مع تجاهل السوابق واللواحق الشائعة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This upgrade introduces Light10 Stemming, allowing you to search Arabic text by ignoring common prefixes and suffixes."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peningkatan ini menggunakan Light10 Arabic Stemming, memungkinkan pencarian dengan mengabaikan awalan dan akhiran umum."
+          }
+        }
+      }
+    },
+    ".ftsMigrationExample" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مثال: البحث عن \"كتب\" سيجد أيضاً \"وكتب\"، \"فكتب\"، \"الكتب\"، إلخ."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Example: Searching for \"كتب\" will also find \"وكتب\", \"فكتب\", \"الكتب\", etc."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contoh: Mencari \"كتب\" juga akan menemukan \"وكتب\", \"فكتب\", \"الكتب\", dll."
+          }
+        }
+      }
+    },
+    ".ftsMigrationStatus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث الأرشيف %1$lld/%2$lld — الكتاب %3$lld/%4$lld (%5$lld%%)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating Archive %1$lld/%2$lld — Book %3$lld/%4$lld (%5$lld%%)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperbarui Arsip %1$lld/%2$lld — Buku %3$lld/%4$lld (%5$lld%%)"
+          }
+        }
+      }
+    },
+    ".ftsMigrationStatusBook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث الأرشيف — الكتاب %1$lld/%2$lld (%3$lld%%)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updating Archive — Book %1$lld/%2$lld (%3$lld%%)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memperbarui Arsip — Buku %1$lld/%2$lld (%3$lld%%)"
+          }
+        }
+      }
+    },
+    ".ftsMigrationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ترقية محرك البحث"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Engine Upgrade"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peningkatan Mesin Pencari"
+          }
+        }
+      }
+    },
+    ".ftsMigrationUpdateBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث الآن"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Now"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui Sekarang"
+          }
+        }
+      }
+    },
+    ".ftsMigrationUpdateIndexBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث الفهرس (%1$lld أرشيف)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Index (%1$lld archives)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui Indeks (%1$lld arsip)"
+          }
+        }
+      }
+    },
+    ".ftsMigrationUpdateNowCountBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث الآن (%1$lld أرشيف)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update Now (%1$lld archives)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui Sekarang (%1$lld arsip)"
+          }
+        }
+      }
+    },
+    ".ftsMigrationUpToDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فهرس البحث محدث ✓"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search index is up to date ✓"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indeks pencarian sudah yang terbaru ✓"
+          }
+        }
+      }
+    },
     ".moreOptions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3399,6 +3698,29 @@
         }
       }
     },
+    "ftsIsMigratingAlert" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرجى الانتظار حتى تكتمل عملية الترحيل."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please wait for the migration to complete."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mohon tunggu migrasi selesai."
+          }
+        }
+      }
+    },
     "Full Library will open the download link in your browser." : {
       "localizations" : {
         "ar" : {
@@ -6008,6 +6330,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cari di Kitab yang terpilih"
+          }
+        }
+      }
+    },
+    "Search Index" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فهرس البحث"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indeks Pencarian"
           }
         }
       }

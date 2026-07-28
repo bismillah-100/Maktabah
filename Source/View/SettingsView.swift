@@ -9,13 +9,68 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel.shared
+    #if os(macOS)
+    @ObservedObject private var ftsManager = FtsMigrationManager.shared
+    #elseif os(iOS)
+    @State private var ftsManager = FtsMigrationManager.shared
+    #endif
+    #if os(iOS)
+    @State private var showFtsMigrationOverlay = false
+    #endif
 
     var body: some View {
-        #if os(macOS)
-        macOSForm
-        #else
-        iOSForm
-        #endif
+        Group {
+            #if os(macOS)
+            macOSForm
+            #else
+            iOSForm
+            #endif
+        }
+        .onAppear {
+            ftsManager.checkNeedsMigration()
+        }
+    }
+    
+    private var searchIndexSection: some View {
+        Section {
+            if ftsManager.needsMigration {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(.ftsMigrationAvailable)
+                        .font(.caption)
+                        .foregroundColor(.primary)
+
+                    if ftsManager.isMigrating {
+                        ProgressView(value: ftsManager.progress)
+                            .progressViewStyle(.linear)
+                        Text(.ftsMigrationStatus(
+                            min(ftsManager.currentArchiveIndex + 1, ftsManager.totalArchivesToMigrate),
+                            ftsManager.totalArchivesToMigrate,
+                            ftsManager.currentBookInArchive,
+                            max(1, ftsManager.booksInCurrentArchive),
+                            Int(ftsManager.progress * 100)
+                        ))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    } else {
+                        Button {
+                            #if os(macOS)
+                            SettingsActions.showFtsMigrationModal()
+                            #else
+                            showFtsMigrationOverlay = true
+                            #endif
+                        } label: {
+                            Text(.ftsMigrationUpdateIndexBtn(ftsManager.totalArchivesToMigrate))
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            } else {
+                Text(.ftsMigrationUpToDate)
+                    .foregroundColor(.secondary)
+            }
+        } header: {
+            Text("Search Index")
+        }
     }
 }
 
@@ -25,6 +80,7 @@ extension SettingsView {
     private var macOSForm: some View {
         Form {
             databaseModeSection
+            searchIndexSection
             libraryStorageSection
             annotationsSection
             downloadsSection
@@ -38,6 +94,7 @@ extension SettingsView {
         } message: {
             Text(.annotationsMoveFolderFileExistsDesc)
         }
+
     }
 }
 #endif
@@ -48,6 +105,8 @@ extension SettingsView {
     private var iOSForm: some View {
         Form {
             databaseModeSection
+                .listRowBackground(Color.appCellBackground)
+            searchIndexSection
                 .listRowBackground(Color.appCellBackground)
             libraryStorageSection
                 .listRowBackground(Color.appCellBackground)
@@ -79,6 +138,25 @@ extension SettingsView {
         } message: {
             Text(.annotationsMoveFolderFileExistsDesc)
         }
+        .overlay {
+            if showFtsMigrationOverlay {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .zIndex(10)
+                FtsMigrationProgressView(
+                    onCancel: {
+                        showFtsMigrationOverlay = false
+                    },
+                    onUpdate: {
+                        try await ftsManager.performMigration()
+                        await MainActor.run { showFtsMigrationOverlay = false }
+                    }
+                )
+                .zIndex(11)
+                .transition(.opacity.combined(with: .scale))
+            }
+        }
+        .animation(.easeInOut, value: showFtsMigrationOverlay)
     }
 
     private var appearanceSection: some View {
