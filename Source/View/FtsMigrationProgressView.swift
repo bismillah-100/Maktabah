@@ -29,34 +29,8 @@ struct FtsMigrationProgressView: View {
             }
 
             if ftsManager.isMigrating || isFinishing {
-                VStack(spacing: 12) {
-                    ProgressView(value: ftsManager.isMigrating ? ftsManager.progress : 1.0)
-                        .progressViewStyle(.linear)
-
-                    if ftsManager.isMigrating {
-                        HStack(alignment: .top, spacing: 12) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                ForEach(ftsManager.activeArchiveStatuses.keys.sorted(), id: \.self) { key in
-                                    if let status = ftsManager.activeArchiveStatuses[key] {
-                                        Text(status)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                if ftsManager.totalBooksToMigrate > 0 {
-                                    Text("\(ftsManager.completedBooksCount) / \(ftsManager.totalBooksToMigrate) buku")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            Spacer()
-                            Text("\(Int(ftsManager.progress * 100))%")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
+                FtsMigrationProgressSection(ftsManager: ftsManager)
+                    .padding(.vertical, 8)
 
                 if ftsManager.isMigrating {
                     Button(role: .cancel) {
@@ -124,5 +98,43 @@ struct FtsMigrationProgressView: View {
         #endif
         .cornerRadius(12)
         .frame(minWidth: 360, idealWidth: 420, maxWidth: 450)
+    }
+}
+
+struct FtsMigrationProgressSection: View {
+    #if os(iOS)
+    var ftsManager: FtsMigrationManager = .shared
+    #else
+    @ObservedObject var ftsManager: FtsMigrationManager = .shared
+    #endif
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ProgressView(value: ftsManager.isMigrating ? ftsManager.progress : 1.0)
+                .progressViewStyle(.linear)
+
+            if ftsManager.isMigrating {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(ftsManager.activeArchiveStatuses.keys.sorted(), id: \.self) { key in
+                            if let status = ftsManager.activeArchiveStatuses[key] {
+                                Text(status)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        if ftsManager.totalBooksToMigrate > 0 {
+                            Text("\(ftsManager.completedBooksCount) / \(ftsManager.totalBooksToMigrate) buku")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                    Text("\(Int(ftsManager.progress * 100))%")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                }
+            }
+        }
     }
 }
