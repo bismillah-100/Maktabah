@@ -50,29 +50,6 @@
         }
       }
     },
-    ".ftsMigrationHideBannerBtn" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا تظهر مرة أخرى"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Don't show again"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jangan tampilkan lagi"
-          }
-        }
-      }
-    },
     ".ftsMigrationAvailableBook" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -161,6 +138,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contoh: Mencari \"كتب\" juga akan menemukan \"وكتب\", \"فكتب\", \"الكتب\", dll."
+          }
+        }
+      }
+    },
+    ".ftsMigrationHideBannerBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تظهر مرة أخرى"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't show again"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jangan tampilkan lagi"
           }
         }
       }
@@ -417,6 +417,28 @@
     },
     "%lld" : {
       "shouldTranslate" : false
+    },
+    "%lld / %lld buku" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld كتابا"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld book"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld buku"
+          }
+        }
+      }
     },
     "%lld Annotations Exist" : {
       "localizations" : {

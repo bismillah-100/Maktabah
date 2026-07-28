@@ -31,31 +31,31 @@ struct SettingsView: View {
         }
     }
     
+    @ViewBuilder
     private var searchIndexSection: some View {
-        Section {
-            if ftsManager.needsMigration {
+        if ftsManager.needsMigration {
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(.ftsMigrationAvailable)
                         .font(.caption)
                         .foregroundColor(.primary)
 
-                    Button {
-                        #if os(macOS)
-                        SettingsActions.showFtsMigrationModal()
-                        #else
-                        showFtsMigrationOverlay = true
-                        #endif
-                    } label: {
-                        Text(.ftsMigrationUpdateIndexBtn(ftsManager.totalArchivesToMigrate))
+                    if !ftsManager.isMigrating {
+                        Button {
+                            #if os(macOS)
+                            SettingsActions.showFtsMigrationModal()
+                            #else
+                            showFtsMigrationOverlay = true
+                            #endif
+                        } label: {
+                            Text(.ftsMigrationUpdateIndexBtn(ftsManager.totalArchivesToMigrate))
+                        }
                     }
                 }
                 .padding(.vertical, 4)
-            } else {
-                Text(.ftsMigrationUpToDate)
-                    .foregroundColor(.secondary)
+            } header: {
+                Text("Search Index")
             }
-        } header: {
-            Text("Search Index")
         }
     }
 }
