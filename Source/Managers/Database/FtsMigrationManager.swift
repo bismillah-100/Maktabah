@@ -190,6 +190,11 @@ final class FtsMigrationManager {
 
         try attachDatabase(archiveDb, path: ftsWritePath, schema: "fts_db")
 
+        // PRAGMA optimizations for fast bulk writing
+        try? exec(archiveDb, "PRAGMA synchronous = OFF;")
+        try? exec(archiveDb, "PRAGMA journal_mode = MEMORY;")
+        try? exec(archiveDb, "PRAGMA temp_store = MEMORY;")
+
         let tables = listTables(
             db: archiveDb,
             schemaName: "main"

@@ -93,38 +93,45 @@ enum ArchiveDatabaseTools {
         }
         defer { sqlite3_finalize(insertStmt) }
 
-        while sqlite3_step(selectStmt) == SQLITE_ROW {
-            let rawText: String
-            
-            if isNassCompressed {
-                let blobBytes = sqlite3_column_bytes(selectStmt, 1)
-                guard let blobPtr = sqlite3_column_blob(selectStmt, 1) else { continue }
-                let buffer = UnsafeRawBufferPointer(start: blobPtr, count: Int(blobBytes))
-                rawText = ReusableFunc.decompressData(from: buffer)
-            } else {
-                guard let textPtr = sqlite3_column_text(selectStmt, 1) else { continue }
-                let textBytes = sqlite3_column_bytes(selectStmt, 1)
-                let textBuffer = UnsafeBufferPointer(start: textPtr, count: Int(textBytes))
-                rawText = String(decoding: textBuffer, as: UTF8.self)
-            }
-            
-            let preProcessed = rawText
-                .replacingOccurrences(of: "\n", with: " ")
-                .stripSpanTags()
+        try exec(db, "BEGIN TRANSACTION;")
+        do {
+            while sqlite3_step(selectStmt) == SQLITE_ROW {
+                let rawText: String
                 
-            let normalized = preProcessed.stemArabicLight10()
-            guard !normalized.isEmpty else { continue }
+                if isNassCompressed {
+                    let blobBytes = sqlite3_column_bytes(selectStmt, 1)
+                    guard let blobPtr = sqlite3_column_blob(selectStmt, 1) else { continue }
+                    let buffer = UnsafeRawBufferPointer(start: blobPtr, count: Int(blobBytes))
+                    rawText = ReusableFunc.decompressData(from: buffer)
+                } else {
+                    guard let textPtr = sqlite3_column_text(selectStmt, 1) else { continue }
+                    let textBytes = sqlite3_column_bytes(selectStmt, 1)
+                    let textBuffer = UnsafeBufferPointer(start: textPtr, count: Int(textBytes))
+                    rawText = String(decoding: textBuffer, as: UTF8.self)
+                }
+                
+                let preProcessed = rawText
+                    .replacingOccurrences(of: "\n", with: " ")
+                    .stripSpanTags()
+                    
+                let normalized = preProcessed.stemArabicLight10()
+                guard !normalized.isEmpty else { continue }
 
-            sqlite3_reset(insertStmt)
-            sqlite3_clear_bindings(insertStmt)
-            sqlite3_bind_int64(insertStmt, 1, sqlite3_column_int64(selectStmt, 0))
-            _ = normalized.withCString {
-                sqlite3_bind_text(insertStmt, 2, $0, -1, sqliteTransient)
-            }
+                sqlite3_reset(insertStmt)
+                sqlite3_clear_bindings(insertStmt)
+                sqlite3_bind_int64(insertStmt, 1, sqlite3_column_int64(selectStmt, 0))
+                _ = normalized.withCString {
+                    sqlite3_bind_text(insertStmt, 2, $0, -1, sqliteTransient)
+                }
 
-            if sqlite3_step(insertStmt) != SQLITE_DONE {
-                throw sqliteError(db, message: "Error insert FTS \(ftsTable).")
+                if sqlite3_step(insertStmt) != SQLITE_DONE {
+                    throw sqliteError(db, message: "Error insert FTS \(ftsTable).")
+                }
             }
+            try exec(db, "COMMIT;")
+        } catch {
+            try? exec(db, "ROLLBACK;")
+            throw error
         }
         
         let checkMetadataSql = "SELECT name FROM \(ftsSchema).sqlite_master WHERE type='table' AND name='metadata';"
