@@ -179,51 +179,31 @@ extension String {
     }
 
     /// Versi ringan: hanya mengembalikan string bersih tanpa menghitung ranges.
-    /// Lebih efisien untuk operasi yang tidak memerlukan header ranges.
+    /// Menggunakan single-pass scalar scanner (O(N)) tanpa NSRegularExpression.
     func stripSpanTags() -> String {
         guard !isEmpty else { return self }
-
-        // Fast path: jika tidak ada tag, return langsung
         if !contains("<") { return self }
 
-        let nsSelf = self as NSString
-        let fullRange = NSRange(location: 0, length: nsSelf.length)
+        var result = ""
+        result.reserveCapacity(utf8.count)
 
-        var allMatches: [(range: NSRange, replacement: String)] = []
+        var isInsideTag = false
 
-        Cached.spanTag?.enumerateMatches(in: self, range: fullRange) { match, _, _ in
-            guard let match = match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append((match.range, inner))
+        for scalar in unicodeScalars {
+            if scalar == "<" {
+                isInsideTag = true
+            } else if scalar == ">" {
+                if isInsideTag {
+                    isInsideTag = false
+                } else {
+                    result.unicodeScalars.append(scalar)
+                }
+            } else if !isInsideTag {
+                result.unicodeScalars.append(scalar)
+            }
         }
 
-        Cached.anchorTag?.enumerateMatches(in: self, range: fullRange) { match, _, _ in
-            guard let match = match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append((match.range, inner))
-        }
-
-        Cached.hadeethTag?.enumerateMatches(in: self, range: fullRange) { match, _, _ in
-            guard let match = match else { return }
-            allMatches.append((match.range, ""))
-        }
-
-        Cached.manTag?.enumerateMatches(in: self, range: fullRange) { match, _, _ in
-            guard let match = match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append((match.range, inner))
-        }
-
-        if allMatches.isEmpty { return self }
-
-        allMatches.sort { $0.range.location > $1.range.location }
-
-        let mutableString = nsSelf.mutableCopy() as! NSMutableString
-        for m in allMatches {
-            mutableString.replaceCharacters(in: m.range, with: m.replacement)
-        }
-
-        return mutableString as String
+        return result
     }
 
     /// Versi lengkap: mengembalikan string bersih DAN ranges untuk header color.
