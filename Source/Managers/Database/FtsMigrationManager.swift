@@ -1,8 +1,6 @@
 //
-//  DatabaseManager.swift
+//  FtsMigrationManager.swift
 //  Maktabah
-//
-//  Created by MacBook on 27/07/26.
 //
 
 import Foundation
@@ -22,7 +20,6 @@ extension FtsMigrationManager: ObservableObject {}
 final class FtsMigrationManager {
     static let shared = FtsMigrationManager()
 
-
     #if os(iOS)
     var isMigrating = false
     var isCancelled = false
@@ -30,9 +27,9 @@ final class FtsMigrationManager {
     var totalArchivesToMigrate: Int = 0
     var currentArchiveIndex: Int = 0
     var needsMigration: Bool = false
-    var currentBookTable: String = ""
-    var booksInCurrentArchive: Int = 0
-    var currentBookInArchive: Int = 0
+    var totalBooksToMigrate: Int = 0
+    var completedBooksCount: Int = 0
+    var activeArchiveStatuses: [Int: String] = [:]
     var archivesToMigrate: [Int] = []
     #elseif os(macOS)
     @Published var isMigrating = false
@@ -41,9 +38,9 @@ final class FtsMigrationManager {
     @Published var totalArchivesToMigrate: Int = 0
     @Published var currentArchiveIndex: Int = 0
     @Published var needsMigration: Bool = false
-    @Published var currentBookTable: String = ""
-    @Published var booksInCurrentArchive: Int = 0
-    @Published var currentBookInArchive: Int = 0
+    @Published var totalBooksToMigrate: Int = 0
+    @Published var completedBooksCount: Int = 0
+    @Published var activeArchiveStatuses: [Int: String] = [:]
     @Published var archivesToMigrate: [Int] = []
     #endif
 
@@ -66,14 +63,12 @@ final class FtsMigrationManager {
     private init() {}
 
     func checkNeedsMigration() {
-        var count = 0
         var outdated: [Int] = []
         for i in 1...20 {
             if let path = AppConfig.archiveDatabasePath(archiveId: i),
                let attrs = try? FileManager.default.attributesOfItem(atPath: path),
                let size = attrs[.size] as? Int64, size > 4096
             {
-                count += 1
                 if let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: i) {
                     if getArchiveFtsVersion(ftsPath: ftsPath) < 2 {
                         outdated.append(i)
@@ -83,15 +78,26 @@ final class FtsMigrationManager {
                       let attrs = try? FileManager.default.attributesOfItem(atPath: path),
                       let size = attrs[.size] as? Int64, size > 4096
             {
-                count += 1
                 if getArchiveFtsVersion(ftsPath: path) < 2 {
                     outdated.append(i)
                 }
             }
         }
 
+        var totalBooks = 0
+        for archiveId in outdated {
+            if let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
+               let archiveDb = try? openDatabase(path: archivePath) {
+                let tables = listTables(db: archiveDb, schemaName: "main")
+                    .filter { $0.hasPrefix("b") && Int($0.dropFirst()) != nil }
+                totalBooks += tables.count
+                sqlite3_close(archiveDb)
+            }
+        }
+
         archivesToMigrate = outdated
         totalArchivesToMigrate = outdated.count
+        totalBooksToMigrate = totalBooks
         needsMigration = totalArchivesToMigrate > 0
     }
 
@@ -103,12 +109,11 @@ final class FtsMigrationManager {
     func performMigration() async throws {
         guard needsMigration, !isMigrating else { return }
 
-        await MainActor.run {
-            isMigrating = true
-            isCancelled = false
-            progress = 0.0
-            currentArchiveIndex = 0
-        }
+        isMigrating = true
+        isCancelled = false
+        progress = 0.0
+        completedBooksCount = 0
+        activeArchiveStatuses.removeAll()
 
         #if canImport(UIKit)
         UIApplication.shared.isIdleTimerDisabled = true
@@ -125,36 +130,41 @@ final class FtsMigrationManager {
         }
         #endif
 
+        let archives = archivesToMigrate
+        let maxConcurrent = 2
+
         do {
-            for i in archivesToMigrate {
-                guard let archivePath = AppConfig.archiveDatabasePath(archiveId: i),
-                      let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: i)
-                else {
-                    continue
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                var iterator = archives.makeIterator()
+
+                for _ in 0..<maxConcurrent {
+                    if let nextId = iterator.next() {
+                        group.addTask {
+                            try await self.migrateSingleArchive(archiveId: nextId)
+                        }
+                    }
                 }
 
-                let fileManager = FileManager.default
-                let archiveExists = fileManager.fileExists(atPath: archivePath)
-                let ftsExists = fileManager.fileExists(atPath: ftsPath)
-
-                if !archiveExists, !ftsExists { continue }
-
-                try await rebuildArchive(archivePath: archivePath, ftsPath: ftsPath)
-
-                await MainActor.run {
-                    currentArchiveIndex += 1
-                    progress = Double(currentArchiveIndex) / Double(totalArchivesToMigrate)
+                while try await group.next() != nil {
+                    if self.isCancelled { break }
+                    if let nextId = iterator.next() {
+                        group.addTask {
+                            try await self.migrateSingleArchive(archiveId: nextId)
+                        }
+                    }
                 }
             }
 
             await MainActor.run {
                 archivesToMigrate.removeAll()
+                activeArchiveStatuses.removeAll()
                 checkNeedsMigration()
                 isMigrating = false
                 isCancelled = false
             }
         } catch {
             await MainActor.run {
+                activeArchiveStatuses.removeAll()
                 isMigrating = false
                 isCancelled = false
             }
@@ -162,7 +172,21 @@ final class FtsMigrationManager {
         }
     }
 
-    private func rebuildArchive(archivePath: String, ftsPath: String) async throws {
+    private func migrateSingleArchive(archiveId: Int) async throws {
+        guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
+              let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
+        else { return }
+
+        let fileManager = FileManager.default
+        let archiveExists = fileManager.fileExists(atPath: archivePath)
+        let ftsExists = fileManager.fileExists(atPath: ftsPath)
+
+        if !archiveExists && !ftsExists { return }
+
+        try await rebuildArchive(archiveId: archiveId, archivePath: archivePath, ftsPath: ftsPath)
+    }
+
+    private func rebuildArchive(archiveId: Int, archivePath: String, ftsPath: String) async throws {
         let archiveWritePath = prepareWritableDatabasePath(archivePath)
         let ftsWritePath = prepareWritableDatabasePath(ftsPath)
 
@@ -200,25 +224,16 @@ final class FtsMigrationManager {
             schemaName: "main"
         ).filter { $0.hasPrefix("b") && Int($0.dropFirst()) != nil }
 
-        await MainActor.run {
-            self.booksInCurrentArchive = tables.count
-            self.currentBookInArchive = 0
-        }
-
-        for table in tables {
+        for (index, table) in tables.enumerated() {
             if isCancelled {
                 try? exec(archiveDb, "DETACH DATABASE fts_db;")
                 sqlite3_close(archiveDb)
                 throw CancellationError()
             }
 
+            let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
             await MainActor.run {
-                self.currentBookInArchive += 1
-                self.currentBookTable = table
-
-                let archiveBase = Double(self.currentArchiveIndex) / Double(self.totalArchivesToMigrate)
-                let bookFraction = Double(self.currentBookInArchive) / Double(self.booksInCurrentArchive * self.totalArchivesToMigrate)
-                self.progress = archiveBase + bookFraction
+                self.activeArchiveStatuses[archiveId] = statusText
             }
 
             try ArchiveDatabaseTools.buildFTS(
@@ -230,8 +245,14 @@ final class FtsMigrationManager {
                 isNassCompressed: true
             )
 
-            // Drop old FTS table from main schema so SQLite doesn't resolve to it
             try? exec(archiveDb, "DROP TABLE IF EXISTS main.\(table)_fts;")
+
+            await MainActor.run {
+                self.completedBooksCount += 1
+                if self.totalBooksToMigrate > 0 {
+                    self.progress = min(1.0, Double(self.completedBooksCount) / Double(self.totalBooksToMigrate))
+                }
+            }
         }
 
         try? exec(archiveDb, "CREATE TABLE IF NOT EXISTS fts_db.metadata (key TEXT PRIMARY KEY, value INTEGER);")
@@ -239,6 +260,10 @@ final class FtsMigrationManager {
 
         try? exec(archiveDb, "DETACH DATABASE fts_db;")
         sqlite3_close(archiveDb)
+
+        await MainActor.run {
+            _ = activeArchiveStatuses.removeValue(forKey: archiveId)
+        }
 
         // Atomic Replace
         try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archivePath)
@@ -256,6 +281,8 @@ final class FtsMigrationManager {
         progress = 0.0
         totalArchivesToMigrate = 1
         currentArchiveIndex = 0
+        completedBooksCount = 0
+        activeArchiveStatuses.removeAll()
 
         #if canImport(UIKit)
         UIApplication.shared.isIdleTimerDisabled = true
@@ -285,7 +312,7 @@ final class FtsMigrationManager {
             let ftsExists = fileManager.fileExists(atPath: ftsPath)
 
             if archiveExists || ftsExists {
-                try await rebuildArchive(archivePath: archivePath, ftsPath: ftsPath)
+                try await rebuildArchive(archiveId: archiveId, archivePath: archivePath, ftsPath: ftsPath)
                 currentArchiveIndex = 1
                 progress = 1.0
             }

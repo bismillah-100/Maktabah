@@ -42,15 +42,22 @@ struct SettingsView: View {
                     if ftsManager.isMigrating {
                         ProgressView(value: ftsManager.progress)
                             .progressViewStyle(.linear)
-                        Text(.ftsMigrationStatus(
-                            min(ftsManager.currentArchiveIndex + 1, ftsManager.totalArchivesToMigrate),
-                            ftsManager.totalArchivesToMigrate,
-                            ftsManager.currentBookInArchive,
-                            max(1, ftsManager.booksInCurrentArchive),
-                            Int(ftsManager.progress * 100)
-                        ))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        HStack(alignment: .top, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                ForEach(ftsManager.activeArchiveStatuses.keys.sorted(), id: \.self) { key in
+                                    if let status = ftsManager.activeArchiveStatuses[key] {
+                                        Text(status)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                            Spacer()
+                            Text("\(Int(ftsManager.progress * 100))%")
+                                .font(.caption)
+                                .bold()
+                                .foregroundColor(.secondary)
+                        }
                     } else {
                         Button {
                             #if os(macOS)
