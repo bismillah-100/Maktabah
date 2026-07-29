@@ -187,6 +187,32 @@ class HistoryDatabaseManager {
 
     // MARK: - Load from Database
 
+    func fetchEntries(byCkRecordIds ids: [String]) -> [ReadingEntry] {
+        guard let _db, !ids.isEmpty else { return [] }
+        var entries: [ReadingEntry] = []
+        let chunkSize = 500
+        for i in stride(from: 0, to: ids.count, by: chunkSize) {
+            let chunk = Array(ids[i..<min(i + chunkSize, ids.count)])
+            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            let sql = "SELECT book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id FROM reading_entries WHERE ck_record_id IN (\(placeholders));"
+            if let rows = try? _db.fetch(query: sql, parameters: chunk, mapping: { row -> ReadingEntry in
+                ReadingEntry(
+                    bookId: row.int(at: 0),
+                    lastContentId: row.isNull(at: 1) ? nil : row.int(at: 1),
+                    lastOpenedAt: row.isNull(at: 2) ? nil : Date(timeIntervalSince1970: row.double(at: 2)),
+                    favoritedAt: row.isNull(at: 3) ? nil : Date(timeIntervalSince1970: row.double(at: 3)),
+                    positionUpdatedAt: row.isNull(at: 4) ? nil : Date(timeIntervalSince1970: row.double(at: 4)),
+                    updatedAt: Date(timeIntervalSince1970: row.double(at: 5)),
+                    isFavorite: row.int(at: 6) != 0,
+                    ckRecordId: row.string(at: 7)
+                )
+            }) {
+                entries.append(contentsOf: rows)
+            }
+        }
+        return entries
+    }
+
     func loadFromDatabase() -> (entries: [ReadingEntry], historyOrder: [Int]) {
         guard let _db else { return ([], []) }
 

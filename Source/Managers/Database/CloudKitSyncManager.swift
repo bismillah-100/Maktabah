@@ -104,11 +104,8 @@ final class CloudKitSyncManager {
 
         var orphans: [String] = []
 
-        // Paginated or direct DB fetch is recommended here, but we keep existing logic compatible
         if !annPending.isEmpty {
-            let annPendingSet = Set(annPending)
-            let allAnnotations = AnnotationManager.shared.loadAnnotations()
-            let toUploadAnn = allAnnotations.filter { annPendingSet.contains($0.ckRecordId ?? "") }
+            let toUploadAnn = AnnotationManager.shared.fetchAnnotations(byCkRecordIds: annPending)
             if !toUploadAnn.isEmpty {
                 upload(annotations: toUploadAnn, debounce: false)
             }
@@ -118,12 +115,8 @@ final class CloudKitSyncManager {
         }
 
         if !resPending.isEmpty {
-            let resPendingSet = Set(resPending)
-            let allFolders = ResultsHandler.shared.fetchAllSyncFolders()
-            let toUploadFolders = allFolders.filter { resPendingSet.contains($0.ckRecordId ?? "") }
-
-            let allResults = ResultsHandler.shared.fetchAllSyncResults()
-            let toUploadResults = allResults.filter { resPendingSet.contains($0.ckRecordId ?? "") }
+            let toUploadFolders = ResultsHandler.shared.fetchFolders(byCkRecordIds: resPending)
+            let toUploadResults = ResultsHandler.shared.fetchResults(byCkRecordIds: resPending)
 
             if !toUploadFolders.isEmpty || !toUploadResults.isEmpty {
                 uploadResultsData(folders: toUploadFolders, results: toUploadResults, debounce: false)
@@ -136,9 +129,7 @@ final class CloudKitSyncManager {
         }
 
         if !histPending.isEmpty {
-            let histPendingSet = Set(histPending)
-            let allHist = HistoryViewModel.shared.getAllEntries()
-            let toUploadHist = allHist.filter { histPendingSet.contains($0.ckRecordId ?? "") }
+            let toUploadHist = HistoryDatabaseManager.shared.fetchEntries(byCkRecordIds: histPending)
             if !toUploadHist.isEmpty {
                 uploadHistory(entries: toUploadHist, debounce: false)
             }
@@ -921,6 +912,7 @@ final class CloudKitSyncManager {
             completion?(.failure(error))
         default:
             // Other errors - leave as pending
+            handleCloudKitError(error, operationType: .upload)
             completion?(.failure(error))
         }
     }
