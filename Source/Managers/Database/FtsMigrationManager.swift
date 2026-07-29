@@ -131,7 +131,7 @@ final class FtsMigrationManager {
         #endif
 
         let archives = archivesToMigrate
-        let maxConcurrent = 2
+        let maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))
 
         do {
             try await withThrowingTaskGroup(of: Void.self) { group in
