@@ -241,11 +241,11 @@ class TarjamahGlobalManager {
                     let bytes = sqlite3_column_bytes(readFtsStmt, 1)
                     let buffer = UnsafeRawBufferPointer(start: blob, count: Int(bytes))
                     let decompressed = ReusableFunc.decompressData(from: buffer)
-                    isoNameClean = decompressed.normalizeArabic(false)
+                    isoNameClean = decompressed.stemArabicLight10()
                 }
             } else if sqlite3_column_type(readFtsStmt, 1) == SQLITE_TEXT {
                 if let text = sqlite3_column_text(readFtsStmt, 1) {
-                    isoNameClean = String(cString: text).normalizeArabic(false)
+                    isoNameClean = String(cString: text).stemArabicLight10()
                 }
             }
 
@@ -280,7 +280,7 @@ class TarjamahGlobalManager {
             var nameClean = ""
 
             if let text = sqlite3_column_text(readFtsBStmt, 1) {
-                nameClean = String(cString: text).normalizeArabic(false)
+                nameClean = String(cString: text).stemArabicLight10()
             }
 
             if !nameClean.isEmpty {
@@ -326,7 +326,7 @@ class TarjamahGlobalManager {
 
         let sanitizedQuery = query
             .filter { $0.isLetter || $0.isNumber || $0.isWhitespace }
-            .normalizeArabic()
+            .stemArabicLight10()
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sanitizedQuery.isEmpty else { return }
 
