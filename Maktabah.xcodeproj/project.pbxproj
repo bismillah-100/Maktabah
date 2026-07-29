@@ -462,6 +462,7 @@
 		F3BEC5682FD97AD600FA0400 /* AnnotationContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BEC5672FD97AD600FA0400 /* AnnotationContentView.swift */; };
 		F3C449562F2B12E200DA7032 /* SearchCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3C449552F2B12E200DA7032 /* SearchCellView.xib */; };
 		F3C449572F2B12E200DA7032 /* SearchCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3C449542F2B12E200DA7032 /* SearchCellView.swift */; };
+		F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
 		F3D02D432FE04D580054807F /* ViewModelProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D3B2FE04D580054807F /* ViewModelProtocols.swift */; };
 		F3D02D442FE04D580054807F /* ReaderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D412FE04D580054807F /* ReaderViewModel.swift */; };
 		F3D02D472FE04D580054807F /* ViewModelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D02D392FE04D580054807F /* ViewModelBase.swift */; };
@@ -1716,6 +1717,7 @@
 				4B58EDCE2EE3DDEE00073495 /* ResultsViewModel.swift in Sources */,
 				4B3202462EDB1099003B95D1 /* ViewerSplitVC.swift in Sources */,
 				4B32024E2EDB13C0003B95D1 /* DatabaseManager.swift in Sources */,
+				F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */,
 				4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */,
 				4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */,
 				4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */,
