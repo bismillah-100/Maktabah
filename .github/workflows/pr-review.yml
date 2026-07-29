@@ -17,7 +17,7 @@ jobs:
       statuses: write
     steps:
       - name: Jules PR Reviewer
-        uses: thalesraymond/jules-pr-reviewer@v1
+        uses: bismillah-100/jules-pr-reviewer@main
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -28,6 +28,3 @@ jobs:
             [PROJECT CONTEXT]
             - macOS/iOS hybrid app using AppKit, UIKit, and SwiftUI.
             - AppKit (e.g. NSOutlineView) is deliberately used over SwiftUI in high-performance UI components.
-            
-            [CRITICAL INSTRUCTION]
-            - You MUST output ONLY valid JSON. Do not include any conversational text, greetings, or explanations before or after the JSON block.
