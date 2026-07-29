@@ -701,6 +701,8 @@ extension ReaderViewModel {
             Task { @MainActor in self?.handleBookIntegrated(notification) }
         }
 
+        #endif
+
         addObserver(
             forName: .bookIdMigrated,
             object: nil, queue: .current
@@ -710,7 +712,6 @@ extension ReaderViewModel {
                   let newId = userInfo["newId"] as? Int else { return }
             Task { @MainActor in self?.handleBookIdMigrated(oldId: oldId, newId: newId) }
         }
-        #endif
 
         #if os(iOS)
         addObserver(
@@ -731,7 +732,6 @@ extension ReaderViewModel {
         #endif
     }
 
-    #if os(macOS)
     func handleBookIdMigrated(oldId: Int, newId: Int) {
         guard let current = currentBook, current.id == oldId else { return }
         if let newBookData = LibraryDataManager.shared.booksById[newId] {
@@ -739,6 +739,7 @@ extension ReaderViewModel {
         }
     }
 
+    #if os(macOS)
     func handleLibraryFolderChanged() {
         cleanUpState()
     }
