@@ -971,67 +971,105 @@ extension String {
 // MARK: - Lucene Arabic Light10 Stemmer
 
 public struct ArabicLightStemmer {
-    private static let prefixes: [String] = [
+    private static let prefixScalars: [[UnicodeScalar]] = [
         "والله", "وبالله", "فالله", "فبالله",
         "والل", "فالل", "بالل", "كالل", "وللم", "فللم",
         "وال", "فال", "بال", "كال", "لل", "ال"
-    ]
+    ].map { Array($0.removingHarakat().unicodeScalars) }
 
-    private static let suffixes: [String] = [
+    private static let suffixScalars: [[UnicodeScalar]] = [
         "هما", "تاني", "تَيْن", "كُمَا", "هُمَا",
         "ان", "ات", "ون", "ين", "يه", "ية", "هم", "هن", "كم", "نا", "ها", "وا", "يا", "ك"
-    ]
+    ].map { Array($0.removingHarakat().unicodeScalars) }
 
-    /// Stems a single Arabic word using Lucene Light10 algorithm.
+    /// Stems a single Arabic word using Lucene Light10 algorithm without temporary String allocations.
     public static func stemWord(_ input: String) -> String {
         guard !input.isEmpty else { return input }
 
-        var word = input.removingHarakat()
-        if word.contains("\u{0640}") {
-            word = word.replacingOccurrences(of: "\u{0640}", with: "")
-        }
-
-        var normalizedScalars = String.UnicodeScalarView()
-        normalizedScalars.reserveCapacity(word.unicodeScalars.count)
-        for scalar in word.unicodeScalars {
-            let val = scalar.value
-            if val == 0x0623 || val == 0x0625 || val == 0x0622 || val == 0x0671 {
-                normalizedScalars.append(UnicodeScalar(0x0627)!)
-            } else if val == 0x0629 {
-                normalizedScalars.append(UnicodeScalar(0x0647)!)
-            } else if val == 0x0649 {
-                normalizedScalars.append(UnicodeScalar(0x064A)!)
-            } else {
-                normalizedScalars.append(scalar)
-            }
-        }
-        word = String(normalizedScalars)
-
-        for prefix in prefixes {
-            if word.hasPrefix(prefix) && (word.count - prefix.count) >= 3 {
-                word = String(word.dropFirst(prefix.count))
-                break
-            }
-        }
-
-        for suffix in suffixes {
-            if word.hasSuffix(suffix) && (word.count - suffix.count) >= 3 {
-                word = String(word.dropLast(suffix.count))
-                break
-            }
-        }
-
-        return word
+        var buffer = ContiguousArray<UnicodeScalar>()
+        buffer.reserveCapacity(input.unicodeScalars.count)
+        
+        stemWordToBuffer(input.unicodeScalars, into: &buffer)
+        
+        return String(String.UnicodeScalarView(buffer))
     }
 
-    /// Stems all Arabic words in a given text block.
+    public static func stemWordToBuffer<S: Sequence>(_ scalars: S, into output: inout ContiguousArray<UnicodeScalar>) where S.Element == UnicodeScalar {
+        var clean = ContiguousArray<UnicodeScalar>()
+        clean.reserveCapacity(32)
+
+        for scalar in scalars {
+            let val = scalar.value
+            // Skip harakat & tatweel
+            if scalar.isArabicHarakat || val == 0x0640 {
+                continue
+            }
+
+            // Normalization
+            if val == 0x0623 || val == 0x0625 || val == 0x0622 || val == 0x0671 {
+                clean.append(UnicodeScalar(0x0627)!)
+            } else if val == 0x0629 {
+                clean.append(UnicodeScalar(0x0647)!)
+            } else if val == 0x0649 {
+                clean.append(UnicodeScalar(0x064A)!)
+            } else {
+                clean.append(scalar)
+            }
+        }
+
+        var start = 0
+        var count = clean.count
+
+        // Prefix trimming
+        for prefix in prefixScalars {
+            let pLen = prefix.count
+            if count - pLen >= 3 {
+                var isMatch = true
+                for i in 0..<pLen {
+                    if clean[start + i] != prefix[i] {
+                        isMatch = false
+                        break
+                    }
+                }
+                if isMatch {
+                    start += pLen
+                    count -= pLen
+                    break
+                }
+            }
+        }
+
+        // Suffix trimming
+        for suffix in suffixScalars {
+            let sLen = suffix.count
+            if count - sLen >= 3 {
+                var isMatch = true
+                for i in 0..<sLen {
+                    if clean[start + count - sLen + i] != suffix[i] {
+                        isMatch = false
+                        break
+                    }
+                }
+                if isMatch {
+                    count -= sLen
+                    break
+                }
+            }
+        }
+
+        if count > 0 {
+            output.append(contentsOf: clean[start..<(start + count)])
+        }
+    }
+
+    /// Stems all Arabic words in a given text block in a single pass with minimum allocations.
     public static func stemText(_ text: String) -> String {
         guard !text.isEmpty else { return text }
 
-        var result = ""
-        result.reserveCapacity(text.utf8.count)
+        var outputScalars = ContiguousArray<UnicodeScalar>()
+        outputScalars.reserveCapacity(text.unicodeScalars.count)
 
-        var currentToken = ""
+        var currentToken = ContiguousArray<UnicodeScalar>()
         currentToken.reserveCapacity(32)
 
         for scalar in text.unicodeScalars {
@@ -1041,21 +1079,21 @@ public struct ArabicLightStemmer {
                            (0x08A0...0x08FF).contains(val)
 
             if isArabic {
-                currentToken.unicodeScalars.append(scalar)
+                currentToken.append(scalar)
             } else {
                 if !currentToken.isEmpty {
-                    result.append(stemWord(currentToken))
+                    stemWordToBuffer(currentToken, into: &outputScalars)
                     currentToken.removeAll(keepingCapacity: true)
                 }
-                result.unicodeScalars.append(scalar)
+                outputScalars.append(scalar)
             }
         }
 
         if !currentToken.isEmpty {
-            result.append(stemWord(currentToken))
+            stemWordToBuffer(currentToken, into: &outputScalars)
         }
 
-        return result
+        return String(String.UnicodeScalarView(outputScalars))
     }
 }
 
