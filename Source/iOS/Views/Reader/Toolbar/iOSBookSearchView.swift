@@ -104,8 +104,8 @@ struct iOSBookSearchView: View {
                     ProgressView(value: ftsManager.progress)
                         .progressViewStyle(.linear)
                     Text(.ftsMigrationStatusBook(
-                        ftsManager.currentBookInArchive,
-                        max(1, ftsManager.booksInCurrentArchive),
+                        ftsManager.completedBooksCount,
+                        max(1, ftsManager.totalBooksToMigrate),
                         Int(ftsManager.progress * 100)
                     ))
                     .font(.caption)

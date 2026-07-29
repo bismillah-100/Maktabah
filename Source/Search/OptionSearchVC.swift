@@ -62,7 +62,7 @@ class OptionSearchVC: NSViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
-    private var migrationButton: NSButton?
+    private var migrationButton: NSView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -108,31 +108,80 @@ class OptionSearchVC: NSViewController {
 
     private func setupMigrationButtonIfNeeded() {
         FtsMigrationManager.shared.checkNeedsMigration()
-        if FtsMigrationManager.shared.needsMigration && migrationButton == nil {
-            guard let stackView = optionsSegment.superview as? NSStackView else { return }
 
-            let title = bkId.isEmpty
-            ? "Perbarui Indeks (\(FtsMigrationManager.shared.totalArchivesToMigrate))"
-            : "Perbarui Indeks Buku Ini"
+        let isHidden = UserDefaults.standard.bool(forKey: "hideFtsMigrationBanner")
+        guard let stackView = optionsSegment.superview as? NSStackView,
+              FtsMigrationManager.shared.needsMigration &&
+                migrationButton == nil && !isHidden
+        else { return }
 
-            let btn = NSButton(
-                title: title,
-                target: self, action: #selector(startMigration(_:))
-            )
-            btn.bezelColor = NSColor.controlAccentColor
-            stackView.insertArrangedSubview(btn, at: 0)
-            migrationButton = btn
+        let title = bkId.isEmpty
+        ? "Perbarui Indeks (\(FtsMigrationManager.shared.totalArchivesToMigrate))"
+        : "Perbarui Indeks Buku Ini"
+
+        let segmentedControl = NSSegmentedControl()
+        segmentedControl.segmentCount = 2
+        segmentedControl.trackingMode = .selectAny
+
+        segmentedControl.setLabel(title, forSegment: 0)
+
+        if let menuImage = NSImage(systemSymbolName: "chevron.down", accessibilityDescription: nil) {
+            segmentedControl.setImage(menuImage, forSegment: 1)
+        }
+
+        // Atur lebar manual untuk tombol menu jika perlu
+        segmentedControl.setWidth(30, forSegment: 1)
+
+        segmentedControl.target = self
+        segmentedControl.action = #selector(migrationSegmentClicked(_:))
+
+        stackView.insertArrangedSubview(segmentedControl, at: 0)
+        migrationButton = segmentedControl
+    }
+
+    @objc private func migrationSegmentClicked(_ sender: NSSegmentedControl) {
+        if sender.isSelected(forSegment: 0) {
+            sender.setSelected(false, forSegment: 0)
+            startMigration(sender)
+        }
+        
+        if sender.isSelected(forSegment: 1) {
+            sender.setSelected(false, forSegment: 1)
+            showMigrationOptions(sender)
         }
     }
 
-    @objc private func startMigration(_ sender: NSButton) {
+    @objc private func showMigrationOptions(_ sender: NSView) {
+        let menu = NSMenu()
+        let hideItem = NSMenuItem(title: String(localized: ".ftsMigrationHideBannerBtn"), action: #selector(hideMigrationBanner), keyEquivalent: "")
+        hideItem.target = self
+        menu.addItem(hideItem)
+
+        let point = NSPoint(x: sender.bounds.minX, y: sender.bounds.maxY)
+        menu.popUp(positioning: nil, at: point, in: sender)
+    }
+
+    @objc private func hideMigrationBanner() {
+        UserDefaults.standard.set(true, forKey: "hideFtsMigrationBanner")
+        migrationButton?.isHidden = true
+        migrationButton?.removeFromSuperview()
+        migrationButton = nil
+
+        ReusableFunc.showAlert(
+            title: String(localized: .ftsMigrationAlertTitle),
+            message: String(localized: .ftsMigrationAlertMessage),
+            style: .informational
+        )
+    }
+
+    @objc private func startMigration(_ sender: NSView) {
         let archiveId: Int? = !bkId.isEmpty
             ? Int(bkId).flatMap { try? DatabaseManager.shared.fetchBook(byId: $0) }?.archive
             : nil
 
         SettingsActions.showFtsMigrationModal(archiveId: archiveId) { [weak self] in
-            sender.isHidden = true
-            sender.removeFromSuperview()
+            self?.migrationButton?.isHidden = true
+            self?.migrationButton?.removeFromSuperview()
             self?.migrationButton = nil
         }
     }

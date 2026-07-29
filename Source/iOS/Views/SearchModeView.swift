@@ -200,6 +200,10 @@ struct SearchModeView: View {
 
                     Button {
                         hideFtsMigrationBanner = true
+                        ReusableFunc.showAlert(
+                            title: String(localized: .ftsMigrationAlertTitle),
+                            message: String(localized: .ftsMigrationAlertMessage)
+                        )
                     } label: {
                         Text(.ftsMigrationHideBannerBtn)
                             .frame(maxWidth: .infinity)
