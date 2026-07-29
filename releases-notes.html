@@ -36,6 +36,35 @@
 </head>
 <body>
 
+<h2>Version 3.3.5</h2>
+<p class="version">July 29, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Arabic Light10 Stemmer integration for root-word full-text search</li>
+  <li>Hadith narrators (Rijāl) database, search integration, and UI components</li>
+  <li>Search query and date modified columns, context menus, and query display</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Migrated reading history storage engine to SQLite</li>
+  <li>Updated copy reference citation format</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Fixed reader Table of Contents navigation and path traversal issue</li>
+  <li>Fixed stale content ID state when switching books without loading content</li>
+  <li>Resolved CloudKit sync issue where deleted history entries were not removed</li>
+  <li>Fixed memory leaks in HistoryViewModel and sensitive log handling</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Database query execution, search filter, and ZSTD archive decompression optimizations</li>
+  <li>CloudKit background sync queue performance and error handling optimizations</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.3.4</h2>
 <p class="version">July 21, 2026</p>
 <h3>Changes</h3>
