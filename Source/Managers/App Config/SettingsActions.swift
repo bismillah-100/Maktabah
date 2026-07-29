@@ -5,6 +5,7 @@
 
 #if canImport(AppKit)
 import AppKit
+import SwiftUI
 #elseif canImport(UIKit)
 import UIKit
 import UniformTypeIdentifiers
@@ -179,6 +180,8 @@ enum SettingsActions {
 
         DatabaseManager.shared.reloadConnectionAndLibrary()
 
+        FtsMigrationManager.shared.checkNeedsMigration()
+
         if showSuccessAlert {
             ReusableFunc.showAlert(
                 title: "masterFolderRenewed".localized,
@@ -223,6 +226,7 @@ enum SettingsActions {
 
         let finishSetup = {
             DatabaseManager.shared.reloadConnectionAndLibrary()
+            FtsMigrationManager.shared.checkNeedsMigration()
         }
 
         let restorePreviousMode = {
@@ -269,6 +273,58 @@ enum SettingsActions {
     }
 
     #if os(macOS)
+    static func showFtsMigrationModal(archiveId: Int? = nil, onDismiss: (() -> Void)? = nil) {
+        var window: NSWindow?
+        let view = FtsMigrationProgressView(
+            onCancel: {
+                window?.close()
+                window = nil
+                onDismiss?()
+            },
+            onUpdate: {
+                if let archiveId {
+                    try await FtsMigrationManager.shared.migrateArchive(archiveId: archiveId)
+                } else {
+                    try await FtsMigrationManager.shared.performMigration()
+                }
+                await MainActor.run { [window] in
+                    window?.close()
+                    onDismiss?()
+                }
+            }
+        )
+
+        let hostingView = NSHostingView(rootView: view)
+        hostingView.autoresizingMask = [.width, .height]
+
+        let fittingSize = hostingView.fittingSize
+        let windowWidth = max(420, fittingSize.width)
+        let windowHeight = max(290, fittingSize.height)
+
+        let w = NSWindow(
+            contentRect: .init(x: 0, y: 0, width: windowWidth, height: windowHeight),
+            styleMask: [.titled, .fullSizeContentView],
+            backing: .buffered, defer: false
+        )
+        w.contentView = hostingView
+        w.isReleasedWhenClosed = false
+        w.titlebarAppearsTransparent = true
+        w.isMovableByWindowBackground = true
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.hasShadow = true
+        w.toolbarStyle = .unifiedCompact
+        w.titleVisibility = .hidden
+        w.standardWindowButton(.closeButton)?.isHidden = true
+        w.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        w.standardWindowButton(.zoomButton)?.isHidden = true
+        w.center()
+        w.level = .floating
+        window = w
+
+        w.makeKeyAndOrderFront(nil)
+    }
+
     static func downloadSelectiveLibrary() {
         BulkDownloadModalCenter.shared.presentModal()
     }

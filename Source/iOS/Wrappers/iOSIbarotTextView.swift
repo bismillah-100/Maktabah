@@ -76,7 +76,12 @@ class iOSCustomIbarotTextView: UITextView {
         }
     }
 
-    private func popupText(for range: NSRange) {
+    func popupText(for range: NSRange) {
+        let nsString = textStorage.string as NSString
+        guard range.location >= 0,
+              range.length > 0,
+              range.location + range.length <= nsString.length else { return }
+
         guard let startPos = position(from: beginningOfDocument, offset: range.location),
               let endPos = position(from: startPos, offset: range.length),
               let textRange = textRange(from: startPos, to: endPos) else { return }
@@ -108,8 +113,9 @@ class iOSCustomIbarotTextView: UITextView {
         
         // 2. Teks di atasnya menggunakan UITextView dengan mengekstrak paragraf penuh
         // Ini memastikan indentasi baris pertama selaras sempurna dengan teks asli
-        let nsString = textStorage.string as NSString
         let fullParaRange = nsString.paragraphRange(for: range)
+        guard fullParaRange.location != NSNotFound,
+              fullParaRange.location + fullParaRange.length <= nsString.length else { return }
         
         let attrText = NSMutableAttributedString(attributedString: textStorage.attributedSubstring(from: fullParaRange))
         let fullRangeLocal = NSRange(location: 0, length: attrText.length)
@@ -122,7 +128,9 @@ class iOSCustomIbarotTextView: UITextView {
         attrText.removeAttribute(.underlineColor, range: fullRangeLocal)
         
         // Hanya tampilkan bagian teks yang dianotasi
-        let localTargetRange = NSRange(location: range.location - fullParaRange.location, length: range.length)
+        let localLocation = range.location - fullParaRange.location
+        guard localLocation >= 0, localLocation + range.length <= attrText.length else { return }
+        let localTargetRange = NSRange(location: localLocation, length: range.length)
         attrText.addAttribute(.foregroundColor, value: UIColor.black, range: localTargetRange)
         
         // Buat UITextView dengan lebar yang SAMA dengan view aslinya agar layoutnya 100% identik
@@ -463,6 +471,11 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
                 DispatchQueue.main.async { [weak textView, firstRange] in
                     textView?.scrollRangeToVisible(firstRange)
+                    Task { [weak textView] in
+                        await Task.yield()
+                        await Task.yield()
+                        textView?.popupText(for: firstRange)
+                    }
                 }
             }
         } else {

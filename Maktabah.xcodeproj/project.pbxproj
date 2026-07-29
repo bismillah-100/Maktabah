@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		17475414BB0B621BFDC173ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
 		240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
 		2519CB6A1E669FBF7124993E /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
+		3090DBCA5F8C3E3A3E5921B5 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
+		3D81E55799D30EEFA6FA3567 /* FtsMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */; };
 		4B0139E02EEAFC3000424CFA /* CustomSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139DF2EEAFC3000424CFA /* CustomSplitView.swift */; };
 		4B0139E22EEB281C00424CFA /* BookPageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E12EEB281C00424CFA /* BookPageCache.swift */; };
 		4B0139E42EEB2FDF00424CFA /* StringInterner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E32EEB2FDF00424CFA /* StringInterner.swift */; };
@@ -268,7 +271,10 @@
 		4BFCD84C2F10744800E41F8A /* ScheherazadeNew-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84B2F10744800E41F8A /* ScheherazadeNew-Regular.ttf */; };
 		4BFCD84F2F10746600E41F8A /* Lateef-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84D2F10746600E41F8A /* Lateef-Regular.ttf */; };
 		4BFCD8502F10746600E41F8A /* Lateef-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84E2F10746600E41F8A /* Lateef-Bold.ttf */; };
+		5D5E85B531CCA1E447711566 /* FtsMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */; };
 		61FB988FFF20432B9CEAB7E2 /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
+		968368763A32E39F80A9D1A1 /* FtsMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */; };
+		9F0065627B7E1290539A29ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
 		B483563522A5498E6D6452ED /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
 		CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C09DE835C53C6EFC0748C3 /* MaktabahApp.swift */; };
@@ -652,7 +658,9 @@
 		4BFCD84D2F10746600E41F8A /* Lateef-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lateef-Regular.ttf"; sourceTree = "<group>"; };
 		4BFCD84E2F10746600E41F8A /* Lateef-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lateef-Bold.ttf"; sourceTree = "<group>"; };
 		88C09DE835C53C6EFC0748C3 /* MaktabahApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MaktabahApp.swift; sourceTree = "<group>"; };
+		90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FtsMigrationProgressView.swift; sourceTree = "<group>"; };
 		9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iOSHistoryView.swift; sourceTree = "<group>"; };
+		9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FtsMigrationManager.swift; sourceTree = "<group>"; };
 		C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncable.swift; sourceTree = "<group>"; };
 		F300A2EB2F2DCE860095015E /* StorageError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageError.swift; sourceTree = "<group>"; };
 		F305776F2FA46222005732C6 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maktabah.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -892,6 +900,7 @@
 				F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */,
 				4BEC35902F34BA330038FC0F /* DatabaseError.swift */,
 				4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */,
+				9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */,
 				F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */,
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
@@ -955,6 +964,7 @@
 				4B6AF2322EE57CCD002EBFFC /* Toolbar.swift */,
 				F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */,
 				4B32023C2EDB0F76003B95D1 /* WindowController.swift */,
+				90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -1752,6 +1762,7 @@
 				CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */,
 				DB899712AF55D9ABF944D61F /* NetworkMonitor.swift in Sources */,
 				61FB988FFF20432B9CEAB7E2 /* HistoryDatabaseManager.swift in Sources */,
+				5D5E85B531CCA1E447711566 /* FtsMigrationManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1898,6 +1909,9 @@
 				F321E0262FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F321E0272FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
 				2519CB6A1E669FBF7124993E /* HistoryDatabaseManager.swift in Sources */,
+				3090DBCA5F8C3E3A3E5921B5 /* BuildFile in Sources */,
+				968368763A32E39F80A9D1A1 /* FtsMigrationManager.swift in Sources */,
+				9F0065627B7E1290539A29ED /* FtsMigrationProgressView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2044,6 +2058,8 @@
 				F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */,
 				240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */,
 				B483563522A5498E6D6452ED /* HistoryDatabaseManager.swift in Sources */,
+				3D81E55799D30EEFA6FA3567 /* FtsMigrationManager.swift in Sources */,
+				17475414BB0B621BFDC173ED /* FtsMigrationProgressView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

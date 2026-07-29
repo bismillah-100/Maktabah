@@ -459,8 +459,8 @@ final class SearchEngine {
             onInitialize(currentWorkers.count)
         }
 
-        // Normalisasi keywords
-        let normalizedKeywords = keywords.map { $0 }
+        // Normalisasi keywords menggunakan Lucene Light10 Stemmer
+        let normalizedKeywords = keywords.map { $0.stemArabicLight10() }
 
         // Buat FTS query - gunakan AND untuk multiple keywords
         let ftsQuery: String = switch mode {
