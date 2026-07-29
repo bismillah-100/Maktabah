@@ -116,8 +116,10 @@ class OptionSearchVC: NSViewController {
         else { return }
 
         let title = bkId.isEmpty
-        ? "Perbarui Indeks (\(FtsMigrationManager.shared.totalArchivesToMigrate))"
-        : "Perbarui Indeks Buku Ini"
+        ? String(localized: .ftsMigrationUpdateNowCountBtn(
+            FtsMigrationManager.shared.totalArchivesToMigrate
+        ))
+        : String(localized: .ftsMigrationAvailableBook)
 
         let segmentedControl = NSSegmentedControl()
         segmentedControl.segmentCount = 2
