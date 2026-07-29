@@ -839,19 +839,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يبحث عن السجلات التي تحتوي على واحدة على الأقل من الكلمات أو العبارات المفصولة بفاصلة (،). تُدرج في النتائج السجلاتُ المطابقة لأي من المدخلات.\n(مثال: الزكاة، زكاة)"
+            "value" : "يبحث عن السجلات التي تحتوي على واحدة على الأقل من الكلمات أو العبارات المفصولة بفاصلة (،). تُدرج في النتائج السجلاتُ المطابقة لأي من المدخلات.\n(مثال: الصوم، زكاة)"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches for records containing at least one of the words or phrases separated by a comma (,). Records matching any of the entries will be included in the results.\n(e.g., زكاة ,الزكاة)"
+            "value" : "Searches for records containing at least one of the words or phrases separated by a comma (,). Records matching any of the entries will be included in the results.\n(e.g., زكاة ,الصوم)"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mencari data yang mengandung setidaknya satu kata atau frasa yang dipisahkan dengan koma (,). Data yang cocok dengan salah satu entri akan ditampilkan dalam hasil pencarian.\n(contoh: زكاة ,الزكاة)"
+            "value" : "Mencari data yang mengandung setidaknya satu kata atau frasa yang dipisahkan dengan koma (,). Data yang cocok dengan salah satu entri akan ditampilkan dalam hasil pencarian.\n(contoh: زكاة ,الصوم)"
           }
         }
       }
