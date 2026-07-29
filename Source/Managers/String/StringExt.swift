@@ -450,6 +450,15 @@ extension String {
             "و", "ف", "ب", "ك", "ل"
         ]
 
+        func coreWord(_ s: String) -> String {
+            for p in prefixes {
+                if s.hasPrefix(p) && (s.count - p.count) >= 3 {
+                    return String(s.dropFirst(p.count))
+                }
+            }
+            return s
+        }
+
         func normalizeToken(_ token: Substring) -> String {
             var norm = ""
             for scalar in token.unicodeScalars {
@@ -464,115 +473,96 @@ extension String {
             return norm
         }
 
-        func candidatesForToken(_ normToken: String) -> [String] {
-            var candidates = [normToken]
-            for p in prefixes {
-                if normToken.hasPrefix(p) && (normToken.count - p.count) >= 3 {
-                    let core = String(normToken.dropFirst(p.count))
-                    if !candidates.contains(core) {
-                        candidates.append(core)
-                    }
-                    break
+        struct TextWord {
+            let text: String
+            let core: String
+            let normStartIdx: Int
+            let normEndIdx: Int
+        }
+
+        var textWords: [TextWord] = []
+        var wordStart: String.Index? = nil
+
+        for idx in normalizedText.indices {
+            let ch = normalizedText[idx]
+            if ch.isWhitespace || ch.isPunctuation {
+                if let start = wordStart {
+                    let wordStr = String(normalizedText[start..<idx])
+                    let core = coreWord(wordStr)
+                    let startOffset = normalizedText.distance(from: normalizedText.startIndex, to: start)
+                    let endOffset = normalizedText.distance(from: normalizedText.startIndex, to: idx)
+                    textWords.append(TextWord(text: wordStr, core: core, normStartIdx: startOffset, normEndIdx: endOffset))
+                    wordStart = nil
+                }
+            } else {
+                if wordStart == nil {
+                    wordStart = idx
                 }
             }
-            return candidates
         }
+        if let start = wordStart {
+            let wordStr = String(normalizedText[start...])
+            let core = coreWord(wordStr)
+            let startOffset = normalizedText.distance(from: normalizedText.startIndex, to: start)
+            let endOffset = normalizedText.distance(from: normalizedText.startIndex, to: normalizedText.endIndex)
+            textWords.append(TextWord(text: wordStr, core: core, normStartIdx: startOffset, normEndIdx: endOffset))
+        }
+
+        if textWords.isEmpty { return [] }
 
         for keyword in keywords {
             let trimmed = keyword.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { continue }
 
             let rawTokens = trimmed.split(whereSeparator: { $0.isWhitespace || $0.isPunctuation })
-            let tokenCandidatesList: [[String]] = rawTokens.compactMap { token -> [String]? in
+            struct QueryWord {
+                let norm: String
+                let core: String
+            }
+            let queryWords: [QueryWord] = rawTokens.compactMap { token -> QueryWord? in
                 let norm = normalizeToken(token)
                 guard !norm.isEmpty else { return nil }
-                return candidatesForToken(norm)
+                return QueryWord(norm: norm, core: coreWord(norm))
             }
 
-            guard !tokenCandidatesList.isEmpty else { continue }
+            guard !queryWords.isEmpty else { continue }
+            let m = queryWords.count
 
-            var searchStart = normalizedText.startIndex
-
-            while searchStart < normalizedText.endIndex {
-                var matchedFirstRange: Range<String.Index>? = nil
-
-                for candidate in tokenCandidatesList[0] {
-                    if let found = normalizedText.range(of: candidate, options: [.caseInsensitive], range: searchStart..<normalizedText.endIndex) {
-                        if matchedFirstRange == nil || found.lowerBound < matchedFirstRange!.lowerBound {
-                            matchedFirstRange = found
-                        }
-                    }
-                }
-
-                guard let firstRange = matchedFirstRange else { break }
-
-                var currentEnd = firstRange.upperBound
-                var sequenceValid = true
-
-                for tIdx in 1..<tokenCandidatesList.count {
-                    while currentEnd < normalizedText.endIndex {
-                        let ch = normalizedText[currentEnd]
-                        if ch.isWhitespace || ch.isPunctuation {
-                            currentEnd = normalizedText.index(after: currentEnd)
-                        } else {
+            if m <= textWords.count {
+                for i in 0...(textWords.count - m) {
+                    var sequenceMatches = true
+                    for j in 0..<m {
+                        let tw = textWords[i + j]
+                        let qw = queryWords[j]
+                        if tw.text != qw.norm && tw.core != qw.core && tw.text != qw.core && tw.core != qw.norm {
+                            sequenceMatches = false
                             break
                         }
                     }
 
-                    var matchedNextToken = false
-                    for candidate in tokenCandidatesList[tIdx] {
-                        if normalizedText[currentEnd...].hasPrefix(candidate) {
-                            currentEnd = normalizedText.index(currentEnd, offsetBy: candidate.count)
-                            matchedNextToken = true
-                            break
-                        }
-                    }
+                    if sequenceMatches {
+                        let firstWord = textWords[i]
+                        let lastWord = textWords[i + m - 1]
 
-                    if !matchedNextToken {
-                        sequenceValid = false
-                        break
-                    }
-                }
+                        let normStartIdx = firstWord.normStartIdx
+                        let normEndIdx = lastWord.normEndIdx
 
-                if sequenceValid {
-                    var normStartIdx = normalizedText.distance(from: normalizedText.startIndex, to: firstRange.lowerBound)
-                    let normEndIdx = normalizedText.distance(from: normalizedText.startIndex, to: currentEnd)
-
-                    if normStartIdx > 0 {
-                        var pStart = normStartIdx
-                        while pStart > 0 {
-                            let prevIdx = normalizedText.index(normalizedText.startIndex, offsetBy: pStart - 1)
-                            let prevChar = normalizedText[prevIdx]
-                            if prevChar.isWhitespace || prevChar.isPunctuation {
-                                break
+                        if normStartIdx < indexMap.count {
+                            let rawUtf16Start = indexMap[normStartIdx]
+                            let rawUtf16End: Int = if normEndIdx < indexMap.count {
+                                indexMap[normEndIdx]
+                            } else {
+                                utf16Offset
                             }
-                            pStart -= 1
-                        }
-                        let wordPrefix = String(normalizedChars[pStart..<normStartIdx])
-                        if prefixes.contains(wordPrefix) || wordPrefix == "ال" {
-                            normStartIdx = pStart
-                        }
-                    }
 
-                    if normStartIdx < indexMap.count {
-                        let rawUtf16Start = indexMap[normStartIdx]
-                        let rawUtf16End: Int = if normEndIdx < indexMap.count {
-                            indexMap[normEndIdx]
-                        } else {
-                            utf16Offset
-                        }
-
-                        if rawUtf16End > rawUtf16Start {
-                            let nsRange = NSRange(location: rawUtf16Start, length: rawUtf16End - rawUtf16Start)
-                            if !ranges.contains(nsRange) {
-                                ranges.append(nsRange)
+                            if rawUtf16End > rawUtf16Start {
+                                let nsRange = NSRange(location: rawUtf16Start, length: rawUtf16End - rawUtf16Start)
+                                if !ranges.contains(nsRange) {
+                                    ranges.append(nsRange)
+                                }
                             }
                         }
                     }
-
-                    searchStart = currentEnd
-                } else {
-                    searchStart = normalizedText.index(after: firstRange.lowerBound)
                 }
             }
         }
