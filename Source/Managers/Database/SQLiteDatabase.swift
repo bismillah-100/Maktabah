@@ -60,6 +60,7 @@ struct SQLiteRow {
 class SQLiteDatabase {
     let dbPointer: OpaquePointer
     private let lock = NSRecursiveLock()
+    private var savepointCounter: Int = 0
 
     init(path: String, flags: Int32 = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX) throws {
         var db: OpaquePointer?
@@ -80,13 +81,33 @@ class SQLiteDatabase {
         lock.lock()
         defer { lock.unlock() }
 
-        try _executeNoLock(query: "BEGIN TRANSACTION;")
-        do {
-            try block()
-            try _executeNoLock(query: "COMMIT;")
-        } catch {
-            try? _executeNoLock(query: "ROLLBACK;")
-            throw error
+        // Cek apakah sudah dalam transaksi aktif untuk mendukung nested transaction.
+        // SQLite tidak mendukung nested BEGIN TRANSACTION — gunakan SAVEPOINT sebagai gantinya.
+        let isNested = sqlite3_get_autocommit(dbPointer) == 0
+
+        if isNested {
+            savepointCounter += 1
+            let savepointName = "sp\(savepointCounter)"
+            defer { savepointCounter -= 1 }
+
+            try _executeNoLock(query: "SAVEPOINT \(savepointName);")
+            do {
+                try block()
+                try _executeNoLock(query: "RELEASE SAVEPOINT \(savepointName);")
+            } catch {
+                try? _executeNoLock(query: "ROLLBACK TO SAVEPOINT \(savepointName);")
+                try? _executeNoLock(query: "RELEASE SAVEPOINT \(savepointName);")
+                throw error
+            }
+        } else {
+            try _executeNoLock(query: "BEGIN TRANSACTION;")
+            do {
+                try block()
+                try _executeNoLock(query: "COMMIT;")
+            } catch {
+                try? _executeNoLock(query: "ROLLBACK;")
+                throw error
+            }
         }
     }
 
