@@ -100,13 +100,28 @@ final class BulkDownloadModalCenter {
     @MainActor
     private func runBulkDownload(books: [BooksData], vc: BulkDownloadVC) async {
         let total = books.count
-        var completedIntegrations = 0
-        var downloadedCount = 0
-
         vc.updateDownloadProgress(completed: 0, total: total)
 
         // ── Fase 1: Download concurrent ──────────────────────────────────────
+        let downloadResults = await executeConcurrentDownloads(books: books, vc: vc, total: total)
+
+        let successfulDownloads = books.filter {
+            if case .success = downloadResults[$0.id] { return true }
+            return false
+        }
+        let integrateTotal = successfulDownloads.count
+
+        // ── Fase 2: Integrate serial ──────────────────────────────────────────
+        let completedIntegrations = await executeSerialIntegrations(successfulDownloads: successfulDownloads, vc: vc, integrateTotal: integrateTotal)
+
+        // ── Selesai ───────────────────────────────────────────────────────────
+        finalizeProcess(books: books, vc: vc, completedIntegrations: completedIntegrations, integrateTotal: integrateTotal)
+    }
+
+    @MainActor
+    private func executeConcurrentDownloads(books: [BooksData], vc: BulkDownloadVC, total: Int) async -> [Int: Result<URL, Error>] {
         var downloadResults: [Int: Result<URL, Error>] = [:]
+        var downloadedCount = 0
 
         if await !NetworkMonitor.shared.isConnected {
             shouldStopDownloads = true
@@ -152,14 +167,12 @@ final class BulkDownloadModalCenter {
                 }
             }
         }
+        return downloadResults
+    }
 
-        let successfulDownloads = books.filter {
-            if case .success = downloadResults[$0.id] { return true }
-            return false
-        }
-        let integrateTotal = successfulDownloads.count
-
-        // ── Fase 2: Integrate serial ──────────────────────────────────────────
+    @MainActor
+    private func executeSerialIntegrations(successfulDownloads: [BooksData], vc: BulkDownloadVC, integrateTotal: Int) async -> Int {
+        var completedIntegrations = 0
         vc.updateIntegrateProgress(completed: 0, total: integrateTotal)
 
         for book in successfulDownloads {
@@ -211,8 +224,11 @@ final class BulkDownloadModalCenter {
                 total: integrateTotal
             )
         }
+        return completedIntegrations
+    }
 
-        // ── Selesai ───────────────────────────────────────────────────────────
+    @MainActor
+    private func finalizeProcess(books: [BooksData], vc: BulkDownloadVC, completedIntegrations: Int, integrateTotal: Int) {
         downloadTask = nil
         vc.setDownloading(false)
 
@@ -234,6 +250,7 @@ final class BulkDownloadModalCenter {
         }
     }
 }
+
 
 // MARK: - WindowCloseDelegate
 
