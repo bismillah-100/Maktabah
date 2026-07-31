@@ -16,12 +16,14 @@ import SQLite3
 class BookConnection {
     private(set) var db: SQLiteDatabase?
     static let tocTreeCache = NSCache<NSNumber, NSArray>()
-    private let totalPartsCache = NSCache<NSString, NSNumber>()
+    static let totalPartsCache: NSCache<NSString, NSNumber> = {
+        let cache = NSCache<NSString, NSNumber>()
+        cache.countLimit = 100 // max 100 books di cache
+        cache.name = "BookTotalPartsCache"
+        return cache
+    }()
 
-    init() {
-        totalPartsCache.countLimit = 100 // max 100 books di cache
-        totalPartsCache.name = "BookTotalPartsCache"
-    }
+    init() {}
 
     deinit {
         db = nil
@@ -373,14 +375,14 @@ extension BookConnection {
         let key = bkid as NSString
 
         // Cek cache dulu
-        if let cached = totalPartsCache.object(forKey: key) {
+        if let cached = Self.totalPartsCache.object(forKey: key) {
             return cached.intValue
         }
 
         let total = calculateTotalParts(bkid: bkid)
 
         // Simpan ke cache
-        totalPartsCache.setObject(NSNumber(value: total), forKey: key)
+        Self.totalPartsCache.setObject(NSNumber(value: total), forKey: key)
 
         return total
     }
@@ -537,5 +539,9 @@ extension BookConnection {
 
         Self.tocTreeCache.setObject(rootNodes as NSArray, forKey: key)
         return rootNodes
+    }
+
+    static func invalidateTOC(for bookId: Int) {
+        tocTreeCache.removeObject(forKey: NSNumber(value: bookId))
     }
 }

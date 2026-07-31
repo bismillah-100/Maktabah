@@ -70,6 +70,8 @@ final class SearchViewModel: ViewModelBase {
     let rowProgressDidUpdate = PassthroughSubject<(completed: Int, total: Int), Never>()
     /// Dikirim sekali saat search selesai sepenuhnya
     let searchDidComplete = PassthroughSubject<Void, Never>()
+    /// Dikirim saat data dimigrasi atau butuh reload UI secara penuh
+    let searchNeedsReload = PassthroughSubject<Void, Never>()
     #endif
 
     private let bkConn = BookConnection()
@@ -90,9 +92,12 @@ final class SearchViewModel: ViewModelBase {
 
     private let searchEngine = SearchEngine()
     private let ldm = LibraryDataManager.shared
+    private var searchWork: Task<Void, Never>?
+
+    #if os(iOS)
     private let filterSubject = PassthroughSubject<String, Never>()
     private let refreshSubject = PassthroughSubject<Void, Never>()
-    private var searchWork: Task<Void, Never>?
+    #endif
 
     // MARK: - Init
 
@@ -125,11 +130,17 @@ final class SearchViewModel: ViewModelBase {
             .sink { [weak self] in self?.updateDisplayedCategories() }
             .store(in: &cancellables)
 
+        #endif
+
         addObserver(
             forName: .bookIntegrated, object: nil, queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
+                #if os(macOS)
+                self?.searchNeedsReload.send(())
+                #else
                 self?.refreshSubject.send(())
+                #endif
             }
         }
 
@@ -137,11 +148,13 @@ final class SearchViewModel: ViewModelBase {
             forName: .booksChanged, object: nil, queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
+                #if os(macOS)
+                self?.searchNeedsReload.send(())
+                #else
                 self?.refreshSubject.send(())
+                #endif
             }
         }
-
-        #endif
 
         addObserver(
             forName: .bookIdMigrated, object: nil, queue: .main
@@ -201,6 +214,11 @@ final class SearchViewModel: ViewModelBase {
         if targetBookId == String(oldId) {
             targetBookId = String(newId)
         }
+        searchNeedsReload.send(())
+        #endif
+
+        #if os(iOS)
+        updateDisplayedCategories()
         #endif
     }
 

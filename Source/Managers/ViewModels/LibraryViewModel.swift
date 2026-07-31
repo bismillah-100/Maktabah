@@ -172,9 +172,7 @@ final class LibraryViewModel: ViewModelBase {
             _authorHierarchy = dataManager.buildAuthorHierarchy()
             _hasBuiltAuthorHierarchy = true
         }
-        setBaseCategories(rootCategories, reload: false)
-        resetAuthorPagination()
-        updateDisplayedCategories()
+        applyFilter(filterMode)
         state = .loaded
         hasLoadedLibrary = dataManager.isDataLoaded
     }
@@ -633,7 +631,7 @@ final class LibraryViewModel: ViewModelBase {
                         _authorHierarchy = dataManager.buildAuthorHierarchy()
                         _hasBuiltAuthorHierarchy = true
                     }
-                    updateDisplayedCategories()
+                    applyFilter(filterMode)
                 }
             }
             .store(in: &cancellables)
@@ -741,9 +739,7 @@ final class LibraryViewModel: ViewModelBase {
                 cat.children = newBooks
                 return cat
             }()]
-            #if os(macOS)
             updateSubject.send(.reloadData)
-            #endif
             return
         }
 
@@ -755,17 +751,13 @@ final class LibraryViewModel: ViewModelBase {
         if oldIds == newIds { return } // Tidak ada perubahan urutan atau penambahan/pengurangan
 
         var currentBooks = oldBooks
-        #if os(macOS)
         updateSubject.send(.beginUpdates)
-        #endif
 
         // Hapus item lama yang sudah tidak ada
         let newIdSet = Set(newIds)
         for (index, oldBook) in currentBooks.enumerated().reversed() {
             if !newIdSet.contains(oldBook.id) {
-                #if os(macOS)
                 updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
-                #endif
                 currentBooks.remove(at: index)
             }
         }
@@ -775,9 +767,7 @@ final class LibraryViewModel: ViewModelBase {
         for (newIndex, newBook) in newBooks.enumerated() {
             if let oldIndex = currentBooks.firstIndex(where: { $0.id == newBook.id }) {
                 if oldIndex != newIndex {
-                    #if os(macOS)
                     updateSubject.send(.moveItem(from: oldIndex, to: newIndex, parent: nil))
-                    #endif
                     let movedBook = currentBooks.remove(at: oldIndex)
                     currentBooks.insert(movedBook, at: newIndex)
                     firstCat.children = currentBooks
@@ -785,14 +775,10 @@ final class LibraryViewModel: ViewModelBase {
             } else {
                 currentBooks.insert(newBook, at: newIndex)
                 firstCat.children = currentBooks
-                #if os(macOS)
                 updateSubject.send(.insertItems(IndexSet(integer: newIndex), parent: nil))
-                #endif
             }
         }
-        #if os(macOS)
         updateSubject.send(.endUpdates)
-        #endif
     }
 
     private func handleBooksChanged(_ notification: Notification) {
@@ -801,7 +787,6 @@ final class LibraryViewModel: ViewModelBase {
             if let category = findCategoryInDisplayed(categoryId) {
                 bookLookup[book.book] = (category, book)
 
-                #if os(macOS)
                 if searchQuery.isEmpty {
                     updateSubject.send(.expandItem(category))
                     updateSubject.send(.reloadItem(category, reloadChildren: true))
@@ -818,7 +803,6 @@ final class LibraryViewModel: ViewModelBase {
                     displayedCategories = filtered
                     updateSubject.send(.reloadData)
                 }
-                #endif
             }
         }
         if !payload.updatedBookIds.isEmpty {
@@ -834,9 +818,7 @@ final class LibraryViewModel: ViewModelBase {
                 bookLookup[book.book] = (value.category, book)
                 break
             }
-            #if os(macOS)
             updateSubject.send(.reloadItem(book, reloadChildren: false))
-            #endif
         }
     }
 
@@ -851,38 +833,28 @@ final class LibraryViewModel: ViewModelBase {
 
         if isDownloadModal {
             if let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
-                #if os(macOS)
                 updateSubject.send(.beginUpdates)
-                #endif
 
                 if parent.children.count == 1 {
                     parent.children.remove(at: childIndex)
                     selectedBookIds.remove(bookId)
                     if let index = displayedCategories.firstIndex(where: { $0 === parent }) {
                         displayedCategories.remove(at: index)
-                        #if os(macOS)
                         updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
-                        #endif
                     }
                     baseCategories = displayedCategories
                 } else {
                     parent.children.remove(at: childIndex)
-                    #if os(macOS)
                     updateSubject.send(.removeItems(IndexSet(integer: childIndex), parent: parent))
-                    #endif
                 }
 
-                #if os(macOS)
                 updateSubject.send(.endUpdates)
                 updateSubject.send(.reloadItem(parent, reloadChildren: false))
-                #endif
             }
         } else {
-            #if os(macOS)
             if let book = parent.children.first(where: { ($0 as? BooksData)?.id == bookId }) {
                 updateSubject.send(.reloadItem(book, reloadChildren: false))
             }
-            #endif
         }
     }
 
@@ -905,9 +877,7 @@ final class LibraryViewModel: ViewModelBase {
                 let category = list[i]
 
                 if let bookIndex = category.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
-                    #if os(macOS)
                     updateSubject.send(.removeItems(IndexSet(integer: bookIndex), parent: category))
-                    #endif
                     category.children.remove(at: bookIndex)
                     anyChanged = true
                 }
@@ -918,9 +888,7 @@ final class LibraryViewModel: ViewModelBase {
                         var subList = [sub]
                         if findAndRemove(in: &subList, parent: category) {
                             if subList.isEmpty {
-                                #if os(macOS)
                                 updateSubject.send(.removeItems(IndexSet(integer: j), parent: category))
-                                #endif
                                 category.children.remove(at: j)
                             }
                             subChanged = true
@@ -1033,9 +1001,7 @@ final class LibraryViewModel: ViewModelBase {
                     let clone = category.copy() as! CategoryData
                     clone.children = []
                     let insertIndex = insertCategory(clone, into: &parent.children)
-                    #if os(macOS)
                     updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: parent))
-                    #endif
                     currentParent = clone
                 }
             } else {
@@ -1047,9 +1013,7 @@ final class LibraryViewModel: ViewModelBase {
                     var list = displayedCategories
                     let insertIndex = insertCategory(clone, into: &list)
                     displayedCategories = list
-                    #if os(macOS)
                     updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: nil))
-                    #endif
                     currentParent = clone
                 }
             }
@@ -1057,8 +1021,9 @@ final class LibraryViewModel: ViewModelBase {
 
         guard let leaf = currentParent else { return }
 
-        #if os(macOS)
-        if let insertIndex = insertBook(book, originalCategory: originalLeaf, targetCategory: leaf) {
+        let insertIndex = insertBook(book, originalCategory: originalLeaf, targetCategory: leaf)
+
+        if let insertIndex {
             updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: leaf))
         }
 
@@ -1067,10 +1032,6 @@ final class LibraryViewModel: ViewModelBase {
             // but typically restore selection handles it.
             updateSubject.send(.expandItem(bookName))
         }
-        #else
-        // Trigger @Published update for iOS
-        displayedCategories = displayedCategories
-        #endif
     }
 
     func findCategoryInDisplayed(_ categoryId: Int) -> CategoryData? {

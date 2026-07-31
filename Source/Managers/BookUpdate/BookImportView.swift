@@ -834,6 +834,8 @@ struct OfflineImportFormView: View {
             }
 
             BookPageCache.shared.remove(bookId: oldId)
+            BookConnection.invalidateTOC(for: oldId)
+            BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(oldId)))
 
             // Phase 3: Upload ke CloudKit SETELAH library data segar.
             // Urutan ini mencegah race condition di mana device lain menerima
