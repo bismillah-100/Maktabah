@@ -61,6 +61,9 @@ class SQLiteDatabase {
     let dbPointer: OpaquePointer
     private let lock = NSRecursiveLock()
     private var savepointCounter: Int = 0
+    private var statementCache: [String: OpaquePointer] = [:]
+    private var cacheKeys: [String] = [] // Untuk LRU eviction
+    private let maxCacheSize = 100
 
     init(path: String, flags: Int32 = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX) throws {
         var db: OpaquePointer?
@@ -74,6 +77,10 @@ class SQLiteDatabase {
     }
 
     deinit {
+        for stmt in statementCache.values {
+            sqlite3_finalize(stmt)
+        }
+        statementCache.removeAll()
         sqlite3_close(dbPointer)
     }
 
@@ -127,12 +134,35 @@ class SQLiteDatabase {
     // MARK: - Internal no-lock variants (caller must hold lock)
 
     private func _executeNoLock(query: String, parameters: [Any] = []) throws {
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(dbPointer, query, -1, &stmt, nil) == SQLITE_OK else {
-            let error = String(cString: sqlite3_errmsg(dbPointer))
-            throw SQLiteError.prepareFailed(error)
+        let stmt: OpaquePointer
+
+        if let cachedStmt = statementCache[query] {
+            stmt = cachedStmt
+            sqlite3_reset(stmt)
+            sqlite3_clear_bindings(stmt)
+
+            // Perbarui LRU order
+            if let idx = cacheKeys.firstIndex(of: query) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(query)
+            }
+        } else {
+            var newStmt: OpaquePointer?
+            guard sqlite3_prepare_v2(dbPointer, query, -1, &newStmt, nil) == SQLITE_OK else {
+                let error = String(cString: sqlite3_errmsg(dbPointer))
+                throw SQLiteError.prepareFailed(error)
+            }
+            stmt = newStmt!
+
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[query] = stmt
+            cacheKeys.append(query)
         }
-        defer { sqlite3_finalize(stmt) }
 
         try bind(parameters: parameters, to: stmt)
 
@@ -144,17 +174,40 @@ class SQLiteDatabase {
 
     @discardableResult
     private func _fetchNoLock<T>(query: String, parameters: [Any] = [], mapping: (SQLiteRow) throws -> T) throws -> [T] {
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(dbPointer, query, -1, &stmt, nil) == SQLITE_OK else {
-            let error = String(cString: sqlite3_errmsg(dbPointer))
-            throw SQLiteError.prepareFailed(error)
+        let stmt: OpaquePointer
+
+        if let cachedStmt = statementCache[query] {
+            stmt = cachedStmt
+            sqlite3_reset(stmt)
+            sqlite3_clear_bindings(stmt)
+
+            // Perbarui LRU order
+            if let idx = cacheKeys.firstIndex(of: query) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(query)
+            }
+        } else {
+            var newStmt: OpaquePointer?
+            guard sqlite3_prepare_v2(dbPointer, query, -1, &newStmt, nil) == SQLITE_OK else {
+                let error = String(cString: sqlite3_errmsg(dbPointer))
+                throw SQLiteError.prepareFailed(error)
+            }
+            stmt = newStmt!
+
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[query] = stmt
+            cacheKeys.append(query)
         }
-        defer { sqlite3_finalize(stmt) }
 
         try bind(parameters: parameters, to: stmt)
 
         var results: [T] = []
-        let row = SQLiteRow(stmt: stmt!)
+        let row = SQLiteRow(stmt: stmt)
 
         while sqlite3_step(stmt) == SQLITE_ROW {
             let mapped = try mapping(row)

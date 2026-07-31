@@ -284,23 +284,22 @@ class LibraryDataManager {
         var archives: [Int: ArchiveInfo] = [:]
         var seenTables = Set<String>() // untuk menghindari duplikat
 
-        // rekursif kumpulkan BooksData dari node (CategoryData atau BooksData)
-        func collectBooks(from node: Any) -> [BooksData] {
-            var result: [BooksData] = []
-
+        // Kumpulkan buku dalam urutan hierarki secara efisien menggunakan array tunggal untuk menghindari overhead alokasi O(N^2)
+        func collectBooks(from node: Any, into result: inout [BooksData]) {
             if let book = node as? BooksData {
                 result.append(book)
             } else if let cat = node as? CategoryData {
                 for child in cat.children {
-                    result.append(contentsOf: collectBooks(from: child))
+                    collectBooks(from: child, into: &result)
                 }
             }
-            return result
         }
 
         // iterasi semua root category dan kumpulkan buku dari seluruh subtree
         for root in rootCats {
-            let books = collectBooks(from: root)
+            var books: [BooksData] = []
+            collectBooks(from: root, into: &books)
+
             for book in books {
                 let archiveId = book.archive
                 // LEWATI SEMUA ARCHIVE = 0

@@ -583,6 +583,12 @@ final class SearchEngine {
 /// ----------------------------------------
 final class SQLiteConnection: DBConnectionType {
     private let db: OpaquePointer?
+    private var statementCache: [String: OpaquePointer] = [:]
+    private var cacheKeys: [String] = []
+    private let maxCacheSize = 50
+    // Mutex explicitly protecting both dictionary manipulation and statement execution
+    // to prevent EXC_BAD_ACCESS if multiple Task instances call this connection simultaneously.
+    private let executionLock = NSLock()
 
     init(dbPath: String) throws {
         var dbPtr: OpaquePointer?
@@ -619,21 +625,39 @@ final class SQLiteConnection: DBConnectionType {
             )
         }
 
-        var statement: OpaquePointer?
         var results: [[String: Any?]] = []
 
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            let msg = String(cString: sqlite3_errmsg(db))
-            throw NSError(
-                domain: "SQLite",
-                code: -2,
-                userInfo: [NSLocalizedDescriptionKey: msg]
-            )
+        executionLock.lock()
+        var statement: OpaquePointer? = statementCache[sql]
+        if statement == nil {
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+                executionLock.unlock()
+                let msg = String(cString: sqlite3_errmsg(db))
+                throw NSError(
+                    domain: "SQLite",
+                    code: -2,
+                    userInfo: [NSLocalizedDescriptionKey: msg]
+                )
+            }
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[sql] = statement
+            cacheKeys.append(sql)
+        } else {
+            if let idx = cacheKeys.firstIndex(of: sql) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(sql)
+            }
         }
+        let stmt = statement!
+        sqlite3_reset(stmt)
+        sqlite3_clear_bindings(stmt)
 
-        defer {
-            sqlite3_finalize(statement)
-        }
+        defer { executionLock.unlock() }
 
         // Bind parameters
         for (i, param) in params.enumerated() {
@@ -645,20 +669,20 @@ final class SQLiteConnection: DBConnectionType {
                         OpaquePointer(bitPattern: -1),
                         to: sqlite3_destructor_type.self
                     )
-                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                    sqlite3_bind_text(stmt, idx, ptr, -1, destructor)
                 }
             case let .int(n):
-                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+                sqlite3_bind_int64(stmt, idx, sqlite3_int64(n))
             case .null:
-                sqlite3_bind_null(statement, idx)
+                sqlite3_bind_null(stmt, idx)
             }
         }
 
         // Cache column names to prevent O(N) allocations
-        let colCount = sqlite3_column_count(statement)
+        let colCount = sqlite3_column_count(stmt)
         var columnNames: [String] = []
         for c in 0 ..< colCount {
-            if let namePtr = sqlite3_column_name(statement, c) {
+            if let namePtr = sqlite3_column_name(stmt, c) {
                 columnNames.append(String(cString: namePtr))
             } else {
                 columnNames.append("")
@@ -666,23 +690,23 @@ final class SQLiteConnection: DBConnectionType {
         }
 
         // Fetch rows
-        while sqlite3_step(statement) == SQLITE_ROW {
+        while sqlite3_step(stmt) == SQLITE_ROW {
             var row: [String: Any?] = [:]
 
             for c in 0 ..< colCount {
                 let name = columnNames[Int(c)]
-                let type = sqlite3_column_type(statement, c)
+                let type = sqlite3_column_type(stmt, c)
 
                 switch type {
                 case SQLITE_INTEGER:
-                    row[name] = Int(sqlite3_column_int64(statement, c))
+                    row[name] = Int(sqlite3_column_int64(stmt, c))
 
                 case SQLITE_FLOAT:
-                    row[name] = sqlite3_column_double(statement, c)
+                    row[name] = sqlite3_column_double(stmt, c)
 
                 case SQLITE_TEXT:
-                    if let txt = sqlite3_column_text(statement, c) {
-                        let bytes = sqlite3_column_bytes(statement, c)
+                    if let txt = sqlite3_column_text(stmt, c) {
+                        let bytes = sqlite3_column_bytes(stmt, c)
                         let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
                         row[name] = String(decoding: buffer, as: UTF8.self)
                     } else {
@@ -691,8 +715,8 @@ final class SQLiteConnection: DBConnectionType {
 
                 case SQLITE_BLOB:
                     // ✅ HANDLE BLOB: Convert ke Data
-                    if let blobPointer = sqlite3_column_blob(statement, c) {
-                        let blobSize = Int(sqlite3_column_bytes(statement, c))
+                    if let blobPointer = sqlite3_column_blob(stmt, c) {
+                        let blobSize = Int(sqlite3_column_bytes(stmt, c))
                         row[name] = Data(bytes: blobPointer, count: blobSize)
                     } else {
                         row[name] = nil
@@ -714,13 +738,34 @@ final class SQLiteConnection: DBConnectionType {
 
     func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent] {
         guard let db else { throw NSError(domain: "SQLite", code: -1, userInfo: nil) }
-        var statement: OpaquePointer?
         var results: [BookContent] = []
 
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+        executionLock.lock()
+        var statement: OpaquePointer? = statementCache[sql]
+        if statement == nil {
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+                executionLock.unlock()
+                throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+            }
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[sql] = statement
+            cacheKeys.append(sql)
+        } else {
+            if let idx = cacheKeys.firstIndex(of: sql) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(sql)
+            }
         }
-        defer { sqlite3_finalize(statement) }
+        let stmt = statement!
+        sqlite3_reset(stmt)
+        sqlite3_clear_bindings(stmt)
+
+        defer { executionLock.unlock() }
 
         for (i, param) in params.enumerated() {
             let idx = Int32(i + 1)
@@ -728,36 +773,36 @@ final class SQLiteConnection: DBConnectionType {
             case let .text(s):
                 s.withCString { ptr in
                     let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
-                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                    sqlite3_bind_text(stmt, idx, ptr, -1, destructor)
                 }
             case let .int(n):
-                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+                sqlite3_bind_int64(stmt, idx, sqlite3_int64(n))
             case .null:
-                sqlite3_bind_null(statement, idx)
+                sqlite3_bind_null(stmt, idx)
             }
         }
 
-        while sqlite3_step(statement) == SQLITE_ROW {
+        while sqlite3_step(stmt) == SQLITE_ROW {
             var nass = ""
-            let type = sqlite3_column_type(statement, 0)
+            let type = sqlite3_column_type(stmt, 0)
 
             if type == SQLITE_TEXT {
-                if let txt = sqlite3_column_text(statement, 0) {
-                    let bytes = sqlite3_column_bytes(statement, 0)
+                if let txt = sqlite3_column_text(stmt, 0) {
+                    let bytes = sqlite3_column_bytes(stmt, 0)
                     let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
                     nass = String(decoding: buffer, as: UTF8.self)
                 }
             } else if type == SQLITE_BLOB {
-                if let blobPointer = sqlite3_column_blob(statement, 0) {
-                    let blobSize = Int(sqlite3_column_bytes(statement, 0))
+                if let blobPointer = sqlite3_column_blob(stmt, 0) {
+                    let blobSize = Int(sqlite3_column_bytes(stmt, 0))
                     let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
                     nass = ReusableFunc.decompressData(from: buffer)
                 }
             }
 
-            let page = Int(sqlite3_column_int64(statement, 1))
-            let id = Int(sqlite3_column_int64(statement, 2))
-            let part = Int(sqlite3_column_int64(statement, 3))
+            let page = Int(sqlite3_column_int64(stmt, 1))
+            let id = Int(sqlite3_column_int64(stmt, 2))
+            let part = Int(sqlite3_column_int64(stmt, 3))
             results.append(BookContent(id: id, nash: nass, page: page, part: part))
         }
         return results
@@ -765,13 +810,34 @@ final class SQLiteConnection: DBConnectionType {
 
     func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen] {
         guard let db else { throw NSError(domain: "SQLite", code: -1, userInfo: nil) }
-        var statement: OpaquePointer?
         var results: [TarjamahMen] = []
 
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+        executionLock.lock()
+        var statement: OpaquePointer? = statementCache[sql]
+        if statement == nil {
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+                executionLock.unlock()
+                throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+            }
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[sql] = statement
+            cacheKeys.append(sql)
+        } else {
+            if let idx = cacheKeys.firstIndex(of: sql) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(sql)
+            }
         }
-        defer { sqlite3_finalize(statement) }
+        let stmt = statement!
+        sqlite3_reset(stmt)
+        sqlite3_clear_bindings(stmt)
+
+        defer { executionLock.unlock() }
 
         for (i, param) in params.enumerated() {
             let idx = Int32(i + 1)
@@ -779,37 +845,37 @@ final class SQLiteConnection: DBConnectionType {
             case let .text(s):
                 s.withCString { ptr in
                     let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
-                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                    sqlite3_bind_text(stmt, idx, ptr, -1, destructor)
                 }
             case let .int(n):
-                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+                sqlite3_bind_int64(stmt, idx, sqlite3_int64(n))
             case .null:
-                sqlite3_bind_null(statement, idx)
+                sqlite3_bind_null(stmt, idx)
             }
         }
 
         let nameIndex: Int32 = isIsoName ? 1 : 0
 
-        while sqlite3_step(statement) == SQLITE_ROW {
+        while sqlite3_step(stmt) == SQLITE_ROW {
             var nameStr = ""
-            let type = sqlite3_column_type(statement, nameIndex)
+            let type = sqlite3_column_type(stmt, nameIndex)
 
             if type == SQLITE_TEXT {
-                if let txt = sqlite3_column_text(statement, nameIndex) {
-                    let bytes = sqlite3_column_bytes(statement, nameIndex)
+                if let txt = sqlite3_column_text(stmt, nameIndex) {
+                    let bytes = sqlite3_column_bytes(stmt, nameIndex)
                     let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
                     nameStr = String(decoding: buffer, as: UTF8.self)
                 }
             } else if type == SQLITE_BLOB {
-                if let blobPointer = sqlite3_column_blob(statement, nameIndex) {
-                    let blobSize = Int(sqlite3_column_bytes(statement, nameIndex))
+                if let blobPointer = sqlite3_column_blob(stmt, nameIndex) {
+                    let blobSize = Int(sqlite3_column_bytes(stmt, nameIndex))
                     let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
                     nameStr = ReusableFunc.decompressData(from: buffer)
                 }
             }
 
-            let bk = Int(sqlite3_column_int64(statement, 2))
-            let id = Int(sqlite3_column_int64(statement, 3))
+            let bk = Int(sqlite3_column_int64(stmt, 2))
+            let id = Int(sqlite3_column_int64(stmt, 3))
 
             results.append(TarjamahMen(name: nameStr, bk: bk, id: id))
         }
@@ -818,12 +884,33 @@ final class SQLiteConnection: DBConnectionType {
 
     func querySingleNass(sql: String, params: [SQLValue]) throws -> String? {
         guard let db else { throw NSError(domain: "SQLite", code: -1, userInfo: nil) }
-        var statement: OpaquePointer?
 
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+        executionLock.lock()
+        var statement: OpaquePointer? = statementCache[sql]
+        if statement == nil {
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+                executionLock.unlock()
+                throw NSError(domain: "SQLite", code: -2, userInfo: nil)
+            }
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[sql] = statement
+            cacheKeys.append(sql)
+        } else {
+            if let idx = cacheKeys.firstIndex(of: sql) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(sql)
+            }
         }
-        defer { sqlite3_finalize(statement) }
+        let stmt = statement!
+        sqlite3_reset(stmt)
+        sqlite3_clear_bindings(stmt)
+
+        defer { executionLock.unlock() }
 
         for (i, param) in params.enumerated() {
             let idx = Int32(i + 1)
@@ -831,26 +918,26 @@ final class SQLiteConnection: DBConnectionType {
             case let .text(s):
                 s.withCString { ptr in
                     let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
-                    sqlite3_bind_text(statement, idx, ptr, -1, destructor)
+                    sqlite3_bind_text(stmt, idx, ptr, -1, destructor)
                 }
             case let .int(n):
-                sqlite3_bind_int64(statement, idx, sqlite3_int64(n))
+                sqlite3_bind_int64(stmt, idx, sqlite3_int64(n))
             case .null:
-                sqlite3_bind_null(statement, idx)
+                sqlite3_bind_null(stmt, idx)
             }
         }
 
-        if sqlite3_step(statement) == SQLITE_ROW {
-            let type = sqlite3_column_type(statement, 0)
+        if sqlite3_step(stmt) == SQLITE_ROW {
+            let type = sqlite3_column_type(stmt, 0)
             if type == SQLITE_TEXT {
-                if let txt = sqlite3_column_text(statement, 0) {
-                    let bytes = sqlite3_column_bytes(statement, 0)
+                if let txt = sqlite3_column_text(stmt, 0) {
+                    let bytes = sqlite3_column_bytes(stmt, 0)
                     let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
                     return String(decoding: buffer, as: UTF8.self)
                 }
             } else if type == SQLITE_BLOB {
-                if let blobPointer = sqlite3_column_blob(statement, 0) {
-                    let blobSize = Int(sqlite3_column_bytes(statement, 0))
+                if let blobPointer = sqlite3_column_blob(stmt, 0) {
+                    let blobSize = Int(sqlite3_column_bytes(stmt, 0))
                     let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
                     return ReusableFunc.decompressData(from: buffer)
                 }
@@ -860,6 +947,13 @@ final class SQLiteConnection: DBConnectionType {
     }
 
     deinit {
+        executionLock.lock()
+        for stmt in statementCache.values {
+            sqlite3_finalize(stmt)
+        }
+        statementCache.removeAll()
+        executionLock.unlock()
+
         if let db {
             sqlite3_close(db)
         }
