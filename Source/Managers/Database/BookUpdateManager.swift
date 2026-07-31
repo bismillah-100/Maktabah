@@ -493,7 +493,9 @@ final class BookUpdateManager {
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK {
             while sqlite3_step(stmt) == SQLITE_ROW {
                 if let name = sqlite3_column_text(stmt, 0) {
-                    objects.append(String(cString: name))
+                    let bytes = sqlite3_column_bytes(stmt, 0)
+                    let buffer = UnsafeBufferPointer(start: name, count: Int(bytes))
+                    objects.append(String(decoding: buffer, as: UTF8.self))
                 }
             }
         }
@@ -1393,7 +1395,9 @@ final class BookUpdateManager {
 
             while sqlite3_step(stmt) == SQLITE_ROW {
                 if let name = sqlite3_column_text(stmt, 0) {
-                    let tableName = String(cString: name)
+                    let bytes = sqlite3_column_bytes(stmt, 0)
+                    let buffer = UnsafeBufferPointer(start: name, count: Int(bytes))
+                    let tableName = String(decoding: buffer, as: UTF8.self)
                     if tableName.hasPrefix("b") {
                         bCandidates.append(tableName)
                     } else if tableName.hasPrefix("t") {
@@ -1564,7 +1568,9 @@ final class BookUpdateManager {
         var columns: [String] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
             if let namePtr = sqlite3_column_text(stmt, 1) {
-                columns.append(String(cString: namePtr))
+                let bytes = sqlite3_column_bytes(stmt, 1)
+                let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
+                columns.append(String(decoding: buffer, as: UTF8.self))
             }
         }
 
