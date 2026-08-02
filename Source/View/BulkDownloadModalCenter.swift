@@ -96,7 +96,7 @@ final class BulkDownloadModalCenter {
     }
 
     // MARK: - Core logic
-    
+
     @MainActor
     private func runBulkDownload(books: [BooksData], vc: BulkDownloadVC) async {
         let total = books.count

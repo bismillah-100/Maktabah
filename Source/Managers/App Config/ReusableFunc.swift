@@ -129,6 +129,50 @@ class ReusableFunc {
         }
     }
 
+    // MARK: - WINDOW
+    static func makeTitlelessWindow(contentView: NSView, size: NSSize) -> NSWindow {
+        let w = NSWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: [.titled, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        w.contentView = contentView
+        w.titlebarAppearsTransparent = true
+        w.isMovableByWindowBackground = true
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.hasShadow = true
+        w.titleVisibility = .hidden
+        w.isReleasedWhenClosed = false
+        w.standardWindowButton(.closeButton)?.isHidden = true
+        w.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        w.standardWindowButton(.zoomButton)?.isHidden = true
+        return w
+    }
+
+    static func makeWindow(
+        contentView: NSView,
+        styleMask: NSWindow.StyleMask,
+        size: NSSize? = nil,
+        title: String = "",
+        centered: Bool = true
+    ) -> NSWindow {
+        let window = NSWindow(
+            contentRect: contentView.frame,
+            styleMask: styleMask,
+            backing: .buffered,
+            defer: false
+        )
+
+        window.title = title
+        window.contentView = contentView
+        window.isReleasedWhenClosed = false
+        if centered { window.center() }
+
+        return window
+    }
+
     // MARK: - OTHERS
     static func resolveRowsToProcess(selectedRows: IndexSet, clickedRow: Int) -> IndexSet {
         if selectedRows.contains(clickedRow), selectedRows.count > 1 {
@@ -386,7 +430,7 @@ class ReusableFunc {
         // Tampilkan popover, relatif terhadap tombol (sender)
         searchHelpPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minX)
     }
-    
+
     // MARK: - NSIMAGE
     static func systemImage(named name: String) -> NSImage {
         guard let image = NSImage(systemSymbolName: name,

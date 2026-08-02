@@ -715,7 +715,9 @@ final class CoreDownloadModalCenter {
         let fittedSize = hosting.fittingSize
         hosting.frame = NSRect(origin: .zero, size: fittedSize)
 
-        let w = makeWindow(contentView: hosting, size: fittedSize)
+        let w = ReusableFunc.makeTitlelessWindow(
+            contentView: hosting, size: fittedSize
+        )
         window = w
         w.center()
     }
@@ -808,27 +810,6 @@ final class CoreDownloadModalCenter {
         let size = (try? fileManager.attributesOfItem(atPath: path)[.size]
                     as? NSNumber)?.int64Value ?? 0
         return size > 0
-    }
-
-    private func makeWindow(contentView: NSView, size: NSSize) -> NSWindow {
-        let w = NSWindow(
-            contentRect: NSRect(origin: .zero, size: size),
-            styleMask: [.titled, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-        w.contentView = contentView
-        w.titlebarAppearsTransparent = true
-        w.isMovableByWindowBackground = true
-        w.isOpaque = false
-        w.backgroundColor = .clear
-        w.hasShadow = true
-        w.titleVisibility = .hidden
-        w.isReleasedWhenClosed = false
-        w.standardWindowButton(.closeButton)?.isHidden = true
-        w.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        w.standardWindowButton(.zoomButton)?.isHidden = true
-        return w
     }
 }
 
