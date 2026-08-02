@@ -194,26 +194,23 @@ class SearchWorker {
         progress: @escaping (Int) -> Void,
         onRowProgress: @escaping (Int, Int) -> Void
     ) async -> Int {
-        // Count total menggunakan FTS
-        let totalCount: Int
+        // Phase 1: Fast ID Fetch (mengambil seluruh rowid yang match)
+        let matchedIDs: [Int]
         do {
-            totalCount = try await pool.read(at: 0) { conn in
-                let countSQL = """
-                    SELECT COUNT(*) as total
+            matchedIDs = try await pool.read(at: 0) { conn in
+                let idSQL = """
+                    SELECT rowid
                     FROM \(tableName)_fts
                     WHERE nass_clean MATCH ?
                 """
-                let rows = try conn.queryRows(sql: countSQL, params: [.text(ftsQuery)])
-                guard let firstRow = rows.first, let total = firstRow["total"] as? Int else {
-                    return 0
-                }
-                return total
+                let rows = try conn.queryRows(sql: idSQL, params: [.text(ftsQuery)])
+                return rows.compactMap { $0["rowid"] as? Int ?? $0["id"] as? Int }
             }
         } catch {
-            print("⚠️ Error counting table \(tableName): \(error)")
+            print("⚠️ Error fetching IDs for table \(tableName): \(error)")
             return 0
         }
-
+        let totalCount = matchedIDs.count
         if totalCount == 0 { return 0 }
 
         // ✅ Report total rows untuk tabel ini
@@ -259,18 +256,17 @@ class SearchWorker {
                     break
                 }
 
-                let offset = workerIndex * chunkSize
-                let limit = min(chunkSize, totalCount - offset)
-                if limit <= 0 { continue }
+                let startIndex = workerIndex * chunkSize
+                if startIndex >= totalCount { continue }
+                let endIndex = min(startIndex + chunkSize, totalCount)
+                let chunkIDs = Array(matchedIDs[startIndex..<endIndex])
 
                 group.addTask { [weak self] in
                     guard let self else { return (workerIndex, []) }
 
-                    let results = await searchChunk(
+                    let results = await searchChunkByIDs(
                         tableName: tableName,
-                        ftsQuery: ftsQuery,
-                        offset: offset,
-                        limit: limit,
+                        ids: chunkIDs,
                         connectionIndex: workerIndex,
                         pauseController: pauseController,
                         stopFlag: stopFlag
@@ -305,9 +301,8 @@ class SearchWorker {
                         }
                     }
 
-                    await MainActor.run {
-                        onResult(tableName, content)
-                    }
+                    onResult(tableName, content)
+
                     totalResults += 1
                     processedRows += 1
 
@@ -333,47 +328,40 @@ class SearchWorker {
         }
     }
 
-    /// ✅ PERBAIKAN: Aggressive stop checking di searchChunk
-    private func searchChunk(
+    /// ✅ PERBAIKAN: Menggunakan ID-based fetching untuk menghindari LIMIT ... OFFSET bottleneck
+    private func searchChunkByIDs(
         tableName: String,
-        ftsQuery: String,
-        offset: Int,
-        limit: Int,
+        ids: [Int],
         connectionIndex: Int,
         pauseController: PauseController,
         stopFlag: @escaping @Sendable () -> Bool
     ) async -> [BookContent] {
         var results: [BookContent] = []
-        var currentOffset = offset
-        let targetEnd = offset + limit
-
-        while currentOffset < targetEnd {
+        var currentIndex = 0
+        
+        while currentIndex < ids.count {
             await pauseController.waitIfPaused()
 
             if stopFlag() || Task.isCancelled {
-                print("      🛑 Worker \(connectionIndex) stopped at offset \(currentOffset)")
+                print("      🛑 Worker \(connectionIndex) stopped at index \(currentIndex)")
                 return results
             }
 
-            let batchLimit = min(batchSize, targetEnd - currentOffset)
+            let batchEnd = min(currentIndex + batchSize, ids.count)
+            let batchIDs = ids[currentIndex..<batchEnd]
+            currentIndex = batchEnd
 
+            let idsString = batchIDs.map { "\($0)" }.joined(separator: ",")
             let sql = """
-                SELECT main.nass, main.page, main.id, main.part
-                FROM \(tableName) AS main
-                INNER JOIN \(tableName)_fts AS fts ON fts.rowid = main.id
-                WHERE fts.nass_clean MATCH ?
-                LIMIT ? OFFSET ?
+                SELECT nass, page, id, part
+                FROM \(tableName)
+                WHERE id IN (\(idsString))
             """
-            let queryParams: [SQLValue] = [
-                .text(ftsQuery),
-                .int(batchLimit),
-                .int(currentOffset),
-            ]
 
             let fetchedContents: [BookContent]
             do {
                 fetchedContents = try await pool.read(at: connectionIndex) { conn in
-                    try conn.queryContents(sql: sql, params: queryParams)
+                    try conn.queryContents(sql: sql, params: [])
                 }
             } catch {
                 let nsError = error as NSError
@@ -388,19 +376,13 @@ class SearchWorker {
                 return results
             }
 
-            if fetchedContents.isEmpty { break }
+            if fetchedContents.isEmpty { continue }
 
             for (idx, content) in fetchedContents.enumerated() {
                 if idx % 10 == 0, stopFlag() || Task.isCancelled {
                     return results
                 }
                 results.append(content)
-            }
-
-            currentOffset += fetchedContents.count
-
-            if fetchedContents.count < batchLimit {
-                break
             }
         }
 
