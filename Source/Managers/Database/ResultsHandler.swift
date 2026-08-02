@@ -883,19 +883,22 @@ extension ResultsHandler {
 
     func getAllDescendantIds(of folderId: Int64) -> [Int64] {
         guard let db else { return [folderId] }
-        var ids: [Int64] = [folderId]
+        var ids: [Int64] = []
+        _getAllDescendantIds(of: folderId, ids: &ids, db: db)
+        return ids
+    }
 
+    private func _getAllDescendantIds(of folderId: Int64, ids: inout [Int64], db: SQLiteDatabase) {
+        ids.append(folderId)
         let sql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ?"
         do {
             let children = try db.fetch(query: sql, parameters: [folderId]) { $0.int64(at: 0) }
             for childId in children {
-                ids.append(contentsOf: getAllDescendantIds(of: childId))
+                _getAllDescendantIds(of: childId, ids: &ids, db: db)
             }
         } catch {
             print("Failed to get descendant IDs: \(error)")
         }
-
-        return ids
     }
 
     func fetchFolders(byCkRecordIds ckRecordIds: [String]) -> [SyncFolder] {

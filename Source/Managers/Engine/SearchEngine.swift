@@ -683,7 +683,10 @@ final class SQLiteConnection: DBConnectionType {
         var columnNames: [String] = []
         for c in 0 ..< colCount {
             if let namePtr = sqlite3_column_name(stmt, c) {
-                columnNames.append(String(cString: namePtr))
+                let nameLen = strlen(namePtr)
+                let rawPtr = UnsafeRawPointer(namePtr)
+                let buffer = UnsafeRawBufferPointer(start: rawPtr, count: Int(nameLen))
+                columnNames.append(String(decoding: buffer, as: UTF8.self))
             } else {
                 columnNames.append("")
             }

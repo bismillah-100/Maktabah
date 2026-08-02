@@ -429,11 +429,16 @@ class ResultsViewModel {
     }
 
     private func getAllDescendantIds(of node: FolderNode) -> [Int64] {
-        var ids: [Int64] = [node.id]
-        for child in node.children {
-            ids.append(contentsOf: getAllDescendantIds(of: child))
-        }
+        var ids: [Int64] = []
+        _getAllDescendantIds(of: node, ids: &ids)
         return ids
+    }
+
+    private func _getAllDescendantIds(of node: FolderNode, ids: inout [Int64]) {
+        ids.append(node.id)
+        for child in node.children {
+            _getAllDescendantIds(of: child, ids: &ids)
+        }
     }
 
     private func removeNodeFromTree(_ node: FolderNode) {
