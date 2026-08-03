@@ -1298,7 +1298,7 @@ final class BookUpdateManager {
             let selectSQL =
                 "SELECT \(columnNames.joined(separator: ", ")) FROM \(tableName);"
             let insertSQL =
-                "INSERT INTO \(tempTable) (\(columnNames.joined(separator: ", "))) VALUES (\(columnNames.map { _ in "?" }.joined(separator: ", ")));"
+                "INSERT INTO \(tempTable) (\(columnNames.joined(separator: ", "))) VALUES (\(String(repeating: "?, ", count: columnNames.count).dropLast(2)));"
 
             var selectStmt: OpaquePointer?
             var insertStmt: OpaquePointer?

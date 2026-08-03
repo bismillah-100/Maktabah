@@ -350,7 +350,7 @@ class ResultsHandler {
 
     func removePendingSync(ckRecordIds: [String]) {
         guard let db else { return }
-        let placeholders = ckRecordIds.map { _ in "?" }.joined(separator: ",")
+        let placeholders = String(repeating: "?,", count: ckRecordIds.count).dropLast()
         let sql = "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));"
         try? db.execute(query: sql, parameters: ckRecordIds)
     }
