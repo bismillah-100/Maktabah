@@ -351,17 +351,19 @@ class SearchWorker {
             let batchIDs = ids[currentIndex..<batchEnd]
             currentIndex = batchEnd
 
-            let idsString = batchIDs.map { "\($0)" }.joined(separator: ",")
+            let placeholders = String(repeating: "?,", count: batchIDs.count).dropLast()
             let sql = """
                 SELECT nass, page, id, part
                 FROM \(tableName)
-                WHERE id IN (\(idsString))
+                WHERE id IN (\(placeholders))
             """
+
+            let params = batchIDs.map { SQLValue.int($0) }
 
             let fetchedContents: [BookContent]
             do {
                 fetchedContents = try await pool.read(at: connectionIndex) { conn in
-                    try conn.queryContents(sql: sql, params: [])
+                    try conn.queryContents(sql: sql, params: params)
                 }
             } catch {
                 let nsError = error as NSError
