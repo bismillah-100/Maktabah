@@ -56,6 +56,13 @@ class MainWindow: NSWindow {
         }
     }
 
+    override func toggleTabBar(_ sender: Any?) {
+        super.toggleTabBar(sender)
+        NotificationCenter.default.post(
+            name: .windowTabBarDidChange, object: nil
+        )
+    }
+
     func setupContentView(restoreState: Bool = true) {
         let currentFrame = frame
         // Restore last mode
