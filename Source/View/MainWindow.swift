@@ -45,6 +45,17 @@ class MainWindow: NSWindow {
         updateUI()
     }
 
+    override func newWindowForTab(_ sender: Any?) {
+        let newWindowController = WindowController()
+
+        // Tambahkan sebagai tab
+        if let newWindow = newWindowController.window as? MainWindow {
+            addTabbedWindow(newWindow, ordered: .above)
+            newWindow.setupContentView(restoreState: false)
+            newWindow.makeKeyAndOrderFront(nil)
+        }
+    }
+
     func setupContentView(restoreState: Bool = true) {
         let currentFrame = frame
         // Restore last mode

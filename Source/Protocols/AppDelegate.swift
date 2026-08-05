@@ -657,6 +657,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         w.displayIfNeeded()
     }
 
+    @IBAction func newTabWindow(_ sender: Any?) {
+        guard let keyWindow else { return }
+        keyWindow.newWindowForTab(sender)
+    }
+
     deinit {
         if let windowObserver {
             NotificationCenter.default.removeObserver(windowObserver)
