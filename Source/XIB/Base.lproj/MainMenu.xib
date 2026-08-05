@@ -104,7 +104,7 @@
                         <items>
                             <menuItem title="New Tab" keyEquivalent="t" id="xh5-uq-cyo">
                                 <connections>
-                                    <action selector="newWindowForTab:" target="-1" id="zUh-8j-Los"/>
+                                    <action selector="newTabWindow:" target="Voe-Tx-rLC" id="2zX-Cl-R3s"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="New Window" keyEquivalent="n" id="Was-JA-tGl">

@@ -315,6 +315,13 @@ class OptionSearchVC: NSViewController {
                 resetProgressBar()
             }
             .store(in: &cancellables)
+
+        viewModel.searchNeedsReload
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.tableView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 
     private func setupTableView() {

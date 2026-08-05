@@ -57,6 +57,21 @@ class ResultsViewModel {
             name: .savedResultsTreeDidUpdate,
             object: nil
         )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleBookIdMigrated(_:)),
+            name: .bookIdMigrated,
+            object: nil
+        )
+    }
+
+    @objc private func handleBookIdMigrated(_ notification: Notification) {
+        Task {
+            await getFolders()
+            await dbLoadAllResults()
+            notifyChange(.fullReload)
+        }
     }
 
     @objc private func handleSavedResultsTreeDidUpdate() {
