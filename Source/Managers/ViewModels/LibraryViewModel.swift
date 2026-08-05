@@ -698,6 +698,7 @@ final class LibraryViewModel: ViewModelBase {
         }
     }
 
+    // MARK: macOS Implementation
     #if os(macOS)
     private func setupMacOSBindings() {
         $searchQuery
@@ -1031,6 +1032,11 @@ final class LibraryViewModel: ViewModelBase {
             // Optional string routing handled by view manager if needed,
             // but typically restore selection handles it.
             updateSubject.send(.expandItem(bookName))
+
+            /* Removed iOS implementation cause this func is
+             macOS only. see line 701 #if os(macOS)
+             func setupMacOSBinding its closed #endif
+             on line 1054 func findCategoryInDisplayed. */
         }
     }
 

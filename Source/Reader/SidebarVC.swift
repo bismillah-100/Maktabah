@@ -27,7 +27,7 @@ class SidebarVC: NSViewController {
     }
 
     var db: BookConnection!
-    
+
     var previousSelectedRow: Int?
 
     var enableDelegate: Bool = true
@@ -67,6 +67,13 @@ class SidebarVC: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         startWindowObservation()
+    }
+
+    deinit {
+        windowsObservation = nil
+        if let obs = tabBarObservation {
+            NotificationCenter.default.removeObserver(obs)
+        }
     }
 
     func startWindowObservation() {
@@ -136,7 +143,7 @@ class SidebarVC: NSViewController {
 
     func updateTOC(_ nodes: [TOCNode]) {
         self.tocTree = nodes
-        
+
         var flat: [TOCNode] = []
         func traverse(_ node: TOCNode) {
             flat.append(node)
@@ -144,7 +151,7 @@ class SidebarVC: NSViewController {
         }
         for node in nodes { traverse(node) }
         self.flatNodes = flat
-        
+
         self.outlineView.reloadData()
         Task { await self.rebuildLookupCache() }
     }
