@@ -438,11 +438,18 @@ final class LibraryViewModel: ViewModelBase {
 
     func getAllBooks(in category: CategoryData) -> [BooksData] {
         var books: [BooksData] = []
-        for child in category.children {
-            if let book = child as? BooksData { books.append(book) }
-            else if let sub = child as? CategoryData { books.append(contentsOf: getAllBooks(in: sub)) }
-        }
+        _getAllBooks(in: category, books: &books)
         return books
+    }
+
+    private func _getAllBooks(in category: CategoryData, books: inout [BooksData]) {
+        for child in category.children {
+            if let book = child as? BooksData {
+                books.append(book)
+            } else if let sub = child as? CategoryData {
+                _getAllBooks(in: sub, books: &books)
+            }
+        }
     }
 
     var selectedDeleteBooks: [BooksData] {
