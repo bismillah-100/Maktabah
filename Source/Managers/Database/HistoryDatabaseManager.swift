@@ -94,6 +94,7 @@ class HistoryDatabaseManager {
 
         try exec("CREATE INDEX IF NOT EXISTS idx_re_favorite ON reading_entries (is_favorite, favorited_at);")
         try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op ON sync_pending (operation, queued_at);")
+        try exec("CREATE INDEX IF NOT EXISTS idx_re_ck_record_id ON reading_entries (ck_record_id);")
     }
 
     // MARK: - SQLite Helpers
@@ -126,7 +127,12 @@ class HistoryDatabaseManager {
             entry.isFavorite ? 1 : 0,
             entry.ckRecordId as Any? ?? NSNull(),
         ]
-        try? _db?.execute(query: sql, parameters: params)
+        try? transaction {
+            try self._db?.execute(query: sql, parameters: params)
+            if let ckId = entry.ckRecordId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
     }
 
     func upsertEntries(_ entries: [ReadingEntry]) throws {
@@ -160,19 +166,40 @@ class HistoryDatabaseManager {
     }
 
     func deleteEntry(bookId: Int) {
-        try? exec("DELETE FROM reading_entries WHERE book_id = ?;", parameters: [bookId])
+        let sql = "DELETE FROM reading_entries WHERE book_id = ?;"
+        try? transaction {
+            // First fetch the ckRecordId
+            let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id = ? LIMIT 1;"
+            let ckIdRow = try self._db?.fetch(query: ckIdSql, parameters: [bookId], mapping: { $0.string(at: 0) }).first
+            let ckId = ckIdRow as? String
+            try self._db?.execute(query: sql, parameters: [bookId])
+            if let ckId = ckId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+            }
+        }
     }
 
     func deleteEntries(bookIds: [Int]) throws {
         guard let _db, !bookIds.isEmpty else { return }
         let chunkSize = 500
-        for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
-            let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
-            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
-            try _db.execute(
-                query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
-                parameters: chunk
-            )
+        try transaction {
+            for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
+                let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+
+                // Fetch ckRecordIds first
+                let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (\(placeholders));"
+                let ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap { $0 }
+
+                try _db.execute(
+                    query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
+                    parameters: chunk
+                )
+
+                for ckId in ckIds {
+                    try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+                }
+            }
         }
     }
 
@@ -193,7 +220,7 @@ class HistoryDatabaseManager {
         let chunkSize = 500
         for i in stride(from: 0, to: ids.count, by: chunkSize) {
             let chunk = Array(ids[i..<min(i + chunkSize, ids.count)])
-            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
             let sql = "SELECT book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id FROM reading_entries WHERE ck_record_id IN (\(placeholders));"
             if let rows = try? _db.fetch(query: sql, parameters: chunk, mapping: { row -> ReadingEntry in
                 ReadingEntry(
@@ -238,30 +265,24 @@ class HistoryDatabaseManager {
 
     // MARK: - Pending Sync (SQLite)
 
-    func addPendingSync(ckRecordId: String, operation: String) {
+    func addPendingSync(ckRecordId: String, operation: String) throws {
         guard let _db else { return }
-        do {
-            if operation == "upload" {
-                let count = try _db.fetch(
-                    query: "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';",
-                    parameters: [ckRecordId]
-                ) { $0.int64(at: 0) }.first ?? 0
-                if count > 0 { return } // Delete wins
-            } else if operation == "delete" {
-                try _db.execute(
-                    query: "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';",
-                    parameters: [ckRecordId]
-                )
-            }
+        if operation == "upload" {
+            let count = try _db.fetch(
+                query: "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';",
+                parameters: [ckRecordId]
+            ) { $0.int64(at: 0) }.first ?? 0
+            if count > 0 { return } // Delete wins
+        } else if operation == "delete" {
             try _db.execute(
-                query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);",
-                parameters: [ckRecordId, operation, Int64(Date().timeIntervalSince1970)]
+                query: "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';",
+                parameters: [ckRecordId]
             )
-        } catch {
-            #if DEBUG
-            print("HistoryDatabaseManager: addPendingSync error: \(error)")
-            #endif
         }
+        try _db.execute(
+            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);",
+            parameters: [ckRecordId, operation, Int64(Date().timeIntervalSince1970)]
+        )
     }
 
     func removePendingSync(ckRecordIds: [String]) {
@@ -269,7 +290,7 @@ class HistoryDatabaseManager {
         let chunkSize = 500
         for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
             let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
-            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
             try? _db.execute(
                 query: "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));",
                 parameters: chunk

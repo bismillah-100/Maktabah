@@ -71,7 +71,7 @@ class ResultsHandler {
 
         for res in updatedResults {
             if let ckId = res.ckRecordId {
-                addPendingSync(ckRecordId: ckId, operation: "upload")
+                try addPendingSync(ckRecordId: ckId, operation: "upload")
             }
         }
         return updatedResults
@@ -178,6 +178,8 @@ class ResultsHandler {
 
             try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_ck_record_id ON sync_pending (ck_record_id);")
             try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op_queued ON sync_pending (operation, queued_at);")
+            try exec("CREATE INDEX IF NOT EXISTS idx_folders_ck_record_id ON \(foldersTable) (\(colCkRecordId));")
+            try exec("CREATE INDEX IF NOT EXISTS idx_results_ck_record_id ON \(resultsTable) (\(colResCkRecordId));")
 
             // Migration for existing databases
             let folderCols = try listTableColumns(tableName: foldersTable)
@@ -325,27 +327,27 @@ class ResultsHandler {
         if !foldersToUpload.isEmpty || !resultsToUpload.isEmpty {
             guard uploadIfNeeded else { return }
             DispatchQueue.global(qos: .background).async {
-                CloudKitSyncManager.shared.uploadResultsData(folders: foldersToUpload, results: resultsToUpload)
+                CloudKitSyncManager.shared.uploadResultsData(folders: foldersToUpload, results: resultsToUpload, trackPending: false)
             }
         }
     }
 
     // MARK: - Sync Pending Helpers
 
-    func addPendingSync(ckRecordId: String, operation: String) {
+    func addPendingSync(ckRecordId: String, operation: String) throws {
         guard let db else { return }
         if operation == "upload" {
             let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
-            if let count = try? db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+            if let count = try db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
                 return // Delete wins
             }
         } else if operation == "delete" {
             let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';"
-            try? db.execute(query: delSql, parameters: [ckRecordId])
+            try db.execute(query: delSql, parameters: [ckRecordId])
         }
         let now = Int64(Date().timeIntervalSince1970)
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
-        try? db.execute(query: sql, parameters: [ckRecordId, operation, now])
+        try db.execute(query: sql, parameters: [ckRecordId, operation, now])
     }
 
     func removePendingSync(ckRecordIds: [String]) {
@@ -423,16 +425,20 @@ extension ResultsHandler {
         let now = Int64(Date().timeIntervalSince1970)
 
         let sql = "INSERT INTO \(foldersTable) (\(colName), \(colParent), \(colCkRecordId), \(colLastModified)) VALUES (?, NULL, ?, ?);"
+        var rowId: Int64 = -1
 
-        try db.execute(query: sql, parameters: [name, cId, now])
-        let rowId = db.lastInsertRowId()
-
-        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
-        if let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncFolder(from: $0) }).first {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [])
+        try transaction {
+            try exec(sql, parameters: [name, cId, now])
+            rowId = db.lastInsertRowId()
+            try self.addPendingSync(ckRecordId: cId, operation: "upload")
         }
 
-        return rowId
+        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+        if rowId != -1, let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncFolder(from: $0) }).first {
+            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [], trackPending: false)
+        }
+
+        return rowId != -1 ? rowId : nil
     }
 
     func insertSubFolder(parentNode: FolderNode, name: String) throws -> Int64? {
@@ -455,15 +461,19 @@ extension ResultsHandler {
             params.append(NSNull())
         }
 
-        try db.execute(query: sql, parameters: params)
-        let rowId = db.lastInsertRowId()
-
-        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
-        if let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncFolder(from: $0) }).first {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [])
+        var rowId: Int64 = -1
+        try transaction {
+            try exec(sql, parameters: params)
+            rowId = db.lastInsertRowId()
+            try self.addPendingSync(ckRecordId: cId, operation: "upload")
         }
 
-        return rowId
+        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+        if rowId != -1, let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncFolder(from: $0) }).first {
+            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [], trackPending: false)
+        }
+
+        return rowId != -1 ? rowId : nil
     }
 
     func fetchFolderTree() -> [FolderNode] {
@@ -526,10 +536,13 @@ extension ResultsHandler {
                 for id in allFolderIds.reversed() {
                     try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [id])
                 }
+                for id in ckIdsToDelete {
+                    try self.addPendingSync(ckRecordId: id, operation: "delete")
+                }
             }
 
             if !ckIdsToDelete.isEmpty {
-                CloudKitSyncManager.shared.delete(ckRecordIds: ckIdsToDelete, target: .result)
+                CloudKitSyncManager.shared.delete(ckRecordIds: ckIdsToDelete, target: .result, trackPending: false)
             }
         } catch {
             print("❌ Delete transaction failed:", error)
@@ -558,9 +571,12 @@ extension ResultsHandler {
             } else {
                 try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?;", parameters: [name])
             }
+            for id in ckIds {
+                try self.addPendingSync(ckRecordId: id, operation: "delete")
+            }
 
             if !ckIds.isEmpty {
-                CloudKitSyncManager.shared.delete(ckRecordIds: ckIds, target: .result)
+                CloudKitSyncManager.shared.delete(ckRecordIds: ckIds, target: .result, trackPending: false)
             }
         } catch {
             print(error.localizedDescription)
@@ -571,21 +587,31 @@ extension ResultsHandler {
         guard let db else { return }
         let now = Int64(Date().timeIntervalSince1970)
 
-        var pCkId: String? = nil
-        if let pid = newParentId {
-            let findParentSql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
-            if let fetchedCkId = try db.fetch(query: findParentSql, parameters: [pid], mapping: { $0.string(at: 0) }).compactMap({ $0 }).first {
-                pCkId = fetchedCkId
+        var reloaded: SyncFolder?
+        try transaction {
+            var pCkId: String? = nil
+            if let pid = newParentId {
+                let findParentSql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+                if let fetchedCkId = try db.fetch(query: findParentSql, parameters: [pid], mapping: { $0.string(at: 0) }).compactMap({ $0 }).first {
+                    pCkId = fetchedCkId
+                }
+            }
+
+            let updateSql = "UPDATE \(foldersTable) SET \(colParent) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ? WHERE \(colId) = ?;"
+            let params: [Any] = [newParentId ?? NSNull(), now, pCkId ?? NSNull(), id]
+            try exec(updateSql, parameters: params)
+
+            let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+            if let fetched = try db.fetch(query: reloadSql, parameters: [id], mapping: { self.makeSyncFolder(from: $0) }).first {
+                reloaded = fetched
+                if let ckId = fetched.ckRecordId {
+                    try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
             }
         }
 
-        let updateSql = "UPDATE \(foldersTable) SET \(colParent) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ? WHERE \(colId) = ?;"
-        let params: [Any] = [newParentId ?? NSNull(), now, pCkId ?? NSNull(), id]
-        try db.execute(query: updateSql, parameters: params)
-
-        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
-        if let reloaded = try db.fetch(query: reloadSql, parameters: [id], mapping: { self.makeSyncFolder(from: $0) }).first {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [])
+        if let folderToUpload = reloaded {
+            CloudKitSyncManager.shared.uploadResultsData(folders: [folderToUpload], results: [], trackPending: false)
         }
     }
 
@@ -612,7 +638,24 @@ extension ResultsHandler {
             params.append(name)
         }
 
-        try db.execute(query: updateSql, parameters: params)
+        var ckIds: [String] = []
+        try transaction {
+            let findCkIdSql: String
+            let findCkIdParams: [Any]
+            if let old = oldParent {
+                findCkIdSql = "SELECT \(colResCkRecordId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ?"
+                findCkIdParams = [old, name]
+            } else {
+                findCkIdSql = "SELECT \(colResCkRecordId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?"
+                findCkIdParams = [name]
+            }
+            ckIds = try db.fetch(query: findCkIdSql, parameters: findCkIdParams) { $0.string(at: 0) }.compactMap { $0 }
+
+            try exec(updateSql, parameters: params)
+            for ckId in ckIds {
+                try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
 
         let reloadSql: String
         var reloadParams: [Any] = []
@@ -626,7 +669,7 @@ extension ResultsHandler {
 
         let updated = try db.fetch(query: reloadSql, parameters: reloadParams) { self.makeSyncResult(from: $0) }
         if !updated.isEmpty {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updated)
+            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updated, trackPending: false)
         }
     }
 }
@@ -665,12 +708,16 @@ extension ResultsHandler {
             fCkId ?? NSNull(),
         ]
 
-        try db.execute(query: sql, parameters: params)
-        let rowId = db.lastInsertRowId()
+        var rowId: Int64 = -1
+        try transaction {
+            try exec(sql, parameters: params)
+            rowId = db.lastInsertRowId()
+            try self.addPendingSync(ckRecordId: cId, operation: "upload")
+        }
 
         let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
-        if let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncResult(from: $0) }).first {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: [reloaded])
+        if rowId != -1, let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncResult(from: $0) }).first {
+            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: [reloaded], trackPending: false)
         }
     }
 
@@ -720,6 +767,7 @@ extension ResultsHandler {
 
                 try db.execute(query: sql, parameters: params)
                 let rowId = db.lastInsertRowId()
+                try self.addPendingSync(ckRecordId: cId, operation: "upload")
 
                 let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
                 if let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncResult(from: $0) }).first {
@@ -729,7 +777,7 @@ extension ResultsHandler {
         }
 
         if !reloadedResults.isEmpty {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: reloadedResults)
+            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: reloadedResults, trackPending: false)
         }
     }
 
@@ -814,11 +862,21 @@ extension ResultsHandler {
         guard let db else { return }
         let now = Int64(Date().timeIntervalSince1970)
         let sql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ? WHERE \(colId) = ?;"
-        try db.execute(query: sql, parameters: [newName, now, folderId])
+
+        try transaction {
+            let findCkIdSql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+            let ckId = try db.fetch(query: findCkIdSql, parameters: [folderId]) { $0.string(at: 0) }.compactMap { $0 }.first
+
+            try exec(sql, parameters: [newName, now, folderId])
+
+            if let ckId = ckId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
 
         let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
         if let reloaded = try db.fetch(query: reloadSql, parameters: [folderId], mapping: { self.makeSyncFolder(from: $0) }).first {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [])
+            CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [], trackPending: false)
         }
     }
 
@@ -836,7 +894,25 @@ extension ResultsHandler {
             params = [newName, now, oldName]
         }
 
-        try db.execute(query: sql, parameters: params)
+        var ckIds: [String] = []
+        try transaction {
+            let findCkIdSql: String
+            let findCkIdParams: [Any]
+            if let fid = folderId {
+                findCkIdSql = "SELECT \(colResCkRecordId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ?"
+                findCkIdParams = [fid, oldName]
+            } else {
+                findCkIdSql = "SELECT \(colResCkRecordId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?"
+                findCkIdParams = [oldName]
+            }
+            ckIds = try db.fetch(query: findCkIdSql, parameters: findCkIdParams) { $0.string(at: 0) }.compactMap { $0 }
+
+            try exec(sql, parameters: params)
+
+            for ckId in ckIds {
+                try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
 
         let reloadSql: String
         var reloadParams: [Any] = []
@@ -851,7 +927,7 @@ extension ResultsHandler {
         let updatedResults = try db.fetch(query: reloadSql, parameters: reloadParams) { self.makeSyncResult(from: $0) }
 
         if !updatedResults.isEmpty {
-            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updatedResults)
+            CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updatedResults, trackPending: false)
         }
     }
 
@@ -859,22 +935,31 @@ extension ResultsHandler {
         guard let db else { return }
         let now = Int64(Date().timeIntervalSince1970)
 
-        var fCkId: String? = nil
-        let findFolderSql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
         do {
-            if let fetchedCkId = try db.fetch(query: findFolderSql, parameters: [newFolderId], mapping: { $0.string(at: 0) }).compactMap({ $0 }).first {
-                fCkId = fetchedCkId
+            var updatedResults: [SyncResult] = []
+            try transaction {
+                var fCkId: String? = nil
+                let findFolderSql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+                if let fetchedCkId = try db.fetch(query: findFolderSql, parameters: [newFolderId], mapping: { $0.string(at: 0) }).compactMap({ $0 }).first {
+                    fCkId = fetchedCkId
+                }
+
+                let updateSql = "UPDATE \(resultsTable) SET \(colFolderId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ? WHERE \(colFolderId) = ?;"
+                let params: [Any] = [newFolderId, now, fCkId ?? NSNull(), oldFolderId]
+                try db.execute(query: updateSql, parameters: params)
+
+                let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) = ?"
+                updatedResults = try db.fetch(query: reloadSql, parameters: [newFolderId]) { self.makeSyncResult(from: $0) }
+
+                for res in updatedResults {
+                    if let ckId = res.ckRecordId {
+                        try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+                    }
+                }
             }
 
-            let updateSql = "UPDATE \(resultsTable) SET \(colFolderId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ? WHERE \(colFolderId) = ?;"
-            let params: [Any] = [newFolderId, now, fCkId ?? NSNull(), oldFolderId]
-            try db.execute(query: updateSql, parameters: params)
-
-            let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) = ?"
-            let updatedResults = try db.fetch(query: reloadSql, parameters: [newFolderId]) { self.makeSyncResult(from: $0) }
-
             if !updatedResults.isEmpty {
-                CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updatedResults)
+                CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updatedResults, trackPending: false)
             }
         } catch {
             print("Failed to update results folder: \(error)")

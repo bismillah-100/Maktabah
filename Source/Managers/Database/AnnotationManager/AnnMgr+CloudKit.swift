@@ -8,19 +8,24 @@ import Foundation
 extension AnnotationManager {
     // MARK: - Sync Pending Helpers
 
-    func addPendingSync(ckRecordId: String, operation: String) {
+    func addPendingSync(ckRecordId: String, operation: String) throws {
         guard let _db else { return }
         if operation == "upload" {
             let checkSql = "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';"
-            if let count = try? _db.fetch(query: checkSql, parameters: [ckRecordId], mapping: { $0.int64(at: 0) }).first, count > 0 {
+            if let count = try _db.fetch(
+                query: checkSql,
+                parameters: [ckRecordId],
+                mapping: { $0.int64(at: 0) }).first,
+                count > 0 {
                 return // Delete wins
             }
         } else if operation == "delete" {
             let delSql = "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';"
-            try? _db.execute(query: delSql, parameters: [ckRecordId])
+            try _db.execute(query: delSql, parameters: [ckRecordId])
         }
+        let now = Int64(Date().timeIntervalSince1970)
         let sql = "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);"
-        try? _db.execute(query: sql, parameters: [ckRecordId, operation, now])
+        try _db.execute(query: sql, parameters: [ckRecordId, operation, now])
     }
 
     func removePendingSync(ckRecordIds: [String]) {
@@ -57,7 +62,8 @@ extension AnnotationManager {
 
     // MARK: - Apply CloudKit Changes
 
-    @discardableResult func applyCloudKitChanges(annotationsToSave: [Annotation], recordIdsToDelete: [String]) -> Bool {
+    @discardableResult
+    func applyCloudKitChanges(annotationsToSave: [Annotation], recordIdsToDelete: [String]) -> Bool {
         guard let _db else { return false }
 
         var addedAnnotations: [Annotation] = []
