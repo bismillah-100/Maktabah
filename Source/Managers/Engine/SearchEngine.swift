@@ -19,6 +19,7 @@ struct ArchiveInfo {
 /// ----------------------------------------
 protocol DBConnectionType {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
+    func queryInts(sql: String, params: [SQLValue]) throws -> [Int]
     func execute(query: String) throws
     func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent]
     func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen]
@@ -203,8 +204,7 @@ class SearchWorker {
                     FROM \(tableName)_fts
                     WHERE nass_clean MATCH ?
                 """
-                let rows = try conn.queryRows(sql: idSQL, params: [.text(ftsQuery)])
-                return rows.compactMap { $0["rowid"] as? Int ?? $0["id"] as? Int }
+                return try conn.queryInts(sql: idSQL, params: [.text(ftsQuery)])
             }
         } catch {
             print("⚠️ Error fetching IDs for table \(tableName): \(error)")
@@ -585,6 +585,76 @@ final class SQLiteConnection: DBConnectionType {
         let ftsPath = dbPath.replacingOccurrences(of: ".sqlite", with: "_fts.sqlite")
         let attachSQL = "ATTACH DATABASE '\(ftsPath)' AS fts_db;"
         sqlite3_exec(db, attachSQL, nil, nil, nil)
+    }
+
+    func queryInts(sql: String, params: [SQLValue]) throws -> [Int] {
+        guard let db else {
+            throw NSError(
+                domain: "SQLite",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "DB closed"]
+            )
+        }
+
+        var results: [Int] = []
+
+        executionLock.lock()
+        var statement: OpaquePointer? = statementCache[sql]
+        if statement == nil {
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+                executionLock.unlock()
+                let msg = String(cString: sqlite3_errmsg(db))
+                throw NSError(
+                    domain: "SQLite",
+                    code: -2,
+                    userInfo: [NSLocalizedDescriptionKey: msg]
+                )
+            }
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[sql] = statement
+            cacheKeys.append(sql)
+        } else {
+            if let idx = cacheKeys.firstIndex(of: sql) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(sql)
+            }
+        }
+        let stmt = statement!
+        sqlite3_reset(stmt)
+        sqlite3_clear_bindings(stmt)
+
+        defer { executionLock.unlock() }
+
+        // Bind parameters
+        for (i, param) in params.enumerated() {
+            let idx = Int32(i + 1)
+            switch param {
+            case let .text(s):
+                s.withCString { ptr in
+                    let destructor = unsafeBitCast(
+                        OpaquePointer(bitPattern: -1),
+                        to: sqlite3_destructor_type.self
+                    )
+                    sqlite3_bind_text(stmt, idx, ptr, -1, destructor)
+                }
+            case let .int(n):
+                sqlite3_bind_int64(stmt, idx, sqlite3_int64(n))
+            case .null:
+                sqlite3_bind_null(stmt, idx)
+            }
+        }
+
+        // Fetch ints directly
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            results.append(Int(sqlite3_column_int64(stmt, 0)))
+        }
+
+        return results
     }
 
     func execute(query: String) throws {
