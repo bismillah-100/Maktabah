@@ -99,7 +99,7 @@ class HistoryDatabaseManager {
 
     // MARK: - SQLite Helpers
 
-    private func exec(_ sql: String, parameters: [Any] = []) throws {
+    func exec(_ sql: String, parameters: [Any] = []) throws {
         guard let _db else { return }
         try _db.execute(query: sql, parameters: parameters)
     }
@@ -204,11 +204,45 @@ class HistoryDatabaseManager {
     }
 
     func saveHistoryOrder(_ order: [Int]) {
-        try? transaction {
+        do {
+            try transaction {
+                try exec("DELETE FROM history_order;")
+                for (position, bookId) in order.enumerated() {
+                    try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
+                }
+            }
+        } catch {
+            #if DEBUG
+            print("HistoryDatabaseManager: saveHistoryOrder failed: \(error)")
+            #endif
+        }
+    }
+
+
+    func saveCloudKitChanges(deletedIds: [Int], upsertedEntries: [ReadingEntry], finalOrder: [Int]) throws {
+        try transaction {
+            try deleteEntries(bookIds: deletedIds)
+            try upsertEntries(upsertedEntries)
             try exec("DELETE FROM history_order;")
-            for (position, bookId) in order.enumerated() {
+            for (position, bookId) in finalOrder.enumerated() {
                 try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
             }
+        }
+    }
+
+    func saveMigrationChanges(newEntries: [ReadingEntry], finalOrder: [Int]) throws {
+        try transaction {
+            try upsertEntries(newEntries)
+            try exec("DELETE FROM history_order;")
+            for (position, bookId) in finalOrder.enumerated() {
+                try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
+            }
+        }
+    }
+
+    func saveUpsertedEntries(_ entries: [ReadingEntry]) throws {
+        try transaction {
+            try upsertEntries(entries)
         }
     }
 
@@ -339,20 +373,26 @@ class HistoryDatabaseManager {
            let upList = try? JSONDecoder().decode([String].self, from: upData), !upList.isEmpty
         {
             let now = Int64(Date().timeIntervalSince1970)
-            try? transaction {
-                let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
-                for i in stride(from: 0, to: upList.count, by: chunkSize) {
-                    let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
-                    let placeholders = String(repeating: "(?, 'upload', ?),", count: chunk.count).dropLast()
-                    var params = [Any]()
-                    for ckId in chunk {
-                        params.append(contentsOf: [ckId, now])
+            do {
+                try transaction {
+                    let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
+                    for i in stride(from: 0, to: upList.count, by: chunkSize) {
+                        let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
+                        let placeholders = String(repeating: "(?, 'upload', ?),", count: chunk.count).dropLast()
+                        var params = [Any]()
+                        for ckId in chunk {
+                            params.append(contentsOf: [ckId, now])
+                        }
+                        try _db.execute(
+                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                            parameters: params
+                        )
                     }
-                    try _db.execute(
-                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
-                        parameters: params
-                    )
                 }
+            } catch {
+                #if DEBUG
+                print("HistoryDatabaseManager: upList migration failed: \(error)")
+                #endif
             }
         }
 
@@ -360,20 +400,26 @@ class HistoryDatabaseManager {
            let delList = try? JSONDecoder().decode([String].self, from: delData), !delList.isEmpty
         {
             let now = Int64(Date().timeIntervalSince1970)
-            try? transaction {
-                let chunkSize = 300 // 3 params per entry
-                for i in stride(from: 0, to: delList.count, by: chunkSize) {
-                    let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
-                    let placeholders = String(repeating: "(?, 'delete', ?),", count: chunk.count).dropLast()
-                    var params = [Any]()
-                    for ckId in chunk {
-                        params.append(contentsOf: [ckId, now])
+            do {
+                try transaction {
+                    let chunkSize = 300 // 3 params per entry
+                    for i in stride(from: 0, to: delList.count, by: chunkSize) {
+                        let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
+                        let placeholders = String(repeating: "(?, 'delete', ?),", count: chunk.count).dropLast()
+                        var params = [Any]()
+                        for ckId in chunk {
+                            params.append(contentsOf: [ckId, now])
+                        }
+                        try _db.execute(
+                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                            parameters: params
+                        )
                     }
-                    try _db.execute(
-                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
-                        parameters: params
-                    )
                 }
+            } catch {
+                #if DEBUG
+                print("HistoryDatabaseManager: delList migration failed: \(error)")
+                #endif
             }
         }
 
