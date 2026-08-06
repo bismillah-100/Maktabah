@@ -247,7 +247,7 @@ extension AnnotationManager {
 
         var result: [Int64: [String]] = [:]
 
-        let placeholders = ids.map { _ in "?" }.joined(separator: ",")
+        let placeholders = String(repeating: "?,", count: ids.count).dropLast()
         let sql = """
         SELECT at.\(colAnnotationTagAnnotationId), t.\(colTagName)
         FROM \(tagsTable) t

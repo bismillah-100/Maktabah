@@ -135,7 +135,7 @@ class HistoryDatabaseManager {
         
         for i in stride(from: 0, to: entries.count, by: chunkSize) {
             let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
-            let placeholders = chunk.map { _ in "(?, ?, ?, ?, ?, ?, ?, ?)" }.joined(separator: ",")
+            let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
             let sql = """
             INSERT OR REPLACE INTO reading_entries
             (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
@@ -168,7 +168,7 @@ class HistoryDatabaseManager {
         let chunkSize = 500
         for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
             let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
-            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
             try _db.execute(
                 query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
                 parameters: chunk
@@ -193,7 +193,7 @@ class HistoryDatabaseManager {
         let chunkSize = 500
         for i in stride(from: 0, to: ids.count, by: chunkSize) {
             let chunk = Array(ids[i..<min(i + chunkSize, ids.count)])
-            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
             let sql = "SELECT book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id FROM reading_entries WHERE ck_record_id IN (\(placeholders));"
             if let rows = try? _db.fetch(query: sql, parameters: chunk, mapping: { row -> ReadingEntry in
                 ReadingEntry(
@@ -269,7 +269,7 @@ class HistoryDatabaseManager {
         let chunkSize = 500
         for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
             let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
-            let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
             try? _db.execute(
                 query: "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));",
                 parameters: chunk
@@ -322,7 +322,7 @@ class HistoryDatabaseManager {
                 let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
                 for i in stride(from: 0, to: upList.count, by: chunkSize) {
                     let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
-                    let placeholders = chunk.map { _ in "(?, 'upload', ?)" }.joined(separator: ",")
+                    let placeholders = String(repeating: "(?, 'upload', ?),", count: chunk.count).dropLast()
                     var params = [Any]()
                     for ckId in chunk {
                         params.append(contentsOf: [ckId, now])
@@ -343,7 +343,7 @@ class HistoryDatabaseManager {
                 let chunkSize = 300 // 3 params per entry
                 for i in stride(from: 0, to: delList.count, by: chunkSize) {
                     let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
-                    let placeholders = chunk.map { _ in "(?, 'delete', ?)" }.joined(separator: ",")
+                    let placeholders = String(repeating: "(?, 'delete', ?),", count: chunk.count).dropLast()
                     var params = [Any]()
                     for ckId in chunk {
                         params.append(contentsOf: [ckId, now])

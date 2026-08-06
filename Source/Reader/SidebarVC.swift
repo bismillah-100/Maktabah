@@ -12,7 +12,6 @@ class SidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var scrollView: NSScrollView!
     @IBOutlet weak var searchField: DSFSearchField!
-    @IBOutlet weak var searchContainer: NSView!
     @IBOutlet weak var xBtn: NSButton!
 
     weak var delegate: SidebarDelegate?
@@ -28,7 +27,7 @@ class SidebarVC: NSViewController {
     }
 
     var db: BookConnection!
-    
+
     var previousSelectedRow: Int?
 
     var enableDelegate: Bool = true
@@ -38,6 +37,9 @@ class SidebarVC: NSViewController {
             xBtn.isEnabled = !searchFieldIsHidden
         }
     }
+
+    private var windowsObservation: NSKeyValueObservation?
+    private var tabBarObservation: NSObjectProtocol?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,6 +66,40 @@ class SidebarVC: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        startWindowObservation()
+    }
+
+    deinit {
+        windowsObservation = nil
+        if let obs = tabBarObservation {
+            NotificationCenter.default.removeObserver(obs)
+        }
+    }
+
+    func startWindowObservation() {
+        guard windowsObservation == nil,
+              let window = view.window,
+              let tabGroup = window.tabGroup
+        else { return }
+
+        windowsObservation = tabGroup.observe(
+            \.windows,
+             options: []
+        ) { _,_ in
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                updateScrollViewInsets(searchField.isHidden)
+            }
+        }
+
+        tabBarObservation = NotificationCenter.default.addObserver(
+            forName: .windowTabBarDidChange,
+            object: nil, queue: .main,
+            using: { [weak self] _ in
+                guard let self else { return }
+                updateScrollViewInsets(searchField.isHidden)
+            }
+        )
     }
 
     @IBAction func performFindPanelAction(_ sender: Any) {
@@ -76,8 +112,6 @@ class SidebarVC: NSViewController {
             scrollView.drawsBackground = true
             scrollView.backgroundColor = color.nsColor
         }
-        searchContainer.wantsLayer = true
-        searchContainer.layer?.backgroundColor = color.nsColor.cgColor
         // Update outline view
         outlineView.backgroundColor = .clear
     }
@@ -92,26 +126,24 @@ class SidebarVC: NSViewController {
         searchFieldIsHidden.toggle()
         let hide = searchFieldIsHidden
 
-        searchContainer.isHidden = hide
         searchField.isHidden = hide
+        updateScrollViewInsets(hide)
+    }
 
-        // 3. Buat Constraint yang Baru
-        if !hide {
-            // KONDISI 1: TIDAK TERSEMBUNYI (Unhide)
+    func updateScrollViewInsets(_ searchFieldHidden: Bool) {
+        if !searchFieldHidden {
             scrollView.automaticallyAdjustsContentInsets = false
-            scrollView.contentInsets.top = 88
+            scrollView.contentInsets.top = view.safeAreaInsets.top +
+                                           searchField.frame.height + 8
             searchField.becomeFirstResponder()
         } else {
-            // KONDISI 2: TERSEMBUNYI (Hide)
-            // Hubungkan scrollView top ke superview top dengan constant 0
-            // Asumsi superview dari scrollView adalah view utama ViewController
             scrollView.automaticallyAdjustsContentInsets = true
         }
     }
 
     func updateTOC(_ nodes: [TOCNode]) {
         self.tocTree = nodes
-        
+
         var flat: [TOCNode] = []
         func traverse(_ node: TOCNode) {
             flat.append(node)
@@ -119,7 +151,7 @@ class SidebarVC: NSViewController {
         }
         for node in nodes { traverse(node) }
         self.flatNodes = flat
-        
+
         self.outlineView.reloadData()
         Task { await self.rebuildLookupCache() }
     }

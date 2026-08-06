@@ -218,21 +218,32 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
     // MARK: - Helpers
     func getAllBooks(in category: CategoryData) -> [BooksData] {
         var books: [BooksData] = []
-        for child in category.children {
-            if let book = child as? BooksData { books.append(book) }
-            else if let sub = child as? CategoryData { books.append(contentsOf: getAllBooks(in: sub)) }
-        }
+        _getAllBooks(in: category, books: &books)
         return books
+    }
+
+    private func _getAllBooks(in category: CategoryData, books: inout [BooksData]) {
+        for child in category.children {
+            if let book = child as? BooksData {
+                books.append(book)
+            } else if let sub = child as? CategoryData {
+                _getAllBooks(in: sub, books: &books)
+            }
+        }
     }
 
     func getAllCategories(in category: CategoryData) -> [CategoryData] {
         var categories: [CategoryData] = []
+        _getAllCategories(in: category, categories: &categories)
+        return categories
+    }
+
+    private func _getAllCategories(in category: CategoryData, categories: inout [CategoryData]) {
         for child in category.children {
             if let sub = child as? CategoryData {
                 categories.append(sub)
-                categories.append(contentsOf: getAllCategories(in: sub))
+                _getAllCategories(in: sub, categories: &categories)
             }
         }
-        return categories
     }
 }

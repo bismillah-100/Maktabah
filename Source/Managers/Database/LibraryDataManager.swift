@@ -284,23 +284,22 @@ class LibraryDataManager {
         var archives: [Int: ArchiveInfo] = [:]
         var seenTables = Set<String>() // untuk menghindari duplikat
 
-        // rekursif kumpulkan BooksData dari node (CategoryData atau BooksData)
-        func collectBooks(from node: Any) -> [BooksData] {
-            var result: [BooksData] = []
-
+        // Kumpulkan buku dalam urutan hierarki secara efisien menggunakan array tunggal untuk menghindari overhead alokasi O(N^2)
+        func collectBooks(from node: Any, into result: inout [BooksData]) {
             if let book = node as? BooksData {
                 result.append(book)
             } else if let cat = node as? CategoryData {
                 for child in cat.children {
-                    result.append(contentsOf: collectBooks(from: child))
+                    collectBooks(from: child, into: &result)
                 }
             }
-            return result
         }
 
         // iterasi semua root category dan kumpulkan buku dari seluruh subtree
         for root in rootCats {
-            let books = collectBooks(from: root)
+            var books: [BooksData] = []
+            collectBooks(from: root, into: &books)
+
             for book in books {
                 let archiveId = book.archive
                 // LEWATI SEMUA ARCHIVE = 0
@@ -502,32 +501,34 @@ class LibraryDataManager {
                     }
                 },
                 onResult: { tableName, archive, content in
-                    Task { @MainActor in
-                        let bookId = Int(tableName.dropFirst()) ?? 0
-                        let (bookTitle, isMultilingual, isImported) = self.lock.withLock {
-                            let book = self._booksById[bookId]
-                            return (book?.book ?? "", book?.isMultiLanguage ?? false, book?.isImported ?? false)
-                        }
+                    let bookId = Int(tableName.dropFirst()) ?? 0
+                    let (bookTitle, isMultilingual, isImported) = self.lock.withLock {
+                        let book = self._booksById[bookId]
+                        return (book?.book ?? "", book?.isMultiLanguage ?? false, book?.isImported ?? false)
+                    }
 
-                        // Strip tags untuk imported books (lebih efisien dengan versi ringan)
-                        let strippedNash = isImported ? content.nash.stripSpanTags() : content.nash
-                        let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
-                        let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
-                        let snippet = normalizedNash
-                            .normalizeArabic()
-                            .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
-                        let highlightedSnippet = snippet.highlightedAttributedText(
-                            keywords: searchKeywordsConverted)
-                        completion(
-                            SearchResultItem(
-                                archive: archive,
-                                tableName: tableName,
-                                bookId: content.id,
-                                bookTitle: bookTitle,
-                                page: content.page,
-                                part: content.part,
-                                attributedText: highlightedSnippet
-                            ))
+                    // Strip tags untuk imported books (lebih efisien dengan versi ringan)
+                    let strippedNash = isImported ? content.nash.stripSpanTags() : content.nash
+                    let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
+                    let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
+                    let snippet = normalizedNash
+                        .normalizeArabic()
+                        .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
+                    let highlightedSnippet = snippet.highlightedAttributedText(
+                        keywords: searchKeywordsConverted)
+
+                    let item = SearchResultItem(
+                        archive: archive,
+                        tableName: tableName,
+                        bookId: content.id,
+                        bookTitle: bookTitle,
+                        page: content.page,
+                        part: content.part,
+                        attributedText: highlightedSnippet
+                    )
+
+                    Task { @MainActor in
+                        completion(item)
                     }
                 },
                 onComplete: {
