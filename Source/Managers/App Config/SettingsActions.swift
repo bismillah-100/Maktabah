@@ -301,23 +301,11 @@ enum SettingsActions {
         let windowWidth = max(420, fittingSize.width)
         let windowHeight = max(290, fittingSize.height)
 
-        let w = NSWindow(
-            contentRect: .init(x: 0, y: 0, width: windowWidth, height: windowHeight),
-            styleMask: [.titled, .fullSizeContentView],
-            backing: .buffered, defer: false
+
+        let w = ReusableFunc.makeTitlelessWindow(
+            contentView: hostingView,
+            size: .init(width: windowWidth, height: windowHeight)
         )
-        w.contentView = hostingView
-        w.isReleasedWhenClosed = false
-        w.titlebarAppearsTransparent = true
-        w.isMovableByWindowBackground = true
-        w.isOpaque = false
-        w.backgroundColor = .clear
-        w.hasShadow = true
-        w.toolbarStyle = .unifiedCompact
-        w.titleVisibility = .hidden
-        w.standardWindowButton(.closeButton)?.isHidden = true
-        w.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        w.standardWindowButton(.zoomButton)?.isHidden = true
         w.center()
         w.level = .floating
         window = w
