@@ -172,7 +172,13 @@ final class LibraryViewModel: ViewModelBase {
             _authorHierarchy = dataManager.buildAuthorHierarchy()
             _hasBuiltAuthorHierarchy = true
         }
-        applyFilter(filterMode)
+
+        /* Revert jules commit cause `OptionSearchVC` load
+         all books without filter only downloaded books.
+         */
+        setBaseCategories(rootCategories, reload: false)
+        resetAuthorPagination()
+        updateDisplayedCategories()
         state = .loaded
         hasLoadedLibrary = dataManager.isDataLoaded
     }
