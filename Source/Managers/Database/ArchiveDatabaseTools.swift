@@ -180,8 +180,15 @@ enum ArchiveDatabaseTools {
             let namePtr = sqlite3_column_text(stmt, 1)
             let typePtr = sqlite3_column_text(stmt, 2)
 
-            let name = namePtr.flatMap { String(cString: $0) } ?? ""
-            let type = typePtr.flatMap { String(cString: $0) } ?? ""
+            let name = namePtr.map { ptr -> String in
+                let bytes = sqlite3_column_bytes(stmt, 1)
+                return String(decoding: UnsafeBufferPointer(start: ptr, count: Int(bytes)), as: UTF8.self)
+            } ?? ""
+
+            let type = typePtr.map { ptr -> String in
+                let bytes = sqlite3_column_bytes(stmt, 2)
+                return String(decoding: UnsafeBufferPointer(start: ptr, count: Int(bytes)), as: UTF8.self)
+            } ?? ""
 
             let isPrimaryKey = sqlite3_column_int64(stmt, 5) == 1
             columns.append(

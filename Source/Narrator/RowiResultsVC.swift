@@ -40,7 +40,7 @@ class RowiResultsVC: NSViewController {
 
     // MARK: - ViewModel
 
-    var viewModel: NarratorViewModel!
+    var viewModel: NarratorViewModel?
 
     // MARK: - Computed
 
@@ -51,7 +51,7 @@ class RowiResultsVC: NSViewController {
     var windowTitle: String = "رواة التهذيبين"
 
     var tarjamahList: [TarjamahResult] {
-        rowiMode == .sidebar ? viewModel.sidebarTarjamahList : viewModel.searchTarjamahList
+        rowiMode == .sidebar ? (viewModel?.sidebarTarjamahList ?? []) : (viewModel?.searchTarjamahList ?? [])
     }
 
     lazy var copyMenuItem: NSMenuItem = {
@@ -75,7 +75,7 @@ class RowiResultsVC: NSViewController {
         searchField.focusRingType = .none
         searchField.recentsAutosaveName = "RowiResultsSearchField"
         searchField.searchSubmitCallback = { [weak self] query in
-            self?.viewModel.stopSearch()
+            self?.viewModel?.stopSearch()
             self?.startNewSearch()
         }
         hStackOptions.addArrangedSubview(hStackSearch)
@@ -104,7 +104,7 @@ class RowiResultsVC: NSViewController {
     // MARK: - ViewModel Binding
 
     private func bindViewModel() {
-        viewModel.onCurrentRowiChanged = { [weak self] rowi in
+        viewModel?.onCurrentRowiChanged = { [weak self] rowi in
             guard let self else { return }
             hideStackUtils()
             if let rowi {
@@ -117,20 +117,20 @@ class RowiResultsVC: NSViewController {
             rowiMode = .sidebar
         }
 
-        viewModel.onRowiContentUpdated = { [weak self] text in
+        viewModel?.onRowiContentUpdated = { [weak self] text in
             self?.textView?.displayAuthor(text)
         }
 
-        viewModel.onSidebarTarjamahLoaded = { [weak self] _ in
+        viewModel?.onSidebarTarjamahLoaded = { [weak self] _ in
             self?.tableView.reloadData()
         }
 
-        viewModel.onSearchBatchAppended = { [weak self] startIndex, count in
+        viewModel?.onSearchBatchAppended = { [weak self] startIndex, count in
             let indices = IndexSet(integersIn: startIndex..<(startIndex + count))
             self?.tableView.insertRows(at: indices, withAnimation: .effectFade)
         }
 
-        viewModel.onSearchComplete = { [weak self] in
+        viewModel?.onSearchComplete = { [weak self] in
             self?.stopSearch(nil)
         }
     }
@@ -156,12 +156,12 @@ class RowiResultsVC: NSViewController {
 
     @IBAction func startSearch(_ sender: Any?) {
         // MODUL 1: Jika sudah berjalan, maka tombol ini berfungsi sebagai Pause/Resume
-        if viewModel.isSearching {
-            if viewModel.isPaused {
-                viewModel.resumeSearch()
+        if viewModel?.isSearching == true {
+            if viewModel?.isPaused == true {
+                viewModel?.resumeSearch()
                 updateStartButton(isPaused: false, isActive: true, state: .on)
             } else {
-                viewModel.pauseSearch()
+                viewModel?.pauseSearch()
                 updateStartButton(isPaused: true, isActive: true, state: .off)
             }
             return // Keluar, jangan jalankan ulang Task di bawah
@@ -178,11 +178,11 @@ class RowiResultsVC: NSViewController {
         ReusableFunc.updateBuiltInRecents(with: query, in: searchField)
         tableView.reloadData()
         updateStartButton(isPaused: false, isActive: true, state: .on)
-        viewModel.startSearch(query: query)
+        viewModel?.startSearch(query: query)
     }
 
     @IBAction func stopSearch(_ sender: Any?) {
-        viewModel.stopSearch()
+        viewModel?.stopSearch()
         updateStartButton(isPaused: false, isActive: false, state: .off)
     }
 
@@ -210,7 +210,7 @@ class RowiResultsVC: NSViewController {
         hStackSearch.isHidden = true
         hStack.isHidden = false
         rowiMode = .sidebar
-        if let rowi = viewModel.currentRowi {
+        if let rowi = viewModel?.currentRowi {
             rowiTextField.stringValue = rowi.isoName
         }
     }
@@ -230,14 +230,14 @@ class RowiResultsVC: NSViewController {
 
         didClickButton = true
 
-        guard let currentRowi = viewModel.currentRowi else { return }
+        guard let currentRowi = viewModel?.currentRowi else { return }
 
         // Tentukan mode display berdasarkan tombol
         switch sender {
-        case tilmidz: viewModel.setDisplayMode(.tilmidz)
-        case syaikh: viewModel.setDisplayMode(.syaikh)
-        case takdil: viewModel.setDisplayMode(.takdil)
-        case mulakhosh: viewModel.setDisplayMode(.mulakhosh)
+        case tilmidz: viewModel?.setDisplayMode(.tilmidz)
+        case syaikh: viewModel?.setDisplayMode(.syaikh)
+        case takdil: viewModel?.setDisplayMode(.takdil)
+        case mulakhosh: viewModel?.setDisplayMode(.mulakhosh)
         default: break
         }
 
@@ -273,7 +273,7 @@ class RowiResultsVC: NSViewController {
 
 extension RowiResultsVC: RowiSidebarDelegate {
     func didSelect(rowi: Rowi) {
-        viewModel.selectRowi(rowi)
+        viewModel?.selectRowi(rowi)
     }
 }
 
@@ -337,7 +337,7 @@ extension RowiResultsVC: NSTableViewDelegate {
 
 extension RowiResultsVC: ReaderStateComponent {
     func updateState(_ state: inout ReaderState) {
-        viewModel.updateState(&state)
+        viewModel?.updateState(&state)
         
         state.authorTarjamahResults = tarjamahList
         state.authorRowiMode = (rowiMode == .sidebar) ? "sidebar" : "fullSearch"
@@ -350,20 +350,20 @@ extension RowiResultsVC: ReaderStateComponent {
         guard let rowi = state.currentRowi else { return }
 
         shouldClickButton = false
-        viewModel.restore(from: state)
+        viewModel?.restore(from: state)
 
         if let savedMode = state.authorRowiMode {
             rowiMode = (savedMode == "sidebar") ? .sidebar : .fullSearch
 
             let sidebar = state.authorTarjamahResults ?? []
             let search: [TarjamahResult] = (rowiMode == .fullSearch) ? sidebar : []
-            viewModel.restoreTarjamahLists(
+            viewModel?.restoreTarjamahLists(
                 sidebar: (rowiMode == .sidebar) ? sidebar : [],
                 search: search
             )
 
             if rowiMode == .fullSearch {
-                searchField.stringValue = viewModel.searchText
+                searchField.stringValue = viewModel?.searchText ?? ""
             }
 
             updateUIForRestoredMode()
@@ -385,7 +385,7 @@ extension RowiResultsVC: ReaderStateComponent {
     }
 
     func cleanUpState() {
-        viewModel.cleanUpState()
+        viewModel?.cleanUpState()
         searchField.stringValue = ""
         rowiTextField.stringValue = ""
         tableView.reloadData()

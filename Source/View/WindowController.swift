@@ -43,18 +43,6 @@ class WindowController: NSWindowController {
         }
         self.window = window
     }
-    
-    @IBAction override func newWindowForTab(_ sender: Any?) {
-        // PERBAIKAN: Instance otomatis disimpan di windowDidLoad
-        let newWindowController = WindowController()
-
-        // Tambahkan sebagai tab
-        if let newWindow = newWindowController.window as? MainWindow {
-            window?.addTabbedWindow(newWindow, ordered: .above)
-            newWindow.setupContentView(restoreState: false)
-            newWindow.makeKeyAndOrderFront(nil)
-        }
-    }
 
     static func showPopOver(sender: NSButton, viewController: NSViewController) {
         let popover = NSPopover()

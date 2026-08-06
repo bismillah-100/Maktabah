@@ -135,7 +135,9 @@ class TarjamahGlobalManager {
             while sqlite3_step(readStmt) == SQLITE_ROW {
                 // Name
                 if let namePtr = sqlite3_column_text(readStmt, 0) {
-                    let nameStr = String(cString: namePtr)
+                    let bytes = sqlite3_column_bytes(readStmt, 0)
+                    let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
+                    let nameStr = String(decoding: buffer, as: UTF8.self)
                     if let compressed = ReusableFunc.compressData(nameStr, level: 10) {
                         _ = compressed.withUnsafeBytes { ptr in
                             sqlite3_bind_blob(
@@ -154,7 +156,9 @@ class TarjamahGlobalManager {
 
                 // IsoName
                 if let isoPtr = sqlite3_column_text(readStmt, 1) {
-                    let isoStr = String(cString: isoPtr)
+                    let bytes = sqlite3_column_bytes(readStmt, 1)
+                    let buffer = UnsafeBufferPointer(start: isoPtr, count: Int(bytes))
+                    let isoStr = String(decoding: buffer, as: UTF8.self)
                     if let compressed = ReusableFunc.compressData(isoStr, level: 10) {
                         _ = compressed.withUnsafeBytes { ptr in
                             sqlite3_bind_blob(
@@ -245,7 +249,9 @@ class TarjamahGlobalManager {
                 }
             } else if sqlite3_column_type(readFtsStmt, 1) == SQLITE_TEXT {
                 if let text = sqlite3_column_text(readFtsStmt, 1) {
-                    isoNameClean = String(cString: text).stemArabicLight10()
+                    let bytes = sqlite3_column_bytes(readFtsStmt, 1)
+                    let buffer = UnsafeBufferPointer(start: text, count: Int(bytes))
+                    isoNameClean = String(decoding: buffer, as: UTF8.self).stemArabicLight10()
                 }
             }
 
@@ -280,7 +286,9 @@ class TarjamahGlobalManager {
             var nameClean = ""
 
             if let text = sqlite3_column_text(readFtsBStmt, 1) {
-                nameClean = String(cString: text).stemArabicLight10()
+                let bytes = sqlite3_column_bytes(readFtsBStmt, 1)
+                let buffer = UnsafeBufferPointer(start: text, count: Int(bytes))
+                nameClean = String(decoding: buffer, as: UTF8.self).stemArabicLight10()
             }
 
             if !nameClean.isEmpty {

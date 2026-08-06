@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24765" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24765"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
         <capability name="NSView safe area layout guides" minToolsVersion="12.0"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -12,7 +12,6 @@
             <connections>
                 <outlet property="outlineView" destination="pZg-pX-mra" id="Ekg-N6-wYP"/>
                 <outlet property="scrollView" destination="DCO-bh-M6O" id="oSA-6a-Mfa"/>
-                <outlet property="searchContainer" destination="y6P-iD-BOi" id="bbT-cP-Fs8"/>
                 <outlet property="searchField" destination="y6P-iD-BOi" id="Ixy-ow-4iq"/>
                 <outlet property="view" destination="c22-O7-iKe" id="yAh-ir-K9F"/>
                 <outlet property="xBtn" destination="54F-3B-nyc" id="5D6-yM-oyD"/>
@@ -21,10 +20,10 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView translatesAutoresizingMaskIntoConstraints="NO" id="c22-O7-iKe">
-            <rect key="frame" x="0.0" y="0.0" width="135" height="377"/>
+            <rect key="frame" x="0.0" y="0.0" width="135" height="433"/>
             <subviews>
                 <button verticalHuggingPriority="750" id="54F-3B-nyc">
-                    <rect key="frame" x="54" y="177" width="27" height="23"/>
+                    <rect key="frame" x="54" y="233" width="27" height="23"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="roundTextured" bezelStyle="texturedRounded" image="xmark" catalog="system" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="VeE-kO-M0k">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -38,13 +37,13 @@ Gw
                     </connections>
                 </button>
                 <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="26" horizontalPageScroll="10" verticalLineScroll="26" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DCO-bh-M6O">
-                    <rect key="frame" x="0.0" y="0.0" width="135" height="377"/>
+                    <rect key="frame" x="0.0" y="0.0" width="135" height="433"/>
                     <clipView key="contentView" drawsBackground="NO" id="INp-hS-uWa">
-                        <rect key="frame" x="0.0" y="0.0" width="135" height="377"/>
+                        <rect key="frame" x="0.0" y="0.0" width="135" height="433"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" mirrorLayoutDirectionWhenInternationalizing="never" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" rowSizeStyle="automatic" viewBased="YES" floatsGroupRows="NO" indentationPerLevel="13" outlineTableColumn="D7v-CS-r19" userInterfaceLayoutDirection="rightToLeft" id="pZg-pX-mra">
-                                <rect key="frame" x="0.0" y="0.0" width="135" height="377"/>
+                                <rect key="frame" x="0.0" y="0.0" width="135" height="433"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <size key="intercellSpacing" width="28" height="2"/>
                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -114,42 +113,33 @@ Gw
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
-                <customView translatesAutoresizingMaskIntoConstraints="NO" id="hbV-qX-hTf">
-                    <rect key="frame" x="0.0" y="293" width="135" height="30"/>
-                    <subviews>
-                        <searchField hidden="YES" wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="y6P-iD-BOi" customClass="DSFSearchField" customModule="Maktabah" customModuleProvider="target">
-                            <rect key="frame" x="4" y="4" width="127" height="22"/>
-                            <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Table of Contents" usesSingleLineMode="YES" bezelStyle="round" sendsSearchStringImmediately="YES" recentsAutosaveName="TOCSearchField" id="757-Jb-dNx">
-                                <font key="font" metaFont="system"/>
-                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                            </searchFieldCell>
-                            <connections>
-                                <action selector="searchContents:" target="-2" id="0fZ-1R-oUQ"/>
-                            </connections>
-                        </searchField>
-                    </subviews>
+                <searchField hidden="YES" wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="y6P-iD-BOi" customClass="DSFSearchField" customModule="Maktabah" customModuleProvider="target">
+                    <rect key="frame" x="4" y="351" width="127" height="22"/>
                     <constraints>
-                        <constraint firstItem="y6P-iD-BOi" firstAttribute="leading" secondItem="B5E-i9-M7f" secondAttribute="leading" constant="4" id="25e-oU-2zo"/>
-                        <constraint firstAttribute="height" constant="30" id="6tZ-Dg-jf1"/>
-                        <constraint firstItem="y6P-iD-BOi" firstAttribute="top" secondItem="hbV-qX-hTf" secondAttribute="top" constant="4" id="GDj-A3-SjQ"/>
-                        <constraint firstAttribute="bottom" secondItem="y6P-iD-BOi" secondAttribute="bottom" constant="4" id="k5q-XP-TOa"/>
-                        <constraint firstItem="B5E-i9-M7f" firstAttribute="trailing" secondItem="y6P-iD-BOi" secondAttribute="trailing" constant="4" id="p8A-hw-vMu"/>
+                        <constraint firstAttribute="height" constant="22" id="iAi-90-aPY"/>
                     </constraints>
-                    <viewLayoutGuide key="safeArea" id="B5E-i9-M7f"/>
-                    <viewLayoutGuide key="layoutMargins" id="qNI-aZ-FKv"/>
-                </customView>
+                    <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" placeholderString="Table of Contents" usesSingleLineMode="YES" bezelStyle="round" sendsSearchStringImmediately="YES" recentsAutosaveName="TOCSearchField" id="757-Jb-dNx">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </searchFieldCell>
+                    <connections>
+                        <action selector="searchContents:" target="-2" id="0fZ-1R-oUQ"/>
+                    </connections>
+                </searchField>
             </subviews>
             <constraints>
-                <constraint firstItem="DCO-bh-M6O" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="1lU-01-2CC"/>
-                <constraint firstItem="hbV-qX-hTf" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="54" id="DFa-g3-Ntc"/>
-                <constraint firstItem="hbV-qX-hTf" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" id="EAY-f3-ySd"/>
-                <constraint firstAttribute="trailing" secondItem="DCO-bh-M6O" secondAttribute="trailing" id="UFh-hR-zsq"/>
-                <constraint firstAttribute="bottom" secondItem="DCO-bh-M6O" secondAttribute="bottom" id="Ubc-8v-Jam"/>
-                <constraint firstItem="DCO-bh-M6O" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" id="ViH-xt-OTj"/>
-                <constraint firstAttribute="trailing" secondItem="hbV-qX-hTf" secondAttribute="trailing" id="cNv-QX-rTG"/>
+                <constraint firstItem="Gqs-78-nIh" firstAttribute="trailing" secondItem="DCO-bh-M6O" secondAttribute="trailing" id="UFh-hR-zsq"/>
+                <constraint firstItem="DCO-bh-M6O" firstAttribute="leading" secondItem="Gqs-78-nIh" secondAttribute="leading" id="ViH-xt-OTj"/>
+                <constraint firstItem="DCO-bh-M6O" firstAttribute="bottom" secondItem="Gqs-78-nIh" secondAttribute="bottom" id="ZEu-9f-rch"/>
+                <constraint firstItem="y6P-iD-BOi" firstAttribute="top" secondItem="Gqs-78-nIh" secondAttribute="top" constant="8" id="cb6-DF-66X"/>
+                <constraint firstItem="y6P-iD-BOi" firstAttribute="leading" secondItem="Gqs-78-nIh" secondAttribute="leading" constant="4" id="iH8-GF-QZg"/>
+                <constraint firstItem="Gqs-78-nIh" firstAttribute="trailing" secondItem="y6P-iD-BOi" secondAttribute="trailing" constant="4" id="jey-cg-0mS"/>
+                <constraint firstItem="DCO-bh-M6O" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="sWg-wG-pLH"/>
             </constraints>
-            <point key="canvasLocation" x="-88.5" y="145.5"/>
+            <viewLayoutGuide key="safeArea" id="Gqs-78-nIh"/>
+            <viewLayoutGuide key="layoutMargins" id="8Iq-8L-U9e"/>
+            <point key="canvasLocation" x="-88.5" y="197.5"/>
         </customView>
     </objects>
     <resources>

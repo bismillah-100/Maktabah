@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var controlMenu: NSMenu!
     @IBOutlet weak var clickEditAnnotationMenuItem: NSMenuItem!
     @IBOutlet weak var screenTimeMenuItem: NSMenuItem!
-    
+
     fileprivate var mainWindowController: NSWindowController!
 
     fileprivate weak var quranWindow: NSWindow?
@@ -180,7 +180,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         mainWindowController = nil
         return false
     }
-    
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         if !hasVisibleWindows {
             newWindow(sender)
@@ -242,7 +242,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             #endif
             return
         }
-        
+
         // Get last active mode
         let lastMode = window.currentMode
 
@@ -275,17 +275,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 600, height: 520)
 
-        let window = NSWindow(
-            contentRect: hostingView.frame,
+        let window = ReusableFunc.makeWindow(
+            contentView: hostingView,
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered,
-            defer: false
+            title: String(localized: "Settings")
         )
 
-        window.center()
-        window.title = String(localized: "Settings")
-        window.contentView = hostingView
-        window.isReleasedWhenClosed = false
         window.makeKeyAndOrderFront(sender)
 
         settingsWindow = window
@@ -313,20 +308,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
 
         // 3. Buat Window baru dengan style mask yang sudah benar dari awal
-        let window = NSWindow(
-            contentRect: hostingView.frame,
-            styleMask: [.fullSizeContentView, .titled, .resizable], // ← Langsung pakai di sini
-            backing: .buffered,
-            defer: false
+        let window = ReusableFunc.makeWindow(
+            contentView: hostingView,
+            styleMask: [.fullSizeContentView, .titled, .resizable],
+            title: "Books Updates".localized
         )
 
-        window.center()
-        window.title = "Books Updates".localized
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
         window.titleVisibility = .hidden
-        window.contentView = hostingView
-        window.isReleasedWhenClosed = false
 
         // 4. Jalankan sebagai Modal
         NSApp.runModal(for: window)
@@ -349,18 +339,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 600, height: 600)
 
-        let window = NSWindow(
-            contentRect: hostingView.frame,
+        let window = ReusableFunc.makeWindow(
+            contentView: hostingView,
             styleMask: [.fullSizeContentView, .titled, .closable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
+            title: "Import Offline Book"
+     )
 
-        window.center()
         window.titleVisibility = .hidden
-        window.title = "Import Offline Book"
-        window.contentView = hostingView
-        window.isReleasedWhenClosed = false
         window.makeKeyAndOrderFront(nil as Any?)
     }
 
@@ -487,15 +472,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         let quranWindow = buildMenu(NSLocalizedString("QuranMenuBar", comment: ""), image: "character.book.closed.ar", keyEquivalent: "u")
-        
+
         let bookInfoImage: String
-        
+
         if #available(macOS 15.4, *) {
             bookInfoImage = "info.circle.text.page.rtl"
         } else {
             bookInfoImage = "info.circle"
         }
-        
+
         let bookInfo = buildMenu(NSLocalizedString("BookInfo", comment: ""), image: bookInfoImage, keyEquivalent: "i")
 
         let resetCurrentView = buildMenu(
@@ -626,7 +611,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func showDiacritics(_ sender: NSMenuItem) {
         TextViewState.shared.toggleHarakat()
     }
-    
+
     @objc private func showCurrentBookInfo(_ sender: NSMenuItem) {
         keyWindow?.splitVC.bookInfo(sender)
     }
@@ -638,7 +623,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func increaseFontSize(_ sender: NSMenuItem) {
         TextViewState.shared.changeFontSize(by: 2)
     }
-    
+
     @IBAction func newWindow(_ sender: Any) {
         let wc = WindowController()
         wc.window?.setFrameAutosaveName("MainWindow")
@@ -655,6 +640,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         w.makeKeyAndOrderFront(sender)
         w.displayIfNeeded()
+    }
+
+    @IBAction func newTabWindow(_ sender: Any?) {
+        guard let keyWindow else { return }
+        keyWindow.newWindowForTab(sender)
     }
 
     deinit {

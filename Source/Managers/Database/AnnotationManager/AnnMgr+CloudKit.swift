@@ -30,7 +30,7 @@ extension AnnotationManager {
 
     func removePendingSync(ckRecordIds: [String]) {
         guard let _db else { return }
-        let placeholders = ckRecordIds.map { _ in "?" }.joined(separator: ",")
+        let placeholders = String(repeating: "?,", count: ckRecordIds.count).dropLast()
         let sql = "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));"
         try? _db.execute(query: sql, parameters: ckRecordIds)
     }
@@ -103,7 +103,7 @@ extension AnnotationManager {
                     let chunkSize = 500
                     for i in stride(from: 0, to: ckIdsToSave.count, by: chunkSize) {
                         let chunk = Array(ckIdsToSave[i..<min(i + chunkSize, ckIdsToSave.count)])
-                        let placeholders = chunk.map { _ in "?" }.joined(separator: ",")
+                        let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
                         let findSql = "SELECT \(colAnnCkRecordId), \(colAnnId), \(colAnnLastModified) FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IN (\(placeholders))"
                         let rows = try _db.fetch(query: findSql, parameters: chunk, mapping: { ($0.string(at: 0) ?? "", $0.int64(at: 1), $0.int64(at: 2)) })
                         for row in rows {

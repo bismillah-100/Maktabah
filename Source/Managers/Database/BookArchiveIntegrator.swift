@@ -652,7 +652,9 @@ final class BookArchiveIntegrator {
         var tables: [String] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
             if let namePtr = sqlite3_column_text(stmt, 0) {
-                tables.append(String(cString: namePtr))
+                let bytes = sqlite3_column_bytes(stmt, 0)
+                let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
+                tables.append(String(decoding: buffer, as: UTF8.self))
             }
         }
         return tables
@@ -717,7 +719,9 @@ final class BookArchiveIntegrator {
         var tables: [String] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
             if let namePtr = sqlite3_column_text(stmt, 0) {
-                tables.append(String(cString: namePtr))
+                let bytes = sqlite3_column_bytes(stmt, 0)
+                let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
+                tables.append(String(decoding: buffer, as: UTF8.self))
             }
         }
         return tables

@@ -249,7 +249,9 @@ final class IntegrationCache {
         var tables: [String] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
             if let ptr = sqlite3_column_text(stmt, 0) {
-                tables.append(String(cString: ptr))
+                let bytes = sqlite3_column_bytes(stmt, 0)
+                let buffer = UnsafeBufferPointer(start: ptr, count: Int(bytes))
+                tables.append(String(decoding: buffer, as: UTF8.self))
             }
         }
         return tables

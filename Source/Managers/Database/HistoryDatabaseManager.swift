@@ -141,7 +141,7 @@ class HistoryDatabaseManager {
         
         for i in stride(from: 0, to: entries.count, by: chunkSize) {
             let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
-            let placeholders = chunk.map { _ in "(?, ?, ?, ?, ?, ?, ?, ?)" }.joined(separator: ",")
+            let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
             let sql = """
             INSERT OR REPLACE INTO reading_entries
             (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
@@ -343,7 +343,7 @@ class HistoryDatabaseManager {
                 let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
                 for i in stride(from: 0, to: upList.count, by: chunkSize) {
                     let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
-                    let placeholders = chunk.map { _ in "(?, 'upload', ?)" }.joined(separator: ",")
+                    let placeholders = String(repeating: "(?, 'upload', ?),", count: chunk.count).dropLast()
                     var params = [Any]()
                     for ckId in chunk {
                         params.append(contentsOf: [ckId, now])
@@ -364,7 +364,7 @@ class HistoryDatabaseManager {
                 let chunkSize = 300 // 3 params per entry
                 for i in stride(from: 0, to: delList.count, by: chunkSize) {
                     let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
-                    let placeholders = chunk.map { _ in "(?, 'delete', ?)" }.joined(separator: ",")
+                    let placeholders = String(repeating: "(?, 'delete', ?),", count: chunk.count).dropLast()
                     var params = [Any]()
                     for ckId in chunk {
                         params.append(contentsOf: [ckId, now])

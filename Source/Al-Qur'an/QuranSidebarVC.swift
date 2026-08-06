@@ -11,7 +11,6 @@ class QuranSidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var scrollView: NSScrollView!
     @IBOutlet weak var searchField: DSFSearchField!
-    @IBOutlet weak var searchContainer: NSView!
     @IBOutlet weak var xBtn: NSButton!
 
     private let manager: QuranDataManager = .shared
@@ -111,20 +110,16 @@ class QuranSidebarVC: NSViewController {
     }
 
     @objc func unhideSearchField() {
-        #if DEBUG
-        print("unhideSearchField")
-        #endif
-
         let hide = searchField.isHidden
 
-        searchContainer.isHidden = !hide
         searchField.isHidden = !hide
 
         // 3. Buat Constraint yang Baru
         if hide {
             // KONDISI 1: TIDAK TERSEMBUNYI (Unhide)
             scrollView.automaticallyAdjustsContentInsets = false
-            scrollView.contentInsets.top = 88
+            scrollView.contentInsets.top = view.safeAreaInsets.top +
+                                           searchField.frame.height + 8
             searchField.becomeFirstResponder()
         } else {
             // KONDISI 2: TERSEMBUNYI (Hide)

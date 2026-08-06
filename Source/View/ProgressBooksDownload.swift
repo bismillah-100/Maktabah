@@ -385,10 +385,15 @@ final class BookIntegrateModalCenter {
                 onCancel: { [weak self] in self?.cancelDownload() }
             )
         )
-        hostingView.frame = NSRect(x: 0, y: 0, width: 380, height: 200)
+        let height = 200
+        let width = 380
+        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: height)
         hostingView.autoresizingMask = [.width, .height]
 
-        let w = makeWindow(contentView: hostingView)
+        let w = ReusableFunc.makeTitlelessWindow(
+            contentView: hostingView,
+            size: .init(width: width, height: height)
+        )
         sheetWindow = w
         w.center()
         w.makeKeyAndOrderFront(nil)
@@ -491,28 +496,6 @@ final class BookIntegrateModalCenter {
         } else {
             w.setContentSize(newSize)
         }
-    }
-
-    private func makeWindow(contentView: NSView) -> NSWindow {
-        let w = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 380, height: 200),
-            styleMask: [.titled, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-        w.contentView = contentView
-        w.titlebarAppearsTransparent = true
-        w.isMovableByWindowBackground = true
-        w.isOpaque = false
-        w.backgroundColor = .clear
-        w.hasShadow = true
-        w.toolbarStyle = .unifiedCompact
-        w.titleVisibility = .hidden
-        w.isReleasedWhenClosed = false
-        w.standardWindowButton(.closeButton)?.isHidden = true
-        w.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        w.standardWindowButton(.zoomButton)?.isHidden = true
-        return w
     }
 }
 

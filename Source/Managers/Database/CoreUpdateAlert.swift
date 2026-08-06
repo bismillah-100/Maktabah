@@ -227,23 +227,9 @@ extension CoreUpdateAlertView {
         hosting.layoutSubtreeIfNeeded()
         let fittedSize = hosting.fittingSize
 
-        let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: fittedSize),
-            styleMask: [.titled, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
+        let window = ReusableFunc.makeTitlelessWindow(
+            contentView: hosting, size: fittedSize
         )
-        window.contentView = hosting
-        window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.hasShadow = true
-        window.titleVisibility = .hidden
-        window.isReleasedWhenClosed = false
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
         window.center()
 
         return window
@@ -314,23 +300,10 @@ extension AppDelegate {
         let fittedSize = hosting.fittingSize
         hosting.frame = NSRect(origin: .zero, size: fittedSize)
 
-        let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: fittedSize),
-            styleMask: [.titled, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
+        let window = ReusableFunc.makeTitlelessWindow(
+            contentView: hosting, size: fittedSize
         )
-        window.contentView = hosting
-        window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.hasShadow = true
-        window.titleVisibility = .hidden
-        window.isReleasedWhenClosed = false
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
+
         window.center()
 
         coreDownloadProgressWindow = window
