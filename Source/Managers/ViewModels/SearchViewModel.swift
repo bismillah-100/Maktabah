@@ -22,6 +22,7 @@ final class SearchViewModel: ViewModelBase {
 
     var query: String = ""
     var searchMode: SearchMode = .phrase
+    var nearDistance: Int = 10
     private(set) var results: [SearchResultItem] = []
     private(set) var isSearching: Bool = false
     private(set) var isPaused: Bool = false
@@ -291,6 +292,7 @@ final class SearchViewModel: ViewModelBase {
         case 0: searchMode = .phrase
         case 1: searchMode = .contains
         case 2: searchMode = .or
+        case 3: searchMode = .near
         default: break
         }
     }
@@ -521,6 +523,7 @@ final class SearchViewModel: ViewModelBase {
                 searchEngine: searchEngine,
                 query: query,
                 mode: searchMode,
+                nearDistance: nearDistance,
                 onInitialize: { [weak self] total in
                     self?.totalTables = total
                     self?.completedTables = 0

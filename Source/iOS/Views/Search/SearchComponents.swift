@@ -10,9 +10,10 @@ struct SearchHistoryOverlay: View {
     @Binding var isVisible: Bool?
     @State private var showingHelp: Bool = false
     @State private var isShowing = false
+    @FocusState private var isDistanceFocused: Bool
 
     private var shouldShow: Bool {
-        isVisible == true ||
+        isVisible == true || isDistanceFocused ||
         (isSearching && isVisible == nil &&
          !viewModel.isSearching && viewModel.results.isEmpty)
     }
@@ -122,10 +123,24 @@ struct SearchHistoryOverlay: View {
                 Image(systemName: "text.quote").tag(SearchMode.phrase)
                 Image(systemName: "checklist.checked").tag(SearchMode.contains)
                 Image(systemName: "checklist").tag(SearchMode.or)
+                Image(systemName: "text.word.spacing").tag(SearchMode.near)
             }
             .controlSize(.regular)
             .pickerStyle(.segmented)
             .frame(maxWidth: .infinity)
+
+            if viewModel.searchMode == .near {
+                TextField("10", value: $viewModel.nearDistance, format: .number)
+                    .focused($isDistanceFocused)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 44, height: 28)
+                    .background(Color.appCellBackground)
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1))
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
 
             Spacer()
 
@@ -140,6 +155,11 @@ struct SearchHistoryOverlay: View {
                     .presentationCompactAdaptation(.popover)
             }
         }
+        .animation(
+            .easeInOut(duration: 0.25)
+            .delay(0.25),
+            value: viewModel.searchMode
+        )
         .prominentButtonStyleIfAvailable()
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -228,6 +248,16 @@ struct SearchHelpView: View {
                     Label("anyWordsSearchTitle", systemImage: "checklist")
                         .font(.subheadline).bold()
                     Text("anyWordsSearchDesc")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("nearSearchTitle", systemImage: "text.word.spacing")
+                        .font(.subheadline).bold()
+                    Text("nearSearchDesc")
                         .font(.footnote)
                         .foregroundColor(.secondary)
                 }

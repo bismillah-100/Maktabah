@@ -7,8 +7,11 @@
 
 import Foundation
 
-enum SearchMode: Int {
+enum SearchMode: Int, CaseIterable, Identifiable {
     case phrase
     case contains
     case or
+    case near
+
+    var id: Int { rawValue }
 }

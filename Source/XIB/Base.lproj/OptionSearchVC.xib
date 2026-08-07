@@ -146,6 +146,7 @@
                                             <segment toolTip="Exact Phrase" image="text.quote" catalog="system" width="30" selected="YES"/>
                                             <segment toolTip="Separate Words" image="checklist.checked" catalog="system" width="30" tag="1"/>
                                             <segment toolTip="Match Any Word" image="checklist" catalog="system" width="30"/>
+                                            <segment toolTip="Proximity Search (NEAR)" image="text.word.spacing" catalog="system" width="30"/>
                                         </segments>
                                     </segmentedCell>
                                     <connections>

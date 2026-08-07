@@ -380,6 +380,7 @@ class LibraryDataManager {
         searchEngine: SearchEngine,
         query: String,
         mode: SearchMode,
+        nearDistance: Int = 10,
         onInitialize: @escaping @MainActor (Int) -> Void,
         onTableProgress: @escaping @MainActor (Int) -> Void,
         onRowProgress: @escaping @MainActor (String, String, Int, Int) -> Void,
@@ -396,19 +397,7 @@ class LibraryDataManager {
         }
         let allowed = tableToScan
 
-        let searchKeywords: [String]
-        switch mode {
-        case .phrase:
-            if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                await onComplete()
-                return
-            }
-            searchKeywords = [query.normalizeArabic()]
-        case .contains, .or:
-            searchKeywords = query.normalizeArabic().components(separatedBy: ",")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-        }
+        let searchKeywords = FtsQueryParser.extractKeywords(query: query, mode: mode)
 
         if searchKeywords.isEmpty {
             await onComplete()
@@ -479,9 +468,11 @@ class LibraryDataManager {
             var completedTablesGlobal = 0
 
             searchEngine.startSearch(
+                query: query,
                 keywords: searchKeywords,
                 allowedTables: allowed.isEmpty ? nil : allowed,
                 mode: mode,
+                nearDistance: nearDistance,
                 onInitialize: { totalWorkers in
                     Task { @MainActor [totalTables] in
                         // Kirim hanya total tables

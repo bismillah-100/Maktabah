@@ -416,9 +416,11 @@ final class SearchEngine {
     }
 
     func startSearch(
-        keywords: [String],
+        query: String = "",
+        keywords: [String] = [],
         allowedTables: Set<String>? = nil,
         mode: SearchMode,
+        nearDistance: Int = 10,
         // Callback BARU untuk inisialisasi total workers
         onInitialize: @escaping (Int) -> Void,
         // Callback untuk setiap table selesai di-process
@@ -443,24 +445,12 @@ final class SearchEngine {
             onInitialize(currentWorkers.count)
         }
 
-        // Normalisasi keywords menggunakan Lucene Light10 Stemmer
-        let normalizedKeywords = keywords.map { $0.stemArabicLight10() }
+        let inputQuery = query.isEmpty ? keywords.joined(separator: " ") : query
+        let ftsQuery = FtsQueryParser.buildFtsQuery(query: inputQuery, mode: mode, nearDistance: nearDistance)
 
-        // Buat FTS query - gunakan AND untuk multiple keywords
-        let ftsQuery: String = switch mode {
-        case .phrase:
-            // keywords.count == 1, karena tidak di-split
-            // Wrap dengan quotes untuk phrase search
-            "\"" + normalizedKeywords.joined(separator: " ") + "\""
-        // Result: "\"كتاب العلم النافع\""
-        case .contains:
-            // keywords.count bisa > 1, karena di-split pakai koma
-            // Gunakan AND - semua keyword harus ada (tapi tidak harus bersebelahan)
-            normalizedKeywords.joined(separator: " AND ")
-        // Result: "كتاب AND العلم AND النافع"
-        case .or:
-            normalizedKeywords.joined(separator: " OR ")
-            // Result: "الحمد OR حمد"
+        if ftsQuery.isEmpty {
+            Task { @MainActor in onComplete() }
+            return
         }
 
         searchTask = Task.detached(priority: .userInitiated) { [weak self, ftsQuery, currentWorkers] in

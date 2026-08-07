@@ -63,6 +63,7 @@ class OptionSearchVC: NSViewController {
     private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
     private var migrationButton: NSView?
+    private var nearDistanceField: NSTextField?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -96,6 +97,7 @@ class OptionSearchVC: NSViewController {
 
         tableView.allowsMultipleSelection = true
 
+        setupNearDistanceControl()
         setupViewModelCallbacks()
         bindViewModelPublishers()
     }
@@ -444,8 +446,46 @@ class OptionSearchVC: NSViewController {
         resultsLoadingTask?.cancel()
     }
 
+    private func setupNearDistanceControl() {
+        guard let stackView = optionsSegment.superview as? NSStackView else { return }
+
+        let field = NSTextField(string: "\(viewModel.nearDistance)")
+        field.placeholderString = String(localized: "nearDistancePlaceholder")
+        field.font = NSFont.systemFont(ofSize: 11)
+        field.alignment = .center
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.widthAnchor.constraint(equalToConstant: 45).isActive = true
+        field.target = self
+        field.action = #selector(distanceFieldChanged(_:))
+        field.isHidden = viewModel.searchMode != .near
+
+        if let index = stackView.arrangedSubviews.firstIndex(of: optionsSegment) {
+            stackView.insertArrangedSubview(field, at: index + 1)
+        } else {
+            stackView.addArrangedSubview(field)
+        }
+        nearDistanceField = field
+    }
+
+    @objc private func distanceFieldChanged(_ sender: NSTextField) {
+        if let val = Int(sender.stringValue), val > 0 {
+            viewModel.nearDistance = val
+        } else {
+            sender.stringValue = "\(viewModel.nearDistance)"
+        }
+    }
+
     @IBAction func optionsSegmentDidCange(_ sender: NSSegmentedControl) {
         viewModel.setSearchModeFromSegment(sender.selectedSegment)
+        let isNear = viewModel.searchMode == .near
+        if let field = nearDistanceField {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                field.animator().isHidden = !isNear
+            }
+        }
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
