@@ -28,6 +28,8 @@ struct SyncResult {
     var folderId: Int64?
     var name: String
     var query: String
+    var searchMode: Int
+    var nearDistance: Int
     var archive: Int
     var bkId: Int
     var contentId: String
@@ -56,14 +58,16 @@ class ResultsHandler {
     private let colContentId = "contentId"
     private let colResCkRecordId = "ckRecordId"
     private let colResLastModified = "lastModified"
-    private let colFolderCkRecordId = "folderCkRecordId"
+    private let colFolderCkRecordId = "folder_ckrecord_id"
+    private let colSearchMode = "search_mode"
+    private let colNearDistance = "near_distance"
 
     func migrateBookId(from oldId: Int, to newId: Int) throws -> [SyncResult] {
         guard let db else { return [] }
         let now = Int64(Date().timeIntervalSince1970)
 
         let sql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colBkId) = ?"
-        let fetchSql = "SELECT * FROM \(resultsTable) WHERE \(colBkId) = ?"
+        let fetchSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colBkId) = ?"
 
         var updatedResults: [SyncResult] = []
         try transaction {
@@ -165,10 +169,12 @@ class ResultsHandler {
                 \(colArchive) INTEGER,
                 \(colBkId) INTEGER,
                 \(colContentId) TEXT,
-                \(colResCkRecordId) TEXT,
+                \(colResCkRecordId) TEXT UNIQUE,
                 \(colResLastModified) INTEGER,
                 \(colFolderCkRecordId) TEXT,
-                UNIQUE(\(colFolderId), \(colName), \(colBkId))
+                \(colSearchMode) INTEGER DEFAULT 0,
+                \(colNearDistance) INTEGER DEFAULT 10,
+                FOREIGN KEY(\(colFolderId)) REFERENCES \(foldersTable)(\(colId)) ON DELETE CASCADE
             );
             """)
 
@@ -204,8 +210,16 @@ class ResultsHandler {
             if !resultCols.contains(colResLastModified) {
                 try exec("ALTER TABLE \(resultsTable) ADD COLUMN \(colResLastModified) INTEGER;")
             }
-            if !resultCols.contains(colFolderCkRecordId) {
+            if resultCols.contains("folderCkRecordId") && !resultCols.contains(colFolderCkRecordId) {
+                try exec("ALTER TABLE \(resultsTable) RENAME COLUMN folderCkRecordId TO \(colFolderCkRecordId);")
+            } else if !resultCols.contains(colFolderCkRecordId) {
                 try exec("ALTER TABLE \(resultsTable) ADD COLUMN \(colFolderCkRecordId) TEXT;")
+            }
+            if !resultCols.contains(colSearchMode) {
+                try exec("ALTER TABLE \(resultsTable) ADD COLUMN \(colSearchMode) INTEGER DEFAULT 0;")
+            }
+            if !resultCols.contains(colNearDistance) {
+                try exec("ALTER TABLE \(resultsTable) ADD COLUMN \(colNearDistance) INTEGER DEFAULT 10;")
             }
 
             try backfillResultsCloudKitFieldsIfNeeded()
@@ -247,7 +261,7 @@ class ResultsHandler {
         var foldersToUpload: [SyncFolder] = []
 
         try transaction {
-            let sql = "SELECT * FROM \(foldersTable) WHERE \(colCkRecordId) IS NULL ORDER BY \(colParent) ASC"
+            let sql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colCkRecordId) IS NULL ORDER BY \(colParent) ASC"
 
             let folders = try db.fetch(query: sql) { row -> (Int64, String, Int64?) in
                 let fId = row.int64(at: 0)
@@ -277,7 +291,7 @@ class ResultsHandler {
                 try exec("UPDATE \(foldersTable) SET \(colCkRecordId) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ? WHERE \(colId) = ?;", parameters: [detId, now, parentCkRecordIdValue, fId])
 
                 // Reload to upload
-                let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+                let reloadSql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
                 if let reloaded = try db.fetch(query: reloadSql, parameters: [fId], mapping: { self.makeSyncFolder(from: $0) }).first {
                     foldersToUpload.append(reloaded)
                 }
@@ -288,7 +302,7 @@ class ResultsHandler {
         var resultsToUpload: [SyncResult] = []
 
         try transaction {
-            let sql = "SELECT * FROM \(resultsTable) WHERE \(colResCkRecordId) IS NULL"
+            let sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colResCkRecordId) IS NULL"
 
             let results = try db.fetch(query: sql) { row -> (Int64, Int64?, String, Int, Int) in
                 let rId = row.int64(at: 0)
@@ -321,7 +335,7 @@ class ResultsHandler {
 
                 try exec("UPDATE \(resultsTable) SET \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ? WHERE \(colId) = ?;", parameters: [detId, now, folderCkIdValue, rId])
 
-                let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
+                let reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
                 if let reloaded = try db.fetch(query: reloadSql, parameters: [rId], mapping: { self.makeSyncResult(from: $0) }).first {
                     resultsToUpload.append(reloaded)
                 }
@@ -398,6 +412,8 @@ class ResultsHandler {
             folderId: !row.isNull(at: 1) ? row.int64(at: 1) : nil,
             name: row.string(at: 2) ?? "",
             query: row.string(at: 3) ?? "",
+            searchMode: row.int(at: 10),
+            nearDistance: row.int(at: 11),
             archive: row.int(at: 4),
             bkId: row.int(at: 5),
             contentId: row.string(at: 6) ?? "",
@@ -437,7 +453,7 @@ extension ResultsHandler {
             try self.addPendingSync(ckRecordId: cId, operation: "upload")
         }
 
-        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+        let reloadSql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
         if rowId != -1, let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncFolder(from: $0) }).first {
             CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [], trackPending: false)
         }
@@ -472,7 +488,7 @@ extension ResultsHandler {
             try self.addPendingSync(ckRecordId: cId, operation: "upload")
         }
 
-        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+        let reloadSql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
         if rowId != -1, let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncFolder(from: $0) }).first {
             CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [], trackPending: false)
         }
@@ -605,7 +621,7 @@ extension ResultsHandler {
             let params: [Any] = [newParentId ?? NSNull(), now, pCkId ?? NSNull(), id]
             try exec(updateSql, parameters: params)
 
-            let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+            let reloadSql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
             if let fetched = try db.fetch(query: reloadSql, parameters: [id], mapping: { self.makeSyncFolder(from: $0) }).first {
                 reloaded = fetched
                 if let ckId = fetched.ckRecordId {
@@ -664,10 +680,10 @@ extension ResultsHandler {
         let reloadSql: String
         var reloadParams: [Any] = []
         if let nid = newParentId {
-            reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ?"
+            reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ?"
             reloadParams = [nid, name]
         } else {
-            reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?"
+            reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?"
             reloadParams = [name]
         }
 
@@ -679,7 +695,7 @@ extension ResultsHandler {
 }
 
 extension ResultsHandler {
-    func insertResult(_ archive: Int, bkId: Int, contentId: String, folderId: Int64?, query: String, name: String) throws {
+    func insertResult(_ archive: Int, bkId: Int, contentId: String, folderId: Int64?, query: String, searchMode: Int = 0, nearDistance: Int = 10, name: String) throws {
         guard let db else { return }
         let cId = UUID().uuidString
         let now = Int64(Date().timeIntervalSince1970)
@@ -696,8 +712,8 @@ extension ResultsHandler {
         INSERT INTO \(resultsTable) (
             \(colFolderId), \(colName), \(colQuery), \(colArchive),
             \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
-            \(colFolderCkRecordId)
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
 
         let params: [Any] = [
@@ -710,6 +726,8 @@ extension ResultsHandler {
             cId,
             now,
             fCkId ?? NSNull(),
+            searchMode,
+            nearDistance,
         ]
 
         var rowId: Int64 = -1
@@ -719,7 +737,7 @@ extension ResultsHandler {
             try self.addPendingSync(ckRecordId: cId, operation: "upload")
         }
 
-        let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
+        let reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
         if rowId != -1, let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncResult(from: $0) }).first {
             CloudKitSyncManager.shared.uploadResultsData(folders: [], results: [reloaded], trackPending: false)
         }
@@ -729,6 +747,8 @@ extension ResultsHandler {
         _ groupedResults: [String: GroupedResult],
         folderId: Int64?,
         query: String,
+        searchMode: Int = 0,
+        nearDistance: Int = 10,
         name: String
     ) throws {
         guard let db else { return }
@@ -753,8 +773,8 @@ extension ResultsHandler {
                 INSERT INTO \(resultsTable) (
                     \(colFolderId), \(colName), \(colQuery), \(colArchive),
                     \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
-                    \(colFolderCkRecordId)
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """
 
                 let params: [Any] = [
@@ -767,13 +787,15 @@ extension ResultsHandler {
                     cId,
                     now,
                     fCkId ?? NSNull(),
+                    searchMode,
+                    nearDistance,
                 ]
 
                 try db.execute(query: sql, parameters: params)
                 let rowId = db.lastInsertRowId()
                 try self.addPendingSync(ckRecordId: cId, operation: "upload")
 
-                let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
+                let reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colId) = ? LIMIT 1"
                 if let reloaded = try db.fetch(query: reloadSql, parameters: [rowId], mapping: { self.makeSyncResult(from: $0) }).first {
                     reloadedResults.append(reloaded)
                 }
@@ -792,14 +814,14 @@ extension ResultsHandler {
         let sql: String
         var params: [Any] = []
         if let fid = folderId {
-            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ?"
+            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) = ?"
             params = [fid]
         } else {
-            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colFolderCkRecordId) IS NULL"
+            sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colFolderCkRecordId) IS NULL"
         }
 
         do {
-            let results = try db.fetch(query: sql, parameters: params) { row -> (Int64, Int64?, String, String, Int, Int, String, Int64?) in
+            let results = try db.fetch(query: sql, parameters: params) { row -> (Int64, Int64?, String, String, Int, Int, String, Int64?, Int, Int) in
                 return (
                     row.int64(at: 0),
                     !row.isNull(at: 1) ? row.int64(at: 1) : nil,
@@ -808,7 +830,9 @@ extension ResultsHandler {
                     row.int(at: 4),
                     row.int(at: 5),
                     row.string(at: 6) ?? "",
-                    !row.isNull(at: 8) ? row.int64(at: 8) : nil
+                    !row.isNull(at: 8) ? row.int64(at: 8) : nil,
+                    row.int(at: 9),
+                    row.int(at: 10)
                 )
             }
 
@@ -821,20 +845,23 @@ extension ResultsHandler {
                 let rBkId = res.5
                 let rContentId = res.6
                 let rLastModified = res.7
+                let rSearchMode = res.8
+                let rNearDistance = res.9
 
                 let contentsId = rContentId.components(separatedBy: ",")
 
                 for cid in contentsId {
-                    guard let idInt = Int(cid),
-                          let book = LibraryDataManager.shared.getBook([rBkId]).first
-                    else { continue }
+                    guard let idInt = Int(cid) else { continue }
+                    let book = LibraryDataManager.shared.getBook([rBkId]).first
 
                     let item = SavedResultsItem(
                         archive: String(rArchive),
                         tableName: String(rBkId),
                         query: queryName,
                         bookId: idInt,
-                        bookTitle: book.book
+                        bookTitle: book?.book ?? "",
+                        searchMode: rSearchMode,
+                        nearDistance: rNearDistance
                     )
 
                     if groupedResults[savedName] == nil {
@@ -849,11 +876,15 @@ extension ResultsHandler {
         }
 
         return groupedResults.map {
-            ResultNode(
+            let mode = $0.value.items.first?.searchMode ?? 0
+            let distance = $0.value.items.first?.nearDistance ?? 10
+            return ResultNode(
                 id: $0.value.id,
                 parentId: $0.value.parentId,
                 name: $0.key,
                 lastModified: $0.value.lastModified,
+                searchMode: mode,
+                nearDistance: distance,
                 items: $0.value.items
             )
         }
@@ -878,7 +909,7 @@ extension ResultsHandler {
             }
         }
 
-        let reloadSql = "SELECT * FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
+        let reloadSql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
         if let reloaded = try db.fetch(query: reloadSql, parameters: [folderId], mapping: { self.makeSyncFolder(from: $0) }).first {
             CloudKitSyncManager.shared.uploadResultsData(folders: [reloaded], results: [], trackPending: false)
         }
@@ -921,10 +952,10 @@ extension ResultsHandler {
         let reloadSql: String
         var reloadParams: [Any] = []
         if let fid = folderId {
-            reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ?"
+            reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ?"
             reloadParams = [fid, newName]
         } else {
-            reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?"
+            reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ?"
             reloadParams = [newName]
         }
 
@@ -952,7 +983,7 @@ extension ResultsHandler {
                 let params: [Any] = [newFolderId, now, fCkId ?? NSNull(), oldFolderId]
                 try db.execute(query: updateSql, parameters: params)
 
-                let reloadSql = "SELECT * FROM \(resultsTable) WHERE \(colFolderId) = ?"
+                let reloadSql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colFolderId) = ?"
                 updatedResults = try db.fetch(query: reloadSql, parameters: [newFolderId]) { self.makeSyncResult(from: $0) }
 
                 for res in updatedResults {
@@ -997,7 +1028,7 @@ extension ResultsHandler {
         for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
             let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-            let sql = "SELECT * FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+            let sql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
             if let fetched = try? db.fetch(query: sql, parameters: chunk, mapping: { self.makeSyncFolder(from: $0) }) {
                 folders.append(contentsOf: fetched)
             }
@@ -1012,7 +1043,7 @@ extension ResultsHandler {
         for i in stride(from: 0, to: ckRecordIds.count, by: chunkSize) {
             let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-            let sql = "SELECT * FROM \(resultsTable) WHERE \(colResCkRecordId) IN (\(placeholders))"
+            let sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable) WHERE \(colResCkRecordId) IN (\(placeholders))"
             if let fetched = try? db.fetch(query: sql, parameters: chunk, mapping: { self.makeSyncResult(from: $0) }) {
                 results.append(contentsOf: fetched)
             }
@@ -1022,7 +1053,7 @@ extension ResultsHandler {
 
     func fetchAllSyncFolders() -> [SyncFolder] {
         guard let db else { return [] }
-        let sql = "SELECT * FROM \(foldersTable)"
+        let sql = "SELECT \(colId), \(colName), \(colParent), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId) FROM \(foldersTable)"
         do {
             return try db.fetch(query: sql) { self.makeSyncFolder(from: $0) }
         } catch {
@@ -1033,7 +1064,7 @@ extension ResultsHandler {
 
     func fetchAllSyncResults() -> [SyncResult] {
         guard let db else { return [] }
-        let sql = "SELECT * FROM \(resultsTable)"
+        let sql = "SELECT \(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance) FROM \(resultsTable)"
         do {
             return try db.fetch(query: sql) { self.makeSyncResult(from: $0) }
         } catch {
@@ -1253,13 +1284,13 @@ extension ResultsHandler {
                             let upSql = """
                             UPDATE \(resultsTable) SET 
                             \(colFolderId) = ?, \(colName) = ?, \(colQuery) = ?, \(colArchive) = ?,
-                            \(colBkId) = ?, \(colContentId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?
+                            \(colBkId) = ?, \(colContentId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?, \(colSearchMode) = ?, \(colNearDistance) = ?
                             WHERE \(colId) = ?;
                             """
                             let params: [Any] = [
                                 newFolderForDb ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
-                                existingLocalId,
+                                res.searchMode, res.nearDistance, existingLocalId,
                             ]
                             try db.execute(query: upSql, parameters: params)
                         }
@@ -1292,13 +1323,13 @@ extension ResultsHandler {
                                 let upSql = """
                                 UPDATE \(resultsTable) SET 
                                 \(colFolderId) = ?, \(colName) = ?, \(colQuery) = ?, \(colArchive) = ?,
-                                \(colBkId) = ?, \(colContentId) = ?, \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?
+                                \(colBkId) = ?, \(colContentId) = ?, \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?, \(colSearchMode) = ?, \(colNearDistance) = ?
                                 WHERE \(colId) = ?;
                                 """
                                 let params: [Any] = [
                                     fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                     res.bkId, res.contentId, ckId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
-                                    conflictLocalId,
+                                    res.searchMode, res.nearDistance, conflictLocalId,
                                 ]
                                 try db.execute(query: upSql, parameters: params)
                             } else {
@@ -1310,13 +1341,13 @@ extension ResultsHandler {
                             INSERT INTO \(resultsTable) (
                                 \(colFolderId), \(colName), \(colQuery), \(colArchive),
                                 \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
-                                \(colFolderCkRecordId)
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                                \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance)
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                             """
                             let params: [Any] = [
                                 fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, ckId, res.lastModified ?? 0,
-                                res.folderCkRecordId ?? NSNull(),
+                                res.folderCkRecordId ?? NSNull(), res.searchMode, res.nearDistance,
                             ]
                             try db.execute(query: insSql, parameters: params)
                         }
@@ -1374,7 +1405,7 @@ extension ResultsHandler {
                 }
             }
         } catch {
-            print("ResultsHandler: Failed to resolve orphan folders - \\(error)")
+            print("ResultsHandler: Failed to resolve orphan folders - \(error)")
         }
     }
 
@@ -1414,7 +1445,7 @@ extension ResultsHandler {
                 }
             }
         } catch {
-            print("ResultsHandler: Failed to resolve orphan results - \\(error)")
+            print("ResultsHandler: Failed to resolve orphan results - \(error)")
         }
     }
 }

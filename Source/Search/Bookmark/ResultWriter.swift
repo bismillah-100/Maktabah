@@ -20,6 +20,8 @@ class ResultWriter: NSViewController {
     var results: [SearchResultItem] = []
     var resultsVM: ResultsViewManager!
     var query: String = ""
+    var searchMode: SearchMode = .phrase
+    var searchViewModel: SearchViewModel?
     
     var nsBtns: [NSButton] {
         [xButton, okButton]
@@ -131,6 +133,8 @@ class ResultWriter: NSViewController {
             try viewModel.saveSearchResults(
                 results: results,
                 query: query,
+                searchMode: searchMode.rawValue,
+                nearDistance: searchViewModel?.nearDistance ?? 10,
                 folderId: folderId,
                 name: name
             )

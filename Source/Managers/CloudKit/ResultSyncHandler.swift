@@ -33,11 +33,16 @@ final class ResultSyncHandler {
               let contentId = record["contentId"] as? String
         else { return nil }
 
+        let searchMode = record["searchMode"] as? Int ?? 0
+        let nearDistance = record["nearDistance"] as? Int ?? 10
+
         return SyncResult(
             id: nil,
             folderId: nil,
             name: name,
             query: query,
+            searchMode: searchMode,
+            nearDistance: nearDistance,
             archive: archive,
             bkId: bkId,
             contentId: contentId,
@@ -65,6 +70,8 @@ extension SyncResult: CloudKitSyncable {
         let record = CKRecord(recordType: ResultSyncHandler.resultRecordType, recordID: CKRecord.ID(recordName: ckId, zoneID: zoneID))
         record["name"] = self.name
         record["query"] = self.query
+        record["searchMode"] = self.searchMode
+        record["nearDistance"] = self.nearDistance
         record["archive"] = self.archive
         record["bkId"] = self.bkId
         record["contentId"] = self.contentId

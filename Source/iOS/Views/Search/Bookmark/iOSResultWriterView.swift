@@ -3,6 +3,8 @@ import SwiftUI
 struct iOSResultWriterView: View {
     let results: [SearchResultItem]
     let query: String
+    var searchMode: SearchMode = .phrase
+    var searchViewModel: SearchViewModel
     @Environment(\.dismiss) var dismiss
 
     @State private var name: String = ""
@@ -90,6 +92,8 @@ struct iOSResultWriterView: View {
             try viewModel.saveSearchResults(
                 results: results,
                 query: query,
+                searchMode: searchMode.rawValue,
+                nearDistance: searchViewModel.nearDistance,
                 folderId: selectedFolderId,
                 name: trimmedName
             )

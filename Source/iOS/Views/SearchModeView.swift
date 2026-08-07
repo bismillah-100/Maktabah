@@ -52,7 +52,12 @@ struct SearchModeView: View {
                 )
             }
             .sheet(isPresented: $showingSaveResults) {
-                iOSResultWriterView(results: viewModel.results, query: viewModel.query)
+                iOSResultWriterView(
+                    results: viewModel.results,
+                    query: viewModel.query,
+                    searchMode: viewModel.searchMode,
+                    searchViewModel: viewModel
+                )
             }
             .sheet(isPresented: $showingSavedResults) {
                 iOSSavedResultsView()

@@ -366,7 +366,13 @@ final class SearchViewModel: ViewModelBase {
         onFinish: (@MainActor () -> Void)? = nil
     ) -> Task<Void, Never> {
         clearResults()
-        if let first = savedResults.first { query = first.query }
+        if let first = savedResults.first {
+            query = first.query
+            if let mode = SearchMode(rawValue: first.searchMode) {
+                searchMode = mode
+            }
+            nearDistance = first.nearDistance
+        }
         results = []
         totalTables = 0
         completedTables = 0

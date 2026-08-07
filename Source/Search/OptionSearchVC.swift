@@ -340,6 +340,8 @@ class OptionSearchVC: NSViewController {
     @IBAction func saveResults(_ sender: NSButton) {
         let sr = ResultWriter()
         sr.query = searchField.stringValue
+        sr.searchMode = viewModel.searchMode
+        sr.searchViewModel = viewModel
         let popover = NSPopover()
         popover.contentViewController = sr
         popover.behavior = .semitransient
@@ -638,6 +640,15 @@ extension OptionSearchVC: ResultsDelegate {
 
         searchField.stringValue = savedResults.first?.query ?? ""
         searchText = searchField.stringValue
+
+        if let first = savedResults.first,
+           let mode = SearchMode(rawValue: first.searchMode) {
+            viewModel.setSearchMode(mode)
+            optionsSegment?.selectedSegment = mode.rawValue
+            viewModel.nearDistance = first.nearDistance
+            nearDistanceField?.stringValue = "\(first.nearDistance)"
+            nearDistanceField?.isHidden = mode != .near
+        }
 
         resultsLoadingTask = viewModel.loadSavedResults(
             savedResults,
