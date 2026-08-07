@@ -694,6 +694,10 @@ extension OptionSearchVC: ReaderStateComponent {
         tableView.reloadData()
         searchField.stringValue = viewModel.query
         searchText = viewModel.query
+
+        optionsSegment?.selectedSegment = viewModel.searchMode.rawValue
+        nearDistanceField?.stringValue = "\(viewModel.nearDistance)"
+        nearDistanceField?.isHidden = viewModel.searchMode != .near
     }
 
     func cleanUpState() {

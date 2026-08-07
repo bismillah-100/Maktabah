@@ -638,6 +638,12 @@ extension SearchViewModel {
         if let savedQuery = state.searchQuery {
             query = savedQuery
         }
+        if let raw = state.searchModeRaw, let mode = SearchMode(rawValue: raw) {
+            searchMode = mode
+        }
+        if let dist = state.searchNearDistance {
+            nearDistance = dist
+        }
 
         // Memasukkan kembali daftar hasil pencarian yang tersimpan
         results = savedResults
@@ -648,6 +654,8 @@ extension SearchViewModel {
     func updateState(_ state: inout ReaderState) {
         state.searchResults = results
         state.searchQuery = query
+        state.searchModeRaw = searchMode.rawValue
+        state.searchNearDistance = nearDistance
     }
 
     /// Membersihkan seluruh data pencarian di dalam ViewModel.

@@ -597,7 +597,9 @@ extension IbarotTextVC: ReaderStateComponent {
             }
 
             if let query = state.searchQuery {
-                await textDelegate?.highlightAndScrollToText(query, mode: nil, nearDistance: 10)
+                let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
+                let nearDistance = state.searchNearDistance ?? 10
+                await textDelegate?.highlightAndScrollToText(query, mode: mode, nearDistance: nearDistance)
             }
 
             if let scrollPos = state.scrollPosition {
