@@ -52,6 +52,9 @@ extension AnnotationManager {
 
             if rowId > 0 {
                 try self.replaceTags(self.sanitizeTagNames(annotationToSave.tags), for: rowId)
+                if let ckId = annotationToSave.ckRecordId {
+                    try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
             } else {
                 throw NSError(domain: "InsertError", code: -1)
             }
@@ -92,6 +95,10 @@ extension AnnotationManager {
 
             try _db.execute(query: sql, parameters: params)
             try self.replaceTags(normalizedTags, for: id)
+
+            if let ckId = updatedAnnotation.ckRecordId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
         }
 
         updatedAnnotation.tags = normalizedTags
@@ -109,6 +116,9 @@ extension AnnotationManager {
             try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) = ?;", parameters: [id])
             try exec("DELETE FROM \(annotationsTable) WHERE \(colAnnId) = ?;", parameters: [id])
             try self.deleteUnusedTags()
+            if let ckId = annotationToDelete?.ckRecordId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+            }
         }
 
         updateCacheAfterDelete(id: id, annotation: annotationToDelete)
@@ -283,20 +293,22 @@ extension AnnotationManager {
         \(colAnnLastModified) = ? WHERE \(colAnnBkId) = ?;
         """
 
-        try _db.execute(query: updateSql, parameters: [newId, now, oldId])
-
-        clearAllCaches()
-        invalidateTree()
-
         var annotationsToSync: [Annotation] = []
-        for annId in affectedIds {
-            if let ann = loadAnnotationById(annId) {
-                annotationsToSync.append(ann)
-                if let ckId = ann.ckRecordId {
-                    addPendingSync(ckRecordId: ckId, operation: "upload")
+        try transaction {
+            try exec(updateSql, parameters: [newId, now, oldId])
+            
+            for annId in affectedIds {
+                if let ann = loadAnnotationById(annId) {
+                    annotationsToSync.append(ann)
+                    if let ckId = ann.ckRecordId {
+                        try addPendingSync(ckRecordId: ckId, operation: "upload")
+                    }
                 }
             }
         }
+
+        clearAllCaches()
+        invalidateTree()
 
         DispatchQueue.main.async {
             NotificationCenter.default.post(

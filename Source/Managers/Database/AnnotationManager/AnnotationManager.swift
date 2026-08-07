@@ -117,10 +117,10 @@ final class AnnotationManager {
             if type == .added || type == .updated {
                 let toUpload = annotationsToSync ?? (annotation != nil ? [annotation!] : [])
                 if !toUpload.isEmpty {
-                    CloudKitSyncManager.shared.upload(annotations: toUpload)
+                    CloudKitSyncManager.shared.upload(annotations: toUpload, trackPending: false)
                 }
             } else if type == .deleted, let ann = annotation, let ckId = ann.ckRecordId {
-                CloudKitSyncManager.shared.delete(ckRecordIds: [ckId], target: .annotation)
+                CloudKitSyncManager.shared.delete(ckRecordIds: [ckId], target: .annotation, trackPending: false)
             }
         }
 

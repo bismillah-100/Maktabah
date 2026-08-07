@@ -94,6 +94,7 @@ class HistoryDatabaseManager {
 
         try exec("CREATE INDEX IF NOT EXISTS idx_re_favorite ON reading_entries (is_favorite, favorited_at);")
         try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op ON sync_pending (operation, queued_at);")
+        try exec("CREATE INDEX IF NOT EXISTS idx_re_ck_record_id ON reading_entries (ck_record_id);")
     }
 
     // MARK: - SQLite Helpers
@@ -101,6 +102,13 @@ class HistoryDatabaseManager {
     private func exec(_ sql: String, parameters: [Any] = []) throws {
         guard let _db else { return }
         try _db.execute(query: sql, parameters: parameters)
+    }
+
+    func replaceHistoryOrder(_ order: [Int]) throws {
+        try exec("DELETE FROM history_order;")
+        for (position, bookId) in order.enumerated() {
+            try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
+        }
     }
 
     func transaction(_ block: () throws -> Void) throws {
@@ -126,7 +134,12 @@ class HistoryDatabaseManager {
             entry.isFavorite ? 1 : 0,
             entry.ckRecordId as Any? ?? NSNull(),
         ]
-        try? _db?.execute(query: sql, parameters: params)
+        try? transaction {
+            try self._db?.execute(query: sql, parameters: params)
+            if let ckId = entry.ckRecordId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
     }
 
     func upsertEntries(_ entries: [ReadingEntry]) throws {
@@ -160,28 +173,74 @@ class HistoryDatabaseManager {
     }
 
     func deleteEntry(bookId: Int) {
-        try? exec("DELETE FROM reading_entries WHERE book_id = ?;", parameters: [bookId])
+        let sql = "DELETE FROM reading_entries WHERE book_id = ?;"
+        try? transaction {
+            // First fetch the ckRecordId
+            let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id = ? LIMIT 1;"
+            let ckIdRow = try self._db?.fetch(query: ckIdSql, parameters: [bookId], mapping: { $0.string(at: 0) }).first
+            let ckId = ckIdRow as? String
+            try self._db?.execute(query: sql, parameters: [bookId])
+            if let ckId = ckId {
+                try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+            }
+        }
     }
 
     func deleteEntries(bookIds: [Int]) throws {
         guard let _db, !bookIds.isEmpty else { return }
         let chunkSize = 500
-        for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
-            let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
-            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-            try _db.execute(
-                query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
-                parameters: chunk
-            )
+        try transaction {
+            for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
+                let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+
+                // Fetch ckRecordIds first
+                let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (\(placeholders));"
+                let ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap { $0 }
+
+                try _db.execute(
+                    query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
+                    parameters: chunk
+                )
+
+                for ckId in ckIds {
+                    try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+                }
+            }
         }
     }
 
     func saveHistoryOrder(_ order: [Int]) {
-        try? transaction {
-            try exec("DELETE FROM history_order;")
-            for (position, bookId) in order.enumerated() {
-                try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
+        do {
+            try transaction {
+                try replaceHistoryOrder(order)
             }
+        } catch {
+            #if DEBUG
+            print("HistoryDatabaseManager: saveHistoryOrder failed: \(error)")
+            #endif
+        }
+    }
+
+
+    func saveCloudKitChanges(deletedIds: [Int], upsertedEntries: [ReadingEntry], finalOrder: [Int]) throws {
+        try transaction {
+            try deleteEntries(bookIds: deletedIds)
+            try upsertEntries(upsertedEntries)
+            try replaceHistoryOrder(finalOrder)
+        }
+    }
+
+    func saveMigrationChanges(newEntries: [ReadingEntry], finalOrder: [Int]) throws {
+        try transaction {
+            try upsertEntries(newEntries)
+            try replaceHistoryOrder(finalOrder)
+        }
+    }
+
+    func saveUpsertedEntries(_ entries: [ReadingEntry]) throws {
+        try transaction {
+            try upsertEntries(entries)
         }
     }
 
@@ -238,30 +297,24 @@ class HistoryDatabaseManager {
 
     // MARK: - Pending Sync (SQLite)
 
-    func addPendingSync(ckRecordId: String, operation: String) {
+    func addPendingSync(ckRecordId: String, operation: String) throws {
         guard let _db else { return }
-        do {
-            if operation == "upload" {
-                let count = try _db.fetch(
-                    query: "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';",
-                    parameters: [ckRecordId]
-                ) { $0.int64(at: 0) }.first ?? 0
-                if count > 0 { return } // Delete wins
-            } else if operation == "delete" {
-                try _db.execute(
-                    query: "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';",
-                    parameters: [ckRecordId]
-                )
-            }
+        if operation == "upload" {
+            let count = try _db.fetch(
+                query: "SELECT COUNT(*) FROM sync_pending WHERE ck_record_id = ? AND operation = 'delete';",
+                parameters: [ckRecordId]
+            ) { $0.int64(at: 0) }.first ?? 0
+            if count > 0 { return } // Delete wins
+        } else if operation == "delete" {
             try _db.execute(
-                query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);",
-                parameters: [ckRecordId, operation, Int64(Date().timeIntervalSince1970)]
+                query: "DELETE FROM sync_pending WHERE ck_record_id = ? AND operation = 'upload';",
+                parameters: [ckRecordId]
             )
-        } catch {
-            #if DEBUG
-            print("HistoryDatabaseManager: addPendingSync error: \(error)")
-            #endif
         }
+        try _db.execute(
+            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES (?, ?, ?);",
+            parameters: [ckRecordId, operation, Int64(Date().timeIntervalSince1970)]
+        )
     }
 
     func removePendingSync(ckRecordIds: [String]) {
@@ -318,20 +371,26 @@ class HistoryDatabaseManager {
            let upList = try? JSONDecoder().decode([String].self, from: upData), !upList.isEmpty
         {
             let now = Int64(Date().timeIntervalSince1970)
-            try? transaction {
-                let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
-                for i in stride(from: 0, to: upList.count, by: chunkSize) {
-                    let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
-                    let placeholders = String(repeating: "(?, 'upload', ?),", count: chunk.count).dropLast()
-                    var params = [Any]()
-                    for ckId in chunk {
-                        params.append(contentsOf: [ckId, now])
+            do {
+                try transaction {
+                    let chunkSize = 300 // 3 params per entry (3 * 300 = 900)
+                    for i in stride(from: 0, to: upList.count, by: chunkSize) {
+                        let chunk = Array(upList[i..<min(i + chunkSize, upList.count)])
+                        let placeholders = String(repeating: "(?, 'upload', ?),", count: chunk.count).dropLast()
+                        var params = [Any]()
+                        for ckId in chunk {
+                            params.append(contentsOf: [ckId, now])
+                        }
+                        try _db.execute(
+                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                            parameters: params
+                        )
                     }
-                    try _db.execute(
-                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
-                        parameters: params
-                    )
                 }
+            } catch {
+                #if DEBUG
+                print("HistoryDatabaseManager: upList migration failed: \(error)")
+                #endif
             }
         }
 
@@ -339,20 +398,26 @@ class HistoryDatabaseManager {
            let delList = try? JSONDecoder().decode([String].self, from: delData), !delList.isEmpty
         {
             let now = Int64(Date().timeIntervalSince1970)
-            try? transaction {
-                let chunkSize = 300 // 3 params per entry
-                for i in stride(from: 0, to: delList.count, by: chunkSize) {
-                    let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
-                    let placeholders = String(repeating: "(?, 'delete', ?),", count: chunk.count).dropLast()
-                    var params = [Any]()
-                    for ckId in chunk {
-                        params.append(contentsOf: [ckId, now])
+            do {
+                try transaction {
+                    let chunkSize = 300 // 3 params per entry
+                    for i in stride(from: 0, to: delList.count, by: chunkSize) {
+                        let chunk = Array(delList[i..<min(i + chunkSize, delList.count)])
+                        let placeholders = String(repeating: "(?, 'delete', ?),", count: chunk.count).dropLast()
+                        var params = [Any]()
+                        for ckId in chunk {
+                            params.append(contentsOf: [ckId, now])
+                        }
+                        try _db.execute(
+                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                            parameters: params
+                        )
                     }
-                    try _db.execute(
-                        query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
-                        parameters: params
-                    )
                 }
+            } catch {
+                #if DEBUG
+                print("HistoryDatabaseManager: delList migration failed: \(error)")
+                #endif
             }
         }
 

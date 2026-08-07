@@ -148,11 +148,14 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         }
 
         pruneOrphanedEntries()
+        if let ckId = entry.ckRecordId {
+            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
         HistoryDatabaseManager.shared.upsertEntry(entry)
         HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
         loadBooksData()
 
-        CloudKitSyncManager.shared.uploadHistory(entries: [entry])
+        CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
     }
 
     func updateLastContentId(_ contentId: Int, for bookId: Int) {
@@ -165,13 +168,12 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             }
             entriesByBookId[bookId] = entry
 
+            if let ckId = entry.ckRecordId {
+                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
             // Hanya simpan ke DB — tidak reload UI library (tidak ada perubahan visible)
             HistoryDatabaseManager.shared.upsertEntry(entry)
-
-            if let ckId = entry.ckRecordId {
-                HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
-            }
-            CloudKitSyncManager.shared.uploadHistory(entries: [entry])
+            CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
         } else {
             addBookToHistory(bookId)
             updateLastContentId(contentId, for: bookId)
@@ -203,35 +205,70 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         }
 
         entriesByBookId[bookId] = entry
+        if let ckId = entry.ckRecordId {
+            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
         HistoryDatabaseManager.shared.upsertEntry(entry)
         loadBooksData()
 
-        CloudKitSyncManager.shared.uploadHistory(entries: [entry])
+        CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
     }
 
     func removeHistory(for bookId: Int) {
         historyOrder.removeAll { $0 == bookId }
         if var entry = entriesByBookId[bookId] {
             if entry.isFavorite {
-                // Entry masih ada tapi bukan history lagi — upload perubahan
                 entry.lastOpenedAt = nil
                 entry.updatedAt = Date()
                 entriesByBookId[bookId] = entry
-                HistoryDatabaseManager.shared.upsertEntry(entry)
-                HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
-                loadBooksData()
-                CloudKitSyncManager.shared.uploadHistory(entries: [entry])
+
+                let upserted = [entry]
+                let order = historyOrder
+
+                DispatchQueue.global(qos: .background).async {
+                    do {
+                        try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: [], upsertedEntries: upserted, finalOrder: order)
+                        DispatchQueue.main.async {
+                            self.loadBooksData()
+                        }
+                        CloudKitSyncManager.shared.uploadHistory(entries: upserted, trackPending: false)
+                    } catch {
+                        #if DEBUG
+                        print("Failed to save removeHistory: \(error)")
+                        #endif
+                    }
+                }
             } else {
-                // Entry dihapus total — delete di CloudKit, tidak perlu upload
                 let ckId = entry.ckRecordId
-                entriesByBookId.removeValue(forKey: bookId)
-                HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
-                HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
-                loadBooksData()
                 if let ckId {
-                    HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                    pendingCloudKitDeletes.insert(ckId)
-                    triggerDeleteDebounce()
+                    try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                }
+                entriesByBookId.removeValue(forKey: bookId)
+
+                let order = historyOrder
+                let deletedIds = [bookId]
+
+                DispatchQueue.global(qos: .background).async {
+                    do {
+                        try HistoryDatabaseManager.shared.transaction {
+                            try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
+                            if let ckId {
+                                try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                            }
+                            try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
+                        }
+                        DispatchQueue.main.async {
+                            self.loadBooksData()
+                            if let ckId {
+                                self.pendingCloudKitDeletes.insert(ckId)
+                                self.triggerDeleteDebounce()
+                            }
+                        }
+                    } catch {
+                        #if DEBUG
+                        print("Failed to save removeHistory: \(error)")
+                        #endif
+                    }
                 }
             }
         }
@@ -247,7 +284,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 guard let self, !pendingCloudKitDeletes.isEmpty else { return }
                 let idsToDelete = Array(pendingCloudKitDeletes)
                 pendingCloudKitDeletes.removeAll()
-                CloudKitSyncManager.shared.delete(ckRecordIds: idsToDelete, target: .history)
+                CloudKitSyncManager.shared.delete(ckRecordIds: idsToDelete, target: .history, trackPending: false)
             }
         }
     }
@@ -257,28 +294,54 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         historyOrder.removeAll()
 
         var ckIdsToDelete = [String]()
+        var upserted = [ReadingEntry]()
+        var deletedIds = [Int]()
+
         for bookId in historyIdsToRemove {
             if var entry = entriesByBookId[bookId] {
                 if entry.isFavorite {
                     entry.lastOpenedAt = nil
                     entry.updatedAt = Date()
                     entriesByBookId[bookId] = entry
-                    HistoryDatabaseManager.shared.upsertEntry(entry)
+                    upserted.append(entry)
                 } else {
                     if let ckId = entry.ckRecordId {
+                        try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                         ckIdsToDelete.append(ckId)
                     }
                     entriesByBookId.removeValue(forKey: bookId)
-                    HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
+                    deletedIds.append(bookId)
                 }
             }
         }
 
-        HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
-        loadBooksData()
+        let order = historyOrder
+        let ckIdsToDeleteSafe = ckIdsToDelete
 
-        if !ckIdsToDelete.isEmpty {
-            CloudKitSyncManager.shared.delete(ckRecordIds: ckIdsToDelete, target: .history)
+        DispatchQueue.global(qos: .background).async {
+            do {
+                try HistoryDatabaseManager.shared.transaction {
+                    try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
+                    for ckId in ckIdsToDeleteSafe {
+                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                    }
+                    try HistoryDatabaseManager.shared.upsertEntries(upserted)
+                    try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
+                }
+                DispatchQueue.main.async {
+                    self.loadBooksData()
+                }
+                if !upserted.isEmpty {
+                    CloudKitSyncManager.shared.uploadHistory(entries: upserted, trackPending: false)
+                }
+                if !ckIdsToDeleteSafe.isEmpty {
+                    CloudKitSyncManager.shared.delete(ckRecordIds: ckIdsToDeleteSafe, target: .history, trackPending: false)
+                }
+            } catch {
+                #if DEBUG
+                print("Failed to save clearHistory: \(error)")
+                #endif
+            }
         }
     }
 
@@ -298,19 +361,41 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             return !isFav && !hasHistory
         }
         var removedIds = [Int]()
+        var ckIdsToDelete = [String]()
         for bookId in toRemove {
             if let ckId = entriesByBookId[bookId]?.ckRecordId {
-                HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                ckIdsToDelete.append(ckId)
                 pendingCloudKitDeletes.insert(ckId)
-                triggerDeleteDebounce()
             }
             
             entriesByBookId.removeValue(forKey: bookId)
             removedIds.append(bookId)
-            if deleteFromDB {
-                HistoryDatabaseManager.shared.deleteEntry(bookId: bookId)
-            }
         }
+
+        if deleteFromDB && !removedIds.isEmpty {
+            DispatchQueue.global(qos: .background).async {
+                do {
+                    try HistoryDatabaseManager.shared.transaction {
+                        try HistoryDatabaseManager.shared.deleteEntries(bookIds: removedIds)
+                        for ckId in ckIdsToDelete {
+                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                        }
+                    }
+                    if !ckIdsToDelete.isEmpty {
+                        DispatchQueue.main.async {
+                            self.triggerDeleteDebounce()
+                        }
+                    }
+                } catch {
+                    #if DEBUG
+                    print("Failed to save pruneOrphanedEntries: \(error)")
+                    #endif
+                }
+            }
+        } else if !ckIdsToDelete.isEmpty {
+            triggerDeleteDebounce()
+        }
+
         return removedIds
     }
 
@@ -385,10 +470,12 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 loadBooksData()
 
                 DispatchQueue.global(qos: .background).async {
-                    try? HistoryDatabaseManager.shared.transaction {
-                        try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
-                        try HistoryDatabaseManager.shared.upsertEntries(upsertedEntries)
-                        HistoryDatabaseManager.shared.saveHistoryOrder(finalOrder)
+                    do {
+                        try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: deletedIds, upsertedEntries: upsertedEntries, finalOrder: finalOrder)
+                    } catch {
+                        #if DEBUG
+                        print("Failed to applyCloudKitChanges: \(error)")
+                        #endif
                     }
                 }
             }
@@ -397,7 +484,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         if Thread.isMainThread {
             block()
         } else {
-            DispatchQueue.main.sync {
+            DispatchQueue.main.async {
                 block()
             }
         }
@@ -423,11 +510,17 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         let toUpdateDb = backfilled
         if didChange {
             DispatchQueue.global(qos: .background).async {
-                try? HistoryDatabaseManager.shared.transaction {
-                    try HistoryDatabaseManager.shared.upsertEntries(toUpdateDb)
+                do {
+                    try HistoryDatabaseManager.shared.saveUpsertedEntries(toUpdateDb)
+                    DispatchQueue.main.async {
+                        self.loadBooksData()
+                    }
+                } catch {
+                    #if DEBUG
+                    print("Failed to backfillCloudKitFields: \(error)")
+                    #endif
                 }
             }
-            loadBooksData()
         }
 
         completion?(backfilled)
@@ -473,13 +566,15 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             let migratedEntries = Array(entriesByBookId.values).filter { $0.ckRecordId != nil }
 
             DispatchQueue.global(qos: .background).async {
-                try? HistoryDatabaseManager.shared.transaction {
-                    try HistoryDatabaseManager.shared.upsertEntries(newEntries)
-                    HistoryDatabaseManager.shared.saveHistoryOrder(finalOrder)
-                }
-                
-                if !migratedEntries.isEmpty {
-                    CloudKitSyncManager.shared.uploadHistory(entries: migratedEntries, debounce: false)
+                do {
+                    try HistoryDatabaseManager.shared.saveMigrationChanges(newEntries: newEntries, finalOrder: finalOrder)
+                    if !migratedEntries.isEmpty {
+                        CloudKitSyncManager.shared.uploadHistory(entries: migratedEntries, debounce: false, trackPending: false)
+                    }
+                } catch {
+                    #if DEBUG
+                    print("Failed to migrateLegacyKVSData: \(error)")
+                    #endif
                 }
             }
         }
@@ -505,18 +600,24 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         }
 
         // Update DB: delete old, insert new
+        if let oldCkId = entry.ckRecordId {
+            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: oldCkId, operation: "delete")
+        }
         HistoryDatabaseManager.shared.deleteEntry(bookId: oldId)
+        if let ckId = migrated.ckRecordId {
+            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
         HistoryDatabaseManager.shared.upsertEntry(migrated)
         HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
 
         // Hapus entry lama dari CloudKit
         if let oldCkId = entry.ckRecordId {
-            CloudKitSyncManager.shared.delete(ckRecordIds: [oldCkId], target: .history)
+            CloudKitSyncManager.shared.delete(ckRecordIds: [oldCkId], target: .history, trackPending: false)
         }
 
         // Upload entry baru
         loadBooksData()
-        CloudKitSyncManager.shared.uploadHistory(entries: [migrated])
+        CloudKitSyncManager.shared.uploadHistory(entries: [migrated], trackPending: false)
     }
 }
 
