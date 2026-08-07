@@ -74,6 +74,22 @@ struct FtsQueryParser {
         }
     }
 
+    /// Extracts the NEAR distance from the query if it contains explicit NEAR syntax.
+    static func extractNearDistance(query: String) -> Int? {
+        let pattern = #"(?i)(?:NEAR\s*\(\s*[^,\)]+(?:,\s*(\d+))?\s*\)|[^\s]+\s+NEAR(?:/(\d+))?\s+[^\s]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
+        
+        let nsText = query as NSString
+        if let match = regex.firstMatch(in: query, options: [], range: NSRange(location: 0, length: nsText.length)) {
+            if match.range(at: 1).location != NSNotFound, let k = Int(nsText.substring(with: match.range(at: 1))) {
+                return k
+            } else if match.range(at: 2).location != NSNotFound, let k = Int(nsText.substring(with: match.range(at: 2))) {
+                return k
+            }
+        }
+        return nil
+    }
+
     // MARK: - Private Helpers
 
     private static func hasExplicitNearSyntax(_ text: String) -> Bool {

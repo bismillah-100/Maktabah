@@ -502,11 +502,21 @@ class LibraryDataManager {
                     let strippedNash = isImported ? content.nash.stripSpanTags() : content.nash
                     let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
                     let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
-                    let snippet = normalizedNash
-                        .normalizeArabic()
-                        .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
-                    let highlightedSnippet = snippet.highlightedAttributedText(
-                        keywords: searchKeywordsConverted)
+                    let snippet: String
+                    let highlightedSnippet: NSAttributedString
+                    if mode == .near {
+                        snippet = normalizedNash
+                            .normalizeArabic()
+                            .snippetNear(keywords: searchKeywordsConverted, nearDistance: nearDistance, contextLength: 60)
+                        highlightedSnippet = snippet.highlightedAttributedText(
+                            keywords: searchKeywordsConverted, nearDistance: nearDistance)
+                    } else {
+                        snippet = normalizedNash
+                            .normalizeArabic()
+                            .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
+                        highlightedSnippet = snippet.highlightedAttributedText(
+                            keywords: searchKeywordsConverted)
+                    }
 
                     let item = SearchResultItem(
                         archive: archive,

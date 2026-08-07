@@ -17,11 +17,22 @@ extension NSTextStorage {
         searchText: String,
         baseColor: PlatformColor
     ) -> NSRange? {
-        let searchTerms = searchText
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
+        // Strip FTS syntax (NEAR, AND, OR, quotes, parens) dan ekstrak kata bersih.
+        // Mendukung query biasa (koma-separated) maupun raw FTS/NEAR syntax.
+        let hasNearSyntax = searchText.uppercased().contains("NEAR")
+        let mode: SearchMode = hasNearSyntax ? .near : .contains
+
+        var searchTerms = FtsQueryParser.extractKeywords(query: searchText, mode: mode)
             .map { $0.replacingHonorificPhrasesIfSupported().text }
+
+        // Fallback: jika ekstraksi gagal, coba parsing koma biasa
+        if searchTerms.isEmpty {
+            searchTerms = searchText
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+                .map { $0.replacingHonorificPhrasesIfSupported().text }
+        }
 
         guard !searchTerms.isEmpty else { return nil }
 
@@ -33,7 +44,17 @@ extension NSTextStorage {
             PlatformColor.systemIndigo.withAlphaComponent(0.4),
         ]
 
-        let ranges = string.findArabicMatchingRanges(keywords: searchTerms)
+        var ranges: [NSRange]
+        
+        // Hanya highlight keyword yang merupakan bagian dari valid cluster jika mode NEAR
+        if mode == .near, searchTerms.count > 1 {
+            let nearDistance = FtsQueryParser.extractNearDistance(query: searchText) ?? 10
+            let rangesWithIndex = string.findArabicMatchingRangesWithIndex(keywords: searchTerms)
+            ranges = string.filterRangesForNearMode(rangesWithIndex: rangesWithIndex, keywordsCount: searchTerms.count, nearDistance: nearDistance)
+        } else {
+            ranges = string.findArabicMatchingRanges(keywords: searchTerms)
+        }
+        
         guard !ranges.isEmpty else { return nil }
 
         beginEditing()
@@ -52,6 +73,7 @@ extension NSTextStorage {
         }
         endEditing()
 
+        // Kembalikan range match pertama untuk scroll-to-visible
         return ranges.first
     }
 

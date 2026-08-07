@@ -436,11 +436,23 @@ final class SearchViewModel: ViewModelBase {
         let normalized = bookContent.nash
             .convertToArabicDigits(isMultilingual: isMultilingual)
             .normalizeArabic()
-        let queryConverted = item
-            .query.convertToArabicDigits(isMultilingual: isMultilingual)
-            .normalizeArabic()
-        let snippet = normalized.snippetAround(keywords: [queryConverted], contextLength: 60)
-        let attributed = snippet.highlightedAttributedText(keywords: [queryConverted])
+
+        let mode = SearchMode(rawValue: item.searchMode) ?? .phrase
+
+        // Ekstrak keyword individual sesuai mode — penting untuk NEAR agar
+        // snippetAround bisa menemukan spanning window antar semua kata kunci.
+        let keywords = FtsQueryParser.extractKeywords(query: item.query, mode: mode)
+            .map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
+
+        let snippet: String
+        let attributed: NSAttributedString
+        if mode == .near {
+            snippet = normalized.snippetNear(keywords: keywords, nearDistance: item.nearDistance, contextLength: 60)
+            attributed = snippet.highlightedAttributedText(keywords: keywords, nearDistance: item.nearDistance)
+        } else {
+            snippet = normalized.snippetAround(keywords: keywords, contextLength: 60)
+            attributed = snippet.highlightedAttributedText(keywords: keywords)
+        }
 
         return SearchResultItem(
             archive: item.archive,
