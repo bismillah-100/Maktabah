@@ -289,6 +289,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
     @Binding var text: String
     var annotations: [Annotation] = []
     @Binding var searchText: String
+    var searchMode: SearchMode?
+    var nearDistance: Int = 10
     var targetAnnotation: Annotation? = nil
     var isMultiLanguage: Bool = false
     var isImported: Bool = false
@@ -465,7 +467,9 @@ struct iOSIbarotTextView: UIViewRepresentable {
                 guard let firstRange = textView.textStorage
                     .highlightSearchText(
                         searchText: searchText,
-                        baseColor: .highlightText
+                        mode: searchMode,
+                        baseColor: .highlightText,
+                        nearDistance: nearDistance
                     )
                 else { return }
 

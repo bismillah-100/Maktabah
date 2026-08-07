@@ -73,6 +73,7 @@ class ReaderViewModel: ViewModelBase {
     static let kfgqpcList = Font.custom(ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 20)
 
     var searchText: String = ""
+    var searchMode: SearchMode?
     var targetAnnotation: Annotation?
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
@@ -523,6 +524,7 @@ class ReaderViewModel: ViewModelBase {
 
     func didSelectSearch(query: String, contentId: Int) {
         searchText = query
+        searchMode = searchViewModel.mode
         fetchContentById(contentId)
     }
 

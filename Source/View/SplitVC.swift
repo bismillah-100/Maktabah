@@ -555,11 +555,13 @@ extension SplitVC {
         )
         optSearch.compactButton()
 
-        optSearch.onSelectedItem = { id, query in
+        optSearch.onSelectedItem = { id, query, mode, nearDistance in
             Task.detached { [weak self] in
                 await self?.ibarotTextVC.didSelectResult(
                     for: id,
-                    highlightText: query
+                    highlightText: query,
+                    mode: mode,
+                    nearDistance: Int(nearDistance) ?? 10
                 )
             }
         }

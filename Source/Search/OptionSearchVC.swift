@@ -55,7 +55,7 @@ class OptionSearchVC: NSViewController {
         didSet { viewModel.targetBookId = bkId }
     }
 
-    var onSelectedItem: ((Int, String) -> Void)?
+    var onSelectedItem: ((Int, String, SearchMode, String) -> Void)?
     var onCleanUp: (() -> Void)?
 
     var compactConfigured: Bool = false
@@ -148,7 +148,7 @@ class OptionSearchVC: NSViewController {
             sender.setSelected(false, forSegment: 0)
             startMigration(sender)
         }
-        
+
         if sender.isSelected(forSegment: 1) {
             sender.setSelected(false, forSegment: 1)
             showMigrationOptions(sender)
@@ -623,9 +623,16 @@ extension OptionSearchVC: LibraryViewDelegate {
         await delegate?.didSelectBook(for: bookData, loadContent: false)
         await itemDelegate?.didSelectResult(
             for: book.bookId,
-            highlightText: searchText
+            highlightText: searchText,
+            mode: viewModel.searchMode,
+            nearDistance: viewModel.nearDistance
         )
-        onSelectedItem?(book.bookId, searchField.stringValue)
+        onSelectedItem?(
+            book.bookId,
+            searchField.stringValue,
+            viewModel.searchMode,
+            nearDistanceField?.stringValue ?? "10"
+        )
     }
 }
 

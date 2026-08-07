@@ -59,6 +59,8 @@ struct iOSReaderView: View {
             text: $viewModel.contentText,
             annotations: viewModel.currentAnnotations,
             searchText: $viewModel.searchText,
+            searchMode: viewModel.searchMode,
+            nearDistance: viewModel.nearDistance,
             targetAnnotation: viewModel.targetAnnotation,
             isMultiLanguage: book.isMultiLanguage,
             isImported: book.isImported,

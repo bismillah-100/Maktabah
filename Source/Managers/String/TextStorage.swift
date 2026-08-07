@@ -15,24 +15,14 @@ extension NSTextStorage {
     @discardableResult
     func highlightSearchText(
         searchText: String,
-        baseColor: PlatformColor
+        mode: SearchMode?,
+        baseColor: PlatformColor,
+        nearDistance: Int = 10
     ) -> NSRange? {
-        // Strip FTS syntax (NEAR, AND, OR, quotes, parens) dan ekstrak kata bersih.
-        // Mendukung query biasa (koma-separated) maupun raw FTS/NEAR syntax.
-        let hasNearSyntax = searchText.uppercased().contains("NEAR")
-        let mode: SearchMode = hasNearSyntax ? .near : .contains
+        let searchMode = mode ?? (searchText.uppercased().contains("NEAR") ? .near : .contains)
 
-        var searchTerms = FtsQueryParser.extractKeywords(query: searchText, mode: mode)
+        let searchTerms = FtsQueryParser.extractKeywords(query: searchText, mode: searchMode)
             .map { $0.replacingHonorificPhrasesIfSupported().text }
-
-        // Fallback: jika ekstraksi gagal, coba parsing koma biasa
-        if searchTerms.isEmpty {
-            searchTerms = searchText
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
-                .map { $0.replacingHonorificPhrasesIfSupported().text }
-        }
 
         guard !searchTerms.isEmpty else { return nil }
 
@@ -45,16 +35,15 @@ extension NSTextStorage {
         ]
 
         var ranges: [NSRange]
-        
+
         // Hanya highlight keyword yang merupakan bagian dari valid cluster jika mode NEAR
-        if mode == .near, searchTerms.count > 1 {
-            let nearDistance = FtsQueryParser.extractNearDistance(query: searchText) ?? 10
+        if searchMode == .near, searchTerms.count > 1 {
             let rangesWithIndex = string.findArabicMatchingRangesWithIndex(keywords: searchTerms)
             ranges = string.filterRangesForNearMode(rangesWithIndex: rangesWithIndex, keywordsCount: searchTerms.count, nearDistance: nearDistance)
         } else {
             ranges = string.findArabicMatchingRanges(keywords: searchTerms)
         }
-        
+
         guard !ranges.isEmpty else { return nil }
 
         beginEditing()

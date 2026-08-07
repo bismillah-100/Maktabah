@@ -85,9 +85,14 @@ class QuranNashVC: NSViewController {
         optSearchPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
         optSearch.compactButton()
 
-        optSearch.onSelectedItem = { id, query in
+        optSearch.onSelectedItem = { id, query, mode, nearDistance in
             Task.detached { [weak self] in
-                await self?.didSelectResult(for: id, highlightText: query)
+                await self?.didSelectResult(
+                    for: id,
+                    highlightText: query,
+                    mode: mode,
+                    nearDistance: Int(nearDistance) ?? 10
+                )
             }
         }
 
@@ -158,7 +163,12 @@ extension QuranNashVC: QuranDelegate {
 }
 
 extension QuranNashVC: OptionSearchDelegate {
-    func didSelectResult(for id: Int, highlightText: String) async {
+    func didSelectResult(
+        for id: Int,
+        highlightText: String,
+        mode: SearchMode?,
+        nearDistance: Int
+    ) async {
         guard let selectedBook = manager.selectedBook,
               let content = manager.bkConn.getContent(bkid: String(selectedBook.id), contentId: id, quran: true) else {
             return
@@ -168,7 +178,7 @@ extension QuranNashVC: OptionSearchDelegate {
 
         try? await Task.sleep(nanoseconds: 3_000_000)
 
-        await textDelegate?.highlightAndScrollToText(highlightText)
+        await textDelegate?.highlightAndScrollToText(highlightText, mode: mode, nearDistance: nearDistance)
         await MainActor.run {
             didNavigateContent?(content)
         }
