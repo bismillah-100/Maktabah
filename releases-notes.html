@@ -36,6 +36,25 @@
 </head>
 <body>
 
+<h2>Version 3.3.7</h2>
+<p class="version">August 07, 2026</p>
+<h3>Fixes</h3>
+<ul>
+  <li>Resolved a critical data desynchronization bug during offline book migrations.</li>
+  <li>Addressed window tab UI glitches and improved stability across macOS windows.</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Optimized Full-Text Search (FTS) memory footprint by eliminating costly dictionary allocations during query execution.</li>
+  <li>Re-engineered the CloudKit sync queue management to guarantee atomic database commits for pending sync operations.</li>
+  <li>Implemented robust retry logic for CloudKit to handle network failures and gracefully skip orphaned or deleted records.</li>
+  <li>Consolidated boilerplate NSWindow creation into reusable helpers to enforce DRY principles and improve code health.</li>
+  <li>Enforced separation of concerns by encapsulating raw SQL executions within HistoryDatabaseManager.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.3.6</h2>
 <p class="version">July 30, 2026</p>
 <h3>Fixes</h3>
