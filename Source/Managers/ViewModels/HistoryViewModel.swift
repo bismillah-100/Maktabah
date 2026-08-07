@@ -255,10 +255,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                             if let ckId {
                                 try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                             }
-                            try HistoryDatabaseManager.shared.exec("DELETE FROM history_order;")
-                            for (position, bId) in order.enumerated() {
-                                try HistoryDatabaseManager.shared.exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bId])
-                            }
+                            try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
                         }
                         DispatchQueue.main.async {
                             self.loadBooksData()
@@ -329,10 +326,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                         try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                     }
                     try HistoryDatabaseManager.shared.upsertEntries(upserted)
-                    try HistoryDatabaseManager.shared.exec("DELETE FROM history_order;")
-                    for (position, bId) in order.enumerated() {
-                        try HistoryDatabaseManager.shared.exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bId])
-                    }
+                    try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
                 }
                 DispatchQueue.main.async {
                     self.loadBooksData()

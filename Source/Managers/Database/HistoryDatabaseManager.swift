@@ -99,9 +99,16 @@ class HistoryDatabaseManager {
 
     // MARK: - SQLite Helpers
 
-    func exec(_ sql: String, parameters: [Any] = []) throws {
+    private func exec(_ sql: String, parameters: [Any] = []) throws {
         guard let _db else { return }
         try _db.execute(query: sql, parameters: parameters)
+    }
+
+    func replaceHistoryOrder(_ order: [Int]) throws {
+        try exec("DELETE FROM history_order;")
+        for (position, bookId) in order.enumerated() {
+            try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
+        }
     }
 
     func transaction(_ block: () throws -> Void) throws {
@@ -206,10 +213,7 @@ class HistoryDatabaseManager {
     func saveHistoryOrder(_ order: [Int]) {
         do {
             try transaction {
-                try exec("DELETE FROM history_order;")
-                for (position, bookId) in order.enumerated() {
-                    try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
-                }
+                try replaceHistoryOrder(order)
             }
         } catch {
             #if DEBUG
@@ -223,20 +227,14 @@ class HistoryDatabaseManager {
         try transaction {
             try deleteEntries(bookIds: deletedIds)
             try upsertEntries(upsertedEntries)
-            try exec("DELETE FROM history_order;")
-            for (position, bookId) in finalOrder.enumerated() {
-                try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
-            }
+            try replaceHistoryOrder(finalOrder)
         }
     }
 
     func saveMigrationChanges(newEntries: [ReadingEntry], finalOrder: [Int]) throws {
         try transaction {
             try upsertEntries(newEntries)
-            try exec("DELETE FROM history_order;")
-            for (position, bookId) in finalOrder.enumerated() {
-                try exec("INSERT INTO history_order (position, book_id) VALUES (?, ?);", parameters: [position, bookId])
-            }
+            try replaceHistoryOrder(finalOrder)
         }
     }
 
