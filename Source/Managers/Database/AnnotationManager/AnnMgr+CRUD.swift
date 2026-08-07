@@ -293,20 +293,22 @@ extension AnnotationManager {
         \(colAnnLastModified) = ? WHERE \(colAnnBkId) = ?;
         """
 
-        try _db.execute(query: updateSql, parameters: [newId, now, oldId])
-
-        clearAllCaches()
-        invalidateTree()
-
         var annotationsToSync: [Annotation] = []
-        for annId in affectedIds {
-            if let ann = loadAnnotationById(annId) {
-                annotationsToSync.append(ann)
-                if let ckId = ann.ckRecordId {
-                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+        try transaction {
+            try exec(updateSql, parameters: [newId, now, oldId])
+            
+            for annId in affectedIds {
+                if let ann = loadAnnotationById(annId) {
+                    annotationsToSync.append(ann)
+                    if let ckId = ann.ckRecordId {
+                        try addPendingSync(ckRecordId: ckId, operation: "upload")
+                    }
                 }
             }
         }
+
+        clearAllCaches()
+        invalidateTree()
 
         DispatchQueue.main.async {
             NotificationCenter.default.post(

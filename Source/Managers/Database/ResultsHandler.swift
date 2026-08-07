@@ -63,15 +63,19 @@ class ResultsHandler {
         let now = Int64(Date().timeIntervalSince1970)
 
         let sql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colBkId) = ?"
-        try exec(sql, parameters: [newId, now, oldId])
-
-        // Fetch updated results to upload
         let fetchSql = "SELECT * FROM \(resultsTable) WHERE \(colBkId) = ?"
-        let updatedResults = try db.fetch(query: fetchSql, parameters: [newId]) { self.makeSyncResult(from: $0) }
 
-        for res in updatedResults {
-            if let ckId = res.ckRecordId {
-                try addPendingSync(ckRecordId: ckId, operation: "upload")
+        var updatedResults: [SyncResult] = []
+        try transaction {
+            try exec(sql, parameters: [newId, now, oldId])
+
+            // Fetch updated results to upload
+            updatedResults = try db.fetch(query: fetchSql, parameters: [newId]) { self.makeSyncResult(from: $0) }
+
+            for res in updatedResults {
+                if let ckId = res.ckRecordId {
+                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
             }
         }
         return updatedResults
