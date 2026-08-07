@@ -879,58 +879,96 @@ extension String {
 extension String {
 
     func normalizedForMatching() -> String {
-        return filter { !$0.isArabicHarakat() }
+        removingHarakat()
     }
 }
 
 extension String {
-    // Cari range di teks original (dengan harakat) berdasarkan selected text dan posisi perkiraan
-    func findRangeInOriginal(selectedText: String, approximateRange: NSRange) -> NSRange {
-        // Bersihkan harakat dari selected text dan self
-        let cleanSelected = selectedText.normalizedForMatching()
+    /* Cari range di teks original (dengan harakat).
+     `approximateRange` berada dalam koordinat NO-HARAKAT (sourceText yang sudah di-strip).
+     `self` adalah teks WITH-HARAKAT (diacText / nash asli).
 
+     Solusi: strip harakat dari self sambil membangun offsetMap ke posisi asli,
+     cari selectedText di no-harakat space (koordinat cocok dengan approximateRange),
+     lalu gunakan offsetMap untuk menghasilkan range di with-harakat string. */
+    func findRangeInOriginal(selectedText: String, approximateRange: NSRange) -> NSRange {
+        let cleanSelected = selectedText.normalizedForMatching()
         guard !cleanSelected.isEmpty else { return approximateRange }
 
-        // Cari posisi di teks tanpa harakat
-        let nsClean = self as NSString
-        let foundRange = nsClean.range(of: cleanSelected, options: .diacriticInsensitive)
+        // Bangun versi no-harakat dari self + offsetMap: [noHarakatUtf16Idx -> withHarakatUtf16Idx]
+        var noHarakatText = ""
+        noHarakatText.reserveCapacity(utf16.count)
+        // +1 untuk sentinel di akhir
+        var offsetMap = [Int]()
+        offsetMap.reserveCapacity(utf16.count + 1)
 
-        guard foundRange.location != NSNotFound else {
-            return approximateRange // fallback
+        var withHarakatIdx = 0
+        for scalar in unicodeScalars {
+            let len = scalar.utf16.count
+            if !scalar.isArabicHarakat {
+                for _ in 0..<len { offsetMap.append(withHarakatIdx) }
+                noHarakatText.unicodeScalars.append(scalar)
+            }
+            withHarakatIdx += len
         }
+        offsetMap.append(withHarakatIdx) // sentinel
 
-        return foundRange
+        // Cari di no-harakat space (koordinat sama dengan approximateRange)
+        let nsNoHarakat = noHarakatText as NSString
+        let totalLen = nsNoHarakat.length
+        let cleanLen = (cleanSelected as NSString).length
+        let radius = 300
+        let searchStart = max(0, approximateRange.location - radius)
+        let searchEnd = min(totalLen, approximateRange.location + approximateRange.length + radius + cleanLen)
+        let searchLength = searchEnd - searchStart
+
+        var found = NSRange(location: NSNotFound, length: 0)
+        if searchLength > 0 {
+            found = nsNoHarakat.range(
+                of: cleanSelected,
+                options: .diacriticInsensitive,
+                range: NSRange(location: searchStart, length: searchLength)
+            )
+        }
+        if found.location == NSNotFound {
+            found = nsNoHarakat.range(of: cleanSelected, options: .diacriticInsensitive)
+        }
+        guard found.location != NSNotFound else { return approximateRange }
+
+        // Map posisi no-harakat → posisi with-harakat via offsetMap
+        let mapStart = min(found.location, offsetMap.count - 1)
+        let mapEnd   = min(found.location + found.length, offsetMap.count - 1)
+        let harakatStart  = offsetMap[mapStart]
+        let harakatEnd    = offsetMap[mapEnd]
+        return NSRange(location: harakatStart, length: max(0, harakatEnd - harakatStart))
     }
 
     func calculateRangeWithoutHarakat(from sourceRange: NSRange, in sourceTextWithHarakat: String) -> NSRange {
-        let sourceNS = sourceTextWithHarakat as NSString
-
-        // 1. Hitung offset start (skip harakat)
         var startOffset = 0
-        for i in 0..<sourceRange.location {
-            let char = sourceNS.character(at: i)
-            let scalar = UnicodeScalar(char)!
-            let c = Character(scalar)
-            if !c.isArabicHarakat() {
-                startOffset += 1
-            }
-        }
-
-        // 2. Hitung length (skip harokat)
         var selectedLength = 0
-        for i in sourceRange.location..<(sourceRange.location + sourceRange.length) {
-            let char = sourceNS.character(at: i)
-            let scalar = UnicodeScalar(char)!
-            let c = Character(scalar)
-            if !c.isArabicHarakat() {
-                selectedLength += 1
+        var currentUtf16 = 0
+
+        for scalar in sourceTextWithHarakat.unicodeScalars {
+            let len = scalar.utf16.count
+            let isHarakat = scalar.isArabicHarakat
+
+            if currentUtf16 < sourceRange.location {
+                if !isHarakat {
+                    startOffset += len
+                }
+            } else if currentUtf16 < sourceRange.location + sourceRange.length {
+                if !isHarakat {
+                    selectedLength += len
+                }
+            } else {
+                break
             }
+
+            currentUtf16 += len
         }
 
-        // 3. Di teks tanpa harakat (self), posisi langsung = offset
         return NSRange(location: startOffset, length: selectedLength)
     }
-
 }
 
 extension Character {
