@@ -46,7 +46,15 @@ class ResultNode: Identifiable, Hashable {
     var nearDistance: Int
     let items: [SavedResultsItem]
 
-    init(id: Int64, parentId: Int64?, name: String, lastModified: Int64? = nil, searchMode: Int = 0, nearDistance: Int = 10, items: [SavedResultsItem]) {
+    init(
+        id: Int64,
+        parentId: Int64?,
+        name: String,
+        lastModified: Int64? = nil,
+        searchMode: Int = 0,
+        nearDistance: Int = 10,
+        items: [SavedResultsItem]
+    ) {
         self.id = id
         self.parentId = parentId
         self.name = name

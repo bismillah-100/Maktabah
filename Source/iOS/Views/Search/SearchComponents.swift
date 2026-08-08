@@ -120,10 +120,14 @@ struct SearchHistoryOverlay: View {
     private var inputControls: some View {
         HStack(spacing: 12) {
             Picker("Mode", selection: $viewModel.searchMode) {
-                Image(systemName: "text.quote").tag(SearchMode.phrase)
-                Image(systemName: "checklist.checked").tag(SearchMode.contains)
-                Image(systemName: "checklist").tag(SearchMode.or)
-                Image(systemName: "text.word.spacing").tag(SearchMode.near)
+                Image(systemName: SearchMode.imageNameForMode(.phrase))
+                    .tag(SearchMode.phrase)
+                Image(systemName: SearchMode.imageNameForMode(.contains))
+                    .tag(SearchMode.contains)
+                Image(systemName: SearchMode.imageNameForMode(.or))
+                    .tag(SearchMode.or)
+                Image(systemName: SearchMode.imageNameForMode(.near))
+                    .tag(SearchMode.near)
             }
             .controlSize(.regular)
             .pickerStyle(.segmented)

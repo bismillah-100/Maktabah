@@ -478,6 +478,11 @@ extension ResultsViewManager: NSOutlineViewDelegate {
             ) as? NSTableCellView,
             let textField = cell.textField
             {
+                let mode = SearchMode(rawValue: result.searchMode) ?? .phrase
+                let imageName = SearchMode.imageNameForMode(mode)
+                cell.imageView?.image = NSImage(
+                    systemSymbolName: imageName, accessibilityDescription: nil
+                )
                 textField.stringValue = "\(result.name)"
                 textField.delegate = self
                 textField.isEditable = true

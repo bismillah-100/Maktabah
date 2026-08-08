@@ -329,7 +329,8 @@ struct ResultRow: View {
     var body: some View {
         Button(action: action) {
             HStack {
-                Image(systemName: "doc.text.magnifyingglass")
+                let mode = SearchMode(rawValue: result.searchMode) ?? .phrase
+                Image(systemName: SearchMode.imageNameForMode(mode))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading) {
                     Text(result.name)
