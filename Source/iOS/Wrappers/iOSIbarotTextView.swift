@@ -432,7 +432,10 @@ struct iOSIbarotTextView: UIViewRepresentable {
         }
 
         textView.attributedText = attributedString
-        
+        textView.invalidateIntrinsicContentSize()
+        textView.setNeedsLayout()
+        textView.layoutIfNeeded()
+
         // Restore Scroll & Selection exactly once per content ID
         if context.coordinator.restoredContentId != viewModel.currentContentId ||
             viewModel.needsScrollRestore
