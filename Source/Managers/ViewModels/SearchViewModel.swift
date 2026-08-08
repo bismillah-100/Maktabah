@@ -519,7 +519,7 @@ final class SearchViewModel: ViewModelBase {
             await ldm.performSearch(
                 tableToScan: tablesToScan,
                 searchEngine: searchEngine,
-                query: query,
+                query: query.replacing("،", with: ","),
                 mode: searchMode,
                 onInitialize: { [weak self] total in
                     self?.totalTables = total
