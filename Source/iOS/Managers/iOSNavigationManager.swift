@@ -376,13 +376,19 @@ class iOSNavigationManager {
             activeTabId = openTabs[existingTabIndex].id
             // Update initialContentId if provided, so the reader can jump to it
             if let contentId = initialContentId {
-                var updatedTab = openTabs[existingTabIndex]
-                updatedTab.initialContentId = contentId
-                updatedTab.viewModel.searchText = searchText ?? ""
-                updatedTab.viewModel.searchMode = searchMode
-                updatedTab.viewModel.nearDistance = nearDistance
-                updatedTab.viewModel.targetAnnotation = targetAnnotation
-                updatedTab.viewModel.fetchContentById(contentId)
+                let updatedTab = openTabs[existingTabIndex]
+                let isSameContent = updatedTab.viewModel.currentContentId == contentId
+                let hasNewSearch = (searchText != nil && !searchText!.isEmpty)
+                let hasNewTarget = (targetAnnotation != nil)
+
+                if !isSameContent || hasNewSearch || hasNewTarget {
+                    updatedTab.viewModel.searchText = searchText ?? ""
+                    updatedTab.viewModel.searchMode = searchMode
+                    updatedTab.viewModel.nearDistance = nearDistance
+                    updatedTab.viewModel.targetAnnotation = targetAnnotation
+                    updatedTab.viewModel.fetchContentById(contentId)
+                }
+
                 openTabs[existingTabIndex] = updatedTab
             } else {
                 let updatedTab = openTabs[existingTabIndex]
