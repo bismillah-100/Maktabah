@@ -171,7 +171,9 @@ struct SearchModeView: View {
                     navigationManager.openBook(
                         bookData,
                         initialContentId: item.bookId,
-                        searchText: navigationManager.searchViewModel.query
+                        searchText: navigationManager.searchViewModel.query,
+                        searchMode: navigationManager.searchViewModel.searchMode,
+                        nearDistance: navigationManager.searchViewModel.nearDistance
                     )
                 }
             }

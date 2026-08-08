@@ -986,20 +986,24 @@ extension IbarotTextView: TextViewRenderable {
     func highlightAndScrollToText(_ searchText: String, mode: SearchMode?, nearDistance: Int) async {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
-            let range: NSRange? = await MainActor.run { [weak self] in
-                guard let self, let r = textStorage?.highlightSearchText(
+            let ranges: [NSRange] = await MainActor.run { [weak self] in
+                guard let self else { return [] }
+                let ranges = textStorage?.highlightSearchText(
                     searchText: searchText,
                     mode: mode,
                     baseColor: .highlightText,
                     nearDistance: nearDistance
-                ) else { return nil }
-                needsLayout = true
-                scrollRangeToVisible(r)
-                enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                layoutSubtreeIfNeeded()
-                return r
+                ) ?? []
+                
+                if let firstRange = ranges.first {
+                    needsLayout = true
+                    scrollRangeToVisible(firstRange)
+                    enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                    layoutSubtreeIfNeeded()
+                }
+                return ranges
             }
-            guard let range else { return }
+            guard let range = ranges.first else { return }
             await showFindIndicator(for: range)
         }
     }

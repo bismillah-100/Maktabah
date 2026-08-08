@@ -74,6 +74,7 @@ class ReaderViewModel: ViewModelBase {
 
     var searchText: String = ""
     var searchMode: SearchMode?
+    var nearDistance: Int = 10
     var targetAnnotation: Annotation?
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
@@ -524,7 +525,8 @@ class ReaderViewModel: ViewModelBase {
 
     func didSelectSearch(query: String, contentId: Int) {
         searchText = query
-        searchMode = searchViewModel.mode
+        searchMode = searchViewModel.searchMode
+        nearDistance = searchViewModel.nearDistance
         fetchContentById(contentId)
     }
 

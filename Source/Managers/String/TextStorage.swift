@@ -11,20 +11,20 @@ import AppKit
 import UIKit
 #endif
 
-extension NSTextStorage {
+extension NSMutableAttributedString {
     @discardableResult
     func highlightSearchText(
         searchText: String,
         mode: SearchMode?,
         baseColor: PlatformColor,
         nearDistance: Int = 10
-    ) -> NSRange? {
+    ) -> [NSRange] {
         let searchMode = mode ?? (searchText.uppercased().contains("NEAR") ? .near : .contains)
 
         let searchTerms = FtsQueryParser.extractKeywords(query: searchText, mode: searchMode)
             .map { $0.replacingHonorificPhrasesIfSupported().text }
 
-        guard !searchTerms.isEmpty else { return nil }
+        guard !searchTerms.isEmpty else { return [] }
 
         let colors: [PlatformColor] = [
             .highlightText,
@@ -44,7 +44,7 @@ extension NSTextStorage {
             ranges = string.findArabicMatchingRanges(keywords: searchTerms)
         }
 
-        guard !ranges.isEmpty else { return nil }
+        guard !ranges.isEmpty else { return [] }
 
         beginEditing()
         for (index, range) in ranges.enumerated() {
@@ -62,8 +62,8 @@ extension NSTextStorage {
         }
         endEditing()
 
-        // Kembalikan range match pertama untuk scroll-to-visible
-        return ranges.first
+        // Kembalikan semua range match untuk popup multi-keyword (misal mode NEAR)
+        return ranges
     }
 
     #if os(macOS)

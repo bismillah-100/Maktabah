@@ -72,28 +72,32 @@ class iOSCustomIbarotTextView: UITextView {
         Task { [weak self] in
             await Task.yield()
             await Task.yield()
-            self?.popupText(for: range)
+            self?.popupText(for: [range])
         }
     }
 
-    func popupText(for range: NSRange) {
+    func popupText(for ranges: [NSRange]) {
         let nsString = textStorage.string as NSString
-        guard range.location >= 0,
-              range.length > 0,
-              range.location + range.length <= nsString.length else { return }
+        guard let firstRange = ranges.first,
+              firstRange.location >= 0,
+              firstRange.length > 0,
+              firstRange.location + firstRange.length <= nsString.length else { return }
 
-        guard let startPos = position(from: beginningOfDocument, offset: range.location),
-              let endPos = position(from: startPos, offset: range.length),
-              let textRange = textRange(from: startPos, to: endPos) else { return }
 
-        let rects = selectionRects(for: textRange)
-        
+
         let path = UIBezierPath()
-        for selectionRect in rects {
-            let rect = selectionRect.rect
-            guard rect.width > 0, rect.height > 0 else { continue }
-            // Tambahkan padding kecil agar highlight tidak terlalu mepet
-            path.append(UIBezierPath(rect: rect.insetBy(dx: -2, dy: -2)))
+        for range in ranges {
+            guard let startPos = position(from: beginningOfDocument, offset: range.location),
+                  let endPos = position(from: startPos, offset: range.length),
+                  let textRange = textRange(from: startPos, to: endPos) else { continue }
+            
+            let rects = selectionRects(for: textRange)
+            for selectionRect in rects {
+                let rect = selectionRect.rect
+                guard rect.width > 0, rect.height > 0 else { continue }
+                // Tambahkan padding kecil agar highlight tidak terlalu mepet
+                path.append(UIBezierPath(rect: rect.insetBy(dx: -2, dy: -2)))
+            }
         }
         
         let totalRect = path.bounds
@@ -111,27 +115,23 @@ class iOSCustomIbarotTextView: UITextView {
         bgLayer.fillColor = UIColor.systemYellow.cgColor
         containerView.layer.addSublayer(bgLayer)
         
-        // 2. Teks di atasnya menggunakan UITextView dengan mengekstrak paragraf penuh
-        // Ini memastikan indentasi baris pertama selaras sempurna dengan teks asli
-        let fullParaRange = nsString.paragraphRange(for: range)
-        guard fullParaRange.location != NSNotFound,
-              fullParaRange.location + fullParaRange.length <= nsString.length else { return }
-        
-        let attrText = NSMutableAttributedString(attributedString: textStorage.attributedSubstring(from: fullParaRange))
+        // 2. Teks di atasnya menggunakan UITextView dengan mengekstrak teks penuh halaman
+        // Ini memastikan layout selaras sempurna dengan teks asli
+        let attrText = NSMutableAttributedString(attributedString: textStorage)
         let fullRangeLocal = NSRange(location: 0, length: attrText.length)
         
-        // Sembunyikan semua teks di paragraf & hapus atribut anotasi lain (seperti link yang bisa meng-override warna text)
-        attrText.addAttribute(.foregroundColor, value: UIColor.clear, range: fullRangeLocal)
-        attrText.removeAttribute(.link, range: fullRangeLocal)
-        attrText.removeAttribute(.backgroundColor, range: fullRangeLocal)
-        attrText.removeAttribute(.underlineStyle, range: fullRangeLocal)
-        attrText.removeAttribute(.underlineColor, range: fullRangeLocal)
+        // Sembunyikan semua teks & hapus atribut anotasi lain (seperti link yang bisa meng-override warna text)
+        attrText.addAttribute(NSAttributedString.Key.foregroundColor, value: UIColor.clear, range: fullRangeLocal)
+        attrText.removeAttribute(NSAttributedString.Key.link, range: fullRangeLocal)
+        attrText.removeAttribute(NSAttributedString.Key.backgroundColor, range: fullRangeLocal)
+        attrText.removeAttribute(NSAttributedString.Key.underlineStyle, range: fullRangeLocal)
+        attrText.removeAttribute(NSAttributedString.Key.underlineColor, range: fullRangeLocal)
         
         // Hanya tampilkan bagian teks yang dianotasi
-        let localLocation = range.location - fullParaRange.location
-        guard localLocation >= 0, localLocation + range.length <= attrText.length else { return }
-        let localTargetRange = NSRange(location: localLocation, length: range.length)
-        attrText.addAttribute(.foregroundColor, value: UIColor.black, range: localTargetRange)
+        for rng in ranges {
+            guard rng.location >= 0, rng.location + rng.length <= attrText.length else { continue }
+            attrText.addAttribute(NSAttributedString.Key.foregroundColor, value: UIColor.black, range: rng)
+        }
         
         // Buat UITextView dengan lebar yang SAMA dengan view aslinya agar layoutnya 100% identik
         let textOverlay = UITextView(frame: CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height))
@@ -149,24 +149,10 @@ class iOSCustomIbarotTextView: UITextView {
         // Paksa layout agar kita bisa mencari posisi presisinya
         textOverlay.layoutIfNeeded()
         
-        if let localStart = textOverlay.position(from: textOverlay.beginningOfDocument, offset: localTargetRange.location),
-           let localEnd = textOverlay.position(from: localStart, offset: localTargetRange.length),
-           let localTextRange = textOverlay.textRange(from: localStart, to: localEnd) {
-            
-            let localRects = textOverlay.selectionRects(for: localTextRange)
-            var localTotalRect = CGRect.null
-            for r in localRects {
-                guard r.rect.width > 0, r.rect.height > 0 else { continue }
-                localTotalRect = localTotalRect.isNull ? r.rect : localTotalRect.union(r.rect)
-            }
-            
-            if !localTotalRect.isNull {
-                // Beri ruang tinggi secukupnya
-                textOverlay.frame.size.height = max(self.bounds.height, textOverlay.contentSize.height)
-                // Geser posisinya sehingga bagian target text tepat berada di (0,0) dari containerView
-                textOverlay.frame.origin = CGPoint(x: -localTotalRect.minX, y: -localTotalRect.minY)
-            }
-        }
+        // Beri ruang tinggi secukupnya
+        textOverlay.frame.size.height = max(self.bounds.height, textOverlay.contentSize.height)
+        // Geser posisinya sehingga bagian target text tepat berada di (0,0) dari containerView
+        textOverlay.frame.origin = CGPoint(x: -totalRect.minX, y: -totalRect.minY)
         
         containerView.addSubview(textOverlay)
         addSubview(containerView)
@@ -424,6 +410,27 @@ struct iOSIbarotTextView: UIViewRepresentable {
             }
         }
 
+        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
+        
+        var searchRanges: [NSRange] = []
+        var shouldTriggerSearchAnimation = false
+        
+        if !searchText.isEmpty {
+            searchRanges = attributedString.highlightSearchText(
+                searchText: searchText,
+                mode: searchMode,
+                baseColor: .highlightText,
+                nearDistance: nearDistance
+            )
+            
+            if context.coordinator.processedSearchText != searchText || contentIdChanged {
+                context.coordinator.processedSearchText = searchText
+                shouldTriggerSearchAnimation = true
+            }
+        } else {
+            context.coordinator.processedSearchText = nil
+        }
+
         textView.attributedText = attributedString
         
         // Restore Scroll & Selection exactly once per content ID
@@ -442,10 +449,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
             context.coordinator.restoredContentId = viewModel.currentContentId
         }
 
-        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
         if contentIdChanged {
             context.coordinator.lastHighlightedContentId = viewModel.currentContentId
-            context.coordinator.processedSearchText = nil
             context.coordinator.processedAnnotationId = nil
         }
 
@@ -460,30 +465,15 @@ struct iOSIbarotTextView: UIViewRepresentable {
             context.coordinator.processedAnnotationId = nil
         }
         
-        if !searchText.isEmpty {
-            if context.coordinator.processedSearchText != searchText || contentIdChanged {
-                context.coordinator.processedSearchText = searchText
-
-                guard let firstRange = textView.textStorage
-                    .highlightSearchText(
-                        searchText: searchText,
-                        mode: searchMode,
-                        baseColor: .highlightText,
-                        nearDistance: nearDistance
-                    )
-                else { return }
-
-                DispatchQueue.main.async { [weak textView, firstRange] in
-                    textView?.scrollRangeToVisible(firstRange)
-                    Task { [weak textView] in
-                        await Task.yield()
-                        await Task.yield()
-                        textView?.popupText(for: firstRange)
-                    }
+        if shouldTriggerSearchAnimation, !searchRanges.isEmpty, let firstRange = searchRanges.first {
+            DispatchQueue.main.async { [weak textView] in
+                textView?.scrollRangeToVisible(firstRange)
+                Task { [weak textView] in
+                    await Task.yield()
+                    await Task.yield()
+                    textView?.popupText(for: searchRanges)
                 }
             }
-        } else {
-            context.coordinator.processedSearchText = nil
         }
     }
 

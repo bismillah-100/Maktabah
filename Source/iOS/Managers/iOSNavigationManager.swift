@@ -139,9 +139,9 @@ class iOSNavigationManager {
         currentMode = mode
     }
 
-    func openBook(_ book: BooksData, initialContentId: Int? = nil, searchText: String? = nil, targetAnnotation: Annotation? = nil) {
+    func openBook(_ book: BooksData, initialContentId: Int? = nil, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil) {
         Task {
-            await openBookAsync(book, initialContentId: initialContentId, searchText: searchText, targetAnnotation: targetAnnotation)
+            await openBookAsync(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation)
         }
     }
 
@@ -262,7 +262,7 @@ class iOSNavigationManager {
         activeIntegrationStates.removeAll { $0.id == state.id }
     }
 
-    private func openBookAsync(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, targetAnnotation: Annotation? = nil) async {
+    private func openBookAsync(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil) async {
         if AppConfig.isUsingBundleMode,
            !BookArchiveIntegrator.shared.isBookIntegrated(book)
         {
@@ -270,7 +270,7 @@ class iOSNavigationManager {
             return
         }
 
-        presentReader(book, initialContentId: initialContentId, searchText: searchText, targetAnnotation: targetAnnotation)
+        presentReader(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation)
 
         await Task.yield()
 
@@ -364,7 +364,7 @@ class iOSNavigationManager {
         state.progress = 0
     }
 
-    private func presentReader(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, targetAnnotation: Annotation? = nil) {
+    private func presentReader(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil) {
         switchToMode(.viewer)
         clearPendingBookIntegration()
 
@@ -379,18 +379,24 @@ class iOSNavigationManager {
                 var updatedTab = openTabs[existingTabIndex]
                 updatedTab.initialContentId = contentId
                 updatedTab.viewModel.searchText = searchText ?? ""
+                updatedTab.viewModel.searchMode = searchMode
+                updatedTab.viewModel.nearDistance = nearDistance
                 updatedTab.viewModel.targetAnnotation = targetAnnotation
                 updatedTab.viewModel.fetchContentById(contentId)
                 openTabs[existingTabIndex] = updatedTab
             } else {
                 let updatedTab = openTabs[existingTabIndex]
                 updatedTab.viewModel.searchText = searchText ?? ""
+                updatedTab.viewModel.searchMode = searchMode
+                updatedTab.viewModel.nearDistance = nearDistance
                 updatedTab.viewModel.targetAnnotation = targetAnnotation
                 openTabs[existingTabIndex] = updatedTab
             }
         } else {
             let viewModel = ReaderViewModel(book: book)
             viewModel.searchText = searchText ?? ""
+            viewModel.searchMode = searchMode
+            viewModel.nearDistance = nearDistance
             viewModel.targetAnnotation = targetAnnotation
             viewModel.loadInitialContent(initialContentId: initialContentId)
             let newTab = ReaderTab(id: UUID(), book: book, initialContentId: initialContentId, viewModel: viewModel)
