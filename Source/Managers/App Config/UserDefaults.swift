@@ -289,6 +289,18 @@ extension UserDefaults {
         }
     }
 
+    // MARK: - searchNearDistance (Int)
+    static let searchNearDistanceKey = "searchNearDistance"
+    var searchNearDistance: Int {
+        get {
+            let val = integer(forKey: Self.searchNearDistanceKey)
+            return val <= 0 ? 10 : val
+        }
+        set {
+            set(newValue, forKey: Self.searchNearDistanceKey)
+        }
+    }
+
     enum TextViewKeys {
         static let fontSize = "textViewFontSize"
         static let fontName = "textViewFontName"

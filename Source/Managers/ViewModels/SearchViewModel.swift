@@ -22,7 +22,11 @@ final class SearchViewModel: ViewModelBase {
 
     var query: String = ""
     var searchMode: SearchMode = .phrase
-    var nearDistance: Int = 10
+    var nearDistance: Int = UserDefaults.standard.searchNearDistance {
+        didSet {
+            UserDefaults.standard.searchNearDistance = nearDistance
+        }
+    }
     private(set) var results: [SearchResultItem] = []
     private(set) var isSearching: Bool = false
     private(set) var isPaused: Bool = false

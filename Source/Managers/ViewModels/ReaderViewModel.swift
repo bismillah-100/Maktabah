@@ -74,7 +74,11 @@ class ReaderViewModel: ViewModelBase {
 
     var searchText: String = ""
     var searchMode: SearchMode?
-    var nearDistance: Int = 10
+    var nearDistance: Int = UserDefaults.standard.searchNearDistance {
+        didSet {
+            UserDefaults.standard.searchNearDistance = nearDistance
+        }
+    }
     var targetAnnotation: Annotation?
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
