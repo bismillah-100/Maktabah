@@ -132,7 +132,7 @@ class SearchWorker {
         var totalFetched = 0
 
         let tablesToProcess = allowedTables != nil
-            ? tables.filter { allowedTables!.contains($0) }
+            ? tables.filter { (allowedTables?.contains($0) ?? false) }
             : tables
 
         print("🔍 Archive \(archiveId): Mulai mencari di \(tablesToProcess.count) tables")

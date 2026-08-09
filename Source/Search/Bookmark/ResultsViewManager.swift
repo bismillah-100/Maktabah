@@ -424,11 +424,13 @@ extension ResultsViewManager: NSOutlineViewDelegate {
                 textField.lineBreakMode = .byTruncatingTail
                 cell?.addSubview(textField)
                 cell?.textField = textField
-                NSLayoutConstraint.activate([
-                    textField.leadingAnchor.constraint(equalTo: cell!.leadingAnchor, constant: 2),
-                    textField.trailingAnchor.constraint(equalTo: cell!.trailingAnchor, constant: -2),
-                    textField.centerYAnchor.constraint(equalTo: cell!.centerYAnchor)
-                ])
+                if let cell = cell {
+                    NSLayoutConstraint.activate([
+                        textField.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 2),
+                        textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -2),
+                        textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+                    ])
+                }
             }
             if let query = result.items.first?.query, !query.isEmpty {
                 cell?.textField?.stringValue = query
@@ -450,11 +452,13 @@ extension ResultsViewManager: NSOutlineViewDelegate {
                 textField.lineBreakMode = .byTruncatingTail
                 cell?.addSubview(textField)
                 cell?.textField = textField
-                NSLayoutConstraint.activate([
-                    textField.leadingAnchor.constraint(equalTo: cell!.leadingAnchor, constant: 2),
-                    textField.trailingAnchor.constraint(equalTo: cell!.trailingAnchor, constant: -2),
-                    textField.centerYAnchor.constraint(equalTo: cell!.centerYAnchor)
-                ])
+                if let cell = cell {
+                    NSLayoutConstraint.activate([
+                        textField.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 2),
+                        textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -2),
+                        textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
+                    ])
+                }
             }
             if let timestamp = result.lastModified {
                 let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
