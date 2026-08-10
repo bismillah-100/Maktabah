@@ -462,7 +462,7 @@ class OptionSearchVC: NSViewController {
         field.bezelStyle = .roundedBezel
         field.isHidden = true
         field.translatesAutoresizingMaskIntoConstraints = false
-        
+
         let widthConstraint = field.widthAnchor.constraint(
             equalToConstant: viewModel.searchMode != .near ? 0 : 45
         )
@@ -656,6 +656,9 @@ extension OptionSearchVC: LibraryViewDelegate {
 
 extension OptionSearchVC: ResultsDelegate {
     func didSelect(savedResults: [SavedResultsItem]) {
+        if let sheet = view.window?.attachedSheet {
+            view.window?.endSheet(sheet)
+        }
         viewModel.clearResults()
         tableView.reloadData()
         stopSearch(nil)
