@@ -3,12 +3,12 @@
     <channel>
         <title>Maktabah</title>
         <item>
-            <title>3.3.7</title>
-            <pubDate>Fri, 07 Aug 2026 01:52:23 +0000</pubDate>
-            <sparkle:version>135</sparkle:version>
-            <sparkle:shortVersionString>3.3.7</sparkle:shortVersionString>
+            <title>3.3.8</title>
+            <pubDate>Mon, 10 Aug 2026 12:10:29 +0000</pubDate>
+            <sparkle:version>140</sparkle:version>
+            <sparkle:shortVersionString>3.3.8</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.7.8</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v3.3.7/Maktabah-v3.3.7.zip" length="6930664" type="application/octet-stream" sparkle:edSignature="ugwRphZmVpdC1OrLKSAtoFsbBBEIHddxtj4jB2vAlZWuBvFSm0PJDFTJ+KOgiAKqzgEEUkofGd2JakWt5YkwAg=="/>
+            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v3.3.8/Maktabah-v3.3.8.zip" length="6923748" type="application/octet-stream" sparkle:edSignature="57gNtODXncPcbML2AR/fQP5FkoBcnRr36qhpnpInvUhWQVqtIbet5qJURKanprcIYa8wrOv5415zwqp21CxfBQ=="/>
             <sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>
         </item>
     </channel>
