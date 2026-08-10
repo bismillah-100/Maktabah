@@ -105,6 +105,7 @@ struct iOSAnnotationEditorSheet: View {
         updated.type = isUnderline ? .underline : .highlight
 
         updated.tags = tagsText
+            .replacingOccurrences(of: "،", with: ",")
             .split(separator: ",")
             .compactMap { let t = String($0).trimmingCharacters(in: .whitespacesAndNewlines); return t.isEmpty ? nil : t }
 
