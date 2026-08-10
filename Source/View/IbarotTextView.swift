@@ -108,10 +108,8 @@ class IbarotTextView: NSTextView {
                 let id = Int64(urlStr),
                 let ann = AnnotationManager.shared.loadAnnotationById(id)
             {
-                presentAnnotationEditor(
-                    ann,
-                    atCharIndex: charIndex
-                )
+                let charRange = NSRange(location: charIndex, length: 1)
+                presentAnnotationEditor(ann, displayedRange: charRange)
             }
         }
     }
@@ -676,14 +674,12 @@ class IbarotTextView: NSTextView {
         }
 
         if let existing = overlapping {
-            let middleIndex = displayedSelection.location + (displayedSelection.length / 2)
-            presentAnnotationEditor(existing, atCharIndex: middleIndex)
+            presentAnnotationEditor(existing, displayedRange: displayedSelection)
             return
         }
 
         let calculator = ArabicRangeCalculator()
 
-        let middleIndex = displayedSelection.location + (displayedSelection.length / 2)
         let ns = sourceTextForAnnotations() as NSString
         let selectedText = ns.substring(with: selection)
         let (rangeWithDiacritics, rangeWithoutDiacritics) =
@@ -711,7 +707,7 @@ class IbarotTextView: NSTextView {
             tags: []
         )
 
-        presentAnnotationEditor(ann, atCharIndex: middleIndex)
+        presentAnnotationEditor(ann, displayedRange: displayedSelection)
     }
 
     func refreshAnnotations() {
@@ -746,7 +742,7 @@ class IbarotTextView: NSTextView {
 
     func presentAnnotationEditor(
         _ annotation: Annotation,
-        atCharIndex charIndex: Int
+        displayedRange: NSRange
     ) {
         let editor = AnnotationEditorVC()
         editor.annotation = annotation
@@ -755,47 +751,27 @@ class IbarotTextView: NSTextView {
         pop.contentViewController = editor
         pop.behavior = .transient
 
-        let anchorView = enclosingScrollView?.contentView ?? self
-        var glyphRect: NSRect = .zero
-
-        if let tlm = textLayoutManager {
-            let docStart = tlm.documentRange.location
-
-            // Setara dengan TextKit 1 boundingRect(forGlyphRange:in:textContainer)
-            if let location = tlm.location(docStart, offsetBy: charIndex),
-               let endLocation = tlm.location(location, offsetBy: 1),
-               let textRange = NSTextRange(location: location, end: endLocation)
-            {
-                tlm.enumerateTextSegments(
-                    in: textRange,
-                    type: .standard,
-                    options: []
-                ) { _, segmentFrame, _, _ in
-                    glyphRect = segmentFrame
-                    return false
-                }
-            }
-        }
-
-        if glyphRect != .zero {
-            let containerOrigin = textContainerOrigin
-            let rectInView = NSRect(
-                x: glyphRect.origin.x + containerOrigin.x,
-                y: glyphRect.origin.y + containerOrigin.y,
-                width: max(glyphRect.width, 1),
-                height: max(glyphRect.height, 1)
-            )
-            pop.show(relativeTo: rectInView, of: anchorView, preferredEdge: .maxY)
+        // firstRect(forCharacterRange:) returns a rect in screen coordinates —
+        // the same API used by the system for autocomplete/tooltip, guaranteed precision.
+        var actualRange = displayedRange
+        let rectInWindow = firstRect(forCharacterRange: displayedRange, actualRange: &actualRange)
+        let anchor: NSRect
+        if let window {
+            let rectInView = convert(window.convertFromScreen(rectInWindow), from: nil)
+            anchor = rectInView == .zero ? bounds : rectInView
         } else {
-            pop.show(relativeTo: bounds, of: anchorView, preferredEdge: .maxY)
+            anchor = bounds
         }
+
+        pop.show(relativeTo: anchor, of: self, preferredEdge: .maxY)
     }
 
     @objc private func showNoteFromMenu(_ sender: NSMenuItem) {
         if let (_, charIndex, ann) = sender.representedObject
             as? (Int64, Int, Annotation)
         {
-            presentAnnotationEditor(ann, atCharIndex: charIndex)
+            let charRange = NSRange(location: charIndex, length: 1)
+            presentAnnotationEditor(ann, displayedRange: charRange)
         }
     }
 

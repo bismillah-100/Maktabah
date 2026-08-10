@@ -99,7 +99,7 @@ class QuranDataManager {
             if surahMap[sora] == nil {
                 surahMap[sora] = (surahName, [])
             }
-            surahMap[sora]!.aya.append(ayat)
+            surahMap[sora]?.aya.append(ayat)
         }
 
         // Build node berurutan

@@ -24,6 +24,10 @@ actor TarjamahDatabaseActor {
         return try conn.queryRows(sql: sql, params: params)
     }
 
+    func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T] {
+        return try conn.queryMapped(sql: sql, params: params, mapper: mapper)
+    }
+
     func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen] {
         return try conn.queryTarjamah(sql: sql, params: params, isIsoName: isIsoName)
     }
@@ -381,24 +385,42 @@ class TarjamahGlobalManager {
             LIMIT ?
             """
 
-            let rowsB = try await conn.queryRows(
+            let rowsB = try await conn.queryMapped(
                 sql: sqlB,
                 params: [.text(ftsQuery), .int(limit)]
-            )
+            ) { stmt -> TarjamahMen in
+                var nameStr = ""
+                let type = sqlite3_column_type(stmt, 0)
 
-            for (index, r) in rowsB.enumerated() {
+                if type == SQLITE_TEXT {
+                    if let txt = sqlite3_column_text(stmt, 0) {
+                        let bytes = sqlite3_column_bytes(stmt, 0)
+                        let buffer = UnsafeBufferPointer(start: txt, count: Int(bytes))
+                        nameStr = String(decoding: buffer, as: UTF8.self)
+                    }
+                } else if type == SQLITE_BLOB {
+                    if let blobPointer = sqlite3_column_blob(stmt, 0) {
+                        let blobSize = Int(sqlite3_column_bytes(stmt, 0))
+                        let buffer = UnsafeRawBufferPointer(start: blobPointer, count: blobSize)
+                        nameStr = ReusableFunc.decompressData(from: buffer)
+                    }
+                }
+
+                let bk = Int(sqlite3_column_int64(stmt, 2))
+                let id = Int(sqlite3_column_int64(stmt, 3))
+
+                return TarjamahMen(name: nameStr, bk: bk, id: id)
+            }
+
+            for (index, mutT) in rowsB.enumerated() {
                 if index % 10 == 0 {
                     if stopFlag() || Task.isCancelled { return }
                     await pauseController?.waitIfPaused()
                 }
 
-                let name  = r["Name"] as? String ?? ""
-                let bk    = (r["Bk"] as? Int) ?? 0
-                let id    = (r["Id"] as? Int) ?? 0
+                var t = mutT
 
-                var t = TarjamahMen(name: name, bk: bk, id: id)
-
-                if let bookData = LibraryDataManager.shared.getBook([bk]).first {
+                if let bookData = LibraryDataManager.shared.getBook([t.bk]).first {
                     t.bookTitle = bookData.book
                     t.archive   = bookData.archive
                 }

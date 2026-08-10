@@ -306,7 +306,6 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                     upserted.append(entry)
                 } else {
                     if let ckId = entry.ckRecordId {
-                        try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                         ckIdsToDelete.append(ckId)
                     }
                     entriesByBookId.removeValue(forKey: bookId)
@@ -321,7 +320,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         DispatchQueue.global(qos: .background).async {
             do {
                 try HistoryDatabaseManager.shared.transaction {
-                    try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
+                    try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds, trackPending: false)
                     for ckId in ckIdsToDeleteSafe {
                         try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                     }
