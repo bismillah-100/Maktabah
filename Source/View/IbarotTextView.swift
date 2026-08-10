@@ -751,12 +751,17 @@ class IbarotTextView: NSTextView {
         pop.contentViewController = editor
         pop.behavior = .transient
 
-        // firstRect(forCharacterRange:) mengembalikan rect dalam window coordinate —
-        // API yang sama dipakai sistem untuk autocomplete/tooltip, presisi terjamin.
+        // firstRect(forCharacterRange:) returns a rect in screen coordinates —
+        // the same API used by the system for autocomplete/tooltip, guaranteed precision.
         var actualRange = displayedRange
         let rectInWindow = firstRect(forCharacterRange: displayedRange, actualRange: &actualRange)
-        let rectInView = convert(window?.convertFromScreen(rectInWindow) ?? bounds, from: nil)
-        let anchor = rectInView == .zero ? bounds : rectInView
+        let anchor: NSRect
+        if let window {
+            let rectInView = convert(window.convertFromScreen(rectInWindow), from: nil)
+            anchor = rectInView == .zero ? bounds : rectInView
+        } else {
+            anchor = bounds
+        }
 
         pop.show(relativeTo: anchor, of: self, preferredEdge: .maxY)
     }
