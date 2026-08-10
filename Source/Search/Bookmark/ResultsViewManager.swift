@@ -404,6 +404,22 @@ extension ResultsViewManager: NSOutlineViewDataSource {
             }
         }
     }
+
+    /// Simpan ID unik item
+    func outlineView(_ outlineView: NSOutlineView, persistentObjectForItem item: Any?) -> Any? {
+        if let folder = item as? FolderNode {
+            return folder.id
+        }
+        return nil
+    }
+
+    /// Restore item dari ID unik saat data di-load
+    func outlineView(_ outlineView: NSOutlineView, itemForPersistentObject object: Any) -> Any? {
+        if let id = object as? Int64 {
+            return vm.findFolder(id)
+        }
+        return nil
+    }
 }
 
 extension ResultsViewManager: NSOutlineViewDelegate {

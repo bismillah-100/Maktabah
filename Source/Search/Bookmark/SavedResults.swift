@@ -65,6 +65,7 @@ class SavedResults: NSViewController {
         outlineView.addTableColumn(dateCol)
 
         outlineView.autosaveTableColumns = true
+        outlineView.autosaveExpandedItems = true
         outlineView.autosaveName = "searchResultsOutlineView"
 
         let headerMenu = NSMenu()
