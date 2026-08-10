@@ -416,35 +416,34 @@ extension String {
     func findArabicMatchingRangesWithIndex(keywords: [String]) -> [(range: NSRange, keywordIndex: Int)] {
         guard !keywords.isEmpty, !self.isEmpty else { return [] }
 
-        var normalizedChars: [Character] = []
-        normalizedChars.reserveCapacity(self.count)
+        var normalizedScalars: [UnicodeScalar] = []
+        normalizedScalars.reserveCapacity(self.unicodeScalars.count)
         var indexMap: [Int] = []
-        indexMap.reserveCapacity(self.count)
+        indexMap.reserveCapacity(self.unicodeScalars.count)
 
         var utf16Offset = 0
-        for char in self {
-            let scalars = char.unicodeScalars
-            let isDiacritic = scalars.count == 1 && scalars.first.map { $0.isArabicHarakat } ?? false
-            let isTatweel = scalars.count == 1 && scalars.first?.value == 0x0640
-
-            if isDiacritic || isTatweel {
-                utf16Offset += char.utf16.count
+        for scalar in self.unicodeScalars {
+            let scalarLen = scalar.utf16.count
+            let val = scalar.value
+            
+            if scalar.isArabicHarakat || val == 0x0640 {
+                utf16Offset += scalarLen
                 continue
             }
 
-            let normalizedChar: Character = switch scalars.first?.value {
-            case 0x0623, 0x0625, 0x0622, 0x0671: "ا"
-            case 0x0629: "ه"
-            case 0x0649: "ي"
-            default: char
+            let normalizedScalar: UnicodeScalar = switch val {
+            case 0x0623, 0x0625, 0x0622, 0x0671: UnicodeScalar(0x0627)! // ا
+            case 0x0629: UnicodeScalar(0x0647)! // ه
+            case 0x0649: UnicodeScalar(0x064A)! // ي
+            default: scalar
             }
 
             indexMap.append(utf16Offset)
-            normalizedChars.append(normalizedChar)
-            utf16Offset += char.utf16.count
+            normalizedScalars.append(normalizedScalar)
+            utf16Offset += scalarLen
         }
 
-        let normalizedText = String(normalizedChars)
+        let normalizedText = String(String.UnicodeScalarView(normalizedScalars))
         var ranges: [(range: NSRange, keywordIndex: Int)] = []
 
         let prefixes: [String] = [
@@ -485,31 +484,34 @@ extension String {
         }
 
         var textWords: [TextWord] = []
-        var wordStart: String.Index? = nil
+        textWords.reserveCapacity(normalizedText.count / 5)
+        
+        var wordStartCharIdx: String.Index? = nil
+        var wordStartScalarOffset: Int = 0
+        var currentScalarOffset = 0
 
         for idx in normalizedText.indices {
             let ch = normalizedText[idx]
             if ch.isWhitespace || ch.isPunctuation {
-                if let start = wordStart {
+                if let start = wordStartCharIdx {
                     let wordStr = String(normalizedText[start..<idx])
                     let core = coreWord(wordStr)
-                    let startOffset = normalizedText.distance(from: normalizedText.startIndex, to: start)
-                    let endOffset = normalizedText.distance(from: normalizedText.startIndex, to: idx)
-                    textWords.append(TextWord(text: wordStr, core: core, normStartIdx: startOffset, normEndIdx: endOffset))
-                    wordStart = nil
+                    textWords.append(TextWord(text: wordStr, core: core, normStartIdx: wordStartScalarOffset, normEndIdx: currentScalarOffset))
+                    wordStartCharIdx = nil
                 }
             } else {
-                if wordStart == nil {
-                    wordStart = idx
+                if wordStartCharIdx == nil {
+                    wordStartCharIdx = idx
+                    wordStartScalarOffset = currentScalarOffset
                 }
             }
+            currentScalarOffset += ch.unicodeScalars.count
         }
-        if let start = wordStart {
+        
+        if let start = wordStartCharIdx {
             let wordStr = String(normalizedText[start...])
             let core = coreWord(wordStr)
-            let startOffset = normalizedText.distance(from: normalizedText.startIndex, to: start)
-            let endOffset = normalizedText.distance(from: normalizedText.startIndex, to: normalizedText.endIndex)
-            textWords.append(TextWord(text: wordStr, core: core, normStartIdx: startOffset, normEndIdx: endOffset))
+            textWords.append(TextWord(text: wordStr, core: core, normStartIdx: wordStartScalarOffset, normEndIdx: currentScalarOffset))
         }
 
         if textWords.isEmpty { return [] }
@@ -553,11 +555,7 @@ extension String {
 
                         if normStartIdx < indexMap.count {
                             let rawUtf16Start = indexMap[normStartIdx]
-                            let rawUtf16End: Int = if normEndIdx < indexMap.count {
-                                indexMap[normEndIdx]
-                            } else {
-                                utf16Offset
-                            }
+                            let rawUtf16End: Int = normEndIdx < indexMap.count ? indexMap[normEndIdx] : utf16Offset
 
                             if rawUtf16End > rawUtf16Start {
                                 let nsRange = NSRange(location: rawUtf16Start, length: rawUtf16End - rawUtf16Start)
