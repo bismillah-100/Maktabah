@@ -442,20 +442,8 @@ extension String {
         let normalizedText = String(String.UnicodeScalarView(normalizedScalars))
         var ranges: [NSRange] = []
 
-        let prefixes: [String] = [
-            "والله", "وبالله", "فالله", "فبالله",
-            "والل", "فالل", "بالل", "كالل", "وللم", "فللم",
-            "وال", "فال", "بال", "كال", "لل", "ال",
-            "و", "ف", "ب", "ك", "ل"
-        ]
-
         func coreWord(_ s: String) -> String {
-            for p in prefixes {
-                if s.hasPrefix(p) && (s.count - p.count) >= 3 {
-                    return String(s.dropFirst(p.count))
-                }
-            }
-            return s
+            return s.stemArabicLight10()
         }
 
         func normalizeToken(_ token: Substring) -> String {
