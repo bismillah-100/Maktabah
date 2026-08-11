@@ -146,34 +146,36 @@ class HistoryDatabaseManager {
         guard let _db, !entries.isEmpty else { return }
         let chunkSize = 50 // SQLite max params is 999. We have 8 params per entry. 50 * 8 = 400.
         
-        for i in stride(from: 0, to: entries.count, by: chunkSize) {
-            let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
-            let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
-            let sql = """
-            INSERT OR REPLACE INTO reading_entries
-            (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
-            VALUES \(placeholders);
-            """
-            
-            var params = [Any]()
-            for entry in chunk {
-                params.append(contentsOf: [
-                    entry.bookId,
-                    entry.lastContentId as Any? ?? NSNull(),
-                    entry.lastOpenedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
-                    entry.favoritedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
-                    entry.positionUpdatedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
-                    entry.updatedAt.timeIntervalSince1970,
-                    entry.isFavorite ? 1 : 0,
-                    entry.ckRecordId as Any? ?? NSNull()
-                ])
-            }
-            try _db.execute(query: sql, parameters: params)
+        try transaction {
+            for i in stride(from: 0, to: entries.count, by: chunkSize) {
+                let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
+                let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
+                let sql = """
+                INSERT OR REPLACE INTO reading_entries
+                (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
+                VALUES \(placeholders);
+                """
 
-            if trackPending {
+                var params = [Any]()
                 for entry in chunk {
-                    if let ckId = entry.ckRecordId {
-                        try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+                    params.append(contentsOf: [
+                        entry.bookId,
+                        entry.lastContentId as Any? ?? NSNull(),
+                        entry.lastOpenedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                        entry.favoritedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                        entry.positionUpdatedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                        entry.updatedAt.timeIntervalSince1970,
+                        entry.isFavorite ? 1 : 0,
+                        entry.ckRecordId as Any? ?? NSNull()
+                    ])
+                }
+                try _db.execute(query: sql, parameters: params)
+
+                if trackPending {
+                    for entry in chunk {
+                        if let ckId = entry.ckRecordId {
+                            try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+                        }
                     }
                 }
             }
