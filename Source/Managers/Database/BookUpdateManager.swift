@@ -1621,12 +1621,19 @@ final class BookUpdateManager {
         mode: String = "IMMEDIATE",
         _ work: () throws -> Void
     ) throws {
-        try exec(db, "BEGIN \(mode) TRANSACTION;")
+        let isInTransaction = sqlite3_get_autocommit(db) == 0
+        if !isInTransaction {
+            try exec(db, "BEGIN \(mode) TRANSACTION;")
+        }
         do {
             try work()
-            try exec(db, "COMMIT;")
+            if !isInTransaction {
+                try exec(db, "COMMIT;")
+            }
         } catch {
-            try? exec(db, "ROLLBACK;")
+            if !isInTransaction {
+                try? exec(db, "ROLLBACK;")
+            }
             throw error
         }
     }

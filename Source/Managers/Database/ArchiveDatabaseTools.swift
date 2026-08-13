@@ -93,7 +93,10 @@ enum ArchiveDatabaseTools {
         }
         defer { sqlite3_finalize(insertStmt) }
 
-        try exec(db, "BEGIN TRANSACTION;")
+        let isInTransaction = sqlite3_get_autocommit(db) == 0
+        if !isInTransaction {
+            try exec(db, "BEGIN TRANSACTION;")
+        }
         do {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
@@ -130,9 +133,13 @@ enum ArchiveDatabaseTools {
                     }
                 }
             }
-            try exec(db, "COMMIT;")
+            if !isInTransaction {
+                try exec(db, "COMMIT;")
+            }
         } catch {
-            try? exec(db, "ROLLBACK;")
+            if !isInTransaction {
+                try? exec(db, "ROLLBACK;")
+            }
             throw error
         }
         
