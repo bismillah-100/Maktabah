@@ -814,6 +814,37 @@ extension ResultsViewManager: NSMenuDelegate {
             accessibilityDescription: ""
         )
         menu.addItem(deleteItem)
+
+        if items.count == 1 {
+            if let result = items.first as? ResultNode {
+                menu.addItem(.separator())
+                let startSearchItem = NSMenuItem(
+                    title: "Start Search".localized,
+                    action: #selector(startSearchSelectedItem(_:)),
+                    keyEquivalent: ""
+                )
+                startSearchItem.target = self
+                startSearchItem.representedObject = result
+                startSearchItem.image = .init(
+                    systemSymbolName: "play.fill",
+                    accessibilityDescription: ""
+                )
+                menu.addItem(startSearchItem)
+            }
+        }
+    }
+
+    @objc private func startSearchSelectedItem(_ sender: NSMenuItem) {
+        if let result = sender.representedObject as? ResultNode {
+            delegate?.didSelect(savedResults: result.items)
+            return
+        }
+        guard let outlineView = outlineView else { return }
+        let rows = outlineView.effectiveRows()
+        guard let firstRow = rows.first,
+              let result = outlineView.item(atRow: firstRow) as? ResultNode
+        else { return }
+        delegate?.didSelect(savedResults: result.items)
     }
 
     @objc private func toggleColumnVisibility(_ sender: NSMenuItem) {
