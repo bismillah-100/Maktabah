@@ -11,6 +11,8 @@ struct SearchHistoryOverlay: View {
     @State private var showingHelp: Bool = false
     @State private var isShowing = false
     @FocusState private var isDistanceFocused: Bool
+    @ScaledMetric(relativeTo: .body) private var distanceFieldWidth: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var distanceFieldHeight: CGFloat = 28
 
     private var shouldShow: Bool {
         isVisible == true || isDistanceFocused ||
@@ -138,7 +140,7 @@ struct SearchHistoryOverlay: View {
                     .focused($isDistanceFocused)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
-                    .frame(width: 44, height: 28)
+                    .frame(width: distanceFieldWidth, height: distanceFieldHeight)
                     .background(Color.appCellBackground)
                     .cornerRadius(6)
                     .overlay(RoundedRectangle(cornerRadius: 6)
