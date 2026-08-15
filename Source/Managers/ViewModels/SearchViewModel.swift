@@ -22,6 +22,11 @@ final class SearchViewModel: ViewModelBase {
 
     var query: String = ""
     var searchMode: SearchMode = .phrase
+    var nearDistance: Int = UserDefaults.standard.searchNearDistance {
+        didSet {
+            UserDefaults.standard.searchNearDistance = nearDistance
+        }
+    }
     private(set) var results: [SearchResultItem] = []
     private(set) var isSearching: Bool = false
     private(set) var isPaused: Bool = false
@@ -291,6 +296,7 @@ final class SearchViewModel: ViewModelBase {
         case 0: searchMode = .phrase
         case 1: searchMode = .contains
         case 2: searchMode = .or
+        case 3: searchMode = .near
         default: break
         }
     }
@@ -364,7 +370,13 @@ final class SearchViewModel: ViewModelBase {
         onFinish: (@MainActor () -> Void)? = nil
     ) -> Task<Void, Never> {
         clearResults()
-        if let first = savedResults.first { query = first.query }
+        if let first = savedResults.first {
+            query = first.query
+            if let mode = SearchMode(rawValue: first.searchMode) {
+                searchMode = mode
+            }
+            nearDistance = first.nearDistance
+        }
         results = []
         totalTables = 0
         completedTables = 0
@@ -428,11 +440,23 @@ final class SearchViewModel: ViewModelBase {
         let normalized = bookContent.nash
             .convertToArabicDigits(isMultilingual: isMultilingual)
             .normalizeArabic()
-        let queryConverted = item
-            .query.convertToArabicDigits(isMultilingual: isMultilingual)
-            .normalizeArabic()
-        let snippet = normalized.snippetAround(keywords: [queryConverted], contextLength: 60)
-        let attributed = snippet.highlightedAttributedText(keywords: [queryConverted])
+
+        let mode = SearchMode(rawValue: item.searchMode) ?? .phrase
+
+        // Ekstrak keyword individual sesuai mode — penting untuk NEAR agar
+        // snippetAround bisa menemukan spanning window antar semua kata kunci.
+        let keywords = FtsQueryParser.extractKeywords(query: item.query, mode: mode)
+            .map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
+
+        let snippet: String
+        let attributed: NSAttributedString
+        if mode == .near {
+            snippet = normalized.snippetNear(keywords: keywords, nearDistance: item.nearDistance, contextLength: 60)
+            attributed = snippet.highlightedAttributedText(keywords: keywords, nearDistance: item.nearDistance)
+        } else {
+            snippet = normalized.snippetAround(keywords: keywords, contextLength: 60)
+            attributed = snippet.highlightedAttributedText(keywords: keywords)
+        }
 
         return SearchResultItem(
             archive: item.archive,
@@ -521,6 +545,7 @@ final class SearchViewModel: ViewModelBase {
                 searchEngine: searchEngine,
                 query: query.replacing("،", with: ","),
                 mode: searchMode,
+                nearDistance: nearDistance,
                 onInitialize: { [weak self] total in
                     self?.totalTables = total
                     self?.completedTables = 0
@@ -617,6 +642,12 @@ extension SearchViewModel {
         if let savedQuery = state.searchQuery {
             query = savedQuery
         }
+        if let raw = state.searchModeRaw, let mode = SearchMode(rawValue: raw) {
+            searchMode = mode
+        }
+        if let dist = state.searchNearDistance {
+            nearDistance = dist
+        }
 
         // Memasukkan kembali daftar hasil pencarian yang tersimpan
         results = savedResults
@@ -627,6 +658,8 @@ extension SearchViewModel {
     func updateState(_ state: inout ReaderState) {
         state.searchResults = results
         state.searchQuery = query
+        state.searchModeRaw = searchMode.rawValue
+        state.searchNearDistance = nearDistance
     }
 
     /// Membersihkan seluruh data pencarian di dalam ViewModel.

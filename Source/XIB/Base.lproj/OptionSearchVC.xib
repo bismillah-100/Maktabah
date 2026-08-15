@@ -20,6 +20,7 @@
                 <outlet property="progressRows" destination="T5c-dz-aW8" id="3GO-re-lPN"/>
                 <outlet property="progressTable" destination="UoD-Rt-MFF" id="WQZ-db-1JH"/>
                 <outlet property="searchField" destination="5sC-g4-qLn" id="KAV-u6-1eh"/>
+                <outlet property="stackView" destination="IBO-iw-tvQ" id="aP2-1A-KN7"/>
                 <outlet property="startButton" destination="4nx-ze-lu9" id="Yrk-mG-u88"/>
                 <outlet property="stopButton" destination="G38-aI-OzH" id="Iyd-s4-C3e"/>
                 <outlet property="tableView" destination="Etr-qP-Qht" id="edt-00-447"/>
@@ -29,14 +30,14 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" id="7BS-4u-pwi">
-            <rect key="frame" x="0.0" y="0.0" width="851" height="272"/>
+            <rect key="frame" x="0.0" y="0.0" width="856" height="272"/>
             <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
             <subviews>
                 <visualEffectView blendingMode="withinWindow" material="headerView" state="followsWindowActiveState" translatesAutoresizingMaskIntoConstraints="NO" id="HXI-8R-ibO">
-                    <rect key="frame" x="0.0" y="234" width="851" height="38"/>
+                    <rect key="frame" x="0.0" y="234" width="856" height="38"/>
                     <subviews>
                         <stackView distribution="equalSpacing" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IBO-iw-tvQ">
-                            <rect key="frame" x="0.0" y="7" width="851" height="24"/>
+                            <rect key="frame" x="0.0" y="7" width="856" height="24"/>
                             <subviews>
                                 <button toolTip="Close" wantsLayer="YES" horizontalHuggingPriority="249" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="sox-gG-e96">
                                     <rect key="frame" x="1" y="-7" width="53" height="36"/>
@@ -53,13 +54,13 @@
                                     </connections>
                                 </button>
                                 <box horizontalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="i2g-JV-elC">
-                                    <rect key="frame" x="56" y="2" width="5" height="20"/>
+                                    <rect key="frame" x="53" y="2" width="5" height="20"/>
                                     <constraints>
                                         <constraint firstAttribute="height" constant="20" id="wed-AX-Vnr"/>
                                     </constraints>
                                 </box>
                                 <button toolTip="Stop Search" wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="G38-aI-OzH">
-                                    <rect key="frame" x="63" y="-7" width="53" height="36"/>
+                                    <rect key="frame" x="57" y="-7" width="53" height="36"/>
                                     <buttonCell key="cell" type="push" bezelStyle="rounded" image="stop.fill" catalog="system" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="buT-Bw-eyv">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
@@ -73,7 +74,7 @@
                                     </connections>
                                 </button>
                                 <button toolTip="Start Search" wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="4nx-ze-lu9">
-                                    <rect key="frame" x="113" y="-7" width="53" height="36"/>
+                                    <rect key="frame" x="104" y="-7" width="53" height="36"/>
                                     <buttonCell key="cell" type="push" bezelStyle="rounded" image="play.fill" catalog="system" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="sid-nn-MX1">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                                         <font key="font" metaFont="system"/>
@@ -87,13 +88,13 @@
                                     </connections>
                                 </button>
                                 <box horizontalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="5Oo-Pw-Yqx">
-                                    <rect key="frame" x="168" y="2" width="5" height="20"/>
+                                    <rect key="frame" x="156" y="2" width="5" height="20"/>
                                     <constraints>
                                         <constraint firstAttribute="height" constant="20" id="xvN-vt-igU"/>
                                     </constraints>
                                 </box>
                                 <button toolTip="Bookmark" wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="qWx-2d-GKY">
-                                    <rect key="frame" x="183" y="-1" width="28" height="25"/>
+                                    <rect key="frame" x="167" y="-1" width="28" height="25"/>
                                     <buttonCell key="cell" type="recessed" bezelStyle="recessed" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="yEF-eW-QmT">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="systemBold" size="14"/>
@@ -109,7 +110,7 @@
                                     </connections>
                                 </button>
                                 <button toolTip="Save Results" wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="HNN-je-3Fd">
-                                    <rect key="frame" x="222" y="-1" width="28" height="25"/>
+                                    <rect key="frame" x="203" y="-1" width="28" height="25"/>
                                     <buttonCell key="cell" type="recessed" bezelStyle="recessed" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="QSw-Sb-rJZ">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="systemBold" size="14"/>
@@ -125,7 +126,7 @@
                                     </connections>
                                 </button>
                                 <searchField wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" mirrorLayoutDirectionWhenInternationalizing="always" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5sC-g4-qLn" customClass="DSFSearchField" customModule="Maktabah" customModuleProvider="target">
-                                    <rect key="frame" x="261" y="1" width="442" height="22"/>
+                                    <rect key="frame" x="239" y="1" width="442" height="22"/>
                                     <constraints>
                                         <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="190" id="FKP-N3-UJM"/>
                                     </constraints>
@@ -139,13 +140,14 @@
                                     </connections>
                                 </searchField>
                                 <segmentedControl identifier="Search Mode" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="b4O-5C-lQb">
-                                    <rect key="frame" x="712" y="0.0" width="102" height="24"/>
+                                    <rect key="frame" x="687" y="0.0" width="135" height="24"/>
                                     <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="e7E-8s-TbD">
                                         <font key="font" metaFont="system"/>
                                         <segments>
                                             <segment toolTip="Exact Phrase" image="text.quote" catalog="system" width="30" selected="YES"/>
                                             <segment toolTip="Separate Words" image="checklist.checked" catalog="system" width="30" tag="1"/>
                                             <segment toolTip="Match Any Word" image="checklist" catalog="system" width="30"/>
+                                            <segment toolTip="Proximity Search (NEAR)" image="text.word.spacing" catalog="system" width="30"/>
                                         </segments>
                                     </segmentedCell>
                                     <connections>
@@ -153,11 +155,14 @@
                                     </connections>
                                 </segmentedControl>
                                 <button horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="NcB-Hn-aux">
-                                    <rect key="frame" x="820" y="-2" width="25" height="25"/>
-                                    <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="925-gP-YdR">
+                                    <rect key="frame" x="825" y="-2" width="25" height="25"/>
+                                    <buttonCell key="cell" type="help" bezelStyle="helpButton" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="925-gP-YdR">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                         <font key="font" metaFont="system"/>
                                     </buttonCell>
+                                    <constraints>
+                                        <constraint firstAttribute="width" constant="20" id="Pa3-ch-OHT"/>
+                                    </constraints>
                                     <connections>
                                         <action selector="helpSearchOpt:" target="-2" id="6zy-jG-Osr"/>
                                     </connections>
@@ -203,7 +208,7 @@
                     <viewLayoutGuide key="layoutMargins" id="lIT-Jv-WzJ"/>
                 </visualEffectView>
                 <stackView distribution="fillProportionally" orientation="vertical" alignment="leading" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="o96-lV-fVx">
-                    <rect key="frame" x="0.0" y="181" width="851" height="53"/>
+                    <rect key="frame" x="0.0" y="181" width="856" height="53"/>
                     <subviews>
                         <progressIndicator hidden="YES" wantsLayer="YES" maxValue="100" displayedWhenStopped="NO" controlSize="small" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="UoD-Rt-MFF">
                             <rect key="frame" x="0.0" y="41" width="732" height="12"/>
@@ -337,6 +342,7 @@
         <image name="play.fill" catalog="system" width="12" height="13"/>
         <image name="stop.fill" catalog="system" width="15" height="13"/>
         <image name="text.quote" catalog="system" width="17" height="13"/>
+        <image name="text.word.spacing" catalog="system" width="17" height="13"/>
         <image name="tray.2.fill" catalog="system" width="19" height="18"/>
         <image name="tray.and.arrow.down.fill" catalog="system" width="19" height="17"/>
         <image name="xmark.circle.fill" catalog="system" width="15" height="15"/>

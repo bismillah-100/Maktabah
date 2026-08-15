@@ -18,6 +18,6 @@ protocol TextViewRenderable: AnyObject {
     )
 
     func highlightAndScrollToAnns(_ ann: Annotation) async
-    func highlightAndScrollToText(_ searchText: String) async
+    func highlightAndScrollToText(_ searchText: String, mode: SearchMode?, nearDistance: Int) async
     func scrollTo(_ scrollPos: CGPoint) async
 }

@@ -351,7 +351,7 @@ class ResultsViewModel {
         }
     }
 
-    func saveSearchResults(results: [SearchResultItem], query: String, folderId: Int64?, name: String) throws {
+    func saveSearchResults(results: [SearchResultItem], query: String, searchMode: Int = 0, nearDistance: Int = 10, folderId: Int64?, name: String) throws {
         var groupedResults: [String: GroupedResult] = [:]
 
         for item in results {
@@ -378,6 +378,8 @@ class ResultsViewModel {
             groupedResults,
             folderId: folderId,
             query: query,
+            searchMode: searchMode,
+            nearDistance: nearDistance,
             name: name
         )
     }

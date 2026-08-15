@@ -50,6 +50,8 @@ struct ReaderState: Codable {
     /// Untuk Search Mode - menyimpan hasil search
     var searchResults: [SearchResultItem]?
     var searchQuery: String?
+    var searchModeRaw: Int?
+    var searchNearDistance: Int?
 
     /// Pemeriksaan state (ada konten yang ditampilkan).
     var hasContent: Bool {

@@ -11,19 +11,20 @@ import AppKit
 import UIKit
 #endif
 
-extension NSTextStorage {
+extension NSMutableAttributedString {
     @discardableResult
     func highlightSearchText(
         searchText: String,
-        baseColor: PlatformColor
-    ) -> NSRange? {
-        let searchTerms = searchText
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
+        mode: SearchMode?,
+        baseColor: PlatformColor,
+        nearDistance: Int = 10
+    ) -> [NSRange] {
+        let searchMode = mode ?? (searchText.uppercased().contains("NEAR") ? .near : .contains)
+
+        let searchTerms = FtsQueryParser.extractKeywords(query: searchText, mode: searchMode)
             .map { $0.replacingHonorificPhrasesIfSupported().text }
 
-        guard !searchTerms.isEmpty else { return nil }
+        guard !searchTerms.isEmpty else { return [] }
 
         let colors: [PlatformColor] = [
             .highlightText,
@@ -33,8 +34,17 @@ extension NSTextStorage {
             PlatformColor.systemIndigo.withAlphaComponent(0.4),
         ]
 
-        let ranges = string.findArabicMatchingRanges(keywords: searchTerms)
-        guard !ranges.isEmpty else { return nil }
+        var ranges: [NSRange]
+
+        // Hanya highlight keyword yang merupakan bagian dari valid cluster jika mode NEAR
+        if searchMode == .near, searchTerms.count > 1 {
+            let rangesWithIndex = string.findArabicMatchingRangesWithIndex(keywords: searchTerms)
+            ranges = string.filterRangesForNearMode(rangesWithIndex: rangesWithIndex, keywordsCount: searchTerms.count, nearDistance: nearDistance)
+        } else {
+            ranges = string.findArabicMatchingRanges(keywords: searchTerms)
+        }
+
+        guard !ranges.isEmpty else { return [] }
 
         beginEditing()
         for (index, range) in ranges.enumerated() {
@@ -52,7 +62,8 @@ extension NSTextStorage {
         }
         endEditing()
 
-        return ranges.first
+        // Kembalikan semua range match untuk popup multi-keyword (misal mode NEAR)
+        return ranges
     }
 
     #if os(macOS)

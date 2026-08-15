@@ -145,6 +145,18 @@
         }
       }
     },
+    "e7E-8s-TbD.ibShadowedToolTips[3]" : {
+      "comment" : "Class = \"NSSegmentedCell\"; e7E-8s-TbD.ibShadowedToolTips[3] = \"Proximity Search (NEAR)\"; ObjectID = \"e7E-8s-TbD\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proximity Search (NEAR)"
+          }
+        }
+      }
+    },
     "G38-aI-OzH.ibShadowedToolTip" : {
       "comment" : "Class = \"NSButton\"; ibShadowedToolTip = \"Stop Search\"; ObjectID = \"G38-aI-OzH\";",
       "extractionState" : "extracted_with_value",

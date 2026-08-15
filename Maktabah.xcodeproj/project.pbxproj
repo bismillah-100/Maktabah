@@ -280,6 +280,9 @@
 		CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C09DE835C53C6EFC0748C3 /* MaktabahApp.swift */; };
 		CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
 		DB899712AF55D9ABF944D61F /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44342A3B384B7605A1AF676A /* NetworkMonitor.swift */; };
+		E87C90E22F83494200454BE1 /* FtsQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C90E12F83494200454BE1 /* FtsQueryParser.swift */; };
+		E87C90E32F83494200454BE1 /* FtsQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C90E12F83494200454BE1 /* FtsQueryParser.swift */; };
+		E87C90E42F83494200454BE1 /* FtsQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C90E12F83494200454BE1 /* FtsQueryParser.swift */; };
 		F300A2EC2F2DCE860095015E /* StorageError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F300A2EB2F2DCE860095015E /* StorageError.swift */; };
 		F30576E52FA46222005732C6 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B01CA2F2EFD366E002A66FA /* AppConfig.swift */; };
 		F30576EC2FA46222005732C6 /* SettingsActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB98D2F69E957007D0945 /* SettingsActions.swift */; };
@@ -663,6 +666,7 @@
 		9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iOSHistoryView.swift; sourceTree = "<group>"; };
 		9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FtsMigrationManager.swift; sourceTree = "<group>"; };
 		C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncable.swift; sourceTree = "<group>"; };
+		E87C90E12F83494200454BE1 /* FtsQueryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FtsQueryParser.swift; sourceTree = "<group>"; };
 		F300A2EB2F2DCE860095015E /* StorageError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageError.swift; sourceTree = "<group>"; };
 		F305776F2FA46222005732C6 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Maktabah.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F30577722FA463B1005732C6 /* iOSNavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSNavigationManager.swift; sourceTree = "<group>"; };
@@ -1108,6 +1112,7 @@
 				4B2FAD992EED472E008E933E /* TOCLoader.swift */,
 				4B65CCBF2EE0A10F0085CEB4 /* SearchEngine.swift */,
 				4B20DB7E2EE7EE1F00B97126 /* SearchMode.swift */,
+				E87C90E12F83494200454BE1 /* FtsQueryParser.swift */,
 				F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */,
 			);
 			path = Engine;
@@ -1679,6 +1684,7 @@
 				F3C449572F2B12E200DA7032 /* SearchCellView.swift in Sources */,
 				4B2FAD9A2EED472E008E933E /* TOCLoader.swift in Sources */,
 				4B20DB7F2EE7EE1F00B97126 /* SearchMode.swift in Sources */,
+				E87C90E22F83494200454BE1 /* FtsQueryParser.swift in Sources */,
 				4B63E1ED2EE9758A00D58F3B /* LoadMoreCell.swift in Sources */,
 				F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */,
 				4B63E1E42EE9425400D58F3B /* RowiResultsVC.swift in Sources */,
@@ -1843,6 +1849,7 @@
 				4B7C90D42F83494200454BE1 /* SearchCellView.swift in Sources */,
 				4B7C90D52F83494200454BE1 /* TOCLoader.swift in Sources */,
 				4B7C90D62F83494200454BE1 /* SearchMode.swift in Sources */,
+				E87C90E32F83494200454BE1 /* FtsQueryParser.swift in Sources */,
 				4B7C90D72F83494200454BE1 /* LoadMoreCell.swift in Sources */,
 				F3D02D5F2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				4B7C90D82F83494200454BE1 /* RowiResultsVC.swift in Sources */,
@@ -2012,6 +2019,7 @@
 				F30577112FA46222005732C6 /* IntegrationCache.swift in Sources */,
 				F30577132FA46222005732C6 /* TOCLoader.swift in Sources */,
 				F30577142FA46222005732C6 /* SearchMode.swift in Sources */,
+				E87C90E42F83494200454BE1 /* FtsQueryParser.swift in Sources */,
 				F36382692FA7BFB40006636C /* iOSAnnotationEditorSheet.swift in Sources */,
 				F305771A2FA46222005732C6 /* BookUpdateVM.swift in Sources */,
 				F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */,

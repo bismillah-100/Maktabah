@@ -486,9 +486,9 @@ extension IbarotTextVC: LibraryDelegate {
 // MARK: - OptionSearchDelegate
 
 extension IbarotTextVC: OptionSearchDelegate {
-    func didSelectResult(for id: Int, highlightText: String) async {
+    func didSelectResult(for id: Int, highlightText: String, mode: SearchMode?, nearDistance: Int) async {
         if viewModel.currentContentId != id { handleDelegate(id) }
-        await textDelegate?.highlightAndScrollToText(highlightText)
+        await textDelegate?.highlightAndScrollToText(highlightText, mode: mode, nearDistance: nearDistance)
     }
 }
 
@@ -544,7 +544,7 @@ extension IbarotTextVC: TarjamahBDelegate {
 
         try? await Task.sleep(nanoseconds: 300_000_000)
         if let query {
-            await textDelegate?.highlightAndScrollToText(query.normalizeArabic(true))
+            await textDelegate?.highlightAndScrollToText(query.normalizeArabic(true), mode: nil, nearDistance: 10)
         }
     }
 }
@@ -597,7 +597,9 @@ extension IbarotTextVC: ReaderStateComponent {
             }
 
             if let query = state.searchQuery {
-                await textDelegate?.highlightAndScrollToText(query)
+                let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
+                let nearDistance = state.searchNearDistance ?? 10
+                await textDelegate?.highlightAndScrollToText(query, mode: mode, nearDistance: nearDistance)
             }
 
             if let scrollPos = state.scrollPosition {

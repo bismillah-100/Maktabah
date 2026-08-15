@@ -93,8 +93,7 @@ struct iOSReaderBottomToolbarView: View {
                 iOSBookSearchView(
                     book: book,
                     onSelect: { contentId, query in
-                        viewModel.searchText = query
-                        viewModel.fetchContentById(contentId)
+                        viewModel.didSelectSearch(query: query, contentId: contentId)
                         showingSearch = false
                     },
                     viewModel: viewModel.searchViewModel
@@ -108,9 +107,7 @@ struct iOSReaderBottomToolbarView: View {
                     viewModel.currentContentId
                 )?.id,
                 onSelect: { id in
-                    viewModel.searchText = ""
-                    viewModel.targetAnnotation = nil
-                    viewModel.fetchContentById(id)
+                    viewModel.didSelectTOCNode(id: id)
                     showingTOC = false
                 }
             )
@@ -121,8 +118,7 @@ struct iOSReaderBottomToolbarView: View {
                     bookId: book.id,
                     annotations: viewModel.currentAnnotations,
                     onSelect: { ann in
-                        viewModel.targetAnnotation = ann
-                        viewModel.fetchContentById(Int(ann.contentId))
+                        viewModel.didSelectAnnotation(ann)
                         showingAnnotationsList = false
                     }
                 )

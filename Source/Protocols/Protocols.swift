@@ -33,7 +33,12 @@ protocol LibraryViewDelegate: AnyObject {
 }
 
 protocol OptionSearchDelegate: AnyObject {
-    func didSelectResult(for id: Int, highlightText: String) async
+    func didSelectResult(
+        for id: Int,
+        highlightText: String,
+        mode: SearchMode?,
+        nearDistance: Int
+    ) async
 }
 
 #if os(macOS)

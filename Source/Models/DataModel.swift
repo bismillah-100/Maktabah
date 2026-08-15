@@ -312,6 +312,8 @@ struct SavedResultsItem {
     let query: String
     let bookId: Int
     let bookTitle: String
+    var searchMode: Int = 0
+    var nearDistance: Int = 10
 }
 
 struct Muallif: Decodable {

@@ -11,6 +11,7 @@ import SwiftUI
 
 class OptionSearchVC: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
+    @IBOutlet weak var stackView: NSStackView!
     @IBOutlet weak var progressTable: NSProgressIndicator!
     @IBOutlet weak var progressRows: NSProgressIndicator!
     @IBOutlet weak var searchField: DSFSearchField!
@@ -55,7 +56,7 @@ class OptionSearchVC: NSViewController {
         didSet { viewModel.targetBookId = bkId }
     }
 
-    var onSelectedItem: ((Int, String) -> Void)?
+    var onSelectedItem: ((Int, String, SearchMode, String) -> Void)?
     var onCleanUp: (() -> Void)?
 
     var compactConfigured: Bool = false
@@ -63,6 +64,8 @@ class OptionSearchVC: NSViewController {
     private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
     private var migrationButton: NSView?
+    private var nearDistanceField: NSTextField?
+    private var nearDistanceWidthConstraint: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -98,6 +101,7 @@ class OptionSearchVC: NSViewController {
 
         setupViewModelCallbacks()
         bindViewModelPublishers()
+        setupNearDistanceControl()
     }
 
     override func viewDidAppear() {
@@ -146,7 +150,7 @@ class OptionSearchVC: NSViewController {
             sender.setSelected(false, forSegment: 0)
             startMigration(sender)
         }
-        
+
         if sender.isSelected(forSegment: 1) {
             sender.setSelected(false, forSegment: 1)
             showMigrationOptions(sender)
@@ -338,6 +342,8 @@ class OptionSearchVC: NSViewController {
     @IBAction func saveResults(_ sender: NSButton) {
         let sr = ResultWriter()
         sr.query = searchField.stringValue
+        sr.searchMode = viewModel.searchMode
+        sr.searchViewModel = viewModel
         let popover = NSPopover()
         popover.contentViewController = sr
         popover.behavior = .semitransient
@@ -444,8 +450,62 @@ class OptionSearchVC: NSViewController {
         resultsLoadingTask?.cancel()
     }
 
+    private func setupNearDistanceControl() {
+        guard let stackView = optionsSegment.superview as? NSStackView else { return }
+
+        let field = NSTextField(string: "\(viewModel.nearDistance)")
+        field.focusRingType = .none
+        field.placeholderString = String(localized: "nearDistancePlaceholder")
+        field.font = NSFont.systemFont(ofSize: 11)
+        field.alignment = .center
+        field.isBezeled = true
+        field.bezelStyle = .roundedBezel
+        field.isHidden = true
+        field.translatesAutoresizingMaskIntoConstraints = false
+
+        let widthConstraint = field.widthAnchor.constraint(
+            equalToConstant: viewModel.searchMode != .near ? 0 : 45
+        )
+        widthConstraint.isActive = true
+        nearDistanceWidthConstraint = widthConstraint
+
+        field.target = self
+        field.action = #selector(distanceFieldChanged(_:))
+
+        if let index = stackView.arrangedSubviews.firstIndex(of: optionsSegment) {
+            stackView.insertArrangedSubview(field, at: index + 1)
+        } else {
+            stackView.addArrangedSubview(field)
+        }
+        nearDistanceField = field
+    }
+
+    @objc private func distanceFieldChanged(_ sender: NSTextField) {
+        if let val = Int(sender.stringValue), val > 0 {
+            viewModel.nearDistance = val
+        } else {
+            sender.stringValue = "\(viewModel.nearDistance)"
+        }
+    }
+
     @IBAction func optionsSegmentDidCange(_ sender: NSSegmentedControl) {
         viewModel.setSearchModeFromSegment(sender.selectedSegment)
+        let isNear = viewModel.searchMode == .near
+        if isNear {
+            nearDistanceField?.stringValue = ""
+            nearDistanceField?.isHidden = false
+        }
+        NSAnimationContext.runAnimationGroup { [weak self] ctx in
+            guard let self else { return }
+            ctx.duration = 0.15
+            ctx.allowsImplicitAnimation = true
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            nearDistanceWidthConstraint?.animator().constant = isNear ? 45 : 0
+            stackView.animator().layoutSubtreeIfNeeded()
+        } completionHandler: { [weak self] in
+            guard let self, let nearDistanceField else { return }
+            if isNear { nearDistanceField.stringValue = .init(viewModel.nearDistance) }
+        }
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
@@ -581,14 +641,24 @@ extension OptionSearchVC: LibraryViewDelegate {
         await delegate?.didSelectBook(for: bookData, loadContent: false)
         await itemDelegate?.didSelectResult(
             for: book.bookId,
-            highlightText: searchText
+            highlightText: searchText,
+            mode: viewModel.searchMode,
+            nearDistance: viewModel.nearDistance
         )
-        onSelectedItem?(book.bookId, searchField.stringValue)
+        onSelectedItem?(
+            book.bookId,
+            searchField.stringValue,
+            viewModel.searchMode,
+            nearDistanceField?.stringValue ?? "10"
+        )
     }
 }
 
 extension OptionSearchVC: ResultsDelegate {
     func didSelect(savedResults: [SavedResultsItem]) {
+        if let sheet = view.window?.attachedSheet {
+            view.window?.endSheet(sheet)
+        }
         viewModel.clearResults()
         tableView.reloadData()
         stopSearch(nil)
@@ -598,6 +668,16 @@ extension OptionSearchVC: ResultsDelegate {
 
         searchField.stringValue = savedResults.first?.query ?? ""
         searchText = searchField.stringValue
+
+        if let first = savedResults.first,
+           let mode = SearchMode(rawValue: first.searchMode) {
+            viewModel.setSearchMode(mode)
+            optionsSegment?.selectedSegment = mode.rawValue
+            viewModel.nearDistance = first.nearDistance
+            nearDistanceField?.stringValue = "\(first.nearDistance)"
+            nearDistanceField?.isHidden = mode != .near
+            nearDistanceWidthConstraint?.constant = mode == .near ? 45 : 0
+        }
 
         resultsLoadingTask = viewModel.loadSavedResults(
             savedResults,
@@ -636,6 +716,11 @@ extension OptionSearchVC: ReaderStateComponent {
         tableView.reloadData()
         searchField.stringValue = viewModel.query
         searchText = viewModel.query
+
+        optionsSegment?.selectedSegment = viewModel.searchMode.rawValue
+        nearDistanceField?.stringValue = "\(viewModel.nearDistance)"
+        nearDistanceField?.isHidden = viewModel.searchMode != .near
+        nearDistanceWidthConstraint?.constant = viewModel.searchMode == .near ? 45 : 0
     }
 
     func cleanUpState() {

@@ -404,6 +404,22 @@ extension ResultsViewManager: NSOutlineViewDataSource {
             }
         }
     }
+
+    /// Simpan ID unik item
+    func outlineView(_ outlineView: NSOutlineView, persistentObjectForItem item: Any?) -> Any? {
+        if let folder = item as? FolderNode {
+            return folder.id
+        }
+        return nil
+    }
+
+    /// Restore item dari ID unik saat data di-load
+    func outlineView(_ outlineView: NSOutlineView, itemForPersistentObject object: Any) -> Any? {
+        if let id = object as? Int64 {
+            return vm.findFolder(id)
+        }
+        return nil
+    }
 }
 
 extension ResultsViewManager: NSOutlineViewDelegate {
@@ -482,6 +498,11 @@ extension ResultsViewManager: NSOutlineViewDelegate {
             ) as? NSTableCellView,
             let textField = cell.textField
             {
+                let mode = SearchMode(rawValue: result.searchMode) ?? .phrase
+                let imageName = SearchMode.imageNameForMode(mode)
+                cell.imageView?.image = NSImage(
+                    systemSymbolName: imageName, accessibilityDescription: nil
+                )
                 textField.stringValue = "\(result.name)"
                 textField.delegate = self
                 textField.isEditable = true
@@ -793,6 +814,37 @@ extension ResultsViewManager: NSMenuDelegate {
             accessibilityDescription: ""
         )
         menu.addItem(deleteItem)
+
+        if items.count == 1 {
+            if let result = items.first as? ResultNode {
+                menu.addItem(.separator())
+                let startSearchItem = NSMenuItem(
+                    title: "Start Search".localized,
+                    action: #selector(startSearchSelectedItem(_:)),
+                    keyEquivalent: ""
+                )
+                startSearchItem.target = self
+                startSearchItem.representedObject = result
+                startSearchItem.image = .init(
+                    systemSymbolName: "play.fill",
+                    accessibilityDescription: ""
+                )
+                menu.addItem(startSearchItem)
+            }
+        }
+    }
+
+    @objc private func startSearchSelectedItem(_ sender: NSMenuItem) {
+        if let result = sender.representedObject as? ResultNode {
+            delegate?.didSelect(savedResults: result.items)
+            return
+        }
+        guard let outlineView = outlineView else { return }
+        let rows = outlineView.effectiveRows()
+        guard let firstRow = rows.first,
+              let result = outlineView.item(atRow: firstRow) as? ResultNode
+        else { return }
+        delegate?.didSelect(savedResults: result.items)
     }
 
     @objc private func toggleColumnVisibility(_ sender: NSMenuItem) {

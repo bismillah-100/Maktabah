@@ -79,7 +79,7 @@ extension String {
                self[nextIndex] == "n" {
                 finalString.append("\n")
                 nextDelta -= 1
-                
+
                 let nextCharLen = String(self[nextIndex]).utf16.count
                 if nextDelta != currentDelta {
                     events.append(DeltaEvent(oldOffset: oldUtf16Offset + charLen + nextCharLen, delta: nextDelta))
@@ -410,6 +410,10 @@ extension String {
     /// Returns all NSRanges in `self` that match any of the given Arabic keywords or multi-word phrases,
     /// handling Alif, Ta Marbuta/Ha, Alif Maqsura/Ya, and per-word prefix variations (ال, و, ف, ب, ك, ل).
     func findArabicMatchingRanges(keywords: [String]) -> [NSRange] {
+        return findArabicMatchingRangesWithIndex(keywords: keywords).map { $0.range }
+    }
+
+    func findArabicMatchingRangesWithIndex(keywords: [String]) -> [(range: NSRange, keywordIndex: Int)] {
         guard !keywords.isEmpty, !self.isEmpty else { return [] }
 
         var normalizedScalars: [UnicodeScalar] = []
@@ -428,9 +432,9 @@ extension String {
             }
 
             let normalizedScalar: UnicodeScalar = switch val {
-            case 0x0623, 0x0625, 0x0622, 0x0671: UnicodeScalar(0x0627)!
-            case 0x0629: UnicodeScalar(0x0647)!
-            case 0x0649: UnicodeScalar(0x064A)!
+            case 0x0623, 0x0625, 0x0622, 0x0671: UnicodeScalar(0x0627)! // ا
+            case 0x0629: UnicodeScalar(0x0647)! // ه
+            case 0x0649: UnicodeScalar(0x064A)! // ي
             default: scalar
             }
 
@@ -440,7 +444,7 @@ extension String {
         }
 
         let normalizedText = String(String.UnicodeScalarView(normalizedScalars))
-        var ranges: [NSRange] = []
+        var ranges: [(range: NSRange, keywordIndex: Int)] = []
 
         func coreWord(_ s: String) -> String {
             return s.stemArabicLight10()
@@ -500,7 +504,7 @@ extension String {
 
         if textWords.isEmpty { return [] }
 
-        for keyword in keywords {
+        for (keywordIndex, keyword) in keywords.enumerated() {
             let trimmed = keyword.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { continue }
 
@@ -539,16 +543,12 @@ extension String {
 
                         if normStartIdx < indexMap.count {
                             let rawUtf16Start = indexMap[normStartIdx]
-                            let rawUtf16End: Int = if normEndIdx < indexMap.count {
-                                indexMap[normEndIdx]
-                            } else {
-                                utf16Offset
-                            }
+                            let rawUtf16End: Int = normEndIdx < indexMap.count ? indexMap[normEndIdx] : utf16Offset
 
                             if rawUtf16End > rawUtf16Start {
                                 let nsRange = NSRange(location: rawUtf16Start, length: rawUtf16End - rawUtf16Start)
-                                if !ranges.contains(nsRange) {
-                                    ranges.append(nsRange)
+                                if !ranges.contains(where: { $0.range == nsRange && $0.keywordIndex == keywordIndex }) {
+                                    ranges.append((range: nsRange, keywordIndex: keywordIndex))
                                 }
                             }
                         }
@@ -557,7 +557,7 @@ extension String {
             }
         }
 
-        ranges.sort { $0.location < $1.location }
+        ranges.sort { $0.range.location < $1.range.location }
         return ranges
     }
 
@@ -596,9 +596,154 @@ extension String {
         return cleanSnippet
     }
 
+    /// Membuat cuplikan teks dengan mencari keyword yang berdekatan dalam rentang kata (word distance)
+    /// yang spesifik, cocok untuk pencarian mode NEAR.
+    /// - Parameters:
+    ///   - keywords: Array kata kunci yang dicari.
+    ///   - nearDistance: Jarak maksimal kata antar keyword.
+    ///   - contextLength: Jumlah karakter konteks di sekitar hasil.
+    func snippetNear(keywords: [String], nearDistance: Int, contextLength: Int = 60) -> String {
+        let rangesWithIndex = findArabicMatchingRangesWithIndex(keywords: keywords)
+        guard !rangesWithIndex.isEmpty else {
+            let limit = min(self.count, contextLength * 2)
+            return String(self.prefix(limit)).replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        }
+
+        let sortedRanges = rangesWithIndex.sorted(by: { $0.range.location < $1.range.location })
+        var bestStartIdx: String.Index?
+        var bestEndIdx: String.Index?
+
+        let uniqueKeywordsCount = Set(sortedRanges.map { $0.keywordIndex }).count
+        var foundCluster = false
+
+        if uniqueKeywordsCount > 1 {
+            var minWordDistance = Int.max
+            let maxAllowedDistance = nearDistance * (uniqueKeywordsCount - 1) + 5
+
+            for i in 0..<sortedRanges.count {
+                var currentSet = Set<Int>()
+                for j in i..<sortedRanges.count {
+                    currentSet.insert(sortedRanges[j].keywordIndex)
+
+                    if currentSet.count == uniqueKeywordsCount {
+                        let startRange = sortedRanges[i].range
+                        let endRange = sortedRanges[j].range
+
+                        guard let startBound = Range(startRange, in: self)?.upperBound,
+                              let endBound = Range(endRange, in: self)?.lowerBound,
+                              startBound <= endBound else { continue }
+
+                        let textBetween = self[startBound..<endBound]
+                        let wordsBetween = textBetween.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
+
+                        if wordsBetween <= maxAllowedDistance && wordsBetween < minWordDistance {
+                            minWordDistance = wordsBetween
+                            bestStartIdx = Range(startRange, in: self)?.lowerBound
+                            bestEndIdx = Range(endRange, in: self)?.upperBound
+                            foundCluster = true
+                        }
+                        break // Kita sudah temukan window minimal yang berawal dari i
+                    }
+                }
+            }
+        }
+
+        if !foundCluster {
+            bestStartIdx = Range(sortedRanges[0].range, in: self)?.lowerBound
+            bestEndIdx = Range(sortedRanges[0].range, in: self)?.upperBound
+        }
+
+        guard let targetStart = bestStartIdx, let targetEnd = bestEndIdx else {
+            let limit = min(self.count, contextLength * 2)
+            return String(self.prefix(limit)).replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        }
+
+        var startIdx = self.index(targetStart, offsetBy: -contextLength, limitedBy: self.startIndex) ?? self.startIndex
+        var endIdx = self.index(targetEnd, offsetBy: contextLength, limitedBy: self.endIndex) ?? self.endIndex
+
+        if startIdx > self.startIndex, let spaceIdx = self.range(of: " ", options: .backwards, range: self.startIndex..<startIdx)?.upperBound {
+            startIdx = spaceIdx
+        }
+
+        if endIdx < self.endIndex, let spaceIdx = self.range(of: " ", range: endIdx..<self.endIndex)?.lowerBound {
+            endIdx = spaceIdx
+        }
+
+        let rawSnippet = self[startIdx..<endIdx]
+
+        var cleanSnippet = rawSnippet
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+
+        if startIdx > self.startIndex { cleanSnippet = "..." + cleanSnippet }
+        if endIdx < self.endIndex { cleanSnippet = cleanSnippet + "..." }
+
+        return cleanSnippet
+    }
+
+    /// Memfilter ranges sehingga hanya menyisakan ranges yang merupakan bagian dari valid NEAR cluster
+func filterRangesForNearMode(rangesWithIndex: [(range: NSRange, keywordIndex: Int)], keywordsCount: Int, nearDistance: Int) -> [NSRange] {
+        guard rangesWithIndex.count >= 2, keywordsCount > 1 else { return rangesWithIndex.map { $0.range } }
+
+        let sortedRanges = rangesWithIndex.sorted(by: { $0.range.location < $1.range.location })
+        let uniqueKeywordsCount = Set(sortedRanges.map { $0.keywordIndex }).count
+        guard uniqueKeywordsCount > 1 else { return [] }
+
+        let maxAllowedDistance = nearDistance * (uniqueKeywordsCount - 1) + 5
+        var validRanges = Set<NSRange>()
+
+        var left = 0
+        var countMap: [Int: Int] = [:]
+        var satisfiedTypes = 0
+
+        for right in 0..<sortedRanges.count {
+            let rightKw = sortedRanges[right].keywordIndex
+            countMap[rightKw, default: 0] += 1
+            if countMap[rightKw] == 1 { satisfiedTypes += 1 }
+
+            // Susutkan dari kiri selama window masih tetap punya semua keyword unik
+            // setelah elemen kiri dibuang (artinya elemen kiri itu duplikat/redundan)
+            while satisfiedTypes == uniqueKeywordsCount {
+                let leftKw = sortedRanges[left].keywordIndex
+                if countMap[leftKw]! > 1 {
+                    countMap[leftKw]! -= 1
+                    left += 1
+                } else {
+                    break
+                }
+            }
+
+            guard satisfiedTypes == uniqueKeywordsCount else { continue }
+
+            // window [left, right] sekarang adalah window PALING KETAT yang berakhir di 'right'
+            let startRange = sortedRanges[left].range
+            let endRange = sortedRanges[right].range
+
+            if startRange == endRange {
+                validRanges.insert(startRange)
+                continue
+            }
+
+            guard let startBound = Range(startRange, in: self)?.upperBound,
+                  let endBound = Range(endRange, in: self)?.lowerBound,
+                  startBound <= endBound else { continue }
+
+            let textBetween = self[startBound..<endBound]
+            let wordsBetween = textBetween.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.count
+
+            if wordsBetween <= maxAllowedDistance {
+                for k in left...right {
+                    validRanges.insert(sortedRanges[k].range)
+                }
+            }
+        }
+
+        return sortedRanges.map { $0.range }.filter { validRanges.contains($0) }
+    }
+
     /// Membuat NSAttributedString dengan highlight keyword.
     /// Dijalankan sekali saat data diproses, bukan saat scrolling.
-    func highlightedAttributedText(keywords: [String]) -> NSAttributedString {
+    func highlightedAttributedText(keywords: [String], nearDistance: Int? = nil) -> NSAttributedString {
         let attributed = NSMutableAttributedString(string: self)
 
         let paragraphStyle = NSMutableParagraphStyle()
@@ -607,7 +752,16 @@ extension String {
 
         attributed.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributed.length))
 
-        let ranges = self.findArabicMatchingRanges(keywords: keywords)
+        var ranges: [NSRange]
+
+        // Hanya highlight keyword yang benar-benar berdekatan jika ini mode NEAR
+        if let nearDistance = nearDistance, keywords.count > 1 {
+            let rangesWithIndex = self.findArabicMatchingRangesWithIndex(keywords: keywords)
+            ranges = filterRangesForNearMode(rangesWithIndex: rangesWithIndex, keywordsCount: keywords.count, nearDistance: nearDistance)
+        } else {
+            ranges = self.findArabicMatchingRanges(keywords: keywords)
+        }
+
         for range in ranges {
             if range.location + range.length <= attributed.length {
                 attributed.addAttribute(.backgroundColor, value: PlatformColor.systemYellow.withAlphaComponent(0.4), range: range)
@@ -694,8 +848,8 @@ extension String {
 extension Character {
     var isArabicLetter: Bool {
         guard let scalar = unicodeScalars.first else { return false }
-        return (0x0600...0x06FF).contains(scalar.value) || 
-               (0x0750...0x077F).contains(scalar.value) || 
+        return (0x0600...0x06FF).contains(scalar.value) ||
+               (0x0750...0x077F).contains(scalar.value) ||
                (0x08A0...0x08FF).contains(scalar.value)
     }
 }
@@ -1006,9 +1160,9 @@ public struct ArabicLightStemmer {
 
         var buffer = ContiguousArray<UnicodeScalar>()
         buffer.reserveCapacity(input.unicodeScalars.count)
-        
+
         stemWordToBuffer(input.unicodeScalars, into: &buffer)
-        
+
         return String(String.UnicodeScalarView(buffer))
     }
 
