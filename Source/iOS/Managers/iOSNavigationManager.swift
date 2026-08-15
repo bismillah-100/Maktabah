@@ -139,9 +139,9 @@ class iOSNavigationManager {
         currentMode = mode
     }
 
-    func openBook(_ book: BooksData, initialContentId: Int? = nil, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil) {
+    func openBook(_ book: BooksData, initialContentId: Int? = nil, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) {
         Task {
-            await openBookAsync(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation)
+            await openBookAsync(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation, recordHistory: recordHistory)
         }
     }
 
@@ -262,7 +262,7 @@ class iOSNavigationManager {
         activeIntegrationStates.removeAll { $0.id == state.id }
     }
 
-    private func openBookAsync(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil) async {
+    private func openBookAsync(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) async {
         if AppConfig.isUsingBundleMode,
            !BookArchiveIntegrator.shared.isBookIntegrated(book)
         {
@@ -270,13 +270,15 @@ class iOSNavigationManager {
             return
         }
 
-        presentReader(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation)
+        presentReader(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation, recordHistory: recordHistory)
 
         await Task.yield()
 
-        HistoryViewModel.shared.addBookToHistory(book.id)
-        if let initialContentId {
-            HistoryViewModel.shared.updateLastContentId(initialContentId, for: book.id)
+        if recordHistory {
+            HistoryViewModel.shared.addBookToHistory(book.id)
+            if let initialContentId {
+                HistoryViewModel.shared.updateLastContentId(initialContentId, for: book.id)
+            }
         }
     }
 
@@ -364,7 +366,7 @@ class iOSNavigationManager {
         state.progress = 0
     }
 
-    private func presentReader(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil) {
+    private func presentReader(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) {
         switchToMode(.viewer)
         clearPendingBookIntegration()
 
@@ -375,8 +377,9 @@ class iOSNavigationManager {
         if let existingTabIndex = openTabs.firstIndex(where: { $0.book.id == book.id }) {
             activeTabId = openTabs[existingTabIndex].id
             // Update initialContentId if provided, so the reader can jump to it
+            var updatedTab = openTabs[existingTabIndex]
+            updatedTab.viewModel.recordHistory = recordHistory
             if let contentId = initialContentId {
-                let updatedTab = openTabs[existingTabIndex]
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId
                 let hasNewSearch = (searchText != nil && !searchText!.isEmpty)
                 let hasNewTarget = (targetAnnotation != nil)
@@ -391,7 +394,6 @@ class iOSNavigationManager {
 
                 openTabs[existingTabIndex] = updatedTab
             } else {
-                let updatedTab = openTabs[existingTabIndex]
                 updatedTab.viewModel.searchText = searchText ?? ""
                 updatedTab.viewModel.searchMode = searchMode
                 updatedTab.viewModel.nearDistance = nearDistance
@@ -400,6 +402,7 @@ class iOSNavigationManager {
             }
         } else {
             let viewModel = ReaderViewModel(book: book)
+            viewModel.recordHistory = recordHistory
             viewModel.searchText = searchText ?? ""
             viewModel.searchMode = searchMode
             viewModel.nearDistance = nearDistance
