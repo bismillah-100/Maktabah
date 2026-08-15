@@ -142,33 +142,43 @@ class HistoryDatabaseManager {
         }
     }
 
-    func upsertEntries(_ entries: [ReadingEntry]) throws {
+    func upsertEntries(_ entries: [ReadingEntry], trackPending: Bool = true) throws {
         guard let _db, !entries.isEmpty else { return }
         let chunkSize = 50 // SQLite max params is 999. We have 8 params per entry. 50 * 8 = 400.
         
-        for i in stride(from: 0, to: entries.count, by: chunkSize) {
-            let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
-            let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
-            let sql = """
-            INSERT OR REPLACE INTO reading_entries
-            (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
-            VALUES \(placeholders);
-            """
-            
-            var params = [Any]()
-            for entry in chunk {
-                params.append(contentsOf: [
-                    entry.bookId,
-                    entry.lastContentId as Any? ?? NSNull(),
-                    entry.lastOpenedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
-                    entry.favoritedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
-                    entry.positionUpdatedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
-                    entry.updatedAt.timeIntervalSince1970,
-                    entry.isFavorite ? 1 : 0,
-                    entry.ckRecordId as Any? ?? NSNull()
-                ])
+        try transaction {
+            for i in stride(from: 0, to: entries.count, by: chunkSize) {
+                let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
+                let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
+                let sql = """
+                INSERT OR REPLACE INTO reading_entries
+                (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
+                VALUES \(placeholders);
+                """
+
+                var params = [Any]()
+                for entry in chunk {
+                    params.append(contentsOf: [
+                        entry.bookId,
+                        entry.lastContentId as Any? ?? NSNull(),
+                        entry.lastOpenedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                        entry.favoritedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                        entry.positionUpdatedAt?.timeIntervalSince1970 as Any? ?? NSNull(),
+                        entry.updatedAt.timeIntervalSince1970,
+                        entry.isFavorite ? 1 : 0,
+                        entry.ckRecordId as Any? ?? NSNull()
+                    ])
+                }
+                try _db.execute(query: sql, parameters: params)
+
+                if trackPending {
+                    for entry in chunk {
+                        if let ckId = entry.ckRecordId {
+                            try self.addPendingSync(ckRecordId: ckId, operation: "upload")
+                        }
+                    }
+                }
             }
-            try _db.execute(query: sql, parameters: params)
         }
     }
 
@@ -186,7 +196,7 @@ class HistoryDatabaseManager {
         }
     }
 
-    func deleteEntries(bookIds: [Int]) throws {
+    func deleteEntries(bookIds: [Int], trackPending: Bool = true) throws {
         guard let _db, !bookIds.isEmpty else { return }
         let chunkSize = 500
         try transaction {
@@ -195,16 +205,21 @@ class HistoryDatabaseManager {
                 let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
 
                 // Fetch ckRecordIds first
-                let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (\(placeholders));"
-                let ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap { $0 }
+                var ckIds: [String] = []
+                if trackPending {
+                    let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (\(placeholders));"
+                    ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap { $0 }
+                }
 
                 try _db.execute(
                     query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
                     parameters: chunk
                 )
 
-                for ckId in ckIds {
-                    try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+                if trackPending {
+                    for ckId in ckIds {
+                        try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+                    }
                 }
             }
         }
@@ -225,8 +240,8 @@ class HistoryDatabaseManager {
 
     func saveCloudKitChanges(deletedIds: [Int], upsertedEntries: [ReadingEntry], finalOrder: [Int]) throws {
         try transaction {
-            try deleteEntries(bookIds: deletedIds)
-            try upsertEntries(upsertedEntries)
+            try deleteEntries(bookIds: deletedIds, trackPending: false)
+            try upsertEntries(upsertedEntries, trackPending: false)
             try replaceHistoryOrder(finalOrder)
         }
     }

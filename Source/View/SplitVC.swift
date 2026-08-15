@@ -143,7 +143,7 @@ class SplitVC: NSSplitViewController {
 
         if #available(macOS 26.1, *) {
             let button: NSButton? = currentMode == .search
-            ? searchSidebarVC!.selectAllButton
+            ? searchSidebarVC?.selectAllButton
             : nil
 
             if currentMode == .search {

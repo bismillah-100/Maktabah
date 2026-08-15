@@ -19,6 +19,7 @@ struct ArchiveInfo {
 /// ----------------------------------------
 protocol DBConnectionType {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
+    func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T]
     func queryInts(sql: String, params: [SQLValue]) throws -> [Int]
     func execute(query: String) throws
     func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent]
@@ -131,7 +132,7 @@ class SearchWorker {
         var totalFetched = 0
 
         let tablesToProcess = allowedTables != nil
-            ? tables.filter { allowedTables!.contains($0) }
+            ? tables.filter { (allowedTables?.contains($0) ?? false) }
             : tables
 
         print("🔍 Archive \(archiveId): Mulai mencari di \(tablesToProcess.count) tables")
@@ -657,6 +658,64 @@ final class SQLiteConnection: DBConnectionType {
             sqlite3_free(errMsg)
             throw NSError(domain: "SQLite", code: Int(sqlite3_errcode(db)), userInfo: [NSLocalizedDescriptionKey: errorString])
         }
+    }
+
+    func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T] {
+        guard let db else {
+            throw NSError(domain: "SQLite", code: -1, userInfo: [NSLocalizedDescriptionKey: "DB closed"])
+        }
+
+        var results: [T] = []
+
+        executionLock.lock()
+        var statement: OpaquePointer? = statementCache[sql]
+        if statement == nil {
+            guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
+                executionLock.unlock()
+                let msg = String(cString: sqlite3_errmsg(db))
+                throw NSError(domain: "SQLite", code: -2, userInfo: [NSLocalizedDescriptionKey: msg])
+            }
+            if statementCache.count >= maxCacheSize, let oldestKey = cacheKeys.first {
+                if let oldStmt = statementCache.removeValue(forKey: oldestKey) {
+                    sqlite3_finalize(oldStmt)
+                }
+                cacheKeys.removeFirst()
+            }
+            statementCache[sql] = statement
+            cacheKeys.append(sql)
+        } else {
+            if let idx = cacheKeys.firstIndex(of: sql) {
+                cacheKeys.remove(at: idx)
+                cacheKeys.append(sql)
+            }
+        }
+        let stmt = statement!
+        sqlite3_reset(stmt)
+        sqlite3_clear_bindings(stmt)
+
+        defer { executionLock.unlock() }
+
+        // Bind parameters
+        for (i, param) in params.enumerated() {
+            let idx = Int32(i + 1)
+            switch param {
+            case let .text(s):
+                s.withCString { ptr in
+                    let destructor = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+                    sqlite3_bind_text(stmt, idx, ptr, -1, destructor)
+                }
+            case let .int(n):
+                sqlite3_bind_int64(stmt, idx, sqlite3_int64(n))
+            case .null:
+                sqlite3_bind_null(stmt, idx)
+            }
+        }
+
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            results.append(mapper(stmt))
+        }
+
+        return results
     }
 
     /// UPDATED: queryRows dengan support BLOB

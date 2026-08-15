@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SearchModeView: View {
     @Environment(iOSNavigationManager.self) var navigationManager: iOSNavigationManager
+    @Environment(\.isSearching) var isSearching
     @State private var showingSaveResults = false
     @State private var showingSavedResults = false
     @FocusState private var isSearchFieldFocused: Bool
@@ -110,29 +111,33 @@ struct SearchModeView: View {
                 ftsMigrationBanner()
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                SearchInputBar(
-                    viewModel: viewModel,
-                    isFocused: _isSearchFieldFocused,
-                    onSubmit: {
-                        Task {
-                            viewModel.addToHistory(viewModel.query)
-                            await viewModel.startSearch()
-                            isSearchFieldFocused = false
+                if !isSearching {
+                    SearchInputBar(
+                        viewModel: viewModel,
+                        isFocused: _isSearchFieldFocused,
+                        onSubmit: {
+                            Task {
+                                viewModel.addToHistory(viewModel.query)
+                                await viewModel.startSearch()
+                                isSearchFieldFocused = false
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
             .overlay(alignment: .bottom) {
-                SearchHistoryOverlay(
-                    viewModel: viewModel,
-                    inputBarHeight: 75,
-                    isVisible: .init(
-                        get: { isSearchFieldFocused },
-                        set: { isSearchFieldFocused = $0 ?? false }
+                if !isSearching {
+                    SearchHistoryOverlay(
+                        viewModel: viewModel,
+                        inputBarHeight: 75,
+                        isVisible: .init(
+                            get: { isSearchFieldFocused },
+                            set: { isSearchFieldFocused = $0 ?? false }
+                        )
                     )
-                )
-                .hideTabBarWhenKeyboardShown()
-                .zIndex(2)
+                    .hideTabBarWhenKeyboardShown()
+                    .zIndex(2)
+                }
             }
         }
     }

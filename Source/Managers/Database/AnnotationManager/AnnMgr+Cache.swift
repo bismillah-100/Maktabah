@@ -31,7 +31,7 @@ extension AnnotationManager {
             arr.insert(annotation, at: idx)
             _cacheByContent[key] = arr
             if _cacheByBook[annotation.bkId] != nil {
-                _cacheByBook[annotation.bkId]!.append(annotation)
+                _cacheByBook[annotation.bkId]?.append(annotation)
             }
         }
     }
