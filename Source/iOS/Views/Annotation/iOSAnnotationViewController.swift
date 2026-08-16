@@ -36,6 +36,9 @@ class iOSAnnotationViewController: UIViewController {
         super.viewDidLoad()
         setupCollectionView()
         configureDataSource()
+        if !currentNodes.isEmpty {
+            rebuildSnapshot(animated: false)
+        }
     }
 
     // MARK: - Full Rebuild (nodes passed from ViewModel)
@@ -43,12 +46,18 @@ class iOSAnnotationViewController: UIViewController {
     func handleTreeUpdate(nodes: [SwiftUIAnnotationNode], groupingMode: AnnotationGroupingMode) {
         currentNodes = nodes
         currentGroupingMode = groupingMode
+        guard isViewLoaded, dataSource != nil else { return }
         rebuildSnapshot(animated: true)
     }
 
     // MARK: - Incremental Update Entry Point
 
     func handleIncrementalUpdate(changeType: AnnotationChangeType, userInfo: [AnyHashable: Any]) {
+        guard isViewLoaded, dataSource != nil else {
+            onNeedFullReload?()
+            return
+        }
+
         let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
         let annotationId = (userInfo[AnnotationNotificationKeys.annotationId] as? Int64) ?? annotation?.id
         let diff = userInfo[AnnotationNotificationKeys.tagDiff] as? TagUpdateDiff
@@ -95,6 +104,8 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func handleTagDiff(_ diff: TagUpdateDiff) {
+        guard isViewLoaded, dataSource != nil else { return }
+
         // 1. Process Removed
         for entry in diff.removed {
             let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
@@ -169,6 +180,11 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func handleDeletedAnnotation(annotationId: Int64?, oldParentIndex: Int?, newParentIndex: Int?) {
+        guard isViewLoaded, dataSource != nil else {
+            onNeedFullReload?()
+            return
+        }
+
         guard let annotationId = annotationId else {
             onNeedFullReload?()
             return
@@ -380,6 +396,8 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func rebuildSnapshot(animated: Bool) {
+        guard isViewLoaded, dataSource != nil else { return }
+
         let newSectionIDs = currentNodes.map { $0.id }
         let currentSectionIDs = dataSource.snapshot().sectionIdentifiers
 
@@ -432,6 +450,8 @@ class iOSAnnotationViewController: UIViewController {
     // MARK: - Expand / Collapse
 
     private func toggleGroup(_ node: SwiftUIAnnotationNode) {
+        guard isViewLoaded, dataSource != nil else { return }
+
         let id = node.id
         let wasExpanded = expandedGroups.contains(id)
         let willExpand = !wasExpanded
