@@ -107,11 +107,6 @@ struct iOSReaderView: View {
                             .frame(maxWidth: 190)
                             .contentShape(Rectangle())
                     }
-                    .popover(isPresented: $showingTabsList) {
-                        iOSReaderTabsPopoverView(isPresented: $showingTabsList)
-                        .frame(maxWidth: 350)
-                        .presentationCompactAdaptation(.popover)
-                    }
                 }
             }
 
@@ -125,12 +120,6 @@ struct iOSReaderView: View {
                 }
                 .accessibilityLabel(String(localized: "Book Information"))
                 .help(String(localized: "Book Information"))
-                .popover(isPresented: $showingBookInfo) {
-                    iOSBookInfoView(book: book)
-                        .preferredColorScheme(isDarkMode ? .dark : .light)
-                        .presentationCompactAdaptation(.popover)
-                        .frame(maxWidth: 350, maxHeight: 450)
-                }
             }
 
             ToolbarItemGroup(placement: .bottomBar) {
@@ -153,6 +142,13 @@ struct iOSReaderView: View {
                 viewModel.didSelectSearch(query: query, contentId: contentId)
                 showingSearch = false
             }, viewModel: viewModel.searchViewModel)
+        }
+        .sheet(isPresented: $showingTabsList) {
+            iOSReaderTabsPopoverView(isPresented: $showingTabsList)
+
+        }
+        .sheet(isPresented: $showingBookInfo) {
+            iOSBookInfoView(book: book)
         }
         .sheet(isPresented: $showingTOC) {
             iOSTOCView(
