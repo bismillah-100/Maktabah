@@ -10,14 +10,14 @@ import SwiftUI
 struct iOSBookSearchView: View {
     let book: BooksData
     let onSelect: (Int, String) -> Void
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     @Bindable var viewModel: SearchViewModel
     @State private var ftsManager = FtsMigrationManager.shared
     @State private var showFtsMigrationOverlay = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ThemeVStack {
                 // Results List
                 SearchResultsListView(
@@ -33,7 +33,7 @@ struct iOSBookSearchView: View {
                 SearchToolbar(
                     viewModel: viewModel,
                     onLeadingAction: {
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     },
                     conditionalLeadingButton: false
                 )

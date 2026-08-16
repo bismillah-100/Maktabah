@@ -14,7 +14,7 @@ struct iOSTOCView: View {
 
     @State private var searchText = ""
     @State private var expandedPaths: Set<ObjectIdentifier> = []
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     init(tocViewModel: BookTOCViewModel, selectedId: Int?, onSelect: @escaping (Int) -> Void) {
         self.tocViewModel = tocViewModel
@@ -47,7 +47,7 @@ struct iOSTOCView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollViewReader { proxy in
                 ThemeList(isGrouped: true) {
                     ForEach(identifiableNodes) { item in
@@ -61,11 +61,13 @@ struct iOSTOCView: View {
                 }
                 .searchable(text: $searchText, prompt: "Search Contents")
                 .navigationTitle("Table of Contents")
-                .navigationBarItems(
-                    leading: Button("Close") {
-                        presentationMode.wrappedValue.dismiss()
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Close") {
+                            dismiss()
+                        }
                     }
-                )
+                }
                 .onAppear {
                     computeExpandedPaths()
                     if let selectedId = selectedId {

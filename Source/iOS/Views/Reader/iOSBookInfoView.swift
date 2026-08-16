@@ -14,12 +14,12 @@ struct iOSBookInfoView: View {
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
-        NavigationView {
             ThemeScrollView {
                 ThemeVStack(alignment: .leading, spacing: 16) {
                     Text(book.book)
                         .font(.title2)
                         .fontWeight(.bold)
+        NavigationStack {
 
                     if let author {
                         Text(author.namaLengkap)
@@ -67,9 +67,13 @@ struct iOSBookInfoView: View {
             .environment(\.layoutDirection, .rightToLeft)
             .navigationTitle("Book Info")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(leading: Button("Close") {
-                presentationMode.wrappedValue.dismiss()
-            })
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
             .onAppear {
                 loadBookInfo()
             }

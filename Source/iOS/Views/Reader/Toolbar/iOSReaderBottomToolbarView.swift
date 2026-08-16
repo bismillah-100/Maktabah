@@ -57,7 +57,9 @@ struct iOSReaderBottomToolbarView: View {
 
         Menu {
             Button(action: {
-                showingOptions = true
+                DispatchQueue.main.async {
+                    showingOptions = true
+                }
             }) {
                 Label("View Options", systemImage: "textformat")
             }
@@ -65,7 +67,9 @@ struct iOSReaderBottomToolbarView: View {
             .help(String(localized: "Text Options"))
 
             Button(action: {
-                showingTOC = true
+                DispatchQueue.main.async {
+                    showingTOC = true
+                }
             }) {
                 Label("Table of Contents", systemImage: "list.bullet")
             }
@@ -73,7 +77,9 @@ struct iOSReaderBottomToolbarView: View {
             .help(String(localized: "Table of Contents"))
 
             Button(action: {
-                showingAnnotationsList = true
+                DispatchQueue.main.async {
+                    showingAnnotationsList = true
+                }
             }) {
                 Label("Annotations", systemImage: "quote.closing")
             }
@@ -86,7 +92,6 @@ struct iOSReaderBottomToolbarView: View {
             ViewOptionsView()
                 .frame(width: 300, height: 500)
                 .presentationCompactAdaptation(.popover)
-                .preferredColorScheme(isDarkMode ? .dark : .light)
         }
         .sheet(isPresented: $showingSearch) {
             if let book = viewModel.currentBook {
