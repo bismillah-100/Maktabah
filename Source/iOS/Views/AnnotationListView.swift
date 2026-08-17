@@ -6,6 +6,15 @@ struct AnnotationListView: View {
     @State private var missingBookId: Int = 0
     @AppStorage("hideMissingBookAnnotations") private var hideMissingBookAnnotations: Bool = false
 
+    @State private var isExporting = false
+    @State private var exportDocument: AnnotationJsonDocument?
+    @State private var isImporting = false
+    @State private var pendingImportAnnotations: [Annotation] = []
+    @State private var showOverwriteDialog = false
+    @State private var importAlertTitle = ""
+    @State private var importAlertMessage: String?
+    @State private var showImportAlert = false
+
     var body: some View {
         let viewModel = navigationManager.annotationViewModel
         annotationsVC(viewModel)
@@ -15,7 +24,7 @@ struct AnnotationListView: View {
                         .controlSize(.large)
                         .background(
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(Color.appBackground)
+                                .fill(Color.appBackground)
                         )
                 }
             }
@@ -75,6 +84,24 @@ struct AnnotationListView: View {
 
                     Divider()
 
+                    Button {
+                        let allAnnotations = AnnotationManager.shared.loadAnnotations()
+                        if let jsonString = AnnotationJsonSerializer.encode(annotations: allAnnotations) {
+                            exportDocument = AnnotationJsonDocument(jsonString: jsonString)
+                            isExporting = true
+                        }
+                    } label: {
+                        Label("Export Annotations (JSON)".localized, systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
+                        isImporting = true
+                    } label: {
+                        Label("Import Annotations (JSON)".localized, systemImage: "square.and.arrow.down")
+                    }
+
+                    Divider()
+
                     Button(role: .destructive) {
                         CloudKitSyncManager.shared.resetChangeToken()
                     } label: {
@@ -85,7 +112,104 @@ struct AnnotationListView: View {
                 }
             }
         }
+        .fileExporter(
+            isPresented: $isExporting,
+            document: exportDocument,
+            contentType: .json,
+            defaultFilename: "maktabah_annotations.json"
+        ) { result in
+            if case let .failure(error) = result {
+                importAlertTitle = "Export Failed".localized
+                importAlertMessage = error.localizedDescription
+                showImportAlert = true
+            }
+        }
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case let .success(urls):
+                guard let url = urls.first else { return }
+                guard url.startAccessingSecurityScopedResource() else {
+                    importAlertTitle = "Import Failed".localized
+                    importAlertMessage = "Unable to access selected file.".localized
+                    showImportAlert = true
+                    return
+                }
+                defer { url.stopAccessingSecurityScopedResource() }
+                do {
+                    let data = try Data(contentsOf: url)
+                    let decoded = try AnnotationJsonSerializer.decode(from: data)
+                    guard !decoded.isEmpty else {
+                        importAlertTitle = "Import Annotations".localized
+                        importAlertMessage = "No annotations found in the selected file.".localized
+                        showImportAlert = true
+                        return
+                    }
+                    pendingImportAnnotations = decoded
+                    showOverwriteDialog = true
+                } catch {
+                    importAlertTitle = "Import Failed".localized
+                    importAlertMessage = error.localizedDescription
+                    showImportAlert = true
+                }
+            case let .failure(error):
+                importAlertTitle = "Import Failed".localized
+                importAlertMessage = error.localizedDescription
+                showImportAlert = true
+            }
+        }
+        .confirmationDialog(
+            "Import Annotations".localized,
+            isPresented: $showOverwriteDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Overwrite Existing".localized) {
+                performImport(overwrite: true, viewModel: viewModel)
+            }
+            Button("Skip Duplicates".localized) {
+                performImport(overwrite: false, viewModel: viewModel)
+            }
+            Button("Cancel".localized, role: .cancel) {
+                pendingImportAnnotations = []
+            }
+        } message: {
+            Text("Some annotations may already exist. How would you like to handle duplicates?".localized)
+        }
+        .alert(
+            importAlertTitle,
+            isPresented: $showImportAlert
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let msg = importAlertMessage {
+                Text(msg)
+            }
+        }
+    }
 
+    private func performImport(overwrite: Bool, viewModel: AnnotationViewModel) {
+        let annotations = pendingImportAnnotations
+        pendingImportAnnotations = []
+        Task {
+            do {
+                let count = try AnnotationManager.shared.importAnnotations(annotations, overwrite: overwrite)
+                await MainActor.run {
+                    importAlertTitle = "Import Annotations".localized
+                    importAlertMessage = String(format: "%d annotations imported successfully".localized, count)
+                    showImportAlert = true
+                }
+                await viewModel.loadAnnotations()
+            } catch {
+                await MainActor.run {
+                    importAlertTitle = "Import Failed".localized
+                    importAlertMessage = error.localizedDescription
+                    showImportAlert = true
+                }
+            }
+        }
     }
 }
 

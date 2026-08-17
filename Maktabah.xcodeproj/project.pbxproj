@@ -389,6 +389,7 @@
 		F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33214392FC2750E006EC214 /* ThemeComponents.swift */; };
 		F347296B3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
 		F347296C3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
+		F347296D3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
 		F347296E3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F347296F3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F349073F2F3064A10036CDAF /* IconMaktabah.icon in Resources */ = {isa = PBXBuildFile; fileRef = F349073E2F3064A10036CDAF /* IconMaktabah.icon */; };
@@ -510,6 +511,12 @@
 		F3D9CB213009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */; };
 		F3DD69E32FA4F76100BFEA0F /* ProgressBooksDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */; };
 		F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */; };
+		F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
+		F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
+		F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
+		F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
+		F3E900072FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
+		F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
 		F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */; };
 		F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
@@ -770,6 +777,8 @@
 		F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUpdateAlert.swift; sourceTree = "<group>"; };
 		F3D66912303215530030510C /* RightAlignedClipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightAlignedClipView.swift; sourceTree = "<group>"; };
 		F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZSTDContextWrapper.swift; sourceTree = "<group>"; };
+		F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationJsonSerializer.swift; sourceTree = "<group>"; };
+		F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "AnnMgr+ImportExport.swift"; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
 		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
@@ -943,6 +952,7 @@
 			isa = PBXGroup;
 			children = (
 				F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */,
+				F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */,
 				4B5695582EEFDAAE00ABEB48 /* Annotations.swift */,
 				4B8C9DD82F6985210049E4EF /* ArchiveErrors.swift */,
 				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
@@ -1362,14 +1372,15 @@
 		F37F1C35300268E3002B5618 /* AnnotationManager */ = {
 			isa = PBXGroup;
 			children = (
-				F37F1C2D300268E3002B5618 /* AnnotationManager.swift */,
 				F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */,
 				F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */,
 				F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */,
 				F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */,
+				F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */,
 				F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */,
 				F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */,
 				F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */,
+				F37F1C2D300268E3002B5618 /* AnnotationManager.swift */,
 			);
 			path = AnnotationManager;
 			sourceTree = "<group>";
@@ -1721,6 +1732,8 @@
 				F37F1C4B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
 				F37F1C4C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
 				F37F1C4D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
+				F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
+				F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				4B4C97122F1F026C0051503E /* Narrator.swift in Sources */,
 				4B313A212F9A0FC60061FCC1 /* ResultCellView.swift in Sources */,
 				4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */,
@@ -1808,6 +1821,8 @@
 				F37F1C3B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
 				F37F1C3C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
 				F37F1C3D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
+				F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
+				F3E900072FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				4B7C90AE2F83494200454BE1 /* InitProgress.swift in Sources */,
 				4B7C90AF2F83494200454BE1 /* SettingsActions.swift in Sources */,
 				4B7C90B02F83494200454BE1 /* QuranTafseerVC.swift in Sources */,
@@ -2024,6 +2039,9 @@
 				F37F1C43300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
 				F37F1C44300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
 				F37F1C45300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
+				F347296D3031D5D10094BF0A /* TagFilterMode.swift in Sources */,
+				F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
+				F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				F31111962FC00F060024B638 /* iOSResultWriterView.swift in Sources */,
 				F31111972FC00F060024B638 /* iOSSavedResultsView.swift in Sources */,
 				F305770C2FA46222005732C6 /* CopyableResult.swift in Sources */,
