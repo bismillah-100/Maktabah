@@ -917,7 +917,14 @@ final class CloudKitSyncManager {
                     }
                 } else {
                     // Non-conflict partial failure - retain failed record IDs in sync_pending for retry
-                    handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
+                    let innerErrors = partialErrors.values.compactMap { $0 as? CKError }
+                    let rateLimitErrors = innerErrors.filter { $0.code == .requestRateLimited || $0.code == .serviceUnavailable || $0.code == .zoneBusy }
+
+                    if let firstRateLimit = rateLimitErrors.first {
+                        handleCloudKitError(firstRateLimit, operationType: .upload, retryCount: retryCount)
+                    } else {
+                        handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
+                    }
                     completion?(.failure(error))
                 }
             } else {

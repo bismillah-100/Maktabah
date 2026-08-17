@@ -56,7 +56,7 @@ class TarjamahGlobalManager {
 
     func setupConnection() {
         guard let specialPath = AppConfig.specialDatabasePath else { return }
-        
+
         // Inisialisasi actor
         dbActor = try? TarjamahDatabaseActor(dbPath: specialPath)
     }
@@ -468,7 +468,7 @@ class TarjamahGlobalManager {
                 if let bookData = LibraryDataManager.shared.getBook([tVar.bk]).first {
                     tVar.bookTitle = bookData.book
                     tVar.archive = bookData.archive
-                    
+
                     allResults.append(tVar)
                     batchBuffer.append(tVar)
 
@@ -546,6 +546,15 @@ class TarjamahGlobalManager {
 
         var batchBuffer: [TarjamahResult] = []
 
+        let targetQuery = query?.trimmingCharacters(in: .whitespaces)
+
+        if let targetQuery {
+            var searchKeywords = FtsQueryParser.extractKeywords(query: targetQuery, mode: .phrase)
+            if searchKeywords.isEmpty {
+                searchKeywords = [targetQuery.normalizeArabic()]
+            }
+        }
+
         for (index, tarjamah) in tarjamahList.enumerated() {
             // Cek Stop
             if stopFlag() || Task.isCancelled {
@@ -557,8 +566,9 @@ class TarjamahGlobalManager {
             await pauseController?.waitIfPaused()
 
             do {
-                guard let result = try await loadTarjamahContent(tarjamah, query: query) else {
-                    continue 
+                let effectiveQuery = targetQuery == nil ? tarjamah.name : targetQuery!
+                guard let result = try await loadTarjamahContent(tarjamah, query: effectiveQuery) else {
+                    continue
                 }
                 batchBuffer.append(result)
 
@@ -575,10 +585,13 @@ class TarjamahGlobalManager {
     }
 
     /// Load konten single (Atomic operation)
-    func loadTarjamahContent(_ tarjamah: TarjamahMen, query: String? = nil) async throws -> TarjamahResult? {
+    func loadTarjamahContent(_ tarjamah: TarjamahMen, query: String) async throws -> TarjamahResult? {
+        let book: BooksData? = await Task.detached {
+            LibraryDataManager.shared.getBook([tarjamah.bk]).first
+        }.value
         var archiveId = tarjamah.archive
         if archiveId == nil {
-            archiveId = LibraryDataManager.shared.getBook([tarjamah.bk]).first?.archive
+            archiveId = book?.archive
         }
         guard let archive = archiveId else {
             throw NSError(domain: "Tarjamah", code: -1, userInfo: [NSLocalizedDescriptionKey: "No Archive ID"])
@@ -597,26 +610,15 @@ class TarjamahGlobalManager {
             throw NSError(domain: "Tarjamah", code: -2, userInfo: [NSLocalizedDescriptionKey: "Not found"])
         }
 
-        let book = LibraryDataManager.shared.getBook([tarjamah.bk]).first
         let isMultilingual = book?.isMultiLanguage ?? false
         let isImported = book?.isImported ?? false
 
         let strippedNash = isImported ? nass.stripSpanTags() : nass
         let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
 
-        let targetQuery = query?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let effectiveQuery = (targetQuery?.isEmpty == false) ? targetQuery! : tarjamah.name
-
-        var searchKeywords = FtsQueryParser.extractKeywords(query: effectiveQuery, mode: .phrase)
-        if searchKeywords.isEmpty && !effectiveQuery.isEmpty {
-            searchKeywords = [effectiveQuery.normalizeArabic()]
-        }
-        let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
-
         let snippet = normalizedNash
-            .normalizeArabic()
-            .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
-        let highlightedSnippet = snippet.highlightedAttributedText(keywords: searchKeywordsConverted)
+            .snippetAround(keywords: [query], contextLength: 60)
+        let highlightedSnippet = snippet.highlightedAttributedText(keywords: [query])
 
         return TarjamahResult(tarjamah: tarjamah, content: snippet, attributedText: highlightedSnippet)
     }
@@ -641,7 +643,7 @@ class TarjamahGlobalManager {
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             do {
-                guard let result = try await loadTarjamahContent(tarjamah, query: nil) else { continue }
+                guard let result = try await loadTarjamahContent(tarjamah, query: tarjamah.name) else { continue }
                 results.append(result)
 
                 await MainActor.run {

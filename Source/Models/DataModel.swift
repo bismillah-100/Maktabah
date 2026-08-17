@@ -54,8 +54,16 @@ class BooksData: Codable, Identifiable {
     var isImported: Bool {
         return pdfCs == 4
     }
-    var bithoqoh: String = .init()
-    var info: String = .init()
+    var bithoqoh: String = .init() {
+        didSet {
+            bithoqoh = bithoqoh.convertToArabicDigits()
+        }
+    }
+    var info: String = .init() {
+        didSet {
+            info = info.convertToArabicDigits()
+        }
+    }
     var isChecked: Bool = true
 
     init(id: Int, book: String, archive: Int, muallif: Int, bithoqoh: String = "", info: String = "") {
@@ -64,8 +72,8 @@ class BooksData: Codable, Identifiable {
         self.normalizedBook = book.normalizeArabic(false)
         self.archive = archive
         self.muallif = muallif
-        self.bithoqoh = bithoqoh
-        self.info = info
+        self.bithoqoh = bithoqoh.convertToArabicDigits()
+        self.info = info.convertToArabicDigits()
     }
 }
 
