@@ -237,6 +237,7 @@ final class NarratorViewModel: ViewModelBase {
 
                     let resultsBatch = await tarjamahManager.loadMultipleTarjamahContent(
                         newBatch,
+                        query: query,
                         pauseController: pauseController
                     ) { [weak self] in
                         self?.isStopped ?? true

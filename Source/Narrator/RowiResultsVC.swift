@@ -176,6 +176,7 @@ class RowiResultsVC: NSViewController {
         guard !query.isEmpty else { return }
 
         ReusableFunc.updateBuiltInRecents(with: query, in: searchField)
+        viewModel?.searchText = query
         tableView.reloadData()
         updateStartButton(isPaused: false, isActive: true, state: .on)
         viewModel?.startSearch(query: query)
@@ -300,9 +301,14 @@ extension RowiResultsVC: NSTableViewDelegate {
 
         let data = tarjamahList[row]
 
+        cell.textField?.allowsExpansionToolTips = true
+        cell.textField?.lineBreakMode = .byTruncatingTail
+        cell.textField?.usesSingleLineMode = true
+        cell.textField?.maximumNumberOfLines = 1
+
         switch tableColumn?.identifier.rawValue {
         case "Content":
-            cell.textField?.stringValue = data.content
+            cell.textField?.attributedStringValue = data.attributedText
         case "Book":
             cell.textField?.stringValue = data.tarjamah.bookTitle ?? ""
         default:
@@ -323,8 +329,17 @@ extension RowiResultsVC: NSTableViewDelegate {
 
         let data = tarjamahList[row]
 
+        let queryToHighlight: String = {
+            if rowiMode == .fullSearch {
+                let text = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                return text.isEmpty ? data.tarjamah.name : text
+            } else {
+                return data.tarjamah.name
+            }
+        }()
+
         Task.detached { [weak self] in
-            await self?.delegate?.didSelect(tarjamahB: data.tarjamah, query: self?.searchField.stringValue)
+            await self?.delegate?.didSelect(tarjamahB: data.tarjamah, query: queryToHighlight)
         }
     }
 

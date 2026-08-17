@@ -11,7 +11,7 @@ struct iOSBookAnnotationsView: View {
     let bookId: Int
     let annotations: [Annotation]
     let onSelect: (Annotation) -> Void
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     /// Load annotations specific to this book directly from the manager
     @State private var bookAnnotations: [Annotation] = []
@@ -30,7 +30,7 @@ struct iOSBookAnnotationsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ThemeList(filteredAnnotations, id: \.id, isGrouped: false) { ann in
                 Button(action: {
                     onSelect(ann)
@@ -78,18 +78,22 @@ struct iOSBookAnnotationsView: View {
             .searchable(text: $searchText, prompt: String(localized: "Search Annotations"))
             .navigationTitle("Annotations")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("Close") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button(action: {
-                    CloudKitSyncManager.shared.resetChangeToken()
-                }) {
-                    Image(systemName: "arrow.counterclockwise.icloud")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
                 }
-                .accessibilityLabel(String(localized: "Synchronize Data"))
-                .help(String(localized: "Synchronize Data"))
-            )
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        CloudKitSyncManager.shared.resetChangeToken()
+                    }) {
+                        Image(systemName: "arrow.counterclockwise.icloud")
+                    }
+                    .accessibilityLabel(String(localized: "Synchronize Data"))
+                    .help(String(localized: "Synchronize Data"))
+                }
+            }
             .onAppear {
                 loadBookAnnotations()
             }

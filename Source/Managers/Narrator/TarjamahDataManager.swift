@@ -56,7 +56,7 @@ class TarjamahGlobalManager {
 
     func setupConnection() {
         guard let specialPath = AppConfig.specialDatabasePath else { return }
-        
+
         // Inisialisasi actor
         dbActor = try? TarjamahDatabaseActor(dbPath: specialPath)
     }
@@ -468,7 +468,7 @@ class TarjamahGlobalManager {
                 if let bookData = LibraryDataManager.shared.getBook([tVar.bk]).first {
                     tVar.bookTitle = bookData.book
                     tVar.archive = bookData.archive
-                    
+
                     allResults.append(tVar)
                     batchBuffer.append(tVar)
 
@@ -536,6 +536,7 @@ class TarjamahGlobalManager {
     /// Load content untuk banyak item sekaligus dengan progress streaming
     func loadMultipleTarjamahContent(
         _ tarjamahList: [TarjamahMen],
+        query: String? = nil,
         pauseController: PauseController?,
         stopFlag: @escaping () -> Bool,
         onProgress: @escaping (Int, Int) -> Void
@@ -544,6 +545,15 @@ class TarjamahGlobalManager {
         guard !tarjamahList.isEmpty else { return [] }
 
         var batchBuffer: [TarjamahResult] = []
+
+        let targetQuery = query?.trimmingCharacters(in: .whitespaces)
+
+        if let targetQuery {
+            var searchKeywords = FtsQueryParser.extractKeywords(query: targetQuery, mode: .phrase)
+            if searchKeywords.isEmpty {
+                searchKeywords = [targetQuery.normalizeArabic()]
+            }
+        }
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             // Cek Stop
@@ -556,12 +566,11 @@ class TarjamahGlobalManager {
             await pauseController?.waitIfPaused()
 
             do {
-                guard let result = try await loadTarjamahContent(tarjamah) else {
-                    continue 
+                let effectiveQuery = targetQuery == nil ? tarjamah.name : targetQuery!
+                guard let result = try await loadTarjamahContent(tarjamah, query: effectiveQuery) else {
+                    continue
                 }
                 batchBuffer.append(result)
-
-
 
                 await MainActor.run {
                     onProgress(index + 1, tarjamahList.count)
@@ -576,8 +585,15 @@ class TarjamahGlobalManager {
     }
 
     /// Load konten single (Atomic operation)
-    func loadTarjamahContent(_ tarjamah: TarjamahMen) async throws -> TarjamahResult? {
-        guard let archive = tarjamah.archive else {
+    func loadTarjamahContent(_ tarjamah: TarjamahMen, query: String) async throws -> TarjamahResult? {
+        let book: BooksData? = await Task.detached {
+            LibraryDataManager.shared.getBook([tarjamah.bk]).first
+        }.value
+        var archiveId = tarjamah.archive
+        if archiveId == nil {
+            archiveId = book?.archive
+        }
+        guard let archive = archiveId else {
             throw NSError(domain: "Tarjamah", code: -1, userInfo: [NSLocalizedDescriptionKey: "No Archive ID"])
         }
 
@@ -594,10 +610,17 @@ class TarjamahGlobalManager {
             throw NSError(domain: "Tarjamah", code: -2, userInfo: [NSLocalizedDescriptionKey: "Not found"])
         }
 
-        // Buat snippet
-        let snippet = nass.snippetAround(keywords: [tarjamah.name], contextLength: 100)
+        let isMultilingual = book?.isMultiLanguage ?? false
+        let isImported = book?.isImported ?? false
 
-        return TarjamahResult(tarjamah: tarjamah, content: snippet) // atau return nass full
+        let strippedNash = isImported ? nass.stripSpanTags() : nass
+        let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
+
+        let snippet = normalizedNash
+            .snippetAround(keywords: [query], contextLength: 60)
+        let highlightedSnippet = snippet.highlightedAttributedText(keywords: [query])
+
+        return TarjamahResult(tarjamah: tarjamah, content: snippet, attributedText: highlightedSnippet)
     }
 
     /// Load semua konten tarjamah untuk rawi
@@ -620,7 +643,7 @@ class TarjamahGlobalManager {
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             do {
-                guard let result = try await loadTarjamahContent(tarjamah) else { continue }
+                guard let result = try await loadTarjamahContent(tarjamah, query: tarjamah.name) else { continue }
                 results.append(result)
 
                 await MainActor.run {

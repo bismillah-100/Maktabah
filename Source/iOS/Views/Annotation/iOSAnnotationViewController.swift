@@ -36,6 +36,9 @@ class iOSAnnotationViewController: UIViewController {
         super.viewDidLoad()
         setupCollectionView()
         configureDataSource()
+        if !currentNodes.isEmpty {
+            rebuildSnapshot(animated: false)
+        }
     }
 
     // MARK: - Full Rebuild (nodes passed from ViewModel)
@@ -43,12 +46,18 @@ class iOSAnnotationViewController: UIViewController {
     func handleTreeUpdate(nodes: [SwiftUIAnnotationNode], groupingMode: AnnotationGroupingMode) {
         currentNodes = nodes
         currentGroupingMode = groupingMode
+        guard isViewLoaded, dataSource != nil else { return }
         rebuildSnapshot(animated: true)
     }
 
     // MARK: - Incremental Update Entry Point
 
     func handleIncrementalUpdate(changeType: AnnotationChangeType, userInfo: [AnyHashable: Any]) {
+        guard isViewLoaded, dataSource != nil else {
+            onNeedFullReload?()
+            return
+        }
+
         let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
         let annotationId = (userInfo[AnnotationNotificationKeys.annotationId] as? Int64) ?? annotation?.id
         let diff = userInfo[AnnotationNotificationKeys.tagDiff] as? TagUpdateDiff
@@ -207,8 +216,6 @@ class iOSAnnotationViewController: UIViewController {
 
     /// Mengganti item lama dengan yang baru langsung di section snapshot untuk memastikan struktur hierarki terjaga
     private func updateItemInSections(with updatedAnnotation: Annotation) {
-        guard isViewLoaded, dataSource != nil else { return }
-
         var found = false
         for sectionID in dataSource.snapshot().sectionIdentifiers {
             var sectionSnapshot = dataSource.snapshot(for: sectionID)

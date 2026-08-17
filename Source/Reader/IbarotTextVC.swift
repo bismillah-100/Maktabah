@@ -57,15 +57,15 @@ class IbarotTextVC: NSViewController {
     private func setupBindings() {
         textView.viewModel = viewModel
         // Bind content text changes syncrhounously
-        viewModel.$contentText
-            .sink { [weak self] text in
-                guard let self, !text.isEmpty else { return }
+        viewModel.$contentPayload
+            .sink { [weak self] payload in
+                guard let self, !payload.text.isEmpty else { return }
                 textDelegate?.loadIbarotText(
-                    text,
+                    payload.text,
                     color: NSColor.header,
                     isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
                     isImported: viewModel.currentBook?.isImported ?? false,
-                    keepScrollPosition: false
+                    keepScrollPosition: payload.keepScrollPosition
                 )
             }
             .store(in: &viewModel.cancellables)
@@ -274,6 +274,11 @@ class IbarotTextVC: NSViewController {
 
     func applyFont(_ redraw: Bool) {
         if !redraw {
+            guard let scrollView = textView.enclosingScrollView else { return }
+            let visibleRect = scrollView.documentVisibleRect
+            let totalHeight = scrollView.documentView?.frame.size.height ?? 0
+            let scrollPercentage = totalHeight > 0 ? (visibleRect.origin.y / totalHeight) : 0
+
             let defaults = UserDefaults.standard
             var fontSize = CGFloat(defaults.textViewFontSize)
             if fontSize == 0 { fontSize = defaultFontSize }
@@ -285,13 +290,25 @@ class IbarotTextVC: NSViewController {
                 fontSize: fontSize
             )
             textView.typingAttributes[.font] = NSFont(name: fontName, size: fontSize)
+
+            if let textLayoutManager = textView.textLayoutManager {
+                textLayoutManager.enumerateTextLayoutFragments(
+                    from: textLayoutManager.documentRange.location,
+                    options: [.ensuresLayout]
+                ) { _ in true }
+            }
+
+            let newTotalHeight = scrollView.documentView?.frame.size.height ?? 0
+            let targetY = scrollPercentage * newTotalHeight
+            scrollView.contentView.scroll(to: NSPoint(x: visibleRect.origin.x, y: targetY))
+            scrollView.reflectScrolledClipView(scrollView.contentView)
         } else {
-            viewModel.refreshCurrentPage()
+            viewModel.refreshCurrentPage(keepScrollPosition: true)
         }
     }
 
     func toggleHarakat(_ on: Bool) {
-        viewModel.refreshCurrentPage()
+        viewModel.refreshCurrentPage(keepScrollPosition: true)
     }
 
     func applyBackgroundColor(_ color: NSColor) {
@@ -544,7 +561,7 @@ extension IbarotTextVC: TarjamahBDelegate {
 
         try? await Task.sleep(nanoseconds: 300_000_000)
         if let query {
-            await textDelegate?.highlightAndScrollToText(query.normalizeArabic(true), mode: nil, nearDistance: 10)
+            await textDelegate?.highlightAndScrollToText(query.normalizeArabic(true), mode: .phrase, nearDistance: 10)
         }
     }
 }

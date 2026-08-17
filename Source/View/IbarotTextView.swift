@@ -202,17 +202,31 @@ class IbarotTextView: NSTextView {
             }
         }
 
-        // Batch update
-        ts.beginEditing()
         if enable {
+            guard !annotations.isEmpty || !annotationRanges.isEmpty else {
+                window?.invalidateCursorRects(for: self)
+                return
+            }
             refreshAnnotations()
         } else {
+            guard !annotationRanges.isEmpty else {
+                window?.invalidateCursorRects(for: self)
+                return
+            }
+            ts.beginEditing()
             for annotation in annotationRanges {
                 ts.removeAttribute(.link, range: annotation.range)
             }
+            ts.endEditing()
         }
-        ts.endEditing()
 
+        if let textLayoutManager {
+            textLayoutManager.enumerateTextLayoutFragments(
+                from: textLayoutManager.documentRange.location,
+                options: [.ensuresLayout]
+            ) { _ in true }
+        }
+        needsDisplay = true
         window?.invalidateCursorRects(for: self)
     }
 
@@ -226,8 +240,24 @@ class IbarotTextView: NSTextView {
     }
 
     func updateLineHeight() {
-        guard let ts = textStorage else { return }
+        guard let ts = textStorage, let scrollView = enclosingScrollView else { return }
+        let visibleRect = scrollView.documentVisibleRect
+        let totalHeight = scrollView.documentView?.frame.size.height ?? 0
+        let scrollPercentage = totalHeight > 0 ? (visibleRect.origin.y / totalHeight) : 0
+
         renderer.updateLineHeight(in: ts)  // ← simpel!
+
+        if let textLayoutManager {
+            textLayoutManager.enumerateTextLayoutFragments(
+                from: textLayoutManager.documentRange.location,
+                options: [.ensuresLayout]
+            ) { _ in true }
+        }
+
+        let newTotalHeight = scrollView.documentView?.frame.size.height ?? 0
+        let targetY = scrollPercentage * newTotalHeight
+        scrollView.contentView.scroll(to: NSPoint(x: visibleRect.origin.x, y: targetY))
+        scrollView.reflectScrolledClipView(scrollView.contentView)
     }
 
     override func changeFont(_ sender: Any?) {
@@ -597,7 +627,9 @@ class IbarotTextView: NSTextView {
     ) throws {
 
         defer {
-            setSelectedRange(NSRange(location: NSNotFound, length: 0))
+            if selectedRange.length > 0 {
+                setSelectedRange(NSRange(location: selectedRange.location, length: 0))
+            }
             colorMenuView.reloadColors()
         }
 
@@ -652,7 +684,6 @@ class IbarotTextView: NSTextView {
 
         do {
             try applyAnnotations(in: sel, with: .black, mode: .underline)
-            setSelectedRange(NSRange(location: NSNotFound, length: 0))
         } catch {
             #if DEBUG
                 print("Failed to save highlight: \(error)")
@@ -712,8 +743,6 @@ class IbarotTextView: NSTextView {
 
     func refreshAnnotations() {
         guard let ts = textStorage else { return }
-        ts.beginEditing()
-
         let fullRange = NSRange(location: 0, length: ts.length)
         var rangesToClear: [NSRange] = []
 
@@ -723,6 +752,9 @@ class IbarotTextView: NSTextView {
             }
         }
 
+        guard !rangesToClear.isEmpty || !annotations.isEmpty else { return }
+
+        ts.beginEditing()
         for range in rangesToClear {
             ts.removeAttribute(.backgroundColor, range: range)
             ts.removeAttribute(.underlineStyle, range: range)
@@ -736,8 +768,15 @@ class IbarotTextView: NSTextView {
             showHarakat: state.showHarakat,
             replacementEvents: currentRenderResult?.replacementEvents ?? []
         )
-
         ts.endEditing()
+
+        if let textLayoutManager {
+            textLayoutManager.enumerateTextLayoutFragments(
+                from: textLayoutManager.documentRange.location,
+                options: [.ensuresLayout]
+            ) { _ in true }
+        }
+        needsDisplay = true
     }
 
     func presentAnnotationEditor(
@@ -806,36 +845,48 @@ class IbarotTextView: NSTextView {
         let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
         let annotationId = userInfo[AnnotationNotificationKeys.annotationId] as? Int64
 
-        ts.beginEditing()
+        let isCurrentPageAnnotation = (annotation?.bkId == self.bkId && annotation?.contentId == self.contentId)
+
         switch changeType {
         case .added:
-            if let ann = annotation, ann.bkId == self.bkId, ann.contentId == self.contentId {
-                renderer.applyAnnotations(
-                    [ann],
-                    to: ts,
-                    showHarakat: state.showHarakat,
-                    replacementEvents: currentRenderResult?.replacementEvents ?? []
-                )
-            }
+            guard isCurrentPageAnnotation, let ann = annotation else { return }
+            ts.beginEditing()
+            renderer.applyAnnotations(
+                [ann],
+                to: ts,
+                showHarakat: state.showHarakat,
+                replacementEvents: currentRenderResult?.replacementEvents ?? []
+            )
+            ts.endEditing()
         case .updated:
-            if let ann = annotation, ann.bkId == self.bkId, ann.contentId == self.contentId, let id = ann.id {
-                removeAttributesForAnnotationId(id)
-                renderer.applyAnnotations(
-                    [ann],
-                    to: ts,
-                    showHarakat: state.showHarakat,
-                    replacementEvents: currentRenderResult?.replacementEvents ?? []
-                )
-            }
+            guard isCurrentPageAnnotation, let ann = annotation, let id = ann.id else { return }
+            ts.beginEditing()
+            removeAttributesForAnnotationId(id)
+            renderer.applyAnnotations(
+                [ann],
+                to: ts,
+                showHarakat: state.showHarakat,
+                replacementEvents: currentRenderResult?.replacementEvents ?? []
+            )
+            ts.endEditing()
         case .deleted:
-            if let id = annotationId {
-                removeAttributesForAnnotationId(id)
-            }
+            guard let id = annotationId else { return }
+            removeAttributesForAnnotationId(id)
         }
-        ts.endEditing()
-        
+
+        if let textLayoutManager {
+            textLayoutManager.enumerateTextLayoutFragments(
+                from: textLayoutManager.documentRange.location,
+                options: [.ensuresLayout]
+            ) { _ in true }
+        }
+        needsDisplay = true
+
         // UI Cleanup
-        setSelectedRange(NSRange(location: NSNotFound, length: 0))
+        let sel = selectedRange()
+        if sel.length > 0 {
+            setSelectedRange(NSRange(location: sel.location, length: 0))
+        }
         colorMenuView.reloadColors()
     }
 
@@ -935,6 +986,8 @@ extension IbarotTextView: TextViewRenderable {
                     let targetY = scrollPercentage * newTotalHeight
                     scrollView.contentView.scroll(to: NSPoint(x: visibleRect.origin.x, y: targetY))
                     scrollView.reflectScrolledClipView(scrollView.contentView)
+                } else {
+                    scrollToBeginningOfDocument(nil)
                 }
             }
         }

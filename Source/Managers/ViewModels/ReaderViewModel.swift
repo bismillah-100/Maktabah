@@ -15,6 +15,18 @@ extension ReaderViewModel: ObservableObject {}
 import SwiftUI
 #endif
 
+#if os(macOS)
+struct ContentRenderPayload: Equatable {
+    let text: String
+    let keepScrollPosition: Bool
+
+    init(text: String, keepScrollPosition: Bool = false) {
+        self.text = text
+        self.keepScrollPosition = keepScrollPosition
+    }
+}
+#endif
+
 #if os(iOS)
 @Observable
 #endif
@@ -27,11 +39,16 @@ class ReaderViewModel: ViewModelBase {
     var currentContentId: Int = 0
 
     #if os(macOS)
-    @Published var contentText: String = ""
+    @Published var contentPayload: ContentRenderPayload = .init(text: "", keepScrollPosition: false)
     @Published var state: ViewModelState = .idle
     @Published var totalParts: Int = 0
     @Published var minPageInPart: Int = 0
     @Published var maxPageInPart: Int = 0
+
+    var contentText: String {
+        get { contentPayload.text }
+        set { contentPayload = ContentRenderPayload(text: newValue, keepScrollPosition: false) }
+    }
     #else
     var contentText: String = ""
     var state: ViewModelState = .idle
@@ -375,7 +392,11 @@ class ReaderViewModel: ViewModelBase {
     // MARK: - Private: Core Update
 
     func updateContentState(with content: BookContent) {
+        #if os(macOS)
+        contentPayload = ContentRenderPayload(text: content.nash, keepScrollPosition: false)
+        #else
         contentText = content.nash
+        #endif
         currentPart = content.part
         currentPage = content.page
         currentID = content.id
@@ -408,7 +429,7 @@ class ReaderViewModel: ViewModelBase {
     }
 
     #if os(macOS)
-    func refreshCurrentPage() {
+    func refreshCurrentPage(keepScrollPosition: Bool = true) {
         guard let currentBook, let currentID,
               let content = bookConnection.getContent(
                   bkid: "\(currentBook.id)",
@@ -416,7 +437,7 @@ class ReaderViewModel: ViewModelBase {
               )
         else { return }
 
-        contentText = content.nash
+        contentPayload = ContentRenderPayload(text: content.nash, keepScrollPosition: keepScrollPosition)
         onContentChanged?(content)
     }
 
