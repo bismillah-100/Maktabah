@@ -104,8 +104,6 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func handleTagDiff(_ diff: TagUpdateDiff) {
-        guard isViewLoaded, dataSource != nil else { return }
-
         // 1. Process Removed
         for entry in diff.removed {
             let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
@@ -180,11 +178,6 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func handleDeletedAnnotation(annotationId: Int64?, oldParentIndex: Int?, newParentIndex: Int?) {
-        guard isViewLoaded, dataSource != nil else {
-            onNeedFullReload?()
-            return
-        }
-
         guard let annotationId = annotationId else {
             onNeedFullReload?()
             return
@@ -223,8 +216,6 @@ class iOSAnnotationViewController: UIViewController {
 
     /// Mengganti item lama dengan yang baru langsung di section snapshot untuk memastikan struktur hierarki terjaga
     private func updateItemInSections(with updatedAnnotation: Annotation) {
-        guard isViewLoaded, dataSource != nil else { return }
-
         var found = false
         for sectionID in dataSource.snapshot().sectionIdentifiers {
             var sectionSnapshot = dataSource.snapshot(for: sectionID)
@@ -396,8 +387,6 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func rebuildSnapshot(animated: Bool) {
-        guard isViewLoaded, dataSource != nil else { return }
-
         let newSectionIDs = currentNodes.map { $0.id }
         let currentSectionIDs = dataSource.snapshot().sectionIdentifiers
 
@@ -450,8 +439,6 @@ class iOSAnnotationViewController: UIViewController {
     // MARK: - Expand / Collapse
 
     private func toggleGroup(_ node: SwiftUIAnnotationNode) {
-        guard isViewLoaded, dataSource != nil else { return }
-
         let id = node.id
         let wasExpanded = expandedGroups.contains(id)
         let willExpand = !wasExpanded
