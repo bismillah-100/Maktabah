@@ -917,10 +917,12 @@ final class CloudKitSyncManager {
                     }
                 } else {
                     // Non-conflict partial failure - retain failed record IDs in sync_pending for retry
+                    handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
                     completion?(.failure(error))
                 }
             } else {
                 // Partial failure without specific errors - retain failed record IDs in sync_pending for retry
+                handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
                 completion?(.failure(error))
             }
         case .networkUnavailable, .networkFailure:
@@ -936,21 +938,39 @@ final class CloudKitSyncManager {
     private func handleCloudKitError(_ error: Error, operationType: CKOperationType, retryCount: Int = 0) {
         guard let ckError = error as? CKError else { return }
 
+        func processError(_ error: CKError) -> Bool {
+            switch error.code {
+            case .serviceUnavailable, .requestRateLimited, .zoneBusy:
+                let baseDelay = error.retryAfterSeconds ?? 3.0
+                let retryDelay = baseDelay * pow(2.0, Double(retryCount))
+                if retryCount < 5 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) {
+                        switch operationType {
+                        case .fetchChanges: self.fetchChanges(retryCount: retryCount + 1)
+                        case .delete, .upload: self.retryAllPendingOperations(retryCount: retryCount + 1)
+                        default: break
+                        }
+                    }
+                }
+                return true
+            default:
+                return false
+            }
+        }
+
         switch ckError.code {
         case .changeTokenExpired:
             resetChangeToken()
-        case .serviceUnavailable, .requestRateLimited, .zoneBusy:
-            let baseDelay = ckError.retryAfterSeconds ?? 3.0
-            let retryDelay = baseDelay * pow(2.0, Double(retryCount))
-            if retryCount < 5 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) {
-                    switch operationType {
-                    case .fetchChanges: self.fetchChanges(retryCount: retryCount + 1)
-                    case .delete, .upload: self.retryAllPendingOperations(retryCount: retryCount + 1)
-                    default: break
+        case .partialFailure:
+            if let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
+                for innerError in partialErrors.values {
+                    if let innerCKError = innerError as? CKError, processError(innerCKError) {
+                        return // Retry scheduled
                     }
                 }
             }
+        case .serviceUnavailable, .requestRateLimited, .zoneBusy:
+            _ = processError(ckError)
         case .networkUnavailable, .networkFailure:
             // Network offline - network monitor will retry deletes when connection returns
             break

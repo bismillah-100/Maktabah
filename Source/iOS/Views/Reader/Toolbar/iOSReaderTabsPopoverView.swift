@@ -14,7 +14,7 @@ struct iOSReaderTabsPopoverView: View {
     private let cardHeight: CGFloat = 50
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ThemeList(bManager.openTabs, id: \.id) { tab in
                 Button(action: {
                     bManager.selectTab(id: tab.id)

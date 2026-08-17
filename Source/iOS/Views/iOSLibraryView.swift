@@ -28,7 +28,7 @@ struct iOSLibraryView: View {
                 toolbarContent(viewModel: viewModel)
             }
             .sheet(isPresented: $viewModel.showingImportSheet) {
-                NavigationView {
+                NavigationStack {
                     OfflineImportFormView { url, metadata, authorRow in
                         await viewModel.importOfflineBook(from: url, metadata: metadata, authorRow: authorRow)
                     }

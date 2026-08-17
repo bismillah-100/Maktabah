@@ -102,8 +102,6 @@ final class LibraryViewModel: ViewModelBase {
         }
     }
 
-    var availableAuthors: [(id: Int, muallif: Muallif)] = []
-
     private var baseCategories: [CategoryData] = []
     private var bookLookup: [String: (category: CategoryData, book: BooksData)] = [:]
     private let lookupQueue = SerialTaskQueue()
@@ -322,11 +320,6 @@ final class LibraryViewModel: ViewModelBase {
     }
 
     // MARK: - Authors Pagination (Unified)
-
-    func loadAuthorsIfNeeded() {
-        guard availableAuthors.isEmpty else { return }
-        availableAuthors = dataManager.getAllAuthors()
-    }
 
     var hasMoreAuthors: Bool {
         let total = showOnlyDownloaded

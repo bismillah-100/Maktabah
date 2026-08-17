@@ -935,6 +935,8 @@ extension IbarotTextView: TextViewRenderable {
                     let targetY = scrollPercentage * newTotalHeight
                     scrollView.contentView.scroll(to: NSPoint(x: visibleRect.origin.x, y: targetY))
                     scrollView.reflectScrolledClipView(scrollView.contentView)
+                } else {
+                    scrollToBeginningOfDocument(nil)
                 }
             }
         }

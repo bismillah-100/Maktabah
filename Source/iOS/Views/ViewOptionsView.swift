@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ViewOptionsView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
 
     @State private var state = TextViewState.shared
     @ObservedObject private var userFontManager = UserFontManager.shared
@@ -61,7 +61,7 @@ struct ViewOptionsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ThemeForm {
                 ThemeSection("Typography") {
                     Picker("Font", selection: fontNameBinding) {
@@ -143,9 +143,13 @@ struct ViewOptionsView: View {
             }
             .navigationTitle("View Options")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(leading: Button("Close") {
-                presentationMode.wrappedValue.dismiss()
-            })
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
         }
         .preferredColorScheme(state.isDarkMode ? .dark : .light)
         .fileImporter(
