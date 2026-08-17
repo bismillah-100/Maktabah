@@ -536,6 +536,7 @@ class TarjamahGlobalManager {
     /// Load content untuk banyak item sekaligus dengan progress streaming
     func loadMultipleTarjamahContent(
         _ tarjamahList: [TarjamahMen],
+        query: String? = nil,
         pauseController: PauseController?,
         stopFlag: @escaping () -> Bool,
         onProgress: @escaping (Int, Int) -> Void
@@ -556,12 +557,10 @@ class TarjamahGlobalManager {
             await pauseController?.waitIfPaused()
 
             do {
-                guard let result = try await loadTarjamahContent(tarjamah) else {
+                guard let result = try await loadTarjamahContent(tarjamah, query: query) else {
                     continue 
                 }
                 batchBuffer.append(result)
-
-
 
                 await MainActor.run {
                     onProgress(index + 1, tarjamahList.count)
@@ -576,8 +575,12 @@ class TarjamahGlobalManager {
     }
 
     /// Load konten single (Atomic operation)
-    func loadTarjamahContent(_ tarjamah: TarjamahMen) async throws -> TarjamahResult? {
-        guard let archive = tarjamah.archive else {
+    func loadTarjamahContent(_ tarjamah: TarjamahMen, query: String? = nil) async throws -> TarjamahResult? {
+        var archiveId = tarjamah.archive
+        if archiveId == nil {
+            archiveId = LibraryDataManager.shared.getBook([tarjamah.bk]).first?.archive
+        }
+        guard let archive = archiveId else {
             throw NSError(domain: "Tarjamah", code: -1, userInfo: [NSLocalizedDescriptionKey: "No Archive ID"])
         }
 
@@ -594,10 +597,28 @@ class TarjamahGlobalManager {
             throw NSError(domain: "Tarjamah", code: -2, userInfo: [NSLocalizedDescriptionKey: "Not found"])
         }
 
-        // Buat snippet
-        let snippet = nass.snippetAround(keywords: [tarjamah.name], contextLength: 100)
+        let book = LibraryDataManager.shared.getBook([tarjamah.bk]).first
+        let isMultilingual = book?.isMultiLanguage ?? false
+        let isImported = book?.isImported ?? false
 
-        return TarjamahResult(tarjamah: tarjamah, content: snippet) // atau return nass full
+        let strippedNash = isImported ? nass.stripSpanTags() : nass
+        let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
+
+        let targetQuery = query?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveQuery = (targetQuery?.isEmpty == false) ? targetQuery! : tarjamah.name
+
+        var searchKeywords = FtsQueryParser.extractKeywords(query: effectiveQuery, mode: .phrase)
+        if searchKeywords.isEmpty && !effectiveQuery.isEmpty {
+            searchKeywords = [effectiveQuery.normalizeArabic()]
+        }
+        let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
+
+        let snippet = normalizedNash
+            .normalizeArabic()
+            .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
+        let highlightedSnippet = snippet.highlightedAttributedText(keywords: searchKeywordsConverted)
+
+        return TarjamahResult(tarjamah: tarjamah, content: snippet, attributedText: highlightedSnippet)
     }
 
     /// Load semua konten tarjamah untuk rawi
@@ -620,7 +641,7 @@ class TarjamahGlobalManager {
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             do {
-                guard let result = try await loadTarjamahContent(tarjamah) else { continue }
+                guard let result = try await loadTarjamahContent(tarjamah, query: nil) else { continue }
                 results.append(result)
 
                 await MainActor.run {

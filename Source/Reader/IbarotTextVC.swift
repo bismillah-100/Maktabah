@@ -543,8 +543,8 @@ extension IbarotTextVC: TarjamahBDelegate {
         setRowiDisplayMode()
 
         try? await Task.sleep(nanoseconds: 300_000_000)
-        if let query {
-            await textDelegate?.highlightAndScrollToText(query.normalizeArabic(true), mode: nil, nearDistance: 10)
+        if let query, !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            await textDelegate?.highlightAndScrollToText(query, mode: .phrase, nearDistance: 10)
         }
     }
 }
