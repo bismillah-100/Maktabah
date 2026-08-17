@@ -395,6 +395,29 @@
         }
       }
     },
+    ".noMetadata" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم توجد المعلومات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was no information"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada informasi"
+          }
+        }
+      }
+    },
     "'%@' already exists. All annotations from '%@' will be merged into '%@'." : {
       "localizations" : {
         "ar" : {
@@ -7829,24 +7852,24 @@
     "الصفحة" : {
       "shouldTranslate" : false
     },
-    "بطاقة الكتاب:" : {
+    "بطاقة الكتاب" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "بطاقة الكتاب:"
+            "value" : "بطاقة الكتاب"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Book Card:"
+            "value" : "Book Card"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kartu Kitab:"
+            "value" : "Kartu Kitab"
           }
         }
       }
@@ -7898,46 +7921,46 @@
         }
       }
     },
-    "عن الكتاب:" : {
+    "عن الكتاب" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عن الكتاب:"
+            "value" : "عن الكتاب"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About the Book:"
+            "value" : "About the Book"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tentang Kitab:"
+            "value" : "Tentang Kitab"
           }
         }
       }
     },
-    "عن المصنف:" : {
+    "عن المصنف" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عن المصنف:"
+            "value" : "عن المصنف"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About the Author:"
+            "value" : "About the Author"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tentang Penulis:"
+            "value" : "Tentang Penulis"
           }
         }
       }
