@@ -637,6 +637,17 @@ extension OptionSearchVC: LibraryViewDelegate {
             return
         }
 
+        let shouldRecord = UserDefaults.standard.recordSearchHistory
+        if let ibarotVC = delegate as? IbarotTextVC {
+            ibarotVC.viewModel.recordHistory = ibarotVC.viewModel.currentBook?.id == bookData.id
+                ? (ibarotVC.viewModel.recordHistory || shouldRecord)
+                : shouldRecord
+        }
+
+        if shouldRecord {
+            HistoryViewModel.shared.addBookToHistory(bookData.id)
+        }
+
         // Penggunaan Task sudah benar di sini, tidak perlu Task.detached lagi
         await delegate?.didSelectBook(for: bookData, loadContent: false)
         await itemDelegate?.didSelectResult(

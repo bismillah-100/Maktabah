@@ -37,6 +37,7 @@ class ReaderViewModel: ViewModelBase {
     var currentPage: Int?
     var currentPart: Int?
     var currentContentId: Int = 0
+    var recordHistory: Bool = true
 
     #if os(macOS)
     @Published var contentPayload: ContentRenderPayload = .init(text: "", keepScrollPosition: false)
@@ -402,7 +403,7 @@ class ReaderViewModel: ViewModelBase {
         currentID = content.id
         currentContentId = content.id
 
-        if let bookId = currentBook?.id {
+        if recordHistory, let bookId = currentBook?.id {
             historyVM.updateLastContentId(content.id, for: bookId)
         }
 

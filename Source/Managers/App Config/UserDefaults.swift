@@ -301,6 +301,20 @@ extension UserDefaults {
         }
     }
 
+    // MARK: - Search
+    static let recordSearchHistoryKey = "recordSearchHistory"
+    var recordSearchHistory: Bool {
+        get {
+            if object(forKey: Self.recordSearchHistoryKey) == nil {
+                return true // default: record history
+            }
+            return bool(forKey: Self.recordSearchHistoryKey)
+        }
+        set {
+            set(newValue, forKey: Self.recordSearchHistoryKey)
+        }
+    }
+
     enum TextViewKeys {
         static let fontSize = "textViewFontSize"
         static let fontName = "textViewFontName"
