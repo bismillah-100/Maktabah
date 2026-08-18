@@ -61,9 +61,13 @@ extension AnnotationsVC {
         do {
             switch mode {
             case .add:
-                for tag in tags { try AnnotationManager.shared.addTag(tag, toAnnotationIDs: annotationIDs) }
+                for tag in tags {
+                    try AnnotationManager.shared.addTag(tag, toAnnotationIDs: annotationIDs)
+                }
             case .remove:
-                for tag in tags { try AnnotationManager.shared.removeTag(tag, fromAnnotationIDs: annotationIDs) }
+                for tag in tags {
+                    try AnnotationManager.shared.removeTag(tag, fromAnnotationIDs: annotationIDs)
+                }
             }
             tagPopover?.performClose(nil)
             updateChips(allTags: dataSource.viewModel.availableTags)

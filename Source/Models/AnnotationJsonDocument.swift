@@ -7,8 +7,13 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct AnnotationJsonDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.json] }
-    static var writableContentTypes: [UTType] { [.json] }
+    static var readableContentTypes: [UTType] {
+        [.json]
+    }
+
+    static var writableContentTypes: [UTType] {
+        [.json]
+    }
 
     var jsonString: String
 

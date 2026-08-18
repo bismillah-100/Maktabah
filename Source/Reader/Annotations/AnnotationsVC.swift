@@ -27,8 +27,13 @@ class AnnotationsVC: NSViewController {
     @IBOutlet weak var contextLineMenu: NSMenu!
     @objc dynamic var isRowUnselected: Bool = true
 
-    var floatPanel: Bool { UserDefaults.standard.annotationFloatWindow }
-    var hideOnPanel: Bool { UserDefaults.standard.annotationHideWindow }
+    var floatPanel: Bool {
+        UserDefaults.standard.annotationFloatWindow
+    }
+
+    var hideOnPanel: Bool {
+        UserDefaults.standard.annotationHideWindow
+    }
 
     static var panel: NSPanel?
 

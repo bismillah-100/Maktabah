@@ -528,6 +528,8 @@
 		F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
 		F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
 		F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
+		006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
+		B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
 		F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
 		F3E900072FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
 		F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
@@ -2095,6 +2097,8 @@
 				F37F1C45300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
 				F347296D3031D5D10094BF0A /* TagFilterMode.swift in Sources */,
 				F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
+				006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */,
+				B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */,
 				F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				F31111962FC00F060024B638 /* iOSResultWriterView.swift in Sources */,
 				F31111972FC00F060024B638 /* iOSSavedResultsView.swift in Sources */,

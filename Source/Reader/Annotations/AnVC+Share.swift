@@ -51,7 +51,9 @@ extension AnnotationsVC {
                     result.append(ann)
                 }
             }
-            for child in node.children { collect(node: child) }
+            for child in node.children {
+                collect(node: child)
+            }
         }
 
         nodes.forEach { collect(node: $0) }
