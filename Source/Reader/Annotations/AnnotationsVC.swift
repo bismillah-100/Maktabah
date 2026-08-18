@@ -93,7 +93,7 @@ class AnnotationsVC: NSViewController {
     private lazy var titlebarRootStack: NSStackView = {
         let titlebarRootStack = NSStackView()
         titlebarRootStack.edgeInsets.top = 10
-        titlebarRootStack.edgeInsets.bottom = 2
+        titlebarRootStack.edgeInsets.bottom = 6
         titlebarRootStack.orientation = .vertical
         titlebarRootStack.spacing = 6
         return titlebarRootStack
@@ -110,6 +110,13 @@ class AnnotationsVC: NSViewController {
         segment.controlSize = .small
         segment.refusesFirstResponder = true
         return segment
+    }()
+
+    lazy var btmBox: NSBox = {
+        let btmBox = NSBox()
+        btmBox.boxType = .separator
+        btmBox.translatesAutoresizingMaskIntoConstraints = false
+        return btmBox
     }()
 
     private enum SortMenuTag {
@@ -179,6 +186,9 @@ class AnnotationsVC: NSViewController {
         outlineView.deselectAll(nil)
         dataSource.outlineView = outlineView
         createRootTitlebarStack()
+        if #unavailable(macOS 26) {
+            rootStackView.insertArrangedSubview(btmBox, at: 0)
+        }
         rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
         Task { [weak self] in
             guard let self else { return }
@@ -710,7 +720,16 @@ class AnnotationsVC: NSViewController {
 
     private func createRootTitlebarStack() {
         if !titlebarRootStack.arrangedSubviews.isEmpty { return }
+
         titlebarRootStack.addArrangedSubview(headerStackView)
+
+        if #unavailable(macOS 26) {
+            let box = NSBox()
+            box.boxType = .separator
+            box.translatesAutoresizingMaskIntoConstraints = false
+            titlebarRootStack.addArrangedSubview(box)
+        }
+
         let filterBar = createTagFilterBar()
         titlebarRootStack.addArrangedSubview(filterBar)
 
@@ -722,14 +741,19 @@ class AnnotationsVC: NSViewController {
     }
 
     private func createTagFilterBar() -> NSStackView {
+        let heightConstant: CGFloat = 20
+        let leftInset: CGFloat = 8
+
         let bar = NSStackView()
         bar.orientation = .horizontal
         bar.userInterfaceLayoutDirection = .rightToLeft
         bar.spacing = 8
         bar.alignment = .centerY
-        bar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
+        bar.edgeInsets.left = leftInset
         bar.translatesAutoresizingMaskIntoConstraints = false
-        bar.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        bar.heightAnchor.constraint(
+            equalToConstant: heightConstant
+        ).isActive = true
 
         // Filter button
         let filterBtn = NSButton()
@@ -786,12 +810,15 @@ class AnnotationsVC: NSViewController {
         chipScroll.horizontalScrollElasticity = .allowed
         chipScroll.verticalScrollElasticity = .none
         chipScroll.drawsBackground = false
-        chipScroll.translatesAutoresizingMaskIntoConstraints = false
-        chipScroll.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        chipScroll.heightAnchor.constraint(
+            equalToConstant: heightConstant
+        ).isActive = true
 
         let clipView = RightAlignedClipView()
         clipView.userInterfaceLayoutDirection = .rightToLeft
         clipView.drawsBackground = false
+        clipView.automaticallyAdjustsContentInsets = false
+        clipView.contentInsets.left = leftInset
         chipScroll.contentView = clipView
         chipScroll.documentView = chipsStack
 
@@ -874,12 +901,15 @@ class AnnotationsVC: NSViewController {
     private func scrollToRightEdge() {
         guard let chipScroll = chipsScrollView,
               let docView = chipScroll.documentView else { return }
-        (chipScroll.contentView as? RightAlignedClipView)?.updateDocumentFrame()
+        let clipView = chipScroll.contentView
+        (clipView as? RightAlignedClipView)?.updateDocumentFrame()
+        let insets = clipView.contentInsets
         let docWidth = docView.frame.width
-        let clipWidth = chipScroll.contentView.bounds.width
-        let targetX = max(0, docWidth - clipWidth)
-        chipScroll.contentView.scroll(to: NSPoint(x: targetX, y: 0))
-        chipScroll.reflectScrolledClipView(chipScroll.contentView)
+        let clipWidth = clipView.bounds.width
+        let minX = -insets.left
+        let maxX = max(minX, docWidth - clipWidth + insets.right)
+        clipView.scroll(to: NSPoint(x: maxX, y: 0))
+        chipScroll.reflectScrolledClipView(clipView)
     }
 
     @objc private func chipToggled(_ sender: NSButton) {

@@ -240,9 +240,8 @@
             </constraints>
             <point key="canvasLocation" x="-30" y="165"/>
         </customView>
-        <stackView distribution="equalSpacing" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" id="eCu-j7-aef">
+        <stackView distribution="equalSpacing" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eCu-j7-aef">
             <rect key="frame" x="0.0" y="0.0" width="398" height="30"/>
-            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <button toolTip="Close" wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Ade-uD-gf7">
                     <rect key="frame" x="8" y="5" width="25" height="19"/>
@@ -378,6 +377,7 @@ Gw
             </subviews>
             <edgeInsets key="edgeInsets" left="8" right="8" top="0.0" bottom="0.0"/>
             <constraints>
+                <constraint firstAttribute="height" constant="30" id="Ua4-Oz-u4A"/>
                 <constraint firstItem="Fxs-bp-Gth" firstAttribute="centerY" secondItem="eCu-j7-aef" secondAttribute="centerY" constant="-2" id="iBK-js-nnJ"/>
             </constraints>
             <visibilityPriorities>
