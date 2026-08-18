@@ -529,13 +529,11 @@ class AnnotationsVC: NSViewController {
 
     private func extractAnnotations(from nodes: [AnnotationNode]) -> [Annotation] {
         var result: [Annotation] = []
-        var seenKeys = Set<String>()
+        var seenIDs = Set<Int64>()
 
         func collect(node: AnnotationNode) {
-            if let ann = node.annotation {
-                let key = "\(ann.bkId)_\(ann.contentId)_\(ann.range.location)_\(ann.range.length)"
-                if !seenKeys.contains(key) {
-                    seenKeys.insert(key)
+            if let ann = node.annotation, let id = ann.id {
+                if seenIDs.insert(id).inserted {
                     result.append(ann)
                 }
             }
@@ -583,29 +581,35 @@ class AnnotationsVC: NSViewController {
             return
         }
 
-        guard let jsonString = AnnotationJsonSerializer.encode(annotations: annotations),
-              let jsonData = jsonString.data(using: .utf8)
-        else {
-            ReusableFunc.showAlert(
-                title: "Error".localized,
-                message: "Failed to encode annotations to JSON.".localized
-            )
-            return
-        }
-
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.json]
         savePanel.nameFieldStringValue = "maktabah_annotations.json"
 
         savePanel.begin { response in
             guard response == .OK, let url = savePanel.url else { return }
-            do {
-                try jsonData.write(to: url)
-                #if DEBUG
-                print("Exported \(annotations.count) annotations to: \(url.path)")
-                #endif
-            } catch {
-                ReusableFunc.showAlert(title: "Error".localized, message: error.localizedDescription)
+            Task.detached(priority: .userInitiated) {
+                guard let jsonString = AnnotationJsonSerializer.encode(annotations: annotations),
+                      let jsonData = jsonString.data(using: .utf8)
+                else {
+                    await MainActor.run {
+                        ReusableFunc.showAlert(
+                            title: "Error".localized,
+                            message: "Failed to encode annotations to JSON.".localized
+                        )
+                    }
+                    return
+                }
+
+                do {
+                    try jsonData.write(to: url)
+                    #if DEBUG
+                    print("Exported \(annotations.count) annotations to: \(url.path)")
+                    #endif
+                } catch {
+                    await MainActor.run {
+                        ReusableFunc.showAlert(title: "Error".localized, message: error.localizedDescription)
+                    }
+                }
             }
         }
     }
@@ -619,40 +623,58 @@ class AnnotationsVC: NSViewController {
 
         openPanel.begin { response in
             guard response == .OK, let url = openPanel.url else { return }
-            do {
-                let data = try Data(contentsOf: url)
-                let decoded = try AnnotationJsonSerializer.decode(from: data)
-                guard !decoded.isEmpty else {
-                    ReusableFunc.showAlert(
-                        title: "Import Annotations".localized,
-                        message: "No annotations found in the selected file.".localized
-                    )
-                    return
+            Task.detached(priority: .userInitiated) {
+                do {
+                    let data = try Data(contentsOf: url)
+                    let decoded = try AnnotationJsonSerializer.decode(from: data)
+                    await MainActor.run {
+                        guard !decoded.isEmpty else {
+                            ReusableFunc.showAlert(
+                                title: "Import Annotations".localized,
+                                message: "No annotations found in the selected file.".localized
+                            )
+                            return
+                        }
+
+                        let alert = NSAlert()
+                        alert.messageText = "Import Annotations".localized
+                        alert.informativeText = "Some annotations may already exist. How would you like to handle duplicates?".localized
+                        alert.addButton(withTitle: "Overwrite Existing".localized)
+                        alert.addButton(withTitle: "Skip Duplicates".localized)
+                        alert.addButton(withTitle: "Cancel".localized)
+
+                        let alertResponse = alert.runModal()
+                        guard alertResponse != .alertThirdButtonReturn else { return }
+
+                        let overwrite = (alertResponse == .alertFirstButtonReturn)
+                        Task.detached(priority: .userInitiated) {
+                            do {
+                                let count = try AnnotationManager.shared.importAnnotations(decoded, overwrite: overwrite)
+                                await MainActor.run {
+                                    let successMsg = String(format: "%d annotations imported successfully".localized, count)
+                                    ReusableFunc.showAlert(
+                                        title: "Import Annotations".localized,
+                                        message: successMsg
+                                    )
+                                }
+                            } catch {
+                                await MainActor.run {
+                                    ReusableFunc.showAlert(
+                                        title: "Import Failed".localized,
+                                        message: error.localizedDescription
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        ReusableFunc.showAlert(
+                            title: "Import Failed".localized,
+                            message: error.localizedDescription
+                        )
+                    }
                 }
-
-                let alert = NSAlert()
-                alert.messageText = "Import Annotations".localized
-                alert.informativeText = "Some annotations may already exist. How would you like to handle duplicates?".localized
-                alert.addButton(withTitle: "Overwrite Existing".localized)
-                alert.addButton(withTitle: "Skip Duplicates".localized)
-                alert.addButton(withTitle: "Cancel".localized)
-
-                let alertResponse = alert.runModal()
-                guard alertResponse != .alertThirdButtonReturn else { return }
-
-                let overwrite = (alertResponse == .alertFirstButtonReturn)
-                let count = try AnnotationManager.shared.importAnnotations(decoded, overwrite: overwrite)
-
-                let successMsg = String(format: "%d annotations imported successfully".localized, count)
-                ReusableFunc.showAlert(
-                    title: "Import Annotations".localized,
-                    message: successMsg
-                )
-            } catch {
-                ReusableFunc.showAlert(
-                    title: "Import Failed".localized,
-                    message: error.localizedDescription
-                )
             }
         }
     }

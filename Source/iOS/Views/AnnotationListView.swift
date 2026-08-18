@@ -85,10 +85,14 @@ struct AnnotationListView: View {
                     Divider()
 
                     Button {
-                        let allAnnotations = AnnotationManager.shared.loadAnnotations()
-                        if let jsonString = AnnotationJsonSerializer.encode(annotations: allAnnotations) {
-                            exportDocument = AnnotationJsonDocument(jsonString: jsonString)
-                            isExporting = true
+                        Task.detached(priority: .userInitiated) {
+                            let allAnnotations = AnnotationManager.shared.loadAnnotations()
+                            if let jsonString = AnnotationJsonSerializer.encode(annotations: allAnnotations) {
+                                await MainActor.run {
+                                    exportDocument = AnnotationJsonDocument(jsonString: jsonString)
+                                    isExporting = true
+                                }
+                            }
                         }
                     } label: {
                         Label("Export Annotations (JSON)".localized, systemImage: "square.and.arrow.up")
@@ -138,22 +142,28 @@ struct AnnotationListView: View {
                     showImportAlert = true
                     return
                 }
-                defer { url.stopAccessingSecurityScopedResource() }
-                do {
-                    let data = try Data(contentsOf: url)
-                    let decoded = try AnnotationJsonSerializer.decode(from: data)
-                    guard !decoded.isEmpty else {
-                        importAlertTitle = "Import Annotations".localized
-                        importAlertMessage = "No annotations found in the selected file.".localized
-                        showImportAlert = true
-                        return
+                Task.detached(priority: .userInitiated) {
+                    defer { url.stopAccessingSecurityScopedResource() }
+                    do {
+                        let data = try Data(contentsOf: url)
+                        let decoded = try AnnotationJsonSerializer.decode(from: data)
+                        await MainActor.run {
+                            guard !decoded.isEmpty else {
+                                importAlertTitle = "Import Annotations".localized
+                                importAlertMessage = "No annotations found in the selected file.".localized
+                                showImportAlert = true
+                                return
+                            }
+                            pendingImportAnnotations = decoded
+                            showOverwriteDialog = true
+                        }
+                    } catch {
+                        await MainActor.run {
+                            importAlertTitle = "Import Failed".localized
+                            importAlertMessage = error.localizedDescription
+                            showImportAlert = true
+                        }
                     }
-                    pendingImportAnnotations = decoded
-                    showOverwriteDialog = true
-                } catch {
-                    importAlertTitle = "Import Failed".localized
-                    importAlertMessage = error.localizedDescription
-                    showImportAlert = true
                 }
             case let .failure(error):
                 importAlertTitle = "Import Failed".localized
@@ -178,6 +188,11 @@ struct AnnotationListView: View {
         } message: {
             Text("Some annotations may already exist. How would you like to handle duplicates?".localized)
         }
+        .onChange(of: showOverwriteDialog) { _, isPresented in
+            if !isPresented {
+                pendingImportAnnotations = []
+            }
+        }
         .alert(
             importAlertTitle,
             isPresented: $showImportAlert
@@ -193,7 +208,7 @@ struct AnnotationListView: View {
     private func performImport(overwrite: Bool, viewModel: AnnotationViewModel) {
         let annotations = pendingImportAnnotations
         pendingImportAnnotations = []
-        Task {
+        Task.detached(priority: .userInitiated) {
             do {
                 let count = try AnnotationManager.shared.importAnnotations(annotations, overwrite: overwrite)
                 await MainActor.run {
