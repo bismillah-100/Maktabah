@@ -6,8 +6,6 @@
 //
 
 import Foundation
-import SwiftUI
-import UniformTypeIdentifiers
 
 enum AnnotationJsonSerializer {
     private static let version = 1
@@ -150,40 +148,7 @@ enum AnnotationJsonSerializer {
     }
 
     static func decode(from jsonString: String) throws -> [Annotation] {
-        guard let data = jsonString.data(using: .utf8) else {
-            return []
-        }
+        guard let data = jsonString.data(using: .utf8) else { return [] }
         return try decode(from: data)
-    }
-}
-
-// MARK: - FileDocument for SwiftUI
-
-struct AnnotationJsonDocument: FileDocument {
-    static var readableContentTypes: [UTType] {
-        [.json]
-    }
-
-    static var writableContentTypes: [UTType] {
-        [.json]
-    }
-
-    var jsonString: String
-
-    init(jsonString: String = "") {
-        self.jsonString = jsonString
-    }
-
-    init(configuration: ReadConfiguration) throws {
-        if let data = configuration.file.regularFileContents {
-            jsonString = String(data: data, encoding: .utf8) ?? ""
-        } else {
-            jsonString = ""
-        }
-    }
-
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        let data = jsonString.data(using: .utf8) ?? Data()
-        return FileWrapper(regularFileWithContents: data)
     }
 }
