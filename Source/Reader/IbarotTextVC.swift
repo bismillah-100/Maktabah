@@ -495,6 +495,7 @@ extension IbarotTextVC: SidebarDelegate {
 
 extension IbarotTextVC: LibraryDelegate {
     func didSelectBook(for book: BooksData, loadContent: Bool) async {
+        if loadContent { viewModel.recordHistory = true }
         if viewModel.currentBook?.id == book.id { return }
         try? await displayBook(book, loadContent: loadContent)
     }

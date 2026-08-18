@@ -8290,6 +8290,52 @@
           }
         }
       }
+    },
+    "Reading History": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تاريخ القراءة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading History"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riwayat Membaca"
+          }
+        }
+      }
+    },
+    "Add books opened from search results to reading history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف الكتب المفتوحة من نتائج البحث إلى سجل القراءة."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add books opened from search results to reading history."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambahkan buku yang dibuka dari hasil pencarian ke riwayat bacaan."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

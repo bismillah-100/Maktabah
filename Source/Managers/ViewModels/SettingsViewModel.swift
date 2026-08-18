@@ -26,6 +26,7 @@ final class SettingsViewModel: ObservableObject {
 
     @AppStorage("hideMissingBookAnnotations") var hideMissingBookAnnotations: Bool = false
     @AppStorage("useDefaultTheme") var useDefaultTheme: Bool = false
+    @AppStorage("recordSearchHistory") var recordSearchHistory: Bool = true
 
     enum PendingCollisionAction {
         case moveFolder(url: URL)

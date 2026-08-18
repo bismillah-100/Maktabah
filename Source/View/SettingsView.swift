@@ -69,6 +69,7 @@ extension SettingsView {
             searchIndexSection
             libraryStorageSection
             annotationsSection
+            searchSection
             downloadsSection
             if shouldShowUpdatesSection { updatesSection }
         }
@@ -97,6 +98,8 @@ extension SettingsView {
             libraryStorageSection
                 .listRowBackground(Color.appCellBackground)
             annotationsSection
+                .listRowBackground(Color.appCellBackground)
+            searchSection
                 .listRowBackground(Color.appCellBackground)
             appearanceSection
                 .listRowBackground(Color.appCellBackground)
@@ -205,6 +208,22 @@ extension SettingsView {
             }.controlSize(.regular)
         } header: {
             Text("Database Mode")
+        }
+    }
+
+    private var searchSection: some View {
+        Section {
+            Toggle(isOn: $viewModel.recordSearchHistory) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(.readingHistory)
+                    Text(.addBooksOpenedFromSearchResultsToReadingHistory)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .controlSize(.regular)
+        } header: {
+            Text("History")
         }
     }
 
