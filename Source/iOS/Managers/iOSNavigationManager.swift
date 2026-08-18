@@ -378,7 +378,7 @@ class iOSNavigationManager {
             activeTabId = openTabs[existingTabIndex].id
             // Update initialContentId if provided, so the reader can jump to it
             var updatedTab = openTabs[existingTabIndex]
-            updatedTab.viewModel.recordHistory = recordHistory
+            updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || recordHistory
             if let contentId = initialContentId {
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId
                 let hasNewSearch = (searchText != nil && !searchText!.isEmpty)

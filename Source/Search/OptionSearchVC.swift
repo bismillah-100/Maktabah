@@ -639,7 +639,9 @@ extension OptionSearchVC: LibraryViewDelegate {
 
         let shouldRecord = UserDefaults.standard.recordSearchHistory
         if let ibarotVC = delegate as? IbarotTextVC {
-            ibarotVC.viewModel.recordHistory = shouldRecord
+            ibarotVC.viewModel.recordHistory = ibarotVC.viewModel.currentBook?.id == bookData.id
+                ? (ibarotVC.viewModel.recordHistory || shouldRecord)
+                : shouldRecord
         }
 
         if shouldRecord {
