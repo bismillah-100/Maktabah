@@ -133,13 +133,6 @@ class AnnotationsVC: NSViewController {
         return segment
     }()
 
-    lazy var btmBox: NSBox = {
-        let box = NSBox()
-        box.boxType = .separator
-        box.translatesAutoresizingMaskIntoConstraints = false
-        return box
-    }()
-
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -172,6 +165,9 @@ class AnnotationsVC: NSViewController {
         dataSource.outlineView = outlineView
         createRootTitlebarStack()
         if #unavailable(macOS 26) {
+            let btmBox = NSBox()
+            btmBox.boxType = .separator
+            btmBox.translatesAutoresizingMaskIntoConstraints = false
             rootStackView.insertArrangedSubview(btmBox, at: 0)
         }
         rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
