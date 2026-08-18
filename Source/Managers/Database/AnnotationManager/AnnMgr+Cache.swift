@@ -63,6 +63,7 @@ extension AnnotationManager {
 
     func updateCacheAfterDelete(id: Int64, annotation: Annotation?) {
         _cacheQueue.sync {
+            _cachedAllTagNames = nil
             _cacheById.removeValue(forKey: id)
             _cacheTagsByAnnotationId.removeValue(forKey: id)
             if let bkId = annotation?.bkId {

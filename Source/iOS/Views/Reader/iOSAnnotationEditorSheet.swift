@@ -25,10 +25,8 @@ struct iOSAnnotationEditorSheet: View {
         NavigationStack {
             ThemeForm {
                 ThemeSection("Note") {
-                    TextEditor(text: $noteText)
+                    iOSAutoDirectionTextView(text: $noteText)
                         .frame(minHeight: 100)
-                        .environment(\.layoutDirection, .rightToLeft)
-                        .multilineTextAlignment(.trailing)
                 }
 
                 ThemeSection("Style") {
@@ -57,7 +55,10 @@ struct iOSAnnotationEditorSheet: View {
                 }
 
                 ThemeSection("Tags (comma separated)") {
+                    let isRTL = tagsText.isParagraphRTL
                     TextField("tag1, tag2...", text: $tagsText)
+                        .multilineTextAlignment(isRTL ? .trailing : .leading)
+                        .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
                 }
 
                 ThemeSection {
@@ -113,3 +114,59 @@ struct iOSAnnotationEditorSheet: View {
         dismiss()
     }
 }
+
+struct iOSAutoDirectionTextView: UIViewRepresentable {
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.delegate = context.coordinator
+        textView.font = UIFont.preferredFont(forTextStyle: .body)
+        textView.backgroundColor = .clear
+        textView.textColor = .label
+        textView.isScrollEnabled = true
+        textView.text = text
+        context.coordinator.updateParagraphAlignments(in: textView)
+        return textView
+    }
+
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+            context.coordinator.updateParagraphAlignments(in: uiView)
+        }
+    }
+
+    class Coordinator: NSObject, UITextViewDelegate {
+        var parent: iOSAutoDirectionTextView
+        var isUpdating = false
+
+        init(_ parent: iOSAutoDirectionTextView) {
+            self.parent = parent
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            guard !isUpdating else { return }
+            isUpdating = true
+
+            let selectedRange = textView.selectedRange
+            updateParagraphAlignments(in: textView)
+            textView.selectedRange = selectedRange
+
+            parent.text = textView.text
+            isUpdating = false
+        }
+
+        func updateParagraphAlignments(in textView: UITextView) {
+            let font = textView.font ?? UIFont.preferredFont(forTextStyle: .body)
+            textView.typingAttributes[.font] = font
+            textView.textStorage.applyAutoDirectionAlignments(font: font)
+        }
+    }
+}
+
+

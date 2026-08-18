@@ -20,21 +20,24 @@ class AnnotationEditorVC: NSViewController {
     @IBOutlet weak var saveButton: NSButton!
 
     @IBOutlet weak var deleteButton: NSButton!
-    
-    @IBOutlet weak var segmentedControl: NSSegmentedControl!
 
     @IBOutlet weak var tagsField: NSTokenField!
 
     // MARK: - Data
+
+    lazy var currentFont: NSFont = {
+        .init(
+            name: UserDefaults.standard.textViewFontName,
+            size: CGFloat(UserDefaults.standard.textViewFontSize - 4)
+        ) ?? .systemFont(ofSize: NSFont.systemFontSize)
+    }()
+
     var annotation: Annotation!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        noteField.alignment = .right
-        noteField.font = NSFont(
-            name: UserDefaults.standard.textViewFontName,
-            size: CGFloat(UserDefaults.standard.textViewFontSize - 4)
-        )
+        noteField.delegate = self
+        noteField.font = currentFont
         populateFields()
         saveButton.action = #selector(saveTapped)
         deleteButton.action = #selector(deleteTapped)
@@ -45,27 +48,9 @@ class AnnotationEditorVC: NSViewController {
         if #available(macOS 26, *) {
             saveButton.borderShape = .capsule
             deleteButton.borderShape = .capsule
-            segmentedControl.borderShape = .capsule
         }
         
-        setupSegmentLayout()
-        tagsField.delegate = self
         tagsField.completionDelay = 0.5
-    }
-    
-    private func setupSegmentLayout() {
-        let userDecision = UserDefaults.standard.integer(forKey: "annotationsLayoutDirection")
-        segmentedControl.selectedSegment = userDecision
-        alignmentChanged(segmentedControl)
-    }
-
-    @IBAction func alignmentChanged(_ sender: NSSegmentedControl) {
-        switch sender.selectedSegment {
-        case 0: noteField.alignment = .left
-        case 1: noteField.alignment = .right
-        default: break
-        }
-        UserDefaults.standard.setValue(sender.selectedSegment, forKey: "annotationsLayoutDirection")
     }
 
     private func populateFields() {
@@ -76,6 +61,16 @@ class AnnotationEditorVC: NSViewController {
             colorWell.color = NSColor.yellow
         }
         tagsField.objectValue = annotation.tags
+        updateParagraphAlignments()
+    }
+
+    func updateParagraphAlignments() {
+        guard let textStorage = noteField.textStorage else { return }
+
+        let selectedRanges = noteField.selectedRanges
+        noteField.typingAttributes[.font] = currentFont
+        textStorage.applyAutoDirectionAlignments(font: currentFont)
+        noteField.selectedRanges = selectedRanges
     }
 
     // MARK: - Actions
@@ -147,17 +142,10 @@ class AnnotationEditorVC: NSViewController {
     }
 }
 
+// MARK: - NSTextViewDelegate
 
-// MARK: - NSTokenFieldDelegate
-
-extension AnnotationEditorVC: NSTokenFieldDelegate {
-    func tokenField(
-        _ tokenField: NSTokenField,
-        completionsForSubstring substring: String,
-        indexOfToken tokenIndex: Int,
-        indexOfSelectedItem selectedIndex: UnsafeMutablePointer<Int>?
-    ) -> [Any]? {
-        guard !substring.isEmpty else { return nil }
-        return existingTagSuggestions(matching: substring)
+extension AnnotationEditorVC: NSTextViewDelegate {
+    func textDidChange(_ notification: Notification) {
+        updateParagraphAlignments()
     }
 }
