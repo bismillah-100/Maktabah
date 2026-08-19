@@ -134,16 +134,14 @@ final class NarratorViewModel: ViewModelBase {
 
     // MARK: - Data
 
+    @MainActor
     func loadData() async {
         defer { state = .loaded }
         guard tabaqaGroups.isEmpty else { return }
         async let booksData: () = LibraryDataManager.shared.loadData()
         async let rowiData: () = dataManager.loadData()
         _ = await (rowiData, booksData)
-
-        await MainActor.run {
-            tabaqaGroups = dataManager.tabaqaGroups
-        }
+        tabaqaGroups = dataManager.tabaqaGroups
     }
 
     func searchRowis(query: String) {
