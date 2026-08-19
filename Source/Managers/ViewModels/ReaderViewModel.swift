@@ -73,8 +73,9 @@ class ReaderViewModel: ViewModelBase {
     /// Called when window title should be updated
     var onWindowTitleChanged: ((String, String) -> Void)?
 
-    // macOS Annotations Support. Tidak perlu publish disini.
-    // IbarotTextView sudah pintar handling notifikasi perubahan anotasi.
+    /// macOS Annotations Support.
+    /// Dibuat sebagai computed property yang didelegasikan langsung ke `AnnotationManager.shared`
+    /// sebagai single source of truth. Performa tetap optimal karena `loadAnnotations` sudah di-cache in-memory.
     var currentAnnotations: [Annotation] {
         guard let bkId = currentBook?.id else { return .init() }
         return annotationManager.loadAnnotations(
@@ -97,6 +98,7 @@ class ReaderViewModel: ViewModelBase {
             UserDefaults.standard.searchNearDistance = nearDistance
         }
     }
+
     var targetAnnotation: Annotation?
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
@@ -107,6 +109,7 @@ class ReaderViewModel: ViewModelBase {
     #endif
 
     // MARK: - Computed Properties
+
     #if os(macOS)
     lazy var tocViewModel: BookTOCViewModel = .init(connFactory: { [weak self] in
         self?.bookConnection ?? BookConnection()
@@ -327,6 +330,7 @@ class ReaderViewModel: ViewModelBase {
     }
 
     #if os(macOS)
+
     // MARK: - State Management
 
     func updateState(_ state: inout ReaderState) {
@@ -590,7 +594,8 @@ class ReaderViewModel: ViewModelBase {
 
     func getCopyBabPath() -> String {
         guard let path = tocViewModel.deepestPath(forContentId: currentContentId),
-              !path.isEmpty else {
+              !path.isEmpty
+        else {
             return ""
         }
         let result = path.map(\.bab).joined(separator: " -- ")
@@ -611,16 +616,15 @@ class ReaderViewModel: ViewModelBase {
     func getCopyCitation() -> String {
         let bookName = currentBook?.book ?? ""
         let pageInfo = getCopyPageInfo()
-        
-        let rawBabPath: String
-        if let path = tocViewModel.deepestPath(forContentId: currentContentId), !path.isEmpty {
-            rawBabPath = path.map(\.bab).joined(separator: " -- ")
+
+        let rawBabPath: String = if let path = tocViewModel.deepestPath(forContentId: currentContentId), !path.isEmpty {
+            path.map(\.bab).joined(separator: " -- ")
         } else {
-            rawBabPath = ""
+            ""
         }
-        
+
         var citationParts: [String] = []
-        
+
         var bookAndPage = ""
         if !bookName.isEmpty {
             if !pageInfo.isEmpty {
@@ -631,15 +635,15 @@ class ReaderViewModel: ViewModelBase {
         } else if !pageInfo.isEmpty {
             bookAndPage = pageInfo
         }
-        
+
         if !bookAndPage.isEmpty {
             citationParts.append(bookAndPage)
         }
-        
+
         if !rawBabPath.isEmpty {
             citationParts.append(rawBabPath)
         }
-        
+
         let citation = citationParts.joined(separator: " ، ")
         return citation.isEmpty ? "" : "— " + citation
     }
@@ -647,7 +651,7 @@ class ReaderViewModel: ViewModelBase {
     private func buildReference(for selectedText: String) -> String {
         let trimmedText = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return "" }
-        
+
         let citation = getCopyCitation()
         if citation.isEmpty {
             return "\(trimmedText)"
@@ -765,7 +769,7 @@ extension ReaderViewModel {
     func handleBookIdMigrated(oldId: Int, newId: Int) {
         guard let current = currentBook, current.id == oldId else { return }
         if let newBookData = LibraryDataManager.shared.booksById[newId] {
-            self.currentBook = newBookData
+            currentBook = newBookData
         }
     }
 

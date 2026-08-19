@@ -454,6 +454,10 @@ extension BookConnection {
         }
     }
 
+    /// Membangun pohon hierarki TOC dari daftar flat entri TOC database (`t{bookId}`).
+    /// Menggunakan multi-pass traversal untuk menangani struktur database Maktabah yang memiliki
+    /// level tidak berurutan secara linier (misalnya lonjakan level atau sub-bab non-monotonik).
+    /// Hasil disimpan di `tocTreeCache` agar kalkulasi hanya berjalan sekali per buku.
     func buildTOCTree(from flatTOCs: [TOC], bookId: Int) async -> [TOCNode] {
         guard !flatTOCs.isEmpty else { return [] }
 
