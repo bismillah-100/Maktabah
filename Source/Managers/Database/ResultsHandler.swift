@@ -1238,26 +1238,58 @@ extension ResultsHandler {
                 }
 
                 // 2. Process Saves/Updates
+
+                // --- Prefetch mappings to avoid N+1 queries ---
+                let allFolderCkIds = Array(Set(resultsToSave.compactMap { $0.folderCkRecordId }))
+                var folderCkIdToLocalId: [String: Int64] = [:]
+                let folderChunkSize = 500
+                for i in stride(from: 0, to: allFolderCkIds.count, by: folderChunkSize) {
+                    let chunk = Array(allFolderCkIds[i..<min(i+folderChunkSize, allFolderCkIds.count)])
+                    let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                    let sql = "SELECT \(colCkRecordId), \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+
+                    let rows = try db.fetch(query: sql, parameters: chunk, mapping: {
+                        ($0.string(at: 0) ?? "", $0.int64(at: 1))
+                    })
+                    for (ckId, localId) in rows {
+                        folderCkIdToLocalId[ckId] = localId
+                    }
+                }
+
+                let allResCkIds = Array(Set(resultsToSave.compactMap { $0.ckRecordId }))
+                var resCkIdToExisting: [String: (Int64, Int64, Int64?)] = [:]
+                let resChunkSize = 500
+                for i in stride(from: 0, to: allResCkIds.count, by: resChunkSize) {
+                    let chunk = Array(allResCkIds[i..<min(i+resChunkSize, allResCkIds.count)])
+                    let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                    let sql = "SELECT \(colResCkRecordId), \(colId), \(colResLastModified), \(colFolderId) FROM \(resultsTable) WHERE \(colResCkRecordId) IN (\(placeholders))"
+
+                    let rows = try db.fetch(query: sql, parameters: chunk, mapping: {
+                        ($0.string(at: 0) ?? "", $0.int64(at: 1), $0.int64(at: 2), !$0.isNull(at: 3) ? $0.int64(at: 3) : nil)
+                    })
+                    for (ckId, localId, lastMod, folderId) in rows {
+                        resCkIdToExisting[ckId] = (localId, lastMod, folderId)
+                    }
+                }
+                // --- End Prefetch ---
+
                 for res in resultsToSave {
                     guard let ckId = res.ckRecordId else { continue }
 
                     // Resolve folderId
                     var fLocalId: Int64? = nil
                     if let fCkId = res.folderCkRecordId {
-                        let findFolderSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-                        if let localFid = try db.fetch(query: findFolderSql, parameters: [fCkId], mapping: { $0.int64(at: 0) }).first {
-                            fLocalId = localFid
-                        }
+                        fLocalId = folderCkIdToLocalId[fCkId]
                     }
 
                     var existingLocalId: Int64 = -1
                     var localLastMod: Int64 = 0
                     var existingFolderId: Int64? = nil
-                    let findResSql = "SELECT \(colId), \(colResLastModified), \(colFolderId) FROM \(resultsTable) WHERE \(colResCkRecordId) = ? LIMIT 1"
-                    if let row = try db.fetch(query: findResSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1), !$0.isNull(at: 2) ? $0.int64(at: 2) : nil) }).first {
-                        existingLocalId = row.0
-                        localLastMod = row.1
-                        existingFolderId = row.2
+
+                    if let existing = resCkIdToExisting[ckId] {
+                        existingLocalId = existing.0
+                        localLastMod = existing.1
+                        existingFolderId = existing.2
                     }
 
                     if existingLocalId != -1 {

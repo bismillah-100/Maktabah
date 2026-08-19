@@ -11,6 +11,7 @@ import AppKit
 protocol TextViewRenderable: AnyObject {
     func loadIbarotText(
         _ text: String,
+        content: BookContent?,
         color: NSColor?,
         isMultiLanguage: Bool?,
         isImported: Bool?,

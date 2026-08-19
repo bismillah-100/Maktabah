@@ -102,56 +102,74 @@ class ArabicTextRenderer {
     private let state = TextViewState.shared
 
     func render(
+        bookId: Int? = nil,
+        contentId: Int? = nil,
         text: String,
         highlightColor: PlatformColor = .header,
         showHarakat: Bool,
         isMultiLanguage: Bool = false,
         isImported: Bool = false
     ) -> ArabicRenderResult {
-        let textWithArabicDigits = text.convertToArabicDigits(isMultilingual: isMultiLanguage)
-        let processedText = showHarakat ? textWithArabicDigits : textWithArabicDigits.removingHarakat()
-
-        // Strip <span data-type="title"> tags for imported books and collect header ranges
-        let (cleanedText, importedHeaderRanges) = isImported
-            ? processedText.stripSpanTagsWithRanges()
-            : (processedText, [NSRange]())
-
-        let cleanedResultAndMappedRanges = cleanedText.cleanedTextWithRanges(mapping: importedHeaderRanges)
-        let cleanedResult = cleanedResultAndMappedRanges.result
-        let footnoteRanges = cleanedResultAndMappedRanges.footnoteRanges
-        let mappedImportedHeaderRanges = cleanedResultAndMappedRanges.mappedRanges ?? []
-        let replacementResult = cleanedResult.text.replacingHonorificPhrasesIfSupported()
-
-        let remappedColoredRanges = cleanedResult.coloredRanges.map {
-            replacementResult.remapDisplayedRange($0)
-        }
-        let remappedFootnoteRanges = footnoteRanges.map {
-            replacementResult.remapDisplayedRange($0)
-        }
-        let remappedImportedHeaderRanges = mappedImportedHeaderRanges.map {
-            replacementResult.remapDisplayedRange($0)
-        }
-        let displayResult = CleanedTextResult(
-            text: replacementResult.text,
-            coloredRanges: remappedColoredRanges + replacementResult.replacementDisplayRanges
+        let key = CleanedTextKey(
+            showHarakat: showHarakat,
+            isMultiLanguage: isMultiLanguage,
+            isImported: isImported
         )
 
-        let result = CleanedTextAndFootnoteRange(
-            result: displayResult,
-            footnoteRanges: remappedFootnoteRanges
+        let processed: ProcessedArabicContent
+        if let bookId, let contentId, let cached = BookPageCache.shared.getProcessed(bookId: bookId, contentId: contentId, key: key) {
+            processed = cached
+        } else {
+            let textWithArabicDigits = text.convertToArabicDigits(isMultilingual: isMultiLanguage)
+            let processedText = showHarakat ? textWithArabicDigits : textWithArabicDigits.removingHarakat()
+
+            // Strip <span data-type="title"> tags for imported books and collect header ranges
+            let (cleanedText, importedHeaderRanges) = isImported
+                ? processedText.stripSpanTagsWithRanges()
+                : (processedText, [NSRange]())
+
+            let cleanedResultAndMappedRanges = cleanedText.cleanedTextWithRanges(mapping: importedHeaderRanges)
+            let cleanedResult = cleanedResultAndMappedRanges.result
+            let footnoteRanges = cleanedResultAndMappedRanges.footnoteRanges
+            let mappedImportedHeaderRanges = cleanedResultAndMappedRanges.mappedRanges ?? []
+            let replacementResult = cleanedResult.text.replacingHonorificPhrasesIfSupported()
+
+            let remappedColoredRanges = cleanedResult.coloredRanges.map {
+                replacementResult.remapDisplayedRange($0)
+            }
+            let remappedFootnoteRanges = footnoteRanges.map {
+                replacementResult.remapDisplayedRange($0)
+            }
+            let remappedImportedHeaderRanges = mappedImportedHeaderRanges.map {
+                replacementResult.remapDisplayedRange($0)
+            }
+
+            processed = ProcessedArabicContent(
+                sourceText: cleanedResult.text,
+                displayText: replacementResult.text,
+                coloredRanges: remappedColoredRanges + replacementResult.replacementDisplayRanges,
+                footnoteRanges: remappedFootnoteRanges,
+                replacementEvents: replacementResult.events,
+                importedHeaderRanges: remappedImportedHeaderRanges,
+                ligatureRanges: replacementResult.replacementDisplayRanges
+            )
+
+            if let bookId, let contentId {
+                BookPageCache.shared.setProcessed(bookId: bookId, contentId: contentId, key: key, content: processed)
+            }
+        }
+
+        let attributedString = createAttributedString(
+            from: processed,
+            color: highlightColor,
+            isMultiLanguage: isMultiLanguage
         )
 
         return ArabicRenderResult(
-            sourceText: cleanedResult.text,
-            attributedString: createAttributedString(
-                from: result,
-                color: highlightColor,
-                isMultiLanguage: isMultiLanguage,
-                ligatureRanges: replacementResult.replacementDisplayRanges,
-                importedHeaderRanges: remappedImportedHeaderRanges
-            ),
-            replacementEvents: replacementResult.events,
-            footnoteRanges: remappedFootnoteRanges
+            sourceText: processed.sourceText,
+            attributedString: attributedString,
+            replacementEvents: processed.replacementEvents,
+            footnoteRanges: processed.footnoteRanges
         )
     }
 
@@ -195,13 +213,14 @@ class ArabicTextRenderer {
         }
     }
 
-    private func createAttributedString(from results: CleanedTextAndFootnoteRange, color: PlatformColor, isMultiLanguage: Bool, ligatureRanges: [NSRange] = [], importedHeaderRanges: [NSRange] = []) -> NSAttributedString {
-        let result = results.result
-        let footnoteRanges = results.footnoteRanges
-        
+    private func createAttributedString(
+        from content: ProcessedArabicContent,
+        color: PlatformColor,
+        isMultiLanguage: Bool
+    ) -> NSAttributedString {
         // Buat string dasar tanpa .paragraphStyle dulu
         var baseAttributes = state.defaultAttributes
-        
+
         if !isMultiLanguage {
             let rtlStyle = (self.state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
             rtlStyle.alignment = .right
@@ -210,9 +229,9 @@ class ArabicTextRenderer {
         } else {
             baseAttributes.removeValue(forKey: .paragraphStyle)
         }
-        
+
         let attributedString = NSMutableAttributedString(
-            string: result.text,
+            string: content.displayText,
             attributes: baseAttributes
         )
 
@@ -221,18 +240,18 @@ class ArabicTextRenderer {
             let ltrStyle = (self.state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
             ltrStyle.alignment = .left
             ltrStyle.baseWritingDirection = .leftToRight
-            
+
             let rtlStyle = (self.state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
             rtlStyle.alignment = .right
             rtlStyle.baseWritingDirection = .rightToLeft
 
             // Deteksi dan terapkan arah/alignment per paragraf
-            let nsString = result.text as NSString
+            let nsString = content.displayText as NSString
             let fullRange = NSRange(location: 0, length: nsString.length)
-            
+
             nsString.enumerateSubstrings(in: fullRange, options: .byParagraphs) { (substring, substringRange, _, _) in
                 guard let substring = substring else { return }
-                
+
                 // Pilih style yang sudah di-cache
                 let style: NSMutableParagraphStyle
                 if substring.hasPrefix("\u{202A}") || substring.hasPrefix("\u{202D}") {
@@ -242,14 +261,14 @@ class ArabicTextRenderer {
                 } else {
                     style = rtlStyle // Fallback RTL
                 }
-                
+
                 attributedString.addAttribute(.paragraphStyle, value: style, range: substringRange)
             }
         }
 
         // Footnote: font lebih kecil + warna sekunder — apply sebelum coloredRanges
         // agar highlight simbol di dalam footnote tetap pakai warna header
-        if !footnoteRanges.isEmpty {
+        if !content.footnoteRanges.isEmpty {
             let baseFont = state.currentFont
             let smallerFont = baseFont.withSize(baseFont.pointSize - 2)
             #if os(macOS)
@@ -261,7 +280,7 @@ class ArabicTextRenderer {
                 .foregroundColor: footnoteColor,
                 .font: smallerFont
             ]
-            for range in footnoteRanges {
+            for range in content.footnoteRanges {
                 if range.location + range.length <= attributedString.length {
                     attributedString.addAttributes(footnoteAttributes, range: range)
                 }
@@ -272,18 +291,18 @@ class ArabicTextRenderer {
             .foregroundColor: color
         ]
 
-        for range in result.coloredRanges {
+        for range in content.coloredRanges {
             if range.location + range.length <= attributedString.length {
                 attributedString.addAttributes(highlightAttributes, range: range)
             }
         }
 
         // Apply header color to imported book TOC spans
-        if !importedHeaderRanges.isEmpty {
+        if !content.importedHeaderRanges.isEmpty {
             let headerColorAttributes: [NSAttributedString.Key: Any] = [
                 .foregroundColor: color
             ]
-            for range in importedHeaderRanges {
+            for range in content.importedHeaderRanges {
                 if range.location + range.length <= attributedString.length {
                     attributedString.addAttributes(headerColorAttributes, range: range)
                 }
@@ -292,14 +311,14 @@ class ArabicTextRenderer {
 
         // Apply Lateef font fallback specifically for ligatures if they are missing from current font
         #if canImport(UIKit)
-        if !ligatureRanges.isEmpty {
+        if !content.ligatureRanges.isEmpty {
             let baseFont = state.currentFont
             let ctFont = baseFont as CTFont
             let fallbackFontName = "Lateef"
 
             let fallbackFont = UIFont(name: fallbackFontName, size: baseFont.pointSize) ?? baseFont
 
-            for range in ligatureRanges {
+            for range in content.ligatureRanges {
                 if range.location + range.length <= attributedString.length {
                     let nsString = attributedString.string as NSString
                     let length = range.length
