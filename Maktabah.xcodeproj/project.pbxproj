@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
 		17475414BB0B621BFDC173ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
 		1878A376483C464F9B105C5F /* AnVC+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */; };
 		240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
@@ -286,6 +287,7 @@
 		99C284B099C445D9B6E3F948 /* AnVC+Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00F222F577745268CA496C9 /* AnVC+Panel.swift */; };
 		9F0065627B7E1290539A29ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
 		AF7789715DB04E0D96BB8B2B /* AnVC+TagPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */; };
+		B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
 		B483563522A5498E6D6452ED /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
 		BE8DDB8A461345B1B88DE69F /* AnVC+Sort.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */; };
 		C9F8C26BCEED4B839B837BAE /* AnVC+Sort.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */; };
@@ -528,8 +530,6 @@
 		F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
 		F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
 		F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
-		006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
-		B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
 		F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
 		F3E900072FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
 		F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
@@ -537,6 +537,8 @@
 		F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
+		F3F3FEA73035E85B00507E9A /* RTLScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */; };
+		F3F3FEA83035E85B00507E9A /* RTLScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */; };
 		F3FF136A2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F3FF136C2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
@@ -807,6 +809,7 @@
 		F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "AnnMgr+ImportExport.swift"; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
+		F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTLScrollView.swift; sourceTree = "<group>"; };
 		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
 		F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+Share.swift"; sourceTree = "<group>"; };
 		F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationJsonDocument.swift; sourceTree = "<group>"; };
@@ -1015,6 +1018,7 @@
 				4BD6C33B2EE6AA7F008684E3 /* MainWindow.swift */,
 				4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */,
 				F3D66912303215530030510C /* RightAlignedClipView.swift */,
+				F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */,
 				4BDAB98B2F69E860007D0945 /* SettingsView.swift */,
 				4B5E70682EF4FEFC00E7D351 /* SharedPopover.swift */,
 				4B03185E2F41E7BC00CB1677 /* SplitVC.swift */,
@@ -1773,6 +1777,7 @@
 				4B6AF2362EE58394002EBFFC /* IbarotTextVC.swift in Sources */,
 				F37F1C46300268E3002B5618 /* AnnotationManager.swift in Sources */,
 				F37F1C47300268E3002B5618 /* AnnMgr+Cache.swift in Sources */,
+				F3F3FEA83035E85B00507E9A /* RTLScrollView.swift in Sources */,
 				F37F1C48300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
 				F37F1C49300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
 				F37F1C4A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */,
@@ -1923,6 +1928,7 @@
 				4B7C90D02F83494200454BE1 /* ArchiveDatabaseTools.swift in Sources */,
 				F3902E8C2F9EE1CA004BA5D1 /* AnnotationTagVC.swift in Sources */,
 				F3902EAF2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */,
+				F3F3FEA73035E85B00507E9A /* RTLScrollView.swift in Sources */,
 				4B7C90D12F83494200454BE1 /* BookArchiveIntegrator.swift in Sources */,
 				4B7C90D22F83494200454BE1 /* BookDownloadManager.swift in Sources */,
 				4B7C90D32F83494200454BE1 /* IntegrationCache.swift in Sources */,

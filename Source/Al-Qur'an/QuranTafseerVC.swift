@@ -43,7 +43,7 @@ class QuranTafseerVC: NSViewController {
 
     override func loadView() {
         let view = NSView()
-        let scrollView = NSScrollView()
+        let scrollView = RTLScrollView()
         scrollView.autohidesScrollers = true
         scrollView.hasVerticalScroller = true
         scrollView.documentView = tableView
