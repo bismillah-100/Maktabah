@@ -79,7 +79,7 @@ class IbarotTextVC: NSViewController {
         // Bind content changed callback
         viewModel.onContentChanged = { [weak self] content in
             guard let self else { return }
-            handleNavigationToContent(content)
+            handleNavigationToContent(content.id)
         }
 
         // Setup textView annotation callbacks
@@ -140,13 +140,8 @@ class IbarotTextVC: NSViewController {
             guard let self else { return }
             sidebarVC?.updateTOC(nodes)
             // Auto-expand TOC ke konten yang sedang aktif begitu TOC selesai di-load di background
-            if viewModel.currentContentId > 0,
-               let bookId = viewModel.currentBook?.id,
-               let content = viewModel.getContent(
-                   bkId: bookId, contentId: viewModel.currentContentId
-               )
-            {
-                handleNavigationToContent(content)
+            if viewModel.currentContentId > 0 {
+                handleNavigationToContent(viewModel.currentContentId)
             }
         }
     }
@@ -392,17 +387,17 @@ class IbarotTextVC: NSViewController {
 
     private var lastSelectedContentIdFromSidebar: Int?
 
-    private func handleNavigationToContent(_ content: BookContent) {
+    private func handleNavigationToContent(_ contentId: Int) {
         guard let sidebarVC else { return }
 
-        if lastSelectedContentIdFromSidebar == content.id {
+        if lastSelectedContentIdFromSidebar == contentId {
             lastSelectedContentIdFromSidebar = nil
             return
         }
 
         sidebarVC.enableDelegate = false
         Task {
-            if let node = viewModel.tocViewModel.findNode(forContentId: content.id) {
+            if let node = viewModel.tocViewModel.findNode(forContentId: contentId) {
                 let path = viewModel.tocViewModel.pathToNode(node)
                 await sidebarVC.selectNode(node, path: path)
             }

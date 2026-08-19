@@ -15,7 +15,13 @@ import SQLite3
 
 class BookConnection {
     private(set) var db: SQLiteDatabase?
-    static let tocTreeCache = NSCache<NSNumber, NSArray>()
+    static let tocTreeCache: NSCache<NSNumber, NSArray> = {
+        let cache = NSCache<NSNumber, NSArray>()
+        cache.countLimit = 50
+        cache.name = "BookTOCTreeCache"
+        return cache
+    }()
+
     static let totalPartsCache: NSCache<NSString, NSNumber> = {
         let cache = NSCache<NSString, NSNumber>()
         cache.countLimit = 100 // max 100 books di cache
@@ -98,7 +104,7 @@ class BookConnection {
             }.compactMap { $0 }.first
         } catch {
             #if DEBUG
-            	print("fetchTafseer error:", error)
+            print("fetchTafseer error:", error)
             #endif
             return nil
         }
@@ -162,6 +168,31 @@ extension BookConnection {
         return 1
     }
 
+    private func parseBookContent(row: SQLiteRow, bkid: String, quran: Bool = false) -> BookContent? {
+        guard let nassBlob = row.rawBlob(at: 0) else { return nil }
+        let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
+
+        let page = row.int64(at: 1)
+        let id = row.int64(at: 2)
+        let part = parsePartValue(row: row, column: 3)
+
+        let shortsMap = DatabaseManager.shared.loadShortsForBook(bkid)
+        let finalNass = shortsMap.isEmpty ? decompressedNass : applyShortsMapping(to: decompressedNass, with: shortsMap)
+
+        let newContent = BookContent(
+            id: Int(id),
+            nash: finalNass,
+            page: Int(page),
+            part: part
+        )
+
+        if quran {
+            newContent.surah = Int(row.int64(at: 4))
+            newContent.aya = Int(row.int64(at: 5))
+        }
+        return newContent
+    }
+
     /// UPDATED: getContent dengan decompress otomatis
     func getContent(bkid: String, contentId: Int, quran: Bool = false)
         -> BookContent?
@@ -170,7 +201,7 @@ extension BookConnection {
 
         if let cached = getCached(bkId: bkid, idContent: contentId) {
             #if DEBUG
-                print("return cached")
+            print("return cached")
             #endif
             return cached
         }
@@ -178,31 +209,8 @@ extension BookConnection {
         let querySQL = quran ? quranContentQuery(forBook: bkid) : contentQuery(forBook: bkid)
 
         do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { row -> BookContent? in
-                if let nassBlob = row.rawBlob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
-
-                    let page = row.int64(at: 1)
-                    let id = row.int64(at: 2)
-                    let part = self.parsePartValue(row: row, column: 3)
-
-                    let shortsMap = DatabaseManager.shared.loadShortsForBook(bkid)
-                    let finalNass = shortsMap.isEmpty ? decompressedNass : self.applyShortsMapping(to: decompressedNass, with: shortsMap)
-
-                    let newContent = BookContent(
-                        id: Int(id),
-                        nash: finalNass,
-                        page: Int(page),
-                        part: part
-                    )
-
-                    if quran {
-                        newContent.surah = Int(row.int64(at: 4))
-                        newContent.aya = Int(row.int64(at: 5))
-                    }
-                    return newContent
-                }
-                return nil
+            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { [weak self] row -> BookContent? in
+                self?.parseBookContent(row: row, bkid: bkid, quran: quran)
             }.compactMap { $0 }
 
             if let content = contents.first {
@@ -227,25 +235,8 @@ extension BookConnection {
         """
 
         do {
-            let contents = try db.fetch(query: querySQL) { row -> BookContent? in
-                if let nassBlob = row.rawBlob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
-
-                    let page = row.int64(at: 1)
-                    let id = row.int64(at: 2)
-                    let part = self.parsePartValue(row: row, column: 3)
-
-                    let shortsMap = DatabaseManager.shared.loadShortsForBook(bkid)
-                    let finalNass = shortsMap.isEmpty ? decompressedNass : self.applyShortsMapping(to: decompressedNass, with: shortsMap)
-
-                    return BookContent(
-                        id: Int(id),
-                        nash: finalNass,
-                        page: Int(page),
-                        part: part
-                    )
-                }
-                return nil
+            let contents = try db.fetch(query: querySQL) { [weak self] row -> BookContent? in
+                self?.parseBookContent(row: row, bkid: bkid)
             }.compactMap { $0 }
 
             if let content = contents.first {
@@ -271,24 +262,8 @@ extension BookConnection {
         """
 
         do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(part), String(page)]) { row -> BookContent? in
-                if let nassBlob = row.rawBlob(at: 0) {
-                    let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
-
-                    let id = row.int64(at: 2)
-                    let partValue = self.parsePartValue(row: row, column: 3)
-
-                    let shortsMap = DatabaseManager.shared.loadShortsForBook(bkid)
-                    let finalNass = self.applyShortsMapping(to: decompressedNass, with: shortsMap)
-
-                    return BookContent(
-                        id: Int(id),
-                        nash: finalNass,
-                        page: page,
-                        part: partValue
-                    )
-                }
-                return nil
+            let contents = try db.fetch(query: querySQL, parameters: [String(part), String(page)]) { [weak self] row -> BookContent? in
+                self?.parseBookContent(row: row, bkid: bkid)
             }.compactMap { $0 }
 
             if let content = contents.first {
@@ -307,25 +282,30 @@ extension BookConnection {
         contentId: Int,
         quran: Bool = false
     ) -> BookContent? {
-        guard
-            let content = getContent(
-                bkid: "\(currentBook.id)",
-                contentId: contentId + 1,
-                quran: quran
-            )
-        else {
-            guard
-                let content = getContent(
-                    bkid: "\(currentBook.id)",
-                    contentId: contentId + 2,
-                    quran: quran
-                )
-            else { return nil }
-
-            return content
+        let bkid = "\(currentBook.id)"
+        if let cached = getCached(bkId: bkid, idContent: contentId + 1) {
+            return cached
         }
 
-        return content
+        guard let db else { return nil }
+        let querySQL = quran
+            ? "SELECT nass, page, id, part, sora, aya FROM b\(bkid) WHERE id > ? ORDER BY id ASC LIMIT 1"
+            : "SELECT nass, page, id, part FROM b\(bkid) WHERE id > ? ORDER BY id ASC LIMIT 1"
+
+        do {
+            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { [weak self] row -> BookContent? in
+                self?.parseBookContent(row: row, bkid: bkid, quran: quran)
+            }.compactMap { $0 }
+
+            if let content = contents.first {
+                setCache(bkId: bkid, content: content)
+                return content
+            }
+        } catch {
+            print("getNextPage error:", error)
+        }
+
+        return nil
     }
 
     func getPrevPage(
@@ -333,25 +313,30 @@ extension BookConnection {
         contentId: Int,
         quran: Bool = false
     ) -> BookContent? {
-        guard
-            let content = getContent(
-                bkid: "\(currentBook.id)",
-                contentId: contentId - 1,
-                quran: quran
-            )
-        else {
-            guard
-                let content = getContent(
-                    bkid: "\(currentBook.id)",
-                    contentId: contentId - 2,
-                    quran: quran
-                )
-            else { return nil }
-
-            return content
+        let bkid = "\(currentBook.id)"
+        if let cached = getCached(bkId: bkid, idContent: contentId - 1) {
+            return cached
         }
 
-        return content
+        guard let db else { return nil }
+        let querySQL = quran
+            ? "SELECT nass, page, id, part, sora, aya FROM b\(bkid) WHERE id < ? ORDER BY id DESC LIMIT 1"
+            : "SELECT nass, page, id, part FROM b\(bkid) WHERE id < ? ORDER BY id DESC LIMIT 1"
+
+        do {
+            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { [weak self] row -> BookContent? in
+                self?.parseBookContent(row: row, bkid: bkid, quran: quran)
+            }.compactMap { $0 }
+
+            if let content = contents.first {
+                setCache(bkId: bkid, content: content)
+                return content
+            }
+        } catch {
+            print("getPrevPage error:", error)
+        }
+
+        return nil
     }
 
     func contentQuery(forBook bkid: String) -> String {
