@@ -944,11 +944,11 @@ extension IbarotTextView: TextViewRenderable {
             scrollPercentage = totalHeight > 0 ? (visibleRect.origin.y / totalHeight) : 0
         }
 
+        let targetBkId = content != nil ? bkId : (viewModel?.currentBook?.id ?? bkId)
+        let targetContentId = content?.id ?? (viewModel?.currentContentId ?? contentId)
+
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
-
-            let targetBkId = content != nil ? bkId : (viewModel?.currentBook?.id ?? bkId)
-            let targetContentId = content?.id ?? (viewModel?.currentContentId ?? contentId)
 
             let renderResult = await renderer.render(
                 bookId: targetBkId,

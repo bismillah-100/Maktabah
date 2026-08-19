@@ -37,7 +37,7 @@
                             <rect key="frame" x="0.0" y="322" width="96" height="5"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         </box>
-                        <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="a3z-2E-AeI">
+                        <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="a3z-2E-AeI" customClass="RTLScrollView" customModule="Maktabah" customModuleProvider="target">
                             <rect key="frame" x="0.0" y="0.0" width="480" height="316"/>
                             <clipView key="contentView" drawsBackground="NO" id="YQu-5m-LFP">
                                 <rect key="frame" x="0.0" y="0.0" width="480" height="316"/>
@@ -59,7 +59,7 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="Pcc-2f-Lme">
-                                <rect key="frame" x="463" y="0.0" width="17" height="316"/>
+                                <rect key="frame" x="464" y="0.0" width="16" height="316"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                         </scrollView>

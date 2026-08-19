@@ -22,7 +22,7 @@
             <rect key="frame" x="0.0" y="0.0" width="178" height="387"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="17" horizontalPageScroll="10" verticalLineScroll="17" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2m4-D5-RbW">
+                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="17" horizontalPageScroll="10" verticalLineScroll="17" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2m4-D5-RbW" customClass="RTLScrollView" customModule="Maktabah" customModuleProvider="target">
                     <rect key="frame" x="0.0" y="0.0" width="178" height="387"/>
                     <clipView key="contentView" drawsBackground="NO" id="a3O-z6-IwY">
                         <rect key="frame" x="0.0" y="0.0" width="178" height="387"/>

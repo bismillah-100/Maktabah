@@ -33,7 +33,7 @@
                 <stackView distribution="fill" orientation="vertical" alignment="centerX" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="un8-N4-Ho6">
                     <rect key="frame" x="0.0" y="0.0" width="376" height="500"/>
                     <subviews>
-                        <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="124" horizontalPageScroll="10" verticalLineScroll="124" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="1my-CM-DOe">
+                        <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="124" horizontalPageScroll="10" verticalLineScroll="124" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="1my-CM-DOe" customClass="RTLScrollView" customModule="Maktabah" customModuleProvider="target">
                             <rect key="frame" x="16" y="20" width="345" height="431"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <clipView key="contentView" drawsBackground="NO" id="Hw0-lk-HUG">

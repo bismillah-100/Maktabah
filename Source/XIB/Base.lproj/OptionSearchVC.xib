@@ -233,7 +233,7 @@
                 <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="ROw-dz-8LF">
                     <rect key="frame" x="0.0" y="178" width="748" height="5"/>
                 </box>
-                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="17" horizontalPageScroll="10" verticalLineScroll="17" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="DX2-kW-Mra">
+                <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="17" horizontalPageScroll="10" verticalLineScroll="17" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="DX2-kW-Mra" customClass="RTLScrollView" customModule="Maktabah" customModuleProvider="target">
                     <rect key="frame" x="0.0" y="0.0" width="851" height="180"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <clipView key="contentView" id="dJ6-Qt-ivX">

@@ -248,16 +248,21 @@ class AnnotationsVC: NSViewController {
         titlebarAccessoryView.view = titlebarRootStack
         titlebarAccessoryView.layoutAttribute = .bottom
 
+        let oldF = titlebarAccessoryView.view.frame
         if #available(macOS 26.1, *) {
             titlebarAccessoryView.preferredScrollEdgeEffectStyle = .soft
+            if oldF.height < 70 {
+                titlebarAccessoryView.view.frame = NSRect(
+                    origin: oldF.origin,
+                    size: CGSize(width: oldF.width, height: 70)
+                )
+            }
+        } else {
+            titlebarAccessoryView.view.frame = NSRect(
+                origin: oldF.origin,
+                size: CGSize(width: oldF.width, height: oldF.height + 42)
+            )
         }
-
-        let oldF = titlebarAccessoryView.view.frame
-        titlebarAccessoryView.view.frame = NSRect(
-            origin: oldF.origin,
-            size: CGSize(width: oldF.width, height: oldF.height + 42)
-        )
-
         panel.addTitlebarAccessoryViewController(titlebarAccessoryView)
     }
 
