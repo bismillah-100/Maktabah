@@ -106,6 +106,7 @@ extension AnnotationManager {
         guard !uniqueIDs.isEmpty else { return }
 
         var updatedAnnotations: [Annotation] = []
+        var updatedIDs: [Int64] = []
         try transaction {
             for annotationID in uniqueIDs {
                 guard var annotation = loadAnnotationById(annotationID) else { continue }
@@ -115,7 +116,21 @@ extension AnnotationManager {
                 annotation.tags = mergedTags
                 annotation.lastModified = now
                 updatedAnnotations.append(annotation)
-                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annotationID])
+                updatedIDs.append(annotationID)
+            }
+
+            let chunkSize = 500
+            for chunkStart in stride(from: 0, to: updatedIDs.count, by: chunkSize) {
+                let chunkEnd = min(chunkStart + chunkSize, updatedIDs.count)
+                let chunk = Array(updatedIDs[chunkStart..<chunkEnd])
+
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
+
+                var parameters: [Any] = [now]
+                parameters.append(contentsOf: chunk)
+
+                try exec(updateSql, parameters: parameters)
             }
         }
 
@@ -131,6 +146,7 @@ extension AnnotationManager {
         guard !uniqueIDs.isEmpty else { return }
 
         var updatedAnnotations: [Annotation] = []
+        var updatedIDs: [Int64] = []
         try transaction {
             for annotationID in uniqueIDs {
                 guard var annotation = loadAnnotationById(annotationID) else { continue }
@@ -143,7 +159,21 @@ extension AnnotationManager {
                 annotation.tags = sanitizedTags
                 annotation.lastModified = now
                 updatedAnnotations.append(annotation)
-                try exec("UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;", parameters: [now, annotationID])
+                updatedIDs.append(annotationID)
+            }
+
+            let chunkSize = 500
+            for chunkStart in stride(from: 0, to: updatedIDs.count, by: chunkSize) {
+                let chunkEnd = min(chunkStart + chunkSize, updatedIDs.count)
+                let chunk = Array(updatedIDs[chunkStart..<chunkEnd])
+
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
+
+                var parameters: [Any] = [now]
+                parameters.append(contentsOf: chunk)
+
+                try exec(updateSql, parameters: parameters)
             }
         }
 
