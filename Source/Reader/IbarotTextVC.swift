@@ -62,6 +62,7 @@ class IbarotTextVC: NSViewController {
                 guard let self, !payload.text.isEmpty else { return }
                 textDelegate?.loadIbarotText(
                     payload.text,
+                    content: payload.content,
                     color: NSColor.header,
                     isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
                     isImported: viewModel.currentBook?.isImported ?? false,

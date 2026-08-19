@@ -926,6 +926,7 @@ class IbarotTextView: NSTextView {
 extension IbarotTextView: TextViewRenderable {
     func loadIbarotText(
         _ text: String,
+        content: BookContent? = nil,
         color: NSColor?,
         isMultiLanguage: Bool?,
         isImported: Bool?,
@@ -946,7 +947,12 @@ extension IbarotTextView: TextViewRenderable {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
 
+            let targetBkId = content != nil ? bkId : (viewModel?.currentBook?.id ?? bkId)
+            let targetContentId = content?.id ?? (viewModel?.currentContentId ?? contentId)
+
             let renderResult = await renderer.render(
+                bookId: targetBkId,
+                contentId: targetContentId,
                 text: text,
                 highlightColor: color ?? .header,
                 showHarakat: state.showHarakat,

@@ -18,11 +18,17 @@ import SwiftUI
 #if os(macOS)
 struct ContentRenderPayload: Equatable {
     let text: String
+    let content: BookContent?
     let keepScrollPosition: Bool
 
-    init(text: String, keepScrollPosition: Bool = false) {
+    init(text: String, content: BookContent? = nil, keepScrollPosition: Bool = false) {
         self.text = text
+        self.content = content
         self.keepScrollPosition = keepScrollPosition
+    }
+
+    static func == (lhs: ContentRenderPayload, rhs: ContentRenderPayload) -> Bool {
+        lhs.text == rhs.text && lhs.content === rhs.content && lhs.keepScrollPosition == rhs.keepScrollPosition
     }
 }
 #endif
@@ -142,10 +148,12 @@ class ReaderViewModel: ViewModelBase {
     }
 
     var diacriticsText: String {
-        BookPageCache.shared.get(
-            bookId: currentBook?.id ?? 0,
-            contentId: currentContentId
-        )?.nash ?? ""
+        currentBookContent?.nash ?? ""
+    }
+
+    var currentBookContent: BookContent? {
+        guard let bkId = currentBook?.id else { return nil }
+        return BookPageCache.shared.get(bookId: bkId, contentId: currentContentId)
     }
 
     // MARK: - Dependencies
@@ -398,7 +406,7 @@ class ReaderViewModel: ViewModelBase {
 
     func updateContentState(with content: BookContent) {
         #if os(macOS)
-        contentPayload = ContentRenderPayload(text: content.nash, keepScrollPosition: false)
+        contentPayload = ContentRenderPayload(text: content.nash, content: content, keepScrollPosition: false)
         #else
         contentText = content.nash
         #endif
@@ -442,7 +450,7 @@ class ReaderViewModel: ViewModelBase {
               )
         else { return }
 
-        contentPayload = ContentRenderPayload(text: content.nash, keepScrollPosition: keepScrollPosition)
+        contentPayload = ContentRenderPayload(text: content.nash, content: content, keepScrollPosition: keepScrollPosition)
         onContentChanged?(content)
     }
 

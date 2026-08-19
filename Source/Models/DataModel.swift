@@ -104,6 +104,40 @@ class CategoryData: NSCopying {
     }
 }
 
+struct CleanedTextKey: Hashable {
+    let showHarakat: Bool
+    let isMultiLanguage: Bool
+    let isImported: Bool
+}
+
+final class ProcessedArabicContent {
+    let sourceText: String
+    let displayText: String
+    let coloredRanges: [NSRange]
+    let footnoteRanges: [NSRange]
+    let replacementEvents: [HonorificReplacementEvent]
+    let importedHeaderRanges: [NSRange]
+    let ligatureRanges: [NSRange]
+
+    init(
+        sourceText: String,
+        displayText: String,
+        coloredRanges: [NSRange],
+        footnoteRanges: [NSRange],
+        replacementEvents: [HonorificReplacementEvent],
+        importedHeaderRanges: [NSRange],
+        ligatureRanges: [NSRange]
+    ) {
+        self.sourceText = sourceText
+        self.displayText = displayText
+        self.coloredRanges = coloredRanges
+        self.footnoteRanges = footnoteRanges
+        self.replacementEvents = replacementEvents
+        self.importedHeaderRanges = importedHeaderRanges
+        self.ligatureRanges = ligatureRanges
+    }
+}
+
 class BookContent {
     let id: Int
     let nash: String

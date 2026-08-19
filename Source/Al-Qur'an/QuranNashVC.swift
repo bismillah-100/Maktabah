@@ -135,7 +135,7 @@ class QuranNashVC: NSViewController {
         navigateToContent: Bool = false
     ) {
         textDelegate?.loadIbarotText(
-            text, color: .header,
+            text, content: content, color: .header,
             isMultiLanguage: false, isImported: false,
             keepScrollPosition: false
         )

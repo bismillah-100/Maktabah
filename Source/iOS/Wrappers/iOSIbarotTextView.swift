@@ -375,6 +375,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
         let headerColor = UIColor.header
 
         let renderResult = renderer.render(
+            bookId: viewModel.currentBook?.id,
+            contentId: viewModel.currentContentId,
             text: text,
             highlightColor: headerColor,
             showHarakat: state.showHarakat,
