@@ -13,7 +13,10 @@ final class RTLScrollView: NSScrollView {
 
     override func tile() {
         super.tile()
-        guard let verticalScroller, hasVerticalScroller else { return }
+        guard !MainWindow.rtl,
+              hasVerticalScroller,
+              let verticalScroller
+        else { return }
 
         var scrollerFrame = verticalScroller.frame
         scrollerFrame.origin.x = scrollerStyle == .overlay ? -leftOffset : 0
