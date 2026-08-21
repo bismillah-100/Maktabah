@@ -13,6 +13,7 @@ struct iPadLayout: View {
 
     @State private var showingSearchHelp = false
     @State private var showingAddFavorites = false
+    @State private var showingDonationSheet = false
     @State private var path: [iOSTab] = []
 
     @StateObject private var historyViewModel = HistoryViewModel.shared
@@ -95,6 +96,12 @@ struct iPadLayout: View {
         .sheet(isPresented: $showingAddFavorites) {
             iOSAddFavoriteSheet(viewModel: historyViewModel)
         }
+        .sheet(isPresented: $showingDonationSheet) {
+            DonationSheetView(onDismiss: {
+                showingDonationSheet = false
+            })
+        }
+
     }
 
     @ViewBuilder
@@ -113,6 +120,18 @@ struct iPadLayout: View {
                 HistorySection(books: filteredHistory, viewModel: historyViewModel)
             }
 
+            if DonationManager.shared.shouldShowDonation {
+                Section {
+                    DonationHistoryButton {
+                        showingDonationSheet = true
+                    }
+                }
+                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 4, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+
+
             if !filteredFavorites.isEmpty {
                 FavoritesSection(
                     books: filteredFavorites,
@@ -125,6 +144,7 @@ struct iPadLayout: View {
             }
         }
     }
+
 
     @ViewBuilder
     private func destinationView(for tab: iOSTab) -> some View {

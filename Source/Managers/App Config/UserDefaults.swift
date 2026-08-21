@@ -315,6 +315,26 @@ extension UserDefaults {
         }
     }
 
+    // MARK: - Donation
+    static let appActivationCountKey = "appActivationCount"
+    static let donationLastDismissedKey = "donationLastDismissedTimestamp"
+    static let hasDonatedKey = "hasDonated"
+
+    var appActivationCount: Int {
+        get { integer(forKey: Self.appActivationCountKey) }
+        set { set(newValue, forKey: Self.appActivationCountKey) }
+    }
+
+    var donationLastDismissed: Double {
+        get { double(forKey: Self.donationLastDismissedKey) }
+        set { set(newValue, forKey: Self.donationLastDismissedKey) }
+    }
+
+    var hasDonated: Bool {
+        get { bool(forKey: Self.hasDonatedKey) }
+        set { set(newValue, forKey: Self.hasDonatedKey) }
+    }
+
     enum TextViewKeys {
         static let fontSize = "textViewFontSize"
         static let fontName = "textViewFontName"
@@ -336,3 +356,4 @@ extension UserDefaults {
         static let ctxMaxNumberOfLines = "ctxMaxNumberOfLines"
     }
 }
+

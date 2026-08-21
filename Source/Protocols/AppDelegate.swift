@@ -62,6 +62,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let wc = WindowController()
         mainWindowController = wc
         guard let window = wc.window else { return }
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]
+            == "1" { return }
+
         window.makeKeyAndOrderFront(nil)
     }
 
@@ -111,6 +114,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Check for core database updates (blocking, throttled 6 months)
         checkCoreDatabaseUpdate()
+
+        DonationManager.shared.recordActivation()
+        DonationManager.shared.checkAndPromptMacOSSheet(on: mainWindowController.window)
     }
 
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String : Any]) {
@@ -122,6 +128,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidBecomeActive(_ notification: Notification) {
         CloudKitSyncManager.shared.fetchChanges()
+        DonationManager.shared.recordActivation()
+        DonationManager.shared.checkAndPromptMacOSSheet(on: keyWindow ?? mainWindowController?.window)
     }
 
     /*
@@ -509,7 +517,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quranWindow.action = #selector(displayQuranWindow(_:))
         resetCurrentView.action = #selector(resetCurrentViewState)
 
+        if DonationManager.isIndonesianRegion {
+            let donationItem = buildMenu(
+                String(localized: .Donation.supportDevelopmentShort),
+                image: "heart.fill",
+                keyEquivalent: ""
+            )
+            donationItem.action = #selector(showDonationSheet(_:))
+            viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+            viewMenu.insertItem(donationItem, at: viewMenu.items.count - 1)
+        }
+
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+
         viewMenu.insertItem(resetCurrentView, at: viewMenu.items.count - 1)
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
         viewMenu.insertItem(quranWindow, at: viewMenu.items.count - 1)
@@ -524,6 +544,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         viewMenu.insertItem(author, at: viewMenu.items.count - 1)
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
     }
+
 
     @objc private func resetCurrentViewState() {
         guard let keyWindow else { return }
@@ -610,6 +631,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @IBAction func showDiacritics(_ sender: NSMenuItem) {
         TextViewState.shared.toggleHarakat()
+    }
+
+    @IBAction func showDonationSheet(_ sender: Any?) {
+        DonationManager.shared.presentDonationSheet(on: keyWindow ?? mainWindowController?.window)
     }
 
     @objc private func showCurrentBookInfo(_ sender: NSMenuItem) {

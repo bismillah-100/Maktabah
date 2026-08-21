@@ -8,6 +8,7 @@ import SwiftUI
 struct iOSHistoryView: View {
     @StateObject private var viewModel = HistoryViewModel.shared
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
+    @State private var showingDonationSheet = false
 
     var body: some View {
         let filteredFavorites = viewModel.filteredFavorites
@@ -15,7 +16,18 @@ struct iOSHistoryView: View {
 
         ThemeList {
             if !filteredHistory.isEmpty {
-                HistorySection(books: filteredHistory,viewModel: viewModel)
+                HistorySection(books: filteredHistory, viewModel: viewModel)
+            }
+
+            if DonationManager.shared.shouldShowDonation {
+                Section {
+                    DonationHistoryButton {
+                        showingDonationSheet = true
+                    }
+                }
+                .listRowInsets(EdgeInsets(top: 26, leading: 16, bottom: 4, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
 
             if !filteredFavorites.isEmpty {
@@ -31,6 +43,12 @@ struct iOSHistoryView: View {
                 HistoryEmptyState(searchText: viewModel.searchText)
             }
         }
+        .sheet(isPresented: $showingDonationSheet) {
+            DonationSheetView(onDismiss: {
+                showingDonationSheet = false
+            })
+        }
+
         .refreshable {
             CloudKitSyncManager.shared.fetchChanges()
             try? await Task.sleep(nanoseconds: 1_000_000_000)

@@ -71,3 +71,44 @@ struct HistoryEmptyState: View {
         }
     }
 }
+
+// MARK: - DonationHistoryButton
+
+struct DonationHistoryButton: View {
+    let cardHeight: CGFloat
+    let action: () -> Void
+
+    init(cardHeight: CGFloat = 50, action: @escaping () -> Void) {
+        self.cardHeight = cardHeight
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Spacer()
+                Image(systemName: "heart.fill")
+                Text(.Donation.supportDevelopment)
+                    .font(.headline)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .foregroundStyle(.tint)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(height: cardHeight)
+            .background(
+                RoundedRectangle(cornerRadius: 30)
+                    .fill(Color.appCellBackground)
+                    .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 30)
+                    .stroke(Color(.secondarySystemFill), lineWidth: 0.3)
+            )
+        }
+        .padding(.horizontal, MaktabahApp.isIpad ? 0 : 2)
+        .buttonStyle(.plain)
+    }
+}
+
