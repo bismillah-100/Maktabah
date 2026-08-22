@@ -346,37 +346,74 @@ extension AnnotationManager {
             }
         }
 
+        var currentTagIds: [Int64] = []
+        var tagsToInsert: [(name: String, normalized: String)] = []
+        var seenNormalized: Set<String> = []
+
+        // Process Updates and prepare unique Inserts
         for tag in tags {
             let normalized = normalizedTagName(tag)
 
-            var existingTagId: Int64 = -1
-            var existingTagName = ""
-
             if let existing = existingTags[normalized] {
-                existingTagId = existing.id
-                existingTagName = existing.name
-            }
+                let existingTagId = existing.id
+                let existingTagName = existing.name
 
-            let currentTagId: Int64
-
-            if existingTagId != -1 {
-                currentTagId = existingTagId
                 if existingTagName != tag {
                     let updateSql = "UPDATE \(tagsTable) SET \(colTagName) = ? WHERE \(colTagId) = ?;"
-                    try _db.execute(query: updateSql, parameters: [tag, currentTagId])
-                    existingTags[normalized] = (currentTagId, tag)
+                    try _db.execute(query: updateSql, parameters: [tag, existingTagId])
+                    existingTags[normalized] = (existingTagId, tag)
+                }
+                if seenNormalized.insert(normalized).inserted {
+                    currentTagIds.append(existingTagId)
                 }
             } else {
-                let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES (?, ?);"
-                try _db.execute(query: insertSql, parameters: [tag, normalized])
-                currentTagId = _db.lastInsertRowId()
-                existingTags[normalized] = (currentTagId, tag)
+                if seenNormalized.insert(normalized).inserted {
+                    tagsToInsert.append((name: tag, normalized: normalized))
+                }
             }
+        }
 
-            if currentTagId != -1 {
-                let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES (?, ?);"
-                try _db.execute(query: insertRelSql, parameters: [annotationId, currentTagId])
+        if !tagsToInsert.isEmpty {
+            let placeholders = String(repeating: "(?, ?),", count: tagsToInsert.count).dropLast()
+            let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(placeholders);"
+
+            var insertParams: [Any] = []
+            for tagTuple in tagsToInsert {
+                insertParams.append(tagTuple.name)
+                insertParams.append(tagTuple.normalized)
             }
+            try _db.execute(query: insertSql, parameters: insertParams)
+
+            let normalizedNewTags = tagsToInsert.map { $0.normalized }
+            let selectPlaceholders = String(repeating: "?,", count: normalizedNewTags.count).dropLast()
+            let fetchNewSql = "SELECT \(colTagId), \(colTagNormalizedName), \(colTagName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders))"
+
+            // Re-fetch using mapped tuples matching the standard SQLiteRow properties
+            do {
+                let fetchedNewTags = try _db.fetch(query: fetchNewSql, parameters: normalizedNewTags) { row -> (Int64, String, String) in
+                    let id = row.int64(at: 0)
+                    let norm = row.string(at: 1) ?? ""
+                    let name = row.string(at: 2) ?? ""
+                    return (id, norm, name)
+                }
+
+                for (id, normalized, name) in fetchedNewTags {
+                    existingTags[normalized] = (id, name)
+                    currentTagIds.append(id)
+                }
+            }
+        }
+
+        if !currentTagIds.isEmpty {
+            let relPlaceholders = String(repeating: "(?, ?),", count: currentTagIds.count).dropLast()
+            let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(relPlaceholders);"
+
+            var relParams: [Any] = []
+            for tagId in currentTagIds {
+                relParams.append(annotationId)
+                relParams.append(tagId)
+            }
+            try _db.execute(query: insertRelSql, parameters: relParams)
         }
 
         _cacheQueue.sync { _cachedAllTagNames = nil }
