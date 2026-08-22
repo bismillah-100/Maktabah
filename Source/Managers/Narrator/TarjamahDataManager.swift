@@ -198,7 +198,7 @@ class TarjamahGlobalManager {
         }
 
         // 2. CREATE FTS DB
-        try db.safeAttachDatabase(path: ftsPath, schema: "fts_db")
+        try db?.safeAttachDatabase(path: ftsPath, schema: "fts_db")
 
         let createFtsSql = """
         CREATE VIRTUAL TABLE IF NOT EXISTS fts_db.men_u_fts
