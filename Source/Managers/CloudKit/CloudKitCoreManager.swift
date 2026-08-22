@@ -50,7 +50,13 @@ final class CloudKitCoreManager {
 
     func loadToken() -> CKServerChangeToken? {
         guard let data = UserDefaults.standard.data(forKey: changeTokenKey) else { return nil }
-        return try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
+        do {
+            let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+            unarchiver.requiresSecureCoding = true
+            return unarchiver.decodeObject(of: CKServerChangeToken.self, forKey: NSKeyedArchiveRootObjectKey)
+        } catch {
+            return nil
+        }
     }
 
     func resetToken() {
