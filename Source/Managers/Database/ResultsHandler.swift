@@ -1262,9 +1262,7 @@ extension ResultsHandler {
                 try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
 
                 // Get the generated localId so children can use it
-                if let newlyInsertedId = try db.fetch(query: "SELECT last_insert_rowid()", mapping: { $0.int64(at: 0) }).first {
-                    newInsertedLocalId = newlyInsertedId
-                }
+                newInsertedLocalId = db.lastInsertRowId()
             }
         }
 
@@ -1449,11 +1447,9 @@ extension ResultsHandler {
                             ]
                             try db.execute(query: insSql, parameters: params)
 
-                            if let newlyInsertedId = try db.fetch(query: "SELECT last_insert_rowid()", mapping: { $0.int64(at: 0) }).first {
-                                let finalFolderStr = fLocalId != nil ? "\(fLocalId!)" : "NULL"
-                                let finalKey = "\(finalFolderStr)_\(res.name)_\(res.bkId)"
-                                conflictMap[finalKey] = (newlyInsertedId, res.lastModified ?? 0)
-                            }
+                            let finalFolderStr = fLocalId != nil ? "\(fLocalId!)" : "NULL"
+                            let finalKey = "\(finalFolderStr)_\(res.name)_\(res.bkId)"
+                            conflictMap[finalKey] = (db.lastInsertRowId(), res.lastModified ?? 0)
                         }
                     }
                 }
