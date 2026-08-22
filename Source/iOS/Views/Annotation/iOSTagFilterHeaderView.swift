@@ -38,7 +38,6 @@ final class iOSTagFilterHeaderView: UICollectionReusableView {
         containerStack.alignment = .center
         containerStack.distribution = .fill
         containerStack.translatesAutoresizingMaskIntoConstraints = false
-        containerStack.semanticContentAttribute = .forceRightToLeft
 
         // Filter Button
         var filterConfig = UIButton.Configuration.plain()
@@ -77,9 +76,9 @@ final class iOSTagFilterHeaderView: UICollectionReusableView {
             chipsStackView.heightAnchor.constraint(equalTo: chipsScrollView.frameLayoutGuide.heightAnchor),
         ])
 
-        containerStack.addArrangedSubview(filterButton)
-        containerStack.addArrangedSubview(modeButton)
         containerStack.addArrangedSubview(chipsScrollView)
+        containerStack.addArrangedSubview(modeButton)
+        containerStack.addArrangedSubview(filterButton)
 
         addSubview(containerStack)
         NSLayoutConstraint.activate([
