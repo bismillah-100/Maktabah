@@ -1108,15 +1108,35 @@ extension ResultsHandler {
     }
 
     private func processFolderDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws {
-        for ckId in recordIdsToDelete {
-            let findSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-            if let localId = try db.fetch(query: findSql, parameters: [ckId], mapping: { $0.int64(at: 0) }).first {
-                let allLocalIds = getAllDescendantIds(of: localId)
-                for fId in allLocalIds {
-                    try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) = ?;", parameters: [fId])
-                    try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [fId])
-                }
+        guard !recordIdsToDelete.isEmpty else { return }
+        let chunkSize = 999
+        var allLocalIdsToDelete = Set<Int64>()
+
+        let ckIdChunks = stride(from: 0, to: recordIdsToDelete.count, by: chunkSize).map {
+            Array(recordIdsToDelete[$0..<min($0 + chunkSize, recordIdsToDelete.count)])
+        }
+
+        for chunk in ckIdChunks {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let findSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+
+            let localIds = try db.fetch(query: findSql, parameters: chunk, mapping: { $0.int64(at: 0) })
+
+            for localId in localIds {
+                let descendantIds = getAllDescendantIds(of: localId)
+                allLocalIdsToDelete.formUnion(descendantIds)
             }
+        }
+
+        let uniqueLocalIds = Array(allLocalIdsToDelete)
+        let localIdChunks = stride(from: 0, to: uniqueLocalIds.count, by: chunkSize).map {
+            Array(uniqueLocalIds[$0..<min($0 + chunkSize, uniqueLocalIds.count)])
+        }
+
+        for chunk in localIdChunks {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) IN (\(placeholders));", parameters: chunk)
+            try exec("DELETE FROM \(foldersTable) WHERE \(colId) IN (\(placeholders));", parameters: chunk)
         }
     }
 
