@@ -1397,12 +1397,12 @@ extension ResultsHandler {
                                 }
                             }
 
-                            let upSql = \"\"\"
+                            let upSql = """
                             UPDATE \(resultsTable) SET 
                             \(colFolderId) = ?, \(colName) = ?, \(colQuery) = ?, \(colArchive) = ?,
                             \(colBkId) = ?, \(colContentId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?, \(colSearchMode) = ?, \(colNearDistance) = ?
                             WHERE \(colId) = ?;
-                            \"\"\"
+                            """
                             let params: [Any] = [
                                 newFolderForDb ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
@@ -1432,12 +1432,12 @@ extension ResultsHandler {
                         if conflictLocalId != -1 {
                             let remoteLastMod = res.lastModified ?? 0
                             if remoteLastMod >= conflictLastMod {
-                                let upSql = \"\"\"
+                                let upSql = """
                                 UPDATE \(resultsTable) SET 
                                 \(colFolderId) = ?, \(colName) = ?, \(colQuery) = ?, \(colArchive) = ?,
                                 \(colBkId) = ?, \(colContentId) = ?, \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ?, \(colSearchMode) = ?, \(colNearDistance) = ?
                                 WHERE \(colId) = ?;
-                                \"\"\"
+                                """
                                 let params: [Any] = [
                                     fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                     res.bkId, res.contentId, ckId, res.lastModified ?? 0, res.folderCkRecordId ?? NSNull(),
@@ -1453,13 +1453,13 @@ extension ResultsHandler {
                                 try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
                             }
                         } else {
-                            let insSql = \"\"\"
+                            let insSql = """
                             INSERT INTO \(resultsTable) (
                                 \(colFolderId), \(colName), \(colQuery), \(colArchive),
                                 \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified),
                                 \(colFolderCkRecordId), \(colSearchMode), \(colNearDistance)
                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-                            \"\"\"
+                            """
                             let params: [Any] = [
                                 fLocalId ?? NSNull(), res.name, res.query, res.archive,
                                 res.bkId, res.contentId, ckId, res.lastModified ?? 0,
