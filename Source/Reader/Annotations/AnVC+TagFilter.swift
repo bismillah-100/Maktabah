@@ -23,10 +23,9 @@ extension AnnotationsVC {
 
         let bar = NSStackView()
         bar.orientation = .horizontal
-        bar.userInterfaceLayoutDirection = .rightToLeft
         bar.spacing = 8
         bar.alignment = .centerY
-        bar.edgeInsets.left = leftInset
+        bar.edgeInsets.right = leftInset
         bar.translatesAutoresizingMaskIntoConstraints = false
         bar.heightAnchor.constraint(equalToConstant: heightConstant).isActive = true
 
@@ -83,13 +82,14 @@ extension AnnotationsVC {
         clipView.drawsBackground = false
         clipView.automaticallyAdjustsContentInsets = false
         clipView.contentInsets.left = leftInset
+        clipView.contentInsets.right = leftInset
         chipScroll.contentView = clipView
         chipScroll.documentView = chipsStack
         chipsScrollView = chipScroll
 
-        bar.addArrangedSubview(filterBtn)
-        bar.addArrangedSubview(modeBtn)
         bar.addArrangedSubview(chipScroll)
+        bar.addArrangedSubview(modeBtn)
+        bar.addArrangedSubview(filterBtn)
 
         tagFilterBar = bar
         return bar
