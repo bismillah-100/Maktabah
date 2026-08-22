@@ -59,10 +59,36 @@ struct TarjamahResult: Codable, CopyableResult {
         tarjamah = try container.decode(TarjamahMen.self, forKey: .tarjamah)
         content = try container.decode(String.self, forKey: .content)
 
-        if let data = try container.decodeIfPresent(Data.self, forKey: .attributedText),
-           let attr = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSAttributedString.self, from: data)
-        {
-            attributedText = attr
+        if let data = try container.decodeIfPresent(Data.self, forKey: .attributedText) {
+            var decodedAttr: NSAttributedString?
+            do {
+                let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+                unarchiver.requiresSecureCoding = true
+
+                #if os(macOS)
+                let allowedClasses = [
+                    NSAttributedString.self,
+                    NSMutableAttributedString.self,
+                    NSColor.self,
+                    NSFont.self,
+                    NSParagraphStyle.self,
+                    NSMutableParagraphStyle.self
+                ]
+                decodedAttr = unarchiver.decodeObject(of: allowedClasses, forKey: NSKeyedArchiveRootObjectKey) as? NSAttributedString
+                #else
+                decodedAttr = unarchiver.decodeObject(of: NSAttributedString.self, forKey: NSKeyedArchiveRootObjectKey)
+                #endif
+
+                unarchiver.finishDecoding()
+            } catch {
+                decodedAttr = nil
+            }
+
+            if let attr = decodedAttr {
+                attributedText = attr
+            } else {
+                attributedText = NSAttributedString(string: content)
+            }
         } else {
             attributedText = NSAttributedString(string: content)
         }
