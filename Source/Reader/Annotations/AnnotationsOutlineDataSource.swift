@@ -16,6 +16,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             outlineView?.doubleAction = #selector(onDoubleClick(_:))
         }
     }
+
     var onAddTagsRequested: (([Int64], NSRect) -> Void)?
     var onRemoveTagsRequested: (([Int64], NSRect) -> Void)?
 
@@ -28,7 +29,9 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     var onSelectItem: ((Int) -> Void)?
 
-    var groupingMode: AnnotationGroupingMode { viewModel.groupingMode }
+    var groupingMode: AnnotationGroupingMode {
+        viewModel.groupingMode
+    }
 
     let menu = NSMenu()
 
@@ -106,7 +109,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     deinit {
         #if DEBUG
-            print("Annotations Data Source deinit")
+        print("Annotations Data Source deinit")
         #endif
     }
 
@@ -194,7 +197,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     private func handleTagModeUpdate(annotationId _: Int64, diff: TagUpdateDiff?) {
         guard let outlineView else { return }
-        guard let diff = diff else {
+        guard let diff else {
             outlineView.reloadData()
             return
         }
@@ -421,7 +424,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
         func rename(from currentName: String, to newName: String) {
             do {
-                try AnnotationManager.shared.renameTag(from: currentName, to: newName)
+                try viewModel.renameTag(from: currentName, to: newName)
             } catch {
                 sender.stringValue = currentName
                 let errorAlert = NSAlert()
@@ -668,10 +671,10 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     private func performDeleteTagRoots(_ nodes: [AnnotationNode]) {
         for node in nodes where node.kind == .tag {
             do {
-                try AnnotationManager.shared.deleteTag(named: node.title)
+                try viewModel.deleteTag(named: node.title)
             } catch {
                 #if DEBUG
-                    print("Error deleting tag '\(node.title)': \(error)")
+                print("Error deleting tag '\(node.title)': \(error)")
                 #endif
             }
         }
@@ -685,7 +688,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                 try AnnotationManager.shared.deleteAnnotation(id: id)
             } catch {
                 #if DEBUG
-                    print("Error deleting annotation \(id): \(error)")
+                print("Error deleting annotation \(id): \(error)")
                 #endif
             }
         }
@@ -701,9 +704,9 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                     try AnnotationManager.shared.deleteAnnotation(id: id)
                 } catch {
                     #if DEBUG
-                        print(
-                            "Error deleting annotation \(id) from book '\(bookNode.title)': \(error)"
-                        )
+                    print(
+                        "Error deleting annotation \(id) from book '\(bookNode.title)': \(error)"
+                    )
                     #endif
                 }
             }
@@ -943,7 +946,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate,
               let annotation = item.annotation
         else {
             #if DEBUG
-                print("outlineView item not as Annotations")
+            print("outlineView item not as Annotations")
             #endif
             return
         }
