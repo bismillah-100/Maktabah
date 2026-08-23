@@ -66,17 +66,45 @@ struct TarjamahResult: Codable, CopyableResult {
                 unarchiver.requiresSecureCoding = true
 
                 #if os(macOS)
-                let allowedClasses = [
+                let allowedClasses: [AnyClass] = [
                     NSAttributedString.self,
                     NSMutableAttributedString.self,
                     NSColor.self,
                     NSFont.self,
                     NSParagraphStyle.self,
-                    NSMutableParagraphStyle.self
+                    NSMutableParagraphStyle.self,
+                    NSDictionary.self,
+                    NSArray.self,
+                    NSString.self,
+                    NSNumber.self
+                ]
+                decodedAttr = unarchiver.decodeObject(of: allowedClasses, forKey: NSKeyedArchiveRootObjectKey) as? NSAttributedString
+                #elseif canImport(UIKit)
+                let allowedClasses: [AnyClass] = [
+                    NSAttributedString.self,
+                    NSMutableAttributedString.self,
+                    UIColor.self,
+                    UIFont.self,
+                    NSParagraphStyle.self,
+                    NSMutableParagraphStyle.self,
+                    NSDictionary.self,
+                    NSArray.self,
+                    NSString.self,
+                    NSNumber.self
                 ]
                 decodedAttr = unarchiver.decodeObject(of: allowedClasses, forKey: NSKeyedArchiveRootObjectKey) as? NSAttributedString
                 #else
-                decodedAttr = unarchiver.decodeObject(of: NSAttributedString.self, forKey: NSKeyedArchiveRootObjectKey)
+                let allowedClasses: [AnyClass] = [
+                    NSAttributedString.self,
+                    NSMutableAttributedString.self,
+                    NSParagraphStyle.self,
+                    NSMutableParagraphStyle.self,
+                    NSDictionary.self,
+                    NSArray.self,
+                    NSString.self,
+                    NSNumber.self
+                ]
+                decodedAttr = unarchiver.decodeObject(of: allowedClasses, forKey: NSKeyedArchiveRootObjectKey) as? NSAttributedString
                 #endif
 
                 unarchiver.finishDecoding()
