@@ -343,8 +343,7 @@ final class FtsMigrationManager {
     }
 
     private func attachDatabase(_ db: OpaquePointer, path: String, schema: String) throws {
-        let sql = "ATTACH DATABASE '\(path)' AS \(schema);"
-        try exec(db, sql)
+        try db.safeAttachDatabase(path: path, schema: schema)
     }
 
     private func exec(_ db: OpaquePointer, _ sql: String) throws {

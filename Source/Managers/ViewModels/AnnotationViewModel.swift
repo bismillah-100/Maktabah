@@ -9,7 +9,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-enum AnnotationSearchScope: Int, CaseIterable, Identifiable {
+enum AnnotationSearchScope: Int, Sendable, CaseIterable, Identifiable {
     case all = 0
     case book = 1
     case context = 2

@@ -602,16 +602,7 @@ final class BookArchiveIntegrator {
         path: String,
         schema: String
     ) throws {
-        let safePath = path.replacingOccurrences(of: "'", with: "''")
-        let sql = "ATTACH DATABASE '\(safePath)' AS \(schema);"
-
-        #if DEBUG
-            print("[BookIntegrate] ATTACH SQL:", sql)
-        #endif
-
-        if sqlite3_exec(db, sql, nil, nil, nil) != SQLITE_OK {
-            throw sqliteError(db, message: "Error ATTACH \(schema).")
-        }
+        try db.safeAttachDatabase(path: path, schema: schema)
     }
 
     private func resolveValidSourceURL(for bookId: Int) async throws -> URL {
