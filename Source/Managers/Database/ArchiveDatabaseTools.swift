@@ -161,7 +161,7 @@ enum ArchiveDatabaseTools {
                 
                 if ftsCount <= 1 {
                     try exec(db, "CREATE TABLE IF NOT EXISTS \(ftsSchema).metadata (key TEXT PRIMARY KEY, value INTEGER);")
-                    try exec(db, "INSERT OR REPLACE INTO \(ftsSchema).metadata (key, value) VALUES ('fts_version', 1);")
+                    try exec(db, "INSERT OR REPLACE INTO \(ftsSchema).metadata (key, value) VALUES ('fts_version', 2);")
                 }
             }
         }
