@@ -1088,9 +1088,43 @@ extension ResultsHandler {
                 // 2. Sort folders topologically to ensure parents are inserted before children
                 let sortedFolders = sortFoldersTopologically(folders: foldersToSave)
 
+                // --- Prefetch mappings to avoid N+1 queries ---
+                let allParentCkIds = Array(Set(foldersToSave.compactMap { $0.parentCkRecordId }))
+                var folderCkIdToLocalId: [String: Int64] = [:]
+                let parentChunkSize = 500
+                for i in stride(from: 0, to: allParentCkIds.count, by: parentChunkSize) {
+                    let chunk = Array(allParentCkIds[i..<min(i+parentChunkSize, allParentCkIds.count)])
+                    let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                    let sql = "SELECT \(colCkRecordId), \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+
+                    let rows = try db.fetch(query: sql, parameters: chunk, mapping: {
+                        ($0.string(at: 0) ?? "", $0.int64(at: 1))
+                    })
+                    for (ckId, localId) in rows {
+                        folderCkIdToLocalId[ckId] = localId
+                    }
+                }
+
+                let allFolderCkIds = Array(Set(foldersToSave.compactMap { $0.ckRecordId }))
+                var folderCkIdToExisting: [String: (Int64, Int64, Int64?)] = [:]
+                let folderChunkSize = 500
+                for i in stride(from: 0, to: allFolderCkIds.count, by: folderChunkSize) {
+                    let chunk = Array(allFolderCkIds[i..<min(i+folderChunkSize, allFolderCkIds.count)])
+                    let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                    let sql = "SELECT \(colCkRecordId), \(colId), \(colLastModified), \(colParent) FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+
+                    let rows = try db.fetch(query: sql, parameters: chunk, mapping: {
+                        ($0.string(at: 0) ?? "", $0.int64(at: 1), $0.int64(at: 2), !$0.isNull(at: 3) ? $0.int64(at: 3) : nil)
+                    })
+                    for (ckId, localId, lastMod, parentId) in rows {
+                        folderCkIdToExisting[ckId] = (localId, lastMod, parentId)
+                    }
+                }
+                // --- End Prefetch ---
+
                 // 3. Process Saves/Updates
                 for folder in sortedFolders {
-                    try processSingleFolderSave(folder, db: db)
+                    try processSingleFolderSave(folder, db: db, folderCkIdToLocalId: &folderCkIdToLocalId, folderCkIdToExisting: folderCkIdToExisting)
                 }
             }
 
@@ -1108,15 +1142,35 @@ extension ResultsHandler {
     }
 
     private func processFolderDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws {
-        for ckId in recordIdsToDelete {
-            let findSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-            if let localId = try db.fetch(query: findSql, parameters: [ckId], mapping: { $0.int64(at: 0) }).first {
-                let allLocalIds = getAllDescendantIds(of: localId)
-                for fId in allLocalIds {
-                    try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) = ?;", parameters: [fId])
-                    try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [fId])
-                }
+        guard !recordIdsToDelete.isEmpty else { return }
+        let chunkSize = 999
+        var allLocalIdsToDelete = Set<Int64>()
+
+        let ckIdChunks = stride(from: 0, to: recordIdsToDelete.count, by: chunkSize).map {
+            Array(recordIdsToDelete[$0..<min($0 + chunkSize, recordIdsToDelete.count)])
+        }
+
+        for chunk in ckIdChunks {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let findSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) IN (\(placeholders))"
+
+            let localIds = try db.fetch(query: findSql, parameters: chunk, mapping: { $0.int64(at: 0) })
+
+            for localId in localIds {
+                let descendantIds = getAllDescendantIds(of: localId)
+                allLocalIdsToDelete.formUnion(descendantIds)
             }
+        }
+
+        let uniqueLocalIds = Array(allLocalIdsToDelete)
+        let localIdChunks = stride(from: 0, to: uniqueLocalIds.count, by: chunkSize).map {
+            Array(uniqueLocalIds[$0..<min($0 + chunkSize, uniqueLocalIds.count)])
+        }
+
+        for chunk in localIdChunks {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) IN (\(placeholders));", parameters: chunk)
+            try exec("DELETE FROM \(foldersTable) WHERE \(colId) IN (\(placeholders));", parameters: chunk)
         }
     }
 
@@ -1142,27 +1196,26 @@ extension ResultsHandler {
         return sortedFolders
     }
 
-    private func processSingleFolderSave(_ folder: SyncFolder, db: SQLiteDatabase) throws {
+    private func processSingleFolderSave(_ folder: SyncFolder, db: SQLiteDatabase, folderCkIdToLocalId: inout [String: Int64], folderCkIdToExisting: [String: (Int64, Int64, Int64?)]) throws {
         guard let ckId = folder.ckRecordId else { return }
 
         // Resolve parent locally
         var pLocalId: Int64? = nil
         if let pCkId = folder.parentCkRecordId {
-            let findParentSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-            if let pid = try db.fetch(query: findParentSql, parameters: [pCkId], mapping: { $0.int64(at: 0) }).first {
-                pLocalId = pid
-            }
+            pLocalId = folderCkIdToLocalId[pCkId]
         }
 
         var existingLocalId: Int64 = -1
         var localLastMod: Int64 = 0
         var existingParentId: Int64? = nil
-        let findSql = "SELECT \(colId), \(colLastModified), \(colParent) FROM \(foldersTable) WHERE \(colCkRecordId) = ? LIMIT 1"
-        if let row = try db.fetch(query: findSql, parameters: [ckId], mapping: { ($0.int64(at: 0), $0.int64(at: 1), !$0.isNull(at: 2) ? $0.int64(at: 2) : nil) }).first {
-            existingLocalId = row.0
-            localLastMod = row.1
-            existingParentId = row.2
+
+        if let existing = folderCkIdToExisting[ckId] {
+            existingLocalId = existing.0
+            localLastMod = existing.1
+            existingParentId = existing.2
         }
+
+        var newInsertedLocalId: Int64? = nil
 
         if existingLocalId != -1 {
             let remoteLastMod = folder.lastModified ?? 0
@@ -1187,6 +1240,9 @@ extension ResultsHandler {
 
                 let upSql = "UPDATE \(foldersTable) SET \(colName) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ?, \(colParent) = ? WHERE \(colId) = ?;"
                 try db.execute(query: upSql, parameters: [folder.name, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), newParentForDb ?? NSNull(), existingLocalId])
+                newInsertedLocalId = existingLocalId
+            } else {
+                newInsertedLocalId = existingLocalId
             }
         } else {
             var conflictLocalId: Int64 = -1
@@ -1220,13 +1276,21 @@ extension ResultsHandler {
                     let upCkIdSql = "UPDATE \(foldersTable) SET \(colCkRecordId) = ? WHERE \(colId) = ?"
                     try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
                 }
+                newInsertedLocalId = conflictLocalId
             } else {
                 let insSql = "INSERT INTO \(foldersTable) (\(colName), \(colCkRecordId), \(colLastModified), \(colParentCkRecordId), \(colParent)) VALUES (?, ?, ?, ?, ?);"
                 try db.execute(query: insSql, parameters: [folder.name, ckId, folder.lastModified ?? 0, folder.parentCkRecordId ?? NSNull(), pLocalId ?? NSNull()])
+
+                // Get the generated localId so children can use it
+                newInsertedLocalId = db.lastInsertRowId()
             }
         }
-    }
 
+        // Ensure that any child folders processed next in the topological sort can find this newly created/updated folder's localId
+        if let newLocalId = newInsertedLocalId {
+            folderCkIdToLocalId[ckId] = newLocalId
+        }
+    }
     @discardableResult func applyCloudKitResultChanges(resultsToSave: [SyncResult], recordIdsToDelete: [String]) -> Bool {
         guard let db else { return false }
 
@@ -1271,6 +1335,31 @@ extension ResultsHandler {
                         resCkIdToExisting[ckId] = (localId, lastMod, folderId)
                     }
                 }
+
+                // Prefetch existing conflict records to avoid N+1 inside the loop
+                // Conflict matching is based on (folderId, name, bkId)
+                // We'll map "folderId_name_bkId" to (id, lastModified)
+                // If folderId is nil, we'll map "NULL_name_bkId"
+                var conflictMap: [String: (Int64, Int64)] = [:]
+                // It is difficult to prefetch *all* combinations via IN effectively, so we'll
+                // just do a fast fetch of the entire results table if it's small, OR
+                // batch query by bkId which is usually highly overlapping.
+                // Wait, resultsToSave may span multiple bkIds, let's just batch query for the bkIds present.
+                let allBkIds = Array(Set(resultsToSave.compactMap { $0.bkId }))
+                for i in stride(from: 0, to: allBkIds.count, by: 500) {
+                    let chunk = Array(allBkIds[i..<min(i+500, allBkIds.count)])
+                    let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                    let conflictSql = "SELECT \(colId), \(colResLastModified), \(colFolderId), \(colName), \(colBkId) FROM \(resultsTable) WHERE \(colBkId) IN (\(placeholders))"
+
+                    let rows = try db.fetch(query: conflictSql, parameters: chunk, mapping: { row -> (Int64, Int64, Int64?, String, Int) in
+                        return (row.int64(at: 0), row.int64(at: 1), !row.isNull(at: 2) ? row.int64(at: 2) : nil, row.string(at: 3) ?? "", row.int(at: 4))
+                    })
+                    for (id, lastMod, folderId, name, bkId) in rows {
+                        let fIdStr = folderId != nil ? "\(folderId!)" : "NULL"
+                        let key = "\(fIdStr)_\(name)_\(bkId)"
+                        conflictMap[key] = (id, lastMod)
+                    }
+                }
                 // --- End Prefetch ---
 
                 for res in resultsToSave {
@@ -1299,17 +1388,12 @@ extension ResultsHandler {
                             let newFolderForDb = isOrphan ? existingFolderId : fLocalId
 
                             if !isOrphan || newFolderForDb != nil {
-                                let conflictSql: String
-                                let conflictParams: [Any]
-                                if let fid = newFolderForDb {
-                                    conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
-                                    conflictParams = [fid, res.name, res.bkId, existingLocalId]
-                                } else {
-                                    conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
-                                    conflictParams = [res.name, res.bkId, existingLocalId]
-                                }
-                                if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
-                                    try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [conflictId])
+                                let fIdStr = newFolderForDb != nil ? "\(newFolderForDb!)" : "NULL"
+                                let key = "\(fIdStr)_\(res.name)_\(res.bkId)"
+                                if let conflict = conflictMap[key], conflict.0 != existingLocalId {
+                                    try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [conflict.0])
+                                    // Remove from map to avoid reusing deleted ID
+                                    conflictMap.removeValue(forKey: key)
                                 }
                             }
 
@@ -1325,6 +1409,10 @@ extension ResultsHandler {
                                 res.searchMode, res.nearDistance, existingLocalId,
                             ]
                             try db.execute(query: upSql, parameters: params)
+
+                            let finalFolderStr = newFolderForDb != nil ? "\(newFolderForDb!)" : "NULL"
+                            let finalKey = "\(finalFolderStr)_\(res.name)_\(res.bkId)"
+                            conflictMap[finalKey] = (existingLocalId, res.lastModified ?? 0)
                         }
                     } else {
                         var conflictLocalId: Int64 = -1
@@ -1333,19 +1421,11 @@ extension ResultsHandler {
                         let isOrphan = res.folderCkRecordId != nil && fLocalId == nil
 
                         if !isOrphan {
-                            let conflictSql: String
-                            let conflictParams: [Any]
-                            if let fid = fLocalId {
-                                conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
-                                conflictParams = [fid, res.name, res.bkId]
-                            } else {
-                                conflictSql = "SELECT \(colId), \(colResLastModified) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
-                                conflictParams = [res.name, res.bkId]
-                            }
-
-                            if let row = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }).first {
-                                conflictLocalId = row.0
-                                conflictLastMod = row.1
+                            let fIdStr = fLocalId != nil ? "\(fLocalId!)" : "NULL"
+                            let key = "\(fIdStr)_\(res.name)_\(res.bkId)"
+                            if let conflict = conflictMap[key] {
+                                conflictLocalId = conflict.0
+                                conflictLastMod = conflict.1
                             }
                         }
 
@@ -1364,6 +1444,10 @@ extension ResultsHandler {
                                     res.searchMode, res.nearDistance, conflictLocalId,
                                 ]
                                 try db.execute(query: upSql, parameters: params)
+
+                                let finalFolderStr = fLocalId != nil ? "\(fLocalId!)" : "NULL"
+                                let finalKey = "\(finalFolderStr)_\(res.name)_\(res.bkId)"
+                                conflictMap[finalKey] = (conflictLocalId, res.lastModified ?? 0)
                             } else {
                                 let upCkIdSql = "UPDATE \(resultsTable) SET \(colResCkRecordId) = ? WHERE \(colId) = ?"
                                 try db.execute(query: upCkIdSql, parameters: [ckId, conflictLocalId])
@@ -1382,6 +1466,10 @@ extension ResultsHandler {
                                 res.folderCkRecordId ?? NSNull(), res.searchMode, res.nearDistance,
                             ]
                             try db.execute(query: insSql, parameters: params)
+
+                            let finalFolderStr = fLocalId != nil ? "\(fLocalId!)" : "NULL"
+                            let finalKey = "\(finalFolderStr)_\(res.name)_\(res.bkId)"
+                            conflictMap[finalKey] = (db.lastInsertRowId(), res.lastModified ?? 0)
                         }
                     }
                 }
