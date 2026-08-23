@@ -1,0 +1,374 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "alreadyDonated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لقد تبرعت بالفعل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I Already Donated"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya Sudah Berdonasi"
+          }
+        }
+      }
+    },
+    "donateBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبرع عبر SociaBuzz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donate via SociaBuzz"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Donasi via SociaBuzz"
+          }
+        }
+      }
+    },
+    "freeDesc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التزام بتقديم وسيلة مريحة للبحث في الكتب بدون تتبع."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Committed to providing a comfortable research tool without tracking."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komitmen menghadirkan sarana riset kitab yang nyaman tanpa pelacakan."
+          }
+        }
+      }
+    },
+    "freeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مجاني وبدون إعلانات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free & Ad-Free"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bebas Biaya & Iklan"
+          }
+        }
+      }
+    },
+    "laterBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ليس الآن"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maybe Later"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nanti Saja"
+          }
+        }
+      }
+    },
+    "maintDesc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دعمكم يساعد في الحفاظ على استمرارية النظام البيئي، والمزامنة عبر المنصات، والتحديثات."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your support helps maintain ecosystem continuity, cross-platform sync, and updates."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dukungan Anda membantu menjaga keberlanjutan ekosistem, sinkronisasi lintas platform, dan pembaruan."
+          }
+        }
+      }
+    },
+    "maintTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصيانة الدورية"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Routine Maintenance"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pemeliharaan Rutin"
+          }
+        }
+      }
+    },
+    "paymentInfo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يدعم PayPal والبطاقات الائتمانية والدفع بالدولار (USD)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports PayPal, Credit Cards (USD), & More"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mendukung QRIS, GoPay, OVO, DANA, & ShopeePay"
+          }
+        }
+      }
+    },
+    "researchDesc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين محرك البحث وتنظيم المكتبة وإضافة كتب جديدة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refining the search engine, organizing the library, and adding new books."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Penyempurnaan mesin pencari, penataan perpustakaan, dan penambahan kitab."
+          }
+        }
+      }
+    },
+    "researchTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تطوير أبحاث البيانات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data Research & Development"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pengembangan Riset Data"
+          }
+        }
+      }
+    },
+    "subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تطبيق مجاني بالكامل، غير ربحي، وبدون إعلانات."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A completely free, non-profit, and ad-free app."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikasi sepenuhnya gratis, nirlaba, dan tanpa iklan."
+          }
+        }
+      }
+    },
+    "supportDevelopment" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دعم تطوير المكتبة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support Maktabah Development"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dukung Pengembangan Maktabah"
+          }
+        }
+      }
+    },
+    "supportDevelopmentShort" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دعم التطوير"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support Development"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dukung Pengembangan"
+          }
+        }
+      }
+    },
+    "supportThanks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شكراً لدعمكم!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thank you for your support!"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terima kasih atas dukungan Anda!"
+          }
+        }
+      }
+    },
+    "title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دعم المكتبة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support Maktabah"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dukung Maktabah"
+          }
+        }
+      }
+    },
+    "wishYouAllTheBest" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جزاكم الله خيرًا وبركة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "May You Be Blessed"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semoga Berkah & Bermanfaat"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

@@ -51,6 +51,7 @@ struct iOSMainView: View {
     @State private var selectedTab: iOSTab = .viewer
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showSettings = false
+    @ObservedObject private var donationManager = DonationManager.shared
 
     var body: some View {
         @Bindable var bManager = navigationManager
@@ -87,6 +88,12 @@ struct iOSMainView: View {
             }
             .tint(.header)
         }
+        .sheet(isPresented: $donationManager.showDonationSheet) {
+            DonationSheetView(onDismiss: {
+                donationManager.dismiss()
+                donationManager.showDonationSheet = false
+            })
+        }
         .alert(item: $navigationManager.alertMessage) { item in
             Alert(
                 title: Text(item.title),
@@ -97,10 +104,13 @@ struct iOSMainView: View {
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
                 CloudKitSyncManager.shared.fetchChanges()
+                DonationManager.shared.recordActivation()
+                DonationManager.shared.checkAndPromptIOSSheet()
             }
         }
     }
 }
+
 
 // MARK: - Navigation Helper
 

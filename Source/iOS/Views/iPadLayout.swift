@@ -16,8 +16,9 @@ struct iPadLayout: View {
     @State private var path: [iOSTab] = []
 
     @StateObject private var historyViewModel = HistoryViewModel.shared
+    @ObservedObject private var donationManager = DonationManager.shared
 
-    // Sidebar search tetap lokal — dipakai hanya untuk filter sidebar (Favorites & History)
+    /// Sidebar search tetap lokal — dipakai hanya untuk filter sidebar (Favorites & History)
     @State private var sidebarSearchText: String = ""
 
     private var filteredFavorites: [BooksData] {
@@ -97,7 +98,6 @@ struct iPadLayout: View {
         }
     }
 
-    @ViewBuilder
     private var sidebarContent: some View {
         ThemeList(isGrouped: true) {
             Section {
@@ -111,6 +111,17 @@ struct iPadLayout: View {
 
             if !filteredHistory.isEmpty {
                 HistorySection(books: filteredHistory, viewModel: historyViewModel)
+            }
+
+            if donationManager.shouldShowDonation {
+                Section {
+                    DonationHistoryButton {
+                        donationManager.showDonationSheet = true
+                    }
+                }
+                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 4, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
 
             if !filteredFavorites.isEmpty {

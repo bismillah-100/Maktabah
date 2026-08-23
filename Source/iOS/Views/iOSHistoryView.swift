@@ -8,6 +8,7 @@ import SwiftUI
 struct iOSHistoryView: View {
     @StateObject private var viewModel = HistoryViewModel.shared
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
+    @ObservedObject private var donationManager = DonationManager.shared
 
     var body: some View {
         let filteredFavorites = viewModel.filteredFavorites
@@ -15,7 +16,11 @@ struct iOSHistoryView: View {
 
         ThemeList {
             if !filteredHistory.isEmpty {
-                HistorySection(books: filteredHistory,viewModel: viewModel)
+                HistorySection(books: filteredHistory, viewModel: viewModel)
+            }
+
+            if donationManager.shouldShowDonation {
+                donationCard(topPad: 26, btmPad: 4)
             }
 
             if !filteredFavorites.isEmpty {
@@ -30,6 +35,17 @@ struct iOSHistoryView: View {
             } else if filteredFavorites.isEmpty {
                 HistoryEmptyState(searchText: viewModel.searchText)
             }
+
+            #if DEBUG
+            donationCard(topPad: 12, btmPad: 24)
+            #else
+            if filteredHistory.count > 10,
+               filteredFavorites.count > 5,
+               !donationManager.shouldShowDonation
+            {
+                donationCard(topPad: 12, btmPad: 24)
+            }
+            #endif
         }
         .refreshable {
             CloudKitSyncManager.shared.fetchChanges()
@@ -37,6 +53,22 @@ struct iOSHistoryView: View {
         }
         .withActiveIntegrationStates()
         .navigationTitle("History & Favorites")
+    }
+
+    private func donationCard(
+        topPad: CGFloat,
+        btmPad: CGFloat
+    ) -> some View {
+        Section {
+            DonationHistoryButton {
+                donationManager.showDonationSheet = true
+            }
+        }
+        .listRowInsets(.init(
+            top: topPad, leading: 16, bottom: btmPad, trailing: 16
+        ))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
     }
 }
 

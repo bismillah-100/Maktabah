@@ -403,6 +403,9 @@
 		F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F32BA47D300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33214392FC2750E006EC214 /* ThemeComponents.swift */; };
+		F34047CC30367EBC003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
+		F34047CD30367EBC003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
+		F34047CE303680D0003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
 		F347296B3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
 		F347296C3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
 		F347296D3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
@@ -511,6 +514,9 @@
 		F3D0815D2F9EFE5C00E017C7 /* Tag.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3D0815C2F9EFE5C00E017C7 /* Tag.xib */; };
 		F3D0815E2F9EFE5C00E017C7 /* Tag.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3D0815C2F9EFE5C00E017C7 /* Tag.xib */; };
 		F3D08C752FDC739900A0E733 /* AnnotationViewControllerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */; };
+		F3D0965B3037CB8800E4A7D7 /* Donation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F3D0965A3037CB8800E4A7D7 /* Donation.xcstrings */; };
+		F3D0965C3037CB8800E4A7D7 /* Donation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F3D0965A3037CB8800E4A7D7 /* Donation.xcstrings */; };
+		F3D0965D3037CB8800E4A7D7 /* Donation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F3D0965A3037CB8800E4A7D7 /* Donation.xcstrings */; };
 		F3D122672FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
 		F3D122682FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
 		F3D122692FF55B2600F44E89 /* CachedArabicLayoutFragment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */; };
@@ -542,6 +548,9 @@
 		F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F3FEA73035E85B00507E9A /* RTLScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */; };
 		F3F3FEA83035E85B00507E9A /* RTLScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */; };
+		F3F3FEAD30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
+		F3F3FEAE30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
+		F3F3FEAF30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
 		F3FF136A2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F3FF136C2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
@@ -743,6 +752,7 @@
 		F323BCA42F2EE71A00EFD4F4 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		F33214392FC2750E006EC214 /* ThemeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeComponents.swift; sourceTree = "<group>"; };
+		F34047CB30367EBC003B4B57 /* DonationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationSheetView.swift; sourceTree = "<group>"; };
 		F347296A3031D5D10094BF0A /* TagFilterMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterMode.swift; sourceTree = "<group>"; };
 		F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterSelectionView.swift; sourceTree = "<group>"; };
 		F349073E2F3064A10036CDAF /* IconMaktabah.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = IconMaktabah.icon; sourceTree = "<group>"; };
@@ -802,6 +812,7 @@
 		F3D02D602FE0616B0054807F /* NarratorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NarratorViewModel.swift; sourceTree = "<group>"; };
 		F3D0815C2F9EFE5C00E017C7 /* Tag.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Tag.xib; sourceTree = "<group>"; };
 		F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewControllerWrapper.swift; sourceTree = "<group>"; };
+		F3D0965A3037CB8800E4A7D7 /* Donation.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Donation.xcstrings; sourceTree = "<group>"; };
 		F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedArabicLayoutFragment.swift; sourceTree = "<group>"; };
 		F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerialTaskQueue.swift; sourceTree = "<group>"; };
 		F3D122782FF5C9A900F44E89 /* TextRenderable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRenderable.swift; sourceTree = "<group>"; };
@@ -815,6 +826,7 @@
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
 		F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTLScrollView.swift; sourceTree = "<group>"; };
+		F3F3FEAC30360EC700507E9A /* DonationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationManager.swift; sourceTree = "<group>"; };
 		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
 		F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+Share.swift"; sourceTree = "<group>"; };
 		F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationJsonDocument.swift; sourceTree = "<group>"; };
@@ -873,6 +885,7 @@
 				44342A3B384B7605A1AF676A /* NetworkMonitor.swift */,
 				4B20DB782EE7D1BB00B97126 /* ReusableFunc.swift */,
 				4B5DF93A2EDC43FB0082DE7F /* UserDefaults.swift */,
+				F3F3FEAC30360EC700507E9A /* DonationManager.swift */,
 				4BDAB98D2F69E957007D0945 /* SettingsActions.swift */,
 				F300A2EB2F2DCE860095015E /* StorageError.swift */,
 				F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */,
@@ -917,6 +930,7 @@
 				4B4C970C2F1EFD150051503E /* XIB */,
 				4B32022D2EDAFE88003B95D1 /* Assets.xcassets */,
 				4B7C912F2F834AE300454BE1 /* Direct-Info.plist */,
+				F3D0965A3037CB8800E4A7D7 /* Donation.xcstrings */,
 				F38A74ED2FF43E9300198CDD /* Info.plist */,
 				F3A775572FB2288E00C82F7B /* iOS-Info.plist */,
 				F349073E2F3064A10036CDAF /* IconMaktabah.icon */,
@@ -1018,6 +1032,7 @@
 				F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */,
 				4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */,
 				4B0139DF2EEAFC3000424CFA /* CustomSplitView.swift */,
+				F34047CB30367EBC003B4B57 /* DonationSheetView.swift */,
 				90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */,
 				4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */,
 				4BD6C33B2EE6AA7F008684E3 /* MainWindow.swift */,
@@ -1627,6 +1642,7 @@
 				4B6AF2372EE58394002EBFFC /* IbarotTextVC.xib in Resources */,
 				4B20DB7D2EE7D84100B97126 /* ResultCellView.xib in Resources */,
 				F3D0815D2F9EFE5C00E017C7 /* Tag.xib in Resources */,
+				F3D0965D3037CB8800E4A7D7 /* Donation.xcstrings in Resources */,
 				4BFCD84C2F10744800E41F8A /* ScheherazadeNew-Regular.ttf in Resources */,
 				4BFCD8502F10746600E41F8A /* Lateef-Bold.ttf in Resources */,
 				4BF392EC2EFCC15700460756 /* Localizable.xcstrings in Resources */,
@@ -1667,6 +1683,7 @@
 				4B7C91212F83494200454BE1 /* IbarotTextVC.xib in Resources */,
 				4B7C91222F83494200454BE1 /* ResultCellView.xib in Resources */,
 				F3D0815E2F9EFE5C00E017C7 /* Tag.xib in Resources */,
+				F3D0965B3037CB8800E4A7D7 /* Donation.xcstrings in Resources */,
 				4B7C91232F83494200454BE1 /* ScheherazadeNew-Regular.ttf in Resources */,
 				4B7C91242F83494200454BE1 /* Lateef-Bold.ttf in Resources */,
 				4B7C91252F83494200454BE1 /* Localizable.xcstrings in Resources */,
@@ -1684,6 +1701,7 @@
 			files = (
 				F305774F2FA46222005732C6 /* Assets.xcassets in Resources */,
 				F30577502FA46222005732C6 /* UthmanTN1-Ver10.otf in Resources */,
+				F3D0965C3037CB8800E4A7D7 /* Donation.xcstrings in Resources */,
 				F30577512FA46222005732C6 /* PrivacyInfo.xcprivacy in Resources */,
 				F30577992FA4BE8D005732C6 /* LaunchScreen.storyboard in Resources */,
 				F30577522FA46222005732C6 /* IconMaktabah.icon in Resources */,
@@ -1744,6 +1762,7 @@
 				4B6AF22F2EE5692A002EBFFC /* AppMode.swift in Sources */,
 				F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				4B3202492EDB10FA003B95D1 /* Protocols.swift in Sources */,
+				F34047CC30367EBC003B4B57 /* DonationSheetView.swift in Sources */,
 				F3D66913303215990030510C /* RightAlignedClipView.swift in Sources */,
 				4B18185E2F45377200AFFAEE /* AnnotationColorMenuView.swift in Sources */,
 				4B6100EB2EFA769200CCBED6 /* QuranDataManager.swift in Sources */,
@@ -1845,6 +1864,7 @@
 				F3ABDF762FBF429700A8965E /* WelcomeScreenView.swift in Sources */,
 				4BDAB9842F69B946007D0945 /* CoreDatabaseDownloader.swift in Sources */,
 				4B5DF9382EDC3DBF0082DE7F /* ViewOptions.swift in Sources */,
+				F3F3FEAD30360EC700507E9A /* DonationManager.swift in Sources */,
 				4BA393642EF0D30200736DFF /* ArabicFont.swift in Sources */,
 				4B9A0AE22EEC17CC0049202E /* TarjamahDataManager.swift in Sources */,
 				4B20DB822EE7EEE400B97126 /* BookInfo.swift in Sources */,
@@ -1905,6 +1925,7 @@
 				F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				4B7C90BB2F83494200454BE1 /* BookUpdateManager.swift in Sources */,
 				F321672A2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
+				F34047CD30367EBC003B4B57 /* DonationSheetView.swift in Sources */,
 				F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */,
 				4B7C90BC2F83494200454BE1 /* AnnotationDelegate.swift in Sources */,
 				F3D46E9C2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */,
@@ -1982,6 +2003,7 @@
 				4B7C90EA2F83494200454BE1 /* TextViewState.swift in Sources */,
 				4B7C90EB2F83494200454BE1 /* DSFSearchField.swift in Sources */,
 				4B7C90EC2F83494200454BE1 /* Navigation.swift in Sources */,
+				F3F3FEAE30360EC700507E9A /* DonationManager.swift in Sources */,
 				4B7C90ED2F83494200454BE1 /* ResultsViewModel.swift in Sources */,
 				4B7C90EE2F83494200454BE1 /* ViewerSplitVC.swift in Sources */,
 				4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */,
@@ -2036,6 +2058,7 @@
 				F3DD69E32FA4F76100BFEA0F /* ProgressBooksDownload.swift in Sources */,
 				F30577932FA4982A005732C6 /* TextViewState.swift in Sources */,
 				F36382642FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift in Sources */,
+				F34047CE303680D0003B4B57 /* DonationSheetView.swift in Sources */,
 				F30576E52FA46222005732C6 /* AppConfig.swift in Sources */,
 				F30576EC2FA46222005732C6 /* SettingsActions.swift in Sources */,
 				F30576EE2FA46222005732C6 /* RowiProtocols.swift in Sources */,
@@ -2095,6 +2118,7 @@
 				F34B708C2FC87BFF00BBE904 /* UserFontManager.swift in Sources */,
 				F30577052FA46222005732C6 /* ReaderState.swift in Sources */,
 				F30577062FA46222005732C6 /* UserDefaults.swift in Sources */,
+				F3F3FEAF30360EC700507E9A /* DonationManager.swift in Sources */,
 				F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */,
 				F30577072FA46222005732C6 /* AppMode.swift in Sources */,
 				F30577082FA46222005732C6 /* Protocols.swift in Sources */,
@@ -2379,6 +2403,7 @@
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -2439,6 +2464,7 @@
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = Release;
 		};

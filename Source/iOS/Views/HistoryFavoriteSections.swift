@@ -71,3 +71,66 @@ struct HistoryEmptyState: View {
         }
     }
 }
+
+// MARK: - DonationHistoryButton
+
+struct DonationHistoryButton: View {
+    let cardHeight: CGFloat
+    let action: () -> Void
+    @ObservedObject private var donationManager = DonationManager.shared
+
+    init(
+        cardHeight: CGFloat = 50,
+        action: (() -> Void)? = nil
+    ) {
+        self.cardHeight = cardHeight
+        self.action = action ?? {
+            DonationManager.shared.showDonationSheet = true
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Spacer()
+                    Image(systemName: "heart.fill")
+                    Text(donationManager.hasDonated
+                        ? .Donation.wishYouAllTheBest
+                        : .Donation.supportDevelopment)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .foregroundStyle(.tint)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .frame(height: cardHeight)
+                .background(
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(Color.appCellBackground)
+                        .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 30)
+                        .stroke(Color(.secondarySystemFill), lineWidth: 0.3)
+                )
+            }
+            .padding(.horizontal, MaktabahApp.isIpad ? 0 : 2)
+            .buttonStyle(.plain)
+
+            #if DEBUG
+            if donationManager.hasDonated {
+                Button {
+                    donationManager.resetHasDonated()
+                } label: {
+                    Text(verbatim: "Reset Has Donated (Debug)")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+            }
+            #endif
+        }
+    }
+}
