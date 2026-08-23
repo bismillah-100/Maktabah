@@ -36,12 +36,16 @@ struct iOSHistoryView: View {
                 HistoryEmptyState(searchText: viewModel.searchText)
             }
 
+            #if DEBUG
+            donationCard(topPad: 12, btmPad: 24)
+            #else
             if filteredHistory.count > 10,
                filteredFavorites.count > 5,
                !donationManager.shouldShowDonation
             {
                 donationCard(topPad: 12, btmPad: 24)
             }
+            #endif
         }
         .refreshable {
             CloudKitSyncManager.shared.fetchChanges()

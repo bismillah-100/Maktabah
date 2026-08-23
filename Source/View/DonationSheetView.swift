@@ -65,17 +65,23 @@ struct DonationSheetView: View {
                 }
             }
             .animation(.spring(response: 0.45, dampingFraction: 0.8), value: showThankYou)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(
+                    placement: donationManager.hasDonated
+                        ? .confirmationAction
+                        : .cancellationAction
+                ) {
                     Button(role: .cancel) {
                         dismissSheet()
                     } label: {
                         Text(donationManager.hasDonated
-                            ? "Close"
+                            ? "Done"
                             : .Donation.laterBtn)
                     }
-                    .opacity(showThankYou ? 0 : 1)
-                    .disabled(showThankYou)
                     #if os(macOS)
                     .keyboardShortcut(.cancelAction)
                     .buttonStyle(.plain)
@@ -89,8 +95,7 @@ struct DonationSheetView: View {
         #if os(macOS)
         .frame(width: 440)
         #else
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .themeTint()
         .presentationBackground(Color.appBackground)
         .onPreferenceChange(DonationSheetHeightKey.self) { measured in
             if measured > 0 {
@@ -122,15 +127,16 @@ struct DonationSheetView: View {
         VStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(Color.pink.opacity(isPulsing ? 0.2 : 0.08))
+                    .foregroundStyle(.pink.opacity(isPulsing ? 0.2 : 0.08))
                     .frame(width: 68, height: 68)
                     .scaleEffect(isPulsing ? 1.18 : 0.95)
                 Image(systemName: "heart.fill")
                     .font(.system(size: 32))
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(.pink.opacity(1.0))
                     .scaleEffect(isPulsing ? 1.18 : 1.0)
             }
-            .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: isPulsing)
+            .animation(.easeInOut(duration: 0.9)
+                .repeatForever(autoreverses: true), value: isPulsing)
             .padding(.top, 4)
             .onAppear {
                 isPulsing = true
@@ -211,13 +217,13 @@ struct DonationSheetView: View {
                 .padding(.vertical, 10)
             }
             .foregroundStyle(Color.white)
+            .tint(.green)
             #if os(iOS)
-                .prominentButtonStyleIfAvailable(tint: .green)
-                .buttonBorderShape(.capsule)
+            .prominentButtonStyleIfAvailable()
+            .buttonBorderShape(.capsule)
             #else
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                .clipShape(.capsule)
+            .buttonStyle(.borderedProminent)
+            .clipShape(.capsule)
             #endif
 
             Button {
@@ -261,7 +267,7 @@ struct DonationSheetView: View {
             dismissSheet()
         }
         .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.55)) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.65)) {
                 thankYouIconScale = 1.0
             }
         }
