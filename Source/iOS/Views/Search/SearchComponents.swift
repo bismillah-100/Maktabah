@@ -294,6 +294,7 @@ struct ProminentButtonStyle: ViewModifier {
         if #available(iOS 26, *) {
             content
                 .buttonStyle(.glassProminent)
+                .tint(.clear)
         } else {
             content
                 .buttonStyle(.borderedProminent)
