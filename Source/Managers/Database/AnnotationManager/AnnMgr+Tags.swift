@@ -335,14 +335,17 @@ extension AnnotationManager {
 
         if !tags.isEmpty {
             let normalizedTags = tags.map { normalizedTagName($0) }
-            let placeholders = Array(repeating: "?", count: normalizedTags.count).joined(separator: ",")
+            for i in stride(from: 0, to: normalizedTags.count, by: 500) {
+                let chunk = Array(normalizedTags[i ..< min(i + 500, normalizedTags.count)])
+                let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ",")
 
-            let findSql = "SELECT \(colTagId), \(colTagName), \(colTagNormalizedName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(placeholders))"
-            let fetchedExisting = try _db.fetch(query: findSql, parameters: normalizedTags) { row -> (Int64, String, String) in
-                return (row.int64(at: 0), row.string(at: 1) ?? "", row.string(at: 2) ?? "")
-            }
-            for (id, name, normalized) in fetchedExisting {
-                existingTags[normalized] = (id, name)
+                let findSql = "SELECT \(colTagId), \(colTagName), \(colTagNormalizedName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(placeholders))"
+                let fetchedExisting = try _db.fetch(query: findSql, parameters: chunk) { row -> (Int64, String, String) in
+                    (row.int64(at: 0), row.string(at: 1) ?? "", row.string(at: 2) ?? "")
+                }
+                for (id, name, normalized) in fetchedExisting {
+                    existingTags[normalized] = (id, name)
+                }
             }
         }
 
@@ -374,23 +377,26 @@ extension AnnotationManager {
         }
 
         if !tagsToInsert.isEmpty {
-            let placeholders = String(repeating: "(?, ?),", count: tagsToInsert.count).dropLast()
-            let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(placeholders);"
+            for i in stride(from: 0, to: tagsToInsert.count, by: 400) {
+                let chunk = Array(tagsToInsert[i ..< min(i + 400, tagsToInsert.count)])
+                let placeholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
+                let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(placeholders);"
 
-            var insertParams: [Any] = []
-            for tagTuple in tagsToInsert {
-                insertParams.append(tagTuple.name)
-                insertParams.append(tagTuple.normalized)
+                var insertParams: [Any] = []
+                for tagTuple in chunk {
+                    insertParams.append(tagTuple.name)
+                    insertParams.append(tagTuple.normalized)
+                }
+                try _db.execute(query: insertSql, parameters: insertParams)
             }
-            try _db.execute(query: insertSql, parameters: insertParams)
 
             let normalizedNewTags = tagsToInsert.map { $0.normalized }
-            let selectPlaceholders = String(repeating: "?,", count: normalizedNewTags.count).dropLast()
-            let fetchNewSql = "SELECT \(colTagId), \(colTagNormalizedName), \(colTagName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders))"
+            for i in stride(from: 0, to: normalizedNewTags.count, by: 500) {
+                let chunk = Array(normalizedNewTags[i ..< min(i + 500, normalizedNewTags.count)])
+                let selectPlaceholders = String(repeating: "?,", count: chunk.count).dropLast()
+                let fetchNewSql = "SELECT \(colTagId), \(colTagNormalizedName), \(colTagName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders))"
 
-            // Re-fetch using mapped tuples matching the standard SQLiteRow properties
-            do {
-                let fetchedNewTags = try _db.fetch(query: fetchNewSql, parameters: normalizedNewTags) { row -> (Int64, String, String) in
+                let fetchedNewTags = try _db.fetch(query: fetchNewSql, parameters: chunk) { row -> (Int64, String, String) in
                     let id = row.int64(at: 0)
                     let norm = row.string(at: 1) ?? ""
                     let name = row.string(at: 2) ?? ""
@@ -405,15 +411,18 @@ extension AnnotationManager {
         }
 
         if !currentTagIds.isEmpty {
-            let relPlaceholders = String(repeating: "(?, ?),", count: currentTagIds.count).dropLast()
-            let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(relPlaceholders);"
+            for i in stride(from: 0, to: currentTagIds.count, by: 400) {
+                let chunk = Array(currentTagIds[i ..< min(i + 400, currentTagIds.count)])
+                let relPlaceholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
+                let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(relPlaceholders);"
 
-            var relParams: [Any] = []
-            for tagId in currentTagIds {
-                relParams.append(annotationId)
-                relParams.append(tagId)
+                var relParams: [Any] = []
+                for tagId in chunk {
+                    relParams.append(annotationId)
+                    relParams.append(tagId)
+                }
+                try _db.execute(query: insertRelSql, parameters: relParams)
             }
-            try _db.execute(query: insertRelSql, parameters: relParams)
         }
 
         _cacheQueue.sync { _cachedAllTagNames = nil }
