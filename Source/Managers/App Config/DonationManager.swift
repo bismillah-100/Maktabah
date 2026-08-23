@@ -45,16 +45,7 @@ final class DonationManager: ObservableObject {
         return elapsed < (cooldownDays * 24 * 3600)
     }
 
-    nonisolated static var isIndonesianRegion: Bool {
-        return Locale.current.region == .indonesia
-    }
-
-    var isIndonesianRegion: Bool {
-        Self.isIndonesianRegion
-    }
-
     var shouldShowDonation: Bool {
-        guard isIndonesianRegion else { return false }
         if hasDonated || isInCooldown { return false }
 
         let count = activationCount
@@ -68,7 +59,6 @@ final class DonationManager: ObservableObject {
     // MARK: - Actions
 
     func recordActivation() {
-        guard isIndonesianRegion else { return }
         // Selama masa cooldown atau jika sudah donasi, tracking dibekukan (tidak dihitung)
         guard !hasDonated, !isInCooldown else { return }
 

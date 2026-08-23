@@ -517,16 +517,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quranWindow.action = #selector(displayQuranWindow(_:))
         resetCurrentView.action = #selector(resetCurrentViewState)
 
-        if DonationManager.isIndonesianRegion {
-            let donationItem = buildMenu(
-                String(localized: .Donation.supportDevelopmentShort),
-                image: "heart.fill",
-                keyEquivalent: ""
-            )
-            donationItem.action = #selector(showDonationSheet(_:))
-            viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
-            viewMenu.insertItem(donationItem, at: viewMenu.items.count - 1)
-        }
+        let donationItem = buildMenu(
+            String(localized: .Donation.supportDevelopmentShort),
+            image: "heart.fill",
+            keyEquivalent: ""
+        )
+        donationItem.action = #selector(showDonationSheet(_:))
+        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+        viewMenu.insertItem(donationItem, at: viewMenu.items.count - 1)
 
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
 

@@ -168,13 +168,13 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يدعم QRIS و GoPay و OVO و DANA و ShopeePay"
+            "value" : "يدعم PayPal والبطاقات الائتمانية والدفع بالدولار (USD)"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Supports QRIS, GoPay, OVO, DANA, & ShopeePay"
+            "value" : "Supports PayPal, Credit Cards (USD), & More"
           }
         },
         "id" : {
