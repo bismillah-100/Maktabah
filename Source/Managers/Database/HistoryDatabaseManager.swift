@@ -150,11 +150,7 @@ class HistoryDatabaseManager {
             for i in stride(from: 0, to: entries.count, by: chunkSize) {
                 let chunk = Array(entries[i..<min(i + chunkSize, entries.count)])
                 let placeholders = String(repeating: "(?, ?, ?, ?, ?, ?, ?, ?),", count: chunk.count).dropLast()
-                let sql = """
-                INSERT OR REPLACE INTO reading_entries
-                (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id)
-                VALUES \(placeholders);
-                """
+                let sql = "INSERT OR REPLACE INTO reading_entries (book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id) VALUES " + String(placeholders) + ";"
 
                 var params = [Any]()
                 for entry in chunk {
@@ -207,12 +203,12 @@ class HistoryDatabaseManager {
                 // Fetch ckRecordIds first
                 var ckIds: [String] = []
                 if trackPending {
-                    let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (\(placeholders));"
+                    let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (" + String(placeholders) + ");"
                     ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap { $0 }
                 }
 
                 try _db.execute(
-                    query: "DELETE FROM reading_entries WHERE book_id IN (\(placeholders));",
+                    query: "DELETE FROM reading_entries WHERE book_id IN (" + String(placeholders) + ");",
                     parameters: chunk
                 )
 
@@ -268,7 +264,7 @@ class HistoryDatabaseManager {
         for i in stride(from: 0, to: ids.count, by: chunkSize) {
             let chunk = Array(ids[i..<min(i + chunkSize, ids.count)])
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-            let sql = "SELECT book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id FROM reading_entries WHERE ck_record_id IN (\(placeholders));"
+            let sql = "SELECT book_id, last_content_id, last_opened_at, favorited_at, position_updated_at, updated_at, is_favorite, ck_record_id FROM reading_entries WHERE ck_record_id IN (" + String(placeholders) + ");"
             if let rows = try? _db.fetch(query: sql, parameters: chunk, mapping: { row -> ReadingEntry in
                 ReadingEntry(
                     bookId: row.int(at: 0),
@@ -339,7 +335,7 @@ class HistoryDatabaseManager {
             let chunk = Array(ckRecordIds[i..<min(i + chunkSize, ckRecordIds.count)])
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
             try? _db.execute(
-                query: "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));",
+                query: "DELETE FROM sync_pending WHERE ck_record_id IN (" + String(placeholders) + ");",
                 parameters: chunk
             )
         }
@@ -397,7 +393,7 @@ class HistoryDatabaseManager {
                             params.append(contentsOf: [ckId, now])
                         }
                         try _db.execute(
-                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES " + String(placeholders) + ";",
                             parameters: params
                         )
                     }
@@ -424,7 +420,7 @@ class HistoryDatabaseManager {
                             params.append(contentsOf: [ckId, now])
                         }
                         try _db.execute(
-                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES \(placeholders);",
+                            query: "INSERT OR REPLACE INTO sync_pending (ck_record_id, operation, queued_at) VALUES " + String(placeholders) + ";",
                             parameters: params
                         )
                     }

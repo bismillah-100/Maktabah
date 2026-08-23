@@ -7,16 +7,25 @@ import Cocoa
 import SwiftUI
 
 extension AnnotationsVC {
+    private var isAnd: Bool {
+        dataSource.viewModel.tagFilterMode == .and
+    }
+
+    private var scrollRightEdge: DispatchWorkItem {
+        DispatchWorkItem { [weak self] in
+            self?.scrollToRightEdge()
+        }
+    }
+
     func createTagFilterBar() -> NSStackView {
         let heightConstant: CGFloat = 20
         let leftInset: CGFloat = 8
 
         let bar = NSStackView()
         bar.orientation = .horizontal
-        bar.userInterfaceLayoutDirection = .rightToLeft
         bar.spacing = 8
         bar.alignment = .centerY
-        bar.edgeInsets.left = leftInset
+        bar.edgeInsets.right = leftInset
         bar.translatesAutoresizingMaskIntoConstraints = false
         bar.heightAnchor.constraint(equalToConstant: heightConstant).isActive = true
 
@@ -37,7 +46,6 @@ extension AnnotationsVC {
         let modeBtn = NSButton()
         modeBtn.bezelStyle = .accessoryBar
         modeBtn.setButtonType(.pushOnPushOff)
-        let isAnd = dataSource.viewModel.tagFilterMode == .and
         modeBtn.image = NSImage(systemSymbolName: "line.3.horizontal.decrease", accessibilityDescription: "Filter Mode")
         modeBtn.isBordered = false
         modeBtn.target = self
@@ -49,7 +57,9 @@ extension AnnotationsVC {
         modeButton = modeBtn
 
         // Chips scroll view
-        let chipsStack = NSStackView()
+        let chipsStack = NSStackView(
+            frame: NSRect(x: 0, y: 0, width: 100, height: heightConstant)
+        )
         chipsStack.userInterfaceLayoutDirection = .rightToLeft
         chipsStack.orientation = .horizontal
         chipsStack.alignment = .centerY
@@ -72,13 +82,14 @@ extension AnnotationsVC {
         clipView.drawsBackground = false
         clipView.automaticallyAdjustsContentInsets = false
         clipView.contentInsets.left = leftInset
+        clipView.contentInsets.right = leftInset
         chipScroll.contentView = clipView
         chipScroll.documentView = chipsStack
         chipsScrollView = chipScroll
 
-        bar.addArrangedSubview(filterBtn)
-        bar.addArrangedSubview(modeBtn)
         bar.addArrangedSubview(chipScroll)
+        bar.addArrangedSubview(modeBtn)
+        bar.addArrangedSubview(filterBtn)
 
         tagFilterBar = bar
         return bar
@@ -88,7 +99,7 @@ extension AnnotationsVC {
         let btn = NSButton()
         btn.title = tag
         btn.setButtonType(.pushOnPushOff)
-        btn.bezelStyle = .badge
+        btn.bezelStyle = .push
         btn.isBordered = true
         btn.font = .systemFont(ofSize: 12)
         btn.target = self
@@ -97,6 +108,7 @@ extension AnnotationsVC {
         btn.setContentHuggingPriority(.required, for: .vertical)
         btn.setContentHuggingPriority(.required, for: .horizontal)
         btn.setContentCompressionResistancePriority(.required, for: .vertical)
+        btn.setContentCompressionResistancePriority(.required, for: .horizontal)
         btn.heightAnchor.constraint(equalToConstant: 20).isActive = true
         if #available(macOS 26, *) { btn.borderShape = .capsule }
         return btn
@@ -105,40 +117,50 @@ extension AnnotationsVC {
     /// Incrementally update chips: add new, remove stale, preserve existing
     func updateChips(allTags: [String]) {
         guard let chipsStack = chipsStackView else { return }
-
-        let existingChips = chipsStack.arrangedSubviews.compactMap { $0 as? NSButton }
-        let existingTitles = Set(existingChips.map(\.title))
-        let newTagsSet = Set(allTags)
         let isFirstLoad = !hasPerformedInitialChipScroll && !allTags.isEmpty
 
-        // Remove chips whose tags no longer exist
-        for chip in existingChips where !newTagsSet.contains(chip.title) {
-            chipsStack.removeArrangedSubview(chip)
-            chip.removeFromSuperview()
-        }
+        NSAnimationContext.runAnimationGroup { [weak self] ctx in
+            guard let self else { return }
+            ctx.allowsImplicitAnimation = true
+            ctx.duration = 0.18
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
 
-        // Add new chips (insert in sorted order)
-        for tag in allTags where !existingTitles.contains(tag) {
-            let chip = makeChipButton(for: tag)
-            chip.state = dataSource.viewModel.selectedTags.contains(tag) ? .on : .off
-            let insertIdx = chipsStack
-                .arrangedSubviews.compactMap { $0 as? NSButton }.enumerated()
-                .first { tag.localizedCaseInsensitiveCompare($0.element.title) == .orderedAscending }?
-                .offset ?? chipsStack.arrangedSubviews.count
-            chipsStack.insertArrangedSubview(chip, at: insertIdx)
-        }
+            let existingChips = chipsStack.arrangedSubviews.compactMap { $0 as? NSButton }
+            let existingTitles = Set(existingChips.map(\.title))
+            let newTagsSet = Set(allTags)
 
-        // Sync selection state of existing chips
-        for chip in chipsStack.arrangedSubviews.compactMap({ $0 as? NSButton }) {
-            chip.state = dataSource.viewModel.selectedTags.contains(chip.title) ? .on : .off
-        }
+            // Remove chips whose tags no longer exist
+            for chip in existingChips where !newTagsSet.contains(chip.title) {
+                chipsStack.removeArrangedSubview(chip)
+                chip.removeFromSuperview()
+            }
 
-        tagFilterBar?.isHidden = allTags.isEmpty
-        (chipsScrollView?.contentView as? RightAlignedClipView)?.updateDocumentFrame()
+            // Add new chips (insert in sorted order)
+            for tag in allTags where !existingTitles.contains(tag) {
+                let chip = makeChipButton(for: tag)
+                chip.state = dataSource.viewModel.selectedTags.contains(tag) ? .on : .off
+                let insertIdx = chipsStack
+                    .arrangedSubviews.compactMap { $0 as? NSButton }.enumerated()
+                    .first { tag.localizedCaseInsensitiveCompare($0.element.title) == .orderedAscending }?
+                    .offset ?? chipsStack.arrangedSubviews.count
+                chipsStack.insertArrangedSubview(chip, at: insertIdx)
+            }
 
-        if isFirstLoad {
-            hasPerformedInitialChipScroll = true
-            DispatchQueue.main.async { [weak self] in self?.scrollToRightEdge() }
+            // Sync selection state of existing chips
+            for chip in chipsStack.arrangedSubviews.compactMap({ $0 as? NSButton }) {
+                chip.state = dataSource.viewModel.selectedTags.contains(chip.title) ? .on : .off
+            }
+
+            tagFilterBar?.isHidden = allTags.isEmpty
+            chipsStack.invalidateIntrinsicContentSize()
+            chipsStack.layoutSubtreeIfNeeded()
+            (chipsScrollView?.contentView as? RightAlignedClipView)?.updateDocumentFrame()
+        } completionHandler: { [weak self] in
+            guard let self else { return }
+            if isFirstLoad {
+                hasPerformedInitialChipScroll = true
+                DispatchQueue.main.async(execute: scrollRightEdge)
+            }
         }
     }
 
@@ -157,18 +179,22 @@ extension AnnotationsVC {
 
     @objc func chipToggled(_ sender: NSButton) {
         dataSource.viewModel.toggleTagSelection(sender.title)
+        if isAnd {
+            DispatchQueue.main.async(execute: scrollRightEdge)
+        }
     }
 
     @objc func toggleFilterMode(_ sender: NSButton) {
         dataSource.viewModel.toggleTagFilterMode()
-        let and = dataSource.viewModel.tagFilterMode == .and
-        sender.toolTip = .init(localized: and ? .and : .or)
-        let color: NSColor = and ? .controlAccentColor : .controlTextColor
+        sender.toolTip = .init(localized: isAnd ? .and : .or)
+        let color: NSColor = isAnd ? .controlAccentColor : .controlTextColor
         let config = NSImage.SymbolConfiguration(hierarchicalColor: color)
         sender.image = NSImage(
             systemSymbolName: "line.3.horizontal.decrease",
             accessibilityDescription: "Filter Mode"
         )?.withSymbolConfiguration(config)
+
+        DispatchQueue.main.async(execute: scrollRightEdge)
     }
 
     @objc func showTagSelectionPopover(_ sender: NSButton) {

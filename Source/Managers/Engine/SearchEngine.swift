@@ -22,6 +22,7 @@ protocol DBConnectionType {
     func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T]
     func queryInts(sql: String, params: [SQLValue]) throws -> [Int]
     func execute(query: String) throws
+    func attachDatabase(path: String, as schema: String) throws
     func queryContents(sql: String, params: [SQLValue]) throws -> [BookContent]
     func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen]
     func querySingleNass(sql: String, params: [SQLValue]) throws -> String?
@@ -574,8 +575,7 @@ final class SQLiteConnection: DBConnectionType {
 
         // Attach FTS database
         let ftsPath = dbPath.replacingOccurrences(of: ".sqlite", with: "_fts.sqlite")
-        let attachSQL = "ATTACH DATABASE '\(ftsPath)' AS fts_db;"
-        sqlite3_exec(db, attachSQL, nil, nil, nil)
+        try db?.safeAttachDatabase(path: ftsPath, schema: "fts_db")
     }
 
     func queryInts(sql: String, params: [SQLValue]) throws -> [Int] {
@@ -658,6 +658,13 @@ final class SQLiteConnection: DBConnectionType {
             sqlite3_free(errMsg)
             throw NSError(domain: "SQLite", code: Int(sqlite3_errcode(db)), userInfo: [NSLocalizedDescriptionKey: errorString])
         }
+    }
+
+    func attachDatabase(path: String, as schema: String) throws {
+        guard let db else {
+            throw NSError(domain: "SQLite", code: -1, userInfo: [NSLocalizedDescriptionKey: "DB closed"])
+        }
+        try db.safeAttachDatabase(path: path, schema: schema)
     }
 
     func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T] {

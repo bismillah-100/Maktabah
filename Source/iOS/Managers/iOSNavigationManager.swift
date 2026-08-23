@@ -377,7 +377,7 @@ class iOSNavigationManager {
         if let existingTabIndex = openTabs.firstIndex(where: { $0.book.id == book.id }) {
             activeTabId = openTabs[existingTabIndex].id
             // Update initialContentId if provided, so the reader can jump to it
-            var updatedTab = openTabs[existingTabIndex]
+            let updatedTab = openTabs[existingTabIndex]
             updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || recordHistory
             if let contentId = initialContentId {
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId

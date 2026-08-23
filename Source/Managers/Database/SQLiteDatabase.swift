@@ -248,3 +248,28 @@ class SQLiteDatabase {
         }
     }
 }
+
+
+// MARK: - Safe Database Attach
+extension OpaquePointer {
+    func safeAttachDatabase(path: String, schema: String) throws {
+        let sql = "ATTACH DATABASE ? AS \(schema)"
+        var stmt: OpaquePointer?
+
+        guard sqlite3_prepare_v2(self, sql, -1, &stmt, nil) == SQLITE_OK else {
+            let errorString = String(cString: sqlite3_errmsg(self))
+            throw NSError(domain: "SQLite", code: Int(sqlite3_errcode(self)), userInfo: [NSLocalizedDescriptionKey: "Prepare failed: \(errorString)"])
+        }
+        defer { sqlite3_finalize(stmt) }
+
+        path.withCString { ptr in
+            let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
+            sqlite3_bind_text(stmt, 1, ptr, -1, SQLITE_TRANSIENT)
+        }
+
+        guard sqlite3_step(stmt) == SQLITE_DONE else {
+            let errorString = String(cString: sqlite3_errmsg(self))
+            throw NSError(domain: "SQLite", code: Int(sqlite3_errcode(self)), userInfo: [NSLocalizedDescriptionKey: "Step failed: \(errorString)"])
+        }
+    }
+}
