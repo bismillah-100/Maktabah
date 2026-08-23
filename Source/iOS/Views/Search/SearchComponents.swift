@@ -276,8 +276,10 @@ struct SearchHelpView: View {
 // MARK: - View Modifiers
 
 extension View {
-    func prominentButtonStyleIfAvailable() -> some View {
-        modifier(ProminentButtonStyle())
+    func prominentButtonStyleIfAvailable(
+        tint: Color = .clear
+    ) -> some View {
+        modifier(ProminentButtonStyle(btnTint: tint))
     }
 
     func hideTabBarWhenKeyboardShown() -> some View {
@@ -290,11 +292,13 @@ extension View {
 }
 
 struct ProminentButtonStyle: ViewModifier {
+    let btnTint: Color
+
     func body(content: Content) -> some View {
         if #available(iOS 26, *) {
             content
                 .buttonStyle(.glassProminent)
-                .tint(.clear)
+                .tint(btnTint)
         } else {
             content
                 .buttonStyle(.borderedProminent)

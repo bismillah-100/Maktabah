@@ -1,6 +1,29 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "alreadyDonated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لقد تبرعت بالفعل"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I Already Donated"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saya Sudah Berdonasi"
+          }
+        }
+      }
+    },
     "donateBtn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -145,19 +168,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يدعم QRIS و GoPay و OVO و DANA و ShopeePay عبر SociaBuzz"
+            "value" : "يدعم QRIS و GoPay و OVO و DANA و ShopeePay"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Supports QRIS, GoPay, OVO, DANA, & ShopeePay via SociaBuzz"
+            "value" : "Supports QRIS, GoPay, OVO, DANA, & ShopeePay"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mendukung QRIS, GoPay, OVO, DANA, & ShopeePay via SociaBuzz"
+            "value" : "Mendukung QRIS, GoPay, OVO, DANA, & ShopeePay"
           }
         }
       }

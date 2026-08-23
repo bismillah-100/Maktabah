@@ -22,10 +22,13 @@ final class DonationManager: ObservableObject {
     /// Milestones aktivasi: 100, 300, 600, 1000 kali dibuka
     private let milestones: Set<Int> = [100, 300, 600, 1000]
     private let cooldownDays: Double = 30 // 1 bulan cooldown
+    private let promptDelayNanoseconds: UInt64 = 2_000_000_000 // 2 detik delay untuk cold start
 
     @Published var showDonationSheet: Bool = false
 
     private init() {}
+
+    // MARK: - Properties
 
     var activationCount: Int {
         UserDefaults.standard.appActivationCount
@@ -51,10 +54,6 @@ final class DonationManager: ObservableObject {
     }
 
     var shouldShowDonation: Bool {
-
-        #if DEBUG
-        return true // Untuk testing, tampilkan terus
-        #else
         guard isIndonesianRegion else { return false }
         if hasDonated || isInCooldown { return false }
 
@@ -64,8 +63,9 @@ final class DonationManager: ObservableObject {
         }
 
         return milestones.contains(count)
-        #endif
     }
+
+    // MARK: - Actions
 
     func recordActivation() {
         guard isIndonesianRegion else { return }
@@ -76,8 +76,6 @@ final class DonationManager: ObservableObject {
         UserDefaults.standard.appActivationCount = newCount
     }
 
-
-
     func dismiss() {
         UserDefaults.standard.donationLastDismissed = Date().timeIntervalSince1970
     }
@@ -86,31 +84,34 @@ final class DonationManager: ObservableObject {
         UserDefaults.standard.hasDonated = true
     }
 
+    /// Helper untuk menunda pop-up agar tidak menginterupsi cold start render
+    private func executeWithDelay(_ action: @escaping @MainActor () -> Void) {
+        guard shouldShowDonation else { return }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: promptDelayNanoseconds)
+            guard shouldShowDonation else { return }
+            action()
+        }
+    }
+
+    // MARK: - iOS Specific
+
     #if os(iOS)
     func checkAndPromptIOSSheet() {
-        guard shouldShowDonation else { return }
-
-        // Delay agar tidak menginterupsi cold start render
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            guard shouldShowDonation else { return }
-            showDonationSheet = true
+        executeWithDelay { [weak self] in
+            self?.showDonationSheet = true
         }
     }
     #endif
 
-    #if os(macOS)
+    // MARK: - macOS Specific
 
+    #if os(macOS)
     private var donationWindow: NSWindow?
 
     func checkAndPromptMacOSSheet(on parentWindow: NSWindow?) {
-        guard shouldShowDonation else { return }
-
-        // Delay agar tidak menginterupsi cold start render
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            guard shouldShowDonation else { return }
-            presentDonationSheet(on: parentWindow ?? NSApp.keyWindow)
+        executeWithDelay { [weak self] in
+            self?.presentDonationSheet(on: parentWindow ?? NSApp.keyWindow)
         }
     }
 
@@ -155,5 +156,4 @@ final class DonationManager: ObservableObject {
         }
     }
     #endif
-
 }

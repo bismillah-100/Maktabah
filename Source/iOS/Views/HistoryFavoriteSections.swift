@@ -85,7 +85,7 @@ struct DonationHistoryButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 Spacer()
                 Image(systemName: "heart.fill")
                 Text(.Donation.supportDevelopment)

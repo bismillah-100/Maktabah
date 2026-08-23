@@ -20,14 +20,7 @@ struct iOSHistoryView: View {
             }
 
             if DonationManager.shared.shouldShowDonation {
-                Section {
-                    DonationHistoryButton {
-                        showingDonationSheet = true
-                    }
-                }
-                .listRowInsets(EdgeInsets(top: 26, leading: 16, bottom: 4, trailing: 16))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                donationCard(topPad: 26, btmPad: 4)
             }
 
             if !filteredFavorites.isEmpty {
@@ -42,6 +35,12 @@ struct iOSHistoryView: View {
             } else if filteredFavorites.isEmpty {
                 HistoryEmptyState(searchText: viewModel.searchText)
             }
+
+            if filteredHistory.count > 10,
+               filteredFavorites.count > 5,
+               DonationManager.shared.shouldShowDonation {
+                donationCard(topPad: 12, btmPad: 24)
+            }
         }
         .sheet(isPresented: $showingDonationSheet) {
             DonationSheetView(onDismiss: {
@@ -55,6 +54,22 @@ struct iOSHistoryView: View {
         }
         .withActiveIntegrationStates()
         .navigationTitle("History & Favorites")
+    }
+
+    private func donationCard(
+        topPad: CGFloat,
+        btmPad: CGFloat
+    ) -> some View {
+        Section {
+            DonationHistoryButton {
+                showingDonationSheet = true
+            }
+        }
+        .listRowInsets(.init(
+            top: topPad, leading: 16, bottom: btmPad, trailing: 16)
+        )
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
     }
 }
 
