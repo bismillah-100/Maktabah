@@ -433,6 +433,7 @@
 		F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374C00B2FDD69A2009D6807 /* SearchComponents.swift */; };
+		F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F37F1C36300268E3002B5618 /* AnnotationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2D300268E3002B5618 /* AnnotationManager.swift */; };
 		F37F1C37300268E3002B5618 /* AnnMgr+Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */; };
 		F37F1C38300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */; };
@@ -487,6 +488,8 @@
 		F3B60E312FC8017D00A9EF58 /* iOSReaderTabsPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E302FC8017D00A9EF58 /* iOSReaderTabsPopoverView.swift */; };
 		F3BEC5652FD958D100FA0400 /* iOSAnnotationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BEC5642FD958D100FA0400 /* iOSAnnotationViewController.swift */; };
 		F3BEC5682FD97AD600FA0400 /* AnnotationContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BEC5672FD97AD600FA0400 /* AnnotationContentView.swift */; };
+		F3BEC56B2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BEC56A2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift */; };
+		F3BEC56D2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3BEC56C2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift */; };
 		F3C449562F2B12E200DA7032 /* SearchCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = F3C449552F2B12E200DA7032 /* SearchCellView.xib */; };
 		F3C449572F2B12E200DA7032 /* SearchCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3C449542F2B12E200DA7032 /* SearchCellView.swift */; };
 		F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
@@ -797,6 +800,8 @@
 		F3B60E302FC8017D00A9EF58 /* iOSReaderTabsPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSReaderTabsPopoverView.swift; sourceTree = "<group>"; };
 		F3BEC5642FD958D100FA0400 /* iOSAnnotationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAnnotationViewController.swift; sourceTree = "<group>"; };
 		F3BEC5672FD97AD600FA0400 /* AnnotationContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationContentView.swift; sourceTree = "<group>"; };
+		F3BEC56A2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSTagFilterHeaderView.swift; sourceTree = "<group>"; };
+		F3BEC56C2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "iOSAnVC+TagFilter.swift"; sourceTree = "<group>"; };
 		F3C449542F2B12E200DA7032 /* SearchCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCellView.swift; sourceTree = "<group>"; };
 		F3C449552F2B12E200DA7032 /* SearchCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SearchCellView.xib; sourceTree = "<group>"; };
 		F3D02D392FE04D580054807F /* ViewModelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelBase.swift; sourceTree = "<group>"; };
@@ -1463,6 +1468,8 @@
 				F3BEC5672FD97AD600FA0400 /* AnnotationContentView.swift */,
 				F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */,
 				F3BEC5642FD958D100FA0400 /* iOSAnnotationViewController.swift */,
+				F3BEC56C2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift */,
+				F3BEC56A2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift */,
 			);
 			path = Annotation;
 			sourceTree = "<group>";
@@ -2087,6 +2094,8 @@
 				F30576F52FA46222005732C6 /* StringExt.swift in Sources */,
 				F30576F62FA46222005732C6 /* ArabicTextRenderer.swift in Sources */,
 				F3BEC5652FD958D100FA0400 /* iOSAnnotationViewController.swift in Sources */,
+				F3BEC56D2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift in Sources */,
+				F3BEC56B2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift in Sources */,
 				F30576F72FA46222005732C6 /* ReusableFunc.swift in Sources */,
 				F3ABDF772FBF429700A8965E /* WelcomeScreenView.swift in Sources */,
 				F30576F82FA46222005732C6 /* BookUpdateManager.swift in Sources */,
@@ -2169,6 +2178,7 @@
 				F321E0202FC7050F00CB37DD /* CloudKitCoreManager.swift in Sources */,
 				F321E0212FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0222FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
+				F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */,
 				F321E0232FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
 				F30577342FA46222005732C6 /* Annotations.swift in Sources */,
 				F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */,

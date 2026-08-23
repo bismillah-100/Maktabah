@@ -16,7 +16,7 @@ actor TarjamahDatabaseActor {
         self.conn = try SQLiteConnection(dbPath: dbPath)
         let ftsPath = dbPath.replacingOccurrences(of: "special.sqlite", with: "special_fts.sqlite")
         if FileManager.default.fileExists(atPath: ftsPath) {
-            try? self.conn.execute(query: "ATTACH DATABASE '\(ftsPath)' AS fts_db")
+            try? self.conn.attachDatabase(path: ftsPath, as: "fts_db")
         }
     }
 
@@ -198,8 +198,7 @@ class TarjamahGlobalManager {
         }
 
         // 2. CREATE FTS DB
-        let attachSql = "ATTACH DATABASE '\(ftsPath)' AS fts_db"
-        sqlite3_exec(db, attachSql, nil, nil, nil)
+        try? db?.safeAttachDatabase(path: ftsPath, schema: "fts_db")
 
         let createFtsSql = """
         CREATE VIRTUAL TABLE IF NOT EXISTS fts_db.men_u_fts

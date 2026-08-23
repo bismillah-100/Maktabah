@@ -9,22 +9,24 @@ import Combine
 import Foundation
 import SwiftUI
 
-enum AnnotationSearchScope: Int, CaseIterable, Identifiable, Sendable {
+enum AnnotationSearchScope: Int, Sendable, CaseIterable, Identifiable {
     case all = 0
     case book = 1
     case context = 2
     case note = 3
     case tag = 4
 
-    var id: Int { rawValue }
-    
+    var id: Int {
+        rawValue
+    }
+
     var title: String {
         switch self {
-        case .all: return "All".localized
-        case .book: return "Book".localized
-        case .context: return "Context".localized
-        case .note: return "Note".localized
-        case .tag: return "Tag".localized
+        case .all: "All".localized
+        case .book: "Book".localized
+        case .context: "Context".localized
+        case .note: "Note".localized
+        case .tag: "Tag".localized
         }
     }
 }
@@ -49,14 +51,14 @@ struct SwiftUIAnnotationNode: Identifiable {
         self.annotation = annotation
         self.children = children
     }
-    
+
     static func id(from node: AnnotationNode) -> String {
         if node.kind == .annotation, let ann = node.annotation, let annId = ann.id {
             return "ann-\(annId)"
         }
         return "group-\(node.kind)-\(node.title)"
     }
-    
+
     /// Convert the core AppKit/Foundation AnnotationNode to SwiftUI identifiable node
     init(from node: AnnotationNode, parentId: String? = nil) {
         let baseId = SwiftUIAnnotationNode.id(from: node)
@@ -68,7 +70,6 @@ struct SwiftUIAnnotationNode: Identifiable {
         children = node.children.isEmpty ? nil : node.children.map { SwiftUIAnnotationNode(from: $0, parentId: currentId) }
     }
 }
-
 
 @MainActor
 #if os(iOS)
@@ -170,7 +171,8 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     func availableTags(for tags: Set<String>) -> [String] {
         guard tagFilterMode == .and, !tags.isEmpty,
-              let root = AnnotationManager.shared.rootNode else {
+              let root = AnnotationManager.shared.rootNode
+        else {
             return allTags
         }
 
@@ -251,7 +253,8 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         if UserDefaults.standard.hideMissingBookAnnotations,
            let annotationId = userInfo[AnnotationNotificationKeys.annotationId] as? Int64,
            let annotation = AnnotationManager.shared.loadAnnotationById(annotationId),
-           LibraryDataManager.shared.getBook([annotation.bkId]).isEmpty {
+           LibraryDataManager.shared.getBook([annotation.bkId]).isEmpty
+        {
             return
         }
 
@@ -284,8 +287,32 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         onTreeUpdate?(filteredNodes, groupingMode)
     }
 
+    func renameTag(from oldName: String, to newName: String) throws {
+        try AnnotationManager.shared.renameTag(from: oldName, to: newName)
+        if let match = selectedTags.first(where: { $0.caseInsensitiveCompare(oldName) == .orderedSame }) {
+            var updated = selectedTags
+            updated.remove(match)
+            updated.insert(newName)
+            selectedTags = updated
+        }
+    }
+
+    func deleteTag(named tagName: String) throws {
+        try AnnotationManager.shared.deleteTag(named: tagName)
+        if let match = selectedTags.first(where: { $0.caseInsensitiveCompare(tagName) == .orderedSame }) {
+            selectedTags.remove(match)
+        }
+    }
+
     private func reloadFromManager() {
         guard let coreNodes = AnnotationManager.shared.rootNode?.children else { return }
+
+        let currentAllTags = Set(allTags)
+        let validSelected = selectedTags.filter { currentAllTags.contains($0) }
+        if validSelected != selectedTags {
+            selectedTags = validSelected
+            return
+        }
 
         var isFiltered = false
         var nodes = coreNodes
@@ -383,7 +410,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
                 if searchScope == .all || searchScope == .book {
                     if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
                 }
-                
+
                 if let ann = node.annotation {
                     if searchScope == .all || searchScope == .context {
                         if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }

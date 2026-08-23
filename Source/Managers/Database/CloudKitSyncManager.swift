@@ -895,19 +895,30 @@ final class CloudKitSyncManager {
                 if !successfulIds.isEmpty {
                     removePendingUploads(successfulIds)
                 }
-                let conflicts = partialErrors.values.compactMap { $0 as? CKError }.filter { $0.code == .serverRecordChanged }
+
+                let innerErrors = partialErrors.values.compactMap { $0 as? CKError }
+                let conflicts = innerErrors.filter { $0.code == .serverRecordChanged }
+                let rateLimitErrors = innerErrors.filter { $0.code == .requestRateLimited || $0.code == .serviceUnavailable || $0.code == .zoneBusy }
+
+                // Trigger retry backoff for rate-limit errors regardless of whether
+                // conflicts are also present in the same batch.
+                if let firstRateLimit = rateLimitErrors.first {
+                    handleCloudKitError(firstRateLimit, operationType: .upload, retryCount: retryCount)
+                }
 
                 if !conflicts.isEmpty {
                     let group = DispatchGroup()
                     let errorLock = NSLock()
-            var lastError: Error?
+                    var lastError: Error?
 
                     for conflict in conflicts {
                         group.enter()
                         resolveServerRecordConflict(ckError: conflict) { result in
-                            if case let .failure(err) = result { errorLock.lock()
+                            if case let .failure(err) = result {
+                                errorLock.lock()
                                 lastError = err
-                                errorLock.unlock() }
+                                errorLock.unlock()
+                            }
                             group.leave()
                         }
                     }
@@ -917,12 +928,7 @@ final class CloudKitSyncManager {
                     }
                 } else {
                     // Non-conflict partial failure - retain failed record IDs in sync_pending for retry
-                    let innerErrors = partialErrors.values.compactMap { $0 as? CKError }
-                    let rateLimitErrors = innerErrors.filter { $0.code == .requestRateLimited || $0.code == .serviceUnavailable || $0.code == .zoneBusy }
-
-                    if let firstRateLimit = rateLimitErrors.first {
-                        handleCloudKitError(firstRateLimit, operationType: .upload, retryCount: retryCount)
-                    } else {
+                    if rateLimitErrors.isEmpty {
                         handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
                     }
                     completion?(.failure(error))

@@ -1441,12 +1441,9 @@ final class BookUpdateManager {
         let db = try openDatabase(path: targetPath)
         defer { sqlite3_close(db) }
 
-        try exec(db, "ATTACH DATABASE '\(sourceURL.path)' AS source_db;")
-        try exec(
-            db,
-            "ATTACH DATABASE '\(ftsSourceURL.path)' AS fts_source_db;"
-        )
-        try exec(db, "ATTACH DATABASE '\(ftsDBPath)' AS fts_db;")
+        try db.safeAttachDatabase(path: sourceURL.path, schema: "source_db")
+        try db.safeAttachDatabase(path: ftsSourceURL.path, schema: "fts_source_db")
+        try db.safeAttachDatabase(path: ftsDBPath, schema: "fts_db")
         defer {
             try? exec(db, "DETACH DATABASE fts_db;")
             try? exec(db, "DETACH DATABASE fts_source_db;")

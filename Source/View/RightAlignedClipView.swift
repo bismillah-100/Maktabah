@@ -19,6 +19,8 @@ final class RightAlignedClipView: NSClipView {
 
     func updateDocumentFrame() {
         guard let docView = documentView as? NSStackView else { return }
+        docView.invalidateIntrinsicContentSize()
+        docView.layoutSubtreeIfNeeded()
         let fittingWidth = docView.fittingSize.width
         let clipWidth = bounds.width
         guard clipWidth > 0 else { return }
@@ -28,6 +30,7 @@ final class RightAlignedClipView: NSClipView {
         if docView.frame.width != targetWidth || docView.frame.height != bounds.height {
             docView.frame = NSRect(x: 0, y: 0, width: targetWidth, height: bounds.height)
         }
+        docView.layoutSubtreeIfNeeded()
     }
 
     override func constrainBoundsRect(_ proposedBounds: NSRect) -> NSRect {
