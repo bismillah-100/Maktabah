@@ -34,9 +34,7 @@ final class DonationManager: ObservableObject {
         UserDefaults.standard.appActivationCount
     }
 
-    var hasDonated: Bool {
-        UserDefaults.standard.hasDonated
-    }
+    @Published var hasDonated: Bool = UserDefaults.standard.hasDonated
 
     var isInCooldown: Bool {
         let lastDismissed = UserDefaults.standard.donationLastDismissed
@@ -72,7 +70,15 @@ final class DonationManager: ObservableObject {
 
     func markAsDonated() {
         UserDefaults.standard.hasDonated = true
+        hasDonated = true
     }
+
+    #if DEBUG
+    func resetHasDonated() {
+        UserDefaults.standard.hasDonated = false
+        hasDonated = false
+    }
+    #endif
 
     /// Helper untuk menunda pop-up agar tidak menginterupsi cold start render
     private func executeWithDelay(_ action: @escaping @MainActor () -> Void) {

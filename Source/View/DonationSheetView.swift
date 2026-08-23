@@ -18,15 +18,19 @@ private struct DonationSheetHeightKey: PreferenceKey {
 
 struct DonationSheetView: View {
     var url: URL = .init(string: "https://sociabuzz.com/ghoysmawahib/support")!
-    var onDismiss: (() -> Void)? = nil
+    var onDismiss: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
     @State private var isPulsing = false
+    @State private var showThankYou = false
+    @State private var thankYouIconScale: CGFloat = 0.4
     #if os(iOS)
     @State private var contentHeight: CGFloat = 0
     #endif
+
+    @ObservedObject private var donationManager = DonationManager.shared
 
     var body: some View {
         NavigationStack {
@@ -39,6 +43,8 @@ struct DonationSheetView: View {
                     actionSection
                 }
                 .padding(24)
+                .opacity(showThankYou ? 0 : 1)
+                .allowsHitTesting(!showThankYou)
                 .background {
                     #if os(iOS)
                     GeometryReader { geo in
@@ -48,32 +54,43 @@ struct DonationSheetView: View {
                     }
                     #endif
                 }
+
+                if showThankYou {
+                    thankYouSection
+                        .padding(24)
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.88).combined(with: .opacity),
+                            removal: .opacity
+                        ))
+                }
             }
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            #endif
+            .animation(.spring(response: 0.45, dampingFraction: 0.8), value: showThankYou)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(role: .cancel) {
-                        if let onDismiss {
-                            onDismiss()
-                        } else {
-                            dismiss()
-                        }
+                        dismissSheet()
                     } label: {
-                        Text(.Donation.laterBtn)
+                        Text(donationManager.hasDonated
+                            ? "Close"
+                            : .Donation.laterBtn)
                     }
+                    .opacity(showThankYou ? 0 : 1)
+                    .disabled(showThankYou)
                     #if os(macOS)
                     .keyboardShortcut(.cancelAction)
+                    .buttonStyle(.plain)
                     #endif
+                    .transaction { transaction in
+                        transaction.animation = nil
+                    }
                 }
             }
         }
-
         #if os(macOS)
         .frame(width: 440)
         #else
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .presentationBackground(Color.appBackground)
         .onPreferenceChange(DonationSheetHeightKey.self) { measured in
             if measured > 0 {
@@ -84,7 +101,7 @@ struct DonationSheetView: View {
         .presentationDragIndicator(.visible)
         #endif
         .onDisappear {
-            DonationManager.shared.dismiss()
+            donationManager.dismiss()
         }
     }
 
@@ -113,15 +130,16 @@ struct DonationSheetView: View {
                     .foregroundStyle(.pink)
                     .scaleEffect(isPulsing ? 1.18 : 1.0)
             }
+            .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: isPulsing)
             .padding(.top, 4)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
-                    isPulsing = true
-                }
+                isPulsing = true
             }
 
             VStack(spacing: 6) {
-                Text(.Donation.title)
+                Text(donationManager.hasDonated
+                    ? .Donation.supportThanks
+                    : .Donation.title)
                     .font(.title2.weight(.bold))
                     .foregroundStyle(.primary)
 
@@ -159,11 +177,11 @@ struct DonationSheetView: View {
         .padding(14)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                #if os(macOS)
+            #if os(macOS)
                 .fill(Color(nsColor: .controlBackgroundColor))
-                #else
+            #else
                 .fill(Color.appCellBackground)
-                #endif
+            #endif
         }
     }
 
@@ -194,21 +212,16 @@ struct DonationSheetView: View {
             }
             .foregroundStyle(Color.white)
             #if os(iOS)
-            .prominentButtonStyleIfAvailable(tint: .green)
-            .buttonBorderShape(.capsule)
+                .prominentButtonStyleIfAvailable(tint: .green)
+                .buttonBorderShape(.capsule)
             #else
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
-            .clipShape(.capsule)
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                .clipShape(.capsule)
             #endif
 
             Button {
-                DonationManager.shared.markAsDonated()
-                if let onDismiss {
-                    onDismiss()
-                } else {
-                    dismiss()
-                }
+                handleAlreadyDonated()
             } label: {
                 Text(.Donation.alreadyDonated)
                     .font(.subheadline.weight(.medium))
@@ -218,7 +231,77 @@ struct DonationSheetView: View {
         }
     }
 
-    private func supportItem(icon: String, color: Color, title: LocalizedStringResource, description: LocalizedStringResource) -> some View {
+    private var thankYouSection: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.pink.opacity(0.15))
+                    .frame(width: 80, height: 80)
+
+                Image(systemName: "heart.fill")
+                    .font(.system(size: 38))
+                    .foregroundStyle(.pink)
+            }
+            .scaleEffect(thankYouIconScale)
+
+            VStack(spacing: 6) {
+                Text(.Donation.supportThanks)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.primary)
+
+                Text(.Donation.wishYouAllTheBest)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            dismissSheet()
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.55)) {
+                thankYouIconScale = 1.0
+            }
+        }
+    }
+
+    private func handleAlreadyDonated() {
+        donationManager.markAsDonated()
+
+        #if os(iOS)
+        let feedback = UINotificationFeedbackGenerator()
+        feedback.prepare()
+        feedback.notificationOccurred(.success)
+        #endif
+
+        withAnimation {
+            showThankYou = true
+        }
+
+        Task {
+            try? await Task.sleep(for: .seconds(1.8))
+            await MainActor.run {
+                dismissSheet()
+            }
+        }
+    }
+
+    private func dismissSheet() {
+        if let onDismiss {
+            onDismiss()
+        } else {
+            dismiss()
+        }
+    }
+
+    private func supportItem(
+        icon: String,
+        color: Color,
+        title: LocalizedStringResource,
+        description: LocalizedStringResource
+    ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 15, weight: .semibold))

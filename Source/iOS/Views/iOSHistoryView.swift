@@ -9,6 +9,7 @@ struct iOSHistoryView: View {
     @StateObject private var viewModel = HistoryViewModel.shared
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
     @State private var showingDonationSheet = false
+    @ObservedObject private var donationManager = DonationManager.shared
 
     var body: some View {
         let filteredFavorites = viewModel.filteredFavorites
@@ -19,7 +20,7 @@ struct iOSHistoryView: View {
                 HistorySection(books: filteredHistory, viewModel: viewModel)
             }
 
-            if DonationManager.shared.shouldShowDonation {
+            if donationManager.shouldShowDonation {
                 donationCard(topPad: 26, btmPad: 4)
             }
 
@@ -38,7 +39,7 @@ struct iOSHistoryView: View {
 
             if filteredHistory.count > 10,
                filteredFavorites.count > 5,
-               DonationManager.shared.shouldShowDonation {
+               !donationManager.shouldShowDonation {
                 donationCard(topPad: 12, btmPad: 24)
             }
         }

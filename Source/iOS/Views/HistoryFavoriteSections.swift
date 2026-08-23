@@ -84,31 +84,47 @@ struct DonationHistoryButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Spacer()
-                Image(systemName: "heart.fill")
-                Text(.Donation.supportDevelopment)
-                    .font(.headline)
-                    .lineLimit(1)
-                Spacer()
+        VStack(spacing: 6) {
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Spacer()
+                    Image(systemName: "heart.fill")
+                    Text(DonationManager.shared.hasDonated
+                        ? .Donation.wishYouAllTheBest
+                        : .Donation.supportDevelopment)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .foregroundStyle(.tint)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .frame(height: cardHeight)
+                .background(
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(Color.appCellBackground)
+                        .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 30)
+                        .stroke(Color(.secondarySystemFill), lineWidth: 0.3)
+                )
             }
-            .foregroundStyle(.tint)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .frame(height: cardHeight)
-            .background(
-                RoundedRectangle(cornerRadius: 30)
-                    .fill(Color.appCellBackground)
-                    .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 30)
-                    .stroke(Color(.secondarySystemFill), lineWidth: 0.3)
-            )
+            .padding(.horizontal, MaktabahApp.isIpad ? 0 : 2)
+            .buttonStyle(.plain)
+
+            #if DEBUG
+            if DonationManager.shared.hasDonated {
+                Button {
+                    DonationManager.shared.resetHasDonated()
+                } label: {
+                    Text(verbatim: "Reset Has Donated (Debug)")
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+            }
+            #endif
         }
-        .padding(.horizontal, MaktabahApp.isIpad ? 0 : 2)
-        .buttonStyle(.plain)
     }
 }
-
