@@ -77,10 +77,16 @@ struct HistoryEmptyState: View {
 struct DonationHistoryButton: View {
     let cardHeight: CGFloat
     let action: () -> Void
+    @ObservedObject private var donationManager = DonationManager.shared
 
-    init(cardHeight: CGFloat = 50, action: @escaping () -> Void) {
+    init(
+        cardHeight: CGFloat = 50,
+        action: (() -> Void)? = nil
+    ) {
         self.cardHeight = cardHeight
-        self.action = action
+        self.action = action ?? {
+            DonationManager.shared.showDonationSheet = true
+        }
     }
 
     var body: some View {
@@ -89,7 +95,7 @@ struct DonationHistoryButton: View {
                 HStack(spacing: 8) {
                     Spacer()
                     Image(systemName: "heart.fill")
-                    Text(DonationManager.shared.hasDonated
+                    Text(donationManager.hasDonated
                         ? .Donation.wishYouAllTheBest
                         : .Donation.supportDevelopment)
                         .font(.headline)
@@ -114,9 +120,9 @@ struct DonationHistoryButton: View {
             .buttonStyle(.plain)
 
             #if DEBUG
-            if DonationManager.shared.hasDonated {
+            if donationManager.hasDonated {
                 Button {
-                    DonationManager.shared.resetHasDonated()
+                    donationManager.resetHasDonated()
                 } label: {
                     Text(verbatim: "Reset Has Donated (Debug)")
                 }

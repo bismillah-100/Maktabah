@@ -8,7 +8,6 @@ import SwiftUI
 struct iOSHistoryView: View {
     @StateObject private var viewModel = HistoryViewModel.shared
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
-    @State private var showingDonationSheet = false
     @ObservedObject private var donationManager = DonationManager.shared
 
     var body: some View {
@@ -39,16 +38,11 @@ struct iOSHistoryView: View {
 
             if filteredHistory.count > 10,
                filteredFavorites.count > 5,
-               !donationManager.shouldShowDonation {
+               !donationManager.shouldShowDonation
+            {
                 donationCard(topPad: 12, btmPad: 24)
             }
         }
-        .sheet(isPresented: $showingDonationSheet) {
-            DonationSheetView(onDismiss: {
-                showingDonationSheet = false
-            })
-        }
-
         .refreshable {
             CloudKitSyncManager.shared.fetchChanges()
             try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -63,12 +57,12 @@ struct iOSHistoryView: View {
     ) -> some View {
         Section {
             DonationHistoryButton {
-                showingDonationSheet = true
+                donationManager.showDonationSheet = true
             }
         }
         .listRowInsets(.init(
-            top: topPad, leading: 16, bottom: btmPad, trailing: 16)
-        )
+            top: topPad, leading: 16, bottom: btmPad, trailing: 16
+        ))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
     }

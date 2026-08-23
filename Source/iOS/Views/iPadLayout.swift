@@ -13,12 +13,12 @@ struct iPadLayout: View {
 
     @State private var showingSearchHelp = false
     @State private var showingAddFavorites = false
-    @State private var showingDonationSheet = false
     @State private var path: [iOSTab] = []
 
     @StateObject private var historyViewModel = HistoryViewModel.shared
+    @ObservedObject private var donationManager = DonationManager.shared
 
-    // Sidebar search tetap lokal — dipakai hanya untuk filter sidebar (Favorites & History)
+    /// Sidebar search tetap lokal — dipakai hanya untuk filter sidebar (Favorites & History)
     @State private var sidebarSearchText: String = ""
 
     private var filteredFavorites: [BooksData] {
@@ -96,15 +96,8 @@ struct iPadLayout: View {
         .sheet(isPresented: $showingAddFavorites) {
             iOSAddFavoriteSheet(viewModel: historyViewModel)
         }
-        .sheet(isPresented: $showingDonationSheet) {
-            DonationSheetView(onDismiss: {
-                showingDonationSheet = false
-            })
-        }
-
     }
 
-    @ViewBuilder
     private var sidebarContent: some View {
         ThemeList(isGrouped: true) {
             Section {
@@ -120,17 +113,16 @@ struct iPadLayout: View {
                 HistorySection(books: filteredHistory, viewModel: historyViewModel)
             }
 
-            if DonationManager.shared.shouldShowDonation {
+            if donationManager.shouldShowDonation {
                 Section {
                     DonationHistoryButton {
-                        showingDonationSheet = true
+                        donationManager.showDonationSheet = true
                     }
                 }
                 .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 4, trailing: 16))
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
             }
-
 
             if !filteredFavorites.isEmpty {
                 FavoritesSection(
@@ -144,7 +136,6 @@ struct iPadLayout: View {
             }
         }
     }
-
 
     @ViewBuilder
     private func destinationView(for tab: iOSTab) -> some View {

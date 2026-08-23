@@ -6,9 +6,9 @@
 //  Restorable state saat membuka jendela baru
 //
 
+import CloudKit
 import Cocoa
 import SwiftUI
-import CloudKit
 import UniformTypeIdentifiers
 #if DIRECT_DISTRIBUTION
 import Sparkle
@@ -16,7 +16,6 @@ import Sparkle
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
-
     @IBOutlet var menu: NSMenu!
     @IBOutlet weak var viewMenu: NSMenu!
     @IBOutlet weak var appUpdatesMenuItem: NSMenuItem!
@@ -81,9 +80,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         controlMenu.delegate = self
         _ = ScreenTimeManager.shared // untuk init supaya pengaturan diload.
 
-        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.lineHeight : 1.0])
-        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorDark : 3])
-        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorLight : 0])
+        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.lineHeight: 1.0])
+        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorDark: 3])
+        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorLight: 0])
         UserDefaults.standard.register(defaults: ["annotationsLayoutDirection": 1])
 
         if UserDefaults.standard.data(forKey: AppConfig.annotationsAndResultsFolder) == nil {
@@ -92,7 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         #if DIRECT_DISTRIBUTION
         UserDefaults.standard.register(
-            defaults: [UserDefaults.autoCheckAppUpdatesKey : true]
+            defaults: [UserDefaults.autoCheckAppUpdatesKey: true]
         )
         Task.detached(priority: .low) { [unowned self] in
             if !UserDefaults.standard.autoCheckAppUpdates { return }
@@ -109,17 +108,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.registerForRemoteNotifications()
 
         /*
-        showWelcomeScreenIfNeeded()
-         */
+         showWelcomeScreenIfNeeded()
+          */
 
         // Check for core database updates (blocking, throttled 6 months)
         checkCoreDatabaseUpdate()
-
-        DonationManager.shared.recordActivation()
-        DonationManager.shared.checkAndPromptMacOSSheet(on: mainWindowController.window)
     }
 
-    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String : Any]) {
+    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
         Task {
             try await Task.sleep(for: .seconds(5))
             CloudKitSyncManager.shared.fetchChanges()
@@ -133,45 +129,45 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /*
-    func showWelcomeScreenIfNeeded() {
-        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let lastVersion = UserDefaults.standard.string(forKey: "lastVersionPrompted") ?? ""
+     func showWelcomeScreenIfNeeded() {
+         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+         let lastVersion = UserDefaults.standard.string(forKey: "lastVersionPrompted") ?? ""
 
-        if lastVersion != currentVersion {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 520, height: 500),
-                styleMask: [.fullSizeContentView, .titled],
-                backing: .buffered,
-                defer: false
-            )
+         if lastVersion != currentVersion {
+             let window = NSWindow(
+                 contentRect: NSRect(x: 0, y: 0, width: 520, height: 500),
+                 styleMask: [.fullSizeContentView, .titled],
+                 backing: .buffered,
+                 defer: false
+             )
 
-            let contentView = WelcomeScreenView { [weak self, weak window] in
-                guard let window else { return }
-                UserDefaults.standard.set(currentVersion, forKey: "lastVersionPrompted")
+             let contentView = WelcomeScreenView { [weak self, weak window] in
+                 guard let window else { return }
+                 UserDefaults.standard.set(currentVersion, forKey: "lastVersionPrompted")
 
-                if let mainWin = self?.mainWindowController?.window, mainWin.sheets.contains(window) {
-                    mainWin.endSheet(window)
-                } else {
-                    window.close()
-                }
-            }
+                 if let mainWin = self?.mainWindowController?.window, mainWin.sheets.contains(window) {
+                     mainWin.endSheet(window)
+                 } else {
+                     window.close()
+                 }
+             }
 
-            let hostingView = NSHostingView(rootView: contentView)
-            window.contentView = hostingView
-            window.title = "What's New"
-            window.titleVisibility = .hidden
-            window.titlebarAppearsTransparent = true
-            window.isReleasedWhenClosed = false
+             let hostingView = NSHostingView(rootView: contentView)
+             window.contentView = hostingView
+             window.title = "What's New"
+             window.titleVisibility = .hidden
+             window.titlebarAppearsTransparent = true
+             window.isReleasedWhenClosed = false
 
-            if let mainWin = mainWindowController?.window {
-                mainWin.beginSheet(window)
-            } else {
-                window.center()
-                window.makeKeyAndOrderFront(nil)
-            }
-        }
-    }
-     */
+             if let mainWin = mainWindowController?.window {
+                 mainWin.beginSheet(window)
+             } else {
+                 window.center()
+                 window.makeKeyAndOrderFront(nil)
+             }
+         }
+     }
+      */
 
     func applicationWillTerminate(_ aNotification: Notification) {
         CloudKitCoreManager.shared.syncWorker()
@@ -181,7 +177,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
-        return true
+        true
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -237,7 +233,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func restorePersistedState(_ window: MainWindow?) {
         guard let window else {
             #if DEBUG
-                print("mainWindowController window nil")
+            print("mainWindowController window nil")
             #endif
             return
         }
@@ -246,7 +242,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let splitVC = window.contentViewController as? SplitVC else {
             #if DEBUG
-                print("Cannot restore state: SplitVC not found")
+            print("Cannot restore state: SplitVC not found")
             #endif
             return
         }
@@ -255,7 +251,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let lastMode = window.currentMode
 
         #if DEBUG
-            print("Restoring app to last mode: \(lastMode)")
+        print("Restoring app to last mode: \(lastMode)")
         #endif
 
         splitVC.setupForMode(lastMode)
@@ -337,11 +333,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func showOfflineImportWindow() {
         let contentView = OfflineImportFormView(onImport: { [unowned self]
             (url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async in
-            await performCustomImport(
-                url: url,
-                metadata: metadata,
-                authorRow: authorRow
-            )
+                await performCustomImport(
+                    url: url,
+                    metadata: metadata,
+                    authorRow: authorRow
+                )
         })
 
         let hostingView = NSHostingView(rootView: contentView)
@@ -351,7 +347,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             contentView: hostingView,
             styleMask: [.fullSizeContentView, .titled, .closable, .resizable],
             title: "Import Offline Book"
-     )
+        )
 
         window.titleVisibility = .hidden
         window.makeKeyAndOrderFront(nil as Any?)
@@ -361,7 +357,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func performCustomImport(url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async {
         do {
             let result = try await BookUpdateManager
-                .shared.importOfflineUpdate (
+                .shared.importOfflineUpdate(
                     from: url,
                     providedMetadata: metadata,
                     authorRow: authorRow
@@ -381,7 +377,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             )
 
             #if DEBUG
-                print("[Offline Import] Failed to import book from \(url.lastPathComponent): \(error)")
+            print("[Offline Import] Failed to import book from \(url.lastPathComponent): \(error)")
             #endif
         }
     }
@@ -403,7 +399,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let fileExtension = tempURL.pathExtension
 
             guard let fontURL = Bundle.main.url(forResource: fileNameWithoutExtension,
-                                                withExtension: fileExtension) else {
+                                                withExtension: fileExtension)
+            else {
                 print("Font file tidak ditemukan: \(fontFile)")
                 continue
             }
@@ -445,7 +442,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     fileprivate func buildViewMenu() {
         let reader = buildMenu(
-            NSLocalizedString("Reader", comment: ""),  image: "book.fill",
+            NSLocalizedString("Reader", comment: ""), image: "book.fill",
             representedObject: .viewer, keyEquivalent: "1"
         )
 
@@ -481,12 +478,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let quranWindow = buildMenu(NSLocalizedString("QuranMenuBar", comment: ""), image: "character.book.closed.ar", keyEquivalent: "u")
 
-        let bookInfoImage: String
-
-        if #available(macOS 15.4, *) {
-            bookInfoImage = "info.circle.text.page.rtl"
+        let bookInfoImage = if #available(macOS 15.4, *) {
+            "info.circle.text.page.rtl"
         } else {
-            bookInfoImage = "info.circle"
+            "info.circle"
         }
 
         let bookInfo = buildMenu(NSLocalizedString("BookInfo", comment: ""), image: bookInfoImage, keyEquivalent: "i")
@@ -543,7 +538,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
     }
 
-
     @objc private func resetCurrentViewState() {
         guard let keyWindow else { return }
         let splitVC = keyWindow.splitVC
@@ -591,7 +585,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .resizable,
             .miniaturizable,
             .fullSizeContentView,
-            .utilityWindow
+            .utilityWindow,
         ]
 
         let window = QuranWindow(
