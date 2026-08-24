@@ -15,7 +15,7 @@ Kami sangat menyarankan pengguna untuk selalu menggunakan versi terbaru untuk me
 Kami sangat menghargai bantuan komunitas dalam menjaga keamanan aplikasi ini. Jika Anda menemukan celah keamanan, silakan ikuti langkah berikut:
 
 1.  **Jangan membuka Issue publik:** Untuk menjaga keamanan pengguna lain, mohon jangan melaporkan celah keamanan melalui GitHub Issues publik.
-2.  **Laporan via Email:** Kirimkan detail temuan Anda ke [dev.kbcdrn@gmail.com]. 
+2.  **Laporkan secara Privat:** Silakan buat laporan secara privat melalui fitur [GitHub Security Advisories](https://github.com/bismillah-100/Maktabah/security/advisories/new).
 3.  **Informasi yang dibutuhkan:**
     *   Deskripsi lengkap mengenai celah keamanan.
     *   Langkah-langkah untuk mereproduksi (PoC).
