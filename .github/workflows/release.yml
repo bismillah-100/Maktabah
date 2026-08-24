@@ -251,10 +251,10 @@ jobs:
              build/sparkle_staging/
 
           # Generate appcast.xml
+          DOWNLOAD_PREFIX="https://github.com/bismillah-100/Maktabah/releases/download/$TAG_NAME/"
           echo "$SPARKLE_PRIVATE_KEY" | base64 --decode | "$SPARKLE_BIN" \
             --ed-key-file - \
-            --download-url-prefix \
-            "https://github.com/bismillah-100/Maktabah/releases/download/${TAG_NAME}/" \
+            --download-url-prefix "$DOWNLOAD_PREFIX" \
             build/sparkle_staging/
 
           # Simpan appcast.xml ke root workspace
