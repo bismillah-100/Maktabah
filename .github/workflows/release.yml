@@ -39,6 +39,15 @@ jobs:
         with:
           xcode-version: "26.4"
 
+      # Cache SPM dependencies
+      - name: Cache SPM dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
       # Tentukan tag
       - name: Set Tag Name
         id: tag

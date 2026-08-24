@@ -33,11 +33,19 @@ jobs:
       with:
         xcode-version: latest
 
-    - name: Clean SPM cache
+    - name: Cache SPM dependencies
+      if: matrix.language == 'swift'
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ~/Library/Caches/org.swift.swiftpm
+        key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          spm-${{ runner.os }}-
+
+    - name: Clean DerivedData
       if: matrix.language == 'swift'
       shell: bash
       run: |
-        rm -rf ~/Library/Caches/org.swift.swiftpm
         rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
     - name: Initialize CodeQL
