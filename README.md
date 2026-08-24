@@ -19,6 +19,8 @@ Created as Sadaqah Jariyah — may it be beneficial for studying religious scien
 
 ---
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1e56e8340d844ba28959d9d1cc7efd98)](https://app.codacy.com/gh/bismillah-100/Maktabah?utm_source=github.com&utm_medium=referral&utm_content=bismillah-100/Maktabah&utm_campaign=Badge_Grade)
+
 ## Screenshots
 ![App-Mode](https://raw.githubusercontent.com/bismillah-100/Maktabah/main/Screenshots/AppMode.gif)
 
