@@ -7,15 +7,19 @@
 
 import AppKit
 
+struct IbarotTextOptions {
+    var content: BookContent? = nil
+    var color: NSColor? = nil
+    var isMultiLanguage: Bool? = nil
+    var isImported: Bool? = nil
+    var keepScrollPosition: Bool? = nil
+}
+
 @MainActor
 protocol TextViewRenderable: AnyObject {
     func loadIbarotText(
         _ text: String,
-        content: BookContent?,
-        color: NSColor?,
-        isMultiLanguage: Bool?,
-        isImported: Bool?,
-        keepScrollPosition: Bool?
+        options: IbarotTextOptions
     )
 
     func highlightAndScrollToAnns(_ ann: Annotation) async
