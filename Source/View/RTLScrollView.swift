@@ -30,3 +30,18 @@ final class RTLScrollView: NSScrollView {
         }
     }
 }
+
+
+extension NSScrollView {
+    var scrollPercentage: CGFloat {
+        let totalHeight = documentView?.frame.size.height ?? 0
+        return totalHeight > 0 ? (documentVisibleRect.origin.y / totalHeight) : 0
+    }
+
+    func restoreScrollPosition(percentage: CGFloat, originX: CGFloat = 0) {
+        let newTotalHeight = documentView?.frame.size.height ?? 0
+        let targetY = percentage * newTotalHeight
+        contentView.scroll(to: NSPoint(x: originX, y: targetY))
+        reflectScrolledClipView(contentView)
+    }
+}

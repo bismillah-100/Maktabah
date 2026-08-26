@@ -56,42 +56,51 @@ class IbarotTextVC: NSViewController {
 
     private func setupBindings() {
         textView.viewModel = viewModel
-        // Bind content text changes syncrhounously
+        bindContentPayload()
+        bindViewModelCallbacks()
+        bindTextViewAnnotationCallbacks()
+        bindTOCViewModelEvents()
+    }
+
+    private func bindContentPayload() {
         viewModel.$contentPayload
             .sink { [weak self] payload in
                 guard let self, !payload.text.isEmpty else { return }
-                textDelegate?.loadIbarotText(
-                    payload.text,
+                let options = IbarotTextOptions(
                     content: payload.content,
                     color: NSColor.header,
                     isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
                     isImported: viewModel.currentBook?.isImported ?? false,
                     keepScrollPosition: payload.keepScrollPosition
                 )
+                textDelegate?.loadIbarotText(payload.text, options: options)
             }
             .store(in: &viewModel.cancellables)
+    }
 
-        // Bind window title changes
+    private func bindViewModelCallbacks() {
         viewModel.onWindowTitleChanged = { [weak self] title, subtitle in
             self?.windowTitle = title
             self?.windowSubtitle = subtitle
         }
 
-        // Bind content changed callback
         viewModel.onContentChanged = { [weak self] content in
-            guard let self else { return }
-            handleNavigationToContent(content.id)
+            self?.handleNavigationToContent(content.id)
         }
 
-        // Setup textView annotation callbacks
+        viewModel.onNeedScrollToTop = { [weak self] in
+            self?.textView.scrollToBeginningOfDocument(nil)
+        }
+
+        viewModel.onError = { error in
+            ReusableFunc.showAlert(title: "Error", message: error.localizedDescription, style: .critical)
+        }
+    }
+
+    private func bindTextViewAnnotationCallbacks() {
         textView.onAddAnnotation = { [weak self] range, color, mode, sourceText in
             do {
-                try self?.viewModel.addAnnotation(
-                    in: range,
-                    mode: mode,
-                    sourceText: sourceText,
-                    color: color
-                )
+                try self?.viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
             } catch {
                 print("Failed to add annotation: \(error)")
             }
@@ -112,22 +121,9 @@ class IbarotTextVC: NSViewController {
                 print("Failed to delete annotation: \(error)")
             }
         }
+    }
 
-        // Bind scroll to top callback
-        viewModel.onNeedScrollToTop = { [weak self] in
-            self?.textView.scrollToBeginningOfDocument(nil)
-        }
-
-        // Bind error callback
-        viewModel.onError = { error in
-            ReusableFunc.showAlert(
-                title: "Error",
-                message: error.localizedDescription,
-                style: .critical
-            )
-        }
-
-        // Bind TOC events
+    private func bindTOCViewModelEvents() {
         viewModel.tocViewModel.onTOCLoadingStateChanged = { [weak self] isLoading in
             guard let self, let sidebarView = sidebarVC?.view else { return }
             if isLoading {
@@ -140,7 +136,6 @@ class IbarotTextVC: NSViewController {
         viewModel.tocViewModel.onTOCLoaded = { [weak self] nodes in
             guard let self else { return }
             sidebarVC?.updateTOC(nodes)
-            // Auto-expand TOC ke konten yang sedang aktif begitu TOC selesai di-load di background
             if viewModel.currentContentId > 0 {
                 handleNavigationToContent(viewModel.currentContentId)
             }
@@ -270,29 +265,19 @@ class IbarotTextVC: NSViewController {
 
     func applyFont(_ redraw: Bool) {
         if !redraw {
-            guard let scrollView = textView.enclosingScrollView else { return }
-            let visibleRect = scrollView.documentVisibleRect
-            let totalHeight = scrollView.documentView?.frame.size.height ?? 0
-            let scrollPercentage = totalHeight > 0 ? (visibleRect.origin.y / totalHeight) : 0
+            textView.preservingScrollPosition {
+                let defaults = UserDefaults.standard
+                var fontSize = CGFloat(defaults.textViewFontSize)
+                if fontSize == 0 { fontSize = defaultFontSize }
+                let fontName = defaults.textViewFontName
 
-            let defaults = UserDefaults.standard
-            var fontSize = CGFloat(defaults.textViewFontSize)
-            if fontSize == 0 { fontSize = defaultFontSize }
-            let fontName = defaults.textViewFontName
-
-            textView.textStorage?.applyFont(
-                footnoteRanges: textView.footnoteRanges,
-                fontName: fontName,
-                fontSize: fontSize
-            )
-            textView.typingAttributes[.font] = NSFont(name: fontName, size: fontSize)
-
-            textView.textLayoutManager?.ensureFullDocumentLayout()
-
-            let newTotalHeight = scrollView.documentView?.frame.size.height ?? 0
-            let targetY = scrollPercentage * newTotalHeight
-            scrollView.contentView.scroll(to: NSPoint(x: visibleRect.origin.x, y: targetY))
-            scrollView.reflectScrolledClipView(scrollView.contentView)
+                textView.textStorage?.applyFont(
+                    footnoteRanges: textView.footnoteRanges,
+                    fontName: fontName,
+                    fontSize: fontSize
+                )
+                textView.typingAttributes[.font] = NSFont(name: fontName, size: fontSize)
+            }
         } else {
             viewModel.refreshCurrentPage(keepScrollPosition: true)
         }

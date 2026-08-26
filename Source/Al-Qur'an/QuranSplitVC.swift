@@ -7,7 +7,7 @@
 
 import Cocoa
 
-class QuranSplitVC: NSSplitViewController {
+class QuranSplitVC: ReaderSplitVC {
 
     lazy var sidebarSurah: QuranSidebarVC = {
         QuranSidebarVC()
@@ -33,16 +33,7 @@ class QuranSplitVC: NSSplitViewController {
         NSSplitViewItem(viewController: tafseerVC)
     }()
 
-    override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        setupLayout()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-
-    func setupLayout() {
+    override func setupLayout() {
         let customSplitView = CustomSplitView()
         splitView = customSplitView
         splitView.isVertical = true
@@ -110,7 +101,10 @@ class QuranSplitVC: NSSplitViewController {
                 return
             }
 
-            sidebarSurah.selectNode(aya: aya, surah: surah, delegate: true)
+            if let ayaNode = sidebarSurah.ayaLookup[surah]?[aya] {
+                textVC.ayahTextField.stringValue = ayaNode.nass
+            }
+            sidebarSurah.selectNode(aya: aya, surah: surah, delegate: false)
         }
     }
 
@@ -127,29 +121,7 @@ class QuranSplitVC: NSSplitViewController {
             }
         }
 
-        if !AppConfig.isUsingBundleMode ||
-            BookArchiveIntegrator.shared.isBookIntegrated(book) {
-            jumpToVerses()
-            return
-        }
-
-        let confirmed = await BookIntegrateModalCenter.shared
-            .presentAndWaitForConfirmation(book: book)
-        guard confirmed else { throw CancellationError() }
-
-        defer {
-            Task { @MainActor in
-                BookIntegrateModalCenter.shared.dismiss()
-            }
-        }
-
-        try await BookArchiveIntegrator.shared.ensureBookIntegrated(
-            book,
-            onIntegrating: {
-                await BookIntegrateModalCenter.shared.showIntegrating()
-            }
-        )
-
+        try await BookIntegrateModalCenter.shared.ensureIntegrated(book: book)
         jumpToVerses()
     }
 

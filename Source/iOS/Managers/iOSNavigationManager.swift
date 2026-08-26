@@ -62,7 +62,7 @@ class iOSNavigationManager {
                     }
                     Task { @MainActor [weak self] in
                         guard let self else { return }
-                        self.handleBookIntegrationChanged(bookId: bookId)
+                        handleBookIntegrationChanged(bookId: bookId)
                     }
                 }
             )
@@ -89,13 +89,9 @@ class iOSNavigationManager {
                     object: nil,
                     queue: .main
                 ) { [weak self] notification in
-                    guard let userInfo = notification.userInfo,
-                        let oldId = userInfo["oldId"] as? Int,
-                        let newId = userInfo["newId"] as? Int
-                    else { return }
+                    guard let migration = notification.bookIdMigration else { return }
                     Task { @MainActor [weak self] in
-                        guard let self else { return }
-                        handleBookIdMigrated(oldId: oldId, newId: newId)
+                        self?.handleBookIdMigrated(oldId: migration.oldId, newId: migration.newId)
                     }
                 }
             )
@@ -106,17 +102,15 @@ class iOSNavigationManager {
         let ldm = LibraryDataManager.shared
         guard let newBookData = ldm.booksById[newId] else { return }
 
-        for i in 0 ..< openTabs.count {
-            if openTabs[i].book.id == oldId {
-                let oldTab = openTabs[i]
-                openTabs[i] = ReaderTab(
-                    id: oldTab.id,
-                    book: newBookData,
-                    initialContentId: oldTab.initialContentId,
-                    viewModel: oldTab.viewModel
-                )
-                openTabs[i].viewModel.currentBook = newBookData
-            }
+        for i in 0 ..< openTabs.count where openTabs[i].book.id == oldId {
+            let oldTab = openTabs[i]
+            openTabs[i] = ReaderTab(
+                id: oldTab.id,
+                book: newBookData,
+                initialContentId: oldTab.initialContentId,
+                viewModel: oldTab.viewModel
+            )
+            openTabs[i].viewModel.currentBook = newBookData
         }
 
         if selectedBook?.id == oldId {
@@ -167,10 +161,8 @@ class iOSNavigationManager {
     }
 
     func clearAllTabs() {
-        for tab in openTabs {
-            if activeTabId == tab.id {
-                tab.viewModel.saveCurrentState()
-            }
+        for tab in openTabs where activeTabId == tab.id {
+            tab.viewModel.saveCurrentState()
         }
         openTabs.removeAll()
         activeTabId = nil
@@ -294,24 +286,7 @@ class iOSNavigationManager {
             return
         }
 
-        let bodyFormat = String(localized: "Confirm Download Message")
-        let message = String(
-            format: bodyFormat,
-            locale: Locale.current,
-            book.book
-        )
-
-        var sizeString = ""
-        if let size = book.compressedDownloadSize, size > 0 {
-            sizeString = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-        }
-
-        let state = BundleArchiveDownloadProgressState(
-            title: book.book,
-            message: message,
-            mode: .confirmation,
-            totalSizeString: sizeString
-        )
+        let state = BundleArchiveDownloadProgressState.makeConfirmation(for: book)
         state.pendingData = .single(book: book, contentId: initialContentId)
         activeIntegrationStates.append(state)
     }

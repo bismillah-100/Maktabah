@@ -205,8 +205,9 @@ extension RowiSidebarVC: NSOutlineViewDataSource {
 // MARK: - OutlineView Delegate
 extension RowiSidebarVC: NSOutlineViewDelegate {
     func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
-        if item is String && (item as! String) == "LoadMore" {
-            let cell = outlineView.makeView(withIdentifier: loadMoreIdentifier, owner: self) as! LoadMoreCell
+        if item is String && (item as? String) == "LoadMore",
+           let cell = outlineView.makeView(withIdentifier: loadMoreIdentifier, owner: self) as? LoadMoreCell
+        {
             cell.loadButton.target = self
             cell.loadButton.action = #selector(loadMoreTapped)
             return cell

@@ -54,7 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     override init() {
         super.init()
-        registerCustomFonts()
+        ArabicFont.registerCustomFonts()
         AppConfig.initializeMode()
         CoreDatabaseBootstrap.run()
 
@@ -413,53 +413,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    fileprivate func registerCustomFonts() {
-        let fontFiles = [
-            "UthmanTN1-Ver10.otf",
-            "Lateef-Regular.ttf",
-            "Lateef-Bold.ttf",
-            "ScheherazadeNew-Regular.ttf",
-        ]
-
-        for fontFile in fontFiles {
-            // Buat URL sementara dari String
-            let tempURL = URL(fileURLWithPath: fontFile)
-
-            // Ambil nama tanpa ekstensi dan ekstensinya
-            let fileNameWithoutExtension = tempURL.deletingPathExtension().lastPathComponent
-            let fileExtension = tempURL.pathExtension
-
-            guard let fontURL = Bundle.main.url(forResource: fileNameWithoutExtension,
-                                                withExtension: fileExtension)
-            else {
-                print("Font file tidak ditemukan: \(fontFile)")
-                continue
-            }
-
-            guard let fontDataProvider = CGDataProvider(url: fontURL as CFURL) else {
-                print("Tidak bisa load font data: \(fontFile)")
-                continue
-            }
-
-            guard let font = CGFont(fontDataProvider) else {
-                print("Tidak bisa create CGFont: \(fontFile)")
-                continue
-            }
-
-            var error: Unmanaged<CFError>?
-            if !CTFontManagerRegisterGraphicsFont(font, &error) {
-                print("Error registering font: \(fontFile)")
-                if let error = error?.takeRetainedValue() {
-                    print("Error detail: \(error)")
-                }
-            } else {
-                if let postScriptName = font.postScriptName {
-                    print("✅ Font berhasil diregister: \(postScriptName)")
-                }
-            }
-        }
-    }
-
     fileprivate func buildMenu(_ title: String, image: String, representedObject: AppMode? = nil, keyEquivalent: String) -> NSMenuItem {
         let menu = NSMenuItem()
         menu.representedObject = representedObject
@@ -472,56 +425,64 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     fileprivate func buildViewMenu() {
+        let modeItems = createModeMenuItems()
+        let toolItems = createToolMenuItems()
+
+        let donationItem = buildMenu(
+            String(localized: .Donation.supportDevelopmentShort),
+            image: "heart.fill",
+            keyEquivalent: ""
+        )
+        donationItem.action = #selector(showDonationSheet(_:))
+
+        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+        viewMenu.insertItem(donationItem, at: viewMenu.items.count - 1)
+        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+
+        for item in toolItems {
+            viewMenu.insertItem(item, at: viewMenu.items.count - 1)
+        }
+
+        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+
+        for item in modeItems {
+            viewMenu.insertItem(item, at: viewMenu.items.count - 1)
+        }
+
+        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+    }
+
+    private func createModeMenuItems() -> [NSMenuItem] {
         let reader = buildMenu(
             NSLocalizedString("Reader", comment: ""), image: "book.fill",
             representedObject: .viewer, keyEquivalent: "1"
         )
-
         let search = buildMenu(
             NSLocalizedString("Finder", comment: ""), image: "text.viewfinder",
             representedObject: .search, keyEquivalent: "2"
         )
-
         let author = buildMenu(
             NSLocalizedString("Rowi", comment: ""), image: "person.text.rectangle.fill",
             representedObject: .narrator, keyEquivalent: "3"
         )
 
-        let annotations = buildMenu(
-            NSLocalizedString("Annotations", comment: ""),
-            image: "quote.closing", keyEquivalent: "p"
-        )
+        reader.action = #selector(switchMode(_:))
+        search.action = #selector(switchMode(_:))
+        author.action = #selector(switchMode(_:))
 
-        let daftarIsi = buildMenu(
-            NSLocalizedString("toggleTableOfContents", comment: ""),
-            image: "doc.append.fill", keyEquivalent: "l"
-        )
+        return [reader, search, author]
+    }
 
-        let viewOpt = buildMenu(
-            NSLocalizedString("ViewOptions", comment: ""),
-            image: "textformat.size.ar", keyEquivalent: "o"
-        )
+    private func createToolMenuItems() -> [NSMenuItem] {
+        let bookInfoImage = if #available(macOS 15.4, *) { "info.circle.text.page.rtl" } else { "info.circle" }
 
-        let pageSlider = buildMenu(
-            NSLocalizedString("PageSlider", comment: ""),
-            image: "slider.horizontal.below.square.filled.and.square", keyEquivalent: "p"
-        )
-
+        let resetCurrentView = buildMenu(NSLocalizedString("ResetCurrentView", comment: ""), image: "arrow.counterclockwise", keyEquivalent: "r")
         let quranWindow = buildMenu(NSLocalizedString("QuranMenuBar", comment: ""), image: "character.book.closed.ar", keyEquivalent: "u")
-
-        let bookInfoImage = if #available(macOS 15.4, *) {
-            "info.circle.text.page.rtl"
-        } else {
-            "info.circle"
-        }
-
+        let annotations = buildMenu(NSLocalizedString("Annotations", comment: ""), image: "quote.closing", keyEquivalent: "p")
         let bookInfo = buildMenu(NSLocalizedString("BookInfo", comment: ""), image: bookInfoImage, keyEquivalent: "i")
-
-        let resetCurrentView = buildMenu(
-            NSLocalizedString("ResetCurrentView", comment: ""),
-            image: "arrow.counterclockwise",
-            keyEquivalent: "r"
-        )
+        let viewOpt = buildMenu(NSLocalizedString("ViewOptions", comment: ""), image: "textformat.size.ar", keyEquivalent: "o")
+        let pageSlider = buildMenu(NSLocalizedString("PageSlider", comment: ""), image: "slider.horizontal.below.square.filled.and.square", keyEquivalent: "p")
+        let daftarIsi = buildMenu(NSLocalizedString("toggleTableOfContents", comment: ""), image: "doc.append.fill", keyEquivalent: "l")
 
         bookInfo.keyEquivalentModifierMask = [.control]
         resetCurrentView.keyEquivalentModifierMask = [.control, .option]
@@ -531,10 +492,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         viewOpt.keyEquivalentModifierMask = [.control, .option]
         quranWindow.keyEquivalentModifierMask = [.control]
 
-        reader.action = #selector(switchMode(_:))
-        search.action = #selector(switchMode(_:))
-        author.action = #selector(switchMode(_:))
-
         annotations.action = #selector(showAnnotations)
         bookInfo.action = #selector(showCurrentBookInfo(_:))
         daftarIsi.action = #selector(showTOC)
@@ -543,30 +500,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quranWindow.action = #selector(displayQuranWindow(_:))
         resetCurrentView.action = #selector(resetCurrentViewState)
 
-        let donationItem = buildMenu(
-            String(localized: .Donation.supportDevelopmentShort),
-            image: "heart.fill",
-            keyEquivalent: ""
-        )
-        donationItem.action = #selector(showDonationSheet(_:))
-        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
-        viewMenu.insertItem(donationItem, at: viewMenu.items.count - 1)
-
-        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
-
-        viewMenu.insertItem(resetCurrentView, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
-        viewMenu.insertItem(quranWindow, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(annotations, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(bookInfo, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(viewOpt, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(pageSlider, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(daftarIsi, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
-        viewMenu.insertItem(reader, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(search, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(author, at: viewMenu.items.count - 1)
-        viewMenu.insertItem(.separator(), at: viewMenu.items.count - 1)
+        return [resetCurrentView, .separator(), quranWindow, annotations, bookInfo, viewOpt, pageSlider, daftarIsi]
     }
 
     @objc private func resetCurrentViewState() {

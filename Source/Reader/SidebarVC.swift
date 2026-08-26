@@ -212,10 +212,12 @@ extension SidebarVC: NSOutlineViewDataSource {
                      child index: Int,
                      ofItem item: Any?) -> Any {
         let source = isFiltering ? filteredTree : tocTree
-        if item == nil {
+
+        guard let item = item as? TOCNode else {
             return source[index]
         }
-        return (item as! TOCNode).children[index]
+
+        return item.children[index]
     }
 
     func outlineView(_ outlineView: NSOutlineView,

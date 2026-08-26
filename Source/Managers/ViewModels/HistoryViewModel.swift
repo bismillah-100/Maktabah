@@ -16,6 +16,39 @@ struct ReadingEntry: Codable, Identifiable, Hashable {
     var id: Int {
         bookId
     }
+
+    init(
+        bookId: Int,
+        lastContentId: Int? = nil,
+        lastOpenedAt: Date? = nil,
+        favoritedAt: Date? = nil,
+        positionUpdatedAt: Date? = nil,
+        updatedAt: Date = Date(),
+        isFavorite: Bool = false,
+        ckRecordId: String? = nil
+    ) {
+        self.bookId = bookId
+        self.lastContentId = lastContentId
+        self.lastOpenedAt = lastOpenedAt
+        self.favoritedAt = favoritedAt
+        self.positionUpdatedAt = positionUpdatedAt
+        self.updatedAt = updatedAt
+        self.isFavorite = isFavorite
+        self.ckRecordId = ckRecordId ?? String(bookId)
+    }
+
+    init(defaultForBookId bookId: Int) {
+        self.init(
+            bookId: bookId,
+            lastContentId: nil,
+            lastOpenedAt: nil,
+            favoritedAt: nil,
+            positionUpdatedAt: nil,
+            updatedAt: Date(),
+            isFavorite: false,
+            ckRecordId: String(bookId)
+        )
+    }
 }
 
 class HistoryViewModel: ViewModelBase, ObservableObject {
@@ -28,20 +61,20 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     @Published var favoriteBooks: [BooksData] = []
     @Published var searchText: String = ""
 
-    var filteredFavorites: [BooksData] {
-        if searchText.isEmpty { return favoriteBooks }
+    private func filterBooks(_ books: [BooksData]) -> [BooksData] {
+        guard !searchText.isEmpty else { return books }
         let normalizedSearchText = searchText.normalizeArabic(false)
-        return favoriteBooks.filter { book in
+        return books.filter { book in
             book.book.normalizeArabic(false).localizedStandardContains(normalizedSearchText)
         }
     }
 
+    var filteredFavorites: [BooksData] {
+        filterBooks(favoriteBooks)
+    }
+
     var filteredHistory: [BooksData] {
-        if searchText.isEmpty { return historyBooks }
-        let normalizedSearchText = searchText.normalizeArabic(false)
-        return historyBooks.filter { book in
-            book.book.normalizeArabic(false).localizedStandardContains(normalizedSearchText)
-        }
+        filterBooks(historyBooks)
     }
 
     private let maxHistoryCount = 50
@@ -87,25 +120,13 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         backfillCloudKitFieldsIfNeeded()
         loadBooksData()
 
-        addObserver(
-            forName: .bookIntegrated,
-            object: nil, queue: .main
-        ) { [weak self] _ in self?.loadBooksData() }
-
-        addObserver(
-            forName: .booksChanged,
-            object: nil, queue: .main
-        ) { [weak self] _ in self?.loadBooksData() }
-
-        addObserver(
-            forName: .bookIdMigrated,
-            object: nil, queue: .main
-        ) { [weak self] notification in
-            guard let userInfo = notification.userInfo,
-                  let oldId = userInfo["oldId"] as? Int,
-                  let newId = userInfo["newId"] as? Int else { return }
-            self?.migrateBookId(from: oldId, to: newId)
+        for name in [Notification.Name.bookIntegrated, .booksChanged] {
+            addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.loadBooksData()
+            }
         }
+
+        enableBookIdMigrationObserver()
     }
 
     // MARK: - Load from Database
@@ -118,28 +139,30 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
     // MARK: - Core Operations
 
+    private func getOrCreateEntry(for bookId: Int) -> ReadingEntry {
+        entriesByBookId[bookId] ?? ReadingEntry(defaultForBookId: bookId)
+    }
+
+    private func saveAndSync(entry: inout ReadingEntry, reloadUI: Bool = true) {
+        if entry.ckRecordId == nil {
+            entry.ckRecordId = String(entry.bookId)
+        }
+        entriesByBookId[entry.bookId] = entry
+        HistoryDatabaseManager.shared.upsertEntry(entry)
+        if reloadUI {
+            loadBooksData()
+        }
+        CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
+    }
+
     func addBookToHistory(_ bookId: Int) {
         guard DatabaseManager.shared.bookExists(id: bookId) else { return }
 
-        var entry = entriesByBookId[bookId] ?? ReadingEntry(
-            bookId: bookId,
-            lastContentId: nil,
-            lastOpenedAt: nil,
-            favoritedAt: nil,
-            positionUpdatedAt: nil,
-            updatedAt: Date(),
-            isFavorite: false,
-            ckRecordId: String(bookId)
-        )
+        var entry = getOrCreateEntry(for: bookId)
+        let now = Date()
+        entry.lastOpenedAt = now
+        entry.updatedAt = now
 
-        entry.lastOpenedAt = Date()
-        entry.updatedAt = Date()
-
-        if entry.ckRecordId == nil {
-            entry.ckRecordId = String(bookId)
-        }
-
-        entriesByBookId[bookId] = entry
         historyOrder.removeAll { $0 == bookId }
         historyOrder.insert(bookId, at: 0)
 
@@ -148,32 +171,18 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         }
 
         pruneOrphanedEntries()
-        if let ckId = entry.ckRecordId {
-            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
-        }
-        HistoryDatabaseManager.shared.upsertEntry(entry)
         HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
-        loadBooksData()
-
-        CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
+        saveAndSync(entry: &entry, reloadUI: true)
     }
 
     func updateLastContentId(_ contentId: Int, for bookId: Int) {
         if var entry = entriesByBookId[bookId] {
+            let now = Date()
             entry.lastContentId = contentId
-            entry.positionUpdatedAt = Date()
-            entry.updatedAt = Date()
-            if entry.ckRecordId == nil {
-                entry.ckRecordId = String(bookId)
-            }
-            entriesByBookId[bookId] = entry
-
-            if let ckId = entry.ckRecordId {
-                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
-            }
+            entry.positionUpdatedAt = now
+            entry.updatedAt = now
             // Hanya simpan ke DB — tidak reload UI library (tidak ada perubahan visible)
-            HistoryDatabaseManager.shared.upsertEntry(entry)
-            CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
+            saveAndSync(entry: &entry, reloadUI: false)
         } else {
             addBookToHistory(bookId)
             updateLastContentId(contentId, for: bookId)
@@ -183,93 +192,81 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     func toggleFavorite(_ bookId: Int) {
         guard DatabaseManager.shared.bookExists(id: bookId) else { return }
 
-        var entry = entriesByBookId[bookId] ?? ReadingEntry(
-            bookId: bookId,
-            lastContentId: nil,
-            lastOpenedAt: nil,
-            favoritedAt: nil,
-            positionUpdatedAt: nil,
-            updatedAt: Date(),
-            isFavorite: false,
-            ckRecordId: String(bookId)
-        )
-
+        var entry = getOrCreateEntry(for: bookId)
         entry.isFavorite.toggle()
         let now = Date()
         if entry.isFavorite {
             entry.favoritedAt = now
         }
         entry.updatedAt = now
-        if entry.ckRecordId == nil {
-            entry.ckRecordId = String(bookId)
-        }
-
-        entriesByBookId[bookId] = entry
-        if let ckId = entry.ckRecordId {
-            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "upload")
-        }
-        HistoryDatabaseManager.shared.upsertEntry(entry)
-        loadBooksData()
-
-        CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
+        saveAndSync(entry: &entry, reloadUI: true)
     }
 
     func removeHistory(for bookId: Int) {
         historyOrder.removeAll { $0 == bookId }
-        if var entry = entriesByBookId[bookId] {
-            if entry.isFavorite {
-                entry.lastOpenedAt = nil
-                entry.updatedAt = Date()
-                entriesByBookId[bookId] = entry
+        guard let entry = entriesByBookId[bookId] else { return }
 
-                let upserted = [entry]
-                let order = historyOrder
+        if entry.isFavorite {
+            handleFavoritedHistoryRemoval(entry: entry, bookId: bookId)
+        } else {
+            handleNonFavoritedHistoryRemoval(entry: entry, bookId: bookId)
+        }
+    }
 
-                DispatchQueue.global(qos: .background).async {
-                    do {
-                        try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: [], upsertedEntries: upserted, finalOrder: order)
-                        DispatchQueue.main.async {
-                            self.loadBooksData()
-                        }
-                        CloudKitSyncManager.shared.uploadHistory(entries: upserted, trackPending: false)
-                    } catch {
-                        #if DEBUG
-                        print("Failed to save removeHistory: \(error)")
-                        #endif
+    private func handleFavoritedHistoryRemoval(entry: ReadingEntry, bookId: Int) {
+        var updatedEntry = entry
+        updatedEntry.lastOpenedAt = nil
+        updatedEntry.updatedAt = Date()
+        entriesByBookId[bookId] = updatedEntry
+
+        let upserted = [updatedEntry]
+        let order = historyOrder
+
+        DispatchQueue.global(qos: .background).async {
+            do {
+                try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: [], upsertedEntries: upserted, finalOrder: order)
+                DispatchQueue.main.async {
+                    self.loadBooksData()
+                }
+                CloudKitSyncManager.shared.uploadHistory(entries: upserted, trackPending: false)
+            } catch {
+                #if DEBUG
+                print("Failed to save removeHistory: \(error)")
+                #endif
+            }
+        }
+    }
+
+    private func handleNonFavoritedHistoryRemoval(entry: ReadingEntry, bookId: Int) {
+        let ckId = entry.ckRecordId
+        if let ckId {
+            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+        }
+        entriesByBookId.removeValue(forKey: bookId)
+
+        let order = historyOrder
+        let deletedIds = [bookId]
+
+        DispatchQueue.global(qos: .background).async {
+            do {
+                try HistoryDatabaseManager.shared.transaction {
+                    try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
+                    if let ckId {
+                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                    }
+                    try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
+                }
+                DispatchQueue.main.async {
+                    self.loadBooksData()
+                    if let ckId {
+                        self.pendingCloudKitDeletes.insert(ckId)
+                        self.triggerDeleteDebounce()
                     }
                 }
-            } else {
-                let ckId = entry.ckRecordId
-                if let ckId {
-                    try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                }
-                entriesByBookId.removeValue(forKey: bookId)
-
-                let order = historyOrder
-                let deletedIds = [bookId]
-
-                DispatchQueue.global(qos: .background).async {
-                    do {
-                        try HistoryDatabaseManager.shared.transaction {
-                            try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
-                            if let ckId {
-                                try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                            }
-                            try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
-                        }
-                        DispatchQueue.main.async {
-                            self.loadBooksData()
-                            if let ckId {
-                                self.pendingCloudKitDeletes.insert(ckId)
-                                self.triggerDeleteDebounce()
-                            }
-                        }
-                    } catch {
-                        #if DEBUG
-                        print("Failed to save removeHistory: \(error)")
-                        #endif
-                    }
-                }
+            } catch {
+                #if DEBUG
+                print("Failed to save removeHistory: \(error)")
+                #endif
             }
         }
     }
@@ -314,19 +311,28 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             }
         }
 
-        let order = historyOrder
-        let ckIdsToDeleteSafe = ckIdsToDelete
+        saveClearedHistoryInDatabase(
+            order: historyOrder,
+            deletedIds: deletedIds,
+            upserted: upserted,
+            ckIdsToDelete: ckIdsToDelete
+        )
+    }
 
+    private func saveClearedHistoryInDatabase(
+        order: [Int],
+        deletedIds: [Int],
+        upserted: [ReadingEntry],
+        ckIdsToDelete: [String]
+    ) {
+        let ckIdsToDeleteSafe = ckIdsToDelete
         DispatchQueue.global(qos: .background).async {
             do {
-                try HistoryDatabaseManager.shared.transaction {
-                    try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds, trackPending: false)
-                    for ckId in ckIdsToDeleteSafe {
-                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                    }
-                    try HistoryDatabaseManager.shared.upsertEntries(upserted)
-                    try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
-                }
+                try HistoryDatabaseManager.shared.saveCloudKitChanges(
+                    deletedIds: deletedIds,
+                    upsertedEntries: upserted,
+                    finalOrder: order
+                )
                 DispatchQueue.main.async {
                     self.loadBooksData()
                 }
@@ -366,18 +372,18 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 ckIdsToDelete.append(ckId)
                 pendingCloudKitDeletes.insert(ckId)
             }
-            
+
             entriesByBookId.removeValue(forKey: bookId)
             removedIds.append(bookId)
         }
 
-        if deleteFromDB && !removedIds.isEmpty {
+        if deleteFromDB, !removedIds.isEmpty {
             DispatchQueue.global(qos: .background).async {
                 do {
                     try HistoryDatabaseManager.shared.transaction {
                         try HistoryDatabaseManager.shared.deleteEntries(bookIds: removedIds)
                         for ckId in ckIdsToDelete {
-                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
+                            try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
                         }
                     }
                     if !ckIdsToDelete.isEmpty {
@@ -528,37 +534,19 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     private func migrateLegacyKVSDataIfNeeded() {
         if UserDefaults.standard.bool(forKey: "HistoryViewModel_LegacyMigrated_v2") { return }
 
-        let kvs = NSUbiquitousKeyValueStore.default
-        var legacyPayload: StoredReadingEntries?
-
-        if let data = UserDefaults.standard.data(forKey: legacyHistoryKey),
-           let decoded = try? JSONDecoder().decode(StoredReadingEntries.self, from: data)
-        {
-            legacyPayload = decoded
-        } else if let data = kvs.data(forKey: legacyHistoryKey),
-                  let decoded = try? JSONDecoder().decode(StoredReadingEntries.self, from: data)
-        {
-            legacyPayload = decoded
-        }
-
-        if let legacy = legacyPayload {
-            // Load current state from DB first
+        if let legacy = loadLegacyPayload() {
             loadFromDatabase()
 
             var newEntries = [ReadingEntry]()
-            for entry in legacy.entries {
-                if entriesByBookId[entry.bookId] == nil {
-                    var migrated = entry
-                    migrated.ckRecordId = String(entry.bookId)
-                    entriesByBookId[entry.bookId] = migrated
-                    newEntries.append(migrated)
-                }
+            for entry in legacy.entries where entriesByBookId[entry.bookId] == nil {
+                var migrated = entry
+                migrated.ckRecordId = String(entry.bookId)
+                entriesByBookId[entry.bookId] = migrated
+                newEntries.append(migrated)
             }
 
-            for hId in legacy.historyOrder {
-                if !historyOrder.contains(hId) {
-                    historyOrder.append(hId)
-                }
+            for hId in legacy.historyOrder where !historyOrder.contains(hId) {
+                historyOrder.append(hId)
             }
 
             let finalOrder = historyOrder
@@ -581,7 +569,21 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         UserDefaults.standard.set(true, forKey: "HistoryViewModel_LegacyMigrated_v2")
     }
 
-    func migrateBookId(from oldId: Int, to newId: Int) {
+    private func loadLegacyPayload() -> StoredReadingEntries? {
+        let kvs = NSUbiquitousKeyValueStore.default
+        if let data = UserDefaults.standard.data(forKey: legacyHistoryKey),
+           let decoded = try? JSONDecoder().decode(StoredReadingEntries.self, from: data)
+        {
+            return decoded
+        } else if let data = kvs.data(forKey: legacyHistoryKey),
+                  let decoded = try? JSONDecoder().decode(StoredReadingEntries.self, from: data)
+        {
+            return decoded
+        }
+        return nil
+    }
+
+    override func migrateBookId(from oldId: Int, to newId: Int) {
         guard let entry = entriesByBookId.removeValue(forKey: oldId) else { return }
         let migrated = ReadingEntry(
             bookId: newId,

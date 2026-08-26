@@ -84,7 +84,7 @@ class BookUpdateViewModel: ObservableObject {
             } catch {
                 progressMessage = "Error: \(error.localizedDescription)"
                 #if DEBUG
-                    print("❌ [Load Updates] Error: \(error)")
+                print("❌ [Load Updates] Error: \(error)")
                 #endif
             }
 
@@ -138,13 +138,8 @@ class BookUpdateViewModel: ObservableObject {
             guard let self else { return }
 
             do {
-                let authEntries = try await BookUpdateManager.shared
-                    .fetchAuthIndexEntriesIfNeeded(
-                        from: Self.authCSVURL
-                    )
-                let authIndexMap = Dictionary(
-                    uniqueKeysWithValues: authEntries.map { ($0.authId, $0) }
-                )
+                let authEntries = try await BookUpdateManager.shared.fetchAuthIndexEntriesIfNeeded(from: Self.authCSVURL)
+                let authIndexMap = Dictionary(uniqueKeysWithValues: authEntries.map { ($0.authId, $0) })
 
                 let selectedContexts = selectedItems.enumerated().map { index, item in
                     SelectedBookContext(
@@ -172,60 +167,78 @@ class BookUpdateViewModel: ObservableObject {
                 )
 
                 progressMessage = String(localized:
-                    "Download phase completed (\(stagedUpdates.count)/\(selectedItems.count)). Starting processing..."
+                    "Download phase completed (\(stagedUpdates.count)/\(selectedItems.count)). Starting processing...")
+
+                let results = await processStagedUpdates(
+                    selectedContexts: selectedContexts,
+                    stagedUpdates: stagedUpdates,
+                    totalCount: selectedItems.count
                 )
+                updateResults = results
 
-                var completedCount = 0
-                var processingCount = 0
-
-                for context in selectedContexts {
-                    guard let stagedUpdate = stagedUpdates[context.index] else {
-                        continue
-                    }
-
-                    context.item.status = .processing
-                    processingCount += 1
-                    progressMessage = String(localized:
-                        "Processing: \(context.item.bookName) (\(processingCount)/\(selectedItems.count))"
-                    )
-
-                    do {
-                        let result = try await BookUpdateManager.shared
-                            .applyStagedBookUpdate(stagedUpdate)
-                        updateResults.append(result)
-
-                        switch result.action {
-                        case .inserted, .updated:
-                            context.item.currentVersion = context.item.newVersion
-                            context.item.isSelected = false
-                            context.item.status = .completed
-                            completedCount += 1
-                        case .skipped:
-                            context.item.status = .skipped
-                        }
-                    } catch {
-                        context.item.status = .failed(error.localizedDescription)
-                        refreshAvailableUpdatesState()
-                        #if DEBUG
-                            print(
-                                "[Update] Failed to update book \(context.item.id): \(error)"
-                            )
-                        #endif
-                    }
-                }
-
-                progressMessage = String(localized:
-                    "Completed! \(completedCount)/\(selectedItems.count) books successfully updated."
-                )
-
-                try await LibraryDataManager.shared.processBookUpdates(updateResults)
+                try await LibraryDataManager.shared.processBookUpdates(results)
                 refreshAvailableUpdatesState()
             } catch {
                 progressMessage = "Error: \(error.localizedDescription)"
                 #if DEBUG
-                    print("❌ [Perform Updates] Error: \(error)")
+                print("❌ [Perform Updates] Error: \(error)")
                 #endif
             }
+        }
+    }
+
+    @MainActor
+    private func processStagedUpdates(
+        selectedContexts: [SelectedBookContext],
+        stagedUpdates: [Int: BookUpdateManager.StagedBookUpdate],
+        totalCount: Int
+    ) async -> [BookUpdateResult] {
+        var results: [BookUpdateResult] = []
+        var completedCount = 0
+        var processingCount = 0
+
+        for context in selectedContexts {
+            guard let stagedUpdate = stagedUpdates[context.index] else { continue }
+
+            context.item.status = .processing
+            processingCount += 1
+            progressMessage = String(localized: "Processing: \(context.item.bookName) (\(processingCount)/\(totalCount))")
+
+            if let result = await applySingleStagedUpdate(context: context, stagedUpdate: stagedUpdate) {
+                results.append(result)
+                if result.action == .inserted || result.action == .updated {
+                    completedCount += 1
+                }
+            }
+        }
+
+        progressMessage = String(localized: "Completed! \(completedCount)/\(totalCount) books successfully updated.")
+        return results
+    }
+
+    @MainActor
+    private func applySingleStagedUpdate(
+        context: SelectedBookContext,
+        stagedUpdate: BookUpdateManager.StagedBookUpdate
+    ) async -> BookUpdateResult? {
+        do {
+            let result = try await BookUpdateManager.shared.applyStagedBookUpdate(stagedUpdate)
+            switch result.action {
+            case .inserted, .updated:
+                context.item.currentVersion = context.item.newVersion
+                context.item.isSelected = false
+                context.item.status = .completed
+            case .skipped:
+                context.item.status = .skipped
+            }
+            return result
+        } catch {
+            context.item.status = .failed(error.localizedDescription)
+            refreshAvailableUpdatesState()
+            #if DEBUG
+            print("[Update] Failed to update book \(context.item.id): \(error)")
+            #endif
+            return nil
         }
     }
 
@@ -265,7 +278,7 @@ class BookUpdateViewModel: ObservableObject {
             by: maxConcurrentDownloads
         ) {
             let chunkEnd = min(chunkStart + maxConcurrentDownloads, taskInputs.count)
-            let chunk = Array(taskInputs[chunkStart..<chunkEnd])
+            let chunk = Array(taskInputs[chunkStart ..< chunkEnd])
 
             await withTaskGroup(of: DownloadTaskOutput.self) { group in
                 for taskInput in chunk {
@@ -300,15 +313,14 @@ class BookUpdateViewModel: ObservableObject {
                     } else if let error = output.error {
                         item.status = .failed(error.localizedDescription)
                         #if DEBUG
-                            print(
-                                "[Download] Failed to download book \(item.id): \(error)"
-                            )
+                        print(
+                            "[Download] Failed to download book \(item.id): \(error)"
+                        )
                         #endif
                     }
 
                     progressMessage = String(localized:
-                        "Downloading books... (\(completedDownloads)/\(selectedContexts.count))"
-                    )
+                        "Downloading books... (\(completedDownloads)/\(selectedContexts.count))")
                 }
             }
         }

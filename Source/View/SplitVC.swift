@@ -520,56 +520,16 @@ extension SplitVC {
     }
 
     func searchCurrentBook(_ sender: NSButton) {
-        if optSearchPopover == nil {
-            let popover = NSPopover()
-            popover.behavior = .transient
-            optSearchPopover = popover
-        }
-
-        guard let optSearchPopover else { return }
-
-        if optSearch == nil {
-            let vc = OptionSearchVC()
-            vc.view.frame = NSRect(x: 0, y: 0, width: 350, height: 300)
-            optSearch = vc
-        }
-
-        guard let optSearch,
-            let bkId = ibarotTextVC.textView.bkId
-        else {
-            ReusableFunc.showAlert(
-                title: NSLocalizedString("noBookSelectedTitle", comment: ""),
-                message: NSLocalizedString("noBookSelectedDesc", comment: "")
-            )
-            return
-        }
-
-        optSearch.bkId = "b\(bkId)"
-
-        optSearchPopover.contentViewController = optSearch
-
-        optSearchPopover.show(
-            relativeTo: sender.bounds,
-            of: sender,
-            preferredEdge: .maxY
-        )
-        optSearch.compactButton()
-
-        optSearch.onSelectedItem = { id, query, mode, nearDistance in
-            Task.detached { [weak self] in
-                await self?.ibarotTextVC.didSelectResult(
-                    for: id,
-                    highlightText: query,
-                    mode: mode,
-                    nearDistance: Int(nearDistance) ?? 10
-                )
+        OptionSearchPopover.present(
+            popover: &optSearchPopover,
+            searchVC: &optSearch,
+            bookID: ibarotTextVC.textView.bkId,
+            from: sender,
+            delegate: ibarotTextVC,
+            onCleanUp: { [weak self] in
+                self?.optSearch = nil
+                self?.optSearchPopover = nil
             }
-        }
-
-        optSearch.onCleanUp = { [weak self] in
-            self?.optSearchPopover?.performClose(sender)
-            self?.optSearch = nil
-            self?.optSearchPopover = nil
-        }
+        )
     }
 }

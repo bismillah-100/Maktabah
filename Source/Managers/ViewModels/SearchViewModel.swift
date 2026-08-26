@@ -27,6 +27,7 @@ final class SearchViewModel: ViewModelBase {
             UserDefaults.standard.searchNearDistance = nearDistance
         }
     }
+
     private(set) var results: [SearchResultItem] = []
     private(set) var isSearching: Bool = false
     private(set) var isPaused: Bool = false
@@ -125,6 +126,15 @@ final class SearchViewModel: ViewModelBase {
 
     private func setupObservers() {
         #if os(iOS)
+        setupDebouncedFilters()
+        #endif
+        observeBooksReloadNotifications()
+        enableBookIdMigrationObserver()
+        observeLibraryFolderChanged()
+    }
+
+    #if os(iOS)
+    private func setupDebouncedFilters() {
         filterSubject
             .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.updateDisplayedCategories() }
@@ -134,49 +144,29 @@ final class SearchViewModel: ViewModelBase {
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] in self?.updateDisplayedCategories() }
             .store(in: &cancellables)
+    }
+    #endif
 
-        #endif
+    private func notifySearchReload() {
+        Task { @MainActor [weak self] in
+            #if os(macOS)
+            self?.searchNeedsReload.send(())
+            #else
+            self?.refreshSubject.send(())
+            #endif
+        }
+    }
 
-        addObserver(
-            forName: .bookIntegrated, object: nil, queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                #if os(macOS)
-                self?.searchNeedsReload.send(())
-                #else
-                self?.refreshSubject.send(())
-                #endif
+    private func observeBooksReloadNotifications() {
+        for name in [Notification.Name.bookIntegrated, .booksChanged] {
+            addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.notifySearchReload()
             }
         }
+    }
 
-        addObserver(
-            forName: .booksChanged, object: nil, queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                #if os(macOS)
-                self?.searchNeedsReload.send(())
-                #else
-                self?.refreshSubject.send(())
-                #endif
-            }
-        }
-
-        addObserver(
-            forName: .bookIdMigrated, object: nil, queue: .main
-        ) { [weak self] notification in
-            Task { @MainActor [weak self] in
-                guard let self = self,
-                      let userInfo = notification.userInfo,
-                      let oldId = userInfo["oldId"] as? Int,
-                      let newId = userInfo["newId"] as? Int else { return }
-
-                self.migrateBookId(from: oldId, to: newId)
-            }
-        }
-
-        addObserver(
-            forName: .libraryFolderChanged, object: nil, queue: .current
-        ) { [weak self] _ in
+    private func observeLibraryFolderChanged() {
+        addObserver(forName: .libraryFolderChanged, object: nil, queue: .current) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 stopSearch()
@@ -194,25 +184,23 @@ final class SearchViewModel: ViewModelBase {
 
     // MARK: - Migration Support
 
-    func migrateBookId(from oldId: Int, to newId: Int) {
+    override func migrateBookId(from oldId: Int, to newId: Int) {
         if selectedBookIds.contains(oldId) {
             selectedBookIds.remove(oldId)
             selectedBookIds.insert(newId)
         }
 
-        for i in 0..<results.count {
-            if results[i].bookId == oldId {
-                let oldItem = results[i]
-                results[i] = SearchResultItem(
-                    archive: oldItem.archive,
-                    tableName: "b\(newId)",
-                    bookId: newId,
-                    bookTitle: oldItem.bookTitle,
-                    page: oldItem.page,
-                    part: oldItem.part,
-                    attributedText: oldItem.attributedText
-                )
-            }
+        for i in 0 ..< results.count where results[i].bookId == oldId {
+            let oldItem = results[i]
+            results[i] = SearchResultItem(
+                archive: oldItem.archive,
+                tableName: "b\(newId)",
+                bookId: newId,
+                bookTitle: oldItem.bookTitle,
+                page: oldItem.page,
+                part: oldItem.part,
+                attributedText: oldItem.attributedText
+            )
         }
 
         #if os(macOS)
@@ -402,21 +390,7 @@ final class SearchViewModel: ViewModelBase {
                     continue
                 }
 
-                for item in items {
-                    guard searchWork?.isCancelled == false else { return }
-                    
-                    while isPaused {
-                        guard searchWork?.isCancelled == false else { return }
-                        try? await Task.sleep(nanoseconds: 100_000_000)
-                    }
-
-                    if let result = await processSavedItem(item) {
-                        buffer.add(result)
-                        if buffer.isFull {
-                            await flushBuffer(&buffer, onInsert: onInsert)
-                        }
-                    }
-                }
+                await processArchiveSavedItems(items: items, buffer: &buffer, onInsert: onInsert)
             }
 
             if !buffer.isEmpty {
@@ -427,6 +401,28 @@ final class SearchViewModel: ViewModelBase {
 
         searchWork = task
         return task
+    }
+
+    private func processArchiveSavedItems(
+        items: [SavedResultsItem],
+        buffer: inout ResultBuffer,
+        onInsert: (@MainActor (Int, Int) -> Void)?
+    ) async {
+        for item in items {
+            guard searchWork?.isCancelled == false else { return }
+
+            while isPaused {
+                guard searchWork?.isCancelled == false else { return }
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+
+            if let result = await processSavedItem(item) {
+                buffer.add(result)
+                if buffer.isFull {
+                    await flushBuffer(&buffer, onInsert: onInsert)
+                }
+            }
+        }
     }
 
     private func processSavedItem(_ item: SavedResultsItem) async -> SearchResultItem? {
@@ -443,20 +439,15 @@ final class SearchViewModel: ViewModelBase {
 
         let mode = SearchMode(rawValue: item.searchMode) ?? .phrase
 
-        // Ekstrak keyword individual sesuai mode — penting untuk NEAR agar
-        // snippetAround bisa menemukan spanning window antar semua kata kunci.
         let keywords = FtsQueryParser.extractKeywords(query: item.query, mode: mode)
             .map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
 
-        let snippet: String
-        let attributed: NSAttributedString
-        if mode == .near {
-            snippet = normalized.snippetNear(keywords: keywords, nearDistance: item.nearDistance, contextLength: 60)
-            attributed = snippet.highlightedAttributedText(keywords: keywords, nearDistance: item.nearDistance)
-        } else {
-            snippet = normalized.snippetAround(keywords: keywords, contextLength: 60)
-            attributed = snippet.highlightedAttributedText(keywords: keywords)
-        }
+        let (_, attributed) = makeSnippetAndAttributedText(
+            normalized: normalized,
+            keywords: keywords,
+            mode: mode,
+            nearDistance: item.nearDistance
+        )
 
         return SearchResultItem(
             archive: item.archive,
@@ -467,6 +458,23 @@ final class SearchViewModel: ViewModelBase {
             part: bookContent.part,
             attributedText: attributed
         )
+    }
+
+    private func makeSnippetAndAttributedText(
+        normalized: String,
+        keywords: [String],
+        mode: SearchMode,
+        nearDistance: Int
+    ) -> (String, NSAttributedString) {
+        if mode == .near {
+            let snippet = normalized.snippetNear(keywords: keywords, nearDistance: nearDistance, contextLength: 60)
+            let attributed = snippet.highlightedAttributedText(keywords: keywords, nearDistance: nearDistance)
+            return (snippet, attributed)
+        } else {
+            let snippet = normalized.snippetAround(keywords: keywords, contextLength: 60)
+            let attributed = snippet.highlightedAttributedText(keywords: keywords)
+            return (snippet, attributed)
+        }
     }
 
     private func flushBuffer(
@@ -518,66 +526,79 @@ final class SearchViewModel: ViewModelBase {
         completedRowsInTable = 0
         totalRowsInTable = 0
 
-        let tablesToScan: Set<String>
-        #if os(iOS)
-        if selectedBookIds.isEmpty {
-            tablesToScan = ldm.getCheckedTables(displayedCategories)
-        } else {
-            tablesToScan = Set(selectedBookIds.map { "b\($0)" })
-        }
-        #else
-        if !selectedBookIds.isEmpty {
-            tablesToScan = Set(selectedBookIds.map { "b\($0)" })
-        } else if !targetBookId.isEmpty {
-            tablesToScan = [targetBookId]
-        } else {
-            tablesToScan = []
-        }
-        #endif
-
+        let tablesToScan = resolveTablesToScan()
         if tablesToScan.isEmpty { stopSearch(); return }
 
         searchWork = Task.detached(priority: .userInitiated) { [weak self, tablesToScan] in
             guard let self else { return }
 
-            await ldm.performSearch(
+            let searchParams = LibrarySearchParams(
                 tableToScan: tablesToScan,
                 searchEngine: searchEngine,
                 query: query.replacing("،", with: ","),
                 mode: searchMode,
-                nearDistance: nearDistance,
-                onInitialize: { [weak self] total in
-                    self?.totalTables = total
-                    self?.completedTables = 0
-                    #if os(macOS)
-                    self?.searchDidInitialize.send(total)
-                    #endif
-                },
-                onTableProgress: { [weak self] completed in
-                    self?.completedTables = completed
-                    #if os(macOS)
-                    self?.searchProgressDidUpdate.send((completed: completed, self?.totalTables ?? 0))
-                    #endif
-                },
-                onRowProgress: { [weak self] _, tableName, current, total in
-                    self?.currentTable = tableName
-                    self?.completedRowsInTable = current
-                    self?.totalRowsInTable = total
-                    #if os(macOS)
-                    self?.rowProgressDidUpdate.send((completed: current, total: total))
-                    #endif
-                },
-                completion: { [weak self] item in
-                    self?.results.append(item)
-                    #if os(macOS)
-                    self?.searchDidReceiveResult.send()
-                    #endif
-                },
-                onComplete: { [weak self] in
-                    self?.stopSearch()
-                }
+                nearDistance: nearDistance
+            )
+            let searchCallbacks = makeLibrarySearchCallbacks()
+
+            await ldm.performSearch(
+                params: searchParams,
+                callbacks: searchCallbacks
             )
         }
+    }
+
+    private func resolveTablesToScan() -> Set<String> {
+        #if os(iOS)
+        if selectedBookIds.isEmpty {
+            return ldm.getCheckedTables(displayedCategories)
+        } else {
+            return Set(selectedBookIds.map { "b\($0)" })
+        }
+        #else
+        if !selectedBookIds.isEmpty {
+            return Set(selectedBookIds.map { "b\($0)" })
+        } else if !targetBookId.isEmpty {
+            return [targetBookId]
+        } else {
+            return []
+        }
+        #endif
+    }
+
+    private func makeLibrarySearchCallbacks() -> LibrarySearchCallbacks {
+        LibrarySearchCallbacks(
+            onInitialize: { [weak self] total in
+                self?.totalTables = total
+                self?.completedTables = 0
+                #if os(macOS)
+                self?.searchDidInitialize.send(total)
+                #endif
+            },
+            onTableProgress: { [weak self] completed in
+                self?.completedTables = completed
+                #if os(macOS)
+                self?.searchProgressDidUpdate.send((completed: completed, self?.totalTables ?? 0))
+                #endif
+            },
+            onRowProgress: { [weak self] _, tableName, current, total in
+                self?.currentTable = tableName
+                self?.completedRowsInTable = current
+                self?.totalRowsInTable = total
+                #if os(macOS)
+                self?.rowProgressDidUpdate.send((completed: current, total: total))
+                #endif
+            },
+            completion: { [weak self] item in
+                self?.results.append(item)
+                #if os(macOS)
+                self?.searchDidReceiveResult.send()
+                #endif
+            },
+            onComplete: { [weak self] in
+                self?.stopSearch()
+            }
+        )
     }
 
     func stopSearch() {

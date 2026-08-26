@@ -7,6 +7,15 @@
 
 import UIKit
 
+struct TagFilterHeaderConfiguration {
+    let allTags: [String]
+    let selectedTags: Set<String>
+    let isAndMode: Bool
+    let onFilterTap: () -> Void
+    let onModeTap: () -> Void
+    let onTagToggle: (String) -> Void
+}
+
 final class iOSTagFilterHeaderView: UICollectionReusableView {
     static let reuseIdentifier = "iOSTagFilterHeaderView"
 
@@ -90,24 +99,17 @@ final class iOSTagFilterHeaderView: UICollectionReusableView {
         ])
     }
 
-    func configure(
-        allTags: [String],
-        selectedTags: Set<String>,
-        isAndMode: Bool,
-        onFilterTap: @escaping () -> Void,
-        onModeTap: @escaping () -> Void,
-        onTagToggle: @escaping (String) -> Void
-    ) {
-        self.onFilterTap = onFilterTap
-        self.onModeTap = onModeTap
-        self.onTagToggle = onTagToggle
+    func configure(with config: TagFilterHeaderConfiguration) {
+        self.onFilterTap = config.onFilterTap
+        self.onModeTap = config.onModeTap
+        self.onTagToggle = config.onTagToggle
 
-        isHidden = allTags.isEmpty
-        if allTags.isEmpty { return }
+        isHidden = config.allTags.isEmpty
+        if config.allTags.isEmpty { return }
 
         // Update mode button appearance
         modeButton.configurationUpdateHandler = { button in
-            var modeConfig: UIButton.Configuration = isAndMode ? .filled() : .plain()
+            var modeConfig: UIButton.Configuration = config.isAndMode ? .filled() : .plain()
             modeConfig.image = UIImage(systemName: "line.3.horizontal.decrease")
             modeConfig.contentInsets = .init(top: 6, leading: 6, bottom: 6, trailing: 6)
             modeConfig.cornerStyle = .capsule
@@ -117,7 +119,7 @@ final class iOSTagFilterHeaderView: UICollectionReusableView {
         // Incrementally update chips in stack view
         let existingButtons = chipsStackView.arrangedSubviews.compactMap { $0 as? UIButton }
         let existingTitles = Set(existingButtons.compactMap { $0.configuration?.title })
-        let newTagsSet = Set(allTags)
+        let newTagsSet = Set(config.allTags)
 
         // Remove stale chips
         for btn in existingButtons {
@@ -128,8 +130,8 @@ final class iOSTagFilterHeaderView: UICollectionReusableView {
         }
 
         // Add new chips
-        for tag in allTags where !existingTitles.contains(tag) {
-            let isSelected = selectedTags.contains(tag)
+        for tag in config.allTags where !existingTitles.contains(tag) {
+            let isSelected = config.selectedTags.contains(tag)
             let chip = makeChipButton(tag: tag, isSelected: isSelected)
             let insertIdx = chipsStackView
                 .arrangedSubviews.compactMap { ($0 as? UIButton)?.configuration?.title }.enumerated()
@@ -141,7 +143,7 @@ final class iOSTagFilterHeaderView: UICollectionReusableView {
         // Sync selection state of all chips
         for view in chipsStackView.arrangedSubviews {
             guard let btn = view as? UIButton, let title = btn.configuration?.title else { continue }
-            let isSelected = selectedTags.contains(title)
+            let isSelected = config.selectedTags.contains(title)
             if btn.isSelected != isSelected {
                 btn.isSelected = isSelected
             }

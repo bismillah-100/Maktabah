@@ -12,9 +12,8 @@ class MainWindow: NSWindow {
     private weak var modeSelectorControl: NSSegmentedControl?
 
     // MARK: - Single Container (state terjaga)
-    lazy var splitVC: SplitVC = {
-        SplitVC()
-    }()
+
+    lazy var splitVC: SplitVC = .init()
 
     var currentMode: AppMode {
         splitVC.currentMode
@@ -22,8 +21,7 @@ class MainWindow: NSWindow {
 
     static var rtl: Bool {
         let languageCode = Locale.current.language.languageCode?.identifier ?? "en"
-        let isRTL = Locale.Language(identifier: languageCode).characterDirection == .rightToLeft
-        return isRTL
+        return Locale.Language(identifier: languageCode).characterDirection == .rightToLeft
     }
 
     override init(
@@ -33,7 +31,7 @@ class MainWindow: NSWindow {
         defer flag: Bool
     ) {
         super.init(contentRect: contentRect, styleMask: styleMask, backing: backing, defer: flag)
-        self.setFrameAutosaveName("MainWindow")
+        setFrameAutosaveName("MainWindow")
     }
 
     override func awakeFromNib() {
@@ -105,13 +103,13 @@ class MainWindow: NSWindow {
             mainToolbar.allowsDisplayModeCustomization = true
             #endif
         }
-        
+
         toolbar = mainToolbar
         toolbarConfigured = true
     }
 
     private func setupToolbarTargets() {
-        guard let toolbar = toolbar else { return }
+        guard let toolbar else { return }
 
         // Set target/action langsung ke view dari masing-masing item
         toolbar.item(with: .sidebarLeading)?
@@ -163,7 +161,8 @@ class MainWindow: NSWindow {
 
     func switchMode(_ sender: NSMenuItem) {
         guard let mode = sender.representedObject as? AppMode,
-              mode != currentMode else {
+              mode != currentMode
+        else {
             return
         }
 
@@ -188,7 +187,7 @@ class MainWindow: NSWindow {
         setAnnotationsPanelDelegate()
         let selector =
             modeSelectorControl
-            ?? (toolbar?.item(with: .modeSelector)?.view as? NSSegmentedControl)
+                ?? (toolbar?.item(with: .modeSelector)?.view as? NSSegmentedControl)
         selector?.selectedSegment = currentMode.rawValue
     }
 
@@ -214,6 +213,7 @@ class MainWindow: NSWindow {
 }
 
 // MARK: - Toolbar (Programmatic)
+
 extension MainWindow: NSToolbarDelegate {
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         var items: [NSToolbarItem.Identifier] = [
@@ -238,7 +238,7 @@ extension MainWindow: NSToolbarDelegate {
             .searchContents,
             .sidebarTrailing,
             .flexibleSpace,
-            .space
+            .space,
         ])
 
         return items
@@ -267,7 +267,7 @@ extension MainWindow: NSToolbarDelegate {
         // Melanjutkan sisa item setelah separator
         items.append(contentsOf: [
             .searchContents,
-            .sidebarTrailing
+            .sidebarTrailing,
         ])
 
         return items
@@ -296,17 +296,16 @@ extension MainWindow: NSToolbarDelegate {
             }
 
             let viewerContainer = rootSplitVC.viewerSplitVC
-            let trackingSeparator = NSTrackingSeparatorToolbarItem(
+            return NSTrackingSeparatorToolbarItem(
                 identifier: itemIdentifier,
                 splitView: viewerContainer.splitView,
                 dividerIndex: 0
             )
-            return trackingSeparator
 
         case .modeSelector:
             let control = makeModeSelector()
             modeSelectorControl = control
-            return makeViewToolbarItem(
+            let config = ViewToolbarItemConfig(
                 identifier: .modeSelector,
                 label: "Mode",
                 paletteLabel: "Switch Mode",
@@ -315,10 +314,11 @@ extension MainWindow: NSToolbarDelegate {
                 image: nil,
                 isNavigational: true
             )
+            return makeViewToolbarItem(config: config)
 
         case .navSegment:
             let control = makeNavSegment()
-            return makeViewToolbarItem(
+            let config = ViewToolbarItemConfig(
                 identifier: .navSegment,
                 label: "Navigasi",
                 paletteLabel: "Navigasi",
@@ -327,127 +327,130 @@ extension MainWindow: NSToolbarDelegate {
                 image: nil,
                 isNavigational: false
             )
+            return makeViewToolbarItem(config: config)
 
-        case .sidebarLeading:
-            return makeButtonToolbarItem(
-                identifier: .sidebarLeading,
+        default:
+            return makeActionButtonToolbarItem(identifier: itemIdentifier) ?? NSToolbarItem(itemIdentifier: itemIdentifier)
+        }
+    }
+
+    private struct ActionButtonConfig {
+        let label: String
+        let paletteLabel: String
+        let systemImageName: String
+        let action: Selector
+        let tooltip: String
+        let isNavigational: Bool
+    }
+
+    private static var actionButtonConfigs: [NSToolbarItem.Identifier: ActionButtonConfig] {
+        [
+            .sidebarLeading: ActionButtonConfig(
                 label: "Library",
                 paletteLabel: "Library",
                 systemImageName: "sidebar.leading",
-                action: #selector(sidebarLeadingToggle(_:)),
+                action: #selector(MainWindow.sidebarLeadingToggle(_:)),
                 tooltip: String(localized: "Library"),
                 isNavigational: false
-            )
-
-        case .searchSidebarLeadingContent:
-            return makeButtonToolbarItem(
-                identifier: .searchSidebarLeadingContent,
+            ),
+            .searchSidebarLeadingContent: ActionButtonConfig(
                 label: "Search Book",
                 paletteLabel: "Search Book",
                 systemImageName: "line.3.horizontal.decrease.circle",
-                action: #selector(hideLibrarySearchField(_:)),
+                action: #selector(MainWindow.hideLibrarySearchField(_:)),
                 tooltip: String(localized: "Search Book"),
                 isNavigational: false
-            )
-
-        case .bookInfo:
-            return makeButtonToolbarItem(
-                identifier: .bookInfo,
+            ),
+            .bookInfo: ActionButtonConfig(
                 label: "Info",
                 paletteLabel: "Book Info",
                 systemImageName: "info.circle",
-                action: #selector(bookInfo(_:)),
+                action: #selector(MainWindow.bookInfo(_:)),
                 tooltip: String(localized: "Book Info"),
                 isNavigational: false
-            )
-
-        case .searchField:
-            return makeButtonToolbarItem(
-                identifier: .searchField,
+            ),
+            .searchField: ActionButtonConfig(
                 label: "Search In Book",
                 paletteLabel: "Search Current Book",
                 systemImageName: "doc.text.magnifyingglass",
-                action: #selector(searchPopover(_:)),
+                action: #selector(MainWindow.searchPopover(_:)),
                 tooltip: String(localized: .searchInThisBook),
                 isNavigational: false
-            )
-
-        case .pageSlider:
-            return makeButtonToolbarItem(
-                identifier: .pageSlider,
+            ),
+            .pageSlider: ActionButtonConfig(
                 label: "Page",
                 paletteLabel: "Page",
                 systemImageName: "slider.horizontal.below.rectangle",
-                action: #selector(navigationPage(_:)),
+                action: #selector(MainWindow.navigationPage(_:)),
                 tooltip: String(localized: "Navigation Page"),
                 isNavigational: false
-            )
-
-        case .textViewOptions:
-            return makeButtonToolbarItem(
-                identifier: .textViewOptions,
+            ),
+            .textViewOptions: ActionButtonConfig(
                 label: "View",
                 paletteLabel: "View",
                 systemImageName: "textformat.size.ar",
-                action: #selector(viewOptions(_:)),
+                action: #selector(MainWindow.viewOptions(_:)),
                 tooltip: String(localized: "View Options"),
                 isNavigational: false
-            )
-
-        case .copyDetails:
-            return makeButtonToolbarItem(
-                identifier: .copyDetails,
+            ),
+            .copyDetails: ActionButtonConfig(
                 label: "Copy",
                 paletteLabel: "Copy + Detail",
                 systemImageName: "doc.on.clipboard",
-                action: #selector(copyWith(_:)),
+                action: #selector(MainWindow.copyWith(_:)),
                 tooltip: String(localized: "Copy"),
                 isNavigational: false
-            )
-
-        case .displayNotations:
-            return makeButtonToolbarItem(
-                identifier: .displayNotations,
+            ),
+            .displayNotations: ActionButtonConfig(
                 label: "Annotations",
                 paletteLabel: "Annotations",
                 systemImageName: "quote.closing",
-                action: #selector(displayAllNotations(_:)),
+                action: #selector(MainWindow.displayAllNotations(_:)),
                 tooltip: String(localized: "All Anotations"),
                 isNavigational: false
-            )
-
-        case .searchContents:
-            return makeButtonToolbarItem(
-                identifier: .searchContents,
+            ),
+            .searchContents: ActionButtonConfig(
                 label: "Search Contents",
                 paletteLabel: "Search Contents",
                 systemImageName: "rectangle.and.text.magnifyingglass.rtl",
-                action: #selector(searchSidebarTrailingContent(_:)),
+                action: #selector(MainWindow.searchSidebarTrailingContent(_:)),
                 tooltip: String(localized: "Search Contents"),
-                isNavigational: Self.rtl
-            )
-
-        case .sidebarTrailing:
-            return makeButtonToolbarItem(
-                identifier: .sidebarTrailing,
+                isNavigational: rtl
+            ),
+            .sidebarTrailing: ActionButtonConfig(
                 label: "Contents",
                 paletteLabel: "Contents",
                 systemImageName: "sidebar.trailing",
-                action: #selector(sidebarTrailing(_:)),
+                action: #selector(MainWindow.sidebarTrailing(_:)),
                 tooltip: String(localized: "Contents"),
-                isNavigational: Self.rtl
-            )
+                isNavigational: rtl
+            ),
+        ]
+    }
 
-        default:
-            return NSToolbarItem(itemIdentifier: itemIdentifier)
-        }
+    private struct ViewToolbarItemConfig {
+        let identifier: NSToolbarItem.Identifier
+        let label: String
+        let paletteLabel: String
+        let toolTip: String?
+        let view: NSView
+        var image: NSImage? = nil
+        var isNavigational: Bool = false
+    }
+
+    private func makeActionButtonToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem? {
+        guard let config = Self.actionButtonConfigs[identifier] else { return nil }
+        return makeButtonToolbarItem(
+            identifier: identifier,
+            config: config
+        )
     }
 
     private func makeModeSelector() -> NSSegmentedControl {
         let images = [
             ReusableFunc.systemImage(named: "book"),
             ReusableFunc.systemImage(named: "text.viewfinder"),
-            ReusableFunc.systemImage(named: "person.text.rectangle")
+            ReusableFunc.systemImage(named: "person.text.rectangle"),
         ]
 
         let control = NSSegmentedControl()
@@ -470,74 +473,53 @@ extension MainWindow: NSToolbarDelegate {
     }
 
     private func makeNavSegment() -> NSSegmentedControl {
-        let control = NSSegmentedControl()
-        control.segmentCount = 2
-        control.trackingMode = .momentary
-        control.userInterfaceLayoutDirection = .leftToRight
-        control.setImage(ReusableFunc.systemImage(named: "arrow.left"), forSegment: 0)
-        control.setImage(ReusableFunc.systemImage(named: "arrow.right"), forSegment: 1)
-        control.setWidth(23, forSegment: 0)
-        control.setWidth(23, forSegment: 1)
-        control.target = self
-        control.action = #selector(pageControl(_:))
-        control.setAccessibilityLabel(String(localized: "Navigation"))
-        control.toolTip = String(localized: "Navigation")
-        control.setToolTip(String(localized: "Next Page"), forSegment: 0)
-        control.setToolTip(String(localized: "Previous Page"), forSegment: 1)
-        return control
+        NSSegmentedControl.makeNavigationControl(
+            target: self,
+            action: #selector(pageControl(_:))
+        )
     }
 
     private func makeButtonToolbarItem(
         identifier: NSToolbarItem.Identifier,
-        label: String,
-        paletteLabel: String,
-        systemImageName: String,
-        action: Selector,
-        tooltip: String?,
-        isNavigational: Bool
+        config: ActionButtonConfig
     ) -> NSToolbarItem {
-        let image = ReusableFunc.systemImage(named: systemImageName)
-        let button = NSButton(image: image, target: self, action: action)
+        let image = ReusableFunc.systemImage(named: config.systemImageName)
+        let button = NSButton(image: image, target: self, action: config.action)
         button.bezelStyle = .texturedRounded
         button.setButtonType(.momentaryPushIn)
         button.imagePosition = .imageOnly
         button.imageScaling = .scaleProportionallyDown
 
-        return makeViewToolbarItem(
+        let viewConfig = ViewToolbarItemConfig(
             identifier: identifier,
-            label: label,
-            paletteLabel: paletteLabel,
-            toolTip: tooltip,
+            label: config.label,
+            paletteLabel: config.paletteLabel,
+            toolTip: config.tooltip,
             view: button,
             image: image,
-            isNavigational: isNavigational
+            isNavigational: config.isNavigational
         )
+
+        return makeViewToolbarItem(config: viewConfig)
     }
 
-    private func makeViewToolbarItem(
-        identifier: NSToolbarItem.Identifier,
-        label: String,
-        paletteLabel: String,
-        toolTip: String?,
-        view: NSView,
-        image: NSImage?,
-        isNavigational: Bool
-    ) -> NSToolbarItem {
-        let item = NSToolbarItem(itemIdentifier: identifier)
-        item.label = label
-        item.paletteLabel = paletteLabel
-        item.toolTip = toolTip
-        item.view = view
-        item.isNavigational = isNavigational
+    private func makeViewToolbarItem(config: ViewToolbarItemConfig) -> NSToolbarItem {
+        let item = NSToolbarItem(itemIdentifier: config.identifier)
+        item.label = config.label
+        item.paletteLabel = config.paletteLabel
+        item.toolTip = config.toolTip
+        item.view = config.view
+        item.isNavigational = config.isNavigational
 
-        let menuItem = NSMenuItem(title: label, action: nil, keyEquivalent: "")
-        menuItem.image = image
+        let menuItem = NSMenuItem(title: config.label, action: nil, keyEquivalent: "")
+        menuItem.image = config.image
         item.menuFormRepresentation = menuItem
         return item
     }
 }
 
 // MARK: - Toolbar Actions (Delegasi ke SplitVC)
+
 extension MainWindow {
     @IBAction func modeSelectorChanged(_ sender: NSSegmentedControl) {
         if let mode = AppMode(rawValue: sender.selectedSegment) {

@@ -52,13 +52,7 @@ class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
                     guard let self else { return }
                     viewModel?.toggleCategorySelection(category)
                     onSelectionChanged?()
-                    
-                    var items: [LibraryItem] = dataSource.snapshot().itemIdentifiers.filter {
-                        if case .category = $0 { return true }
-                        return false
-                    }
-                    items.append(contentsOf: getAllBooks(in: category).map { .book($0) })
-                    reconfigureItems(items)
+                    reconfigureCategories(includingBooks: getAllBooks(in: category))
                 }
             }
 
@@ -81,17 +75,16 @@ class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
                 leadingAccessory = .icon(isDownloaded ? "book.fill" : "icloud.and.arrow.down")
             }
             let isAuthorMode = viewModel?.viewMode == .author
-            let indentationLevel: Int
-            if isAuthorMode {
-                indentationLevel = 1
+            let indentationLevel: Int = if isAuthorMode {
+                1
             } else {
-                indentationLevel = (LibraryDataManager.shared.categoryLevel(for: book) ?? 0) == 0 ? 1 : 2
+                (LibraryDataManager.shared.categoryLevel(for: book) ?? 0) == 0 ? 1 : 2
             }
 
             let config = ListContentConfiguration(
                 text: book.book,
                 font: font,
-                isDownloaded: (isDownloaded && isSelectionMode),
+                isDownloaded: isDownloaded && isSelectionMode,
                 leadingAccessory: leadingAccessory,
                 isExpanded: false,
                 root: false,
@@ -103,62 +96,41 @@ class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
             // Wire up checkbox tap handler for selection mode
             if isSelectionMode, let listContentView = cell.contentView as? ListContentView {
                 listContentView.onCheckboxTap = { [weak self] in
-                    guard let self else { return }
-                    self.viewModel?.toggleBookSelection(book)
-                    self.onSelectionChanged?()
-
-                    var items: [LibraryItem] = self.dataSource.snapshot().itemIdentifiers.filter {
-                        if case .category = $0 { return true }
-                        return false
-                    }
-                    items.append(.book(book))
-                    self.reconfigureItems(items)
+                    self?.handleBookSelectionToggle(book)
                 }
             }
 
             cell.applyThemeConfigurationUpdateHandler()
         }
     }
-}
 
-// MARK: - UICollectionViewDelegate
+    private func handleBookSelectionToggle(_ book: BooksData) {
+        viewModel?.toggleBookSelection(book)
+        onSelectionChanged?()
+        reconfigureCategories(includingBook: book)
+    }
 
-extension iOSLibraryViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
-
-        // In selection mode, category row tap should still expand/collapse
-        // Selection is handled via checkbox tap (onCheckboxTap)
-        switch item {
-        case let .category(category):
-            toggleCategory(category)
-        case let .book(book):
-            if viewModel?.isSelectionMode == true {
-                viewModel?.toggleBookSelection(book)
-                onSelectionChanged?()
-                var items: [LibraryItem] = dataSource.snapshot().itemIdentifiers.filter {
-                    if case .category = $0 { return true }
-                    return false
-                }
-                items.append(.book(book))
-                reconfigureItems(items)
-            } else {
-                onBookSelected?(book)
-            }
-        case .loadMore:
-            viewModel?.loadMoreAuthors()
+    override func didSelectBook(_ book: BooksData) {
+        if viewModel?.isSelectionMode == true {
+            handleBookSelectionToggle(book)
+        } else {
+            onBookSelected?(book)
         }
     }
 
-    func collectionView(_ collectionView: UICollectionView, canFocusItemAt indexPath: IndexPath) -> Bool {
-        !isGroup(dataSource.itemIdentifier(for: indexPath))
+    override func didSelectLoadMore() {
+        viewModel?.loadMoreAuthors()
     }
+}
 
+// MARK: - UICollectionViewDelegate Context Menu
+
+extension iOSLibraryViewController {
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
         guard let indexPath = indexPaths.first,
               let item = dataSource.itemIdentifier(for: indexPath),
               case let .book(book) = item,
-              let viewModel = viewModel
+              let viewModel
         else {
             return nil
         }
@@ -174,9 +146,8 @@ extension iOSLibraryViewController: UICollectionViewDelegate {
                 self?.onSelectionChanged?()
             }
 
-            let mainAction: UIAction
-            if isDownloaded {
-                mainAction = UIAction(
+            let mainAction = if isDownloaded {
+                UIAction(
                     title: String(localized: "Delete Download"),
                     image: UIImage(systemName: "trash"),
                     attributes: .destructive
@@ -184,7 +155,7 @@ extension iOSLibraryViewController: UICollectionViewDelegate {
                     self?.onDeleteBook?(book)
                 }
             } else {
-                mainAction = UIAction(title: String(localized: "Download"), image: UIImage(systemName: "icloud.and.arrow.down")) { _ in
+                UIAction(title: String(localized: "Download"), image: UIImage(systemName: "icloud.and.arrow.down")) { _ in
                     self?.onDownloadBook?(book)
                 }
             }

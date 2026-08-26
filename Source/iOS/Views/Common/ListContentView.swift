@@ -1,5 +1,5 @@
 //
-//  ListLayoutMetrics.swift
+//  ListContentView.swift
 //  Maktabah
 //
 //  Created by Ghoys Mawahib on 10/06/26.
@@ -33,7 +33,7 @@ class ListContentView: UIView, UIContentView {
     private var appliedConfiguration: ListContentConfiguration?
 
     var configuration: UIContentConfiguration {
-        get { return appliedConfiguration ?? ListContentConfiguration(root: false) }
+        get { appliedConfiguration ?? ListContentConfiguration(root: false) }
         set {
             guard let safeConfig = newValue as? ListContentConfiguration else { return }
             let oldConfig = appliedConfiguration // Simpan state sebelumnya
@@ -56,17 +56,19 @@ class ListContentView: UIView, UIContentView {
     }
 
     init(_ configuration: ListContentConfiguration) {
-        self.appliedConfiguration = configuration
+        appliedConfiguration = configuration
         super.init(frame: .zero)
         semanticContentAttribute = .forceLeftToRight
         setupViews()
         apply(configuration)
     }
 
-    required init?(coder: NSCoder) { fatalError() }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
 
     private func setupViews() {
-        // Leading stack: checkbox atau icon
         let leadingStack = UIStackView(arrangedSubviews: [checkboxButton, leadingIcon])
         leadingStack.axis = .horizontal
         leadingStack.alignment = .center
@@ -74,21 +76,16 @@ class ListContentView: UIView, UIContentView {
         leadingStack.translatesAutoresizingMaskIntoConstraints = false
         leadingStack.semanticContentAttribute = .forceLeftToRight
 
-        // Main stack: leading + label + chevron
-        let mainStack = UIStackView(arrangedSubviews: [label, leadingStack])
+        let mainStack = UIStackView(arrangedSubviews: [label, leadingStack, chevronIcon])
         mainStack.axis = .horizontal
         mainStack.alignment = .center
         mainStack.spacing = ListLayoutMetrics.imageGap
         mainStack.translatesAutoresizingMaskIntoConstraints = false
         mainStack.semanticContentAttribute = .forceLeftToRight
 
-        mainStack.addArrangedSubview(chevronIcon)
-
-        // Label mengisi sisa ruang, perataan kanan
         label.setContentHuggingPriority(.defaultLow, for: .horizontal)
         label.textAlignment = .right
 
-        // Definisikan ukuran statis menggunakan pusat metrics
         leadingIcon.setContentHuggingPriority(.required, for: .horizontal)
         leadingIcon.contentMode = .scaleAspectFit
         checkboxButton.setContentHuggingPriority(.required, for: .horizontal)
@@ -96,23 +93,24 @@ class ListContentView: UIView, UIContentView {
         chevronIcon.setContentHuggingPriority(.required, for: .horizontal)
 
         addSubview(mainStack)
+        setupStackConstraints(mainStack: mainStack)
 
+        checkboxButton.addTarget(self, action: #selector(checkboxTapped), for: .touchUpInside)
+    }
+
+    private func setupStackConstraints(mainStack: UIStackView) {
         let trailing = mainStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -ListLayoutMetrics.defaultPadding)
         trailingConstraint = trailing
 
         let topConstraint = mainStack.topAnchor.constraint(equalTo: topAnchor)
-        topConstraint.priority = .init(999)
         let bottomConstraint = mainStack.bottomAnchor.constraint(equalTo: bottomAnchor)
-        bottomConstraint.priority = .init(999)
         let leadingConstraint = mainStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: ListLayoutMetrics.defaultPadding)
-        leadingConstraint.priority = .init(999)
-        trailing.priority = .init(999)
+        let heightConstraint = heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+
+        [topConstraint, bottomConstraint, leadingConstraint, trailing, heightConstraint].forEach { $0.priority = .init(999) }
 
         NSLayoutConstraint.activate([
-            topConstraint,
-            bottomConstraint,
-            leadingConstraint,
-            trailing,
+            topConstraint, bottomConstraint, leadingConstraint, trailing, heightConstraint,
             leadingIcon.widthAnchor.constraint(equalToConstant: ListLayoutMetrics.imageWidth),
             leadingIcon.heightAnchor.constraint(equalToConstant: ListLayoutMetrics.imageWidth),
             checkboxButton.widthAnchor.constraint(equalToConstant: ListLayoutMetrics.imageWidth),
@@ -120,12 +118,6 @@ class ListContentView: UIView, UIContentView {
             chevronIcon.widthAnchor.constraint(equalToConstant: ListLayoutMetrics.chevronWidth),
             chevronIcon.heightAnchor.constraint(equalToConstant: ListLayoutMetrics.chevronWidth),
         ])
-        
-        let heightConstraint = heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        heightConstraint.priority = .init(999)
-        heightConstraint.isActive = true
-
-        checkboxButton.addTarget(self, action: #selector(checkboxTapped), for: .touchUpInside)
     }
 
     @objc private func checkboxTapped() {
@@ -133,9 +125,9 @@ class ListContentView: UIView, UIContentView {
     }
 
     private func apply(_ config: ListContentConfiguration, oldConfig: ListContentConfiguration? = nil) {
-        let isModeSwitching = self.window != nil &&
-        oldConfig != nil &&
-        oldConfig?.leadingAccessory.isCheckboxMode != config.leadingAccessory.isCheckboxMode
+        let isModeSwitching = window != nil &&
+            oldConfig != nil &&
+            oldConfig?.leadingAccessory.isCheckboxMode != config.leadingAccessory.isCheckboxMode
 
         let updateUI = { [weak self] in
             guard let self else { return }
@@ -145,49 +137,12 @@ class ListContentView: UIView, UIContentView {
             )
 
             chevronIcon.isHidden = !config.root
-
             label.text = config.text
             label.font = config.font
             label.textColor = config.isDownloaded ? .secondaryLabel : .label
             label.numberOfLines = 1
 
-            switch config.leadingAccessory {
-            case .none:
-                leadingIcon.isHidden = true
-                leadingIcon.alpha = 0
-                checkboxButton.isHidden = true
-                checkboxButton.alpha = 0
-
-            case .icon(let symbolName):
-                leadingIcon.isHidden = false
-                leadingIcon.alpha = 1
-                checkboxButton.isHidden = true
-                checkboxButton.alpha = 0
-                leadingIcon.image = UIImage(systemName: symbolName)
-                leadingIcon.tintColor = .tintColor
-
-            case .checkbox(let state):
-                leadingIcon.isHidden = true
-                leadingIcon.alpha = 0
-                checkboxButton.isHidden = false
-                checkboxButton.alpha = 1
-
-                let imageName: String
-                let tintColor: UIColor
-                switch state {
-                case .unchecked:
-                    imageName = "circle"
-                    tintColor = .secondaryLabel
-                case .checked:
-                    imageName = config.isDownloaded ? "xmark.circle.fill" : "checkmark.circle.fill"
-                    tintColor = .tintColor
-                case .partial:
-                    imageName = "minus.circle.fill"
-                    tintColor = .tintColor
-                }
-                checkboxButton.setImage(UIImage(systemName: imageName), for: .normal)
-                checkboxButton.tintColor = tintColor
-            }
+            applyAccessoryConfiguration(config)
 
             chevronIcon.image = UIImage(systemName: "chevron.left")?
                 .withConfiguration(UIImage.SymbolConfiguration(pointSize: 13, weight: .bold))
@@ -201,17 +156,51 @@ class ListContentView: UIView, UIContentView {
         }
 
         if isModeSwitching {
-            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .allowUserInteraction]) {
-                updateUI()
-            }
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .allowUserInteraction]) { updateUI() }
+        } else if let old = oldConfig, old.leadingAccessory != config.leadingAccessory, window != nil {
+            UIView.transition(with: checkboxButton, duration: 0.15, options: [.transitionCrossDissolve, .allowUserInteraction]) { updateUI() }
         } else {
-            if let old = oldConfig, old.leadingAccessory != config.leadingAccessory, window != nil {
-                UIView.transition(with: checkboxButton, duration: 0.15, options: [.transitionCrossDissolve, .allowUserInteraction]) {
-                    updateUI()
-                }
-            } else {
-                updateUI()
+            updateUI()
+        }
+    }
+
+    private func applyAccessoryConfiguration(_ config: ListContentConfiguration) {
+        switch config.leadingAccessory {
+        case .none:
+            leadingIcon.isHidden = true
+            leadingIcon.alpha = 0
+            checkboxButton.isHidden = true
+            checkboxButton.alpha = 0
+
+        case let .icon(symbolName):
+            leadingIcon.isHidden = false
+            leadingIcon.alpha = 1
+            checkboxButton.isHidden = true
+            checkboxButton.alpha = 0
+            leadingIcon.image = UIImage(systemName: symbolName)
+            leadingIcon.tintColor = .tintColor
+
+        case let .checkbox(state):
+            leadingIcon.isHidden = true
+            leadingIcon.alpha = 0
+            checkboxButton.isHidden = false
+            checkboxButton.alpha = 1
+
+            let imageName: String
+            let tintColor: UIColor
+            switch state {
+            case .unchecked:
+                imageName = "circle"
+                tintColor = .secondaryLabel
+            case .checked:
+                imageName = config.isDownloaded ? "xmark.circle.fill" : "checkmark.circle.fill"
+                tintColor = .tintColor
+            case .partial:
+                imageName = "minus.circle.fill"
+                tintColor = .tintColor
             }
+            checkboxButton.setImage(UIImage(systemName: imageName), for: .normal)
+            checkboxButton.tintColor = tintColor
         }
     }
 }

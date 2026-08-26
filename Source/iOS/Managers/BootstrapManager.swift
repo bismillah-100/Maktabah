@@ -63,20 +63,14 @@ final class iOSBootstrapManager {
 
     func startDownload() {
         isChecking = false
-        coreDownloadState.phase = .downloading
-        coreDownloadState.progress = 0
-        coreDownloadState.detail = ""
+        resetDownloadState()
 
         downloader.startDownload(
-            onProgress: { [weak self] progress, detail in
-                self?.coreDownloadState.progress = progress
-                self?.coreDownloadState.detail = detail
-            },
+            onProgress: makeProgressHandler(),
             onCompletion: { [weak self] error in
                 guard let self else { return }
                 if let error {
-                    coreDownloadState.phase = .error(error.localizedDescription)
-                    coreDownloadState.progress = 0
+                    handleDownloadError(error)
                     return
                 }
                 finishSetup()
@@ -100,7 +94,7 @@ final class iOSBootstrapManager {
         Task.detached(priority: .low) { [weak self] in
             let result = await CoreUpdateChecker.checkAsync()
 
-            guard case .updateAvailable(let newVersion) = result else { return }
+            guard case let .updateAvailable(newVersion) = result else { return }
 
             await MainActor.run { [weak self] in
                 self?.availableCoreVersion = newVersion
@@ -112,24 +106,16 @@ final class iOSBootstrapManager {
     func performCoreUpdate() {
         guard let version = availableCoreVersion else { return }
         isUpdating = true
-
-        // Reset state untuk download
-        coreDownloadState.phase = .downloading
-        coreDownloadState.progress = 0
-        coreDownloadState.detail = ""
+        resetDownloadState()
 
         downloader.updateToVersion(
             version,
-            onProgress: { [weak self] progress, detail in
-                self?.coreDownloadState.progress = progress
-                self?.coreDownloadState.detail = detail
-            },
+            onProgress: makeProgressHandler(),
             onCompletion: { [weak self] error in
                 guard let self else { return }
 
                 if let error {
-                    coreDownloadState.phase = .error(error.localizedDescription)
-                    coreDownloadState.progress = 0
+                    handleDownloadError(error)
                     showCoreUpdateAlert = false
                     isUpdating = false
                     return
@@ -142,6 +128,28 @@ final class iOSBootstrapManager {
                 isUpdating = false
             }
         )
+    }
+
+    private func resetDownloadState() {
+        coreDownloadState.phase = .downloading
+        coreDownloadState.progress = 0
+        coreDownloadState.detail = ""
+    }
+
+    private func makeProgressHandler() -> (Double, String) -> Void {
+        { [weak self] progress, detail in
+            self?.handleDownloadProgress(progress: progress, detail: detail)
+        }
+    }
+
+    private func handleDownloadProgress(progress: Double, detail: String) {
+        coreDownloadState.progress = progress
+        coreDownloadState.detail = detail
+    }
+
+    private func handleDownloadError(_ error: Error) {
+        coreDownloadState.phase = .error(error.localizedDescription)
+        coreDownloadState.progress = 0
     }
 
     func reloadLibrary(isCancellable: Bool = false) {

@@ -9,7 +9,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-enum AnnotationSearchScope: Int, Sendable, CaseIterable, Identifiable {
+enum AnnotationSearchScope: Int, CaseIterable, Identifiable {
     case all = 0
     case book = 1
     case context = 2
@@ -398,32 +398,11 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     private func filterNodes(_ nodes: [AnnotationNode], with query: String) -> [AnnotationNode] {
         var result: [AnnotationNode] = []
-        let query = query.normalizeArabic(false)
+        let normalizedQuery = query.normalizeArabic(false)
 
         for node in nodes {
-            var matchingChildren: [AnnotationNode] = []
-            if !node.children.isEmpty {
-                matchingChildren = filterNodes(node.children, with: query)
-            }
-
-            let matchesSelf: Bool = {
-                if searchScope == .all || searchScope == .book {
-                    if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
-                }
-
-                if let ann = node.annotation {
-                    if searchScope == .all || searchScope == .context {
-                        if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }
-                    }
-                    if searchScope == .all || searchScope == .note {
-                        if let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) { return true }
-                    }
-                    if searchScope == .all || searchScope == .tag {
-                        if ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) { return true }
-                    }
-                }
-                return false
-            }()
+            let matchingChildren = node.children.isEmpty ? [] : filterNodes(node.children, with: normalizedQuery)
+            let matchesSelf = nodeMatchesQuery(node, query: normalizedQuery)
 
             if matchesSelf {
                 let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: node.annotation)
@@ -436,6 +415,25 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             }
         }
         return result
+    }
+
+    private func nodeMatchesQuery(_ node: AnnotationNode, query: String) -> Bool {
+        if searchScope == .all || searchScope == .book {
+            if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
+        }
+
+        guard let ann = node.annotation else { return false }
+
+        if searchScope == .all || searchScope == .context, ann.context.normalizeArabic(false).localizedStandardContains(query) {
+            return true
+        }
+        if searchScope == .all || searchScope == .note, let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) {
+            return true
+        }
+        if searchScope == .all || searchScope == .tag, ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) {
+            return true
+        }
+        return false
     }
 
     func deleteAnnotation(id: Int64) {

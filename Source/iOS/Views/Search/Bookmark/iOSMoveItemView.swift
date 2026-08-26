@@ -5,10 +5,9 @@ import SwiftUI
 /// Sheet untuk memilih folder tujuan saat memindahkan folder atau result.
 struct iOSMoveItemView: View {
     let target: MoveTarget
-    @Environment(\.dismiss) private var dismiss
-
     let viewModel: ResultsViewModel = .shared
 
+    @Environment(\.dismiss) private var dismiss
     @State private var selectedFolderId: Int64? = nil // nil = Root
     @State private var alertMessage = ""
     @State private var showAlert = false
@@ -49,14 +48,12 @@ struct iOSMoveItemView: View {
         }
     }
 
-
-
     // MARK: - Disabled destinations
 
     /// Untuk folder move: nonaktifkan diri sendiri + semua descendant.
     private var disabledFolderIds: Set<Int64> {
         guard case .folder(let node) = target else { return [] }
-        return Set(getAllDescendantIds(of: node))
+        return Set(node.allDescendantIds)
     }
 
     /// Root dinonaktifkan jika target sudah ada di root.
@@ -66,19 +63,6 @@ struct iOSMoveItemView: View {
             return (viewModel.parentById[node.id] ?? nil) == nil
         case .result(let node):
             return node.parentId == nil
-        }
-    }
-
-    private func getAllDescendantIds(of node: FolderNode) -> [Int64] {
-        var ids: [Int64] = []
-        _getAllDescendantIds(of: node, ids: &ids)
-        return ids
-    }
-
-    private func _getAllDescendantIds(of node: FolderNode, ids: inout [Int64]) {
-        ids.append(node.id)
-        for child in node.children {
-            _getAllDescendantIds(of: child, ids: &ids)
         }
     }
 

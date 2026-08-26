@@ -56,46 +56,60 @@ class LibraryViewManager: NSObject {
             }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] update in
-                guard let self else { return }
-                switch update {
-                case .reloadData:
-                    outlineView.reloadData()
-                    if viewModel.searchQuery.isEmpty {
-                        restoreSelection(byBookName: viewModel.selectedBookName)
-                    }
-                case let .reloadItem(item, reloadChildren):
-                    outlineView.reloadItem(item, reloadChildren: reloadChildren)
-                case let .expandItem(item):
-                    if let category = item as? CategoryData {
-                        outlineView.expandItem(category, expandChildren: true)
-                    } else if let bookName = item as? String {
-                        restoreSelection(byBookName: bookName)
-                    } else {
-                        outlineView.expandItem(item, expandChildren: true)
-                    }
-                case let .scrollRowToVisible(item):
-                    let row = outlineView.row(forItem: item)
-                    if row >= 0 {
-                        outlineView.scrollRowToVisible(row)
-                    }
-                case .beginUpdates:
-                    outlineView.beginUpdates()
-                case .endUpdates:
-                    outlineView.endUpdates()
-                case let .removeItems(indexes, parent):
-                    outlineView.removeItems(at: indexes, inParent: parent, withAnimation: [.slideUp])
-                case let .insertItems(indexes, parent):
-                    outlineView.insertItems(at: indexes, inParent: parent, withAnimation: [.slideDown])
-                    if viewModel.isFlatMode,
-                       let selectedBook = viewModel.selectedBookName
-                    {
-                        restoreFlatSelection(byBookName: selectedBook)
-                    }
-                case let .moveItem(from, to, parent):
-                    outlineView.moveItem(at: from, inParent: parent, to: to, inParent: parent)
-                }
+                self?.handleViewModelUpdate(update)
             }
             .store(in: &cancellables)
+    }
+
+    private func handleViewModelUpdate(_ update: LibraryUpdate) {
+        switch update {
+        case .reloadData:
+            outlineView.reloadData()
+            if viewModel.searchQuery.isEmpty {
+                restoreSelection(byBookName: viewModel.selectedBookName)
+            }
+        case let .reloadItem(item, reloadChildren):
+            outlineView.reloadItem(item, reloadChildren: reloadChildren)
+        case let .expandItem(item):
+            handleExpandUpdate(item)
+        case let .scrollRowToVisible(item):
+            let row = outlineView.row(forItem: item)
+            if row >= 0 {
+                outlineView.scrollRowToVisible(row)
+            }
+        case .beginUpdates, .endUpdates, .removeItems, .insertItems, .moveItem:
+            handleMutationUpdate(update)
+        }
+    }
+
+    private func handleExpandUpdate(_ item: Any?) {
+        if let category = item as? CategoryData {
+            outlineView.expandItem(category, expandChildren: true)
+        } else if let bookName = item as? String {
+            restoreSelection(byBookName: bookName)
+        } else {
+            outlineView.expandItem(item, expandChildren: true)
+        }
+    }
+
+    private func handleMutationUpdate(_ update: LibraryUpdate) {
+        switch update {
+        case .beginUpdates:
+            outlineView.beginUpdates()
+        case .endUpdates:
+            outlineView.endUpdates()
+        case let .removeItems(indexes, parent):
+            outlineView.removeItems(at: indexes, inParent: parent, withAnimation: [.slideUp])
+        case let .insertItems(indexes, parent):
+            outlineView.insertItems(at: indexes, inParent: parent, withAnimation: [.slideDown])
+            if viewModel.isFlatMode, let selectedBook = viewModel.selectedBookName {
+                restoreFlatSelection(byBookName: selectedBook)
+            }
+        case let .moveItem(from, to, parent):
+            outlineView.moveItem(at: from, inParent: parent, to: to, inParent: parent)
+        default:
+            break
+        }
     }
 
     // MARK: - Passthrough to ViewModel
