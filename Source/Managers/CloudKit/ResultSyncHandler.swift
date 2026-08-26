@@ -55,28 +55,28 @@ final class ResultSyncHandler {
 
 extension SyncFolder: CloudKitSyncable {
     func toCKRecord(zoneID: CKRecordZone.ID) -> CKRecord? {
-        guard let ckId = self.ckRecordId else { return nil }
-        let record = CKRecord(recordType: ResultSyncHandler.folderRecordType, recordID: CKRecord.ID(recordName: ckId, zoneID: zoneID))
-        record["name"] = self.name
-        record["lastModified"] = self.lastModified ?? Int64(Date().timeIntervalSince1970)
-        record["parentCkRecordId"] = self.parentCkRecordId
+        guard let ckId = ckRecordId else { return nil }
+        let record = createRecord(type: ResultSyncHandler.folderRecordType, recordName: ckId, zoneID: zoneID)
+        record["name"] = name
+        record["lastModified"] = lastModified ?? Int64(Date().timeIntervalSince1970)
+        record["parentCkRecordId"] = parentCkRecordId
         return record
     }
 }
 
 extension SyncResult: CloudKitSyncable {
     func toCKRecord(zoneID: CKRecordZone.ID) -> CKRecord? {
-        guard let ckId = self.ckRecordId else { return nil }
-        let record = CKRecord(recordType: ResultSyncHandler.resultRecordType, recordID: CKRecord.ID(recordName: ckId, zoneID: zoneID))
-        record["name"] = self.name
-        record["query"] = self.query
-        record["searchMode"] = self.searchMode
-        record["nearDistance"] = self.nearDistance
-        record["archive"] = self.archive
-        record["bkId"] = self.bkId
-        record["contentId"] = self.contentId
-        record["lastModified"] = self.lastModified ?? Int64(Date().timeIntervalSince1970)
-        record["folderCkRecordId"] = self.folderCkRecordId
+        guard let ckId = ckRecordId else { return nil }
+        let record = createRecord(type: ResultSyncHandler.resultRecordType, recordName: ckId, zoneID: zoneID)
+        record["name"] = name
+        record["query"] = query
+        record["searchMode"] = searchMode
+        record["nearDistance"] = nearDistance
+        record["archive"] = archive
+        record["bkId"] = bkId
+        record["contentId"] = contentId
+        record["lastModified"] = lastModified ?? Int64(Date().timeIntervalSince1970)
+        record["folderCkRecordId"] = folderCkRecordId
         return record
     }
 }

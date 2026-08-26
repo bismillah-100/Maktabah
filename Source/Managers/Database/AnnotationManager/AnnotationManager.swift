@@ -10,11 +10,11 @@ import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
-import Foundation
 import Combine
+import Foundation
 import SQLite3
 
-final class AnnotationManager {
+final class AnnotationManager: SyncPendingManaging {
     // MARK: - Table & column names
 
     let annotationsTable = "annotations"
@@ -47,7 +47,12 @@ final class AnnotationManager {
     // MARK: - Singleton
 
     var _db: SQLiteDatabase?
-    var db: SQLiteDatabase? { _db }
+    var db: SQLiteDatabase? {
+        _db
+    }
+
+    var syncPendingStore: SyncPendingStore?
+
     static let shared = AnnotationManager()
 
     // MARK: - Caches
@@ -127,7 +132,7 @@ final class AnnotationManager {
         if let id = annotationId {
             userInfo[AnnotationNotificationKeys.annotationId] = id
         }
-        if let diff = diff {
+        if let diff {
             userInfo[AnnotationNotificationKeys.tagDiff] = diff
         }
         if let oldIdx = oldParentIndex {

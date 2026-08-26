@@ -1,5 +1,5 @@
 //
-//  AnnotationManager+Cache.swift
+//  AnnMgr+Cache.swift
 //  Maktabah
 //
 
@@ -22,42 +22,36 @@ extension AnnotationManager {
 
     func updateCacheAfterAdd(_ annotation: Annotation) {
         _cacheQueue.sync {
-            guard let id = annotation.id else { return }
-            _cacheById[id] = annotation
-            _cacheTagsByAnnotationId[id] = annotation.tags
-            let key = ContentKey(bkId: annotation.bkId, contentId: annotation.contentId)
-            var arr = _cacheByContent[key] ?? []
-            let idx = arr.insertionIndex(for: annotation) { $0.range.location < $1.range.location }
-            arr.insert(annotation, at: idx)
-            _cacheByContent[key] = arr
-            if _cacheByBook[annotation.bkId] != nil {
-                _cacheByBook[annotation.bkId]?.append(annotation)
-            }
+            updateSingleAnnotationCache(annotation)
         }
     }
 
     func updateCacheAfterUpdate(_ annotation: Annotation) {
         _cacheQueue.sync {
-            guard let id = annotation.id else { return }
-            _cacheById[id] = annotation
-            _cacheTagsByAnnotationId[id] = annotation.tags
-            let key = ContentKey(bkId: annotation.bkId, contentId: annotation.contentId)
-            var arr = _cacheByContent[key] ?? []
-            if let idx = arr.firstIndex(where: { $0.id == id }) {
-                arr[idx] = annotation
+            updateSingleAnnotationCache(annotation)
+        }
+    }
+
+    private func updateSingleAnnotationCache(_ annotation: Annotation) {
+        guard let id = annotation.id else { return }
+        _cacheById[id] = annotation
+        _cacheTagsByAnnotationId[id] = annotation.tags
+        let key = ContentKey(bkId: annotation.bkId, contentId: annotation.contentId)
+        var arr = _cacheByContent[key] ?? []
+        if let idx = arr.firstIndex(where: { $0.id == id }) {
+            arr[idx] = annotation
+        } else {
+            let idx = arr.insertionIndex(for: annotation) { $0.range.location < $1.range.location }
+            arr.insert(annotation, at: idx)
+        }
+        _cacheByContent[key] = arr
+        if var bookArr = _cacheByBook[annotation.bkId] {
+            if let idx = bookArr.firstIndex(where: { $0.id == id }) {
+                bookArr[idx] = annotation
             } else {
-                let idx = arr.insertionIndex(for: annotation) { $0.range.location < $1.range.location }
-                arr.insert(annotation, at: idx)
+                bookArr.append(annotation)
             }
-            _cacheByContent[key] = arr
-            if var bookArr = _cacheByBook[annotation.bkId] {
-                if let idx = bookArr.firstIndex(where: { $0.id == id }) {
-                    bookArr[idx] = annotation
-                } else {
-                    bookArr.append(annotation)
-                }
-                _cacheByBook[annotation.bkId] = bookArr
-            }
+            _cacheByBook[annotation.bkId] = bookArr
         }
     }
 
@@ -87,54 +81,30 @@ extension AnnotationManager {
         _cacheQueue.sync {
             _cachedAllTagNames = nil
             for annotation in annotations {
-                guard let id = annotation.id else { continue }
-                _cacheById[id] = annotation
-                _cacheTagsByAnnotationId[id] = annotation.tags
-
-                let key = ContentKey(bkId: annotation.bkId, contentId: annotation.contentId)
-                var cachedAnnotations = _cacheByContent[key] ?? []
-                if let index = cachedAnnotations.firstIndex(where: { $0.id == id }) {
-                    cachedAnnotations[index] = annotation
-                } else {
-                    let index = cachedAnnotations.insertionIndex(for: annotation) {
-                        $0.range.location < $1.range.location
-                    }
-                    cachedAnnotations.insert(annotation, at: index)
-                }
-                _cacheByContent[key] = cachedAnnotations
-
-                if var bookArr = _cacheByBook[annotation.bkId] {
-                    if let index = bookArr.firstIndex(where: { $0.id == id }) {
-                        bookArr[index] = annotation
-                    } else {
-                        bookArr.append(annotation)
-                    }
-                    _cacheByBook[annotation.bkId] = bookArr
-                }
+                updateSingleAnnotationCache(annotation)
             }
         }
 
         _treeQueue.async { [weak self] in
             guard let self else { return }
-            if self._groupingMode == .book {
-                for annotation in annotations {
-                    guard let annotationId = annotation.id,
-                          let node = self.findAnnotationNode(by: annotationId)
-                    else {
-                        self.postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
-                        continue
-                    }
-                    if let note = annotation.note, !note.isEmpty {
-                        node.title = note
-                    } else {
-                        node.title = annotation.context
-                    }
-                    node.annotation = annotation
-                    self.postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
+            updateTreeNodesForBatch(annotations: annotations, uploadToCloudKit: uploadToCloudKit)
+        }
+    }
+
+    private func updateTreeNodesForBatch(annotations: [Annotation], uploadToCloudKit: Bool) {
+        if _groupingMode == .book {
+            for annotation in annotations {
+                guard let annotationId = annotation.id,
+                      let node = findAnnotationNode(by: annotationId)
+                else {
+                    postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
+                    continue
                 }
-            } else {
-                self.performBatchTagTreeUpdate(annotations, uploadToCloudKit: uploadToCloudKit)
+                node.update(with: annotation)
+                postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
             }
+        } else {
+            performBatchTagTreeUpdate(annotations, uploadToCloudKit: uploadToCloudKit)
         }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  AnnotationManager+Tree.swift
+//  AnnMgr+Tree.swift
 //  Maktabah
 //
 
@@ -16,7 +16,7 @@ extension AnnotationManager {
             var anns = loadAnnotations()
 
             if UserDefaults.standard.hideMissingBookAnnotations {
-                let uniqueBkIds = Set(anns.map { $0.bkId })
+                let uniqueBkIds = Set(anns.map(\.bkId))
                 let existingBkIds = Set(uniqueBkIds.filter { !LibraryDataManager.shared.getBook([$0]).isEmpty })
                 anns = anns.filter { existingBkIds.contains($0.bkId) }
             }
@@ -188,13 +188,7 @@ extension AnnotationManager {
                 return
             }
 
-            if let note = annotation.note, !note.isEmpty {
-                node.title = note
-            } else {
-                node.title = annotation.context
-            }
-            node.annotation = annotation
-
+            node.update(with: annotation)
             postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
         }
     }

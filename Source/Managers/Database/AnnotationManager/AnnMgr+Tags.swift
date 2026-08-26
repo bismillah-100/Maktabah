@@ -1,5 +1,5 @@
 //
-//  AnnotationManager+Tags.swift
+//  AnnMgr+Tags.swift
 //  Maktabah
 //
 
@@ -36,11 +36,8 @@ extension AnnotationManager {
 
         if oldTagId == -1 { return }
 
-        var affectedIds: [Int64] = []
         let findAffectedSql = "SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?"
-        affectedIds = try _db.fetch(query: findAffectedSql, parameters: [oldTagId], mapping: { $0.int64(at: 0) })
-
-        var updatedAnnotations: [Annotation] = []
+        let affectedIds = try _db.fetch(query: findAffectedSql, parameters: [oldTagId], mapping: { $0.int64(at: 0) })
 
         var existingNewTagId: Int64 = -1
         let findNewSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1"
@@ -48,60 +45,95 @@ extension AnnotationManager {
             existingNewTagId = fetchedId
         }
 
-        if existingNewTagId != -1 {
-            // MERGE
-            try transaction {
-                for annId in affectedIds {
-                    guard var ann = loadAnnotationById(annId) else { continue }
-                    var tags = ann.tags.filter { normalizedTagName($0) != oldNormalized }
-                    if !tags.contains(where: { normalizedTagName($0) == newNormalized }) {
-                        tags.append(trimmedNew)
-                    }
-                    ann.tags = sanitizeTagNames(tags)
-                    ann.lastModified = now
-                    updatedAnnotations.append(ann)
-                }
+        let renameContext = TagRenameContext(
+            oldTagId: oldTagId,
+            oldNormalized: oldNormalized,
+            newNormalized: newNormalized,
+            trimmedNew: trimmedNew,
+            affectedIds: affectedIds,
+            now: now
+        )
 
-                let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) SELECT \(colAnnotationTagAnnotationId), ? FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;"
-                try exec(insertRelSql, parameters: [existingNewTagId, oldTagId])
-
-                let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
-                try exec(updateAnnSql, parameters: [now, oldTagId])
-
-                try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [oldTagId])
-                try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [oldTagId])
-            }
+        let updatedAnnotations: [Annotation] = if existingNewTagId != -1 {
+            try performTagMerge(
+                context: renameContext,
+                existingNewTagId: existingNewTagId
+            )
         } else {
-            // SIMPLE RENAME
-            try transaction {
-                for annId in affectedIds {
-                    guard var ann = loadAnnotationById(annId) else { continue }
-                    ann.tags = ann.tags.map {
-                        normalizedTagName($0) == oldNormalized ? trimmedNew : $0
-                    }
-                    ann.tags = sanitizeTagNames(ann.tags)
-                    ann.lastModified = now
-                    updatedAnnotations.append(ann)
-                }
-
-                let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
-                try exec(updateAnnSql, parameters: [now, oldTagId])
-
-                let updateTagSql = "UPDATE \(tagsTable) SET \(colTagName) = ?, \(colTagNormalizedName) = ? WHERE \(colTagId) = ?;"
-                try exec(updateTagSql, parameters: [trimmedNew, newNormalized, oldTagId])
-            }
+            try performSimpleTagRename(
+                context: renameContext
+            )
         }
 
         applyBatchTagUpdates(updatedAnnotations)
     }
 
-    // MARK: - Add / Remove Tag (Batch)
+    private struct TagRenameContext {
+        let oldTagId: Int64
+        let oldNormalized: String
+        let newNormalized: String
+        let trimmedNew: String
+        let affectedIds: [Int64]
+        let now: Int64
+    }
 
-    func addTag(_ tag: String, toAnnotationIDs annotationIDs: [Int64]) throws {
-        let trimmedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        let sanitizedTags = sanitizeTagNames([trimmedTag])
-        guard let normalizedTag = sanitizedTags.first else { return }
+    private func performTagMerge(
+        context: TagRenameContext,
+        existingNewTagId: Int64
+    ) throws -> [Annotation] {
+        var updatedAnnotations: [Annotation] = []
+        try transaction {
+            for annId in context.affectedIds {
+                guard var ann = loadAnnotationById(annId) else { continue }
+                var tags = ann.tags.filter { normalizedTagName($0) != context.oldNormalized }
+                if !tags.contains(where: { normalizedTagName($0) == context.newNormalized }) {
+                    tags.append(context.trimmedNew)
+                }
+                ann.tags = sanitizeTagNames(tags)
+                ann.lastModified = context.now
+                updatedAnnotations.append(ann)
+            }
 
+            let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) SELECT \(colAnnotationTagAnnotationId), ? FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;"
+            try exec(insertRelSql, parameters: [existingNewTagId, context.oldTagId])
+
+            let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
+            try exec(updateAnnSql, parameters: [context.now, context.oldTagId])
+
+            try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [context.oldTagId])
+            try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [context.oldTagId])
+        }
+        return updatedAnnotations
+    }
+
+    private func performSimpleTagRename(
+        context: TagRenameContext
+    ) throws -> [Annotation] {
+        var updatedAnnotations: [Annotation] = []
+        try transaction {
+            for annId in context.affectedIds {
+                guard var ann = loadAnnotationById(annId) else { continue }
+                ann.tags = ann.tags.map {
+                    normalizedTagName($0) == context.oldNormalized ? context.trimmedNew : $0
+                }
+                ann.tags = sanitizeTagNames(ann.tags)
+                ann.lastModified = context.now
+                updatedAnnotations.append(ann)
+            }
+
+            let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
+            try exec(updateAnnSql, parameters: [context.now, context.oldTagId])
+
+            let updateTagSql = "UPDATE \(tagsTable) SET \(colTagName) = ?, \(colTagNormalizedName) = ? WHERE \(colTagId) = ?;"
+            try exec(updateTagSql, parameters: [context.trimmedNew, context.newNormalized, context.oldTagId])
+        }
+        return updatedAnnotations
+    }
+
+    private func mutateTags(
+        forAnnotationIDs annotationIDs: [Int64],
+        mutation: (inout [String]) -> Bool
+    ) throws {
         let uniqueIDs = Array(Set(annotationIDs)).sorted()
         guard !uniqueIDs.isEmpty else { return }
 
@@ -110,50 +142,9 @@ extension AnnotationManager {
         try transaction {
             for annotationID in uniqueIDs {
                 guard var annotation = loadAnnotationById(annotationID) else { continue }
-                let mergedTags = sanitizeTagNames(annotation.tags + [normalizedTag])
-                guard mergedTags != annotation.tags else { continue }
-                try replaceTags(mergedTags, for: annotationID)
-                annotation.tags = mergedTags
-                annotation.lastModified = now
-                updatedAnnotations.append(annotation)
-                updatedIDs.append(annotationID)
-            }
-
-            let chunkSize = 500
-            for chunkStart in stride(from: 0, to: updatedIDs.count, by: chunkSize) {
-                let chunkEnd = min(chunkStart + chunkSize, updatedIDs.count)
-                let chunk = Array(updatedIDs[chunkStart..<chunkEnd])
-
-                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
-
-                var parameters: [Any] = [now]
-                parameters.append(contentsOf: chunk)
-
-                try exec(updateSql, parameters: parameters)
-            }
-        }
-
-        applyBatchTagUpdates(updatedAnnotations)
-    }
-
-    func removeTag(_ tag: String, fromAnnotationIDs annotationIDs: [Int64]) throws {
-        let trimmedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedTarget = normalizedTagName(trimmedTag)
-        guard !normalizedTarget.isEmpty else { return }
-
-        let uniqueIDs = Array(Set(annotationIDs)).sorted()
-        guard !uniqueIDs.isEmpty else { return }
-
-        var updatedAnnotations: [Annotation] = []
-        var updatedIDs: [Int64] = []
-        try transaction {
-            for annotationID in uniqueIDs {
-                guard var annotation = loadAnnotationById(annotationID) else { continue }
-                let filteredTags = annotation.tags.filter {
-                    normalizedTagName($0) != normalizedTarget
-                }
-                let sanitizedTags = sanitizeTagNames(filteredTags)
+                var tags = annotation.tags
+                guard mutation(&tags) else { continue }
+                let sanitizedTags = sanitizeTagNames(tags)
                 guard sanitizedTags != annotation.tags else { continue }
                 try replaceTags(sanitizedTags, for: annotationID)
                 annotation.tags = sanitizedTags
@@ -162,22 +153,45 @@ extension AnnotationManager {
                 updatedIDs.append(annotationID)
             }
 
-            let chunkSize = 500
-            for chunkStart in stride(from: 0, to: updatedIDs.count, by: chunkSize) {
-                let chunkEnd = min(chunkStart + chunkSize, updatedIDs.count)
-                let chunk = Array(updatedIDs[chunkStart..<chunkEnd])
-
-                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
-
-                var parameters: [Any] = [now]
-                parameters.append(contentsOf: chunk)
-
-                try exec(updateSql, parameters: parameters)
-            }
+            try updateAnnotationsLastModified(for: updatedIDs, timestamp: now)
         }
 
         applyBatchTagUpdates(updatedAnnotations)
+    }
+
+    func addTag(_ tag: String, toAnnotationIDs annotationIDs: [Int64]) throws {
+        let trimmedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sanitizedTags = sanitizeTagNames([trimmedTag])
+        guard let normalizedTag = sanitizedTags.first else { return }
+
+        try mutateTags(forAnnotationIDs: annotationIDs) { tags in
+            tags.append(normalizedTag)
+            return true
+        }
+    }
+
+    func removeTag(_ tag: String, fromAnnotationIDs annotationIDs: [Int64]) throws {
+        let trimmedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedTarget = normalizedTagName(trimmedTag)
+        guard !normalizedTarget.isEmpty else { return }
+
+        try mutateTags(forAnnotationIDs: annotationIDs) { tags in
+            tags.removeAll { self.normalizedTagName($0) == normalizedTarget }
+            return true
+        }
+    }
+
+    private func updateAnnotationsLastModified(for annotationIDs: [Int64], timestamp: Int64) throws {
+        guard !annotationIDs.isEmpty else { return }
+        for chunk in annotationIDs.chunked(into: 500) {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
+
+            var parameters: [Any] = [timestamp]
+            parameters.append(contentsOf: chunk)
+
+            try exec(updateSql, parameters: parameters)
+        }
     }
 
     // MARK: - Delete Tag
@@ -203,21 +217,19 @@ extension AnnotationManager {
             try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [deletedTagId])
             try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
 
-            let chunkSize = 500
-            for chunkStart in stride(from: 0, to: affectedIds.count, by: chunkSize) {
-                let chunkEnd = min(chunkStart + chunkSize, affectedIds.count)
-                let chunk = Array(affectedIds[chunkStart..<chunkEnd])
-
-                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-                let updateSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (\(placeholders));"
-
-                var parameters: [Any] = [now]
-                parameters.append(contentsOf: chunk)
-
-                try exec(updateSql, parameters: parameters)
-            }
+            try updateAnnotationsLastModified(for: affectedIds, timestamp: now)
         }
 
+        let updatedAnnotations = purgeCachedTagAnnotations(affectedIds: affectedIds, normalized: normalized, now: now)
+
+        deleteTagFromTree(
+            tagName: tagNameToDelete,
+            normalizedName: normalized,
+            updatedAnnotations: updatedAnnotations
+        )
+    }
+
+    private func purgeCachedTagAnnotations(affectedIds: [Int64], normalized: String, now: Int64) -> [Annotation] {
         var updatedAnnotations: [Annotation] = []
         _cacheQueue.sync {
             _cachedAllTagNames = nil
@@ -243,12 +255,7 @@ extension AnnotationManager {
                 updatedAnnotations.append(ann)
             }
         }
-
-        deleteTagFromTree(
-            tagName: tagNameToDelete,
-            normalizedName: normalized,
-            updatedAnnotations: updatedAnnotations
-        )
+        return updatedAnnotations
     }
 
     // MARK: - All Tag Names
@@ -272,7 +279,7 @@ extension AnnotationManager {
     // MARK: - Private Tag Helpers
 
     func fetchTagsForAnnotations(_ annotations: [Annotation]) -> [Int64: [String]] {
-        let ids = annotations.compactMap { $0.id }
+        let ids = annotations.compactMap(\.id)
         guard !ids.isEmpty, let _db = db else { return [:] }
 
         var result: [Int64: [String]] = [:]
@@ -326,29 +333,102 @@ extension AnnotationManager {
         return tags
     }
 
+    private func fetchExistingTagsMap(
+        db: SQLiteDatabase,
+        tags: [String]
+    ) throws -> [String: (id: Int64, name: String)] {
+        var existingTags: [String: (id: Int64, name: String)] = [:]
+        guard !tags.isEmpty else { return existingTags }
+
+        struct TagRow {
+            let id: Int64
+            let name: String
+            let normalizedName: String
+        }
+
+        let normalizedTags = tags.map { normalizedTagName($0) }
+        for chunk in normalizedTags.chunked(into: 500) {
+            let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ",")
+
+            let findSql = "SELECT \(colTagId), \(colTagName), \(colTagNormalizedName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(placeholders))"
+            let fetchedExisting = try db.fetch(query: findSql, parameters: chunk) { row -> TagRow in
+                TagRow(id: row.int64(at: 0), name: row.string(at: 1) ?? "", normalizedName: row.string(at: 2) ?? "")
+            }
+            for tag in fetchedExisting {
+                existingTags[tag.normalizedName] = (tag.id, tag.name)
+            }
+        }
+        return existingTags
+    }
+
+    private func insertNewTagsAndFetch(
+        db: SQLiteDatabase,
+        tagsToInsert: [(name: String, normalized: String)],
+        existingTags: inout [String: (id: Int64, name: String)],
+        currentTagIds: inout [Int64]
+    ) throws {
+        guard !tagsToInsert.isEmpty else { return }
+
+        struct TagRow {
+            let id: Int64
+            let name: String
+            let normalizedName: String
+        }
+
+        for chunk in tagsToInsert.chunked(into: 400) {
+            let placeholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
+            let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(placeholders);"
+
+            var insertParams: [Any] = []
+            for tagTuple in chunk {
+                insertParams.append(tagTuple.name)
+                insertParams.append(tagTuple.normalized)
+            }
+            try db.execute(query: insertSql, parameters: insertParams)
+        }
+
+        let normalizedNewTags = tagsToInsert.map(\.normalized)
+        for chunk in normalizedNewTags.chunked(into: 500) {
+            let selectPlaceholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let fetchNewSql = "SELECT \(colTagId), \(colTagNormalizedName), \(colTagName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders))"
+
+            let fetchedNewTags = try db.fetch(query: fetchNewSql, parameters: chunk) { row -> TagRow in
+                TagRow(id: row.int64(at: 0), name: row.string(at: 2) ?? "", normalizedName: row.string(at: 1) ?? "")
+            }
+
+            for tag in fetchedNewTags {
+                existingTags[tag.normalizedName] = (tag.id, tag.name)
+                currentTagIds.append(tag.id)
+            }
+        }
+    }
+
+    private func linkAnnotationTags(
+        db: SQLiteDatabase,
+        annotationId: Int64,
+        tagIds: [Int64]
+    ) throws {
+        guard !tagIds.isEmpty else { return }
+
+        for chunk in tagIds.chunked(into: 400) {
+            let relPlaceholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
+            let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(relPlaceholders);"
+
+            var relParams: [Any] = []
+            for tagId in chunk {
+                relParams.append(annotationId)
+                relParams.append(tagId)
+            }
+            try db.execute(query: insertRelSql, parameters: relParams)
+        }
+    }
+
     func replaceTags(_ tags: [String], for annotationId: Int64) throws {
         guard let _db = db else { return }
 
         try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) = ?;", parameters: [annotationId])
 
-        var existingTags: [String: (id: Int64, name: String)] = [:]
-
-        if !tags.isEmpty {
-            let normalizedTags = tags.map { normalizedTagName($0) }
-            for i in stride(from: 0, to: normalizedTags.count, by: 500) {
-                let chunk = Array(normalizedTags[i ..< min(i + 500, normalizedTags.count)])
-                let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ",")
-
-                let findSql = "SELECT \(colTagId), \(colTagName), \(colTagNormalizedName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(placeholders))"
-                let fetchedExisting = try _db.fetch(query: findSql, parameters: chunk) { row -> (Int64, String, String) in
-                    (row.int64(at: 0), row.string(at: 1) ?? "", row.string(at: 2) ?? "")
-                }
-                for (id, name, normalized) in fetchedExisting {
-                    existingTags[normalized] = (id, name)
-                }
-            }
-        }
-
+        var existingTags = try fetchExistingTagsMap(db: _db, tags: tags)
         var currentTagIds: [Int64] = []
         var tagsToInsert: [(name: String, normalized: String)] = []
         var seenNormalized: Set<String> = []
@@ -369,61 +449,19 @@ extension AnnotationManager {
                 if seenNormalized.insert(normalized).inserted {
                     currentTagIds.append(existingTagId)
                 }
-            } else {
-                if seenNormalized.insert(normalized).inserted {
-                    tagsToInsert.append((name: tag, normalized: normalized))
-                }
+            } else if seenNormalized.insert(normalized).inserted {
+                tagsToInsert.append((name: tag, normalized: normalized))
             }
         }
 
-        if !tagsToInsert.isEmpty {
-            for i in stride(from: 0, to: tagsToInsert.count, by: 400) {
-                let chunk = Array(tagsToInsert[i ..< min(i + 400, tagsToInsert.count)])
-                let placeholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
-                let insertSql = "INSERT INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(placeholders);"
+        try insertNewTagsAndFetch(
+            db: _db,
+            tagsToInsert: tagsToInsert,
+            existingTags: &existingTags,
+            currentTagIds: &currentTagIds
+        )
 
-                var insertParams: [Any] = []
-                for tagTuple in chunk {
-                    insertParams.append(tagTuple.name)
-                    insertParams.append(tagTuple.normalized)
-                }
-                try _db.execute(query: insertSql, parameters: insertParams)
-            }
-
-            let normalizedNewTags = tagsToInsert.map { $0.normalized }
-            for i in stride(from: 0, to: normalizedNewTags.count, by: 500) {
-                let chunk = Array(normalizedNewTags[i ..< min(i + 500, normalizedNewTags.count)])
-                let selectPlaceholders = String(repeating: "?,", count: chunk.count).dropLast()
-                let fetchNewSql = "SELECT \(colTagId), \(colTagNormalizedName), \(colTagName) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders))"
-
-                let fetchedNewTags = try _db.fetch(query: fetchNewSql, parameters: chunk) { row -> (Int64, String, String) in
-                    let id = row.int64(at: 0)
-                    let norm = row.string(at: 1) ?? ""
-                    let name = row.string(at: 2) ?? ""
-                    return (id, norm, name)
-                }
-
-                for (id, normalized, name) in fetchedNewTags {
-                    existingTags[normalized] = (id, name)
-                    currentTagIds.append(id)
-                }
-            }
-        }
-
-        if !currentTagIds.isEmpty {
-            for i in stride(from: 0, to: currentTagIds.count, by: 400) {
-                let chunk = Array(currentTagIds[i ..< min(i + 400, currentTagIds.count)])
-                let relPlaceholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
-                let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(relPlaceholders);"
-
-                var relParams: [Any] = []
-                for tagId in chunk {
-                    relParams.append(annotationId)
-                    relParams.append(tagId)
-                }
-                try _db.execute(query: insertRelSql, parameters: relParams)
-            }
-        }
+        try linkAnnotationTags(db: _db, annotationId: annotationId, tagIds: currentTagIds)
 
         _cacheQueue.sync { _cachedAllTagNames = nil }
         try deleteUnusedTags()
