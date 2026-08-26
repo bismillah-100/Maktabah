@@ -1,5 +1,5 @@
 //
-//  ContainerVC.swift
+//  ViewerSplitVC.swift
 //  maktab
 //
 //  Created by MacBook on 29/11/25.
@@ -7,20 +7,16 @@
 
 import Cocoa
 
-class ViewerSplitVC: NSSplitViewController {
+class ViewerSplitVC: ReaderSplitVC {
     weak var ibarotTextItem: NSSplitViewItem?
     /// Sidebar item yang berisi sidebar view controller.
     weak var sidebarItem: NSSplitViewItem?
 
     weak var rootSplitView: NSSplitViewController?
 
-    lazy var sidebarVC: SidebarVC = {
-        SidebarVC(nibName: "SidebarVC", bundle: nil)
-    }()
+    lazy var sidebarVC: SidebarVC = .init(nibName: "SidebarVC", bundle: nil)
 
-    lazy var ibarotVC: IbarotTextVC = {
-        IbarotTextVC()
-    }()
+    lazy var ibarotVC: IbarotTextVC = .init()
 
     var bgObserver: NSObjectProtocol?
     var tasykilObserver: NSObjectProtocol?
@@ -28,72 +24,19 @@ class ViewerSplitVC: NSSplitViewController {
 
     var workItemAppereance: DispatchWorkItem?
 
-    override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        setupLayout()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-
-    func setupLayout() {
+    override func setupLayout() {
         let ltr = !MainWindow.rtl
 
         splitView = CustomSplitView(frame: .zero)
         splitView.isVertical = true
 
         ibarotVC = IbarotTextVC()
-        let ibarot: NSSplitViewItem
-        let sidebar: NSSplitViewItem
+        let items = createSplitViewItems(ltr: ltr)
+        ibarotTextItem = items.ibarot
+        sidebarItem = items.sidebar
 
-        if #available(macOS 26, *) {
-            ibarot = NSSplitViewItem(viewController: ibarotVC)
-            if ltr {
-                sidebar = NSSplitViewItem(inspectorWithViewController: sidebarVC)
-            } else {
-                sidebar = NSSplitViewItem(viewController: sidebarVC)
-            }
-        } else {
-            sidebar = NSSplitViewItem(viewController: sidebarVC)
-            ibarot = NSSplitViewItem(viewController: ibarotVC)
-        }
+        configureAndAddSplitItems(sidebarItem: items.sidebar, ibarotTextItem: items.ibarot, ltr: ltr)
 
-        ibarotTextItem = ibarot
-        sidebarItem = sidebar
-
-        if let sidebarItem, let ibarotTextItem {
-            ibarotTextItem.allowsFullHeightLayout = true
-            ibarotTextItem.titlebarSeparatorStyle = .automatic
-            sidebarItem.allowsFullHeightLayout = true
-            sidebarItem.titlebarSeparatorStyle = .automatic
-            sidebarItem.minimumThickness = 135
-
-            if ltr {
-                sidebarItem.holdingPriority = NSLayoutConstraint.Priority(251)
-            } else {
-                sidebarItem.holdingPriority = NSLayoutConstraint.Priority(260)
-                ibarotTextItem.holdingPriority = NSLayoutConstraint.Priority(250)
-            }
-
-            if #available(macOS 26, *) {
-                if ltr {
-                    addSplitViewItem(ibarotTextItem)
-                    addSplitViewItem(sidebarItem)
-                } else {
-                    addSplitViewItem(sidebarItem)
-                    addSplitViewItem(ibarotTextItem)
-                }
-            } else if ltr {
-                addSplitViewItem(ibarotTextItem)
-                addSplitViewItem(sidebarItem)
-            } else {
-                addSplitViewItem(sidebarItem)
-                addSplitViewItem(ibarotTextItem)
-            }
-        }
-
-        // Set sidebar delegate
         if let sidebarViewController = sidebarItem?.viewController as? SidebarVC {
             sidebarViewController.db = ibarotVC.bookDB
             sidebarViewController.delegate = ibarotVC
@@ -108,6 +51,39 @@ class ViewerSplitVC: NSSplitViewController {
         startObservingLineHeight()
     }
 
+    private func createSplitViewItems(ltr: Bool) -> (ibarot: NSSplitViewItem, sidebar: NSSplitViewItem) {
+        let ibarot: NSSplitViewItem
+        let sidebar: NSSplitViewItem
+
+        if #available(macOS 26, *) {
+            ibarot = NSSplitViewItem(viewController: ibarotVC)
+            sidebar = ltr ? NSSplitViewItem(inspectorWithViewController: sidebarVC) : NSSplitViewItem(viewController: sidebarVC)
+        } else {
+            sidebar = NSSplitViewItem(viewController: sidebarVC)
+            ibarot = NSSplitViewItem(viewController: ibarotVC)
+        }
+        return (ibarot, sidebar)
+    }
+
+    private func configureAndAddSplitItems(sidebarItem: NSSplitViewItem, ibarotTextItem: NSSplitViewItem, ltr: Bool) {
+        ibarotTextItem.allowsFullHeightLayout = true
+        ibarotTextItem.titlebarSeparatorStyle = .automatic
+        sidebarItem.allowsFullHeightLayout = true
+        sidebarItem.titlebarSeparatorStyle = .automatic
+        sidebarItem.minimumThickness = 135
+
+        if ltr {
+            sidebarItem.holdingPriority = NSLayoutConstraint.Priority(251)
+            addSplitViewItem(ibarotTextItem)
+            addSplitViewItem(sidebarItem)
+        } else {
+            sidebarItem.holdingPriority = NSLayoutConstraint.Priority(260)
+            ibarotTextItem.holdingPriority = NSLayoutConstraint.Priority(250)
+            addSplitViewItem(sidebarItem)
+            addSplitViewItem(ibarotTextItem)
+        }
+    }
+
     /// Oberservasi line height
     var lineHeightObservation: NSObjectProtocol?
 
@@ -116,7 +92,8 @@ class ViewerSplitVC: NSSplitViewController {
             forName: .didChangeLineHeight, object: nil,
             queue: .main, using: { [weak self] _ in
                 self?.ibarotVC.textView.updateLineHeight()
-        })
+            }
+        )
     }
 
     /// Observasi tampilan sistem
@@ -126,7 +103,7 @@ class ViewerSplitVC: NSSplitViewController {
     private func startObservingAppearance() {
         appearanceObservation = splitView.observe(
             \.effectiveAppearance,
-             options: [.new]
+            options: [.new]
         ) { [weak self] _, _ in
             self?.applyThemeBasedOnSystem()
         }
@@ -136,32 +113,35 @@ class ViewerSplitVC: NSSplitViewController {
         bgObserver = NotificationCenter.default.addObserver(
             forName: .didChangeBackground, object: nil,
             queue: .main, using: { [weak self] _ in
-            guard let self else { return }
-            let bg = getBgColor()
-            applyBackgroundColorToUI(bg)
-        })
+                guard let self else { return }
+                let bg = getBgColor()
+                applyBackgroundColorToUI(bg)
+            }
+        )
     }
 
     private func startObservingTasykil() {
         tasykilObserver = NotificationCenter.default.addObserver(
             forName: .didChangeHarakat, object: nil,
             queue: .main, using: { [weak self] notif in
-            guard let userInfo = notif.userInfo,
-                  let on = userInfo["on"] as? Bool
-            else { return }
-            self?.ibarotVC.toggleHarakat(on)
-        })
+                guard let userInfo = notif.userInfo,
+                      let on = userInfo["on"] as? Bool
+                else { return }
+                self?.ibarotVC.toggleHarakat(on)
+            }
+        )
     }
 
     private func startObservingFont() {
         fontObserver = NotificationCenter.default.addObserver(
             forName: .didChangeFont, object: nil,
             queue: .main, using: { [weak self] notif in
-            guard let userInfo = notif.userInfo,
-                  let redraw = userInfo["redraw"] as? Bool
-            else { return }
-            self?.ibarotVC.applyFont(redraw)
-        })
+                guard let userInfo = notif.userInfo,
+                      let redraw = userInfo["redraw"] as? Bool
+                else { return }
+                self?.ibarotVC.applyFont(redraw)
+            }
+        )
     }
 
     @IBAction func hideTableOfContents(_ sender: Any?) {
@@ -175,7 +155,6 @@ class ViewerSplitVC: NSSplitViewController {
 
     override func toggleSidebar(_ sender: Any?) {
         rootSplitView?.toggleSidebar(sender)
-        return
     }
 
     @IBAction func viewOptions(_ sender: Any) {
@@ -241,8 +220,8 @@ class ViewerSplitVC: NSSplitViewController {
 
         // Gunakan dark appearance untuk gray dan black
         let appearance: NSAppearance = (bg.rawValue > 1)
-        ? NSAppearance(named: .darkAqua)!
-        : NSAppearance(named: .aqua)!
+            ? NSAppearance(named: .darkAqua)!
+            : NSAppearance(named: .aqua)!
 
         #if DEBUG
         print("DEBUG: Applying bg=\(bg), rawValue=\(bg.rawValue), appearance=\(appearance)")
@@ -271,7 +250,8 @@ class ViewerSplitVC: NSSplitViewController {
            let appearanceObservation,
            let fontObserver,
            let tasykilObserver,
-           let lineHeightObservation {
+           let lineHeightObservation
+        {
             NotificationCenter.default.removeObserver(bgObserver)
             NotificationCenter.default.removeObserver(appearanceObservation)
             NotificationCenter.default.removeObserver(lineHeightObservation)

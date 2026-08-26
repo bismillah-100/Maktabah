@@ -854,7 +854,7 @@ extension LibraryDataManager {
     /// Cek apakah Book ID memenuhi syarat untuk dihapus berdasarkan versi core
     static func shouldRemoveBook(id: Int) -> Bool {
         let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-        return coreVersion >= 1.0 ? id > 151_203 : id > 32792
+        return coreVersion >= 1.0 ? id > 151203 : id > 32792
     }
 
     /// Cek apakah Author ID memenuhi syarat untuk dihapus berdasarkan versi core

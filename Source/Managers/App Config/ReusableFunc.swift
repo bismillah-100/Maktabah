@@ -65,13 +65,12 @@ class ReusableFunc {
         searchField.recentSearches = recents
     }
 
-
     /// Fungsi untuk membuka jendela ketika salah satu view di Sidebar pertama kali ditampilkan. Yaitu ketika view sedang memproses pemuatan data dari Data Base.
     /// - Parameters:
     ///   - view: view yang akan bertindak sebagai induk untuk jendela yang akan ditambahkan sebagai child window.
     static func showProgressWindow(_ parentView: NSView) {
         // 1. Cek apakah view sudah ada untuk menghindari duplikasi
-        if  parentView.subviews.first(where: { $0.identifier?.rawValue == "ProgressOverlay" }) != nil {
+        if parentView.subviews.first(where: { $0.identifier?.rawValue == "ProgressOverlay" }) != nil {
             return
         }
 
@@ -92,7 +91,7 @@ class ReusableFunc {
             progressView.centerYAnchor.constraint(equalTo: parentView.centerYAnchor),
             // Jika InitProgress punya size tetap di XIB, gunakan itu:
             progressView.widthAnchor.constraint(equalToConstant: progressView.frame.width),
-            progressView.heightAnchor.constraint(equalToConstant: progressView.frame.height)
+            progressView.heightAnchor.constraint(equalToConstant: progressView.frame.height),
         ])
     }
 
@@ -113,12 +112,13 @@ class ReusableFunc {
             // Setelah animasi selesai, hapus dari superview
             progressView.removeFromSuperview()
             #if DEBUG
-                print("Progress view removed from parent view")
+            print("Progress view removed from parent view")
             #endif
         }
     }
 
     // MARK: - TABLEVIEW
+
     static func registerNib(tableView: NSTableView, nibName: CellIViewIdentifier, cellIdentifier: CellIViewIdentifier) {
         if let folderNib = NSNib(nibNamed: nibName.rawValue, bundle: nil) {
             tableView.register(folderNib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: cellIdentifier.rawValue))
@@ -130,6 +130,7 @@ class ReusableFunc {
     }
 
     // MARK: - WINDOW
+
     static func makeTitlelessWindow(contentView: NSView, size: NSSize) -> NSWindow {
         let w = NSWindow(
             contentRect: NSRect(origin: .zero, size: size),
@@ -174,6 +175,7 @@ class ReusableFunc {
     }
 
     // MARK: - OTHERS
+
     static func resolveRowsToProcess(selectedRows: IndexSet, clickedRow: Int) -> IndexSet {
         if selectedRows.contains(clickedRow), selectedRows.count > 1 {
             return selectedRows
@@ -210,7 +212,7 @@ class ReusableFunc {
     }
     #endif
 
-    /// Menampilkan jendela peringatan standar kepada pengguna.
+    // Menampilkan jendela peringatan standar kepada pengguna.
     #if os(macOS)
     static func showAlert(title: String, message: String, style: NSAlert.Style = .warning) {
         DispatchQueue.main.async {
@@ -233,7 +235,8 @@ class ReusableFunc {
 
     static func getTopViewController() -> UIViewController? {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+              let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController
+        else {
             return nil
         }
         var topVC = rootVC
@@ -244,57 +247,56 @@ class ReusableFunc {
     }
     #endif
 
-
     static func decompressData(_ data: Data?) -> String {
         guard let compressed = data, !compressed.isEmpty else { return "" }
         return compressed.withUnsafeBytes { ptr in decompressData(from: ptr) }
     }
 
     static func decompressData(from ptr: UnsafeRawBufferPointer?) -> String {
-        guard let ptr = ptr, ptr.count > 0 else { return "" }
+        guard let ptr, ptr.count > 0 else { return "" }
 
         // 1. Ambil ukuran asli dari frame ZSTD
         let expectedSize = ZSTD_getFrameContentSize(ptr.baseAddress, ptr.count)
 
-            // Cek jika ukuran tidak valid atau error
-            if expectedSize == ZSTD_CONTENTSIZE_ERROR || expectedSize == ZSTD_CONTENTSIZE_UNKNOWN {
-                // Jika tidak diketahui, gunakan fallback manual yang lebih besar (misal * 10) atau return empty
+        // Cek jika ukuran tidak valid atau error
+        if expectedSize == ZSTD_CONTENTSIZE_ERROR || expectedSize == ZSTD_CONTENTSIZE_UNKNOWN {
+            // Jika tidak diketahui, gunakan fallback manual yang lebih besar (misal * 10) atau return empty
+            #if DEBUG
+            print("❌ Ukuran konten tidak diketahui")
+            #endif
+            return ""
+        }
+
+        let expectedSizeInt = Int(expectedSize)
+        return String(unsafeUninitializedCapacity: expectedSizeInt) { outBuffer in
+            let dict = Thread.current.threadDictionary
+            let dctx: OpaquePointer
+            if let wrapper = dict["Maktabah.ZSTDDCtx"] as? ZSTDContextWrapper {
+                dctx = wrapper.dctx
+            } else {
+                let wrapper = ZSTDContextWrapper()
+                dict["Maktabah.ZSTDDCtx"] = wrapper
+                dctx = wrapper.dctx
+            }
+
+            let decompressedSize = ZSTD_decompressDCtx(
+                dctx,
+                outBuffer.baseAddress,
+                expectedSizeInt,
+                ptr.baseAddress,
+                ptr.count
+            )
+
+            if ZSTD_isError(decompressedSize) != 0 {
+                let errorName = String(cString: ZSTD_getErrorName(decompressedSize))
                 #if DEBUG
-                print("❌ Ukuran konten tidak diketahui")
+                print("❌ Zstd Error: \(errorName)")
                 #endif
-                return ""
+                return 0
             }
 
-            let expectedSizeInt = Int(expectedSize)
-            return String(unsafeUninitializedCapacity: expectedSizeInt) { outBuffer in
-                let dict = Thread.current.threadDictionary
-                let dctx: OpaquePointer
-                if let wrapper = dict["Maktabah.ZSTDDCtx"] as? ZSTDContextWrapper {
-                    dctx = wrapper.dctx
-                } else {
-                    let wrapper = ZSTDContextWrapper()
-                    dict["Maktabah.ZSTDDCtx"] = wrapper
-                    dctx = wrapper.dctx
-                }
-
-                let decompressedSize = ZSTD_decompressDCtx(
-                    dctx,
-                    outBuffer.baseAddress,
-                    expectedSizeInt,
-                    ptr.baseAddress,
-                    ptr.count
-                )
-
-                if ZSTD_isError(decompressedSize) != 0 {
-                    let errorName = String(cString: ZSTD_getErrorName(decompressedSize))
-                    #if DEBUG
-                    print("❌ Zstd Error: \(errorName)")
-                    #endif
-                    return 0
-                }
-
-                return decompressedSize
-            }
+            return decompressedSize
+        }
     }
 
     static func compressData(_ text: String, level: Int32 = 10) -> Data? {
@@ -306,7 +308,7 @@ class ReusableFunc {
 
         let compressedSize = output.withUnsafeMutableBytes { outPtr -> Int in
             return inputData.withUnsafeBytes { inPtr in
-                return ZSTD_compress(
+                ZSTD_compress(
                     outPtr.baseAddress,
                     bound,
                     inPtr.baseAddress,
@@ -319,7 +321,7 @@ class ReusableFunc {
         if ZSTD_isError(compressedSize) != 0 {
             let errorName = String(cString: ZSTD_getErrorName(compressedSize))
             #if DEBUG
-                print("❌ Zstd Compress Error: \(errorName)")
+            print("❌ Zstd Compress Error: \(errorName)")
             #endif
             return nil
         }
@@ -330,23 +332,23 @@ class ReusableFunc {
 
     #if os(macOS)
     static func helpSearchOpt(_ sender: NSButton) {
-        let searchHelpPopover: NSPopover = NSPopover()
-
-        // 1. Cek dan Tutup Popover jika sudah terbuka
+        let searchHelpPopover = NSPopover()
         if searchHelpPopover.isShown {
             searchHelpPopover.close()
             return
         }
 
-        // 2. Buat NSViewController (kecil-kecilan) secara in-place
-        let contentVC = NSViewController()
+        searchHelpPopover.contentViewController = createSearchHelpContentViewController()
+        searchHelpPopover.behavior = .transient
+        searchHelpPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minX)
+    }
 
-        // Atur ukuran konten yang diinginkan untuk Popover
+    private static func createSearchHelpContentViewController() -> NSViewController {
         let preferredWidth: CGFloat = 250
         let preferredHeight: CGFloat = 250
+        let contentVC = NSViewController()
         contentVC.preferredContentSize = NSSize(width: preferredWidth, height: preferredHeight)
 
-        // 3. Buat View Utama dan StackView
         let mainView = NSView(frame: NSRect(x: 0, y: 0, width: preferredWidth, height: preferredHeight))
         contentVC.view = mainView
 
@@ -356,90 +358,47 @@ class ReusableFunc {
         stackView.spacing = 12
         stackView.edgeInsets = NSEdgeInsetsZero
         stackView.translatesAutoresizingMaskIntoConstraints = false
-
         mainView.addSubview(stackView)
 
         let constant: CGFloat = 20
-
-        // Atur constraints agar StackView mengisi View Controller
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: mainView.topAnchor, constant: constant),
             stackView.bottomAnchor.constraint(equalTo: mainView.bottomAnchor, constant: -constant),
             stackView.leadingAnchor.constraint(equalTo: mainView.leadingAnchor, constant: constant),
-            stackView.trailingAnchor.constraint(equalTo: mainView.trailingAnchor, constant: -constant)
+            stackView.trailingAnchor.constraint(equalTo: mainView.trailingAnchor, constant: -constant),
         ])
 
-        // --- 4. Definisi Konten Bantuan ---
-
-        // Judul Utama
         let titleLabel = NSTextField(labelWithString: NSLocalizedString("searchOptionsHelp", comment: ""))
         titleLabel.font = NSFont.boldSystemFont(ofSize: 16)
         stackView.addArrangedSubview(titleLabel)
 
-        // Fungsi pembantu lokal (didefinisikan di dalam func ini)
-        func createTitleLabel(text: String) -> NSTextField {
-            let label = NSTextField(wrappingLabelWithString: text)
-            label.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
-            return label
-        }
+        let options: [(title: String, desc: String)] = [
+            (NSLocalizedString("exactSearchTitle", comment: ""), NSLocalizedString("exactSearchDesc", comment: "")),
+            (NSLocalizedString("separateWordsSearchTitle", comment: ""), NSLocalizedString("separateWordsSearchDesc", comment: "")),
+            (String(localized: "anyWordsSearchTitle"), String(localized: "anyWordsSearchDesc")),
+            (String(localized: "nearSearchTitle"), String(localized: "nearSearchDesc")),
+        ]
 
-        func createDescLabel(text: String) -> NSTextField {
-            let label = NSTextField(wrappingLabelWithString: text)
-            label.font = NSFont.systemFont(ofSize: 13)
-            label.setContentHuggingPriority(.defaultLow, for: .horizontal)
-            return label
-        }
-
-        func createSeparator() -> NSView {
+        for (title, desc) in options {
             let separator = NSBox()
             separator.boxType = .separator
-            return separator
+            stackView.addArrangedSubview(separator)
+
+            let titleLbl = NSTextField(wrappingLabelWithString: title)
+            titleLbl.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+            stackView.addArrangedSubview(titleLbl)
+
+            let descLbl = NSTextField(wrappingLabelWithString: desc)
+            descLbl.font = NSFont.systemFont(ofSize: 13)
+            descLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            stackView.addArrangedSubview(descLbl)
         }
 
-        stackView.addArrangedSubview(createSeparator())
-
-        // Option 1
-        let option1Label = createTitleLabel(text: NSLocalizedString("exactSearchTitle", comment: ""))
-        let option1Desc = createDescLabel(text: NSLocalizedString("exactSearchDesc", comment: ""))
-
-        // Option 2
-        let option2Label = createTitleLabel(text: NSLocalizedString("separateWordsSearchTitle", comment: ""))
-        let option2Desc = createDescLabel(text: NSLocalizedString("separateWordsSearchDesc", comment: ""))
-
-        let option3Label = createTitleLabel(text: String(localized: "anyWordsSearchTitle"))
-        let option3Desc = createDescLabel(text: String(localized: "anyWordsSearchDesc"))
-
-        let option4Label = createTitleLabel(text: String(localized: "nearSearchTitle"))
-        let option4Desc = createDescLabel(text: String(localized: "nearSearchDesc"))
-
-        // 5. Tambahkan Konten ke StackView
-        stackView.addArrangedSubview(option1Label)
-        stackView.addArrangedSubview(option1Desc)
-
-        stackView.addArrangedSubview(createSeparator())
-
-        stackView.addArrangedSubview(option2Label)
-        stackView.addArrangedSubview(option2Desc)
-
-        stackView.addArrangedSubview(createSeparator())
-
-        stackView.addArrangedSubview(option3Label)
-        stackView.addArrangedSubview(option3Desc)
-
-        stackView.addArrangedSubview(createSeparator())
-
-        stackView.addArrangedSubview(option4Label)
-        stackView.addArrangedSubview(option4Desc)
-
-        // 6. Konfigurasi dan Tampilkan Popover
-        searchHelpPopover.contentViewController = contentVC
-        searchHelpPopover.behavior = .transient // Popover menutup ketika fokus hilang
-
-        // Tampilkan popover, relatif terhadap tombol (sender)
-        searchHelpPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minX)
+        return contentVC
     }
 
     // MARK: - NSIMAGE
+
     static func systemImage(named name: String) -> NSImage {
         guard let image = NSImage(systemSymbolName: name,
                                   accessibilityDescription: nil)
@@ -464,4 +423,37 @@ extension NSOutlineView {
         return rect(ofRow: anchorRow)
     }
 }
+
+extension NSSegmentedControl {
+    static func makeNavigationControl(
+        target: AnyObject? = nil,
+        action: Selector? = nil
+    ) -> NSSegmentedControl {
+        let control = NSSegmentedControl()
+        control.segmentCount = 2
+        control.segmentStyle = .texturedRounded
+        control.trackingMode = .momentary
+        control.userInterfaceLayoutDirection = .leftToRight
+        control.setImage(ReusableFunc.systemImage(named: "arrow.left"), forSegment: 0)
+        control.setImage(ReusableFunc.systemImage(named: "arrow.right"), forSegment: 1)
+        control.setWidth(23, forSegment: 0)
+        control.setWidth(23, forSegment: 1)
+        control.target = target
+        control.action = action
+        control.setAccessibilityLabel(String(localized: "Navigation"))
+        control.toolTip = String(localized: "Navigation")
+        control.setToolTip(String(localized: "Next Page"), forSegment: 0)
+        control.setToolTip(String(localized: "Previous Page"), forSegment: 1)
+        return control
+    }
+}
 #endif
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        guard size > 0 else { return [self] }
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
+        }
+    }
+}

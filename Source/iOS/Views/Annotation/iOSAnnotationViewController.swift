@@ -105,8 +105,18 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func handleTagDiff(_ diff: TagUpdateDiff) {
-        // 1. Process Removed
-        for entry in diff.removed {
+        processTagDiffRemovals(diff.removed)
+        processTagDiffAdditions(diff.added)
+
+        for node in diff.updated {
+            if let ann = node.annotation {
+                updateItemInSections(with: ann)
+            }
+        }
+    }
+
+    private func processTagDiffRemovals(_ removed: [TagUpdateDiff.RemovedEntry]) {
+        for entry in removed {
             let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
             var sectionSnap = dataSource.snapshot(for: sectionID)
             let targetAnnotationId = entry.annotationNode.annotation?.id
@@ -128,14 +138,14 @@ class iOSAnnotationViewController: UIViewController {
                 dataSource.apply(rootSnap, animatingDifferences: true)
             }
         }
+    }
 
-        // 2. Process Added
-        for entry in diff.added {
+    private func processTagDiffAdditions(_ added: [TagUpdateDiff.AddedEntry]) {
+        for entry in added {
             let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
 
             var rootSnap = dataSource.snapshot()
             if !rootSnap.sectionIdentifiers.contains(sectionID) {
-                // If the item needs to be sorted logically, ideally we reload, but append works for simple diffs
                 rootSnap.appendSections([sectionID])
                 dataSource.apply(rootSnap, animatingDifferences: true)
             }
@@ -167,13 +177,6 @@ class iOSAnnotationViewController: UIViewController {
             if !sectionSnap.items.contains(where: { $0.node.annotation?.id == newNode.annotation?.id }) {
                 sectionSnap.append([newItem], to: groupItem)
                 dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
-            }
-        }
-
-        // 3. Process Updated
-        for node in diff.updated {
-            if let ann = node.annotation {
-                updateItemInSections(with: ann)
             }
         }
     }
@@ -254,48 +257,29 @@ class iOSAnnotationViewController: UIViewController {
     // MARK: - Setup
 
     private func setupCollectionView() {
-        var listConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
-        listConfig.showsSeparators = true
-        listConfig.backgroundColor = .appBackground
-        listConfig.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
-            guard let self,
-                  let dataSource,
-                  let item = dataSource.itemIdentifier(for: indexPath),
-                  case let .annotation(node) = item
-            else { return nil }
+        let layout = createCompositionalLayout()
 
-            let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, _ in
-                guard let self else { return }
-                // Remove from snapshot immediately for instant UI feedback
-                var snap = dataSource.snapshot()
-                snap.deleteItems([item])
-                dataSource.apply(snap, animatingDifferences: true)
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.register(
+            iOSTagFilterHeaderView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+            withReuseIdentifier: iOSTagFilterHeaderView.reuseIdentifier
+        )
+        collectionView.backgroundColor = SettingsViewModel.shared.useDefaultTheme
+            ? .systemGroupedBackground : .appBackground
+        collectionView.contentInsetAdjustmentBehavior = .automatic
+        collectionView.semanticContentAttribute = .forceLeftToRight
+        collectionView.delegate = self
 
-                // Execute actual deletion in background
-                onAnnotationDeleted?(node)
-            }
-            delete.image = UIImage(systemName: "trash")
-            return UISwipeActionsConfiguration(actions: [delete])
-        }
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        collectionView.refreshControl = refreshControl
 
-        listConfig.itemSeparatorHandler = { [weak self] indexPath, sectionSeparatorConfiguration in
-            var separatorConfig = sectionSeparatorConfiguration
-            guard let self, let dataSource,
-                  let item = dataSource.itemIdentifier(for: indexPath)
-            else {
-                return separatorConfig
-            }
+        collectionView.pinToEdges(of: view)
+    }
 
-            let trailing = trailingOffset(for: item)
-            separatorConfig.bottomSeparatorInsets = NSDirectionalEdgeInsets(
-                top: 0,
-                leading: ListLayoutMetrics.defaultPadding,
-                bottom: 0,
-                trailing: trailing
-            )
-            return separatorConfig
-        }
-
+    private func createCompositionalLayout() -> UICollectionViewLayout {
+        let listConfig = createListLayoutConfiguration()
         let headerSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
             heightDimension: .estimated(40)
@@ -310,78 +294,48 @@ class iOSAnnotationViewController: UIViewController {
         let layoutConfig = UICollectionViewCompositionalLayoutConfiguration()
         layoutConfig.boundarySupplementaryItems = [header]
 
-        let layout = UICollectionViewCompositionalLayout(sectionProvider: { [weak self] _, environment in
+        return UICollectionViewCompositionalLayout(sectionProvider: { [weak self] _, environment in
             guard let self else {
-                return NSCollectionLayoutSection.list(
-                    using: listConfig,
-                    layoutEnvironment: environment
-                )
+                return NSCollectionLayoutSection.list(using: listConfig, layoutEnvironment: environment)
             }
             let section = NSCollectionLayoutSection.list(using: listConfig, layoutEnvironment: environment)
             section.contentInsets = sectionInsets
             return section
         }, configuration: layoutConfig)
+    }
 
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.register(
-            iOSTagFilterHeaderView.self,
-            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-            withReuseIdentifier: iOSTagFilterHeaderView.reuseIdentifier
-        )
-        collectionView.backgroundColor = SettingsViewModel.shared.useDefaultTheme
-            ? .systemGroupedBackground : .appBackground
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.contentInsetAdjustmentBehavior = .automatic
-        collectionView.semanticContentAttribute = .forceLeftToRight
-        collectionView.delegate = self
+    private func createListLayoutConfiguration() -> UICollectionLayoutListConfiguration {
+        var listConfig = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
+        listConfig.showsSeparators = true
+        listConfig.backgroundColor = .appBackground
+        listConfig.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath in
+            guard let self,
+                  let dataSource,
+                  let item = dataSource.itemIdentifier(for: indexPath),
+                  case let .annotation(node) = item
+            else { return nil }
 
-        let refreshControl = UIRefreshControl()
-        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
-        collectionView.refreshControl = refreshControl
+            let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, _ in
+                guard let self else { return }
+                var snap = dataSource.snapshot()
+                snap.deleteItems([item])
+                dataSource.apply(snap, animatingDifferences: true)
+                onAnnotationDeleted?(node)
+            }
+            delete.image = UIImage(systemName: "trash")
+            return UISwipeActionsConfiguration(actions: [delete])
+        }
 
-        view.addSubview(collectionView)
+        listConfig.setStandardItemSeparatorHandler(dataSource: { [weak self] in self?.dataSource }, trailingOffset: { [weak self] item in
+            self?.trailingOffset(for: item) ?? 16
+        })
 
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-        ])
+        return listConfig
     }
 
     private func configureDataSource() {
-        // Group cell — reuse ListContentView/ListContentConfiguration
-        let groupCellReg = UICollectionView.CellRegistration<UICollectionViewListCell, SwiftUIAnnotationNode> {
-            [weak self] cell, _, node in
-            guard let self else { return }
-
-            let isExpanded = expandedGroups.contains(node.id)
-            let iconName = iconForKind(node.kind)
-
-            let config = ListContentConfiguration(
-                text: node.title,
-                font: font,
-                leadingAccessory: .icon(iconName),
-                isExpanded: isExpanded,
-                root: true,
-                indentationLevel: 0
-            )
-            cell.contentConfiguration = config
-            cell.accessories = []
-            cell.applyThemeConfigurationUpdateHandler()
-        }
-
-        // Annotation (leaf) cell
-        let annotationCellReg = UICollectionView.CellRegistration<UICollectionViewListCell, SwiftUIAnnotationNode> {
-            cell, _, node in
-            let config = AnnotationContentConfiguration(
-                annotation: node.annotation,
-                groupingMode: self.currentGroupingMode
-            )
-            cell.contentConfiguration = config
-            cell.accessories = []
-            cell.applyThemeConfigurationUpdateHandler()
-        }
+        let groupCellReg = makeGroupCellRegistration()
+        let annotationCellReg = makeAnnotationCellRegistration()
 
         dataSource = UICollectionViewDiffableDataSource<String, AnnotationItem>(
             collectionView: collectionView
@@ -401,6 +355,39 @@ class iOSAnnotationViewController: UIViewController {
             ) as? iOSTagFilterHeaderView
             self?.configureTagFilterHeader(header)
             return header
+        }
+    }
+
+    private func makeGroupCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, SwiftUIAnnotationNode> {
+        UICollectionView.CellRegistration<UICollectionViewListCell, SwiftUIAnnotationNode> { [weak self] cell, _, node in
+            guard let self else { return }
+            let isExpanded = expandedGroups.contains(node.id)
+            let iconName = iconForKind(node.kind)
+
+            let config = ListContentConfiguration(
+                text: node.title,
+                font: font,
+                leadingAccessory: .icon(iconName),
+                isExpanded: isExpanded,
+                root: true,
+                indentationLevel: 0
+            )
+            cell.contentConfiguration = config
+            cell.accessories = []
+            cell.applyThemeConfigurationUpdateHandler()
+        }
+    }
+
+    private func makeAnnotationCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, SwiftUIAnnotationNode> {
+        UICollectionView.CellRegistration<UICollectionViewListCell, SwiftUIAnnotationNode> { [weak self] cell, _, node in
+            guard let self else { return }
+            let config = AnnotationContentConfiguration(
+                annotation: node.annotation,
+                groupingMode: currentGroupingMode
+            )
+            cell.contentConfiguration = config
+            cell.accessories = []
+            cell.applyThemeConfigurationUpdateHandler()
         }
     }
 

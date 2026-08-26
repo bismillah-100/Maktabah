@@ -12,7 +12,7 @@ import SwiftUI
 extension iOSAnnotationViewController {
     func configureTagFilterHeader(_ header: iOSTagFilterHeaderView?) {
         guard let header, let viewModel else { return }
-        header.configure(
+        let config = TagFilterHeaderConfiguration(
             allTags: viewModel.availableTags,
             selectedTags: viewModel.selectedTags,
             isAndMode: viewModel.tagFilterMode == .and,
@@ -26,6 +26,7 @@ extension iOSAnnotationViewController {
                 self?.viewModel?.toggleTagSelection(tag)
             }
         )
+        header.configure(with: config)
     }
 
     func updateTagFilterHeader() {

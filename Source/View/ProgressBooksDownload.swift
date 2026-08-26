@@ -5,12 +5,11 @@
 //  Created by MacBook on 02/03/26.
 //
 
+import Observation
 import SwiftUI
-#if canImport(AppKit)
+#if os(macOS)
 import AppKit
 #endif
-
-import Observation
 
 @MainActor
 #if os(iOS)
@@ -24,6 +23,7 @@ final class BundleArchiveDownloadProgressState: Identifiable {
         case downloading
         case integrating
     }
+
     enum PendingData {
         case single(book: BooksData, contentId: Int?)
         case bulk(books: [BooksData])
@@ -63,6 +63,27 @@ final class BundleArchiveDownloadProgressState: Identifiable {
         self.mode = mode
         self.totalSizeString = totalSizeString
     }
+
+    static func makeConfirmation(for book: BooksData) -> BundleArchiveDownloadProgressState {
+        let bodyFormat = String(localized: "Confirm Download Message")
+        let message = String(
+            format: bodyFormat,
+            locale: Locale.current,
+            book.book
+        )
+
+        var sizeString = ""
+        if let size = book.compressedDownloadSize, size > 0 {
+            sizeString = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+        }
+
+        return BundleArchiveDownloadProgressState(
+            title: book.book,
+            message: message,
+            mode: .confirmation,
+            totalSizeString: sizeString
+        )
+    }
 }
 
 struct BundleArchiveDownloadProgressView: View {
@@ -83,7 +104,7 @@ struct BundleArchiveDownloadProgressView: View {
                             LinearGradient(
                                 colors: [
                                     Color.accentColor.opacity(0.95),
-                                    Color.accentColor.opacity(0.65)
+                                    Color.accentColor.opacity(0.65),
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -101,25 +122,23 @@ struct BundleArchiveDownloadProgressView: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
 
-                    let badgeText: String = {
-                        switch state.mode {
-                        case .confirmation:
-                            return NSLocalizedString(
-                                "Ready to Download",
-                                comment: "Ready to download badge"
-                            )
-                        case .downloading:
-                            return NSLocalizedString(
-                                "Downloading",
-                                comment: "Downloading badge"
-                            )
-                        case .integrating:
-                            return NSLocalizedString(
-                                "Integrating",
-                                comment: "Integrating badge"
-                            )
-                        }
-                    }()
+                    let badgeText: String = switch state.mode {
+                    case .confirmation:
+                        NSLocalizedString(
+                            "Ready to Download",
+                            comment: "Ready to download badge"
+                        )
+                    case .downloading:
+                        NSLocalizedString(
+                            "Downloading",
+                            comment: "Downloading badge"
+                        )
+                    case .integrating:
+                        NSLocalizedString(
+                            "Integrating",
+                            comment: "Integrating badge"
+                        )
+                    }
                     Text(badgeText)
                         .font(.caption2)
                         .padding(.horizontal, 8)
@@ -134,7 +153,7 @@ struct BundleArchiveDownloadProgressView: View {
             }
 
             // Message / description
-            if state.mode == .confirmation && !state.totalSizeString.isEmpty {
+            if state.mode == .confirmation, !state.totalSizeString.isEmpty {
                 Text("\(state.message) (\(state.totalSizeString))")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -218,9 +237,9 @@ struct BundleArchiveDownloadProgressView: View {
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.regularMaterial)
-                #if os(iOS)
+            #if os(iOS)
                 .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
-                #endif
+            #endif
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -235,8 +254,8 @@ struct BundleArchiveDownloadProgressView: View {
 
 struct iOSBookDownloadProgressView: View {
     var state: BundleArchiveDownloadProgressState
-    var onConfirm: (() -> Void)? = nil
-    var onCancel: (() -> Void)? = nil
+    var onConfirm: (() -> Void)?
+    var onCancel: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -307,7 +326,7 @@ extension View {
     @ViewBuilder
     func buttonBorderShapeCircle() -> some View {
         if #available(macOS 14.0, iOS 17.0, tvOS 17.0, watchOS 10.0, *) {
-            self.buttonBorderShape(.circle)
+            buttonBorderShape(.circle)
         } else {
             self
         }
@@ -356,26 +375,7 @@ final class BookIntegrateModalCenter {
     func presentAndWaitForConfirmation(book: BooksData) async -> Bool {
         internalDismiss(cancelContinuation: true)
 
-        let bodyFormat = String(
-            localized: "Confirm Download Message"
-        )
-        let message = String(
-            format: bodyFormat,
-            locale: Locale.current,
-            book.book
-        )
-
-        var sizeString = ""
-        if let size = book.compressedDownloadSize, size > 0 {
-            sizeString = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-        }
-
-        let state = BundleArchiveDownloadProgressState(
-            title: book.book,
-            message: message,
-            mode: .confirmation,
-            totalSizeString: sizeString
-        )
+        let state = BundleArchiveDownloadProgressState.makeConfirmation(for: book)
         progressState = state
 
         let hostingView = NSHostingView(
@@ -499,4 +499,30 @@ final class BookIntegrateModalCenter {
     }
 }
 
+extension BookIntegrateModalCenter {
+    /// Memeriksa status integrasi bundle dan menampilkan modal konfirmasi & progress jika diperlukan.
+    func ensureIntegrated(book: BooksData) async throws {
+        guard AppConfig.isUsingBundleMode,
+              !BookArchiveIntegrator.shared.isBookIntegrated(book)
+        else {
+            return
+        }
+
+        let confirmed = await presentAndWaitForConfirmation(book: book)
+        guard confirmed else { throw CancellationError() }
+
+        defer {
+            Task { @MainActor [weak self] in
+                self?.dismiss()
+            }
+        }
+
+        try await BookArchiveIntegrator.shared.ensureBookIntegrated(
+            book,
+            onIntegrating: { [weak self] in
+                await self?.showIntegrating()
+            }
+        )
+    }
+}
 #endif

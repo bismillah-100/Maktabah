@@ -7,10 +7,8 @@
 
 import Foundation
 import SwiftUI
-#if canImport(AppKit)
+#if os(macOS)
 import AppKit
-#elseif canImport(UIKit)
-import UIKit
 #endif
 
 @MainActor
@@ -47,7 +45,7 @@ final class DonationManager: ObservableObject {
         if hasDonated || isInCooldown { return false }
 
         let count = activationCount
-        if count >= 1000 && count % 1000 == 0 {
+        if count >= 1000, count % 1000 == 0 {
             return true
         }
 

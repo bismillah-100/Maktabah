@@ -132,13 +132,7 @@ final class BulkDownloadModalCenter {
             for book in books {
                 guard !shouldStopDownloads, !Task.isCancelled else { break }
                 group.addTask {
-                    do {
-                        let url = try await BookDownloadManager.shared
-                            .ensureBookDownloaded(bookId: book.id)
-                        return (book.id, .success(url))
-                    } catch {
-                        return (book.id, .failure(error))
-                    }
+                    await BookDownloadManager.shared.downloadBookResult(bookId: book.id)
                 }
                 vc.updateStatus(bookId: book.id, status: .downloading)
             }

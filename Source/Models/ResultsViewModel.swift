@@ -32,9 +32,13 @@ class ResultsViewModel {
         var list = [FolderNode]()
         func walk(_ node: FolderNode) {
             list.append(node)
-            for child in node.children { walk(child) }
+            for child in node.children {
+                walk(child)
+            }
         }
-        for root in folderRoots { walk(root) }
+        for root in folderRoots {
+            walk(root)
+        }
         return list
     }
 
@@ -136,7 +140,7 @@ class ResultsViewModel {
             return resultsMap
         }.value
 
-        self.folderResults = allResults
+        folderResults = allResults
         rebuildResultIndex()
         notifyChange(.fullReload)
     }
@@ -293,7 +297,7 @@ class ResultsViewModel {
         db.deleteFolder(node.id)
 
         // remove results under this subtree
-        let ids = getAllDescendantIds(of: node)
+        let ids = node.allDescendantIds
         for id in ids {
             // remove folderResults entries for each descendant
             folderResults.removeValue(forKey: id)
@@ -332,7 +336,7 @@ class ResultsViewModel {
         guard var results = folderResults[parentFolderId] else { return }
 
         // Kumpulkan index yang akan dihapus
-        let deletedIndices: [(ResultNode, Int)] = results.enumerated().compactMap { (i, r) in
+        let deletedIndices: [(ResultNode, Int)] = results.enumerated().compactMap { i, r in
             r.name == name ? (r, i) : nil
         }
 
@@ -374,13 +378,16 @@ class ResultsViewModel {
             }
         }
 
-        try db.insertResults(
-            groupedResults,
+        let options = ResultSaveOptions(
             folderId: folderId,
             query: query,
+            name: name,
             searchMode: searchMode,
-            nearDistance: nearDistance,
-            name: name
+            nearDistance: nearDistance
+        )
+        try db.insertResults(
+            groupedResults,
+            options: options
         )
     }
 
@@ -390,9 +397,9 @@ class ResultsViewModel {
         // 1. Cek apakah newParent adalah descendant dari draggedNode
         if let parent = newParent {
             if isDescendant(parent, of: draggedNode) {
-#if DEBUG
+                #if DEBUG
                 print("Tidak bisa memindahkan folder ke dalam dirinya sendiri")
-#endif
+                #endif
                 return
             }
         }
@@ -422,8 +429,7 @@ class ResultsViewModel {
         // update folderById if missing (usually not necessary)
         folderById[draggedNode.id] = draggedNode
         // 4. Update results di semua descendant folders
-        let allIds = getAllDescendantIds(of: draggedNode)
-        for id in allIds {
+        for id in draggedNode.allDescendantIds {
             db.updateResultsFolder(oldFolderId: id, newFolderId: id)
         }
 
@@ -439,23 +445,10 @@ class ResultsViewModel {
     private func isDescendant(_ node: FolderNode, of ancestor: FolderNode) -> Bool {
         if node.id == ancestor.id { return true }
 
-        for child in ancestor.children {
-            if isDescendant(node, of: child) { return true }
+        for child in ancestor.children where isDescendant(node, of: child) {
+            return true
         }
         return false
-    }
-
-    private func getAllDescendantIds(of node: FolderNode) -> [Int64] {
-        var ids: [Int64] = []
-        _getAllDescendantIds(of: node, ids: &ids)
-        return ids
-    }
-
-    private func _getAllDescendantIds(of node: FolderNode, ids: inout [Int64]) {
-        ids.append(node.id)
-        for child in node.children {
-            _getAllDescendantIds(of: child, ids: &ids)
-        }
     }
 
     private func removeNodeFromTree(_ node: FolderNode) {
@@ -469,14 +462,14 @@ class ResultsViewModel {
                 parent.children.remove(at: i)
                 return true
             }
-            for child in parent.children {
-                if remove(from: child) { return true }
+            for child in parent.children where remove(from: child) {
+                return true
             }
             return false
         }
 
-        for root in folderRoots {
-            if remove(from: root) { break }
+        for root in folderRoots where remove(from: root) {
+            break
         }
     }
 
@@ -526,7 +519,7 @@ class ResultsViewModel {
     // MARK: - Find helpers using index
 
     func findFolder(_ id: Int64) -> FolderNode? {
-        return folderById[id]
+        folderById[id]
     }
 
     /*
@@ -556,10 +549,8 @@ class ResultsViewModel {
 
         var matches: [FolderNode] = []
 
-        for (_, node) in folderById {
-            if node.name.localizedStandardContains(q) {
-                matches.append(node)
-            }
+        for (_, node) in folderById where node.name.localizedStandardContains(q) {
+            matches.append(node)
         }
 
         return matches.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -572,21 +563,19 @@ class ResultsViewModel {
 
         var matches: [ResultNode] = []
 
-        for (_, r) in resultById {
-            if r.name.localizedStandardContains(q) {
-                matches.append(r)
-            }
+        for (_, r) in resultById where r.name.localizedStandardContains(q) {
+            matches.append(r)
         }
 
         return matches.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
-    /// Mengembalikan tuple (result, folderId, folderPathString)
-    func searchResultsWithFolderPath(_ query: String) -> [(result: ResultNode, folderId: Int64?, folderPath: String)] {
+    /// Mengembalikan array SearchResultWithPath (result, folderId, folderPathString)
+    func searchResultsWithFolderPath(_ query: String) -> [SearchResultWithPath] {
         let results = searchResultsInMemory(query)
         return results.map { result in
             let path = folderPath(for: result.parentId)
-            return (result: result, folderId: result.parentId, folderPath: path)
+            return SearchResultWithPath(result: result, folderId: result.parentId, folderPath: path)
         }
     }
 

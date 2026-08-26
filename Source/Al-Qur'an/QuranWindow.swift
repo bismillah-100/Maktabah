@@ -9,23 +9,23 @@ import Cocoa
 
 class QuranWindow: NSWindow {
     private var toolbarConfigured = false
-    
+
     private(set) var navSegment: NSToolbarItem!
     private(set) var searchCurrent: NSToolbarItem!
     private(set) var searchQuran: NSToolbarItem!
     private(set) var searchTafseer: NSToolbarItem!
-    
+
     weak var splitView: NSSplitView! {
         didSet {
             // Panggil setup toolbar di sini setelah splitView tersedia
             setupToolbar()
         }
     }
-    
+
     var rtl: Bool {
         MainWindow.rtl
     }
-    
+
     override init(
         contentRect: NSRect,
         styleMask: NSWindow.StyleMask,
@@ -35,11 +35,11 @@ class QuranWindow: NSWindow {
         super.init(contentRect: contentRect, styleMask: styleMask, backing: backing, defer: flag)
         commonInit()
     }
-    
+
     private func commonInit() {
         titleVisibility = rtl ? .hidden : .visible
     }
-    
+
     private func setupToolbar() {
         guard !toolbarConfigured else { return }
         let mainToolbar = NSToolbar(identifier: NSToolbar.Identifier("QuranToolbar"))
@@ -52,11 +52,9 @@ class QuranWindow: NSWindow {
         toolbar = mainToolbar
         toolbarConfigured = true
     }
-    
 }
 
 extension QuranWindow: NSToolbarDelegate {
-    
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         [
             .searchTafseer,
@@ -66,110 +64,47 @@ extension QuranWindow: NSToolbarDelegate {
             .flexibleSpace,
             .space,
             .trackingSeparatorQuran,
-            .trackingSeparatorTafseer
+            .trackingSeparatorTafseer,
         ]
     }
-    
+
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        let items: [NSToolbarItem.Identifier]
-        if rtl {
-            items = [
+        let items: [NSToolbarItem.Identifier] = if rtl {
+            [
                 .searchQuran,
                 .trackingSeparatorQuran,
                 .searchTafseer,
                 .trackingSeparatorTafseer,
                 .navSegment,
-                .searchField
+                .searchField,
             ]
         } else {
-            items = [
+            [
                 .searchField,
                 .navSegment,
                 .trackingSeparatorTafseer,
                 .searchTafseer,
                 .trackingSeparatorQuran,
-                .searchQuran
+                .searchQuran,
             ]
         }
         return [.flexibleSpace] + items
     }
-    
+
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         switch itemIdentifier {
         case .trackingSeparatorQuran:
-            guard let splitView else {
-                return NSToolbarItem(itemIdentifier: itemIdentifier)
-            }
+            guard let splitView else { return NSToolbarItem(itemIdentifier: itemIdentifier) }
             let index = rtl ? 0 : 1
-            return createTrackingSeparator(
-                splitView,
-                itemIdentifier: itemIdentifier,
-                dividerIndex: index
-            )
-            
+            return createTrackingSeparator(splitView, itemIdentifier: itemIdentifier, dividerIndex: index)
         case .trackingSeparatorTafseer:
-            guard let splitView else {
-                return NSToolbarItem(itemIdentifier: itemIdentifier)
-            }
+            guard let splitView else { return NSToolbarItem(itemIdentifier: itemIdentifier) }
             let index = rtl ? 1 : 0
-            return createTrackingSeparator(
-                splitView,
-                itemIdentifier: itemIdentifier,
-                dividerIndex: index
-            )
-            
+            return createTrackingSeparator(splitView, itemIdentifier: itemIdentifier, dividerIndex: index)
         case .navSegment:
-            let item = navSegment ?? NSToolbarItem(itemIdentifier: itemIdentifier)
-            if navSegment == nil {
-                navSegment = item
-                let control = makeNavSegment()
-                item.label = "Navigation"
-                item.paletteLabel = "Navigation"
-                item.view = control
-            }
-            return item
-            
-        case .searchField:
-            let item = searchCurrent ?? NSToolbarItem(itemIdentifier: itemIdentifier)
-            if searchCurrent == nil {
-                searchCurrent = item
-                let button = makeToolbarButton(systemImageName: "doc.text.magnifyingglass")
-                item.label = "Search In Book"
-                item.paletteLabel = "Search In Current Book"
-                item.view = button
-                item.menuFormRepresentation = makeMenuItem(
-                    title: item.label,
-                    imageName: "doc.text.magnifyingglass"
-                )
-            }
-            return item
-            
-        case .searchQuran:
-            let item = searchQuran ?? NSToolbarItem(itemIdentifier: itemIdentifier)
-            if searchQuran == nil {
-                searchQuran = item
-                let button = makeToolbarButton(systemImageName: "text.magnifyingglass.rtl")
-                item.label = "Search Quran"
-                item.paletteLabel = "Search Quran"
-                item.view = button
-                item.menuFormRepresentation = makeMenuItem(
-                    title: item.label,
-                    imageName: "text.magnifyingglass.rtl"
-                )
-            }
-            return item
-            
-        case .searchTafseer:
-            let item = searchTafseer ?? NSToolbarItem(itemIdentifier: itemIdentifier)
-            if searchTafseer == nil {
-                searchTafseer = item
-                let field = makeTafseerSearchField()
-                item.label = "Search Tafseer"
-                item.paletteLabel = "Search Tafseer"
-                item.view = field
-            }
-            return item
-            
+            return makeNavSegmentItem(identifier: itemIdentifier)
+        case .searchField, .searchQuran, .searchTafseer:
+            return makeSearchToolbarItem(identifier: itemIdentifier)
         case .flexibleSpace:
             return NSToolbarItem(itemIdentifier: .flexibleSpace)
         case .space:
@@ -178,32 +113,82 @@ extension QuranWindow: NSToolbarDelegate {
             return NSToolbarItem(itemIdentifier: itemIdentifier)
         }
     }
-    
+
+    private func makeNavSegmentItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem {
+        let item = navSegment ?? NSToolbarItem(itemIdentifier: identifier)
+        if navSegment == nil {
+            navSegment = item
+            let control = NSSegmentedControl.makeNavigationControl()
+            item.label = "Navigation"
+            item.paletteLabel = "Navigation"
+            item.view = control
+        }
+        return item
+    }
+
+    private func makeSearchToolbarItem(identifier: NSToolbarItem.Identifier) -> NSToolbarItem? {
+        switch identifier {
+        case .searchField:
+            return configureButtonToolbarItem(
+                existingItem: &searchCurrent,
+                identifier: identifier,
+                imageName: "doc.text.magnifyingglass",
+                label: "Search In Book",
+                paletteLabel: "Search In Current Book"
+            )
+
+        case .searchQuran:
+            return configureButtonToolbarItem(
+                existingItem: &searchQuran,
+                identifier: identifier,
+                imageName: "text.magnifyingglass.rtl",
+                label: "Search Quran",
+                paletteLabel: "Search Quran"
+            )
+
+        case .searchTafseer:
+            let item = searchTafseer ?? NSToolbarItem(itemIdentifier: identifier)
+            if searchTafseer == nil {
+                searchTafseer = item
+                let field = makeTafseerSearchField()
+                item.label = "Search Tafseer"
+                item.paletteLabel = "Search Tafseer"
+                item.view = field
+            }
+            return item
+
+        default:
+            return nil
+        }
+    }
+
+    private func configureButtonToolbarItem(
+        existingItem: inout NSToolbarItem!,
+        identifier: NSToolbarItem.Identifier,
+        imageName: String,
+        label: String,
+        paletteLabel: String
+    ) -> NSToolbarItem {
+        let item = existingItem ?? NSToolbarItem(itemIdentifier: identifier)
+        if existingItem == nil {
+            existingItem = item
+            let button = makeToolbarButton(systemImageName: imageName)
+            item.label = label
+            item.paletteLabel = paletteLabel
+            item.view = button
+            item.menuFormRepresentation = makeMenuItem(title: label, imageName: imageName)
+        }
+        return item
+    }
+
     private func createTrackingSeparator(_ splitView: NSSplitView, itemIdentifier: NSToolbarItem.Identifier, dividerIndex: Int) -> NSTrackingSeparatorToolbarItem {
-        // ViewerSplitVC punya 2 items (IbarotTextVC dan SidebarVC)
-        // Jadi hanya ada 1 divider di index 0
-        let trackingSeparator = NSTrackingSeparatorToolbarItem(
+        NSTrackingSeparatorToolbarItem(
             identifier: itemIdentifier,
             splitView: splitView,
-            dividerIndex: dividerIndex // Index 0 untuk divider antara item pertama dan kedua
+            dividerIndex: dividerIndex
         )
-        
-        return trackingSeparator
     }
-    
-    private func makeNavSegment() -> NSSegmentedControl {
-        let control = NSSegmentedControl()
-        control.segmentCount = 2
-        control.segmentStyle = .texturedRounded
-        control.trackingMode = .momentary
-        control.userInterfaceLayoutDirection = .leftToRight
-        control.setImage(ReusableFunc.systemImage(named: "arrow.left"), forSegment: 0)
-        control.setImage(ReusableFunc.systemImage(named: "arrow.right"), forSegment: 1)
-        control.setWidth(23, forSegment: 0)
-        control.setWidth(23, forSegment: 1)
-        return control
-    }
-    
+
     private func makeToolbarButton(systemImageName: String) -> NSButton {
         let image = ReusableFunc.systemImage(named: systemImageName)
         let button = NSButton(image: image, target: nil, action: nil)
@@ -213,7 +198,7 @@ extension QuranWindow: NSToolbarDelegate {
         button.imageScaling = .scaleProportionallyDown
         return button
     }
-    
+
     private func makeTafseerSearchField() -> NSSearchField {
         let field = NSSearchField()
         field.focusRingType = .none
@@ -225,7 +210,7 @@ extension QuranWindow: NSToolbarDelegate {
         }
         return field
     }
-    
+
     private func makeMenuItem(title: String, imageName: String) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.image = ReusableFunc.systemImage(named: imageName)

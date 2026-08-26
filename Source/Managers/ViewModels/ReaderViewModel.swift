@@ -6,13 +6,10 @@
 //
 
 import Foundation
+import SwiftUI
 
 #if os(macOS)
 extension ReaderViewModel: ObservableObject {}
-#endif
-
-#if canImport(SwiftUI)
-import SwiftUI
 #endif
 
 #if os(macOS)
@@ -255,33 +252,7 @@ class ReaderViewModel: ViewModelBase {
     #if os(macOS)
     /// Connects to book archive with bundle fallback (macOS only)
     func connectBookWithBundleFallback(_ book: BooksData) async throws {
-        guard AppConfig.isUsingBundleMode else {
-            try bookConnection.connect(archive: book.archive)
-            return
-        }
-
-        guard !BookArchiveIntegrator.shared.isBookIntegrated(book) else {
-            try bookConnection.connect(archive: book.archive)
-            return
-        }
-
-        let confirmed = await BookIntegrateModalCenter.shared
-            .presentAndWaitForConfirmation(book: book)
-        guard confirmed else { throw CancellationError() }
-
-        defer {
-            Task { @MainActor in
-                BookIntegrateModalCenter.shared.dismiss()
-            }
-        }
-
-        try await BookArchiveIntegrator.shared.ensureBookIntegrated(
-            book,
-            onIntegrating: {
-                await BookIntegrateModalCenter.shared.showIntegrating()
-            }
-        )
-
+        try await BookIntegrateModalCenter.shared.ensureIntegrated(book: book)
         try bookConnection.connect(archive: book.archive)
     }
     #endif
@@ -699,7 +670,7 @@ class ReaderViewModel: ViewModelBase {
         color: PlatformColor
     ) throws {
         guard let book = currentBook else { return }
-        _ = try annotationCoordinator.saveHighlight(
+        let params = SaveHighlightParams(
             text: sourceText,
             range: range,
             color: color,
@@ -711,6 +682,7 @@ class ReaderViewModel: ViewModelBase {
             showHarakat: showHarakat,
             mode: mode
         )
+        _ = try annotationCoordinator.saveHighlight(params)
         loadAnnotations()
     }
 
@@ -723,11 +695,9 @@ class ReaderViewModel: ViewModelBase {
         try annotationManager.updateAnnotation(annotation)
         loadAnnotations()
     }
-}
 
-// MARK: - Notification Observers
+    // MARK: - Notification Observers
 
-extension ReaderViewModel {
     func setupNotificationObservers() {
         #if os(macOS)
         addObserver(
@@ -745,15 +715,7 @@ extension ReaderViewModel {
 
         #endif
 
-        addObserver(
-            forName: .bookIdMigrated,
-            object: nil, queue: .current
-        ) { [weak self] notification in
-            guard let userInfo = notification.userInfo,
-                  let oldId = userInfo["oldId"] as? Int,
-                  let newId = userInfo["newId"] as? Int else { return }
-            Task { @MainActor in self?.handleBookIdMigrated(oldId: oldId, newId: newId) }
-        }
+        enableBookIdMigrationObserver()
 
         #if os(iOS)
         addObserver(
@@ -774,7 +736,7 @@ extension ReaderViewModel {
         #endif
     }
 
-    func handleBookIdMigrated(oldId: Int, newId: Int) {
+    override func migrateBookId(from oldId: Int, to newId: Int) {
         guard let current = currentBook, current.id == oldId else { return }
         if let newBookData = LibraryDataManager.shared.booksById[newId] {
             currentBook = newBookData

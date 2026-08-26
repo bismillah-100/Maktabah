@@ -53,7 +53,6 @@ struct iPhoneLayout: View {
 
     // MARK: - Tab Contents
 
-    @ViewBuilder
     private var viewerTabContent: some View {
         NavigationStack {
             iOSLibraryView()
@@ -71,7 +70,6 @@ struct iPhoneLayout: View {
         )
     }
 
-    @ViewBuilder
     private var searchTabContent: some View {
         NavigationStack {
             SearchModeView()
@@ -89,7 +87,6 @@ struct iPhoneLayout: View {
         )
     }
 
-    @ViewBuilder
     private var authorTabContent: some View {
         NavigationStack {
             AuthorModeView()
@@ -107,7 +104,6 @@ struct iPhoneLayout: View {
         )
     }
 
-    @ViewBuilder
     private var annotationsTabContent: some View {
         NavigationStack {
             AnnotationListView()
@@ -130,7 +126,6 @@ struct iPhoneLayout: View {
         }
     }
 
-    @ViewBuilder
     private var historyTabContent: some View {
         NavigationStack {
             iOSHistoryView()
@@ -140,22 +135,10 @@ struct iPhoneLayout: View {
                     manager: bManager
                 )
                 .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Image(systemName: "gear")
-                        }
-                        .accessibilityLabel(String(localized: "Settings"))
-                        .help(String(localized: "Settings"))
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: { showingAddFavorites = true }) {
-                            Image(systemName: "plus")
-                        }
-                        .accessibilityLabel(String(localized: "Add Favorite"))
-                        .help(String(localized: "Add Favorite"))
-                    }
+                    HomeToolbarItems(
+                        showSettings: $showSettings,
+                        showingAddFavorites: $showingAddFavorites
+                    )
                 }
         }
         .searchable(
@@ -166,5 +149,31 @@ struct iPhoneLayout: View {
             placement: .toolbar,
             prompt: String(localized: "Search History & Favorites")
         )
+    }
+}
+
+// MARK: - Shared Home Toolbar Items
+
+struct HomeToolbarItems: ToolbarContent {
+    @Binding var showSettings: Bool
+    @Binding var showingAddFavorites: Bool
+
+    var body: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                showSettings = true
+            } label: {
+                Image(systemName: "gear")
+            }
+            .accessibilityLabel(String(localized: "Settings"))
+            .help(String(localized: "Settings"))
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            Button(action: { showingAddFavorites = true }) {
+                Image(systemName: "plus")
+            }
+            .accessibilityLabel(String(localized: "Add Favorite"))
+            .help(String(localized: "Add Favorite"))
+        }
     }
 }

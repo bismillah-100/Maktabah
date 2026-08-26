@@ -122,8 +122,11 @@ class SavedResults: NSViewController {
     
     override func dismiss(_ sender: Any?) {
         if let window = view.window {
-            window.contentViewController = nil
-            window.close()
+            if let parent = window.sheetParent {
+                parent.endSheet(window)
+            } else {
+                window.close()
+            }
         }
         super.dismiss(sender)
     }

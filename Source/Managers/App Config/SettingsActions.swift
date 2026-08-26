@@ -3,14 +3,14 @@
 //  Maktabah
 //
 
-#if canImport(AppKit)
-import AppKit
+import Foundation
 import SwiftUI
-#elseif canImport(UIKit)
+#if os(macOS)
+import AppKit
+#elseif os(iOS)
 import UIKit
 import UniformTypeIdentifiers
 #endif
-import Foundation
 
 enum SettingsActions {
     private static let fullLibraryDownloadURL =
@@ -19,6 +19,64 @@ enum SettingsActions {
     private static var coreDownloadModal: CoreDownloadModalCenter?
     #elseif os(iOS)
     private static var documentPickerCoordinator: DocumentPickerCoordinator?
+    #endif
+
+    #if os(macOS)
+    private static func presentFolderOpenPanel(
+        message: String = .init(localized: "personalFolder"),
+        prompt: String = .init(localized: "Choose Folder"),
+        canCreateDirectories: Bool = true
+    ) -> URL? {
+        let panel = NSOpenPanel()
+        panel.message = message
+        panel.prompt = prompt
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = canCreateDirectories
+        panel.allowsMultipleSelection = false
+        panel.level = .floating
+
+        let response = panel.runModal()
+        return (response == .OK) ? panel.url : nil
+    }
+
+    #elseif os(iOS)
+    private static func presentFolderPickerWithAlert(
+        title: String = .init(localized: "personalFolder"),
+        chooseTitle: String = .init(localized: "Choose Folder"),
+        cancelTitle: String = .init(localized: "Cancel"),
+        onPick: @escaping (URL) -> Void,
+        onCancel: (() -> Void)? = nil
+    ) {
+        let showPicker = {
+            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
+            picker.allowsMultipleSelection = false
+
+            documentPickerCoordinator = DocumentPickerCoordinator(onPick: { url in
+                onPick(url)
+                documentPickerCoordinator = nil
+            }, onCancel: {
+                onCancel?()
+                documentPickerCoordinator = nil
+            })
+            picker.delegate = documentPickerCoordinator
+
+            ReusableFunc.getTopViewController()?.present(picker, animated: true)
+        }
+
+        let alert = UIAlertController(
+            title: title,
+            message: nil,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: chooseTitle, style: .default) { _ in
+            showPicker()
+        })
+        alert.addAction(UIAlertAction(title: cancelTitle, style: .cancel) { _ in
+            onCancel?()
+        })
+        ReusableFunc.getTopViewController()?.present(alert, animated: true)
+    }
     #endif
 
     static func chooseAnnotationsAndResultsFolder(resolution: AppConfig.MigrationResolution = .ask, retryURL: URL? = nil, onCompletion: @escaping (Result<URL, Error>?) -> Void) {
@@ -31,58 +89,23 @@ enum SettingsActions {
                 onCompletion(.failure(error))
             }
         }
-        
-        if let retryURL = retryURL {
+
+        if let retryURL {
             processURL(retryURL)
             return
         }
 
         #if os(macOS)
-        let panel = NSOpenPanel()
-        panel.message = NSLocalizedString("personalFolder", comment: "")
-        panel.prompt = NSLocalizedString("Choose Folder", comment: "")
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.level = .floating
-
-        let response = panel.runModal()
-
-        if response == .OK, let url = panel.url {
+        if let url = presentFolderOpenPanel() {
             processURL(url)
         } else {
             onCompletion(nil)
         }
         #else
-        let showPicker = {
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
-            picker.allowsMultipleSelection = false
-            
-            documentPickerCoordinator = DocumentPickerCoordinator(onPick: { url in
-                processURL(url)
-                documentPickerCoordinator = nil
-            }, onCancel: {
-                onCompletion(nil)
-                documentPickerCoordinator = nil
-            })
-            picker.delegate = documentPickerCoordinator
-            
-            ReusableFunc.getTopViewController()?.present(picker, animated: true)
-        }
-
-        let alert = UIAlertController(
-            title: NSLocalizedString("personalFolder", comment: ""),
-            message: nil,
-            preferredStyle: .alert
+        presentFolderPickerWithAlert(
+            onPick: { url in processURL(url) },
+            onCancel: { onCompletion(nil) }
         )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Choose Folder", comment: ""), style: .default) { _ in
-            showPicker()
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
-            onCompletion(nil)
-        })
-        ReusableFunc.getTopViewController()?.present(alert, animated: true)
         #endif
     }
 
@@ -94,17 +117,10 @@ enum SettingsActions {
         onCompletion: ((Bool) -> Void)? = nil
     ) -> Bool {
         #if os(macOS)
-        let panel = NSOpenPanel()
-        panel.message = NSLocalizedString("appNeedAccess", comment: "")
-        panel.prompt = NSLocalizedString("Choose Folder", comment: "")
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.level = .floating
-
-        let response = panel.runModal()
-
-        if response == .OK, let url = panel.url {
+        if let url = presentFolderOpenPanel(
+            message: .init(localized: "appNeedAccess"),
+            canCreateDirectories: false
+        ) {
             if let error = validate?(url) {
                 ReusableFunc.showAlert(title: "Error", message: error.localizedDescription)
                 onCompletion?(false)
@@ -123,46 +139,25 @@ enum SettingsActions {
         onCompletion?(false)
         return false
         #else
-        let showPicker = {
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
-            picker.allowsMultipleSelection = false
-            
-            documentPickerCoordinator = DocumentPickerCoordinator(onPick: { url in
+        presentFolderPickerWithAlert(
+            title: .init(localized: "appNeedAccess"),
+            onPick: { url in
                 if let error = validate?(url) {
                     ReusableFunc.showAlert(title: "Error", message: error.localizedDescription)
                     onCompletion?(false)
-                    documentPickerCoordinator = nil
                     return
                 }
                 let success = performLibraryFolderMigration(url: url, showSuccessAlert: showSuccessAlert)
                 onCompletion?(success)
-                documentPickerCoordinator = nil
-            }, onCancel: {
+            },
+            onCancel: {
+                if shouldTerminateOnCancel {
+                    showAccessNeededAlert()
+                }
                 onCompletion?(false)
-                documentPickerCoordinator = nil
-            })
-            picker.delegate = documentPickerCoordinator
-            
-            ReusableFunc.getTopViewController()?.present(picker, animated: true)
-        }
-
-        let alert = UIAlertController(
-            title: NSLocalizedString("appNeedAccess", comment: ""),
-            message: nil,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Choose Folder", comment: ""), style: .default) { _ in
-            showPicker()
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
-            if shouldTerminateOnCancel {
-                // On iOS we don't usually terminate the app, but we can show an alert
-                showAccessNeededAlert()
             }
-            onCompletion?(false)
-        })
-        ReusableFunc.getTopViewController()?.present(alert, animated: true)
-        return true // On iOS, we return true as we've shown the alert/picker
+        )
+        return true
         #endif
     }
 
@@ -190,24 +185,24 @@ enum SettingsActions {
         }
 
         #if DEBUG
-            print("Custom folder selected and migrated: \(url.path)")
+        print("Custom folder selected and migrated: \(url.path)")
         #endif
         return true
     }
 
     private static func showAccessNeededAlert() {
         ReusableFunc.showAlert(
-            title: NSLocalizedString(
-                "AccessNeeded",
+            title: .init(
+                localized: "AccessNeeded",
                 comment: "Alert Memilih Folder Master"
             ),
-            message: NSLocalizedString(
-                "FolderMasterPenjelasan",
+            message: .init(
+                localized: "FolderMasterPenjelasan",
                 comment: "Informasi Alert Memilih Folder Master"
             )
         )
     }
-    
+
     static var pendingRestoreAction: (() -> Void)?
 
     static func cancelBundleModeSwitch() {
@@ -301,7 +296,6 @@ enum SettingsActions {
         let windowWidth = max(420, fittingSize.width)
         let windowHeight = max(290, fittingSize.height)
 
-
         let w = ReusableFunc.makeTitlelessWindow(
             contentView: hostingView,
             size: .init(width: windowWidth, height: windowHeight)
@@ -329,72 +323,24 @@ enum SettingsActions {
 
     static func selectLocalFolderForICloudDisable(onCompletion: @escaping (URL?) -> Void) {
         #if os(macOS)
-        let panel = NSOpenPanel()
-        panel.message = NSLocalizedString("personalFolder", comment: "")
-        panel.prompt = NSLocalizedString("Choose Folder", comment: "")
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.level = .floating
-
-        let response = panel.runModal()
-
-        if response == .OK, let url = panel.url {
-            onCompletion(url)
-        } else {
-            onCompletion(nil)
-        }
+        onCompletion(presentFolderOpenPanel())
         #else
-        let showPicker = {
-            let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
-            picker.allowsMultipleSelection = false
-            
-            documentPickerCoordinator = DocumentPickerCoordinator(onPick: { url in
-                onCompletion(url)
-                documentPickerCoordinator = nil
-            }, onCancel: {
-                onCompletion(nil)
-                documentPickerCoordinator = nil
-            })
-            picker.delegate = documentPickerCoordinator
-            
-            ReusableFunc.getTopViewController()?.present(picker, animated: true)
-        }
-
-        let alert = UIAlertController(
-            title: NSLocalizedString("personalFolder", comment: ""),
-            message: nil,
-            preferredStyle: .alert
+        presentFolderPickerWithAlert(
+            onPick: { url in onCompletion(url) },
+            onCancel: { onCompletion(nil) }
         )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Choose Folder", comment: ""), style: .default) { _ in
-            showPicker()
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
-            onCompletion(nil)
-        })
-        ReusableFunc.getTopViewController()?.present(alert, animated: true)
         #endif
     }
 
     private static func changeAnnotationsBaseUrl(to newURL: URL, resolution: AppConfig.MigrationResolution) throws {
         let fm = FileManager.default
+        let oldURL = AppConfig.folder(for: AppConfig.annotationsAndResultsFolder)
 
-        let oldURL = AppConfig.folder(
-            for: AppConfig.annotationsAndResultsFolder
-        )
-
-        var isDir: ObjCBool = false
-        guard fm.fileExists(atPath: newURL.path, isDirectory: &isDir),
-              isDir.boolValue
-        else {
-            throw StorageError.invalidDirectory
-        }
+        try validateNewDirectoryURL(newURL, fm: fm)
 
         guard newURL.startAccessingSecurityScopedResource() else {
             throw StorageError.cannotAccessSecurityScope
         }
-
         defer {
             newURL.stopAccessingSecurityScopedResource()
         }
@@ -403,39 +349,7 @@ enum SettingsActions {
         ResultsHandler.shared.disconnect()
 
         if let oldURL, fm.fileExists(atPath: oldURL.path) {
-            let filesToMove = ["Annotations.sqlite", "SearchResults.sqlite", "History.sqlite", "Annotations.sqlite-wal", "Annotations.sqlite-shm", "SearchResults.sqlite-wal", "SearchResults.sqlite-shm", "History.sqlite-wal", "History.sqlite-shm"]
-
-            // Phase 1: Check for collisions
-            if resolution == .ask {
-                for fileName in filesToMove {
-                    let sourceFile = oldURL.appendingPathComponent(fileName)
-                    guard fm.fileExists(atPath: sourceFile.path) else { continue }
-                    
-                    let destFile = newURL.appendingPathComponent(fileName)
-                    if fm.fileExists(atPath: destFile.path) {
-                        throw StorageError.collision(newURL)
-                    }
-                }
-            }
-
-            // Phase 2: Execute migration
-            for fileName in filesToMove {
-                let sourceFile = oldURL.appendingPathComponent(fileName)
-                let destFile = newURL.appendingPathComponent(fileName)
-
-                guard fm.fileExists(atPath: sourceFile.path) else { continue }
-
-                if fm.fileExists(atPath: destFile.path) {
-                    if resolution == .keepDestination {
-                        try? fm.removeItem(at: sourceFile)
-                        continue
-                    } else if resolution == .overwriteDestination {
-                        try? fm.removeItem(at: destFile)
-                    }
-                }
-
-                try fm.moveItem(at: sourceFile, to: destFile)
-            }
+            try migrateDatabaseFiles(from: oldURL, to: newURL, resolution: resolution, fm: fm)
         }
 
         AppConfig.saveBookmark(
@@ -445,6 +359,61 @@ enum SettingsActions {
 
         try AnnotationManager.shared.setupAnnotations(at: newURL)
         try ResultsHandler.shared.setupResultDatabase(at: newURL)
+    }
+
+    private static func validateNewDirectoryURL(_ newURL: URL, fm: FileManager) throws {
+        var isDir: ObjCBool = false
+        guard fm.fileExists(atPath: newURL.path, isDirectory: &isDir),
+              isDir.boolValue
+        else {
+            throw StorageError.invalidDirectory
+        }
+    }
+
+    private static func migrateDatabaseFiles(
+        from oldURL: URL,
+        to newURL: URL,
+        resolution: AppConfig.MigrationResolution,
+        fm: FileManager
+    ) throws {
+        let filesToMove = [
+            "Annotations.sqlite", "SearchResults.sqlite", "History.sqlite",
+            "Annotations.sqlite-wal", "Annotations.sqlite-shm",
+            "SearchResults.sqlite-wal", "SearchResults.sqlite-shm",
+            "History.sqlite-wal", "History.sqlite-shm",
+        ]
+
+        // Phase 1: Check for collisions
+        if resolution == .ask {
+            for fileName in filesToMove {
+                let sourceFile = oldURL.appendingPathComponent(fileName)
+                guard fm.fileExists(atPath: sourceFile.path) else { continue }
+
+                let destFile = newURL.appendingPathComponent(fileName)
+                if fm.fileExists(atPath: destFile.path) {
+                    throw StorageError.collision(newURL)
+                }
+            }
+        }
+
+        // Phase 2: Execute migration
+        for fileName in filesToMove {
+            let sourceFile = oldURL.appendingPathComponent(fileName)
+            let destFile = newURL.appendingPathComponent(fileName)
+
+            guard fm.fileExists(atPath: sourceFile.path) else { continue }
+
+            if fm.fileExists(atPath: destFile.path) {
+                if resolution == .keepDestination {
+                    try? fm.removeItem(at: sourceFile)
+                    continue
+                } else if resolution == .overwriteDestination {
+                    try? fm.removeItem(at: destFile)
+                }
+            }
+
+            try fm.moveItem(at: sourceFile, to: destFile)
+        }
     }
 
     static func setUseCrossPlatformSync(_ use: Bool) {
@@ -459,18 +428,18 @@ enum SettingsActions {
 class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
     var onPick: (URL) -> Void
     var onCancel: (() -> Void)?
-    
+
     init(onPick: @escaping (URL) -> Void, onCancel: (() -> Void)? = nil) {
         self.onPick = onPick
         self.onCancel = onCancel
     }
-    
+
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         guard let url = urls.first else {
             onCancel?()
             return
         }
-        
+
         // Start accessing the security-scoped resource
         if url.startAccessingSecurityScopedResource() {
             onPick(url)
@@ -479,7 +448,7 @@ class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
             onCancel?()
         }
     }
-    
+
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         onCancel?()
     }
