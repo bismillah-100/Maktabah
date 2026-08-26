@@ -16,10 +16,12 @@ import SQLite3
 struct ShortsMapping {
     let map: [String: String]
     let sortedKeys: [String]
-    var isEmpty: Bool { map.isEmpty }
+    var isEmpty: Bool {
+        map.isEmpty
+    }
 }
 
-// DatabaseManager.swift
+/// DatabaseManager.swift
 class DatabaseManager {
     static var shared: DatabaseManager = .init()
 
@@ -85,25 +87,25 @@ class DatabaseManager {
             let tempWriteDb = try SQLiteDatabase(path: specialPath)
 
             let sqlIndex = """
-                CREATE INDEX IF NOT EXISTS idx_auth_covering 
-                ON "Auth" ("auth" ASC, "authid", "inf", "Lng");
-                """
+            CREATE INDEX IF NOT EXISTS idx_auth_covering
+            ON "Auth" ("auth" ASC, "authid", "inf", "Lng");
+            """
             try tempWriteDb.execute(query: sqlIndex)
         } catch {
             print("\(error). Continue to ReadOnly Mode...")
         }
 
-        let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
+        let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
 
         do {
-            db = try SQLiteDatabase(path: mainPath, flags: flags)
+            db = try SQLiteDatabase(path: mainPath, flags: flags, queryOnly: true)
         } catch {
             handleSetupError()
             return
         }
 
         do {
-            dbSpecial = try SQLiteDatabase(path: specialPath, flags: flags)
+            dbSpecial = try SQLiteDatabase(path: specialPath, flags: flags, queryOnly: true)
         } catch {
             handleSetupError()
             return
@@ -193,6 +195,26 @@ class DatabaseManager {
         }
     }
 
+    private var bookSelectColumns: String {
+        "\(colBokId), \(colBokName), \(colBokArchive), \(colBokMuallif), \(colBokCat), \(colTafseerNam), \(colBokPdfCs)"
+    }
+
+    private func parseBookData(from row: SQLiteRow) -> BooksData {
+        let id = row.int(at: 0)
+        let name = row.string(at: 1) ?? ""
+        let archive = row.int(at: 2)
+        let muallif = row.int(at: 3)
+        let catId = !row.isNull(at: 4) ? row.int(at: 4) : nil
+        let tafseer = row.string(at: 5)
+        let pdfCs = !row.isNull(at: 6) ? row.int(at: 6) : nil
+
+        let book = BooksData(id: id, book: name, archive: archive, muallif: muallif)
+        book.catId = catId
+        book.tafseerNam = (tafseer?.isEmpty == true) ? nil : tafseer
+        book.pdfCs = pdfCs
+        return book
+    }
+
     func fetchAllBooksGroupedByCategory() throws -> [Int: [BooksData]] {
         lock.lock()
         defer { lock.unlock() }
@@ -200,24 +222,8 @@ class DatabaseManager {
         guard let db else { return [:] }
 
         var groupedBooks: [Int: [BooksData]] = [:]
-        let sql = "SELECT \(colBokId), \(colBokName), \(colBokArchive), \(colBokMuallif), \(colBokCat), \(colTafseerNam), \(colBokPdfCs) FROM \(booksTableName) ORDER BY \(colBokName) ASC"
-
-        let books = try db.fetch(query: sql) { row -> BooksData in
-            let id = row.int(at: 0)
-            let name = row.string(at: 1) ?? ""
-            let archive = row.int(at: 2)
-            let muallif = row.int(at: 3)
-            let catId = row.int(at: 4)
-
-            let tafseer = row.string(at: 5)
-            let pdfCs = !row.isNull(at: 6) ? row.int(at: 6) : nil
-
-            let book = BooksData(id: id, book: name, archive: archive, muallif: muallif)
-            book.catId = catId
-            book.tafseerNam = (tafseer?.isEmpty == true) ? nil : tafseer
-            book.pdfCs = pdfCs
-            return book
-        }
+        let sql = "SELECT \(bookSelectColumns) FROM \(booksTableName) ORDER BY \(colBokName) ASC"
+        let books = try db.fetch(query: sql, mapping: parseBookData(from:))
 
         for book in books {
             if let catId = book.catId {
@@ -244,7 +250,7 @@ class DatabaseManager {
         lock.lock()
         defer { lock.unlock() }
 
-        guard let dbSpecial = dbSpecial else { return 0 }
+        guard let dbSpecial else { return 0 }
         let sql = "SELECT MAX(\(colAuthId)) FROM \(authTableName)"
 
         return (try? dbSpecial.fetch(query: sql) { row in
@@ -256,7 +262,7 @@ class DatabaseManager {
         lock.lock()
         defer { lock.unlock() }
 
-        guard let dbSpecial = dbSpecial else { return [] }
+        guard let dbSpecial else { return [] }
         let sql = "SELECT \(colAuthId), \(colAuthName), \(colAuthInf), \(colAuthLng) FROM \(authTableName) ORDER BY \(colAuthName)"
 
         return (try? dbSpecial.fetch(query: sql) { row in
@@ -276,21 +282,8 @@ class DatabaseManager {
             throw NSError(domain: "No database connection", code: 1)
         }
 
-        let sql = "SELECT \(colBokId), \(colBokName), \(colBokArchive), \(colBokMuallif), \(colTafseerNam), \(colBokPdfCs) FROM \(booksTableName) WHERE \(colBokId) = ? LIMIT 1"
-
-        let books = try db.fetch(query: sql, parameters: [bookId]) { row -> BooksData in
-            let id = row.int(at: 0)
-            let name = row.string(at: 1) ?? ""
-            let archive = row.int(at: 2)
-            let muallif = row.int(at: 3)
-            let tafseer = row.string(at: 4)
-            let pdfCs = !row.isNull(at: 5) ? row.int(at: 5) : nil
-
-            let book = BooksData(id: id, book: name, archive: archive, muallif: muallif)
-            book.tafseerNam = (tafseer?.isEmpty == true) ? nil : tafseer
-            book.pdfCs = pdfCs
-            return book
-        }
+        let sql = "SELECT \(bookSelectColumns) FROM \(booksTableName) WHERE \(colBokId) = ? LIMIT 1"
+        let books = try db.fetch(query: sql, parameters: [bookId], mapping: parseBookData(from:))
 
         if let book = books.first {
             return book
@@ -341,7 +334,7 @@ class DatabaseManager {
             return cached
         }
 
-        guard let dbSpecial = dbSpecial else {
+        guard let dbSpecial else {
             return ShortsMapping(map: [:], sortedKeys: [])
         }
 
@@ -370,7 +363,7 @@ class DatabaseManager {
         lock.lock()
         defer { lock.unlock() }
 
-        guard let dbSpecial = dbSpecial else {
+        guard let dbSpecial else {
             return nil
         }
 
@@ -406,17 +399,7 @@ class DatabaseManager {
             return false
         }
 
-        let archiveExists = fm.fileExists(atPath: archiveFile)
-        let ftsExists = fm.fileExists(atPath: ftsFtsFile)
-        let isAvailable: Bool
-
-        if archiveExists && ftsExists {
-            let archiveSize = (try? fm.attributesOfItem(atPath: archiveFile)[.size] as? NSNumber)?.int64Value ?? 0
-            let ftsSize = (try? fm.attributesOfItem(atPath: ftsFtsFile)[.size] as? NSNumber)?.int64Value ?? 0
-            isAvailable = archiveSize > 0 && ftsSize > 0
-        } else {
-            isAvailable = false
-        }
+        let isAvailable = fm.isNonEmptyFile(atPath: archiveFile) && fm.isNonEmptyFile(atPath: ftsFtsFile)
 
         lock.lock()
         archiveAvailabilityCache[archiveId] = isAvailable
@@ -443,15 +426,8 @@ class DatabaseManager {
         let mainSqlite = mainFolder.appendingPathComponent("main.sqlite")
         let specialSqlite = mainFolder.appendingPathComponent("special.sqlite")
 
-        guard fm.fileExists(atPath: mainSqlite.path), fm.fileExists(atPath: specialSqlite.path) else {
-            return NSError(domain: "Maktabah", code: 2, userInfo: [NSLocalizedDescriptionKey: "main.sqlite or special.sqlite is missing in the 'Files' folder."])
-        }
-
-        let mainSize = (try? fm.attributesOfItem(atPath: mainSqlite.path)[.size] as? NSNumber)?.int64Value ?? 0
-        let specialSize = (try? fm.attributesOfItem(atPath: specialSqlite.path)[.size] as? NSNumber)?.int64Value ?? 0
-
-        guard mainSize > 0, specialSize > 0 else {
-            return NSError(domain: "Maktabah", code: 3, userInfo: [NSLocalizedDescriptionKey: "Database files are empty."])
+        guard fm.isNonEmptyFile(at: mainSqlite), fm.isNonEmptyFile(at: specialSqlite) else {
+            return NSError(domain: "Maktabah", code: 2, userInfo: [NSLocalizedDescriptionKey: "main.sqlite or special.sqlite is missing or empty in the 'Files' folder."])
         }
 
         do {
@@ -478,5 +454,29 @@ class DatabaseManager {
         }
 
         return nil
+    }
+}
+
+
+extension FileManager {
+    func removeDatabaseAndSidecars(at url: URL) {
+        removeDatabaseAndSidecars(atPath: url.path)
+    }
+
+    func removeDatabaseAndSidecars(atPath path: String) {
+        try? removeItem(atPath: path)
+        try? removeItem(atPath: path + "-wal")
+        try? removeItem(atPath: path + "-shm")
+        try? removeItem(atPath: path + "-journal")
+    }
+
+    func cleanupDirectory(at url: URL) {
+        guard let items = try? contentsOfDirectory(
+            at: url, includingPropertiesForKeys: nil
+        ) else { return }
+
+        for item in items {
+            removeDatabaseAndSidecars(at: item)
+        }
     }
 }

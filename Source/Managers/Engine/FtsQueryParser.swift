@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct FtsQueryParser {
+enum FtsQueryParser {
     /// Builds a safe, normalized, and stemmed FTS5 MATCH query string.
     static func buildFtsQuery(query: String, mode: SearchMode, nearDistance: Int = 10) -> String {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -20,32 +20,18 @@ struct FtsQueryParser {
             }
         }
 
-        let distance = max(1, nearDistance)
+        let terms = extractCleanTerms(trimmed)
+        guard !terms.isEmpty else { return "" }
 
         switch mode {
         case .phrase:
-            let terms = extractCleanTerms(trimmed)
-            guard !terms.isEmpty else { return "" }
             return "\"" + terms.joined(separator: " ") + "\""
-
         case .contains:
-            let terms = extractCleanTerms(trimmed)
-            guard !terms.isEmpty else { return "" }
             return terms.map { "\"\($0)\"" }.joined(separator: " AND ")
-
         case .or:
-            let terms = extractCleanTerms(trimmed)
-            guard !terms.isEmpty else { return "" }
             return terms.map { "\"\($0)\"" }.joined(separator: " OR ")
-
         case .near:
-            let terms = extractCleanTerms(trimmed)
-            guard !terms.isEmpty else { return "" }
-            if terms.count == 1 {
-                return "\"\((terms.first!))\""
-            }
-            let joinedTerms = terms.map { "\"\($0)\"" }.joined(separator: " ")
-            return "NEAR(\(joinedTerms), \(distance))"
+            return formatNearQuery(terms: terms, distance: nearDistance)
         }
     }
 
@@ -78,7 +64,7 @@ struct FtsQueryParser {
     static func extractNearDistance(query: String) -> Int? {
         let pattern = #"(?i)(?:NEAR\s*\(\s*[^,\)]+(?:,\s*(\d+))?\s*\)|[^\s]+\s+NEAR(?:/(\d+))?\s+[^\s]+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
-        
+
         let nsText = query as NSString
         if let match = regex.firstMatch(in: query, options: [], range: NSRange(location: 0, length: nsText.length)) {
             if match.range(at: 1).location != NSNotFound, let k = Int(nsText.substring(with: match.range(at: 1))) {
@@ -108,50 +94,52 @@ struct FtsQueryParser {
         let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
 
         if let match = matches.first {
-            var distance = fallbackDistance
-            var words: [String] = []
-
-            if match.range(at: 1).location != NSNotFound {
-                // Format: NEAR(term1 term2 ..., k)
-                let termStr = nsText.substring(with: match.range(at: 1))
-                if match.range(at: 2).location != NSNotFound,
-                   let k = Int(nsText.substring(with: match.range(at: 2))) {
-                    distance = k
-                }
-                words = extractCleanTerms(termStr)
-            } else if match.range(at: 3).location != NSNotFound && match.range(at: 5).location != NSNotFound {
-                // Format: wordA NEAR/k wordB
-                let leftStr = nsText.substring(with: match.range(at: 3))
-                let rightStr = nsText.substring(with: match.range(at: 5))
-                if match.range(at: 4).location != NSNotFound,
-                   let k = Int(nsText.substring(with: match.range(at: 4))) {
-                    distance = k
-                }
-                let leftTerms = extractCleanTerms(leftStr)
-                let rightTerms = extractCleanTerms(rightStr)
-                words = leftTerms + rightTerms
-            }
-
-            distance = max(1, distance)
-
+            let (words, distance) = extractWordsAndDistance(from: match, nsText: nsText, fallbackDistance: fallbackDistance)
             guard !words.isEmpty else { return nil }
-            if words.count == 1 {
-                return "\"\((words.first!))\""
-            }
-
-            let joined = words.map { "\"\($0)\"" }.joined(separator: " ")
-            return "NEAR(\(joined), \(distance))"
+            return formatNearQuery(terms: words, distance: distance)
         }
 
-        // Fallback: If syntax couldn't be parsed strictly (e.g. malformed NEAR), extract clean words and format safely
         let cleanTerms = extractCleanTerms(text)
         guard !cleanTerms.isEmpty else { return nil }
-        if cleanTerms.count >= 2 {
-            let joined = cleanTerms.map { "\"\($0)\"" }.joined(separator: " ")
-            return "NEAR(\(joined), \(max(1, fallbackDistance)))"
-        } else {
-            return "\"\((cleanTerms.first!))\""
+        return formatNearQuery(terms: cleanTerms, distance: fallbackDistance)
+    }
+
+    private static func extractWordsAndDistance(
+        from match: NSTextCheckingResult,
+        nsText: NSString,
+        fallbackDistance: Int
+    ) -> (words: [String], distance: Int) {
+        var distance = fallbackDistance
+        var words: [String] = []
+
+        if match.range(at: 1).location != NSNotFound {
+            let termStr = nsText.substring(with: match.range(at: 1))
+            if match.range(at: 2).location != NSNotFound,
+               let k = Int(nsText.substring(with: match.range(at: 2)))
+            {
+                distance = k
+            }
+            words = extractCleanTerms(termStr)
+        } else if match.range(at: 3).location != NSNotFound, match.range(at: 5).location != NSNotFound {
+            let leftStr = nsText.substring(with: match.range(at: 3))
+            let rightStr = nsText.substring(with: match.range(at: 5))
+            if match.range(at: 4).location != NSNotFound,
+               let k = Int(nsText.substring(with: match.range(at: 4)))
+            {
+                distance = k
+            }
+            words = extractCleanTerms(leftStr) + extractCleanTerms(rightStr)
         }
+
+        return (words, max(1, distance))
+    }
+
+    private static func formatNearQuery(terms: [String], distance: Int) -> String {
+        if terms.count <= 1 {
+            return terms.first.map { "\"\($0)\"" } ?? ""
+        }
+        let joined = terms.map { "\"\($0)\"" }.joined(separator: " ")
+        return "NEAR(\(joined), \(max(1, distance)))"
     }
 
     private static func extractCleanTerms(_ text: String) -> [String] {

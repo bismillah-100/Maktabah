@@ -42,6 +42,18 @@ extension AnnotationManager {
     // MARK: - Schema Setup
 
     func setupAnnotationsDatabase() throws {
+        try createAnnotationsTableAndSchemaIfNeeded()
+        try createTagsTablesIfNeeded()
+        try createSyncPendingTableIfNeeded()
+
+        try backfillCloudKitFieldsIfNeeded { backfilled in
+            if !backfilled.isEmpty {
+                CloudKitSyncManager.shared.upload(annotations: backfilled, debounce: false)
+            }
+        }
+    }
+
+    private func createAnnotationsTableAndSchemaIfNeeded() throws {
         try exec("""
         CREATE TABLE IF NOT EXISTS \(annotationsTable) (
             \(colAnnId) INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +82,10 @@ extension AnnotationManager {
         }
 
         try exec("CREATE INDEX IF NOT EXISTS idx_ann_bk_content ON \(annotationsTable) (\(colAnnBkId), \(colAnnContentId));")
+        try exec("CREATE INDEX IF NOT EXISTS idx_ann_ck_record_id ON \(annotationsTable) (\(colAnnCkRecordId));")
+    }
 
+    private func createTagsTablesIfNeeded() throws {
         try exec("""
         CREATE TABLE IF NOT EXISTS \(tagsTable) (
             \(colTagId) INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,24 +102,10 @@ extension AnnotationManager {
         """)
 
         try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_ann_tag_ids ON \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId));")
+    }
 
-        try exec("""
-        CREATE TABLE IF NOT EXISTS sync_pending (
-            ck_record_id TEXT PRIMARY KEY,
-            operation TEXT NOT NULL CHECK(operation IN ('upload', 'delete')),
-            queued_at INTEGER NOT NULL
-        );
-        """)
-
-        try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_ck_record_id ON sync_pending (ck_record_id);")
-        try exec("CREATE INDEX IF NOT EXISTS idx_sync_pending_op_queued ON sync_pending (operation, queued_at);")
-        try exec("CREATE INDEX IF NOT EXISTS idx_ann_ck_record_id ON \(annotationsTable) (\(colAnnCkRecordId));")
-
-        try backfillCloudKitFieldsIfNeeded { backfilled in
-            if !backfilled.isEmpty {
-                CloudKitSyncManager.shared.upload(annotations: backfilled, debounce: false)
-            }
-        }
+    private func createSyncPendingTableIfNeeded() throws {
+        try syncPendingStore?.createTable()
     }
 
     func backfillCloudKitFieldsIfNeeded(completion: (([Annotation]) -> Void)? = nil) throws {
@@ -117,22 +118,30 @@ extension AnnotationManager {
         var backfilledAnnotations: [Annotation] = []
 
         try transaction {
-            let results = try _db.fetch(query: sql) { row -> (Int64, Int, Int, Int, Int64) in
-                return (
-                    row.int64(at: 0),
-                    row.int(at: 1),
-                    row.int(at: 2),
-                    row.int(at: 3),
-                    row.int64(at: 4)
+            struct BackfillAnnotationRow {
+                let id: Int64
+                let bkId: Int
+                let contentId: Int
+                let start: Int
+                let createdAt: Int64
+            }
+
+            let results = try _db.fetch(query: sql) { row -> BackfillAnnotationRow in
+                BackfillAnnotationRow(
+                    id: row.int64(at: 0),
+                    bkId: row.int(at: 1),
+                    contentId: row.int(at: 2),
+                    start: row.int(at: 3),
+                    createdAt: row.int64(at: 4)
                 )
             }
 
             for res in results {
-                let id = res.0
-                let bkId = res.1
-                let contentId = res.2
-                let start = res.3
-                let createdAt = res.4
+                let id = res.id
+                let bkId = res.bkId
+                let contentId = res.contentId
+                let start = res.start
+                let createdAt = res.createdAt
 
                 let deterministicID = "legacy_\(bkId)_\(contentId)_\(start)_\(createdAt)"
 
@@ -154,36 +163,20 @@ extension AnnotationManager {
     func disconnect() {
         _db?.checkpoint()
         _db = nil
+        syncPendingStore = nil
     }
 
     func connect() {
         if let dbURL {
             do {
-                _db = try SQLiteDatabase(path: dbURL.path)
-                enableWALMode()
+                let db = try SQLiteDatabase(path: dbURL.path)
+                db.enableWALMode()
+                db.checkpoint() // Ensure WAL is committed and truncated, prevents locked DB after app update.
+                _db = db
+                syncPendingStore = SyncPendingStore(database: db)
             } catch {
                 ReusableFunc.showAlert(title: "Error", message: "Failed to open annotations database: \(error.localizedDescription)")
             }
-        }
-    }
-
-    private func enableWALMode() {
-        guard let _db else { return }
-        do {
-            let mode = try _db.fetch(query: "PRAGMA journal_mode = WAL;") { row in
-                row.string(at: 0) ?? ""
-            }.first
-
-            #if DEBUG
-            if mode?.lowercased() != "wal" {
-                let currentMode = mode ?? "unknown"
-                print("AnnotationManager: failed to enable WAL mode, current mode: \(currentMode)")
-            }
-            #endif
-        } catch {
-            #if DEBUG
-            print("AnnotationManager: error enabling WAL mode: \(error)")
-            #endif
         }
     }
 
@@ -201,7 +194,6 @@ extension AnnotationManager {
 
     func listTableColumns(tableName: String) throws -> [String] {
         guard let _db else { return [] }
-        let sql = "PRAGMA table_info(\(tableName));"
-        return try _db.fetch(query: sql) { $0.string(at: 1) ?? "" }
+        return _db.tableColumns(tableName: tableName)
     }
 }

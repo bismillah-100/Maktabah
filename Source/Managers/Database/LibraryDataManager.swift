@@ -10,7 +10,7 @@ import Foundation
 class LibraryDataManager {
     static let shared = LibraryDataManager()
     var db: DatabaseManager = .shared
-    
+
     private let lock = NSRecursiveLock()
 
     private var _allRootCategories: [CategoryData] = []
@@ -18,7 +18,7 @@ class LibraryDataManager {
     private var _booksById: [Int: BooksData] = [:]
     private var _archives: [Int: ArchiveInfo] = [:]
     private var _archivesBuiltFromFullData: Bool = false
-        private var _authorsCache: [Int: Muallif] = [:]
+    private var _authorsCache: [Int: Muallif] = [:]
     private var _isDataLoaded = false
     private var _isAuthorsLoaded = false
     private var _loadingTask: Task<Void, Never>?
@@ -87,7 +87,7 @@ class LibraryDataManager {
                     }
                 } catch {
                     #if DEBUG
-                        print("Error loading data: \(error)")
+                    print("Error loading data: \(error)")
                     #endif
                 }
 
@@ -113,6 +113,7 @@ class LibraryDataManager {
     }
 
     // MARK: - Helpers for loading data
+
     private func buildCategoryHierarchy(from allCategories: [CategoryData]) -> (
         rootCats: [CategoryData], categoryMap: [Int: CategoryData]
     ) {
@@ -147,10 +148,8 @@ class LibraryDataManager {
         for cat in allCategories {
             let books = allBooksGrouped[cat.id] ?? []
             cat.children.append(contentsOf: books)
-            for book in books {
-                if localBooksById[book.id] == nil {
-                    localBooksById[book.id] = book
-                }
+            for book in books where localBooksById[book.id] == nil {
+                localBooksById[book.id] = book
             }
         }
 
@@ -176,7 +175,7 @@ class LibraryDataManager {
             }
         } catch {
             #if DEBUG
-                print("Failed to apply bundle download metadata:", error)
+            print("Failed to apply bundle download metadata:", error)
             #endif
         }
     }
@@ -188,13 +187,13 @@ class LibraryDataManager {
             }
             return (false, [])
         }
-        
+
         if isLoaded {
             return cachedRes
         }
 
         let fetched = DatabaseManager.shared.fetchAllAuthors()
-        
+
         lock.withLock {
             for author in fetched {
                 _authorsCache[author.id] = author.muallif
@@ -240,7 +239,7 @@ class LibraryDataManager {
     func getBook(_ ids: [Int]) -> [BooksData] {
         var books = [BooksData]()
         var idsToFetch = [Int]()
-        
+
         lock.withLock {
             for id in ids {
                 if let book = _booksById[id] {
@@ -261,7 +260,7 @@ class LibraryDataManager {
                 }
             } catch {
                 #if DEBUG
-                    print(error.localizedDescription)
+                print(error.localizedDescription)
                 #endif
             }
         }
@@ -284,7 +283,7 @@ class LibraryDataManager {
         var archives: [Int: ArchiveInfo] = [:]
         var seenTables = Set<String>() // untuk menghindari duplikat
 
-        // Kumpulkan buku dalam urutan hierarki secara efisien menggunakan array tunggal untuk menghindari overhead alokasi O(N^2)
+        /// Kumpulkan buku dalam urutan hierarki secara efisien menggunakan array tunggal untuk menghindari overhead alokasi O(N^2)
         func collectBooks(from node: Any, into result: inout [BooksData]) {
             if let book = node as? BooksData {
                 result.append(book)
@@ -337,12 +336,12 @@ class LibraryDataManager {
             return []
         }
 
-        for i in 0..<count {
+        for i in 0 ..< count {
             do {
                 let conn = try SQLiteConnection(dbPath: dbPath)
                 connections.append(conn)
             } catch {
-                print("⚠️ Connection \(i+1) gagal untuk \(dbPath): \(error)")
+                print("⚠️ Connection \(i + 1) gagal untuk \(dbPath): \(error)")
             }
         }
 
@@ -374,18 +373,36 @@ class LibraryDataManager {
         traverse(items)
         return checkedTables
     }
+}
 
+struct LibrarySearchParams {
+    var tableToScan: Set<String> = []
+    var searchEngine: SearchEngine
+    var query: String
+    var mode: SearchMode
+    var nearDistance: Int = 10
+}
+
+struct LibrarySearchCallbacks {
+    var onInitialize: @MainActor (Int) -> Void
+    var onTableProgress: @MainActor (Int) -> Void
+    var onRowProgress: @MainActor (String, String, Int, Int) -> Void
+    var completion: @MainActor (SearchResultItem) -> Void
+    var onComplete: @MainActor () -> Void
+}
+
+private struct SearchResultItemParams {
+    let tableName: String
+    let archive: String
+    let searchKeywords: [String]
+    let mode: SearchMode
+    let nearDistance: Int
+}
+
+extension LibraryDataManager {
     func performSearch(
-        tableToScan: Set<String> = [],
-        searchEngine: SearchEngine,
-        query: String,
-        mode: SearchMode,
-        nearDistance: Int = 10,
-        onInitialize: @escaping @MainActor (Int) -> Void,
-        onTableProgress: @escaping @MainActor (Int) -> Void,
-        onRowProgress: @escaping @MainActor (String, String, Int, Int) -> Void,
-        completion: @escaping @MainActor (SearchResultItem) -> Void,
-        onComplete: @escaping @MainActor () -> Void
+        params: LibrarySearchParams,
+        callbacks: LibrarySearchCallbacks
     ) async {
         if FtsMigrationManager.shared.isMigrating {
             await MainActor.run {
@@ -395,16 +412,49 @@ class LibraryDataManager {
             }
             return
         }
-        let allowed = tableToScan
 
-        let searchKeywords = FtsQueryParser.extractKeywords(query: query, mode: mode)
-
-        if searchKeywords.isEmpty {
-            await onComplete()
+        let searchKeywords = FtsQueryParser.extractKeywords(query: params.query, mode: params.mode)
+        guard !searchKeywords.isEmpty else {
+            await callbacks.onComplete()
             return
         }
 
-        let (archivesCount, allowedByArchive) = lock.withLock {
+        let allowed = params.tableToScan
+        let allowedByArchive = filterAllowedByArchive(allowed: allowed)
+        let totalTables = registerArchivesForSearch(allowedByArchive: allowedByArchive, searchEngine: params.searchEngine)
+
+        if totalTables == 0 || Task.isCancelled {
+            await callbacks.onComplete()
+            return
+        }
+
+        params.searchEngine.checkAndResumeIfNeeded { [weak self] resumed in
+            guard let self, !resumed, !Task.isCancelled else { return }
+
+            let options = SearchQueryOptions(
+                query: params.query,
+                keywords: searchKeywords,
+                allowedTables: allowed.isEmpty ? nil : allowed,
+                mode: params.mode,
+                nearDistance: params.nearDistance
+            )
+
+            let engineCallbacks = makeSearchEngineCallbacks(
+                params: params,
+                callbacks: callbacks,
+                searchKeywords: searchKeywords,
+                totalTables: totalTables
+            )
+
+            params.searchEngine.startSearch(
+                options: options,
+                callbacks: engineCallbacks
+            )
+        }
+    }
+
+    private func filterAllowedByArchive(allowed: Set<String>) -> [Int: Set<String>] {
+        lock.withLock {
             var allowedByArchive: [Int: Set<String>] = [:]
             for tableName in allowed {
                 let bookId = Int(tableName.dropFirst()) ?? 0
@@ -412,21 +462,72 @@ class LibraryDataManager {
                     allowedByArchive[book.archive, default: []].insert(tableName)
                 }
             }
-            return (_archives.count, allowedByArchive)
+            return allowedByArchive
         }
+    }
 
-        #if DEBUG
-            print(
-                "Filter: Dari \(archivesCount) archive → \(allowedByArchive.keys.count) relevan")
-        #endif
+    private func makeSearchEngineCallbacks(
+        params: LibrarySearchParams,
+        callbacks: LibrarySearchCallbacks,
+        searchKeywords: [String],
+        totalTables: Int
+    ) -> SearchEngineCallbacks {
+        var completedTablesGlobal = 0
 
+        return SearchEngineCallbacks(
+            onInitialize: { _ in
+                Task { @MainActor [totalTables] in
+                    callbacks.onInitialize(totalTables)
+                }
+            },
+            onTableComplete: { _, _ in
+                completedTablesGlobal += 1
+                Task { @MainActor [completedTablesGlobal] in
+                    callbacks.onTableProgress(completedTablesGlobal)
+                }
+            },
+            onRowProgress: { archiveId, tableName, current, total in
+                Task { @MainActor in
+                    callbacks.onRowProgress(archiveId, tableName, current, total)
+                }
+            },
+            onResult: { [weak self] tableName, archive, content in
+                guard let self else { return }
+                let itemParams = SearchResultItemParams(
+                    tableName: tableName,
+                    archive: archive,
+                    searchKeywords: searchKeywords,
+                    mode: params.mode,
+                    nearDistance: params.nearDistance
+                )
+                let item = makeSearchResultItem(
+                    content: content,
+                    params: itemParams
+                )
+                Task { @MainActor in
+                    callbacks.completion(item)
+                }
+            },
+            onComplete: {
+                Task { @MainActor in
+                    callbacks.onComplete()
+                }
+            }
+        )
+    }
+
+    private func registerArchivesForSearch(
+        allowedByArchive: [Int: Set<String>],
+        searchEngine: SearchEngine
+    ) -> Int {
         var totalTables = 0
 
         for archiveId in allowedByArchive.keys.sorted() {
-            if Task.isCancelled { return }
-            
-            guard let archiveInfo = archives[archiveId] else { continue }
-            guard let dbPath = getDatabasePath(forArchive: archiveId) else {
+            if Task.isCancelled { return totalTables }
+
+            guard let archiveInfo = archives[archiveId],
+                  let dbPath = getDatabasePath(forArchive: archiveId)
+            else {
                 continue
             }
             let connections = createConnections(dbPath: dbPath, count: 4)
@@ -436,7 +537,6 @@ class LibraryDataManager {
                 continue
             }
 
-            // Validasi: pastikan table ada di archive dan diizinkan (O(1) lookup per item)
             let allowedForThisArchive = allowedByArchive[archiveId] ?? []
             let relevantTablesForArchive = archiveInfo.tables.filter {
                 allowedForThisArchive.contains($0)
@@ -447,98 +547,65 @@ class LibraryDataManager {
 
             searchEngine.registerDB(
                 archiveId: String(archiveId),
-                tables: archiveInfo.tables,  // Masih kirim semua tables, filtering di worker
+                tables: archiveInfo.tables,
                 connections: connections,
                 batchSize: 200
             )
+
             #if DEBUG
-                print("Worker archive \(archiveId): \(relevantTablesForArchive.count) tables")
+            print("Worker archive \(archiveId): \(relevantTablesForArchive.count) tables")
             #endif
         }
 
-        if totalTables == 0 || Task.isCancelled {
-            await onComplete()
-            return
+        return totalTables
+    }
+
+    private func makeSearchResultItem(
+        content: BookContent,
+        params: SearchResultItemParams
+    ) -> SearchResultItem {
+        let tableName = params.tableName
+        let archive = params.archive
+        let searchKeywords = params.searchKeywords
+        let mode = params.mode
+        let nearDistance = params.nearDistance
+        let bookId = Int(tableName.dropFirst()) ?? 0
+        let (bookTitle, isMultilingual, isImported) = lock.withLock {
+            let book = _booksById[bookId]
+            return (book?.book ?? "", book?.isMultiLanguage ?? false, book?.isImported ?? false)
         }
 
-        searchEngine.checkAndResumeIfNeeded { [weak self] resumed in
-            guard let self, !resumed else { return }
-            if Task.isCancelled { return }
+        let strippedNash = isImported ? content.nash.stripSpanTags() : content.nash
+        let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
+        let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
+        let snippet: String
+        let highlightedSnippet: NSAttributedString
 
-            var completedTablesGlobal = 0
-
-            searchEngine.startSearch(
-                query: query,
-                keywords: searchKeywords,
-                allowedTables: allowed.isEmpty ? nil : allowed,
-                mode: mode,
-                nearDistance: nearDistance,
-                onInitialize: { totalWorkers in
-                    Task { @MainActor [totalTables] in
-                        // Kirim hanya total tables
-                        onInitialize(totalTables)
-                    }
-                },
-                onTableComplete: { archiveId, completedTablesInWorker in
-                    completedTablesGlobal += 1
-                    Task { @MainActor [completedTablesGlobal] in
-                        onTableProgress(completedTablesGlobal)
-                    }
-                }, 
-                onRowProgress: { archiveId, tableName, current, total in
-                    // ✅ Forward ke UI
-                    Task { @MainActor in
-                        onRowProgress(archiveId, tableName, current, total)
-                    }
-                },
-                onResult: { tableName, archive, content in
-                    let bookId = Int(tableName.dropFirst()) ?? 0
-                    let (bookTitle, isMultilingual, isImported) = self.lock.withLock {
-                        let book = self._booksById[bookId]
-                        return (book?.book ?? "", book?.isMultiLanguage ?? false, book?.isImported ?? false)
-                    }
-
-                    // Strip tags untuk imported books (lebih efisien dengan versi ringan)
-                    let strippedNash = isImported ? content.nash.stripSpanTags() : content.nash
-                    let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
-                    let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
-                    let snippet: String
-                    let highlightedSnippet: NSAttributedString
-                    if mode == .near {
-                        snippet = normalizedNash
-                            .normalizeArabic()
-                            .snippetNear(keywords: searchKeywordsConverted, nearDistance: nearDistance, contextLength: 60)
-                        highlightedSnippet = snippet.highlightedAttributedText(
-                            keywords: searchKeywordsConverted, nearDistance: nearDistance)
-                    } else {
-                        snippet = normalizedNash
-                            .normalizeArabic()
-                            .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
-                        highlightedSnippet = snippet.highlightedAttributedText(
-                            keywords: searchKeywordsConverted)
-                    }
-
-                    let item = SearchResultItem(
-                        archive: archive,
-                        tableName: tableName,
-                        bookId: content.id,
-                        bookTitle: bookTitle,
-                        page: content.page,
-                        part: content.part,
-                        attributedText: highlightedSnippet
-                    )
-
-                    Task { @MainActor in
-                        completion(item)
-                    }
-                },
-                onComplete: {
-                    Task { @MainActor in
-                        onComplete()
-                    }
-                }
+        if mode == .near {
+            snippet = normalizedNash
+                .normalizeArabic()
+                .snippetNear(keywords: searchKeywordsConverted, nearDistance: nearDistance, contextLength: 60)
+            highlightedSnippet = snippet.highlightedAttributedText(
+                keywords: searchKeywordsConverted, nearDistance: nearDistance
+            )
+        } else {
+            snippet = normalizedNash
+                .normalizeArabic()
+                .snippetAround(keywords: searchKeywordsConverted, contextLength: 60)
+            highlightedSnippet = snippet.highlightedAttributedText(
+                keywords: searchKeywordsConverted
             )
         }
+
+        return SearchResultItem(
+            archive: archive,
+            tableName: tableName,
+            bookId: content.id,
+            bookTitle: bookTitle,
+            page: content.page,
+            part: content.part,
+            attributedText: highlightedSnippet
+        )
     }
 
     // MARK: - Generic Hierarchy Filtering logic
@@ -550,7 +617,7 @@ class LibraryDataManager {
     ) -> Bool {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
         let normalizedSearchText = trimmed.normalizeArabic()
-        
+
         let base = baseCategories ?? lock.withLock { _allRootCategories }
 
         if trimmed.isEmpty {
@@ -574,7 +641,7 @@ class LibraryDataManager {
         // Jika kategori sendiri cocok, tampilkan semua children-nya tanpa filter
         // (misalnya: author "Imam Nawawi" cocok → semua bukunya ditampilkan)
         if categoryMatches {
-            let cloned = category.copy() as! CategoryData
+            let cloned = category.copy()
             cloned.children = category.children
             return cloned
         }
@@ -593,7 +660,7 @@ class LibraryDataManager {
 
         // Jika ada children yang cocok, return kategori dengan children yang terfilter
         if !filteredChildren.isEmpty {
-            let cloned = category.copy() as! CategoryData
+            let cloned = category.copy()
             cloned.children = filteredChildren
             return cloned
         }
@@ -608,13 +675,11 @@ class LibraryDataManager {
         // First: find exact author name matches (fast path)
         var matchedAuthors: [CategoryData] = []
 
-        for category in categories {
-            if category.normalizedName.contains(normalizedSearch) {
-                // Author name matches - return ALL books under this author
-                let cloned = category.copy() as! CategoryData
-                cloned.children = category.children
-                matchedAuthors.append(cloned)
-            }
+        for category in categories where category.normalizedName.contains(normalizedSearch) {
+            // Author name matches - return ALL books under this author
+            let cloned = category.copy()
+            cloned.children = category.children
+            matchedAuthors.append(cloned)
         }
 
         // If we found exact matches, return them immediately
@@ -635,7 +700,7 @@ class LibraryDataManager {
             }
 
             if !matchingBooks.isEmpty {
-                let cloned = category.copy() as! CategoryData
+                let cloned = category.copy()
                 cloned.children = matchingBooks
                 result.append(cloned)
             }
@@ -665,10 +730,10 @@ class LibraryDataManager {
 
         // Tentukan apakah kategori ini harus disertakan
         let shouldInclude =
-        !filteredChildren.isEmpty || includeCategoryIfEmpty(category)
+            !filteredChildren.isEmpty || includeCategoryIfEmpty(category)
 
         if shouldInclude {
-            let cloned = category.copy() as! CategoryData
+            let cloned = category.copy()
             cloned.children = filteredChildren
             return cloned
         }
@@ -689,23 +754,53 @@ class LibraryDataManager {
     /// Bangun hierarchy berdasarkan Author (Muallif)
     /// Root = Author, Children = BooksData yang ditulis oleh author tersebut
     func buildAuthorHierarchy() -> [CategoryData] {
-        // Langsung fetch authors dari database, jangan rely pada cache
         let authors = DatabaseManager.shared.fetchAllAuthors()
 
-        // Handle potential duplicate author IDs by keeping the first occurrence
         var authorMap: [Int: Muallif] = [:]
-        for author in authors {
-            if authorMap[author.id] == nil {
-                authorMap[author.id] = author.muallif
-            }
+        for author in authors where authorMap[author.id] == nil {
+            authorMap[author.id] = author.muallif
         }
 
-        // Collect ALL books from _booksById (sumber resmi semua buku)
         let allBooks: [BooksData] = lock.withLock {
             Array(_booksById.values)
         }
 
-        // Group books by muallif
+        let (booksByAuthor, booksWithNoAuthor) = groupBooksByAuthor(allBooks: allBooks)
+
+        var authorCategories: [CategoryData] = []
+        var processedAuthorIds: Set<Int> = []
+
+        // First pass: authors that exist in the Auth table
+        for (authorId, muallif) in authors {
+            let books = booksByAuthor[authorId] ?? []
+            guard !books.isEmpty else { continue }
+
+            processedAuthorIds.insert(authorId)
+            authorCategories.append(createAuthorCategory(id: authorId, name: muallif.nama, books: books, order: authorId))
+        }
+
+        // Second pass: authors not in Auth table but have books
+        let unprocessedBooks = booksByAuthor.filter { !processedAuthorIds.contains($0.key) }
+        for (authorId, books) in unprocessedBooks.sorted(by: { $0.key < $1.key }) {
+            guard !books.isEmpty else { continue }
+            let authorName = authorMap[authorId]?.nama ?? "Unknown Author (\(authorId))"
+            authorCategories.append(createAuthorCategory(id: authorId, name: authorName, books: books, order: authorId))
+        }
+
+        // Third pass: books with muallif = 0
+        if !booksWithNoAuthor.isEmpty {
+            authorCategories.append(createAuthorCategory(id: 0, name: "---", books: booksWithNoAuthor, order: Int.max))
+        }
+
+        if let index = authorCategories.firstIndex(where: { $0.id == 0 }), index != authorCategories.count - 1 {
+            let noAuthor = authorCategories.remove(at: index)
+            authorCategories.append(noAuthor)
+        }
+
+        return authorCategories
+    }
+
+    private func groupBooksByAuthor(allBooks: [BooksData]) -> (booksByAuthor: [Int: [BooksData]], booksWithNoAuthor: [BooksData]) {
         var booksByAuthor: [Int: [BooksData]] = [:]
         var booksWithNoAuthor: [BooksData] = []
 
@@ -716,84 +811,18 @@ class LibraryDataManager {
                 booksByAuthor[book.muallif, default: []].append(book)
             }
         }
+        return (booksByAuthor, booksWithNoAuthor)
+    }
 
-        // Debug: print author hierarchy status (sanitized; no data values)
-        #if DEBUG
-            print("=== Author Hierarchy Debug ===")
-            print("Author hierarchy rebuild started")
-            print("Author/book grouping computed")
-            print("Author hierarchy integrity check completed")
-            print("Author hierarchy debug summary generated")
-
-            // Keep internal check but avoid logging IDs/counts
-            let authorIdsInBooks = Set(booksByAuthor.keys)
-            let authorIdsInAuthTable = Set(authors.map { $0.id })
-            let missingAuthorIds = authorIdsInBooks.subtracting(authorIdsInAuthTable)
-            if !missingAuthorIds.isEmpty {
-                print("Author hierarchy mismatch detected")
-            }
-        #endif
-
-        // Build author categories
-        var authorCategories: [CategoryData] = []
-        var processedAuthorIds: Set<Int> = []
-
-        // First pass: authors that exist in the Auth table
-        for (authorId, muallif) in authors {
-            let books = booksByAuthor[authorId] ?? []
-            guard !books.isEmpty else { continue }
-
-            processedAuthorIds.insert(authorId)
-
-            let authorCategory = CategoryData(
-                id: authorId,
-                name: muallif.nama,
-                level: 0,
-                order: authorId
-            )
-            authorCategory.children = books.sorted { $0.book < $1.book }
-            authorCategories.append(authorCategory)
-        }
-
-        // Second pass: authors not in Auth table but have books
-        let unprocessedBooks = booksByAuthor.filter { !processedAuthorIds.contains($0.key) }
-        for (authorId, books) in unprocessedBooks.sorted(by: { $0.key < $1.key }) {
-            guard !books.isEmpty else { continue }
-
-            let authorName = authorMap[authorId]?.nama ?? "Unknown Author (\(authorId))"
-
-            let authorCategory = CategoryData(
-                id: authorId,
-                name: authorName,
-                level: 0,
-                order: authorId
-            )
-            authorCategory.children = books.sorted { $0.book < $1.book }
-            authorCategories.append(authorCategory)
-        }
-
-        // Third pass: books with muallif = 0
-        if !booksWithNoAuthor.isEmpty {
-            let noAuthorCategory = CategoryData(
-                id: 0,
-                name: "---",
-                level: 0,
-                order: Int.max
-            )
-            noAuthorCategory.children = booksWithNoAuthor.sorted { $0.book < $1.book }
-            authorCategories.append(noAuthorCategory)
-        }
-
-        if let index = authorCategories.firstIndex(where: { $0.id == 0 }), index != authorCategories.count - 1 {
-            let noAuthor = authorCategories.remove(at: index)
-            authorCategories.append(noAuthor)
-        }
-
-        #if DEBUG
-            print("Author hierarchy build completed.")
-        #endif
-
-        return authorCategories
+    private func createAuthorCategory(id: Int, name: String, books: [BooksData], order: Int) -> CategoryData {
+        let authorCategory = CategoryData(
+            id: id,
+            name: name,
+            level: 0,
+            order: order
+        )
+        authorCategory.children = books.sorted { $0.book < $1.book }
+        return authorCategory
     }
 
     func filterByAuthor(_ authorId: Int) -> [CategoryData] {
@@ -825,7 +854,7 @@ class LibraryDataManager {
     /// Cek apakah Book ID memenuhi syarat untuk dihapus berdasarkan versi core
     static func shouldRemoveBook(id: Int) -> Bool {
         let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-        return coreVersion >= 1.0 ? id > 151203 : id > 32792
+        return coreVersion >= 1.0 ? id > 151_203 : id > 32792
     }
 
     /// Cek apakah Author ID memenuhi syarat untuk dihapus berdasarkan versi core
@@ -862,7 +891,6 @@ class LibraryDataManager {
 }
 
 extension LibraryDataManager {
-    
     /// Pemeriksaan pembaruan buku dengan jeda satu hari.
     /// - Parameters:
     ///   - force: Menjalankan pemeriksaan pembaruan buku lebih dari sekali dalam satu hari.
@@ -915,52 +943,16 @@ extension LibraryDataManager {
         var updatedBookIds: Set<Int> = []
 
         for result in updateResults {
-            let bookId = result.bookId
-
             switch result.action {
             case .inserted:
-                // Fetch buku baru dari database
-                if let book = try db.fetchBook(byId: bookId) {
-                    lock.withLock {
-                        // Tambahkan ke data structures
-                        _booksById[bookId] = book
-
-                        // Dapatkan category ID
-                        let categoryId = result.catId
-
-                        // Tambahkan ke category hierarchy
-                        if let category = _categoryMap[categoryId] {
-                            category.children.append(book)
-                            insertedBooks.append((categoryId, book))
-                        }
-                    }
-
-                    // Update archive
-                    updateArchiveForBooks([book])
+                if let inserted = try applyInsertedBook(result) {
+                    insertedBooks.append(inserted)
                 }
-
             case .updated:
-                // Fetch buku yang diupdate dari database
-                if let book = try db.fetchBook(byId: bookId) {
-                    lock.withLock {
-                        // Update booksById cache
-                        _booksById[bookId] = book
-
-                        // Update di hierarchy tree
-                        updateBookInHierarchy(book)
-                    }
-
-                    // Clear cache
-                    BookPageCache.shared.remove(bookId: bookId)
-
-                    // Update archive
-                    updateArchiveForBooks([book])
-
-                    updatedBookIds.insert(bookId)
+                if let updatedId = try applyUpdatedBook(result.bookId) {
+                    updatedBookIds.insert(updatedId)
                 }
-
             case .skipped:
-                // Do nothing
                 break
             }
         }
@@ -974,13 +966,41 @@ extension LibraryDataManager {
         }
     }
 
+    private func applyInsertedBook(_ result: BookUpdateResult) throws -> (categoryId: Int, book: BooksData)? {
+        guard let book = try db.fetchBook(byId: result.bookId) else { return nil }
+        var inserted: (categoryId: Int, book: BooksData)?
+
+        lock.withLock {
+            _booksById[result.bookId] = book
+            let categoryId = result.catId
+            if let category = _categoryMap[categoryId] {
+                category.children.append(book)
+                inserted = (categoryId, book)
+            }
+        }
+
+        updateArchiveForBooks([book])
+        return inserted
+    }
+
+    private func applyUpdatedBook(_ bookId: Int) throws -> Int? {
+        guard let book = try db.fetchBook(byId: bookId) else { return nil }
+
+        lock.withLock {
+            _booksById[bookId] = book
+            updateBookInHierarchy(book)
+        }
+
+        BookPageCache.shared.remove(bookId: bookId)
+        updateArchiveForBooks([book])
+        return bookId
+    }
+
     /// Update single book di hierarchy tree
     private func updateBookInHierarchy(_ updatedBook: BooksData) {
         // Cari book di tree dan replace
-        for category in _allRootCategories {
-            if replaceBookInCategory(category, with: updatedBook) {
-                break
-            }
+        for category in _allRootCategories where replaceBookInCategory(category, with: updatedBook) {
+            break
         }
     }
 
@@ -1048,5 +1068,15 @@ extension NotificationCenter {
             updatedBookIds: updatedBookIds
         )
         post(name: .booksChanged, object: payload)
+    }
+}
+
+extension Notification {
+    var bookIdMigration: (oldId: Int, newId: Int)? {
+        guard let userInfo,
+              let oldId = userInfo["oldId"] as? Int,
+              let newId = userInfo["newId"] as? Int
+        else { return nil }
+        return (oldId, newId)
     }
 }
