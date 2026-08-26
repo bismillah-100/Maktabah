@@ -122,8 +122,8 @@ class BookConnection {
         // Ini menghemat O(N log N) sorting pada setiap operasi mapping.
         for key in mapping.sortedKeys {
             if let replacement = mapping.map[key] {
-                output = output.replacingOccurrences(
-                    of: key,
+                output = output.replacing(
+                    key,
                     with: "\(replacement)\n"
                 )
             }
@@ -193,23 +193,17 @@ extension BookConnection {
         return newContent
     }
 
-    /// UPDATED: getContent dengan decompress otomatis
-    func getContent(bkid: String, contentId: Int, quran: Bool = false)
-        -> BookContent?
-    {
+    private func fetchContent(
+        query: String,
+        parameters: [String] = [],
+        bkid: String,
+        quran: Bool = false,
+        errorContext: String
+    ) -> BookContent? {
         guard let db else { return nil }
 
-        if let cached = getCached(bkId: bkid, idContent: contentId) {
-            #if DEBUG
-            print("return cached")
-            #endif
-            return cached
-        }
-
-        let querySQL = quran ? quranContentQuery(forBook: bkid) : contentQuery(forBook: bkid)
-
         do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { [weak self] row -> BookContent? in
+            let contents = try db.fetch(query: query, parameters: parameters) { [weak self] row -> BookContent? in
                 self?.parseBookContent(row: row, bkid: bkid, quran: quran)
             }.compactMap { $0 }
 
@@ -218,15 +212,34 @@ extension BookConnection {
                 return content
             }
         } catch {
-            print("getContent error:", error)
+            print("\(errorContext) error:", error)
         }
 
         return nil
     }
 
-    func getFirstContent(bkid: String) -> BookContent? {
-        guard let db else { return nil }
+    /// UPDATED: getContent dengan decompress otomatis
+    func getContent(bkid: String, contentId: Int, quran: Bool = false)
+        -> BookContent?
+    {
+        if let cached = getCached(bkId: bkid, idContent: contentId) {
+            #if DEBUG
+            print("return cached")
+            #endif
+            return cached
+        }
 
+        let querySQL = quran ? quranContentQuery(forBook: bkid) : contentQuery(forBook: bkid)
+        return fetchContent(
+            query: querySQL,
+            parameters: [String(contentId)],
+            bkid: bkid,
+            quran: quran,
+            errorContext: "getContent"
+        )
+    }
+
+    func getFirstContent(bkid: String) -> BookContent? {
         let querySQL = """
         SELECT nass, page, id, part
         FROM b\(bkid)
@@ -234,26 +247,15 @@ extension BookConnection {
         LIMIT 1
         """
 
-        do {
-            let contents = try db.fetch(query: querySQL) { [weak self] row -> BookContent? in
-                self?.parseBookContent(row: row, bkid: bkid)
-            }.compactMap { $0 }
-
-            if let content = contents.first {
-                setCache(bkId: bkid, content: content)
-                return content
-            }
-        } catch {
-            print("getFirstContent error:", error)
-        }
-
-        return nil
+        return fetchContent(
+            query: querySQL,
+            bkid: bkid,
+            errorContext: "getFirstContent"
+        )
     }
 
     /// UPDATED: getContent by part and page
     func getContent(bkid: String, part: Int, page: Int) -> BookContent? {
-        guard let db else { return nil }
-
         let querySQL = """
         SELECT nass, page, id, part
         FROM b\(bkid)
@@ -261,20 +263,12 @@ extension BookConnection {
         LIMIT 1
         """
 
-        do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(part), String(page)]) { [weak self] row -> BookContent? in
-                self?.parseBookContent(row: row, bkid: bkid)
-            }.compactMap { $0 }
-
-            if let content = contents.first {
-                setCache(bkId: bkid, content: content)
-                return content
-            }
-        } catch {
-            print("getContent part page error:", error)
-        }
-
-        return nil
+        return fetchContent(
+            query: querySQL,
+            parameters: [String(part), String(page)],
+            bkid: bkid,
+            errorContext: "getContent part page"
+        )
     }
 
     func getNextPage(
@@ -287,25 +281,17 @@ extension BookConnection {
             return cached
         }
 
-        guard let db else { return nil }
         let querySQL = quran
             ? "SELECT nass, page, id, part, sora, aya FROM b\(bkid) WHERE id > ? ORDER BY id ASC LIMIT 1"
             : "SELECT nass, page, id, part FROM b\(bkid) WHERE id > ? ORDER BY id ASC LIMIT 1"
 
-        do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { [weak self] row -> BookContent? in
-                self?.parseBookContent(row: row, bkid: bkid, quran: quran)
-            }.compactMap { $0 }
-
-            if let content = contents.first {
-                setCache(bkId: bkid, content: content)
-                return content
-            }
-        } catch {
-            print("getNextPage error:", error)
-        }
-
-        return nil
+        return fetchContent(
+            query: querySQL,
+            parameters: [String(contentId)],
+            bkid: bkid,
+            quran: quran,
+            errorContext: "getNextPage"
+        )
     }
 
     func getPrevPage(
@@ -318,25 +304,17 @@ extension BookConnection {
             return cached
         }
 
-        guard let db else { return nil }
         let querySQL = quran
             ? "SELECT nass, page, id, part, sora, aya FROM b\(bkid) WHERE id < ? ORDER BY id DESC LIMIT 1"
             : "SELECT nass, page, id, part FROM b\(bkid) WHERE id < ? ORDER BY id DESC LIMIT 1"
 
-        do {
-            let contents = try db.fetch(query: querySQL, parameters: [String(contentId)]) { [weak self] row -> BookContent? in
-                self?.parseBookContent(row: row, bkid: bkid, quran: quran)
-            }.compactMap { $0 }
-
-            if let content = contents.first {
-                setCache(bkId: bkid, content: content)
-                return content
-            }
-        } catch {
-            print("getPrevPage error:", error)
-        }
-
-        return nil
+        return fetchContent(
+            query: querySQL,
+            parameters: [String(contentId)],
+            bkid: bkid,
+            quran: quran,
+            errorContext: "getPrevPage"
+        )
     }
 
     func contentQuery(forBook bkid: String) -> String {
@@ -395,24 +373,18 @@ extension BookConnection {
 
     /// Mendapatkan jumlah halaman dalam juz/part tertentu
     func getPagesInPart(bkid: String, part: Int) -> Int {
-        guard let db else { return 0 }
-
-        let querySQL = """
-        SELECT MAX(page)
-        FROM b\(bkid)
-        WHERE part = ?
-        """
-
-        return (try? db.fetch(query: querySQL, parameters: [String(part)]) { row in
-            Int(row.int64(at: 0))
-        }.first) ?? 0
+        getPageAggregate(function: "MAX", bkid: bkid, part: part)
     }
 
     func getMinPagesInPart(bkid: String, part: Int) -> Int {
+        getPageAggregate(function: "MIN", bkid: bkid, part: part)
+    }
+
+    private func getPageAggregate(function: String, bkid: String, part: Int) -> Int {
         guard let db else { return 0 }
 
         let querySQL = """
-        SELECT MIN(page)
+        SELECT \(function)(page)
         FROM b\(bkid)
         WHERE part = ?
         """
@@ -468,17 +440,13 @@ extension BookConnection {
 
         // Pass 1: Buat semua node dulu, simpan dalam dictionary
         var allNodes: [TOCNode] = []
-        var levelStacks: [Int: [TOCNode]] = [:] // key = level, value = array of nodes di level itu
+        var levelStacks: [Int: [TOCNode]] = [:]
 
         for toc in flatTOCs {
             if Task.isCancelled { return [] }
             let node = TOCNode(from: toc)
             allNodes.append(node)
-
-            if levelStacks[node.level] == nil {
-                levelStacks[node.level] = []
-            }
-            levelStacks[node.level]?.append(node)
+            levelStacks[node.level, default: []].append(node)
         }
 
         // Pass 2: Identifikasi root nodes (level 1, sub 0)
@@ -488,18 +456,31 @@ extension BookConnection {
         }
 
         // Pass 3: Hubungkan children ke parent
+        let success = attachTOCNodesToParents(levelStacks: levelStacks, rootNodes: &rootNodes)
+        guard success else { return [] }
+
+        #if os(iOS)
+        // Pass 4: Hitung endID berdasarkan urutan flat list
+        calculateTOCEndIDs(allNodes: allNodes)
+        #endif
+
+        Self.tocTreeCache.setObject(rootNodes as NSArray, forKey: key)
+        return rootNodes
+    }
+
+    private func attachTOCNodesToParents(levelStacks: [Int: [TOCNode]], rootNodes: inout [TOCNode]) -> Bool {
         let sortedLevels = levelStacks.keys.sorted()
 
         for currentLevel in sortedLevels where currentLevel > 1 {
-            if Task.isCancelled { return [] }
+            if Task.isCancelled { return false }
             guard let nodesAtCurrentLevel = levelStacks[currentLevel] else { continue }
 
             for node in nodesAtCurrentLevel {
-                if Task.isCancelled { return [] }
+                if Task.isCancelled { return false }
                 var foundParent = false
 
                 for parentLevel in stride(from: currentLevel - 1, through: 1, by: -1) {
-                    if Task.isCancelled { return [] }
+                    if Task.isCancelled { return false }
                     guard let candidateParents = levelStacks[parentLevel] else { continue }
 
                     if let parent = candidateParents.last(where: { $0.id <= node.id }) {
@@ -514,9 +495,11 @@ extension BookConnection {
                 }
             }
         }
+        return true
+    }
 
-        #if os(iOS)
-        // Pass 4: Hitung endID berdasarkan urutan flat list
+    #if os(iOS)
+    private func calculateTOCEndIDs(allNodes: [TOCNode]) {
         for (i, node) in allNodes.enumerated() {
             if i < allNodes.count - 1 {
                 node.endID = allNodes[i + 1].id - 1
@@ -524,11 +507,8 @@ extension BookConnection {
                 node.endID = Int.max
             }
         }
-        #endif
-
-        Self.tocTreeCache.setObject(rootNodes as NSArray, forKey: key)
-        return rootNodes
     }
+    #endif
 
     static func invalidateTOC(for bookId: Int) {
         tocTreeCache.removeObject(forKey: NSNumber(value: bookId))

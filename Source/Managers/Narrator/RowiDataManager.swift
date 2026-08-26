@@ -65,28 +65,40 @@ class RowiDataManager {
         let sql = "SELECT \(colName), \(colWulida), \(colAqual), \(colRotba), \(colRZahbi), \(colSheok), \(colTelmez), \(colWho), \(colTuwuffi) FROM \(tableName) WHERE \(colId) = ? LIMIT 1"
 
         do {
-            if let result = try db.fetch(query: sql, parameters: [rowi.id], mapping: { row -> (String?, String?, String?, String?, String?, String?, String?, String?, String?) in
-                return (
-                    row.string(at: 0),
-                    row.string(at: 1),
-                    row.string(at: 2),
-                    row.string(at: 3),
-                    row.string(at: 4),
-                    row.string(at: 5),
-                    row.string(at: 6),
-                    row.string(at: 7),
-                    row.string(at: 8)
+            struct RowiDetailRow {
+                let name: String?
+                let wulida: String?
+                let aqual: String?
+                let rotba: String?
+                let rZahbi: String?
+                let sheok: String?
+                let telmez: String?
+                let who: String?
+                let tuwuffi: String?
+            }
+
+            if let result = try db.fetch(query: sql, parameters: [rowi.id], mapping: { row -> RowiDetailRow in
+                RowiDetailRow(
+                    name: row.string(at: 0),
+                    wulida: row.string(at: 1),
+                    aqual: row.string(at: 2),
+                    rotba: row.string(at: 3),
+                    rZahbi: row.string(at: 4),
+                    sheok: row.string(at: 5),
+                    telmez: row.string(at: 6),
+                    who: row.string(at: 7),
+                    tuwuffi: row.string(at: 8)
                 )
             }).first {
-                rowi.name = result.0
-                rowi.wulida = result.1
-                rowi.aqual = result.2
-                rowi.rotba = result.3
-                rowi.rZahbi = result.4
-                rowi.sheok = result.5
-                rowi.telmez = result.6
-                rowi.who = result.7
-                rowi.tuwuffi = result.8
+                rowi.name = result.name
+                rowi.wulida = result.wulida
+                rowi.aqual = result.aqual
+                rowi.rotba = result.rotba
+                rowi.rZahbi = result.rZahbi
+                rowi.sheok = result.sheok
+                rowi.telmez = result.telmez
+                rowi.who = result.who
+                rowi.tuwuffi = result.tuwuffi
                 rowi.isLoaded = true
 
                 #if DEBUG
@@ -98,50 +110,32 @@ class RowiDataManager {
         }
     }
 
-    private func groupByTabaqa() {
-        // 1. Group rowis by the normalized tabaqa code
-        var grouped: [String: [Rowi]] = [:]
-
-        for rowi in allRowis {
-            // *** Menggunakan kode yang dinormalisasi untuk grouping ***
-            let normalizedCode = rowi.getNormalizedTabaqaCode()
-
-            if grouped[normalizedCode] == nil {
-                grouped[normalizedCode] = []
-            }
-            grouped[normalizedCode]?.append(rowi)
-        }
-
-        // 2. Create TabaqaGroup objects in order
+    private func buildTabaqaGroups(from rowis: [Rowi]) {
+        var grouped = Dictionary(grouping: rowis, by: { $0.getNormalizedTabaqaCode() })
         tabaqaGroups.removeAll()
 
-        // Proses kode struktural F-P sesuai urutan
         for code in TabaqaGroup.orderedCodes {
-            if let rowis = grouped[code], !rowis.isEmpty {
-                // *** Menggunakan fungsi normalisasi nama ***
+            if let items = grouped[code], !items.isEmpty {
                 let name = TabaqaGroup.getNormalizedTabaqaName(for: code)
-
-                let group = TabaqaGroup(code: code, name: name, rowis: rowis)
+                let group = TabaqaGroup(code: code, name: name, rowis: items)
                 group.initialLoad()
                 tabaqaGroups.append(group)
-                grouped.removeValue(forKey: code) // Hapus yang sudah diproses
+                grouped.removeValue(forKey: code)
             }
         }
 
-        // 3. Tambahkan sisa kelompok (seperti "Unknown")
-        for (code, rowis) in grouped where !rowis.isEmpty {
-            let name: String
-
-            if code == "Unknown" {
-                name = "غير مصنف / غير معروف"
-            } else {
-                // Menggunakan kode mentah sebagai nama jika tidak terpetakan (fallback)
-                name = code
-            }
-
-            let group = TabaqaGroup(code: code, name: name, rowis: rowis)
+        for (code, items) in grouped where !items.isEmpty {
+            let name = (code == "Unknown")
+                ? "غير مصنف / غير معروف"
+                : (TabaqaGroup.tabaqaMapping[code] ?? code)
+            let group = TabaqaGroup(code: code, name: name, rowis: items)
+            group.initialLoad()
             tabaqaGroups.append(group)
         }
+    }
+
+    private func groupByTabaqa() {
+        buildTabaqaGroups(from: allRowis)
     }
 
     /// Ubah completion handler agar mengembalikan jumlah item yang dimuat
@@ -178,36 +172,9 @@ class RowiDataManager {
         }
 
         let normalizedQuery = query.normalizeArabic()
-
-        // Filter allRowis berdasarkan query
         let filtered = allRowis.filter { rowi in
             rowi.isoName.normalizeArabic().localizedCaseInsensitiveContains(normalizedQuery)
         }
-
-        // Group hasil filter berdasarkan tabaqa mentah (atau "Unknown" kalau nil)
-        var grouped = Dictionary(grouping: filtered, by: { $0.getNormalizedTabaqaCode() })
-
-        tabaqaGroups.removeAll()
-
-        // Tambahkan group sesuai urutan orderedCodes
-        for code in TabaqaGroup.orderedCodes {
-            if let rowis = grouped[code], !rowis.isEmpty {
-                let name = TabaqaGroup.tabaqaMapping[code] ?? code
-                let group = TabaqaGroup(code: code, name: name, rowis: rowis)
-                group.initialLoad()
-                tabaqaGroups.append(group)
-                grouped.removeValue(forKey: code)
-            }
-        }
-
-        // Tambahkan sisa group (misalnya Unknown atau kode lain yang tidak ada di orderedCodes)
-        for (code, rowis) in grouped where !rowis.isEmpty {
-            let name = (code == "Unknown")
-                ? "غير مصنف / غير معروف"
-                : (TabaqaGroup.tabaqaMapping[code] ?? code)
-            let group = TabaqaGroup(code: code, name: name, rowis: rowis)
-            group.initialLoad()
-            tabaqaGroups.append(group)
-        }
+        buildTabaqaGroups(from: filtered)
     }
 }

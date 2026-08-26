@@ -8,7 +8,7 @@
 
 import Foundation
 import SwiftUI
-#if canImport(AppKit)
+#if os(macOS)
 import AppKit
 #endif
 
@@ -21,13 +21,15 @@ enum CoreFile: CaseIterable {
     /// Nama file hasil dekompresi yang disimpan ke disk
     var filename: String {
         switch self {
-        case .main:    return "main.sqlite"
-        case .special: return "special.sqlite"
+        case .main: "main.sqlite"
+        case .special: "special.sqlite"
         }
     }
 
     /// Nama file asset di GitHub Release (selalu .zst)
-    var releaseFilename: String { filename + ".zst" }
+    var releaseFilename: String {
+        filename + ".zst"
+    }
 }
 
 // MARK: - CoreDownloadError
@@ -44,44 +46,44 @@ enum CoreDownloadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidBaseURL:
-            return String(
+            String(
                 localized: "core.error.invalidBaseURL",
                 defaultValue:
-                    "Invalid download URL. Please check your configuration."
+                "Invalid download URL. Please check your configuration."
             )
 
         case .destinationUnavailable:
-            return String(
+            String(
                 localized: "core.error.destinationUnavailable",
                 defaultValue: "The destination folder could not be created."
             )
 
         case .invalidResponse:
-            return String(
+            String(
                 localized: "core.error.invalidResponse",
                 defaultValue: "Invalid server response."
             )
 
-        case .httpStatus(let file, let code):
-            return String(
+        case let .httpStatus(file, code):
+            String(
                 localized: "core.error.httpStatus",
                 defaultValue: "Failed to download “\(file)” (HTTP \(code))."
             )
 
-        case .downloadFailed(let file):
-            return String(
+        case let .downloadFailed(file):
+            String(
                 localized: "core.error.downloadFailed",
                 defaultValue: "File “\(file)” is incomplete after download."
             )
 
-        case .decompressionFailed(let file, let reason):
-            return String(
+        case let .decompressionFailed(file, reason):
+            String(
                 localized: "core.error.decompressionFailed",
                 defaultValue: "Failed to decompress “\(file)”: \(reason)."
             )
 
         case .cancelled:
-            return String(
+            String(
                 localized: "core.error.cancelled",
                 defaultValue: "Download cancelled."
             )
@@ -112,7 +114,8 @@ final class CoreDatabaseDownloader: NSObject {
 
     func areBundleCoreFilesReady() -> Bool {
         CoreFile.allCases.allSatisfy { fileExistsAndHasSize(
-            for: $0, path: AppConfig.archiveCachePath)
+            for: $0, path: AppConfig.archiveCachePath
+        )
         }
     }
 
@@ -127,7 +130,7 @@ final class CoreDatabaseDownloader: NSObject {
         let (data, response) = try await URLSession.shared.data(from: url)
 
         guard let http = response as? HTTPURLResponse,
-              (200..<300).contains(http.statusCode)
+              (200 ..< 300).contains(http.statusCode)
         else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             throw CoreDownloadError.httpStatus(file: "version.txt", statusCode: code)
@@ -135,7 +138,7 @@ final class CoreDatabaseDownloader: NSObject {
 
         guard let version = String(data: data, encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-              !version.isEmpty
+            !version.isEmpty
         else {
             throw CoreDownloadError.downloadFailed(file: "version.txt")
         }
@@ -159,10 +162,10 @@ final class CoreDatabaseDownloader: NSObject {
 
             guard error == nil,
                   let http = response as? HTTPURLResponse,
-                  (200..<300).contains(http.statusCode),
-                  let data = data,
+                  (200 ..< 300).contains(http.statusCode),
+                  let data,
                   let version = String(data: data, encoding: .utf8)?
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                  .trimmingCharacters(in: .whitespacesAndNewlines),
                   !version.isEmpty
             else {
                 return
@@ -202,21 +205,7 @@ final class CoreDatabaseDownloader: NSObject {
                     .appendingPathComponent(file.releaseFilename)
             }
 
-            let fileSizes: [Int64] = fileURLs.map { url in
-                var req = URLRequest(url: url)
-                req.httpMethod = "HEAD"
-                var size: Int64 = 0
-                let sem = DispatchSemaphore(value: 0)
-                URLSession.shared.dataTask(with: req) { _, resp, _ in
-                    size = (resp as? HTTPURLResponse)?
-                        .value(forHTTPHeaderField: "Content-Length")
-                        .flatMap { Int64($0) } ?? 0
-                    sem.signal()
-                }.resume()
-                sem.wait()
-                return size
-            }
-
+            let fileSizes = fetchRemoteFileSizes(fileURLs: fileURLs)
             let grandTotal = fileSizes.reduce(0, +)
             onCompletion(grandTotal)
         }
@@ -233,7 +222,7 @@ final class CoreDatabaseDownloader: NSObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
             do {
-                try self.downloadMissingCoreFiles(onProgress: onProgress)
+                try downloadMissingCoreFiles(onProgress: onProgress)
                 DispatchQueue.main.async { onCompletion(nil) }
             } catch {
                 DispatchQueue.main.async { onCompletion(error) }
@@ -273,18 +262,8 @@ final class CoreDatabaseDownloader: NSObject {
         onProgress(1.0, "Index ready (\(entries.count) books)")
     }
 
-    /// Update core database ke versi terbaru
-    /// Mengganti tag di UserDefaults dan download file baru
-    /// Termasuk fetch index.json untuk memastikan mapping buku terbaru
     func updateToVersion(_ newTag: String, onProgress: @escaping ProgressHandler, onCompletion: @escaping CompletionHandler) {
-        // 1. Hapus file lama
-        for file in CoreFile.allCases {
-            if let path = AppConfig.coreDatabasePath {
-                let filePath = URL(fileURLWithPath: path)
-                    .appendingPathComponent(file.filename).path
-                try? FileManager.default.removeItem(atPath: filePath)
-            }
-        }
+        purgeExistingCoreFiles()
 
         // 2. Download ulang dengan tag baru - gunakan Task untuk async
         Task.detached(priority: .userInitiated) { [weak self, onProgress, onCompletion] in
@@ -332,6 +311,16 @@ final class CoreDatabaseDownloader: NSObject {
         }
     }
 
+    private func purgeExistingCoreFiles() {
+        for file in CoreFile.allCases {
+            if let path = AppConfig.coreDatabasePath {
+                let filePath = URL(fileURLWithPath: path)
+                    .appendingPathComponent(file.filename).path
+                try? FileManager.default.removeItem(atPath: filePath)
+            }
+        }
+    }
+
     // MARK: - Private: orchestrate
 
     private func downloadMissingCoreFiles(
@@ -341,7 +330,8 @@ final class CoreDatabaseDownloader: NSObject {
         guard !missing.isEmpty else { return }
 
         guard let baseURL = AppConfig.coreReleaseBaseURL,
-              let tag    = AppConfig.coreReleaseTag else {
+              let tag = AppConfig.coreReleaseTag
+        else {
             throw CoreDownloadError.invalidBaseURL
         }
 
@@ -351,8 +341,36 @@ final class CoreDatabaseDownloader: NSObject {
                 .appendingPathComponent(file.releaseFilename)
         }
 
-        // HEAD request ke semua file untuk dapat ukuran total
-        let fileSizes: [Int64] = fileURLs.map { url in
+        let fileSizes = fetchRemoteFileSizes(fileURLs: fileURLs)
+        let grandTotal = fileSizes.reduce(0, +)
+        var cumulativeOffset: Int64 = 0
+
+        for (i, (file, fileURL)) in zip(missing, fileURLs).enumerated() {
+            let offsetAtStart = cumulativeOffset
+
+            try downloadSingleFile(file, from: fileURL) { bytesWritten, _, _ in
+                let totalWritten = offsetAtStart + bytesWritten
+
+                let combinedProgress: Double = grandTotal > 0
+                    ? Double(totalWritten) / Double(grandTotal)
+                    : (Double(i) + Double(bytesWritten) / max(1, Double(fileSizes[i]))) / Double(missing.count)
+
+                let writtenMB = String(format: "%.1f", Double(totalWritten) / 1_048_576)
+                let totalStr = grandTotal > 0
+                    ? String(format: "%.1f MB", Double(grandTotal) / 1_048_576)
+                    : "? MB"
+
+                DispatchQueue.main.async {
+                    onProgress(combinedProgress, "\(writtenMB) / \(totalStr)")
+                }
+            }
+
+            cumulativeOffset += fileSizes[i] > 0 ? fileSizes[i] : 0
+        }
+    }
+
+    private func fetchRemoteFileSizes(fileURLs: [URL]) -> [Int64] {
+        fileURLs.map { url in
             var req = URLRequest(url: url)
             req.httpMethod = "HEAD"
             var size: Int64 = 0
@@ -365,32 +383,6 @@ final class CoreDatabaseDownloader: NSObject {
             }.resume()
             sem.wait()
             return size
-        }
-
-        let grandTotal = fileSizes.reduce(0, +)  // 0 jika semua HEAD gagal
-        var cumulativeOffset: Int64 = 0           // bytes dari file-file yang sudah selesai
-
-        for (i, (file, fileURL)) in zip(missing, fileURLs).enumerated() {
-            let offsetAtStart = cumulativeOffset
-
-            try downloadSingleFile(file, from: fileURL) { bytesWritten, _, _ in
-                let totalWritten = offsetAtStart + bytesWritten
-
-                let combinedProgress: Double = grandTotal > 0
-                ? Double(totalWritten) / Double(grandTotal)
-                : (Double(i) + Double(bytesWritten) / max(1, Double(fileSizes[i]))) / Double(missing.count)
-
-                let writtenMB = String(format: "%.1f", Double(totalWritten) / 1_048_576)
-                let totalStr  = grandTotal > 0
-                ? String(format: "%.1f MB", Double(grandTotal) / 1_048_576)
-                : "? MB"
-
-                DispatchQueue.main.async {
-                    onProgress(combinedProgress, "\(writtenMB) / \(totalStr)")
-                }
-            }
-
-            cumulativeOffset += fileSizes[i] > 0 ? fileSizes[i] : 0
         }
     }
 
@@ -413,7 +405,7 @@ final class CoreDatabaseDownloader: NSObject {
         var downloadError: Error?
 
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest  = 120
+        config.timeoutIntervalForRequest = 120
         config.timeoutIntervalForResource = 3600
         config.waitsForConnectivity = false
 
@@ -421,7 +413,7 @@ final class CoreDatabaseDownloader: NSObject {
             onProgress: onProgress,
             onFinish: { tempURL, error in
                 downloadedTempURL = tempURL
-                downloadError    = error
+                downloadError = error
                 semaphore.signal()
             }
         )
@@ -443,7 +435,11 @@ final class CoreDatabaseDownloader: NSObject {
 
         // Validasi HTTP sudah dilakukan di delegate; di sini tinggal proses file
         if url.pathExtension.lowercased() == "zst" {
-            try decompressZstdFile(from: tempURL, to: destURL, filename: coreFile.filename)
+            do {
+                try ZstdDecompressor.decompressFile(from: tempURL, to: destURL)
+            } catch {
+                throw CoreDownloadError.decompressionFailed(file: coreFile.filename, reason: error.localizedDescription)
+            }
         } else {
             if fileManager.fileExists(atPath: destURL.path) {
                 try fileManager.removeItem(at: destURL)
@@ -456,51 +452,6 @@ final class CoreDatabaseDownloader: NSObject {
         }
     }
 
-    // MARK: - Private: zstd
-
-    private func decompressZstdFile(
-        from sourceURL: URL,
-        to destinationURL: URL,
-        filename: String
-    ) throws {
-        let compressed = try Data(contentsOf: sourceURL)
-        guard !compressed.isEmpty else {
-            throw CoreDownloadError.decompressionFailed(file: filename, reason: "Empty file")
-        }
-
-        let expectedSize = compressed.withUnsafeBytes { ptr in
-            ZSTD_getFrameContentSize(ptr.baseAddress, compressed.count)
-        }
-
-        if expectedSize == ZSTD_CONTENTSIZE_ERROR || expectedSize == ZSTD_CONTENTSIZE_UNKNOWN {
-            throw CoreDownloadError.decompressionFailed(file: filename, reason: "Unknown content size")
-        }
-
-        var output = Data(count: Int(expectedSize))
-        let decompressedSize = output.withUnsafeMutableBytes { outPtr in
-            compressed.withUnsafeBytes { inPtr in
-                ZSTD_decompress(
-                    outPtr.baseAddress,
-                    Int(expectedSize),
-                    inPtr.baseAddress,
-                    compressed.count
-                )
-            }
-        }
-
-        if ZSTD_isError(decompressedSize) != 0 {
-            let errorName = String(cString: ZSTD_getErrorName(decompressedSize))
-            throw CoreDownloadError.decompressionFailed(file: filename, reason: errorName)
-        }
-
-        output.count = decompressedSize
-
-        if fileManager.fileExists(atPath: destinationURL.path) {
-            try fileManager.removeItem(at: destinationURL)
-        }
-        try output.write(to: destinationURL, options: [.atomic])
-    }
-
     // MARK: - Private: helpers
 
     private func fileExistsAndHasSize(
@@ -509,12 +460,9 @@ final class CoreDatabaseDownloader: NSObject {
     ) -> Bool {
         let dirPath = path == nil ? AppConfig.coreDatabasePath : path
         guard let dirPath else { return false }
-        let path = URL(fileURLWithPath: dirPath)
+        let filePath = URL(fileURLWithPath: dirPath)
             .appendingPathComponent(coreFile.filename).path
-        guard fileManager.fileExists(atPath: path) else { return false }
-        let size = (try? fileManager.attributesOfItem(atPath: path)[.size]
-                    as? NSNumber)?.int64Value ?? 0
-        return size > 0
+        return fileManager.isNonEmptyFile(atPath: filePath)
     }
 }
 
@@ -530,7 +478,7 @@ private final class CoreDownloadDelegate: NSObject, URLSessionDownloadDelegate {
         onFinish: @escaping (URL?, Error?) -> Void
     ) {
         self.onProgress = onProgress
-        self.onFinish   = onFinish
+        self.onFinish = onFinish
     }
 
     func urlSession(
@@ -553,7 +501,8 @@ private final class CoreDownloadDelegate: NSObject, URLSessionDownloadDelegate {
     ) {
         // Cek HTTP status
         if let http = downloadTask.response as? HTTPURLResponse,
-           !(200..<300).contains(http.statusCode) {
+           !(200 ..< 300).contains(http.statusCode)
+        {
             let filename = downloadTask.originalRequest?.url?.lastPathComponent ?? "?"
             httpError = CoreDownloadError.httpStatus(file: filename, statusCode: http.statusCode)
             onFinish(nil, httpError)
@@ -585,8 +534,7 @@ private final class CoreDownloadDelegate: NSObject, URLSessionDownloadDelegate {
 /// Entry point yang dipanggil sinkron dari AppDelegate.applicationDidFinishLaunching
 /// (pada main thread). Menampilkan modal blocking jika core files belum tersedia,
 /// lalu memanggil DatabaseManager.shared.setupFolders() setelah siap.
-final class CoreDatabaseBootstrap {
-
+enum CoreDatabaseBootstrap {
     static func run() {
         // Custom mode: folder dipilih user, DatabaseManager langsung setup.
         if AppConfig.hasCustomDatabaseFolder() {
@@ -657,19 +605,7 @@ final class CoreDownloadModalCenter {
         onCompletion: ((CoreDownloadModalResult) -> Void)? = nil
     ) {
         self.onCompletion = onCompletion
-        let state = CoreDownloadProgressState()
-        progressState = state
-
-        downloader.fetchTotalDownloadSize { [weak state] size in
-            DispatchQueue.main.async {
-                if size > 0 {
-                    let mb = Double(size) / 1_048_576
-                    state?.totalSizeString = String(format: "%.1f MB", mb)
-                }
-            }
-        }
-
-        presentWindow(state: state)
+        _ = setupModalWindow()
 
         if let parent = parentWindow ?? NSApp.keyWindow ?? NSApp.mainWindow {
             presentedAsSheet = true
@@ -684,6 +620,12 @@ final class CoreDownloadModalCenter {
     // MARK: - Private: modal lifecycle
 
     private func showConfirmation() {
+        _ = setupModalWindow()
+        // runModal blocks until NSApp.stopModal() dipanggil
+        NSApp.runModal(for: window!)
+    }
+
+    private func setupModalWindow() -> CoreDownloadProgressState {
         let state = CoreDownloadProgressState()
         progressState = state
 
@@ -697,9 +639,7 @@ final class CoreDownloadModalCenter {
         }
 
         presentWindow(state: state)
-
-        // runModal blocks until NSApp.stopModal() dipanggil
-        NSApp.runModal(for: window!)
+        return state
     }
 
     private func presentWindow(state: CoreDownloadProgressState) {
@@ -732,7 +672,7 @@ final class CoreDownloadModalCenter {
             onProgress: { [weak state] progress, detail in
                 // Sudah di main thread dari startDownload
                 state?.progress = progress
-                state?.detail   = detail
+                state?.detail = detail
             },
             onCompletion: { [weak self] error in
                 // Sudah di main thread
@@ -808,7 +748,7 @@ final class CoreDownloadModalCenter {
     private func fileExistsAndHasSize(at path: String) -> Bool {
         guard fileManager.fileExists(atPath: path) else { return false }
         let size = (try? fileManager.attributesOfItem(atPath: path)[.size]
-                    as? NSNumber)?.int64Value ?? 0
+            as? NSNumber)?.int64Value ?? 0
         return size > 0
     }
 }
@@ -830,6 +770,7 @@ final class CoreDownloadProgressState: ObservableObject {
 
 #elseif os(iOS)
 import Observation
+
 @Observable
 final class CoreDownloadProgressState {
     enum Phase: Equatable {
