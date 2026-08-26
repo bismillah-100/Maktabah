@@ -171,7 +171,6 @@ extension AnnotationManager {
             do {
                 let db = try SQLiteDatabase(path: dbURL.path)
                 db.enableWALMode()
-                db.checkpoint() // Ensure WAL is committed and truncated, prevents locked DB after app update.
                 _db = db
                 syncPendingStore = SyncPendingStore(database: db)
             } catch {

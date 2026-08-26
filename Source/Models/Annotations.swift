@@ -103,6 +103,15 @@ final class AnnotationNode: Equatable, Hashable {
         self.annotation = annotation
     }
 
+    func update(with annotation: Annotation) {
+        if let note = annotation.note, !note.isEmpty {
+            title = note
+        } else {
+            title = annotation.context
+        }
+        self.annotation = annotation
+    }
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
     }

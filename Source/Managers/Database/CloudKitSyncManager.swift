@@ -16,10 +16,10 @@ final class CloudKitSyncManager {
         case history
     }
 
-    private let pendingUploadsKey = "CloudKitSyncManager_PendingUploads"
-    private let pendingDeletesKey = "CloudKitSyncManager_PendingDeletes"
     private let syncQueue = DispatchQueue(label: "com.maktabah.cloudkitsync", attributes: .concurrent)
     private var accountChangeObserver: NSObjectProtocol?
+    private let upload: String = "upload"
+    private let delete: String = "delete"
 
     private var core: CloudKitCoreManager {
         CloudKitCoreManager.shared
@@ -59,50 +59,51 @@ final class CloudKitSyncManager {
         for id in ids {
             switch target {
             case .annotation:
-                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: upload)
             case .result:
-                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: upload)
             case .history:
-                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: upload)
             }
         }
-    }
-
-    private func removePendingUploads(_ ids: [String]) {
-        AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
-        ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
-        HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: ids)
     }
 
     private func addPendingDeletes(_ ids: [String], target: SyncTarget) {
         for id in ids {
             switch target {
             case .annotation:
-                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: delete)
             case .result:
-                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: delete)
             case .history:
-                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: delete)
             }
         }
     }
 
-    private func removePendingDeletes(_ ids: [String]) {
-        AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
-        ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
-        HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: ids)
+    private func removePendingSync(_ ids: [String], target: SyncTarget) {
+        switch target {
+        case .annotation:
+            AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
+        case .result:
+            ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
+        case .history:
+            HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: ids)
+        }
     }
 
     // MARK: - Retry Logic
 
     private func retryPendingUploads(retryCount: Int = 0) {
-        let annPending = AnnotationManager.shared.fetchPendingSync(operation: "upload")
-        let resPending = ResultsHandler.shared.fetchPendingSync(operation: "upload")
-        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: "upload")
+        let annPending = AnnotationManager.shared.fetchPendingSync(operation: upload)
+        let resPending = ResultsHandler.shared.fetchPendingSync(operation: upload)
+        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: upload)
 
         guard !annPending.isEmpty || !resPending.isEmpty || !histPending.isEmpty else { return }
 
-        var orphans: [String] = []
+        var annOrphans: [String] = []
+        var resOrphans: [String] = []
+        var histOrphans: [String] = []
 
         if !annPending.isEmpty {
             let toUploadAnn = AnnotationManager.shared.fetchAnnotations(byCkRecordIds: annPending)
@@ -111,7 +112,7 @@ final class CloudKitSyncManager {
             }
 
             let foundIds = Set(toUploadAnn.compactMap(\.ckRecordId))
-            orphans.append(contentsOf: annPending.filter { !foundIds.contains($0) })
+            annOrphans = annPending.filter { !foundIds.contains($0) }
         }
 
         if !resPending.isEmpty {
@@ -125,7 +126,7 @@ final class CloudKitSyncManager {
             let foundFolderIds = Set(toUploadFolders.compactMap(\.ckRecordId))
             let foundResultIds = Set(toUploadResults.compactMap(\.ckRecordId))
             let foundIds = foundFolderIds.union(foundResultIds)
-            orphans.append(contentsOf: resPending.filter { !foundIds.contains($0) })
+            resOrphans = resPending.filter { !foundIds.contains($0) }
         }
 
         if !histPending.isEmpty {
@@ -135,25 +136,35 @@ final class CloudKitSyncManager {
             }
 
             let foundIds = Set(toUploadHist.compactMap(\.ckRecordId))
-            orphans.append(contentsOf: histPending.filter { !foundIds.contains($0) })
+            histOrphans = histPending.filter { !foundIds.contains($0) }
         }
 
-        if !orphans.isEmpty {
-            // Prune orphaned records from pending queues if the local item no longer exists in DB to prevent infinite retry loops
-            removePendingUploads(orphans)
-            AnnotationManager.shared.removePendingSync(ckRecordIds: orphans)
-            ResultsHandler.shared.removePendingSync(ckRecordIds: orphans)
-            HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: orphans)
+        // Prune orphaned records from pending queues to prevent infinite retry loops
+        if !annOrphans.isEmpty {
+            removePendingSync(annOrphans, target: .annotation)
+        }
+        if !resOrphans.isEmpty {
+            removePendingSync(resOrphans, target: .result)
+        }
+        if !histOrphans.isEmpty {
+            removePendingSync(histOrphans, target: .history)
         }
     }
 
     private func retryPendingDeletes(retryCount: Int = 0) {
-        let pending = AnnotationManager.shared.fetchPendingSync(operation: "delete") +
-            ResultsHandler.shared.fetchPendingSync(operation: "delete") +
-            HistoryDatabaseManager.shared.fetchPendingSync(operation: "delete")
+        let annPending = AnnotationManager.shared.fetchPendingSync(operation: delete)
+        let resPending = ResultsHandler.shared.fetchPendingSync(operation: delete)
+        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: delete)
 
-        guard !pending.isEmpty else { return }
-        delete(ckRecordIds: pending, trackPending: false, retryCount: retryCount)
+        if !annPending.isEmpty {
+            delete(ckRecordIds: annPending, target: .annotation, trackPending: false, retryCount: retryCount)
+        }
+        if !resPending.isEmpty {
+            delete(ckRecordIds: resPending, target: .result, trackPending: false, retryCount: retryCount)
+        }
+        if !histPending.isEmpty {
+            delete(ckRecordIds: histPending, target: .history, trackPending: false, retryCount: retryCount)
+        }
     }
 
     // MARK: - Initialization
@@ -208,7 +219,9 @@ final class CloudKitSyncManager {
 
         if let _ = AnnotationManager.shared.db {
             try? AnnotationManager.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
-                if !isInitialUpload, !backfilled.isEmpty { self?.upload(annotations: backfilled, debounce: false) }
+                if !isInitialUpload, !backfilled.isEmpty {
+                    self?.upload(annotations: backfilled, debounce: false)
+                }
             }
         }
 
@@ -217,7 +230,9 @@ final class CloudKitSyncManager {
         }
 
         HistoryViewModel.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
-            if !isInitialUpload, !backfilled.isEmpty { self?.uploadHistory(entries: backfilled, debounce: false) }
+            if !isInitialUpload, !backfilled.isEmpty {
+                self?.uploadHistory(entries: backfilled, debounce: false)
+            }
         }
 
         if isInitialUpload {
@@ -235,41 +250,45 @@ final class CloudKitSyncManager {
         let batchSize = 200
 
         let allAnnotations = AnnotationManager.shared.loadAnnotations()
-        for i in stride(from: 0, to: allAnnotations.count, by: batchSize) {
-            let batch = Array(allAnnotations[i ..< min(i + batchSize, allAnnotations.count)])
+        for batch in allAnnotations.chunked(into: batchSize) {
             group.enter()
             upload(annotations: batch, debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
 
         let allFolders = ResultsHandler.shared.fetchAllSyncFolders()
-        for i in stride(from: 0, to: allFolders.count, by: batchSize) {
-            let batch = Array(allFolders[i ..< min(i + batchSize, allFolders.count)])
+        for batch in allFolders.chunked(into: batchSize) {
             group.enter()
             uploadResultsData(folders: batch, results: [], debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
 
         let allResults = ResultsHandler.shared.fetchAllSyncResults()
-        for i in stride(from: 0, to: allResults.count, by: batchSize) {
-            let batch = Array(allResults[i ..< min(i + batchSize, allResults.count)])
+        for batch in allResults.chunked(into: batchSize) {
             group.enter()
             uploadResultsData(folders: [], results: batch, debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
 
         let allHistory = HistoryViewModel.shared.getAllEntries()
-        for i in stride(from: 0, to: allHistory.count, by: batchSize) {
-            let batch = Array(allHistory[i ..< min(i + batchSize, allHistory.count)])
+        for batch in allHistory.chunked(into: batchSize) {
             group.enter()
             uploadHistory(entries: batch, debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
@@ -281,9 +300,63 @@ final class CloudKitSyncManager {
 
     // MARK: - Upload (Insert/Update)
 
-    private var annotationUploadBuffer: [String: Annotation] = [:]
-    private var annotationDebounceTask: DispatchWorkItem?
-    private var annotationDebounceCompletions: [(Result<Void, Error>) -> Void] = []
+    private enum ResultsUploadItem: CloudKitSyncable {
+        case folder(SyncFolder)
+        case result(SyncResult)
+
+        var ckRecordId: String? {
+            switch self {
+            case let .folder(f): f.ckRecordId
+            case let .result(r): r.ckRecordId
+            }
+        }
+
+        func toCKRecord(zoneID: CKRecordZone.ID) -> CKRecord? {
+            switch self {
+            case let .folder(f): f.toCKRecord(zoneID: zoneID)
+            case let .result(r): r.toCKRecord(zoneID: zoneID)
+            }
+        }
+    }
+
+    private lazy var annotationDebouncer = CloudKitUploadDebouncer<Annotation>(queue: syncQueue)
+    private lazy var resultsDebouncer = CloudKitUploadDebouncer<ResultsUploadItem>(queue: syncQueue)
+    private lazy var historyDebouncer = CloudKitUploadDebouncer<ReadingEntry>(queue: syncQueue)
+
+    private func uploadGeneric<T: CloudKitSyncable>(
+        items: [T],
+        debouncer: CloudKitUploadDebouncer<T>,
+        target: SyncTarget,
+        debounce: Bool = true,
+        retryCount: Int = 0,
+        trackPending: Bool = true,
+        completion: ((Result<Void, Error>) -> Void)? = nil
+    ) {
+        guard AppConfig.useICloud else { completion?(.success(())); return }
+
+        let pendingIds = items.compactMap(\.ckRecordId)
+        if trackPending, !pendingIds.isEmpty {
+            addPendingUploads(pendingIds, target: target)
+        }
+
+        let pairedItems = items.pairedWithRecordId
+
+        syncQueue.async(flags: .barrier) { [weak self] in
+            guard let self else { return }
+            debouncer.add(
+                items: pairedItems, completion: completion, debounce: debounce
+            ) { [weak self] itemsToUpload, completions in
+                guard let self else { return }
+                let records = itemsToUpload.compactMap { $0.toCKRecord(zoneID: self.core.zoneId) }
+                executeBatchedRecordsUpload(
+                    records: records,
+                    target: target,
+                    retryCount: retryCount,
+                    pendingCompletions: completions
+                )
+            }
+        }
+    }
 
     func upload(
         annotations: [Annotation],
@@ -292,107 +365,16 @@ final class CloudKitSyncManager {
         trackPending: Bool = true,
         completion: ((Result<Void, Error>) -> Void)? = nil
     ) {
-        guard AppConfig.useICloud else { completion?(.success(())); return }
-
-        // Guarantee immediate persistence into the sync_pending queue before any debounce delays
-        let pendingIds = annotations.compactMap(\.ckRecordId)
-        if trackPending, !pendingIds.isEmpty {
-            addPendingUploads(pendingIds, target: .annotation)
-        }
-
-        syncQueue.async(flags: .barrier) { [weak self] in
-            guard let self else { return }
-            for ann in annotations {
-                if let ckId = ann.ckRecordId {
-                    annotationUploadBuffer[ckId] = ann
-                }
-            }
-
-            if let completion {
-                annotationDebounceCompletions.append(completion)
-            }
-
-            self.annotationDebounceTask?.cancel()
-
-            if debounce {
-                let workItem = DispatchWorkItem { [weak self] in
-                    self?.performDebouncedAnnotationUpload(retryCount: retryCount)
-                }
-                self.annotationDebounceTask = workItem
-                DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 2.0, execute: workItem)
-            } else {
-                self.performDebouncedAnnotationUpload(retryCount: retryCount)
-            }
-        }
+        uploadGeneric(
+            items: annotations,
+            debouncer: annotationDebouncer,
+            target: .annotation,
+            debounce: debounce,
+            retryCount: retryCount,
+            trackPending: trackPending,
+            completion: completion
+        )
     }
-
-    private func performDebouncedAnnotationUpload(retryCount: Int = 0) {
-        syncQueue.async(flags: .barrier) { [weak self] in
-            guard let self else { return }
-
-            let annotationsToUpload = Array(annotationUploadBuffer.values)
-            annotationUploadBuffer.removeAll()
-
-            let records = annotationsToUpload.compactMap {
-                $0.toCKRecord(zoneID: self.core.zoneId)
-            }
-
-            let pendingCompletions = annotationDebounceCompletions
-            annotationDebounceCompletions.removeAll()
-
-            guard !records.isEmpty else {
-                DispatchQueue.main.async {
-                    pendingCompletions.forEach { $0(.success(())) }
-                }
-                return
-            }
-
-            let batchSize = 300 // explicitly split the payload into smaller chunks
-            let group = DispatchGroup()
-            let errorLock = NSLock()
-            var lastError: Error?
-
-            for i in stride(from: 0, to: records.count, by: batchSize) {
-                let batch = Array(records[i ..< min(i + batchSize, records.count)])
-                let ids = batch.map(\.recordID.recordName)
-
-                group.enter()
-                self.core.upload(records: batch) { [weak self] result in
-                    guard let self = self else {
-                        group.leave()
-                        return
-                    }
-                    self.handleUploadResult(
-                        result,
-                        pendingIds: ids,
-                        target: .annotation,
-                        retryCount: retryCount,
-                        completion: { res in
-                            if case let .failure(err) = res {
-                                errorLock.lock()
-                                lastError = err
-                                errorLock.unlock()
-                            }
-                            group.leave()
-                        }
-                    )
-                }
-            }
-
-            group.notify(queue: .main) {
-                if let error = lastError {
-                    pendingCompletions.forEach { $0(.failure(error)) }
-                } else {
-                    pendingCompletions.forEach { $0(.success(())) }
-                }
-            }
-        }
-    }
-
-    private var resultFolderUploadBuffer: [String: SyncFolder] = [:]
-    private var resultUploadBuffer: [String: SyncResult] = [:]
-    private var resultDebounceTask: DispatchWorkItem?
-    private var resultDebounceCompletions: [(Result<Void, Error>) -> Void] = []
 
     func uploadResultsData(
         folders: [SyncFolder],
@@ -402,126 +384,17 @@ final class CloudKitSyncManager {
         trackPending: Bool = true,
         completion: ((Result<Void, Error>) -> Void)? = nil
     ) {
-        guard AppConfig.useICloud else { completion?(.success(())); return }
-
-        let pendingFolderIds = folders.compactMap(\.ckRecordId)
-        let pendingResultIds = results.compactMap(\.ckRecordId)
-        let pendingIds = pendingFolderIds + pendingResultIds
-
-        if trackPending, !pendingIds.isEmpty {
-            addPendingUploads(pendingIds, target: .result)
-        }
-
-        syncQueue.async(flags: .barrier) { [weak self] in
-            guard let self else { return }
-            
-            for folder in folders {
-                if let ckId = folder.ckRecordId {
-                    self.resultFolderUploadBuffer[ckId] = folder
-                }
-            }
-            
-            for result in results {
-                if let ckId = result.ckRecordId {
-                    self.resultUploadBuffer[ckId] = result
-                }
-            }
-
-            if let completion {
-                self.resultDebounceCompletions.append(completion)
-            }
-
-            self.resultDebounceTask?.cancel()
-
-            if debounce {
-                let workItem = DispatchWorkItem { [weak self] in
-                    self?.performDebouncedResultUpload(retryCount: retryCount)
-                }
-                self.resultDebounceTask = workItem
-                DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 2.0, execute: workItem)
-            } else {
-                self.performDebouncedResultUpload(retryCount: retryCount)
-            }
-        }
+        let items = folders.map(ResultsUploadItem.folder) + results.map(ResultsUploadItem.result)
+        uploadGeneric(
+            items: items,
+            debouncer: resultsDebouncer,
+            target: .result,
+            debounce: debounce,
+            retryCount: retryCount,
+            trackPending: trackPending,
+            completion: completion
+        )
     }
-
-    private func performDebouncedResultUpload(retryCount: Int = 0) {
-        syncQueue.async(flags: .barrier) { [weak self] in
-            guard let self else { return }
-
-            let foldersToUpload = Array(resultFolderUploadBuffer.values)
-            let resultsToUpload = Array(resultUploadBuffer.values)
-            resultFolderUploadBuffer.removeAll()
-            resultUploadBuffer.removeAll()
-
-            var records: [CKRecord] = []
-            records.append(
-                contentsOf: foldersToUpload.compactMap {
-                    $0.toCKRecord(zoneID: self.core.zoneId)
-                }
-            )
-            records.append(
-                contentsOf: resultsToUpload.compactMap {
-                    $0.toCKRecord(zoneID: self.core.zoneId)
-                }
-            )
-
-            let pendingCompletions = resultDebounceCompletions
-            resultDebounceCompletions.removeAll()
-
-            guard !records.isEmpty else {
-                DispatchQueue.main.async {
-                    pendingCompletions.forEach { $0(.success(())) }
-                }
-                return
-            }
-
-            let batchSize = 300 // explicitly split the payload into smaller chunks
-            let group = DispatchGroup()
-            let errorLock = NSLock()
-            var lastError: Error?
-
-            for i in stride(from: 0, to: records.count, by: batchSize) {
-                let batch = Array(records[i ..< min(i + batchSize, records.count)])
-                let ids = batch.map(\.recordID.recordName)
-
-                group.enter()
-                self.core.upload(records: batch) { [weak self] result in
-                    guard let self = self else {
-                        group.leave()
-                        return
-                    }
-                    self.handleUploadResult(
-                        result,
-                        pendingIds: ids,
-                        target: .result,
-                        retryCount: retryCount,
-                        completion: { res in
-                            if case let .failure(err) = res {
-                                errorLock.lock()
-                                lastError = err
-                                errorLock.unlock()
-                            }
-                            group.leave()
-                        }
-                    )
-                }
-            }
-
-            group.notify(queue: .main) {
-                if let error = lastError {
-                    pendingCompletions.forEach { $0(.failure(error)) }
-                } else {
-                    pendingCompletions.forEach { $0(.success(())) }
-                }
-            }
-        }
-    }
-
-
-    private var historyUploadBuffer: [String: ReadingEntry] = [:]
-    private var historyDebounceTask: DispatchWorkItem?
-    private var historyDebounceCompletions: [(Result<Void, Error>) -> Void] = []
 
     func uploadHistory(
         entries: [ReadingEntry],
@@ -530,98 +403,66 @@ final class CloudKitSyncManager {
         trackPending: Bool = true,
         completion: ((Result<Void, Error>) -> Void)? = nil
     ) {
-        guard AppConfig.useICloud else { completion?(.success(())); return }
-
-        let pendingIds = entries.compactMap(\.ckRecordId)
-        if trackPending, !pendingIds.isEmpty {
-            addPendingUploads(pendingIds, target: .history)
-        }
-
-        syncQueue.async(flags: .barrier) { [weak self] in
-            guard let self else { return }
-            for entry in entries {
-                if let ckId = entry.ckRecordId {
-                    historyUploadBuffer[ckId] = entry
-                }
-            }
-
-            if let completion {
-                historyDebounceCompletions.append(completion)
-            }
-
-            self.historyDebounceTask?.cancel()
-
-            if debounce {
-                let workItem = DispatchWorkItem { [weak self] in
-                    self?.performDebouncedHistoryUpload(retryCount: retryCount)
-                }
-                self.historyDebounceTask = workItem
-                DispatchQueue.global(qos: .background).asyncAfter(deadline: .now() + 2.0, execute: workItem)
-            } else {
-                self.performDebouncedHistoryUpload(retryCount: retryCount)
-            }
-        }
+        uploadGeneric(
+            items: entries,
+            debouncer: historyDebouncer,
+            target: .history,
+            debounce: debounce,
+            retryCount: retryCount,
+            trackPending: trackPending,
+            completion: completion
+        )
     }
 
-    private func performDebouncedHistoryUpload(retryCount: Int = 0) {
-        syncQueue.async(flags: .barrier) { [weak self] in
-            guard let self else { return }
-
-            let entriesToUpload = Array(historyUploadBuffer.values)
-            historyUploadBuffer.removeAll()
-
-            let records = entriesToUpload.compactMap {
-                $0.toCKRecord(zoneID: self.core.zoneId)
+    private func executeBatchedRecordsUpload(
+        records: [CKRecord],
+        target: SyncTarget,
+        retryCount: Int,
+        pendingCompletions: [(Result<Void, Error>) -> Void]
+    ) {
+        guard !records.isEmpty else {
+            DispatchQueue.main.async {
+                pendingCompletions.forEach { $0(.success(())) }
             }
+            return
+        }
 
-            let pendingCompletions = historyDebounceCompletions
-            historyDebounceCompletions.removeAll()
+        let batchSize = 300
+        let group = DispatchGroup()
+        let errorLock = NSLock()
+        var lastError: Error?
 
-            guard !records.isEmpty else {
-                DispatchQueue.main.async {
-                    pendingCompletions.forEach { $0(.success(())) }
+        for batch in records.chunked(into: batchSize) {
+            let ids = batch.map(\.recordID.recordName)
+
+            group.enter()
+            core.upload(records: batch) { [weak self] result in
+                guard let self else {
+                    group.leave()
+                    return
                 }
-                return
-            }
-
-            let batchSize = 300 // explicitly split the payload into smaller chunks
-            let group = DispatchGroup()
-            let errorLock = NSLock()
-            var lastError: Error?
-
-            for i in stride(from: 0, to: records.count, by: batchSize) {
-                let batch = Array(records[i ..< min(i + batchSize, records.count)])
-                let ids = batch.map(\.recordID.recordName)
-
-                group.enter()
-                self.core.upload(records: batch) { [weak self] result in
-                    guard let self = self else {
-                        group.leave()
-                        return
-                    }
-                    self.handleUploadResult(
-                        result,
-                        pendingIds: ids,
-                        target: .history,
-                        retryCount: retryCount,
-                        completion: { res in
-                            if case let .failure(err) = res {
-                                errorLock.lock()
-                                lastError = err
-                                errorLock.unlock()
-                            }
-                            group.leave()
+                handleUploadResult(
+                    result,
+                    pendingIds: ids,
+                    target: target,
+                    retryCount: retryCount,
+                    completion: { res in
+                        if case let .failure(err) = res {
+                            errorLock.lock()
+                            lastError = err
+                            errorLock.unlock()
                         }
-                    )
-                }
+                        group.leave()
+                    }
+                )
             }
+        }
 
-            group.notify(queue: .main) {
-                if let error = lastError {
-                    pendingCompletions.forEach { $0(.failure(error)) }
-                } else {
-                    pendingCompletions.forEach { $0(.success(())) }
-                }
+        group.notify(queue: .main) {
+            if let error = lastError {
+                pendingCompletions.forEach { $0(.failure(error)) }
+            } else {
+                pendingCompletions.forEach { $0(.success(())) }
             }
         }
     }
@@ -635,12 +476,13 @@ final class CloudKitSyncManager {
     ) {
         switch result {
         case .success:
-            removePendingUploads(pendingIds)
+            removePendingSync(pendingIds, target: target)
             completion?(.success(()))
         case let .failure(error):
             handleUploadFailure(
                 error,
                 pendingRecordIds: pendingIds,
+                target: target,
                 retryCount: retryCount,
                 completion: completion
             )
@@ -656,41 +498,48 @@ final class CloudKitSyncManager {
         }
 
         let recordIds = ckRecordIds.map { CKRecord.ID(recordName: $0, zoneID: core.zoneId) }
+        let batchSize = 300
 
-        let batchSize = 300 // explicitly split the payload into smaller chunks
-
-        for i in stride(from: 0, to: recordIds.count, by: batchSize) {
-            let batch = Array(recordIds[i ..< min(i + batchSize, recordIds.count)])
+        for batch in recordIds.chunked(into: batchSize) {
             let batchStrIds = batch.map(\.recordName)
 
-            self.core.delete(recordIds: batch) { [weak self] result in
+            core.delete(recordIds: batch) { [weak self] result in
                 switch result {
                 case .success:
-                    self?.removePendingDeletes(batchStrIds)
-                case let .failure(error):
-                    if let ckError = error as? CKError, ckError.code == .partialFailure,
-                       let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
-                        let failedRecordNames = Set(partialErrors.keys.map(\.recordName))
-                        var idsToRemove = batchStrIds.filter { !failedRecordNames.contains($0) }
-                        for (recordID, itemError) in partialErrors {
-                            if let itemCKError = itemError as? CKError {
-                                if itemCKError.code == .unknownItem || itemCKError.code == .serverRecordChanged {
-                                    idsToRemove.append(recordID.recordName)
-                                }
-                            }
-                        }
-                        if !idsToRemove.isEmpty {
-                            self?.removePendingDeletes(idsToRemove)
-                        }
-                    } else if let ckError = error as? CKError, ckError.code == .serverRecordChanged {
-                        self?.removePendingDeletes(batchStrIds)
-                    } else if let ckError = error as? CKError, ckError.code == .unknownItem {
-                        self?.removePendingDeletes(batchStrIds)
+                    if let target {
+                        self?.removePendingSync(batchStrIds, target: target)
                     }
-                    self?.handleCloudKitError(error, operationType: .delete, retryCount: retryCount)
+                case let .failure(error):
+                    self?.handleDeleteFailure(error, batchStrIds: batchStrIds, target: target, retryCount: retryCount)
                 }
             }
         }
+    }
+
+    private func handleDeleteFailure(_ error: Error, batchStrIds: [String], target: SyncTarget?, retryCount: Int) {
+        if let ckError = error as? CKError {
+            if ckError.code == .partialFailure,
+               let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error]
+            {
+                let failedRecordNames = Set(partialErrors.keys.map(\.recordName))
+                var idsToRemove = batchStrIds.filter { !failedRecordNames.contains($0) }
+                for (recordID, itemError) in partialErrors {
+                    if let itemCKError = itemError as? CKError,
+                       itemCKError.code == .unknownItem || itemCKError.code == .serverRecordChanged
+                    {
+                        idsToRemove.append(recordID.recordName)
+                    }
+                }
+                if !idsToRemove.isEmpty, let target {
+                    removePendingSync(idsToRemove, target: target)
+                }
+            } else if ckError.code == .serverRecordChanged || ckError.code == .unknownItem {
+                if let target {
+                    removePendingSync(batchStrIds, target: target)
+                }
+            }
+        }
+        handleCloudKitError(error, operationType: .delete, retryCount: retryCount)
     }
 
     // MARK: - Fetch Changes (Delta)
@@ -708,9 +557,7 @@ final class CloudKitSyncManager {
         guard shouldProceed else { return }
 
         let previousToken = core.loadToken()
-        let fetchStateQueue = DispatchQueue(
-            label: "com.maktabah.cloudkitsync.fetch-state"
-        )
+        let fetchStateQueue = DispatchQueue(label: "com.maktabah.cloudkitsync.fetch-state")
         var changedRecords: [CKRecord] = []
         var deletedRecordIds: [CKRecord.ID] = []
 
@@ -723,105 +570,121 @@ final class CloudKitSyncManager {
                 fetchStateQueue.sync { deletedRecordIds.append(recordId) }
             },
             completion: { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case .success(let (finalToken, moreComing)):
-                    let records = fetchStateQueue.sync { changedRecords }
-                    let deletes = fetchStateQueue.sync { deletedRecordIds }
-
-                    self.syncQueue.async {
-                        var applySuccess = true
-                        if !records.isEmpty || !deletes.isEmpty {
-                            applySuccess = self.applyChangesLocally(
-                                recordsToSave: records,
-                                recordIDsToDelete: deletes
-                            )
-                        }
-
-                        DispatchQueue.main.async {
-                            if let token = finalToken, applySuccess {
-                                self.core.saveToken(token)
-                            }
-
-                            self.core.setSyncing(false) {
-                                if moreComing {
-                                    self.fetchChanges(retryCount: 0)
-                                }
-                            }
-                        }
-                    }
-                case let .failure(error):
-                    handleCloudKitError(
-                        error,
-                        operationType: .fetchChanges,
-                        retryCount: retryCount
-                    )
-                    core.setSyncing(false)
-                }
+                self?.handleFetchChangesCompletion(
+                    result: result,
+                    fetchStateQueue: fetchStateQueue,
+                    changedRecords: changedRecords,
+                    deletedRecordIds: deletedRecordIds,
+                    retryCount: retryCount
+                )
             }
         )
+    }
+
+    private func handleFetchChangesCompletion(
+        result: Result<(CKServerChangeToken?, Bool), Error>,
+        fetchStateQueue: DispatchQueue,
+        changedRecords: [CKRecord],
+        deletedRecordIds: [CKRecord.ID],
+        retryCount: Int
+    ) {
+        switch result {
+        case let .success((finalToken, moreComing)):
+            let records = fetchStateQueue.sync { changedRecords }
+            let deletes = fetchStateQueue.sync { deletedRecordIds }
+
+            syncQueue.async { [weak self] in
+                guard let self else { return }
+                var applySuccess = true
+                if !records.isEmpty || !deletes.isEmpty {
+                    applySuccess = applyChangesLocally(recordsToSave: records, recordIDsToDelete: deletes)
+                }
+
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    if let token = finalToken, applySuccess {
+                        core.saveToken(token)
+                    }
+
+                    core.setSyncing(false) { [weak self] in
+                        if moreComing {
+                            self?.fetchChanges(retryCount: 0)
+                        }
+                    }
+                }
+            }
+        case let .failure(error):
+            handleCloudKitError(error, operationType: .fetchChanges, retryCount: retryCount)
+            core.setSyncing(false)
+        }
+    }
+
+    private struct ParsedChanges {
+        var annotations: [Annotation] = []
+        var folders: [SyncFolder] = []
+        var searchResults: [SyncResult] = []
+        var historyEntries: [ReadingEntry] = []
+    }
+
+    private func parseRecordsToSave(_ records: [CKRecord]) -> ParsedChanges {
+        var parsed = ParsedChanges()
+        for record in records {
+            if record.recordType == AnnotationSyncHandler.recordType {
+                if let ann = AnnotationSyncHandler.parse(from: record) {
+                    parsed.annotations.append(ann)
+                }
+            } else if record.recordType == ResultSyncHandler.folderRecordType {
+                if let folder = ResultSyncHandler.parseFolder(from: record) {
+                    parsed.folders.append(folder)
+                }
+            } else if record.recordType == ResultSyncHandler.resultRecordType {
+                if let res = ResultSyncHandler.parseResult(from: record) {
+                    parsed.searchResults.append(res)
+                }
+            } else if record.recordType == HistorySyncHandler.recordType {
+                if let entry = HistorySyncHandler.parse(from: record) {
+                    parsed.historyEntries.append(entry)
+                }
+            }
+        }
+        return parsed
     }
 
     @discardableResult private func applyChangesLocally(
         recordsToSave: [CKRecord],
         recordIDsToDelete: [CKRecord.ID]
     ) -> Bool {
-        var annotations: [Annotation] = []
-        var folders: [SyncFolder] = []
-        var searchResults: [SyncResult] = []
-        var historyEntries: [ReadingEntry] = []
-
-        for record in recordsToSave {
-            if record.recordType == AnnotationSyncHandler.recordType {
-                if let ann = AnnotationSyncHandler.parse(from: record) {
-                    annotations.append(ann)
-                }
-            } else if record.recordType == ResultSyncHandler.folderRecordType {
-                if let folder = ResultSyncHandler.parseFolder(from: record) {
-                    folders.append(folder)
-                }
-            } else if record.recordType == ResultSyncHandler.resultRecordType {
-                if let res = ResultSyncHandler.parseResult(from: record) {
-                    searchResults.append(res)
-                }
-            } else if record.recordType == HistorySyncHandler.recordType {
-                if let entry = HistorySyncHandler.parse(from: record) {
-                    historyEntries.append(entry)
-                }
-            }
-        }
-
+        let parsed = parseRecordsToSave(recordsToSave)
         let idsToDelete = recordIDsToDelete.map(\.recordName)
-
         var success = true
 
-        if !annotations.isEmpty || !idsToDelete.isEmpty {
+        if !parsed.annotations.isEmpty || !idsToDelete.isEmpty {
             let annSuccess = AnnotationManager.shared.applyCloudKitChanges(
-                annotationsToSave: annotations,
+                annotationsToSave: parsed.annotations,
                 recordIdsToDelete: idsToDelete
             )
             success = success && annSuccess
         }
 
-        if !folders.isEmpty || !idsToDelete.isEmpty {
+        if !parsed.folders.isEmpty || !idsToDelete.isEmpty {
             let fldSuccess = ResultsHandler.shared.applyCloudKitFolderChanges(
-                foldersToSave: folders,
+                foldersToSave: parsed.folders,
                 recordIdsToDelete: idsToDelete
             )
             success = success && fldSuccess
         }
 
-        if !searchResults.isEmpty || !idsToDelete.isEmpty {
+        if !parsed.searchResults.isEmpty || !idsToDelete.isEmpty {
             let resSuccess = ResultsHandler.shared.applyCloudKitResultChanges(
-                resultsToSave: searchResults,
+                resultsToSave: parsed.searchResults,
                 recordIdsToDelete: idsToDelete
             )
             success = success && resSuccess
         }
 
-        if !historyEntries.isEmpty || !idsToDelete.isEmpty {
+        if !parsed.historyEntries.isEmpty || !idsToDelete.isEmpty {
             let histSuccess = HistoryViewModel.shared.applyCloudKitChanges(
-                entriesToSave: historyEntries,
+                entriesToSave: parsed.historyEntries,
                 recordIdsToDelete: idsToDelete
             )
             success = success && histSuccess
@@ -838,6 +701,7 @@ final class CloudKitSyncManager {
 
     private func resolveServerRecordConflict(
         ckError: CKError,
+        target: SyncTarget,
         pendingRecordIds: [String] = [],
         completion: ((Result<Void, Error>) -> Void)? = nil
     ) {
@@ -860,13 +724,13 @@ final class CloudKitSyncManager {
 
             core.upload(records: [serverRecord]) { [weak self] result in
                 if case .success = result {
-                    self?.removePendingUploads([recordId])
+                    self?.removePendingSync([recordId], target: target)
                 }
                 completion?(result)
             }
         } else {
             if applyChangesLocally(recordsToSave: [serverRecord], recordIDsToDelete: []) {
-                removePendingUploads([recordId])
+                removePendingSync([recordId], target: target)
             }
             completion?(.success(()))
         }
@@ -875,6 +739,7 @@ final class CloudKitSyncManager {
     private func handleUploadFailure(
         _ error: Error,
         pendingRecordIds: [String],
+        target: SyncTarget,
         retryCount: Int = 0,
         completion: ((Result<Void, Error>) -> Void)? = nil
     ) {
@@ -885,117 +750,147 @@ final class CloudKitSyncManager {
 
         switch ckError.code {
         case .serverRecordChanged:
-            resolveServerRecordConflict(ckError: ckError, pendingRecordIds: pendingRecordIds, completion: completion)
+            resolveServerRecordConflict(ckError: ckError, target: target, pendingRecordIds: pendingRecordIds, completion: completion)
         case .partialFailure:
-            // Inspect individual record results in CKPartialErrorsByItemIDKey
             if let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
-                let failedIds = Set(partialErrors.keys.map(\.recordName))
-                let successfulIds = pendingRecordIds.filter { !failedIds.contains($0) }
-                // Remove successful record IDs from sync_pending immediately
-                if !successfulIds.isEmpty {
-                    removePendingUploads(successfulIds)
-                }
-
-                let innerErrors = partialErrors.values.compactMap { $0 as? CKError }
-                let conflicts = innerErrors.filter { $0.code == .serverRecordChanged }
-                let rateLimitErrors = innerErrors.filter { $0.code == .requestRateLimited || $0.code == .serviceUnavailable || $0.code == .zoneBusy }
-
-                // Trigger retry backoff for rate-limit errors regardless of whether
-                // conflicts are also present in the same batch.
-                if let firstRateLimit = rateLimitErrors.first {
-                    handleCloudKitError(firstRateLimit, operationType: .upload, retryCount: retryCount)
-                }
-
-                if !conflicts.isEmpty {
-                    let group = DispatchGroup()
-                    let errorLock = NSLock()
-                    var lastError: Error?
-
-                    for conflict in conflicts {
-                        group.enter()
-                        resolveServerRecordConflict(ckError: conflict) { result in
-                            if case let .failure(err) = result {
-                                errorLock.lock()
-                                lastError = err
-                                errorLock.unlock()
-                            }
-                            group.leave()
-                        }
-                    }
-
-                    group.notify(queue: syncQueue) {
-                        completion?(lastError.map { .failure($0) } ?? .success(()))
-                    }
-                } else {
-                    // Non-conflict partial failure - retain failed record IDs in sync_pending for retry
-                    if rateLimitErrors.isEmpty {
-                        handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
-                    }
-                    completion?(.failure(error))
-                }
+                let context = PartialUploadContext(
+                    partialErrors: partialErrors,
+                    pendingRecordIds: pendingRecordIds,
+                    target: target,
+                    originalError: error,
+                    retryCount: retryCount
+                )
+                handlePartialUploadErrors(context: context, completion: completion)
             } else {
-                // Partial failure without specific errors - retain failed record IDs in sync_pending for retry
                 handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
                 completion?(.failure(error))
             }
         case .networkUnavailable, .networkFailure:
-            // Network offline - network monitor will retry when connection returns
             completion?(.failure(error))
         default:
-            // Other errors - leave as pending
             handleCloudKitError(error, operationType: .upload, retryCount: retryCount)
             completion?(.failure(error))
         }
     }
 
+    private struct PartialUploadContext {
+        let partialErrors: [CKRecord.ID: Error]
+        let pendingRecordIds: [String]
+        let target: SyncTarget
+        let originalError: Error
+        let retryCount: Int
+    }
+
+    private func handlePartialUploadErrors(
+        context: PartialUploadContext,
+        completion: ((Result<Void, Error>) -> Void)?
+    ) {
+        let failedIds = Set(context.partialErrors.keys.map(\.recordName))
+        let successfulIds = context.pendingRecordIds.filter { !failedIds.contains($0) }
+        if !successfulIds.isEmpty {
+            removePendingSync(successfulIds, target: context.target)
+        }
+
+        let innerErrors = context.partialErrors.values.compactMap { $0 as? CKError }
+        let conflicts = innerErrors.filter { $0.code == .serverRecordChanged }
+        let rateLimitErrors = innerErrors.filter { $0.code == .requestRateLimited || $0.code == .serviceUnavailable || $0.code == .zoneBusy }
+
+        if !conflicts.isEmpty {
+            // Resolve conflicts first; skip scheduling a rate-limit retry here to avoid
+            // re-uploading records whose conflicts are still in-flight. retryPendingUploads
+            // will pick them up again after resolution if rate-limiting is still active.
+            resolveMultipleServerRecordConflicts(conflicts: conflicts, target: context.target, completion: completion)
+        } else {
+            if let firstRateLimit = rateLimitErrors.first {
+                handleCloudKitError(firstRateLimit, operationType: .upload, retryCount: context.retryCount)
+            } else {
+                handleCloudKitError(context.originalError, operationType: .upload, retryCount: context.retryCount)
+            }
+            completion?(.failure(context.originalError))
+        }
+    }
+
+    private func resolveMultipleServerRecordConflicts(
+        conflicts: [CKError],
+        target: SyncTarget,
+        completion: ((Result<Void, Error>) -> Void)?
+    ) {
+        let group = DispatchGroup()
+        let errorLock = NSLock()
+        var lastError: Error?
+
+        for conflict in conflicts {
+            group.enter()
+            resolveServerRecordConflict(ckError: conflict, target: target) { result in
+                if case let .failure(err) = result {
+                    errorLock.lock()
+                    lastError = err
+                    errorLock.unlock()
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: syncQueue) {
+            completion?(lastError.map { .failure($0) } ?? .success(()))
+        }
+    }
+
+    private func scheduleRateLimitRetry(error: CKError, operationType: CKOperationType, retryCount: Int) -> Bool {
+        switch error.code {
+        case .serviceUnavailable, .requestRateLimited, .zoneBusy:
+            let baseDelay = error.retryAfterSeconds ?? 3.0
+            let retryDelay = baseDelay * pow(2.0, Double(retryCount))
+            if retryCount < 5 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) { [weak self] in
+                    guard let self else { return }
+                    switch operationType {
+                    case .fetchChanges: fetchChanges(retryCount: retryCount + 1)
+                    case .delete, .upload: retryAllPendingOperations(retryCount: retryCount + 1)
+                    default: break
+                    }
+                }
+            }
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func handlePartialFailureError(ckError: CKError, operationType: CKOperationType, retryCount: Int) -> Bool {
+        guard let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] else { return false }
+        for innerError in partialErrors.values {
+            if let innerCKError = innerError as? CKError,
+               scheduleRateLimitRetry(error: innerCKError, operationType: operationType, retryCount: retryCount)
+            {
+                return true
+            }
+        }
+        return false
+    }
+
     private func handleCloudKitError(_ error: Error, operationType: CKOperationType, retryCount: Int = 0) {
         guard let ckError = error as? CKError else { return }
 
-        func processError(_ error: CKError) -> Bool {
-            switch error.code {
-            case .serviceUnavailable, .requestRateLimited, .zoneBusy:
-                let baseDelay = error.retryAfterSeconds ?? 3.0
-                let retryDelay = baseDelay * pow(2.0, Double(retryCount))
-                if retryCount < 5 {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + retryDelay) {
-                        switch operationType {
-                        case .fetchChanges: self.fetchChanges(retryCount: retryCount + 1)
-                        case .delete, .upload: self.retryAllPendingOperations(retryCount: retryCount + 1)
-                        default: break
-                        }
-                    }
-                }
-                return true
-            default:
-                return false
-            }
+        if scheduleRateLimitRetry(error: ckError, operationType: operationType, retryCount: retryCount) {
+            return
         }
 
         switch ckError.code {
         case .changeTokenExpired:
             resetChangeToken()
         case .partialFailure:
-            if let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: Error] {
-                for innerError in partialErrors.values {
-                    if let innerCKError = innerError as? CKError, processError(innerCKError) {
-                        return // Retry scheduled
-                    }
-                }
+            if handlePartialFailureError(ckError: ckError, operationType: operationType, retryCount: retryCount) {
+                return
             }
-        case .serviceUnavailable, .requestRateLimited, .zoneBusy:
-            _ = processError(ckError)
-        case .networkUnavailable, .networkFailure:
-            // Network offline - network monitor will retry deletes when connection returns
-            break
         case .zoneNotFound:
             initializeOnLaunch()
-        case .serverRecordChanged:
-            resolveServerRecordConflict(ckError: ckError)
         case .notAuthenticated:
             DispatchQueue.main.async {
                 ReusableFunc.showAlert(title: "iCloud Error", message: ckError.localizedDescription)
             }
-        default: break
+        default:
+            break
         }
     }
 
@@ -1008,11 +903,12 @@ final class CloudKitSyncManager {
     private func checkUserIdentityChange() {
         core.container.fetchUserRecordID { [weak self] recordID, _ in
             guard let self, let currentID = recordID?.recordName else { return }
-            let lastID = UserDefaults.standard.string(forKey: "CloudKitSyncManager_LastUserRecordID")
+            let key = "CloudKitSyncManager_LastUserRecordID"
+            let lastID = UserDefaults.standard.string(forKey: key)
             if let lastID, lastID != currentID {
                 resetChangeToken()
             }
-            UserDefaults.standard.set(currentID, forKey: "CloudKitSyncManager_LastUserRecordID")
+            UserDefaults.standard.set(currentID, forKey: key)
         }
     }
 
