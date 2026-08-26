@@ -97,7 +97,7 @@ enum HonorificBoundaryAffinity {
     case trailing
 }
 
-// ArabicTextRenderer.swift - NEW FILE
+/// ArabicTextRenderer.swift - NEW FILE
 class ArabicTextRenderer {
     private let state = TextViewState.shared
 
@@ -120,38 +120,11 @@ class ArabicTextRenderer {
         if let bookId, let contentId, let cached = BookPageCache.shared.getProcessed(bookId: bookId, contentId: contentId, key: key) {
             processed = cached
         } else {
-            let textWithArabicDigits = text.convertToArabicDigits(isMultilingual: isMultiLanguage)
-            let processedText = showHarakat ? textWithArabicDigits : textWithArabicDigits.removingHarakat()
-
-            // Strip <span data-type="title"> tags for imported books and collect header ranges
-            let (cleanedText, importedHeaderRanges) = isImported
-                ? processedText.stripSpanTagsWithRanges()
-                : (processedText, [NSRange]())
-
-            let cleanedResultAndMappedRanges = cleanedText.cleanedTextWithRanges(mapping: importedHeaderRanges)
-            let cleanedResult = cleanedResultAndMappedRanges.result
-            let footnoteRanges = cleanedResultAndMappedRanges.footnoteRanges
-            let mappedImportedHeaderRanges = cleanedResultAndMappedRanges.mappedRanges ?? []
-            let replacementResult = cleanedResult.text.replacingHonorificPhrasesIfSupported()
-
-            let remappedColoredRanges = cleanedResult.coloredRanges.map {
-                replacementResult.remapDisplayedRange($0)
-            }
-            let remappedFootnoteRanges = footnoteRanges.map {
-                replacementResult.remapDisplayedRange($0)
-            }
-            let remappedImportedHeaderRanges = mappedImportedHeaderRanges.map {
-                replacementResult.remapDisplayedRange($0)
-            }
-
-            processed = ProcessedArabicContent(
-                sourceText: cleanedResult.text,
-                displayText: replacementResult.text,
-                coloredRanges: remappedColoredRanges + replacementResult.replacementDisplayRanges,
-                footnoteRanges: remappedFootnoteRanges,
-                replacementEvents: replacementResult.events,
-                importedHeaderRanges: remappedImportedHeaderRanges,
-                ligatureRanges: replacementResult.replacementDisplayRanges
+            processed = buildProcessedArabicContent(
+                text: text,
+                showHarakat: showHarakat,
+                isMultiLanguage: isMultiLanguage,
+                isImported: isImported
             )
 
             if let bookId, let contentId {
@@ -170,6 +143,46 @@ class ArabicTextRenderer {
             attributedString: attributedString,
             replacementEvents: processed.replacementEvents,
             footnoteRanges: processed.footnoteRanges
+        )
+    }
+
+    private func buildProcessedArabicContent(
+        text: String,
+        showHarakat: Bool,
+        isMultiLanguage: Bool,
+        isImported: Bool
+    ) -> ProcessedArabicContent {
+        let textWithArabicDigits = text.convertToArabicDigits(isMultilingual: isMultiLanguage)
+        let processedText = showHarakat ? textWithArabicDigits : textWithArabicDigits.removingHarakat()
+
+        let (cleanedText, importedHeaderRanges) = isImported
+            ? processedText.stripSpanTagsWithRanges()
+            : (processedText, [NSRange]())
+
+        let cleanedResultAndMappedRanges = cleanedText.cleanedTextWithRanges(mapping: importedHeaderRanges)
+        let cleanedResult = cleanedResultAndMappedRanges.result
+        let footnoteRanges = cleanedResultAndMappedRanges.footnoteRanges
+        let mappedImportedHeaderRanges = cleanedResultAndMappedRanges.mappedRanges ?? []
+        let replacementResult = cleanedResult.text.replacingHonorificPhrasesIfSupported()
+
+        let remappedColoredRanges = cleanedResult.coloredRanges.map {
+            replacementResult.remapDisplayedRange($0)
+        }
+        let remappedFootnoteRanges = footnoteRanges.map {
+            replacementResult.remapDisplayedRange($0)
+        }
+        let remappedImportedHeaderRanges = mappedImportedHeaderRanges.map {
+            replacementResult.remapDisplayedRange($0)
+        }
+
+        return ProcessedArabicContent(
+            sourceText: cleanedResult.text,
+            displayText: replacementResult.text,
+            coloredRanges: remappedColoredRanges + replacementResult.replacementDisplayRanges,
+            footnoteRanges: remappedFootnoteRanges,
+            replacementEvents: replacementResult.events,
+            importedHeaderRanges: remappedImportedHeaderRanges,
+            ligatureRanges: replacementResult.replacementDisplayRanges
         )
     }
 
@@ -206,7 +219,7 @@ class ArabicTextRenderer {
 
         textStorage.enumerateAttribute(.paragraphStyle, in: fullRange) { value, range, _ in
             let oldStyle = (value as? NSParagraphStyle) ?? state.paragraphStyle
-            let newStyle = oldStyle.mutableCopy() as! NSMutableParagraphStyle
+            guard let newStyle = oldStyle.mutableCopy() as? NSMutableParagraphStyle else { return }
             newStyle.lineHeightMultiple = state.lineHeight
 
             textStorage.addAttribute(.paragraphStyle, value: newStyle, range: range)
@@ -218,11 +231,10 @@ class ArabicTextRenderer {
         color: PlatformColor,
         isMultiLanguage: Bool
     ) -> NSAttributedString {
-        // Buat string dasar tanpa .paragraphStyle dulu
         var baseAttributes = state.defaultAttributes
 
         if !isMultiLanguage {
-            let rtlStyle = (self.state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
+            let rtlStyle = (state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
             rtlStyle.alignment = .right
             rtlStyle.baseWritingDirection = .rightToLeft
             baseAttributes[.paragraphStyle] = rtlStyle
@@ -236,107 +248,87 @@ class ArabicTextRenderer {
         )
 
         if isMultiLanguage {
-            // Cache style objek untuk efisiensi (agar tidak create objek di setiap paragraf)
-            let ltrStyle = (self.state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
-            ltrStyle.alignment = .left
-            ltrStyle.baseWritingDirection = .leftToRight
-
-            let rtlStyle = (self.state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
-            rtlStyle.alignment = .right
-            rtlStyle.baseWritingDirection = .rightToLeft
-
-            // Deteksi dan terapkan arah/alignment per paragraf
-            let nsString = content.displayText as NSString
-            let fullRange = NSRange(location: 0, length: nsString.length)
-
-            nsString.enumerateSubstrings(in: fullRange, options: .byParagraphs) { (substring, substringRange, _, _) in
-                guard let substring = substring else { return }
-
-                // Pilih style yang sudah di-cache
-                let style: NSMutableParagraphStyle
-                if substring.hasPrefix("\u{202A}") || substring.hasPrefix("\u{202D}") {
-                    style = ltrStyle
-                } else if substring.hasPrefix("\u{202B}") || substring.hasPrefix("\u{202E}") {
-                    style = rtlStyle
-                } else {
-                    style = rtlStyle // Fallback RTL
-                }
-
-                attributedString.addAttribute(.paragraphStyle, value: style, range: substringRange)
-            }
+            applyMultiLanguageParagraphStyles(to: attributedString, displayText: content.displayText)
         }
 
-        // Footnote: font lebih kecil + warna sekunder — apply sebelum coloredRanges
-        // agar highlight simbol di dalam footnote tetap pakai warna header
         if !content.footnoteRanges.isEmpty {
-            let baseFont = state.currentFont
-            let smallerFont = baseFont.withSize(baseFont.pointSize - 2)
-            #if os(macOS)
-            let footnoteColor = PlatformColor.secondaryLabelColor
-            #else
-            let footnoteColor = PlatformColor.secondaryLabel
-            #endif
-            let footnoteAttributes: [NSAttributedString.Key: Any] = [
-                .foregroundColor: footnoteColor,
-                .font: smallerFont
-            ]
-            for range in content.footnoteRanges {
-                if range.location + range.length <= attributedString.length {
-                    attributedString.addAttributes(footnoteAttributes, range: range)
-                }
-            }
+            applyFootnotes(to: attributedString, ranges: content.footnoteRanges)
         }
 
-        let highlightAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: color
-        ]
+        let highlightAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: color]
+        applyRanges(ranges: content.coloredRanges, attributes: highlightAttributes, to: attributedString)
+        applyRanges(ranges: content.importedHeaderRanges, attributes: highlightAttributes, to: attributedString)
 
-        for range in content.coloredRanges {
-            if range.location + range.length <= attributedString.length {
-                attributedString.addAttributes(highlightAttributes, range: range)
-            }
-        }
-
-        // Apply header color to imported book TOC spans
-        if !content.importedHeaderRanges.isEmpty {
-            let headerColorAttributes: [NSAttributedString.Key: Any] = [
-                .foregroundColor: color
-            ]
-            for range in content.importedHeaderRanges {
-                if range.location + range.length <= attributedString.length {
-                    attributedString.addAttributes(headerColorAttributes, range: range)
-                }
-            }
-        }
-
-        // Apply Lateef font fallback specifically for ligatures if they are missing from current font
         #if canImport(UIKit)
         if !content.ligatureRanges.isEmpty {
-            let baseFont = state.currentFont
-            let ctFont = baseFont as CTFont
-            let fallbackFontName = "Lateef"
-
-            let fallbackFont = UIFont(name: fallbackFontName, size: baseFont.pointSize) ?? baseFont
-
-            for range in content.ligatureRanges {
-                if range.location + range.length <= attributedString.length {
-                    let nsString = attributedString.string as NSString
-                    let length = range.length
-                    var unichars = [unichar](repeating: 0, count: length)
-                    var glyphs = [CGGlyph](repeating: 0, count: length)
-                    nsString.getCharacters(&unichars, range: range)
-
-                    let hasGlyph = CTFontGetGlyphsForCharacters(ctFont, unichars, &glyphs, length)
-                    if !hasGlyph {
-                        attributedString.addAttribute(.font, value: fallbackFont, range: range)
-                    }
-                }
-            }
+            applyLigatureFallbacks(to: attributedString, ligatureRanges: content.ligatureRanges)
         }
         #endif
 
         return attributedString
     }
+
+    private func applyMultiLanguageParagraphStyles(to attributedString: NSMutableAttributedString, displayText: String) {
+        let ltrStyle = (state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
+        ltrStyle.alignment = .left
+        ltrStyle.baseWritingDirection = .leftToRight
+
+        let rtlStyle = (state.paragraphStyle.mutableCopy() as? NSMutableParagraphStyle) ?? NSMutableParagraphStyle()
+        rtlStyle.alignment = .right
+        rtlStyle.baseWritingDirection = .rightToLeft
+
+        let nsString = displayText as NSString
+        let fullRange = NSRange(location: 0, length: nsString.length)
+
+        nsString.enumerateSubstrings(in: fullRange, options: .byParagraphs) { substring, substringRange, _, _ in
+            guard let substring else { return }
+            let style = (substring.hasPrefix("\u{202A}") || substring.hasPrefix("\u{202D}")) ? ltrStyle : rtlStyle
+            attributedString.addAttribute(.paragraphStyle, value: style, range: substringRange)
+        }
+    }
+
+    private func applyFootnotes(to attributedString: NSMutableAttributedString, ranges: [NSRange]) {
+        let baseFont = state.currentFont
+        let smallerFont = baseFont.withSize(baseFont.pointSize - 2)
+        #if os(macOS)
+        let footnoteColor = PlatformColor.secondaryLabelColor
+        #else
+        let footnoteColor = PlatformColor.secondaryLabel
+        #endif
+        let footnoteAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: footnoteColor,
+            .font: smallerFont,
+        ]
+        applyRanges(ranges: ranges, attributes: footnoteAttributes, to: attributedString)
+    }
+
+    private func applyRanges(ranges: [NSRange], attributes: [NSAttributedString.Key: Any], to attributedString: NSMutableAttributedString) {
+        for range in ranges where range.location + range.length <= attributedString.length {
+            attributedString.addAttributes(attributes, range: range)
+        }
+    }
+
+    #if canImport(UIKit)
+    private func applyLigatureFallbacks(to attributedString: NSMutableAttributedString, ligatureRanges: [NSRange]) {
+        let baseFont = state.currentFont
+        let ctFont = baseFont as CTFont
+        let fallbackFontName = "Lateef"
+        let fallbackFont = UIFont(name: fallbackFontName, size: baseFont.pointSize) ?? baseFont
+
+        for range in ligatureRanges where range.location + range.length <= attributedString.length {
+            let nsString = attributedString.string as NSString
+            let length = range.length
+            var unichars = [unichar](repeating: 0, count: length)
+            var glyphs = [CGGlyph](repeating: 0, count: length)
+            nsString.getCharacters(&unichars, range: range)
+
+            let hasGlyph = CTFontGetGlyphsForCharacters(ctFont, unichars, &glyphs, length)
+            if !hasGlyph {
+                attributedString.addAttribute(.font, value: fallbackFont, range: range)
+            }
+        }
+    }
+    #endif
 
     private func applyAnnotation(_ ann: Annotation, at range: NSRange, to textStorage: NSMutableAttributedString) {
         if ann.type == .highlight {
@@ -394,25 +386,36 @@ struct HonorificReplacementResult {
 }
 
 extension String {
-    func replacingHonorificPhrasesIfSupported() -> HonorificReplacementResult {
-        let replacements: [(phrase: String, glyph: String)] = [
-            (.sholawat, "\u{FDFA}"),
-            ("رحمهم الله", "\u{FD4F}"),
-            ("رحمه الله", "\u{FD40}"),
-            ("رضي الله عنهما", "\u{FD44}"),
-            ("رضي الله عنهم", "\u{FD43}"),
-            ("رضي الله عنها", "\u{FD42}"),
-            ("رضي الله عنه", "\u{FD41}"),
-            ("سبحانه وتعالى", "\u{FDFE}"),
-            ("تبارك وتعالى", "\u{FD4E}"),
-            ("عليهم السلام", "\u{FD48}"),
-            ("عليها السلام", "\u{FD4D}"),
-            ("عليه السلام", "\u{FD47}"),
-            ("عز وجل", "\u{FDFF}"),
-        ]
+    private static let honorificReplacements: [(phrase: String, glyph: String)] = [
+        (.sholawat, "\u{FDFA}"),
+        ("رحمهم الله", "\u{FD4F}"),
+        ("رحمه الله", "\u{FD40}"),
+        ("رضي الله عنهما", "\u{FD44}"),
+        ("رضي الله عنهم", "\u{FD43}"),
+        ("رضي الله عنها", "\u{FD42}"),
+        ("رضي الله عنه", "\u{FD41}"),
+        ("سبحانه وتعالى", "\u{FDFE}"),
+        ("تبارك وتعالى", "\u{FD4E}"),
+        ("عليهم السلام", "\u{FD48}"),
+        ("عليها السلام", "\u{FD4D}"),
+        ("عليه السلام", "\u{FD47}"),
+        ("عز وجل", "\u{FDFF}"),
+    ]
 
+    func replacingHonorificPhrasesIfSupported() -> HonorificReplacementResult {
         let source = self as NSString
         let normalized = normalizedArabicHonorificSearchText()
+        let matches = findHonorificMatches(in: normalized)
+
+        guard !matches.isEmpty else {
+            return HonorificReplacementResult(sourceText: self, text: self, events: [])
+        }
+
+        let (finalText, events) = buildHonorificReplacedText(source: source, matches: matches)
+        return HonorificReplacementResult(sourceText: self, text: finalText, events: events)
+    }
+
+    private func findHonorificMatches(in normalized: NormalizedArabicSearchText) -> [(range: NSRange, glyph: String)] {
         let normalizedSource = normalized.text as NSString
         var matches: [(range: NSRange, glyph: String)] = []
         var searchLocation = 0
@@ -420,7 +423,7 @@ extension String {
         while searchLocation < normalizedSource.length {
             var nextMatch: (range: NSRange, glyph: String)?
 
-            for replacement in replacements {
+            for replacement in String.honorificReplacements {
                 let foundRange = normalizedSource.range(
                     of: replacement.phrase,
                     options: [],
@@ -444,13 +447,15 @@ extension String {
             searchLocation = match.range.location + match.range.length
         }
 
-        guard !matches.isEmpty else {
-            return HonorificReplacementResult(sourceText: self, text: self, events: [])
-        }
+        return matches
+    }
 
+    private func buildHonorificReplacedText(
+        source: NSString,
+        matches: [(range: NSRange, glyph: String)]
+    ) -> (text: String, events: [HonorificReplacementEvent]) {
         var finalText = ""
         finalText.reserveCapacity(source.length)
-
         var events: [HonorificReplacementEvent] = []
         var currentLocation = 0
 
@@ -474,7 +479,7 @@ extension String {
             finalText += source.substring(from: currentLocation)
         }
 
-        return HonorificReplacementResult(sourceText: self, text: finalText, events: events)
+        return (finalText, events)
     }
 
     func normalizedArabicHonorificSearchText() -> NormalizedArabicSearchText {
