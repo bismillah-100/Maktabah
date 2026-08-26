@@ -44,14 +44,24 @@ final class FtsMigrationManager {
     @Published var archivesToMigrate: [Int] = []
     #endif
 
+    private enum SQL {
+        static let getFtsVersion = "SELECT value FROM metadata WHERE key = 'fts_version';"
+        static let detachFtsDb = "DETACH DATABASE fts_db;"
+        static let pragmaSyncOff = "PRAGMA synchronous = OFF;"
+        static let pragmaJournalMemory = "PRAGMA journal_mode = MEMORY;"
+        static let pragmaTempStoreMemory = "PRAGMA temp_store = MEMORY;"
+        static let createFtsMetadata = "CREATE TABLE IF NOT EXISTS fts_db.metadata (key TEXT PRIMARY KEY, value INTEGER);"
+        static let insertFtsVersion = "INSERT OR REPLACE INTO fts_db.metadata (key, value) VALUES ('fts_version', 2);"
+        static func dropFtsTable(_ table: String) -> String { "DROP TABLE IF EXISTS main.\(table)_fts;" }
+    }
+
     private func getArchiveFtsVersion(ftsPath: String) -> Int {
         guard FileManager.default.fileExists(atPath: ftsPath) else { return 0 }
         guard let db = try? openDatabase(path: ftsPath) else { return 0 }
         defer { sqlite3_close(db) }
 
-        let sql = "SELECT value FROM metadata WHERE key = 'fts_version';"
         var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return 0 }
+        guard sqlite3_prepare_v2(db, SQL.getFtsVersion, -1, &stmt, nil) == SQLITE_OK else { return 0 }
         defer { sqlite3_finalize(stmt) }
 
         if sqlite3_step(stmt) == SQLITE_ROW {
@@ -64,7 +74,7 @@ final class FtsMigrationManager {
 
     func checkNeedsMigration() {
         var outdated: [Int] = []
-        for i in 1...20 {
+        for i in 1 ... 20 {
             if let path = AppConfig.archiveDatabasePath(archiveId: i),
                let attrs = try? FileManager.default.attributesOfItem(atPath: path),
                let size = attrs[.size] as? Int64, size > 4096
@@ -87,7 +97,8 @@ final class FtsMigrationManager {
         var totalBooks = 0
         for archiveId in outdated {
             if let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
-               let archiveDb = try? openDatabase(path: archivePath) {
+               let archiveDb = try? openDatabase(path: archivePath)
+            {
                 let tables = listTables(db: archiveDb, schemaName: "main")
                     .filter { $0.hasPrefix("b") && Int($0.dropFirst()) != nil }
                 totalBooks += tables.count
@@ -106,15 +117,74 @@ final class FtsMigrationManager {
     }
 
     @MainActor
-    func performMigration() async throws {
-        guard needsMigration, !isMigrating else { return }
-
+    private func resetMigrationState() {
         isMigrating = true
         isCancelled = false
         progress = 0.0
         completedBooksCount = 0
         activeArchiveStatuses.removeAll()
+    }
 
+    @MainActor
+    private func finalizeMigration(error: Error? = nil) {
+        if error == nil && !isCancelled {
+            archivesToMigrate.removeAll()
+            checkNeedsMigration()
+        }
+        activeArchiveStatuses.removeAll()
+        isMigrating = false
+        isCancelled = false
+    }
+
+    private func processMigrationTasks(archives: [Int], maxConcurrent: Int) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            var iterator = archives.makeIterator()
+
+            for _ in 0 ..< maxConcurrent {
+                if let nextId = iterator.next() {
+                    group.addTask {
+                        try await self.migrateSingleArchive(archiveId: nextId)
+                    }
+                }
+            }
+
+            while try await group.next() != nil {
+                if self.isCancelled { break }
+                if let nextId = iterator.next() {
+                    group.addTask {
+                        try await self.migrateSingleArchive(archiveId: nextId)
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor
+    func performMigration() async throws {
+        guard needsMigration, !isMigrating else { return }
+
+        resetMigrationState()
+
+        try await withBackgroundTask {
+            let archives = self.archivesToMigrate
+            let maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))
+
+            do {
+                try await self.processMigrationTasks(archives: archives, maxConcurrent: maxConcurrent)
+                await MainActor.run {
+                    self.finalizeMigration()
+                }
+            } catch {
+                await MainActor.run {
+                    self.finalizeMigration(error: error)
+                }
+                throw error
+            }
+        }
+    }
+
+    @MainActor
+    private func withBackgroundTask<T>(_ work: () async throws -> T) async throws -> T {
         #if canImport(UIKit)
         UIApplication.shared.isIdleTimerDisabled = true
         var backgroundTask: UIBackgroundTaskIdentifier = .invalid
@@ -129,105 +199,74 @@ final class FtsMigrationManager {
             }
         }
         #endif
-
-        let archives = archivesToMigrate
-        let maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))
-
-        do {
-            try await withThrowingTaskGroup(of: Void.self) { group in
-                var iterator = archives.makeIterator()
-
-                for _ in 0..<maxConcurrent {
-                    if let nextId = iterator.next() {
-                        group.addTask {
-                            try await self.migrateSingleArchive(archiveId: nextId)
-                        }
-                    }
-                }
-
-                while try await group.next() != nil {
-                    if self.isCancelled { break }
-                    if let nextId = iterator.next() {
-                        group.addTask {
-                            try await self.migrateSingleArchive(archiveId: nextId)
-                        }
-                    }
-                }
-            }
-
-            await MainActor.run {
-                archivesToMigrate.removeAll()
-                activeArchiveStatuses.removeAll()
-                checkNeedsMigration()
-                isMigrating = false
-                isCancelled = false
-            }
-        } catch {
-            await MainActor.run {
-                activeArchiveStatuses.removeAll()
-                isMigrating = false
-                isCancelled = false
-            }
-            throw error
-        }
+        return try await work()
     }
 
     private func migrateSingleArchive(archiveId: Int) async throws {
         guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
               let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
-        else { return }
+        else {
+            return
+        }
 
-        let fileManager = FileManager.default
-        let archiveExists = fileManager.fileExists(atPath: archivePath)
-        let ftsExists = fileManager.fileExists(atPath: ftsPath)
-
-        if !archiveExists && !ftsExists { return }
-
-        try await rebuildArchive(archiveId: archiveId, archivePath: archivePath, ftsPath: ftsPath)
-    }
-
-    private func rebuildArchive(archiveId: Int, archivePath: String, ftsPath: String) async throws {
         let archiveWritePath = prepareWritableDatabasePath(archivePath)
         let ftsWritePath = prepareWritableDatabasePath(ftsPath)
 
         var isSuccess = false
         defer {
             if !isSuccess {
-                let fm = FileManager.default
-                if archiveWritePath != archivePath, fm.fileExists(atPath: archiveWritePath) {
-                    try? fm.removeItem(atPath: archiveWritePath)
-                }
-                if ftsWritePath != ftsPath, fm.fileExists(atPath: ftsWritePath) {
-                    try? fm.removeItem(atPath: ftsWritePath)
-                }
+                cleanupTempDatabases(archiveWritePath: archiveWritePath, originalArchivePath: archivePath, ftsWritePath: ftsWritePath, originalFtsPath: ftsPath)
             }
         }
 
-        let archiveDb = try openDatabase(path: archiveWritePath)
+        var archiveDb: OpaquePointer? = try openDatabase(path: archiveWritePath)
         defer {
-            try? exec(archiveDb, "DETACH DATABASE fts_db;")
-            sqlite3_close(archiveDb)
+            if let db = archiveDb {
+                try? exec(db, SQL.detachFtsDb)
+                sqlite3_close(db)
+            }
         }
 
-        // Detach if already attached from previous run
-        try? exec(archiveDb, "DETACH DATABASE fts_db;")
+        guard let db = archiveDb else { return }
 
-        try attachDatabase(archiveDb, path: ftsWritePath, schema: "fts_db")
+        // Detach if already attached from previous run
+        try? exec(db, SQL.detachFtsDb)
+
+        try attachDatabase(db, path: ftsWritePath, schema: "fts_db")
 
         // PRAGMA optimizations for fast bulk writing
-        try? exec(archiveDb, "PRAGMA synchronous = OFF;")
-        try? exec(archiveDb, "PRAGMA journal_mode = MEMORY;")
-        try? exec(archiveDb, "PRAGMA temp_store = MEMORY;")
+        try? exec(db, SQL.pragmaSyncOff)
+        try? exec(db, SQL.pragmaJournalMemory)
+        try? exec(db, SQL.pragmaTempStoreMemory)
 
         let tables = listTables(
-            db: archiveDb,
+            db: db,
             schemaName: "main"
         ).filter { $0.hasPrefix("b") && Int($0.dropFirst()) != nil }
 
+        try await buildFtsForTables(tables, archiveDb: db, archiveId: archiveId)
+
+        try? exec(db, SQL.createFtsMetadata)
+        try? exec(db, SQL.insertFtsVersion)
+
+        try? exec(db, SQL.detachFtsDb)
+        sqlite3_close(db)
+        archiveDb = nil
+
+        await MainActor.run {
+            _ = activeArchiveStatuses.removeValue(forKey: archiveId)
+        }
+
+        // Atomic Replace
+        try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archivePath)
+        try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsPath)
+
+        isSuccess = true
+    }
+
+    private func buildFtsForTables(_ tables: [String], archiveDb: OpaquePointer, archiveId: Int) async throws {
         for (index, table) in tables.enumerated() {
             if isCancelled {
-                try? exec(archiveDb, "DETACH DATABASE fts_db;")
-                sqlite3_close(archiveDb)
                 throw CancellationError()
             }
 
@@ -245,7 +284,7 @@ final class FtsMigrationManager {
                 isNassCompressed: true
             )
 
-            try? exec(archiveDb, "DROP TABLE IF EXISTS main.\(table)_fts;")
+            try? exec(archiveDb, SQL.dropFtsTable(table))
 
             await MainActor.run {
                 self.completedBooksCount += 1
@@ -254,22 +293,16 @@ final class FtsMigrationManager {
                 }
             }
         }
+    }
 
-        try? exec(archiveDb, "CREATE TABLE IF NOT EXISTS fts_db.metadata (key TEXT PRIMARY KEY, value INTEGER);")
-        try? exec(archiveDb, "INSERT OR REPLACE INTO fts_db.metadata (key, value) VALUES ('fts_version', 2);")
-
-        try? exec(archiveDb, "DETACH DATABASE fts_db;")
-        sqlite3_close(archiveDb)
-
-        await MainActor.run {
-            _ = activeArchiveStatuses.removeValue(forKey: archiveId)
+    private func cleanupTempDatabases(archiveWritePath: String, originalArchivePath: String, ftsWritePath: String, originalFtsPath: String) {
+        let fm = FileManager.default
+        if archiveWritePath != originalArchivePath, fm.fileExists(atPath: archiveWritePath) {
+            try? fm.removeItem(atPath: archiveWritePath)
         }
-
-        // Atomic Replace
-        try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archivePath)
-        try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsPath)
-
-        isSuccess = true
+        if ftsWritePath != originalFtsPath, fm.fileExists(atPath: ftsWritePath) {
+            try? fm.removeItem(atPath: ftsWritePath)
+        }
     }
 
     @MainActor
@@ -284,43 +317,30 @@ final class FtsMigrationManager {
         completedBooksCount = 0
         activeArchiveStatuses.removeAll()
 
-        #if canImport(UIKit)
-        UIApplication.shared.isIdleTimerDisabled = true
-        var backgroundTask: UIBackgroundTaskIdentifier = .invalid
-        backgroundTask = UIApplication.shared.beginBackgroundTask {
-            UIApplication.shared.endBackgroundTask(backgroundTask)
-            backgroundTask = .invalid
-        }
-        defer {
-            UIApplication.shared.isIdleTimerDisabled = false
-            if backgroundTask != .invalid {
-                UIApplication.shared.endBackgroundTask(backgroundTask)
+        try await withBackgroundTask {
+            do {
+                guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
+                      let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
+                else {
+                    self.isMigrating = false
+                    return
+                }
+
+                let fileManager = FileManager.default
+                let archiveExists = fileManager.fileExists(atPath: archivePath)
+                let ftsExists = fileManager.fileExists(atPath: ftsPath)
+
+                if archiveExists || ftsExists {
+                    try await self.migrateSingleArchive(archiveId: archiveId)
+                    self.currentArchiveIndex = 1
+                    self.progress = 1.0
+                }
+
+                self.isMigrating = false
+            } catch {
+                self.isMigrating = false
+                throw error
             }
-        }
-        #endif
-
-        do {
-            guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
-                  let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
-            else {
-                isMigrating = false
-                return
-            }
-
-            let fileManager = FileManager.default
-            let archiveExists = fileManager.fileExists(atPath: archivePath)
-            let ftsExists = fileManager.fileExists(atPath: ftsPath)
-
-            if archiveExists || ftsExists {
-                try await rebuildArchive(archiveId: archiveId, archivePath: archivePath, ftsPath: ftsPath)
-                currentArchiveIndex = 1
-                progress = 1.0
-            }
-
-            isMigrating = false
-        } catch {
-            isMigrating = false
-            throw error
         }
     }
 
@@ -328,18 +348,18 @@ final class FtsMigrationManager {
 
     private func openDatabase(path: String) throws -> OpaquePointer {
         var db: OpaquePointer?
-        if sqlite3_open_v2(
+        guard sqlite3_open_v2(
             path, &db,
             SQLITE_OPEN_READWRITE |
-            SQLITE_OPEN_CREATE |
-            SQLITE_OPEN_NOMUTEX,
+                SQLITE_OPEN_CREATE |
+                SQLITE_OPEN_NOMUTEX,
             nil
-        ) != SQLITE_OK {
-            let errorMsg = String(cString: sqlite3_errmsg(db))
-            sqlite3_close(db)
+        ) == SQLITE_OK, let validDb = db else {
+            let errorMsg = db.flatMap { String(cString: sqlite3_errmsg($0)) } ?? "Unknown error"
+            if let db { sqlite3_close(db) }
             throw NSError(domain: "FtsMigration", code: 1, userInfo: [NSLocalizedDescriptionKey: "Open failed: \(errorMsg)"])
         }
-        return db!
+        return validDb
     }
 
     private func attachDatabase(_ db: OpaquePointer, path: String, schema: String) throws {
@@ -360,20 +380,7 @@ final class FtsMigrationManager {
     }
 
     private func listTables(db: OpaquePointer, schemaName: String) -> [String] {
-        let sql = "SELECT name FROM \(schemaName).sqlite_master WHERE type='table' ORDER BY name;"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-
-        var tables: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let namePtr = sqlite3_column_text(stmt, 0) {
-                let bytes = sqlite3_column_bytes(stmt, 0)
-                let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
-                tables.append(String(decoding: buffer, as: UTF8.self))
-            }
-        }
-        return tables
+        db.listTableNames(schemaName: schemaName)
     }
 
     private func prepareWritableDatabasePath(_ dbPath: String) -> String {

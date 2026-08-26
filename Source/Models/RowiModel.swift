@@ -57,8 +57,8 @@ class Rowi: Codable {
         didSet {
             if let who {
                 self.who = StringInterner.shared.intern(who.replaceKutubCodes(
-                    with: TabaqaGroup.mappingRowiKutub, mode: .mulakhos)
-                )
+                    with: TabaqaGroup.mappingRowiKutub, mode: .mulakhos
+                ))
             }
         }
     }
@@ -68,7 +68,7 @@ class Rowi: Codable {
 
     var isLoaded: Bool = false
 
-    init(id: Int, 
+    init(id: Int,
          name: String? = nil,
          tabaqa: String?,
          aqual: String? = nil,
@@ -79,10 +79,10 @@ class Rowi: Codable {
          isoName: String,
          who: String? = nil,
          birth: String? = nil,
-         death: String? = nil
-    ) {
+         death: String? = nil)
+    {
         self.id = id
-        self.name = name?.replacingOccurrences(of: "W", with: String.sholawat)
+        self.name = name?.replacing("W", with: String.sholawat)
         if let tabaqa {
             self.tabaqa = StringInterner.shared.intern(tabaqa)
         } else {
@@ -93,7 +93,7 @@ class Rowi: Codable {
         self.rZahbi = rZahbi
         self.sheok = sheok
         self.telmez = telmez
-        self.isoName = isoName.replacingOccurrences(of: "W", with: String.sholawat)
+        self.isoName = isoName.replacing("W", with: String.sholawat)
         self.who = who
         wulida = birth?.convertToArabicDigits()
         tuwuffi = death?.convertToArabicDigits()
@@ -104,8 +104,11 @@ class TabaqaGroup {
     let code: String
     let name: String
     var rowis: [Rowi]
-    var displayedRowis: [Rowi] = []  // Yang ditampilkan
-    var hasMore: Bool { rowis.count > displayedRowis.count }
+    var displayedRowis: [Rowi] = [] // Yang ditampilkan
+    var hasMore: Bool {
+        rowis.count > displayedRowis.count
+    }
+
     let pageSize = 50
 
     init(code: String, name: String, rowis: [Rowi]) {
@@ -119,7 +122,7 @@ class TabaqaGroup {
         let remaining = rowis.count - currentCount
         let toLoad = min(remaining, pageSize)
 
-        displayedRowis.append(contentsOf: rowis[currentCount..<(currentCount + toLoad)])
+        displayedRowis.append(contentsOf: rowis[currentCount ..< (currentCount + toLoad)])
     }
 
     func initialLoad() {
@@ -137,7 +140,7 @@ class TabaqaGroup {
         "M": "الوسطى من أتباع التابعين",
         "N": "صغار أتباع التابعين",
         "O": "كبار الآخذين عن تبع الأتباع",
-        "P": "صغار الآخذين عن تبع الأتباع"
+        "P": "صغار الآخذين عن تبع الأتباع",
     ]
 
     static let orderedCodes = ["F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]
@@ -175,14 +178,14 @@ class TabaqaGroup {
         "ل": "أبو داود في المسائل",
         "م": "مسلم",
         "مد": "أبو داود في المراسيل",
-        "مق": "مسلم في مقدمة صحيحه"
+        "مق": "مسلم في مقدمة صحيحه",
     ]
 
     static let replacementRowiMapping: [String: String] = [
         "C": "قال المزي في تهذيب الكمال ",
         "E": "قال الحافظ في تهذيب التهذيب ",
         "W": .sholawat,
-        "#": "\n"
+        "#": "\n",
     ]
 
     static let replacementSheokMapping: [String: String] = [
@@ -193,84 +196,46 @@ class TabaqaGroup {
         "D": "ذكر المزي في تهذيب الكمال:",
         "F": "",
         "W": .sholawat,
-        "#": "\n"
+        "#": "\n",
     ]
 }
 
 extension Rowi {
+    private static let tabaqaRulePatterns: [(patterns: [String], targetKey: String)] = [
+        (["F", "1"], "F"),
+        (["2 :", "G"], "G"),
+        (["3 :", "H"], "H"),
+        (["4 :", "I"], "I"),
+        (["5 :", "J"], "J"),
+        (["6 :", "K"], "K"),
+        (["7 :", "L"], "L"),
+        (["8 :", "M"], "M"),
+        (["9 :", "N"], "N"),
+        (["10 :", "O"], "O"),
+        (["Q", "P"], "P"),
+    ]
+
     /// Mengekstrak kode TABAQA struktural yang dinormalisasi.
     func getNormalizedTabaqaCode() -> String {
-        guard let tabaqaRaw = self.tabaqa else {
+        guard let tabaqaRaw = tabaqa else {
             return "Unknown"
         }
 
         let upperCasedTabaqa = tabaqaRaw.uppercased()
 
-        // Helper: cek apakah string mengandung minimal satu key dari mapping,
-        // tapi kecualikan key huruf yang sedang diuji
         func hasOtherValidKey(excluding excludedKey: String) -> Bool {
-            return TabaqaGroup.tabaqaMapping.keys.contains { key in
+            TabaqaGroup.tabaqaMapping.keys.contains { key in
                 key != excludedKey && upperCasedTabaqa.contains(key)
             }
         }
 
-        // Aturan khusus: F atau angka 1 → F (Sahabi)
-        if (upperCasedTabaqa.contains("F") || upperCasedTabaqa.contains("1")) && !hasOtherValidKey(excluding: "F") {
-            return "F"
-        }
-
-        // Angka 2 → G (Kibar Tabi'in)
-        if (upperCasedTabaqa.contains("2 :") || upperCasedTabaqa.contains("G")) && !hasOtherValidKey(excluding: "G") {
-            return "G"
-        }
-
-        // Angka 3 → H (Wustha Tabi'in)
-        if (upperCasedTabaqa.contains("3 :") || upperCasedTabaqa.contains("H")) && !hasOtherValidKey(excluding: "H") {
-            return "H"
-        }
-
-        // Angka 4 → I (Ma yali al‑wustha)
-        if (upperCasedTabaqa.contains("4 :") || upperCasedTabaqa.contains("I")) && !hasOtherValidKey(excluding: "I") {
-            return "I"
-        }
-
-        // Angka 5 → J (Sighar Tabi'in)
-        if (upperCasedTabaqa.contains("5 :") || upperCasedTabaqa.contains("J")) && !hasOtherValidKey(excluding: "J") {
-            return "J"
-        }
-
-        // Angka 6 → K (Mu'ashir sighar Tabi'in)
-        if (upperCasedTabaqa.contains("6 :") || upperCasedTabaqa.contains("K")) && !hasOtherValidKey(excluding: "K") {
-            return "K"
-        }
-
-        // Angka 7 → L (Kibar atba' Tabi'in)
-        if (upperCasedTabaqa.contains("7 :") || upperCasedTabaqa.contains("L")) && !hasOtherValidKey(excluding: "L") {
-            return "L"
-        }
-
-        // Angka 8 → M (Wustha atba' Tabi'in)
-        if (upperCasedTabaqa.contains("8 :") || upperCasedTabaqa.contains("M")) && !hasOtherValidKey(excluding: "M") {
-            return "M"
-        }
-
-        // Angka 9 → N (Sighar atba' Tabi'in)
-        if (upperCasedTabaqa.contains("9 :") || upperCasedTabaqa.contains("N")) && !hasOtherValidKey(excluding: "N") {
-            return "N"
-        }
-
-        // Angka 10 → O (Kibar al‑akhidhin)
-        if (upperCasedTabaqa.contains("10 :") || upperCasedTabaqa.contains("O")) && !hasOtherValidKey(excluding: "O") {
-            return "O"
-        }
-
-        // Gabungkan Q ke P (sama label)
-        if (upperCasedTabaqa.contains("Q") || upperCasedTabaqa.contains("P")) && !hasOtherValidKey(excluding: "P") {
-            return "P"
+        for (patterns, targetKey) in Self.tabaqaRulePatterns {
+            let matchesPattern = patterns.contains { upperCasedTabaqa.contains($0) }
+            if matchesPattern, !hasOtherValidKey(excluding: targetKey) {
+                return targetKey
+            }
         }
 
         return "Unknown"
     }
-
-
 }

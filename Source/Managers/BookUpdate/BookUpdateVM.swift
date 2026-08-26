@@ -130,7 +130,11 @@ class BookUpdateViewModel: ObservableObject {
         updateResults.removeAll()
 
         Task { @MainActor [weak self] in
-            defer { self?.isUpdating = false }
+            defer { 
+                self?.isUpdating = false 
+                BookUpdateManager.shared.cleanupWorkingDirectory()
+                BookDownloadManager.shared.cleanupBooksDirectory()
+            }
             guard let self else { return }
 
             do {

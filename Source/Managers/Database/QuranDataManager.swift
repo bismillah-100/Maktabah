@@ -19,38 +19,38 @@ class QuranDataManager {
 
     let bkConn = BookConnection()
     private(set) var selectedQuran: (aya: Int, surah: Int)?
-    var selectedBook: BooksData?
-    var currentBookContent: BookContent?
+    private(set) var selectedBook: BooksData?
+    private(set) var currentBookContent: BookContent?
 
     private init() {
         guard let path else { return }
         do {
             db = try SQLiteDatabase(path: path, flags: SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
         } catch {
-#if DEBUG
+            #if DEBUG
             print("error saat mencoba membuka database:", error)
-#endif
+            #endif
         }
     }
 
     func connect(to book: BooksData) {
-#if DEBUG
+        #if DEBUG
         print("QuranDataManager connect")
-#endif
+        #endif
         try? bkConn.connect(archive: book.archive)
         selectedBook = book
     }
 
     @discardableResult
     func loadTafseer(for aya: Int, in surah: Int) -> String? {
-#if DEBUG
+        #if DEBUG
         print("loadTafseer")
-#endif
+        #endif
         selectedQuran = (aya: aya, surah: surah)
         guard let selectedBook else {
-#if DEBUG
+            #if DEBUG
             print("no selectedBook")
-#endif
+            #endif
             return nil
         }
         currentBookContent = bkConn.fetchTafseer(
@@ -114,9 +114,9 @@ class QuranDataManager {
             }
 
         surahNodes = nodes
-#if DEBUG
+        #if DEBUG
         print("total nodes:", nodes.count)
-#endif
+        #endif
     }
 
     func buildTafseerMap() {
@@ -124,16 +124,20 @@ class QuranDataManager {
 
         for cat in LibraryDataManager.shared.allRootCategories {
             guard cat.id == 127 || cat.id == 70 else { continue }
-            for case let book as BooksData in cat.children {
-                if book.tafseerNam != nil {
-                    tafseerBooks.append(book)
-                }
+            for case let book as BooksData in cat.children where book.tafseerNam != nil {
+                tafseerBooks.append(book)
             }
         }
 
-#if DEBUG
+        #if DEBUG
         print("tafseerBooks:", tafseerBooks.count)
-#endif
+        #endif
+    }
+
+    func setCurrentBookContent(_ content: BookContent?) {
+        if content != nil {
+            currentBookContent = content
+        }
     }
 
     func nextPage() -> BookContent? {
@@ -144,7 +148,7 @@ class QuranDataManager {
             quran: true
         )
 
-        self.currentBookContent = content
+        setCurrentBookContent(content)
 
         return content
     }
@@ -157,7 +161,8 @@ class QuranDataManager {
             quran: true
         )
 
-        self.currentBookContent = content
+        setCurrentBookContent(content)
+
         return content
     }
 

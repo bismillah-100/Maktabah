@@ -32,6 +32,19 @@ class FolderNode: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
+
+    var allDescendantIds: [Int64] {
+        var ids: [Int64] = []
+        collectDescendantIds(into: &ids)
+        return ids
+    }
+
+    private func collectDescendantIds(into ids: inout [Int64]) {
+        ids.append(id)
+        for child in children {
+            child.collectDescendantIds(into: &ids)
+        }
+    }
 }
 
 #if os(iOS)
@@ -77,6 +90,12 @@ struct GroupedResult {
     let archive: Int
     let bkId: Int // tableName setelah dropFirst()
     var contentIds: [String] = []
+}
+
+struct SearchResultWithPath {
+    let result: ResultNode
+    let folderId: Int64?
+    let folderPath: String
 }
 
 enum BookmarkTreeChange {

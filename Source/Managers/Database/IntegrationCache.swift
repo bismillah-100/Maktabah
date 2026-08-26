@@ -25,8 +25,8 @@ final class IntegrationCache {
     static let shared = IntegrationCache()
 
     // bookId per archive yang sudah terintegrasi
-    private var integrated: [Int: Set<Int>] = [:]       // [archiveId: Set<bookId>]
-    private var loadedArchives: Set<Int> = []            // archive yang sudah di-load ke RAM
+    private var integrated: [Int: Set<Int>] = [:] // [archiveId: Set<bookId>]
+    private var loadedArchives: Set<Int> = [] // archive yang sudah di-load ke RAM
 
     private let fm = FileManager.default
     private let queue = DispatchQueue(label: "com.maktabah.IntegrationCache", attributes: .concurrent)
@@ -95,7 +95,8 @@ final class IntegrationCache {
         else { return }
 
         guard fm.fileExists(atPath: archivePath),
-              fm.fileExists(atPath: ftsPath) else {
+              fm.fileExists(atPath: ftsPath)
+        else {
             // Archive belum ada → cache kosong, simpan supaya kita tahu sudah di-scan
             queue.async(flags: .barrier) { [self] in
                 if loadedArchives.contains(archiveId) { return }
@@ -161,7 +162,8 @@ final class IntegrationCache {
         if alreadyLoaded { return }
 
         guard let file = cacheFile(for: archiveId),
-              fm.fileExists(atPath: file.path) else {
+              fm.fileExists(atPath: file.path)
+        else {
             // Belum ada cache → build sekarang (sekali saja)
             build(for: archiveId)
             return
@@ -218,7 +220,7 @@ final class IntegrationCache {
         defer { sqlite3_close(ftsDb) }
 
         let archiveTables = Set(listTables(db: archiveDb))
-        let ftsTables     = Set(listTables(db: ftsDb))
+        let ftsTables = Set(listTables(db: ftsDb))
 
         var result: [Int] = []
         for table in archiveTables {
@@ -242,19 +244,7 @@ final class IntegrationCache {
     }
 
     private func listTables(db: OpaquePointer) -> [String] {
-        let sql = "SELECT name FROM sqlite_master WHERE type='table';"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-        var tables: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let ptr = sqlite3_column_text(stmt, 0) {
-                let bytes = sqlite3_column_bytes(stmt, 0)
-                let buffer = UnsafeBufferPointer(start: ptr, count: Int(bytes))
-                tables.append(String(decoding: buffer, as: UTF8.self))
-            }
-        }
-        return tables
+        db.listTableNames()
     }
 
     // MARK: - Codable DTO

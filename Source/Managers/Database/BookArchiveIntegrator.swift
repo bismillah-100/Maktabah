@@ -12,7 +12,7 @@ import SQLite3
 // MARK: - IntegratePhase
 
 /// Fase-fase integrasi yang dilaporkan ke caller melalui callback `onProgress`.
-enum IntegratePhase: Sendable {
+enum IntegratePhase {
     /// Sedang membangun indeks FTS dari teks kitab.
     case fts
     /// Sedang menyalin tabel data utama kitab ke archive.
@@ -26,12 +26,12 @@ enum BookArchiveIntegrateError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidArchiveId(let id):
-            return "Invalid archive ID: \(id)."
-        case .sourceTableMissing(let table):
-            return "Source table missing: \(table)."
-        case .fileReplacementFailed(let reason):
-            return "Failed to replace database files: \(reason)"
+        case let .invalidArchiveId(id):
+            "Invalid archive ID: \(id)."
+        case let .sourceTableMissing(table):
+            "Source table missing: \(table)."
+        case let .fileReplacementFailed(reason):
+            "Failed to replace database files: \(reason)"
         }
     }
 }
@@ -94,7 +94,7 @@ final class BookArchiveIntegrator {
 
     private init() {
         let saved = UserDefaults.standard.array(forKey: vacuumKey) as? [Int] ?? []
-        self.pendingVacuumArchiveIds = Set(saved)
+        pendingVacuumArchiveIds = Set(saved)
     }
 
     private func savePendingVacuumIds() {
@@ -149,11 +149,11 @@ final class BookArchiveIntegrator {
 
             do {
                 #if DEBUG
-                    let sourceTables = listTables(path: sourceURL.path)
-                    print("[BookIntegrate] source:", sourceURL.path)
-                    print("[BookIntegrate] source tables:", sourceTables.joined(separator: ", "))
-                    print("[BookIntegrate] archive:", archiveDbPath)
-                    print("[BookIntegrate] fts:", ftsDbPath)
+                let sourceTables = listTables(path: sourceURL.path)
+                print("[BookIntegrate] source:", sourceURL.path)
+                print("[BookIntegrate] source tables:", sourceTables.joined(separator: ", "))
+                print("[BookIntegrate] archive:", archiveDbPath)
+                print("[BookIntegrate] fts:", ftsDbPath)
                 #endif
                 // Jalankan pekerjaan CPU-intensif di background, tetapi tetap bisa
                 // mengawait callback onProgress ke MainActor.
@@ -177,9 +177,8 @@ final class BookArchiveIntegrator {
 
     /// Menghapus kitab dari archive dan FTS.
     func removeBookFromArchive(_ book: BooksData) async throws {
-        guard AppConfig.isUsingBundleMode else { return }
-        guard book.archive > 0 else { return }
-        guard let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: book.archive),
+        guard AppConfig.isUsingBundleMode, book.archive > 0,
+              let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: book.archive),
               let ftsDbPath = AppConfig.archiveFtsDatabasePath(archiveId: book.archive)
         else {
             return
@@ -187,92 +186,109 @@ final class BookArchiveIntegrator {
 
         try await BookArchiveSingleFlight.shared.run(archiveId: book.archive, bookId: book.id) { [weak self] in
             guard let self else { return }
+            try executeBookRemoval(
+                book: book,
+                archiveDbPath: archiveDbPath,
+                ftsDbPath: ftsDbPath
+            )
+        }
+    }
 
-            let archiveWritePath = try prepareWritableDatabasePath(archiveDbPath)
-            let ftsWritePath = try prepareWritableDatabasePath(ftsDbPath)
+    private func executeBookRemoval(
+        book: BooksData,
+        archiveDbPath: String,
+        ftsDbPath: String
+    ) throws {
+        let archiveWritePath = try prepareWritableDatabasePath(archiveDbPath)
+        let ftsWritePath = try prepareWritableDatabasePath(ftsDbPath)
 
-            var archiveDb: OpaquePointer? = try openDatabase(path: archiveWritePath)
-            var ftsDb: OpaquePointer? = try openDatabase(path: ftsWritePath)
+        var archiveDb: OpaquePointer? = try openDatabase(path: archiveWritePath)
+        var ftsDb: OpaquePointer? = try openDatabase(path: ftsWritePath)
 
-            defer {
-                if let db = archiveDb { sqlite3_close(db) }
-                if let db = ftsDb { sqlite3_close(db) }
-            }
+        defer {
+            if let db = archiveDb { sqlite3_close(db) }
+            if let db = ftsDb { sqlite3_close(db) }
+        }
 
-            let bookTable = "b\(book.id)"
-            let tocTable = "t\(book.id)"
-            let ftsTable = "\(bookTable)_fts"
+        dropTablesForBookRemoval(bookId: book.id, archiveDb: archiveDb, ftsDb: ftsDb)
 
-            do {
-                try exec(archiveDb, "DROP TABLE IF EXISTS \(bookTable);")
-                try exec(archiveDb, "DROP TABLE IF EXISTS \(tocTable);")
-                try exec(ftsDb, "DROP TABLE IF EXISTS \(ftsTable);")
-            } catch {
-                #if DEBUG
-                print("Error dropping tables during removal: \(error)")
-                #endif
-            }
+        // Close databases explicitly BEFORE replacing the files to prevent lock issues and resource leaks.
+        if let db = archiveDb {
+            sqlite3_close(db)
+            archiveDb = nil
+        }
+        if let db = ftsDb {
+            sqlite3_close(db)
+            ftsDb = nil
+        }
 
-            // Close databases explicitly BEFORE replacing the files to prevent lock issues and resource leaks.
-            if let db = archiveDb {
-                sqlite3_close(db)
-                archiveDb = nil
-            }
-            if let db = ftsDb {
-                sqlite3_close(db)
-                ftsDb = nil
-            }
+        var fileReplacementFailedError: Error?
+        do {
+            try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archiveDbPath)
+            try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsDbPath)
+        } catch {
+            #if DEBUG
+            print("Error replacing databases during removal: \(error)")
+            #endif
+            fileReplacementFailedError = error
+        }
 
-            var fileReplacementFailedError: Error? = nil
-            do {
-                try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archiveDbPath)
-                try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsDbPath)
-            } catch {
-                #if DEBUG
-                print("Error replacing databases during removal: \(error)")
-                #endif
-                fileReplacementFailedError = error
-            }
+        removeBookFromMainDbIfNeeded(bookId: book.id)
+        removeAuthorFromSpecialDbIfNeeded(muallifId: book.muallif)
 
-            // Hapus dari main.sqlite jika buku adalah yang telah diimport.
-            if LibraryDataManager.shouldRemoveBook(id: book.id),
-               let mainDbPath = AppConfig.mainDatabasePath {
-                do {
-                    let mainDb = try openDatabase(path: mainDbPath)
-                    let query = #"DELETE FROM "0bok" WHERE bkid = \#(book.id);"#
-                    try exec(mainDb, query)
-                    sqlite3_close(mainDb)
-                } catch {
-                    #if DEBUG
-                    print("Error deleting book from main database: \(error)")
-                    #endif
-                }
-            }
+        pendingVacuumArchiveIds.insert(book.archive)
+        savePendingVacuumIds()
 
-            // Hapus dari special.sqlite jika authid dari buku yang telah diimport.
-            if LibraryDataManager.shouldRemoveAuthor(muallifId: book.muallif),
-               let specialDbPath = AppConfig.specialDatabasePath {
-                if !DatabaseManager.shared.isAuthorUsed(authorId: book.muallif) {
-                    do {
-                        let specialDb = try openDatabase(path: specialDbPath)
-                        try exec(specialDb, "DELETE FROM Auth WHERE authid = \(book.muallif);")
-                        sqlite3_close(specialDb)
-                    } catch {
-                        #if DEBUG
-                        print("Error deleting author from special database: \(error)")
-                        #endif
-                    }
-                }
-            }
+        finalizeRemoval(book: book)
 
-            self.pendingVacuumArchiveIds.insert(book.archive)
-            self.savePendingVacuumIds()
+        if let error = fileReplacementFailedError {
+            throw BookArchiveIntegrateError.fileReplacementFailed(error.localizedDescription)
+        }
+    }
 
-            finalizeRemoval(book: book)
+    private func dropTablesForBookRemoval(bookId: Int, archiveDb: OpaquePointer?, ftsDb: OpaquePointer?) {
+        let bookTable = "b\(bookId)"
+        let tocTable = "t\(bookId)"
+        let ftsTable = "\(bookTable)_fts"
 
-            if let error = fileReplacementFailedError {
-                throw BookArchiveIntegrateError.fileReplacementFailed(error.localizedDescription)
-            }
+        do {
+            try exec(archiveDb, SQL.dropTable(name: bookTable))
+            try exec(archiveDb, SQL.dropTable(name: tocTable))
+            try exec(ftsDb, SQL.dropTable(name: ftsTable))
+        } catch {
+            #if DEBUG
+            print("Error dropping tables during removal: \(error)")
+            #endif
+        }
+    }
+
+    private func removeBookFromMainDbIfNeeded(bookId: Int) {
+        guard LibraryDataManager.shouldRemoveBook(id: bookId),
+              let mainDbPath = AppConfig.mainDatabasePath else { return }
+        do {
+            let mainDb = try openDatabase(path: mainDbPath)
+            let query = #"DELETE FROM "0bok" WHERE bkid = \#(bookId);"#
+            try exec(mainDb, query)
+            sqlite3_close(mainDb)
+        } catch {
+            #if DEBUG
+            print("Error deleting book from main database: \(error)")
+            #endif
+        }
+    }
+
+    private func removeAuthorFromSpecialDbIfNeeded(muallifId: Int) {
+        guard LibraryDataManager.shouldRemoveAuthor(muallifId: muallifId),
+              let specialDbPath = AppConfig.specialDatabasePath,
+              !DatabaseManager.shared.isAuthorUsed(authorId: muallifId) else { return }
+        do {
+            let specialDb = try openDatabase(path: specialDbPath)
+            try exec(specialDb, "DELETE FROM Auth WHERE authid = \(muallifId);")
+            sqlite3_close(specialDb)
+        } catch {
+            #if DEBUG
+            print("Error deleting author from special database: \(error)")
+            #endif
         }
     }
 
@@ -291,7 +307,7 @@ final class BookArchiveIntegrator {
             #if DEBUG
             print("[Vacuum] Attempting archive: \(archiveId)")
             #endif
-            
+
             // Mencoba vacuum. Jika buku sedang dibuka, ini mungkin gagal (Busy),
             // namun sesuai instruksi, kita akan tetap membersihkan daftar ID setelah proses selesai.
             vacuum(path: archiveDbPath)
@@ -307,7 +323,7 @@ final class BookArchiveIntegrator {
     private func vacuum(path: String) -> Bool {
         var db: OpaquePointer?
         var success = false
-        
+
         // Gunakan OPEN_READWRITE tanpa CREATE agar tidak membuat file baru jika tidak ada.
         if sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE, nil) == SQLITE_OK {
             // Jika database sedang digunakan, ini akan mengembalikan SQLITE_BUSY
@@ -344,8 +360,9 @@ final class BookArchiveIntegrator {
         ftsDbPath: String,
         bookId: Int
     ) -> Bool {
-        guard fileExistsAndHasSize(at: archiveDbPath),
-              fileExistsAndHasSize(at: ftsDbPath) else {
+        guard FileManager.default.isNonEmptyFile(atPath: archiveDbPath),
+              FileManager.default.isNonEmptyFile(atPath: ftsDbPath)
+        else {
             return false
         }
 
@@ -353,7 +370,8 @@ final class BookArchiveIntegrator {
         let ftsTable = "b\(bookId)_fts"
 
         guard let archiveDb = try? openDatabase(path: archiveDbPath),
-              let ftsDb = try? openDatabase(path: ftsDbPath) else {
+              let ftsDb = try? openDatabase(path: ftsDbPath)
+        else {
             return false
         }
         defer {
@@ -375,7 +393,7 @@ final class BookArchiveIntegrator {
         bookId: Int,
         onProgress: (@Sendable (IntegratePhase) async -> Void)? = nil
     ) async throws {
-        guard fileExistsAndHasSize(at: sourceURL.path) else {
+        guard FileManager.default.isNonEmptyFile(atPath: sourceURL.path) else {
             throw ArchiveError.fileNotReadable(path: sourceURL.path)
         }
 
@@ -383,29 +401,7 @@ final class BookArchiveIntegrator {
         let ftsWritePath = try prepareWritableDatabasePath(ftsDbPath)
 
         #if DEBUG
-            if let attrs = try? FileManager.default.attributesOfItem(
-                atPath: archiveDbPath
-            ) {
-                let perms = attrs[.posixPermissions] as? NSNumber
-                let immutable = attrs[.immutable] as? NSNumber
-                let appendOnly = attrs[.appendOnly] as? NSNumber
-                print(
-                    "[BookIntegrate] archive writable:",
-                    FileManager.default.isWritableFile(atPath: archiveDbPath),
-                    "perms:",
-                    perms ?? -1,
-                    "immutable:",
-                    immutable ?? -1,
-                    "appendOnly:",
-                    appendOnly ?? -1
-                )
-            }
-            if archiveWritePath != archiveDbPath {
-                print("[BookIntegrate] using temp archive:", archiveWritePath)
-            }
-            if ftsWritePath != ftsDbPath {
-                print("[BookIntegrate] using temp fts:", ftsWritePath)
-            }
+        logIntegrationDiagnostics(archiveDbPath: archiveDbPath, archiveWritePath: archiveWritePath, ftsDbPath: ftsDbPath, ftsWritePath: ftsWritePath)
         #endif
 
         var archiveDbPtr: OpaquePointer? = try openDatabase(path: archiveWritePath)
@@ -414,17 +410,42 @@ final class BookArchiveIntegrator {
         }
         defer {
             if let db = archiveDbPtr {
-                try? exec(db, "DETACH DATABASE fts_db;")
-                try? exec(db, "DETACH DATABASE source_db;")
+                try? exec(db, SQL.detachFts)
+                try? exec(db, SQL.detachSource)
                 sqlite3_close(db)
             }
         }
 
         #if DEBUG
-            let isReadonly = sqlite3_db_readonly(archiveDb, "main") == 1
-            print("[BookIntegrate] sqlite readonly(main):", isReadonly)
+        let isReadonly = sqlite3_db_readonly(archiveDb, "main") == 1
+        print("[BookIntegrate] sqlite readonly(main):", isReadonly)
         #endif
 
+        try await performIntegrationTasks(
+            archiveDb: archiveDb,
+            sourceURL: sourceURL,
+            ftsWritePath: ftsWritePath,
+            bookId: bookId,
+            onProgress: onProgress
+        )
+
+        // Close connection explicitly before replacing database files to release locks and avoid resource leaks.
+        try exec(archiveDb, SQL.detachFts)
+        try exec(archiveDb, SQL.detachSource)
+        sqlite3_close(archiveDb)
+        archiveDbPtr = nil
+
+        try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archiveDbPath)
+        try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsDbPath)
+    }
+
+    private func performIntegrationTasks(
+        archiveDb: OpaquePointer,
+        sourceURL: URL,
+        ftsWritePath: String,
+        bookId: Int,
+        onProgress: (@Sendable (IntegratePhase) async -> Void)?
+    ) async throws {
         try attachDatabase(
             archiveDb,
             path: sourceURL.path,
@@ -441,8 +462,8 @@ final class BookArchiveIntegrator {
 
         guard tableExists(db: archiveDb, schemaName: "source_db", tableName: bookTable) else {
             #if DEBUG
-                let tables = listTables(db: archiveDb, schemaName: "source_db")
-                print("[BookIntegrate] source_db tables:", tables.joined(separator: ", "))
+            let tables = listTables(db: archiveDb, schemaName: "source_db")
+            print("[BookIntegrate] source_db tables:", tables.joined(separator: ", "))
             #endif
             throw BookArchiveIntegrateError.sourceTableMissing(bookTable)
         }
@@ -459,10 +480,24 @@ final class BookArchiveIntegrator {
         )
 
         // ── Fase Data ────────────────────────────────────────────────────────
-        // Detach dulu agar convertBookDatabase bisa membuka file secara eksklusif,
-        // lalu attach kembali untuk copyTable.
         await onProgress?(.data)
-        try exec(archiveDb, "DETACH DATABASE source_db;")
+        try copySourceTablesToArchive(
+            archiveDb: archiveDb,
+            sourceURL: sourceURL,
+            bookId: bookId,
+            bookTable: bookTable,
+            tocTable: tocTable
+        )
+    }
+
+    private func copySourceTablesToArchive(
+        archiveDb: OpaquePointer,
+        sourceURL: URL,
+        bookId: Int,
+        bookTable: String,
+        tocTable: String
+    ) throws {
+        try exec(archiveDb, SQL.detachSource)
         try BookUpdateManager.shared.convertBookDatabase(at: sourceURL, bookId: bookId)
         try attachDatabase(archiveDb, path: sourceURL.path, schema: "source_db")
         try ArchiveDatabaseTools.copyTable(
@@ -478,27 +513,43 @@ final class BookArchiveIntegrator {
                 tableName: tocTable
             )
         }
-
-        // Close connection explicitly before replacing database files to release locks and avoid resource leaks.
-        try exec(archiveDb, "DETACH DATABASE fts_db;")
-        try exec(archiveDb, "DETACH DATABASE source_db;")
-        sqlite3_close(archiveDb)
-        archiveDbPtr = nil
-
-        try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archiveDbPath)
-        try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsDbPath)
     }
+
+    #if DEBUG
+    private func logIntegrationDiagnostics(archiveDbPath: String, archiveWritePath: String, ftsDbPath: String, ftsWritePath: String) {
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: archiveDbPath) {
+            let perms = attrs[.posixPermissions] as? NSNumber
+            let immutable = attrs[.immutable] as? NSNumber
+            let appendOnly = attrs[.appendOnly] as? NSNumber
+            print(
+                "[BookIntegrate] archive writable:",
+                FileManager.default.isWritableFile(atPath: archiveDbPath),
+                "perms:",
+                perms ?? -1,
+                "immutable:",
+                immutable ?? -1,
+                "appendOnly:",
+                appendOnly ?? -1
+            )
+        }
+        if archiveWritePath != archiveDbPath {
+            print("[BookIntegrate] using temp archive:", archiveWritePath)
+        }
+        if ftsWritePath != ftsDbPath {
+            print("[BookIntegrate] using temp fts:", ftsWritePath)
+        }
+    }
+    #endif
 
     private func openDatabase(path: String) throws -> OpaquePointer {
         var dbPtr: OpaquePointer?
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX
-        if sqlite3_open_v2(path, &dbPtr, flags, nil) != SQLITE_OK {
+        guard sqlite3_open_v2(path, &dbPtr, flags, nil) == SQLITE_OK, let db = dbPtr else {
             let errCode = Int(sqlite3_errcode(dbPtr))
-            let errMsg: String
-            if let raw = dbPtr, let cMsg = sqlite3_errmsg(raw) {
-                errMsg = String(cString: cMsg)
+            let errMsg = if let raw = dbPtr, let cMsg = sqlite3_errmsg(raw) {
+                String(cString: cMsg)
             } else {
-                errMsg = "Unknown error"
+                "Unknown error"
             }
             if let raw = dbPtr { sqlite3_close(raw) }
             throw NSError(
@@ -507,31 +558,16 @@ final class BookArchiveIntegrator {
                 userInfo: [NSLocalizedDescriptionKey: errMsg]
             )
         }
-        sqlite3_busy_timeout(dbPtr, 5000)
-        return dbPtr!
+        sqlite3_busy_timeout(db, 5000)
+        return db
     }
 
     private func ensureWritableSQLite(at path: String) throws {
         let fm = FileManager.default
 
         if !fm.fileExists(atPath: path) {
-            var dbPtr: OpaquePointer?
-            if sqlite3_open_v2(
-                path,
-                &dbPtr,
-                SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                nil
-            ) != SQLITE_OK {
-                let errCode = Int(sqlite3_errcode(dbPtr))
-                let errMsg = dbPtr.flatMap { String(cString: sqlite3_errmsg($0)) } ?? "Unknown error"
-                if let raw = dbPtr { sqlite3_close(raw) }
-                throw NSError(
-                    domain: "BookArchiveIntegrator",
-                    code: errCode,
-                    userInfo: [NSLocalizedDescriptionKey: errMsg]
-                )
-            }
-            if let raw = dbPtr { sqlite3_close(raw) }
+            let db = try openDatabase(path: path, flags: SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)
+            sqlite3_close(db)
         }
 
         if fm.isWritableFile(atPath: path) { return }
@@ -608,7 +644,7 @@ final class BookArchiveIntegrator {
     private func resolveValidSourceURL(for bookId: Int) async throws -> URL {
         var lastError: Error?
 
-        for _ in 0..<2 {
+        for _ in 0 ..< 2 {
             let sourceURL = try await BookDownloadManager.shared.ensureBookDownloaded(
                 bookId: bookId
             )
@@ -625,7 +661,7 @@ final class BookArchiveIntegrator {
     }
 
     private func sourceHasBookTable(sourceURL: URL, bookId: Int) -> Bool {
-        guard fileExistsAndHasSize(at: sourceURL.path) else { return false }
+        guard FileManager.default.isNonEmptyFile(atPath: sourceURL.path) else { return false }
         guard let db = try? openReadOnlyDatabase(path: sourceURL.path) else { return false }
         defer { sqlite3_close(db) }
         return tableExists(db: db, tableName: "b\(bookId)")
@@ -634,38 +670,28 @@ final class BookArchiveIntegrator {
     private func listTables(path: String) -> [String] {
         guard let db = try? openReadOnlyDatabase(path: path) else { return [] }
         defer { sqlite3_close(db) }
-
-        let sql = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-
-        var tables: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let namePtr = sqlite3_column_text(stmt, 0) {
-                let bytes = sqlite3_column_bytes(stmt, 0)
-                let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
-                tables.append(String(decoding: buffer, as: UTF8.self))
-            }
-        }
-        return tables
+        return db.listTableNames()
     }
 
     private func openReadOnlyDatabase(path: String) throws -> OpaquePointer {
+        let db = try openDatabase(path: path, flags: SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX)
+        sqlite3_busy_timeout(db, 5000)
+        return db
+    }
+
+    private func openDatabase(path: String, flags: Int32) throws -> OpaquePointer {
         var dbPtr: OpaquePointer?
-        let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
-        if sqlite3_open_v2(path, &dbPtr, flags, nil) != SQLITE_OK {
+        guard sqlite3_open_v2(path, &dbPtr, flags, nil) == SQLITE_OK, let db = dbPtr else {
             let errCode = Int(sqlite3_errcode(dbPtr))
             let errMsg = dbPtr.flatMap { String(cString: sqlite3_errmsg($0)) } ?? "Unknown error"
-            sqlite3_close(dbPtr)
+            if let raw = dbPtr { sqlite3_close(raw) }
             throw NSError(
                 domain: "BookArchiveIntegrator",
                 code: errCode,
                 userInfo: [NSLocalizedDescriptionKey: errMsg]
             )
         }
-        sqlite3_busy_timeout(dbPtr, 5000)
-        return dbPtr!
+        return db
     }
 
     private func sqliteError(_ db: OpaquePointer?, message: String) -> NSError {
@@ -679,15 +705,20 @@ final class BookArchiveIntegrator {
         )
     }
 
-    private func fileExistsAndHasSize(at path: String) -> Bool {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: path) else { return false }
-        let size = (try? fm.attributesOfItem(atPath: path)[.size] as? NSNumber)?.int64Value ?? 0
-        return size > 0
+    private enum SQL {
+        static func checkTableExists(schema: String) -> String {
+            "SELECT 1 FROM \(schema).sqlite_master WHERE type='table' AND name=? LIMIT 1;"
+        }
+        static func dropTable(name: String) -> String {
+            "DROP TABLE IF EXISTS \(name);"
+        }
+        static let detachSource = "DETACH DATABASE source_db;"
+        static let detachFts = "DETACH DATABASE fts_db;"
+        static let vacuum = "VACUUM;"
     }
 
     private func tableExists(db: OpaquePointer, schemaName: String = "main", tableName: String) -> Bool {
-        let sql = "SELECT 1 FROM \(schemaName).sqlite_master WHERE type='table' AND name=? LIMIT 1;"
+        let sql = SQL.checkTableExists(schema: schemaName)
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
             return false
@@ -702,20 +733,6 @@ final class BookArchiveIntegrator {
     }
 
     private func listTables(db: OpaquePointer, schemaName: String) -> [String] {
-        let sql = "SELECT name FROM \(schemaName).sqlite_master WHERE type='table' ORDER BY name;"
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
-        defer { sqlite3_finalize(stmt) }
-
-        var tables: [String] = []
-        while sqlite3_step(stmt) == SQLITE_ROW {
-            if let namePtr = sqlite3_column_text(stmt, 0) {
-                let bytes = sqlite3_column_bytes(stmt, 0)
-                let buffer = UnsafeBufferPointer(start: namePtr, count: Int(bytes))
-                tables.append(String(decoding: buffer, as: UTF8.self))
-            }
-        }
-        return tables
+        db.listTableNames(schemaName: schemaName)
     }
-
 }

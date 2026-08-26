@@ -22,16 +22,16 @@ class TOCNode: Identifiable {
     var endID: Int = .max
 
     init(from toc: TOC) {
-        self.bab = toc.bab.convertToArabicDigits()
-        self.level = toc.level
-        self.sub = toc.sub
-        self.id = toc.id
+        bab = toc.bab.convertToArabicDigits()
+        level = toc.level
+        sub = toc.sub
+        id = toc.id
     }
 }
 
 struct TOC {
-    let bab: String   // Memetakan ke kolom 'tit'
-    let level: Int    // Memetakan ke kolom 'lvl'
+    let bab: String // Memetakan ke kolom 'tit'
+    let level: Int // Memetakan ke kolom 'lvl'
     let sub: Int
     let id: Int
 }
@@ -49,27 +49,31 @@ class BooksData: Codable, Identifiable {
     var tafseerNam: String?
     var pdfCs: Int?
     var isMultiLanguage: Bool {
-        return pdfCs == 3
+        pdfCs == 3
     }
+
     var isImported: Bool {
-        return pdfCs == 4
+        pdfCs == 4
     }
+
     var bithoqoh: String = .init() {
         didSet {
             bithoqoh = bithoqoh.convertToArabicDigits()
         }
     }
+
     var info: String = .init() {
         didSet {
             info = info.convertToArabicDigits()
         }
     }
+
     var isChecked: Bool = true
 
     init(id: Int, book: String, archive: Int, muallif: Int, bithoqoh: String = "", info: String = "") {
         self.id = id
         self.book = StringInterner.shared.intern(book)
-        self.normalizedBook = book.normalizeArabic(false)
+        normalizedBook = book.normalizeArabic(false)
         self.archive = archive
         self.muallif = muallif
         self.bithoqoh = bithoqoh.convertToArabicDigits()
@@ -77,7 +81,7 @@ class BooksData: Codable, Identifiable {
     }
 }
 
-class CategoryData: NSCopying {
+class CategoryData {
     let id: Int
     let name: String
     let normalizedName: String
@@ -89,18 +93,49 @@ class CategoryData: NSCopying {
     init(id: Int, name: String, level: Int, order: Int) {
         self.id = id
         self.name = StringInterner.shared.intern(name)
-        self.normalizedName = name.normalizeArabic(false)
+        normalizedName = name.normalizeArabic(false)
         self.level = level
         self.order = order
     }
 
-    func copy(with zone: NSZone? = nil) -> Any {
-        return CategoryData(
-            id: self.id,
+    func copy(with zone: NSZone? = nil) -> CategoryData {
+        CategoryData(
+            id: id,
             name: StringInterner.shared.intern(name),
-            level: self.level,
-            order: self.order
+            level: level,
+            order: order
         )
+    }
+
+    var allBooks: [BooksData] {
+        var result: [BooksData] = []
+        collectBooks(into: &result)
+        return result
+    }
+
+    var allSubcategories: [CategoryData] {
+        var result: [CategoryData] = []
+        collectSubcategories(into: &result)
+        return result
+    }
+
+    private func collectBooks(into books: inout [BooksData]) {
+        for child in children {
+            if let book = child as? BooksData {
+                books.append(book)
+            } else if let sub = child as? CategoryData {
+                sub.collectBooks(into: &books)
+            }
+        }
+    }
+
+    private func collectSubcategories(into categories: inout [CategoryData]) {
+        for child in children {
+            if let sub = child as? CategoryData {
+                categories.append(sub)
+                sub.collectSubcategories(into: &categories)
+            }
+        }
     }
 }
 
@@ -201,13 +236,7 @@ struct SearchResultItem: Codable, CopyableResult, Hashable {
         try container.encode(bookTitle, forKey: .bookTitle)
         try container.encode(page, forKey: .page)
         try container.encode(part, forKey: .part)
-
-        let data = try NSKeyedArchiver.archivedData(
-            withRootObject: attributedText,
-            requiringSecureCoding: true
-        )
-
-        try container.encode(data, forKey: .attributedText)
+        try container.encode(attributedText.archivedData(), forKey: .attributedText)
     }
 
     init(from decoder: Decoder) throws {
@@ -221,27 +250,7 @@ struct SearchResultItem: Codable, CopyableResult, Hashable {
         part = try container.decode(Int.self, forKey: .part)
 
         let data = try container.decode(Data.self, forKey: .attributedText)
-
-        #if os(macOS)
-        let allowedClasses = [
-            NSAttributedString.self,
-            NSMutableAttributedString.self,
-            NSColor.self,
-            NSFont.self,
-            NSParagraphStyle.self,
-            NSMutableParagraphStyle.self
-        ]
-
-        attributedText = try NSKeyedUnarchiver.unarchivedObject(
-            ofClasses: allowedClasses,
-            from: data
-        ) as? NSAttributedString ?? NSAttributedString(string: "")
-        #else
-        attributedText = try NSKeyedUnarchiver.unarchivedObject(
-            ofClass: NSAttributedString.self,
-            from: data
-        ) ?? NSAttributedString(string: "")
-        #endif
+        attributedText = NSAttributedString.unarchiveSecure(from: data) ?? NSAttributedString(string: "")
     }
 
     func hash(into hasher: inout Hasher) {
@@ -254,15 +263,15 @@ enum SearchSortKey: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .bookTitle: return "Kitab"
-        case .page: return "Halaman"
-        case .part: return "Juz"
-        case .content: return "Konten"
+        case .bookTitle: "Kitab"
+        case .page: "Halaman"
+        case .part: "Juz"
+        case .content: "Konten"
         }
     }
 }
 
-struct SearchResultsSorter {
+enum SearchResultsSorter {
     static func sort(_ results: inout [SearchResultItem], by key: SearchSortKey, ascending asc: Bool) {
         switch key {
         case .bookTitle:
@@ -351,7 +360,6 @@ struct SavedResultsItem {
 }
 
 struct Muallif: Decodable {
-
     /// Nama pengarang (auth)
     let nama: String
 
@@ -364,6 +372,7 @@ struct Muallif: Decodable {
     // Properti tambahan yang sering ada di Syamilah (tapi tidak di kueri Anda)
 
     // MARK: - CodingKeys (Jika nama properti Swift berbeda dari nama Kolom SQL)
+
     private enum CodingKeys: String, CodingKey {
         case nama = "auth"
         case info = "inf"
@@ -373,40 +382,75 @@ struct Muallif: Decodable {
     init(nama: String, info: String, namaLengkap: String) {
         self.nama = nama
         self.info = info
-            .replacingOccurrences(of: "\\n", with: "\n")
+            .replacing("\\n", with: "\n")
             .convertToArabicDigits()
         self.namaLengkap = namaLengkap.convertToArabicDigits()
     }
 }
 
-// MARK: - 3. FUNGSI PENGAMBILAN DATA
+// MARK: - NSAttributedString Secure Coding
 
-extension BookConnection {
-
-    /*
-    // Fungsi helper untuk debugging tree structure dengan depth counter
-    func printTree(_ nodes: [TOCNode], indent: String = "", level: Int = 0) {
-        for node in nodes {
-            print("\(indent)[\(node.id)] L\(node.level)-S\(node.sub): \(node.bab)")
-            if !node.children.isEmpty {
-                print("\(indent)  ↓ (\(node.children.count) children)")
-                printTree(node.children, indent: indent + "  ", level: level + 1)
-            }
-        }
+extension NSAttributedString {
+    static var secureCodingClasses: [AnyClass] {
+        #if os(macOS)
+        [
+            NSAttributedString.self,
+            NSMutableAttributedString.self,
+            NSColor.self,
+            NSFont.self,
+            NSParagraphStyle.self,
+            NSMutableParagraphStyle.self,
+            NSDictionary.self,
+            NSArray.self,
+            NSString.self,
+            NSNumber.self,
+        ]
+        #elseif canImport(UIKit)
+        [
+            NSAttributedString.self,
+            NSMutableAttributedString.self,
+            UIColor.self,
+            UIFont.self,
+            NSParagraphStyle.self,
+            NSMutableParagraphStyle.self,
+            NSDictionary.self,
+            NSArray.self,
+            NSString.self,
+            NSNumber.self,
+        ]
+        #else
+        [
+            NSAttributedString.self,
+            NSMutableAttributedString.self,
+            NSParagraphStyle.self,
+            NSMutableParagraphStyle.self,
+            NSDictionary.self,
+            NSArray.self,
+            NSString.self,
+            NSNumber.self,
+        ]
+        #endif
     }
 
-    // Fungsi untuk validasi tree
-    func validateTree(_ nodes: [TOCNode], parentLevel: Int = 0) -> Bool {
-        for node in nodes {
-            if parentLevel > 0 && node.level <= parentLevel {
-                print("⚠️ ERROR: Child level (\(node.level)) <= parent level (\(parentLevel))")
-                return false
-            }
-            if !validateTree(node.children, parentLevel: node.level) {
-                return false
-            }
-        }
-        return true
+    func archivedData() throws -> Data {
+        try NSKeyedArchiver.archivedData(
+            withRootObject: self,
+            requiringSecureCoding: true
+        )
     }
-     */
+
+    static func unarchiveSecure(from data: Data) -> NSAttributedString? {
+        do {
+            let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+            unarchiver.requiresSecureCoding = true
+            let decoded = unarchiver.decodeObject(
+                of: secureCodingClasses,
+                forKey: NSKeyedArchiveRootObjectKey
+            ) as? NSAttributedString
+            unarchiver.finishDecoding()
+            return decoded
+        } catch {
+            return nil
+        }
+    }
 }
