@@ -21,26 +21,22 @@ struct iPadLayout: View {
     /// Sidebar search tetap lokal — dipakai hanya untuk filter sidebar (Favorites & History)
     @State private var sidebarSearchText: String = ""
 
-    private var filteredFavorites: [BooksData] {
+    private func filterSidebarBooks(_ books: [BooksData]) -> [BooksData] {
         if sidebarSearchText.isEmpty || !path.isEmpty {
-            return historyViewModel.favoriteBooks
+            return books
         }
-        return historyViewModel.favoriteBooks.filter {
-            $0.book.normalizeArabic(false).contains(
-                sidebarSearchText.normalizeArabic(false)
-            )
+        let normalized = sidebarSearchText.normalizeArabic(false)
+        return books.filter {
+            $0.book.normalizeArabic(false).contains(normalized)
         }
     }
 
+    private var filteredFavorites: [BooksData] {
+        filterSidebarBooks(historyViewModel.favoriteBooks)
+    }
+
     private var filteredHistory: [BooksData] {
-        if sidebarSearchText.isEmpty || !path.isEmpty {
-            return historyViewModel.historyBooks
-        }
-        return historyViewModel.historyBooks.filter {
-            $0.book.normalizeArabic(false).contains(
-                sidebarSearchText.normalizeArabic(false)
-            )
-        }
+        filterSidebarBooks(historyViewModel.historyBooks)
     }
 
     private func searchPrompt(for tab: iOSTab) -> String {
@@ -66,24 +62,10 @@ struct iPadLayout: View {
                         prompt: "Search Favorites & History".localized
                     )
                     .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button {
-                                showSettings = true
-                            } label: {
-                                Image(systemName: "gear")
-                            }
-                            .accessibilityLabel(String(localized: "Settings"))
-                            .help(String(localized: "Settings"))
-                        }
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(action: { showingAddFavorites = true }) {
-                                Image(systemName: "plus")
-                            }
-                            .accessibilityLabel(
-                                String(localized: "Add Favorite")
-                            )
-                            .help(String(localized: "Add Favorite"))
-                        }
+                        HomeToolbarItems(
+                            showSettings: $showSettings,
+                            showingAddFavorites: $showingAddFavorites
+                        )
                     }
                     .withActiveIntegrationStates()
                     .navigationDestination(for: iOSTab.self) { tab in

@@ -375,7 +375,7 @@ class OptionSearchVC: NSViewController {
         bm.delegate = self
         let window = NSWindow(contentViewController: bm)
         window.setFrameAutosaveName("searchResultsSheetWindowFrame")
-        window.isReleasedWhenClosed = true
+        window.isReleasedWhenClosed = false
         view.window?.beginSheet(window)
     }
 

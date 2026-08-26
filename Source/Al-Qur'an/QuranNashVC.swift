@@ -28,7 +28,6 @@ class QuranNashVC: NSViewController {
         textView.backgroundColor = .bgSepia
         textDelegate = textView
         stackView.setCustomSpacing(0, after: hLine)
-        // Do view setup here.
     }
 
     override func viewDidAppear() {
@@ -54,53 +53,13 @@ class QuranNashVC: NSViewController {
     }
 
     @IBAction func searchCurrentBook(_ sender: NSButton) {
-        if optSearchPopover == nil {
-            let popover = NSPopover()
-            popover.behavior = .transient
-            optSearchPopover = popover
-        }
-
-        guard let optSearchPopover else { return }
-
-        if optSearch == nil {
-            let vc = OptionSearchVC()
-            vc.view.frame = NSRect(x: 0, y: 0, width: 350, height: 300)
-            optSearch = vc
-        }
-
-        guard let optSearch,
-              let bkId = QuranDataManager.shared.selectedBook?.id
-        else {
-            ReusableFunc.showAlert(
-                title: NSLocalizedString("noBookSelectedTitle", comment: ""),
-                message: NSLocalizedString("noBookSelectedDesc", comment: "")
-            )
-            return
-        }
-
-        optSearch.bkId = "b\(bkId)"
-
-        optSearchPopover.contentViewController = optSearch
-
-        optSearchPopover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .maxY)
-        optSearch.compactButton()
-
-        optSearch.onSelectedItem = { id, query, mode, nearDistance in
-            Task.detached { [weak self] in
-                await self?.didSelectResult(
-                    for: id,
-                    highlightText: query,
-                    mode: mode,
-                    nearDistance: Int(nearDistance) ?? 10
-                )
-            }
-        }
-
-        optSearch.onCleanUp = { [weak self] in
-            self?.optSearchPopover?.performClose(sender)
-            self?.optSearch = nil
-            self?.optSearchPopover = nil
-        }
+        OptionSearchPopover.present(
+            popover: &optSearchPopover,
+            searchVC: &optSearch,
+            bookID: manager.selectedBook?.id,
+            from: sender,
+            delegate: self
+        )
     }
 
     @IBAction func navigationSegmentDidClick(_ sender: NSSegmentedControl) {
@@ -112,53 +71,47 @@ class QuranNashVC: NSViewController {
     }
 
     @IBAction func nextPage(_ sender: Any?) {
-        guard let content = manager.nextPage() else {
-            updateNotFoundString()
-            return
-        }
-
-        loadText(content.nash, content: content)
+        navigatePage(manager.nextPage())
     }
 
     @IBAction func previousPage(_ sender: Any?) {
-        guard let content = manager.prevPage() else {
-            updateNotFoundString()
-            return
-        }
+        navigatePage(manager.prevPage())
+    }
 
-        loadText(content.nash, content: content)
+    private func navigatePage(_ content: BookContent?) {
+        loadText(content?.nash, content: content, navigateToContent: true)
     }
 
     private func loadText(
-        _ text: String,
+        _ text: String?,
         content: BookContent? = nil,
         navigateToContent: Bool = false
     ) {
-        textDelegate?.loadIbarotText(
-            text, content: content, color: .header,
-            isMultiLanguage: false, isImported: false,
+        guard let text else {
+            updateNotFoundString()
+            return
+        }
+        let options = IbarotTextOptions(
+            content: content,
+            color: .header,
+            isMultiLanguage: false,
+            isImported: false,
             keepScrollPosition: false
         )
+
+        textDelegate?.loadIbarotText(text, options: options)
 
         if navigateToContent, let content {
             didNavigateContent?(content)
         }
     }
-
 }
 
 extension QuranNashVC: QuranDelegate {
     func didSelectAya(_ surah: SurahNode, aya: Quran) {
+        let nash = manager.loadTafseer(for: aya.aya, in: surah.id)
+        loadText(nash)
         ayahTextField.stringValue = aya.nass
-
-        if let nash = manager.loadTafseer(for: aya.aya, in: surah.id) {
-            loadText(nash)
-        } else {
-            #if DEBUG
-            print("error load nash to textview")
-            #endif
-            updateNotFoundString()
-        }
     }
 }
 
@@ -170,17 +123,10 @@ extension QuranNashVC: OptionSearchDelegate {
         nearDistance: Int
     ) async {
         guard let selectedBook = manager.selectedBook,
-              let content = manager.bkConn.getContent(bkid: String(selectedBook.id), contentId: id, quran: true) else {
-            return
-        }
+              let content = manager.bkConn.getContent(bkid: String(selectedBook.id), contentId: id, quran: true)
+        else { return }
 
-        loadText(content.nash)
-
-        try? await Task.sleep(nanoseconds: 3_000_000)
-
+        loadText(content.nash, content: content, navigateToContent: true)
         await textDelegate?.highlightAndScrollToText(highlightText, mode: mode, nearDistance: nearDistance)
-        await MainActor.run {
-            didNavigateContent?(content)
-        }
     }
 }

@@ -38,13 +38,18 @@ extension CategoryData: Hashable {
 }
 
 extension BooksData: Hashable {
-    public static func == (lhs: BooksData, rhs: BooksData) -> Bool { lhs.id == rhs.id }
-    public func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    public static func == (lhs: BooksData, rhs: BooksData) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 // MARK: - Controller
-class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewController<LibraryItem> {
 
+class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewController<LibraryItem> {
     private(set) var expandedCategories: Set<Int> = []
     private var previousExpandedCategories: Set<Int> = []
     private var pendingCategories: [CategoryData]?
@@ -55,6 +60,7 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        collectionView.delegate = self
         if let pending = pendingCategories {
             applyCategories(pending)
             pendingCategories = nil
@@ -66,10 +72,10 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
         let indentationLevel: Int
 
         switch item {
-        case .category(let category):
+        case let .category(category):
             root = true
             indentationLevel = category.level
-        case .book(let book):
+        case let .book(book):
             root = false
             let level = LibraryDataManager.shared.categoryLevel(for: book)
             indentationLevel = level == 0 ? 1 : 2
@@ -90,17 +96,15 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
         fatalError("\(type(of: self)) harus override makeBookCellRegistration()")
     }
 
-    lazy var loadMoreCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, LibraryItem> = {
-        UICollectionView.CellRegistration { [weak self] cell, _, item in
-            var content = cell.defaultContentConfiguration()
-            content.text = "Load More... (\(self?.loadMoreCount ?? 0) remaining)"
-            content.textProperties.color = .tintColor
-            content.textProperties.alignment = .center
-            cell.contentConfiguration = content
-            cell.accessories = []
-            cell.applyThemeConfigurationUpdateHandler()
-        }
-    }()
+    lazy var loadMoreCellRegistration: UICollectionView.CellRegistration<UICollectionViewListCell, LibraryItem> = UICollectionView.CellRegistration { [weak self] cell, _, item in
+        var content = cell.defaultContentConfiguration()
+        content.text = "Load More... (\(self?.loadMoreCount ?? 0) remaining)"
+        content.textProperties.color = .tintColor
+        content.textProperties.alignment = .center
+        cell.contentConfiguration = content
+        cell.accessories = []
+        cell.applyThemeConfigurationUpdateHandler()
+    }
 
     // MARK: - Data Source
 
@@ -199,7 +203,7 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
     }
 
     // MARK: - Expand/Collapse
-    
+
     /// Toggles the expanded state of a CategoryData and animates the chevron.
     func toggleCategory(_ category: CategoryData) {
         let willBeExpanded = !expandedCategories.contains(category.id)
@@ -216,34 +220,55 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
     }
 
     // MARK: - Helpers
-    func getAllBooks(in category: CategoryData) -> [BooksData] {
-        var books: [BooksData] = []
-        _getAllBooks(in: category, books: &books)
-        return books
-    }
 
-    private func _getAllBooks(in category: CategoryData, books: inout [BooksData]) {
-        for child in category.children {
-            if let book = child as? BooksData {
-                books.append(book)
-            } else if let sub = child as? CategoryData {
-                _getAllBooks(in: sub, books: &books)
-            }
-        }
+    func getAllBooks(in category: CategoryData) -> [BooksData] {
+        category.allBooks
     }
 
     func getAllCategories(in category: CategoryData) -> [CategoryData] {
-        var categories: [CategoryData] = []
-        _getAllCategories(in: category, categories: &categories)
-        return categories
+        category.allSubcategories
     }
 
-    private func _getAllCategories(in category: CategoryData, categories: inout [CategoryData]) {
-        for child in category.children {
-            if let sub = child as? CategoryData {
-                categories.append(sub)
-                _getAllCategories(in: sub, categories: &categories)
-            }
+    func reconfigureCategories(including extraItems: [LibraryItem] = []) {
+        var items: [LibraryItem] = dataSource.snapshot().itemIdentifiers.filter {
+            if case .category = $0 { return true }
+            return false
         }
+        items.append(contentsOf: extraItems)
+        reconfigureItems(items)
+    }
+
+    func reconfigureCategories(includingBook book: BooksData) {
+        reconfigureCategories(including: [.book(book)])
+    }
+
+    func reconfigureCategories(includingBooks books: [BooksData]) {
+        reconfigureCategories(including: books.map { .book($0) })
+    }
+
+    // MARK: - Selection Hooks
+
+    open func didSelectBook(_ book: BooksData) {}
+    open func didSelectLoadMore() {}
+}
+
+// MARK: - UICollectionViewDelegate
+
+extension iOSHierarchicalCollectionViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
+
+        switch item {
+        case let .category(category):
+            toggleCategory(category)
+        case let .book(book):
+            didSelectBook(book)
+        case .loadMore:
+            didSelectLoadMore()
+        }
+    }
+
+    func collectionView(_ collectionView: UICollectionView, canFocusItemAt indexPath: IndexPath) -> Bool {
+        !isGroup(dataSource.itemIdentifier(for: indexPath))
     }
 }

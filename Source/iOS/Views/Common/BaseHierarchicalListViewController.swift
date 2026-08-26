@@ -26,6 +26,42 @@ extension UICollectionViewListCell {
     }
 }
 
+extension UIView {
+    func pinToEdges(of parentView: UIView) {
+        translatesAutoresizingMaskIntoConstraints = false
+        parentView.addSubview(self)
+        NSLayoutConstraint.activate([
+            topAnchor.constraint(equalTo: parentView.topAnchor),
+            bottomAnchor.constraint(equalTo: parentView.bottomAnchor),
+            leadingAnchor.constraint(equalTo: parentView.leadingAnchor),
+            trailingAnchor.constraint(equalTo: parentView.trailingAnchor),
+        ])
+    }
+}
+
+extension UICollectionLayoutListConfiguration {
+    mutating func setStandardItemSeparatorHandler<Item>(
+        dataSource: @escaping () -> UICollectionViewDiffableDataSource<some Any, Item>?,
+        trailingOffset: @escaping (Item) -> CGFloat
+    ) {
+        itemSeparatorHandler = { indexPath, sectionSeparatorConfiguration in
+            var separatorConfig = sectionSeparatorConfiguration
+            guard let ds = dataSource(),
+                  let item = ds.itemIdentifier(for: indexPath)
+            else { return separatorConfig }
+
+            let trailing = trailingOffset(item)
+            separatorConfig.bottomSeparatorInsets = NSDirectionalEdgeInsets(
+                top: 0,
+                leading: ListLayoutMetrics.defaultPadding,
+                bottom: 0,
+                trailing: trailing
+            )
+            return separatorConfig
+        }
+    }
+}
+
 /// Base class generik untuk UICollectionView dengan layout hierarkis (outline).
 class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewController {
     private(set) var collectionView: UICollectionView!
@@ -49,7 +85,7 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
 
     /// Wajib di-override oleh subclass untuk menentukan offset separator tiap item
     open func trailingOffset(for item: ItemType) -> CGFloat {
-        return 16
+        16
     }
 
     // MARK: - Setup UI
@@ -60,38 +96,18 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = SettingsViewModel.shared.useDefaultTheme
             ? .systemGroupedBackground : .appBackground
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.semanticContentAttribute = .forceLeftToRight
-        view.addSubview(collectionView)
-
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-        ])
+        collectionView.pinToEdges(of: view)
     }
 
     private func makeListConfiguration() -> UICollectionLayoutListConfiguration {
         var config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         config.showsSeparators = true
         config.backgroundColor = .appBackground
-
-        config.itemSeparatorHandler = { [weak self] indexPath, sectionSeparatorConfiguration in
-            var separatorConfig = sectionSeparatorConfiguration
-            guard let self,
-                  let dataSource = self.dataSource,
-                  let item = dataSource.itemIdentifier(for: indexPath)
-            else { return separatorConfig }
-
-            let trailing = trailingOffset(for: item)
-            separatorConfig.bottomSeparatorInsets = NSDirectionalEdgeInsets(
-                top: 0, leading: ListLayoutMetrics.defaultPadding, bottom: 0, trailing: trailing
-            )
-            return separatorConfig
-        }
-
+        config.setStandardItemSeparatorHandler(dataSource: { [weak self] in self?.dataSource }, trailingOffset: { [weak self] item in
+            self?.trailingOffset(for: item) ?? 16
+        })
         return config
     }
 
@@ -99,14 +115,14 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
 
     /// Rumus matematika yang sama untuk menghitung offset separator
     func calculateTrailingOffset(isRoot root: Bool, indentationLevel: Int) -> CGFloat {
-        if root && indentationLevel > 0 {
-            return 86 /* 24 + 38 -image dan padding + 24 -untuk chevron */
+        if root, indentationLevel > 0 {
+            86 /* 24 + 38 -image dan padding + 24 -untuk chevron */
         } else if indentationLevel > 1 {
-            return root ? 118 /* 56 + 38 + 24 */ : 94
+            root ? 118 /* 56 + 38 + 24 */ : 94
         } else {
-            return root
-            ? CGFloat(16 + (32 * indentationLevel) + 38 + 24)
-            : CGFloat(16 + (32 * indentationLevel) + 38)
+            root
+                ? CGFloat(16 + (32 * indentationLevel) + 38 + 24)
+                : CGFloat(16 + (32 * indentationLevel) + 38)
         }
     }
 
@@ -124,8 +140,8 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
         dataSource.apply(sectionSnapshot, to: section, animatingDifferences: true)
 
         if let indexPath = dataSource.indexPath(for: item),
-           let cell = collectionView.cellForItem(at: indexPath) {
-
+           let cell = collectionView.cellForItem(at: indexPath)
+        {
             UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseInOut) {
                 if var config = cell.contentConfiguration as? ListContentConfiguration {
                     config.isExpanded = isExpanding
@@ -152,8 +168,8 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
             let sectionIdentifier = snapshot.sectionIdentifiers[section]
             let sectionItems = snapshot.itemIdentifiers(inSection: sectionIdentifier)
 
-            let minRow = paths.map { $0.row }.min() ?? 0
-            let maxRow = paths.map { $0.row }.max() ?? 0
+            let minRow = paths.map(\.row).min() ?? 0
+            let maxRow = paths.map(\.row).max() ?? 0
 
             let startRow = max(0, minRow - margin)
             let endRow = min(sectionItems.count - 1, maxRow + margin)
@@ -185,7 +201,7 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
 
     /// Search Data Type
     func isGroup(_ item: LibraryItem?) -> Bool {
-        return switch item {
+        switch item {
         case .category: true
         default: false
         }

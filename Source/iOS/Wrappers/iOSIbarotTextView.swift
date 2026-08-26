@@ -83,77 +83,22 @@ class iOSCustomIbarotTextView: UITextView {
               firstRange.length > 0,
               firstRange.location + firstRange.length <= nsString.length else { return }
 
-
-
-        let path = UIBezierPath()
-        for range in ranges {
-            guard let startPos = position(from: beginningOfDocument, offset: range.location),
-                  let endPos = position(from: startPos, offset: range.length),
-                  let textRange = textRange(from: startPos, to: endPos) else { continue }
-            
-            let rects = selectionRects(for: textRange)
-            for selectionRect in rects {
-                let rect = selectionRect.rect
-                guard rect.width > 0, rect.height > 0 else { continue }
-                // Tambahkan padding kecil agar highlight tidak terlalu mepet
-                path.append(UIBezierPath(rect: rect.insetBy(dx: -2, dy: -2)))
-            }
-        }
-        
+        let path = calculateHighlightPath(for: ranges)
         let totalRect = path.bounds
         guard !totalRect.isNull, totalRect.width > 0, totalRect.height > 0 else { return }
-        
+
         let containerView = UIView(frame: totalRect)
         containerView.alpha = 0
         containerView.transform = CGAffineTransform(scaleX: 1.35, y: 1.4)
-        
-        // 1. Background layer kuning dari gabungan rects
+
         let bgLayer = CAShapeLayer()
         let shiftedPath = UIBezierPath(cgPath: path.cgPath)
         shiftedPath.apply(CGAffineTransform(translationX: -totalRect.minX, y: -totalRect.minY))
         bgLayer.path = shiftedPath.cgPath
         bgLayer.fillColor = UIColor.systemYellow.cgColor
         containerView.layer.addSublayer(bgLayer)
-        
-        // 2. Teks di atasnya menggunakan UITextView dengan mengekstrak teks penuh halaman
-        // Ini memastikan layout selaras sempurna dengan teks asli
-        let attrText = NSMutableAttributedString(attributedString: textStorage)
-        let fullRangeLocal = NSRange(location: 0, length: attrText.length)
-        
-        // Sembunyikan semua teks & hapus atribut anotasi lain (seperti link yang bisa meng-override warna text)
-        attrText.addAttribute(NSAttributedString.Key.foregroundColor, value: UIColor.clear, range: fullRangeLocal)
-        attrText.removeAttribute(NSAttributedString.Key.link, range: fullRangeLocal)
-        attrText.removeAttribute(NSAttributedString.Key.backgroundColor, range: fullRangeLocal)
-        attrText.removeAttribute(NSAttributedString.Key.underlineStyle, range: fullRangeLocal)
-        attrText.removeAttribute(NSAttributedString.Key.underlineColor, range: fullRangeLocal)
-        
-        // Hanya tampilkan bagian teks yang dianotasi
-        for rng in ranges {
-            guard rng.location >= 0, rng.location + rng.length <= attrText.length else { continue }
-            attrText.addAttribute(NSAttributedString.Key.foregroundColor, value: UIColor.black, range: rng)
-        }
-        
-        // Buat UITextView dengan lebar yang SAMA dengan view aslinya agar layoutnya 100% identik
-        let textOverlay = UITextView(frame: CGRect(x: 0, y: 0, width: self.bounds.width, height: self.bounds.height))
-        textOverlay.attributedText = attrText
-        textOverlay.backgroundColor = .clear
-        textOverlay.isScrollEnabled = false
-        textOverlay.isEditable = false
-        textOverlay.isSelectable = false
-        textOverlay.textAlignment = self.textAlignment
-        textOverlay.semanticContentAttribute = self.semanticContentAttribute
-        textOverlay.textContainerInset = self.textContainerInset
-        textOverlay.textContainer.lineFragmentPadding = self.textContainer.lineFragmentPadding
-        textOverlay.clipsToBounds = false
-        
-        // Paksa layout agar kita bisa mencari posisi presisinya
-        textOverlay.layoutIfNeeded()
-        
-        // Beri ruang tinggi secukupnya
-        textOverlay.frame.size.height = max(self.bounds.height, textOverlay.contentSize.height)
-        // Geser posisinya sehingga bagian target text tepat berada di (0,0) dari containerView
-        textOverlay.frame.origin = CGPoint(x: -totalRect.minX, y: -totalRect.minY)
-        
+
+        let textOverlay = createOverlayTextView(for: ranges, totalRect: totalRect)
         containerView.addSubview(textOverlay)
         addSubview(containerView)
 
@@ -177,6 +122,56 @@ class iOSCustomIbarotTextView: UITextView {
                 containerView.removeFromSuperview()
             }
         }
+    }
+
+    private func calculateHighlightPath(for ranges: [NSRange]) -> UIBezierPath {
+        let path = UIBezierPath()
+        for range in ranges {
+            guard let startPos = position(from: beginningOfDocument, offset: range.location),
+                  let endPos = position(from: startPos, offset: range.length),
+                  let textRange = textRange(from: startPos, to: endPos) else { continue }
+
+            let rects = selectionRects(for: textRange)
+            for selectionRect in rects {
+                let rect = selectionRect.rect
+                guard rect.width > 0, rect.height > 0 else { continue }
+                path.append(UIBezierPath(rect: rect.insetBy(dx: -2, dy: -2)))
+            }
+        }
+        return path
+    }
+
+    private func createOverlayTextView(for ranges: [NSRange], totalRect: CGRect) -> UITextView {
+        let attrText = NSMutableAttributedString(attributedString: textStorage)
+        let fullRangeLocal = NSRange(location: 0, length: attrText.length)
+
+        attrText.addAttribute(.foregroundColor, value: UIColor.clear, range: fullRangeLocal)
+        attrText.removeAttribute(.link, range: fullRangeLocal)
+        attrText.removeAttribute(.backgroundColor, range: fullRangeLocal)
+        attrText.removeAttribute(.underlineStyle, range: fullRangeLocal)
+        attrText.removeAttribute(.underlineColor, range: fullRangeLocal)
+
+        for rng in ranges {
+            guard rng.location >= 0, rng.location + rng.length <= attrText.length else { continue }
+            attrText.addAttribute(.foregroundColor, value: UIColor.black, range: rng)
+        }
+
+        let textOverlay = UITextView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height))
+        textOverlay.attributedText = attrText
+        textOverlay.backgroundColor = .clear
+        textOverlay.isScrollEnabled = false
+        textOverlay.isEditable = false
+        textOverlay.isSelectable = false
+        textOverlay.textAlignment = textAlignment
+        textOverlay.semanticContentAttribute = semanticContentAttribute
+        textOverlay.textContainerInset = textContainerInset
+        textOverlay.textContainer.lineFragmentPadding = textContainer.lineFragmentPadding
+        textOverlay.clipsToBounds = false
+
+        textOverlay.layoutIfNeeded()
+        textOverlay.frame.size.height = max(bounds.height, textOverlay.contentSize.height)
+        textOverlay.frame.origin = CGPoint(x: -totalRect.minX, y: -totalRect.minY)
+        return textOverlay
     }
 
     func displayedRange(for annotation: Annotation) -> NSRange {
@@ -208,6 +203,7 @@ class PullNavigationIndicatorView: UIView {
         setupView()
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -277,10 +273,10 @@ struct iOSIbarotTextView: UIViewRepresentable {
     @Binding var searchText: String
     var searchMode: SearchMode?
     var nearDistance: Int = 10
-    var targetAnnotation: Annotation? = nil
+    var targetAnnotation: Annotation?
     var isMultiLanguage: Bool = false
     var isImported: Bool = false
-    
+
     var viewModel: ReaderViewModel
 
     // Callbacks for the ViewModel to handle menu actions
@@ -351,14 +347,11 @@ struct iOSIbarotTextView: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         guard let textView = uiView.subviews.first as? iOSCustomIbarotTextView else { return }
 
-        /* NavigationStack di SwiftUI tidak selalu destroy+recreate secara sinkron. Ada kasus di mana updateUIView dipanggil lebih dulu dengan parent baru sebelum SwiftUI selesai memutuskan apakah akan recreate atau reuse — terutama karena `ReaderViewModel` adalah @Observable class (reference type). SwiftUI mungkin mendeteksi "view type sama, posisi sama" dan mencoba reuse dulu, trigger updateUIView, baru kemudian recreate. Jadi context.coordinator.parent = self di updateUIView itu memang defensive programming — dan karena terbukti memperbaiki bug nyata, berarti memang ada skenario di mana Coordinator di-reuse dengan parent stale.
-         */
         context.coordinator.parent = self
 
         viewModel.fetchScrollPosition = { [weak textView] in
             textView?.contentOffset
         }
-
         viewModel.fetchSelectedRange = { [weak textView] in
             textView?.selectedRange
         }
@@ -371,14 +364,45 @@ struct iOSIbarotTextView: UIViewRepresentable {
             textView.semanticContentAttribute = .forceRightToLeft
         }
 
-        let renderer = ArabicTextRenderer()
-        let headerColor = UIColor.header
+        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
+        let rendered = renderAttributedContent(
+            textView: textView,
+            context: context,
+            contentIdChanged: contentIdChanged
+        )
 
+        textView.attributedText = rendered.attributedString
+        textView.invalidateIntrinsicContentSize()
+        textView.setNeedsLayout()
+        textView.layoutIfNeeded()
+
+        restoreScrollAndSelectionIfNeeded(textView: textView, context: context)
+        handleTargetAnnotationAndSearchHighlight(
+            textView: textView,
+            context: context,
+            contentIdChanged: contentIdChanged,
+            searchRanges: rendered.searchRanges,
+            shouldTriggerSearchAnimation: rendered.shouldTriggerSearchAnimation
+        )
+    }
+
+    private struct RenderedAttributedContent {
+        let attributedString: NSMutableAttributedString
+        let searchRanges: [NSRange]
+        let shouldTriggerSearchAnimation: Bool
+    }
+
+    private func renderAttributedContent(
+        textView: iOSCustomIbarotTextView,
+        context: Context,
+        contentIdChanged: Bool
+    ) -> RenderedAttributedContent {
+        let renderer = ArabicTextRenderer()
         let renderResult = renderer.render(
             bookId: viewModel.currentBook?.id,
             contentId: viewModel.currentContentId,
             text: text,
-            highlightColor: headerColor,
+            highlightColor: UIColor.header,
             showHarakat: state.showHarakat,
             isMultiLanguage: isMultiLanguage,
             isImported: isImported
@@ -387,9 +411,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         textView.currentRenderResult = renderResult
         context.coordinator.currentRenderResult = renderResult
 
-        let attributedString = NSMutableAttributedString(
-            attributedString: renderResult.attributedString
-        )
+        let attributedString = NSMutableAttributedString(attributedString: renderResult.attributedString)
         renderer.applyAnnotations(
             annotations,
             to: attributedString,
@@ -397,26 +419,13 @@ struct iOSIbarotTextView: UIViewRepresentable {
             replacementEvents: renderResult.replacementEvents
         )
 
-        // Apply clickable links berdasarkan setting
         if state.clickableAnnotation {
-            attributedString.enumerateAttribute(
-                NSAttributedString.Key("annotationID"),
-                in: NSRange(location: 0, length: attributedString.length)
-            ) { value, range, _ in
-                if let id = value as? Int64 {
-                    let urlString = "annotation://\(id)"
-                    if let url = URL(string: urlString) {
-                        attributedString.addAttribute(.link, value: url, range: range)
-                    }
-                }
-            }
+            applyClickableAnnotationLinks(to: attributedString)
         }
 
-        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
-        
         var searchRanges: [NSRange] = []
         var shouldTriggerSearchAnimation = false
-        
+
         if !searchText.isEmpty {
             searchRanges = attributedString.highlightSearchText(
                 searchText: searchText,
@@ -424,7 +433,6 @@ struct iOSIbarotTextView: UIViewRepresentable {
                 baseColor: .highlightText,
                 nearDistance: nearDistance
             )
-            
             if context.coordinator.processedSearchText != searchText || contentIdChanged {
                 context.coordinator.processedSearchText = searchText
                 shouldTriggerSearchAnimation = true
@@ -433,33 +441,52 @@ struct iOSIbarotTextView: UIViewRepresentable {
             context.coordinator.processedSearchText = nil
         }
 
-        textView.attributedText = attributedString
-        textView.invalidateIntrinsicContentSize()
-        textView.setNeedsLayout()
-        textView.layoutIfNeeded()
+        return RenderedAttributedContent(
+            attributedString: attributedString,
+            searchRanges: searchRanges,
+            shouldTriggerSearchAnimation: shouldTriggerSearchAnimation
+        )
+    }
 
-        // Restore Scroll & Selection exactly once per content ID
-        if context.coordinator.restoredContentId != viewModel.currentContentId ||
-            viewModel.needsScrollRestore
-        {
-            if let scroll = viewModel.readerState.scrollPosition {
-                textView.setContentOffset(scroll, animated: false)
-            } else {
-                textView.setContentOffset(CGPoint(x: 0, y: -textView.adjustedContentInset.top), animated: false)
+    private func applyClickableAnnotationLinks(to attributedString: NSMutableAttributedString) {
+        attributedString.enumerateAttribute(
+            NSAttributedString.Key("annotationID"),
+            in: NSRange(location: 0, length: attributedString.length)
+        ) { value, range, _ in
+            if let id = value as? Int64, let url = URL(string: "annotation://\(id)") {
+                attributedString.addAttribute(.link, value: url, range: range)
             }
-            if let range = viewModel.readerState.selectedRange {
-                textView.selectedRange = range
-            }
-            viewModel.needsScrollRestore = false
-            context.coordinator.restoredContentId = viewModel.currentContentId
         }
+    }
 
+    private func restoreScrollAndSelectionIfNeeded(textView: iOSCustomIbarotTextView, context: Context) {
+        guard context.coordinator.restoredContentId != viewModel.currentContentId || viewModel.needsScrollRestore else { return }
+
+        if let scroll = viewModel.readerState.scrollPosition {
+            textView.setContentOffset(scroll, animated: false)
+        } else {
+            textView.setContentOffset(CGPoint(x: 0, y: -textView.adjustedContentInset.top), animated: false)
+        }
+        if let range = viewModel.readerState.selectedRange {
+            textView.selectedRange = range
+        }
+        viewModel.needsScrollRestore = false
+        context.coordinator.restoredContentId = viewModel.currentContentId
+    }
+
+    private func handleTargetAnnotationAndSearchHighlight(
+        textView: iOSCustomIbarotTextView,
+        context: Context,
+        contentIdChanged: Bool,
+        searchRanges: [NSRange],
+        shouldTriggerSearchAnimation: Bool
+    ) {
         if contentIdChanged {
             context.coordinator.lastHighlightedContentId = viewModel.currentContentId
             context.coordinator.processedAnnotationId = nil
         }
 
-        if let targetAnnotation = targetAnnotation {
+        if let targetAnnotation {
             if context.coordinator.processedAnnotationId != targetAnnotation.id || targetAnnotation.id == nil || contentIdChanged {
                 context.coordinator.processedAnnotationId = targetAnnotation.id
                 DispatchQueue.main.async {
@@ -469,7 +496,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         } else {
             context.coordinator.processedAnnotationId = nil
         }
-        
+
         if shouldTriggerSearchAnimation, !searchRanges.isEmpty, let firstRange = searchRanges.first {
             DispatchQueue.main.async { [weak textView] in
                 textView?.scrollRangeToVisible(firstRange)
@@ -628,71 +655,20 @@ struct iOSIbarotTextView: UIViewRepresentable {
             let sourceRange = currentRenderResult?.remapSourceRange(range) ?? range
             let sourceText = currentRenderResult?.sourceText ?? textView.text ?? ""
 
-            var menuChildren: [UIMenuElement] = []
-            var actions = suggestedActions
-
-            if let existing = parent.viewModel.findBestAnnotation(for: sourceRange) {
-                // Ada anotasi yang tumpang tindih
-                let editAction = UIAction(
-                    title: String(localized: "Edit Note"),
-                    image: UIImage(systemName: "square.and.pencil")
-                ) { [weak self] _ in
-                    if let id = existing.id {
-                        self?.parent.onTapAnnotation?(id)
-                    }
-                }
-
-                let deleteTitle = existing.note == nil ? String(localized: "Delete Highlight") : String(localized: "Delete Highlight & Note")
-                let deleteAction = UIAction(
-                    title: deleteTitle,
-                    image: UIImage(systemName: "trash"),
-                    attributes: .destructive
-                ) { [weak self] _ in
-                    if let id = existing.id {
-                        try? self?.parent.viewModel.deleteAnnotation(id: id)
-                    }
-                }
-
-                menuChildren = [editAction, deleteAction]
+            let menuChildren: [UIMenuElement] = if let existing = parent.viewModel.findBestAnnotation(for: sourceRange) {
+                buildExistingAnnotationMenuChildren(for: existing)
             } else {
-                // Tidak ada anotasi, buat opsi Highlight & Underline
-                let colors = Array(UserDefaults.standard.recentHighlightColors.prefix(UserDefaults.maxRecentColors))
-                let highlightActions = colors.map { color in
-                    UIAction(
-                        title: color.accessibilityName.capitalized,
-                        image: UIImage(systemName: "circle.fill")?.withTintColor(color, renderingMode: .alwaysOriginal)
-                    ) { [weak self] _ in
-                        self?.parent.onAddAnnotation?(sourceRange, .highlight, sourceText, color)
-                    }
-                }
-
-                let highlightMenu = UIMenu(
-                    title: String(localized: "Highlight"),
-                    options: .displayInline,
-                    children: highlightActions
-                )
-
-                let underlineAction = UIAction(
-                    title: String(localized: "Underline"),
-                    image: UIImage(systemName: "underline")
-                ) { [weak self] _ in
-                    self?.parent.onAddAnnotation?(sourceRange, .underline, sourceText, .black)
-                }
-
-                menuChildren = [highlightMenu, underlineAction]
+                buildNewAnnotationMenuChildren(sourceRange: sourceRange, sourceText: sourceText)
             }
 
+            var actions = suggestedActions
             if let shareContent = shareContent(sourceText: sourceText, sourceRange: sourceRange) {
                 let shareAction = UIAction(
                     title: String(localized: "Share with Reference"),
                     image: UIImage(systemName: "square.and.arrow.up")
                 ) { [weak self, weak textView] _ in
                     guard let self, let textView else { return }
-                    self.presentShareSheet(
-                        content: shareContent,
-                        from: textView,
-                        selectedRange: range
-                    )
+                    presentShareSheet(content: shareContent, from: textView, selectedRange: range)
                 }
                 actions.insert(shareAction, at: 1)
             }
@@ -702,15 +678,65 @@ struct iOSIbarotTextView: UIViewRepresentable {
                 image: UIImage(systemName: "highlighter"),
                 children: menuChildren
             )
-
             actions.insert(customMenu, at: 1)
             return UIMenu(children: actions)
+        }
+
+        private func buildExistingAnnotationMenuChildren(for existing: Annotation) -> [UIMenuElement] {
+            let editAction = UIAction(
+                title: String(localized: "Edit Note"),
+                image: UIImage(systemName: "square.and.pencil")
+            ) { [weak self] _ in
+                if let id = existing.id {
+                    self?.parent.onTapAnnotation?(id)
+                }
+            }
+
+            let deleteTitle = existing.note == nil ? String(localized: "Delete Highlight") : String(localized: "Delete Highlight & Note")
+            let deleteAction = UIAction(
+                title: deleteTitle,
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { [weak self] _ in
+                if let id = existing.id {
+                    try? self?.parent.viewModel.deleteAnnotation(id: id)
+                }
+            }
+
+            return [editAction, deleteAction]
+        }
+
+        private func buildNewAnnotationMenuChildren(sourceRange: NSRange, sourceText: String) -> [UIMenuElement] {
+            let colors = Array(UserDefaults.standard.recentHighlightColors.prefix(UserDefaults.maxRecentColors))
+            let highlightActions = colors.map { color in
+                UIAction(
+                    title: color.accessibilityName.capitalized,
+                    image: UIImage(systemName: "circle.fill")?.withTintColor(color, renderingMode: .alwaysOriginal)
+                ) { [weak self] _ in
+                    self?.parent.onAddAnnotation?(sourceRange, .highlight, sourceText, color)
+                }
+            }
+
+            let highlightMenu = UIMenu(
+                title: String(localized: "Highlight"),
+                options: .displayInline,
+                children: highlightActions
+            )
+
+            let underlineAction = UIAction(
+                title: String(localized: "Underline"),
+                image: UIImage(systemName: "underline")
+            ) { [weak self] _ in
+                self?.parent.onAddAnnotation?(sourceRange, .underline, sourceText, .black)
+            }
+
+            return [highlightMenu, underlineAction]
         }
 
         private func shareContent(sourceText: String, sourceRange: NSRange) -> String? {
             guard let selectedText = substring(sourceText, in: sourceRange)?
                 .trimmingCharacters(in: .whitespacesAndNewlines),
-                  !selectedText.isEmpty else { return nil }
+                !selectedText.isEmpty else { return nil }
 
             return parent.viewModel.getShareReference(for: selectedText)
         }
@@ -747,7 +773,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
         private func selectionRect(in textView: UITextView, range: NSRange) -> CGRect {
             guard let start = textView.position(from: textView.beginningOfDocument, offset: range.location),
                   let end = textView.position(from: start, offset: range.length),
-                  let textRange = textView.textRange(from: start, to: end) else {
+                  let textRange = textView.textRange(from: start, to: end)
+            else {
                 return CGRect(
                     x: textView.bounds.midX,
                     y: textView.bounds.midY,

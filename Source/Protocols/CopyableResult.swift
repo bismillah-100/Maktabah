@@ -37,10 +37,8 @@ extension Array where Element: CopyableResult {
     func copyToClipboard(at rows: IndexSet) {
         var dataToCopy = ""
 
-        for row in rows {
-            if self.indices.contains(row) {
-                dataToCopy += self[row].formatForClipboard()
-            }
+        for row in rows where indices.contains(row) {
+            dataToCopy += self[row].formatForClipboard()
         }
 
         let pasteboard = NSPasteboard.general
@@ -50,8 +48,8 @@ extension Array where Element: CopyableResult {
 }
 
 extension ReusableFunc {
-    static func copyResults<T: CopyableResult>(
-        _ items: [T],
+    static func copyResults(
+        _ items: [some CopyableResult],
         tableView: NSTableView
     ) {
         let clickedRow = tableView.clickedRow
@@ -66,8 +64,7 @@ extension ReusableFunc {
         }
 
         if clickedRow >= 0, !selectedRows.contains(clickedRow) {
-            items.copyToClipboard(at: IndexSet(integer: clickedRow)
-            )
+            items.copyToClipboard(at: IndexSet(integer: clickedRow))
             return
         }
 
@@ -75,4 +72,3 @@ extension ReusableFunc {
     }
 }
 #endif
-

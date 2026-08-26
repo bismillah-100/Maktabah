@@ -301,30 +301,37 @@ struct OfflineImportFormView: View {
         }
     }
 
-    private var selectBookField: some View {
-        AdaptiveLabeledContent("Select Book") {
-            Button(action: { showBookPicker = true }) {
-                HStack {
-                    if let bookId = selectedBookId,
-                       let book = LibraryDataManager.shared.booksById[bookId]
-                    {
-                        Text("\(book.book) (ID: \(bookId))")
-                            .foregroundColor(.primary)
-                    } else {
-                        Text("Click to select...")
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption)
+    private func pickerSelectorButton(title: String?, onSelect: @escaping () -> Void) -> some View {
+        Button(action: onSelect) {
+            HStack {
+                if let title {
+                    Text(title)
+                        .foregroundColor(.primary)
+                } else {
+                    Text("Click to select...")
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 8)
-                .frame(minHeight: 24)
-                .background(Color.gray.opacity(0.1))
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .environment(\.layoutDirection, .rightToLeft)
-            .buttonStyle(.plain)
+            .padding(.horizontal, 8)
+            .frame(minHeight: 24)
+            .background(Color.gray.opacity(0.1))
+        }
+        .environment(\.layoutDirection, .rightToLeft)
+        .buttonStyle(.plain)
+    }
+
+    private var selectBookField: some View {
+        AdaptiveLabeledContent("Select Book") {
+            let title = selectedBookId.flatMap { bookId in
+                LibraryDataManager.shared.booksById[bookId].map { "\($0.book) (ID: \(bookId))" }
+            }
+            pickerSelectorButton(title: title) {
+                showBookPicker = true
+            }
         }
     }
 
@@ -474,28 +481,12 @@ struct OfflineImportFormView: View {
 
     private var selectAuthorField: some View {
         AdaptiveLabeledContent("Select Author") {
-            Button(action: { showAuthorPicker = true }) {
-                HStack {
-                    if let authId = selectedAuthorId,
-                       let auth = authors.first(where: { $0.id == authId })
-                    {
-                        Text("\(auth.muallif.nama) (ID: \(authId))")
-                            .foregroundColor(.primary)
-                    } else {
-                        Text("Click to select...")
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 8)
-                .frame(minHeight: 24)
-                .background(Color.gray.opacity(0.1))
+            let title = selectedAuthorId.flatMap { authId in
+                authors.first(where: { $0.id == authId }).map { "\($0.muallif.nama) (ID: \(authId))" }
             }
-            .environment(\.layoutDirection, .rightToLeft)
-            .buttonStyle(.plain)
+            pickerSelectorButton(title: title) {
+                showAuthorPicker = true
+            }
         }
     }
 
@@ -939,20 +930,7 @@ struct SearchSelectionView: View {
             Divider()
 
             List(filteredItems) { item in
-                Button(action: { onSelect(item) }) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.title)
-                            .font(.body)
-                            .fontWeight(.medium)
-                        Text(item.subtitle)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                itemRow(for: item)
             }
         }
         .environment(\.layoutDirection, .rightToLeft)
@@ -960,20 +938,7 @@ struct SearchSelectionView: View {
         #else
         NavigationStack {
             ThemeList(filteredItems) { item in
-                Button(action: { onSelect(item) }) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.title)
-                            .font(.body)
-                            .fontWeight(.medium)
-                        Text(item.subtitle)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                itemRow(for: item)
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
@@ -990,6 +955,23 @@ struct SearchSelectionView: View {
         .scrollContentBackground(.hidden)
         .themeBackground()
         #endif
+    }
+
+    private func itemRow(for item: SearchSelectionItem) -> some View {
+        Button(action: { onSelect(item) }) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.title)
+                    .font(.body)
+                    .fontWeight(.medium)
+                Text(item.subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

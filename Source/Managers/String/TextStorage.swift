@@ -84,3 +84,45 @@ extension NSMutableAttributedString {
     }
     #endif
 }
+
+extension NSTextStorage {
+    private static let annotationAttributeKeys: [NSAttributedString.Key] = [
+        .backgroundColor,
+        .underlineStyle,
+        .link,
+        NSAttributedString.Key("annotationID"),
+        NSAttributedString.Key("annotationNote"),
+        NSAttributedString.Key("underlineColor"),
+    ]
+
+    func removeAnnotationAttributes(in ranges: [NSRange]) {
+        for range in ranges {
+            for key in Self.annotationAttributeKeys {
+                removeAttribute(key, range: range)
+            }
+        }
+    }
+
+    func findAnnotationRanges(matching predicate: (Any?) -> Bool) -> [NSRange] {
+        var ranges: [NSRange] = []
+        enumerateAttribute(
+            NSAttributedString.Key("annotationID"),
+            in: NSRange(location: 0, length: length),
+            options: []
+        ) { value, range, _ in
+            if predicate(value) {
+                ranges.append(range)
+            }
+        }
+        return ranges
+    }
+}
+
+extension NSTextLayoutManager {
+    func ensureFullDocumentLayout() {
+        enumerateTextLayoutFragments(
+            from: documentRange.location,
+            options: [.ensuresLayout]
+        ) { _ in true }
+    }
+}

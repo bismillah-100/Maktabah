@@ -47,55 +47,59 @@ protocol SearchableLibrarySidebar: AnyObject {
     func connectSearchField(_ field: DSFSearchField)
 }
 
-/// LibraryVC
-extension LibraryVC: SearchableLibrarySidebar {
-    func connectSearchField(_ field: DSFSearchField) {
+extension SearchableLibrarySidebar {
+    func bindSearchField(
+        _ field: DSFSearchField,
+        setup: ((DSFSearchField) -> Void)? = nil,
+        onConnected: (() -> Void)? = nil
+    ) {
         guard let searchField else {
             print("searchField nil")
             return
         }
         field.delegate = searchField.delegate
-        dataVM.searchField = field
+        setup?(field)
         if searchField != field {
             searchField.removeFromSuperview()
         }
         self.searchField = field
-        dataVM.setupDSFSearchField()
-        updateContentInset()
+        onConnected?()
+    }
+
+    func bindSearchField(
+        _ field: DSFSearchField,
+        withManager dataVM: LibraryViewManager,
+        onConnected: (() -> Void)? = nil
+    ) {
+        bindSearchField(field, setup: { f in
+            dataVM.searchField = f
+            dataVM.setupDSFSearchField()
+        }, onConnected: onConnected)
+    }
+}
+
+/// LibraryVC
+extension LibraryVC: SearchableLibrarySidebar {
+    func connectSearchField(_ field: DSFSearchField) {
+        bindSearchField(field, withManager: dataVM) { [weak self] in
+            self?.updateContentInset()
+        }
     }
 }
 
 /// SearchSidebarVC
 extension SearchSidebarVC: SearchableLibrarySidebar {
     func connectSearchField(_ field: DSFSearchField) {
-        guard let searchField else {
-            print("searchField nil")
-            return
+        bindSearchField(field, withManager: dataVM) { [weak self] in
+            self?.scrollViewTopConstraint.constant = 0
         }
-
-        field.delegate = searchField.delegate
-        dataVM.searchField = field
-        if searchField != field {
-            searchField.removeFromSuperview()
-        }
-        self.searchField = field
-        dataVM.setupDSFSearchField()
-        scrollViewTopConstraint.constant = 0
     }
 }
 
 /// atau buat computed var yang wrap-nya
 extension RowiSidebarVC: SearchableLibrarySidebar {
     func connectSearchField(_ field: DSFSearchField) {
-        guard let searchField else {
-            print("searchField nil")
-            return
-        }
-        field.delegate = searchField.delegate
-        if searchField != field {
-            searchField.removeFromSuperview()
-        }
-        self.searchField = field
+        bindSearchField(field)
     }
 }
 #endif

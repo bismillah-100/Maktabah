@@ -9,8 +9,8 @@ enum MoveTarget: Identifiable {
 
     var id: ObjectIdentifier {
         switch self {
-        case .folder(let node): return ObjectIdentifier(node)
-        case .result(let node): return ObjectIdentifier(node)
+        case let .folder(node): ObjectIdentifier(node)
+        case let .result(node): ObjectIdentifier(node)
         }
     }
 }
@@ -39,7 +39,8 @@ struct iOSSavedResultsView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .themeBackground()
                 } else if viewModel.folderRoots.isEmpty,
-                          (viewModel.folderResults[nil] ?? []).isEmpty {
+                          (viewModel.folderResults[nil] ?? []).isEmpty
+                {
                     ContentUnavailableView(
                         "No Saved Results",
                         systemImage: "bookmark.slash",
@@ -49,34 +50,14 @@ struct iOSSavedResultsView: View {
                     // Global Flattened Search
                     flattenedSearchList
                 } else {
-                    iOSFolderContentList(
-                        folder: nil,
-                        onSelectResult: loadResult,
-                        onDeleteFolder: { folderToDelete = $0 },
-                        onMoveFolder: { itemToMove = .folder($0) },
-                        onRenameFolder: { itemToRename = .folder($0) },
-                        onDeleteResult: { viewModel.deleteResult($0.parentId, name: $0.name) },
-                        onMoveResult: { itemToMove = .result($0) },
-                        onRenameResult: { itemToRename = .result($0) },
-                        onNewFolder: { parent in itemToRename = .newFolder(parent: parent) }
-                    )
+                    makeFolderContentList(folder: nil)
                 }
             }
             .navigationTitle("Saved Results".localized)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Search globally")
             .navigationDestination(for: FolderNode.self) { folder in
-                iOSFolderContentList(
-                    folder: folder,
-                    onSelectResult: loadResult,
-                    onDeleteFolder: { folderToDelete = $0 },
-                    onMoveFolder: { itemToMove = .folder($0) },
-                    onRenameFolder: { itemToRename = .folder($0) },
-                    onDeleteResult: { viewModel.deleteResult($0.parentId, name: $0.name) },
-                    onMoveResult: { itemToMove = .result($0) },
-                    onRenameResult: { itemToRename = .result($0) },
-                    onNewFolder: { parent in itemToRename = .newFolder(parent: parent) }
-                )
+                makeFolderContentList(folder: folder)
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -156,7 +137,7 @@ struct iOSSavedResultsView: View {
 
             let matchingResults = viewModel.allResults.filter {
                 $0.name.localizedStandardContains(searchText) ||
-                ($0.items.first?.query ?? "").localizedStandardContains(searchText)
+                    ($0.items.first?.query ?? "").localizedStandardContains(searchText)
             }
 
             if !matchingResults.isEmpty {
@@ -174,10 +155,24 @@ struct iOSSavedResultsView: View {
                 }
             }
 
-            if matchingFolders.isEmpty && matchingResults.isEmpty {
+            if matchingFolders.isEmpty, matchingResults.isEmpty {
                 ContentUnavailableView.search(text: searchText)
             }
         }
+    }
+
+    private func makeFolderContentList(folder: FolderNode?) -> some View {
+        iOSFolderContentList(
+            folder: folder,
+            onSelectResult: loadResult,
+            onDeleteFolder: { folderToDelete = $0 },
+            onMoveFolder: { itemToMove = .folder($0) },
+            onRenameFolder: { itemToRename = .folder($0) },
+            onDeleteResult: { viewModel.deleteResult($0.parentId, name: $0.name) },
+            onMoveResult: { itemToMove = .result($0) },
+            onRenameResult: { itemToRename = .result($0) },
+            onNewFolder: { parent in itemToRename = .newFolder(parent: parent) }
+        )
     }
 
     // MARK: - Rename
@@ -188,13 +183,13 @@ struct iOSSavedResultsView: View {
 
         do {
             switch target.kind {
-            case .folder(let node):
+            case let .folder(node):
                 guard node.name != newName else { return }
                 try viewModel.updateFolderName(id: node.id, newName: newName)
-            case .result(let node):
+            case let .result(node):
                 guard node.name != newName else { return }
                 try viewModel.updateResultQueryName(id: node.id, newName: newName)
-            case .newFolder(let parent):
+            case let .newFolder(parent):
                 if let parent {
                     try viewModel.addSubFolder(parentNode: parent, name: newName)
                 } else {
@@ -236,9 +231,9 @@ struct iOSFolderContentList: View {
 
     private var children: [FolderNode] {
         if let currentFolder {
-            return currentFolder.children
+            currentFolder.children
         } else {
-            return viewModel.folderRoots
+            viewModel.folderRoots
         }
     }
 
@@ -321,9 +316,9 @@ struct RenameTarget: Identifiable {
 
     var alertTitle: String {
         switch kind {
-        case .folder:   return String(localized: "Rename Folder")
-        case .result:   return String(localized: "Rename Result")
-        case .newFolder: return String(localized: "New Folder")
+        case .folder: String(localized: "Rename Folder")
+        case .result: String(localized: "Rename Result")
+        case .newFolder: String(localized: "New Folder")
         }
     }
 }
@@ -351,38 +346,5 @@ struct ResultRow: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - MoveDestinationRow
-
-struct MoveDestinationRow: View {
-    let folder: FolderNode
-    let level: Int
-    @Binding var selectedFolderId: Int64?
-    let disabledFolderIds: Set<Int64>
-
-    private var isDisabled: Bool {
-        disabledFolderIds.contains(folder.id)
-    }
-
-    var body: some View {
-        Button {
-            selectedFolderId = folder.id
-        } label: {
-            HStack {
-                Spacer().frame(width: CGFloat(level * 20))
-                Image(systemName: "folder")
-                    .accessibilityHidden(true)
-                Text(folder.name)
-                Spacer()
-                if selectedFolderId == folder.id {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(.tint)
-                }
-            }
-        }
-        .foregroundStyle(isDisabled ? .secondary : .primary)
-        .disabled(isDisabled)
     }
 }

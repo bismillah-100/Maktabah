@@ -8,14 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
+		09BABD2120005583A760399B /* BookUpdateMgr+Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */; };
 		17475414BB0B621BFDC173ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
 		1878A376483C464F9B105C5F /* AnVC+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */; };
+		1AA44A4BF22C527A9B715C40 /* ResultsFolders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344307D010B55FE69E3E8724 /* ResultsFolders.swift */; };
 		240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
 		2519CB6A1E669FBF7124993E /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
+		2782B44B51D55ECFBFC055F4 /* ResultsCRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AE316343835CA0B29721BE /* ResultsCRUD.swift */; };
+		29BEACCCC38B577FA2584336 /* ResultsFolders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344307D010B55FE69E3E8724 /* ResultsFolders.swift */; };
+		2EB1013341A95032A69A7357 /* BookUpdateMgr+Fetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF895F9D92955AAAFEDAB0D /* BookUpdateMgr+Fetch.swift */; };
+		2EB66E3FDF915C2C84229978 /* ResultsCloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */; };
+		2EB66E40DF915C2C84229978 /* ResultsOrphans.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */; };
 		3090DBCA5F8C3E3A3E5921B5 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		3599633FC8314B93AC7E536B /* AnVC+LineMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D7BAF818D3447A9204EB5D /* AnVC+LineMenu.swift */; };
 		363C8599EF10487F9EC0B18F /* AnVC+Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00F222F577745268CA496C9 /* AnVC+Panel.swift */; };
+		3B530CC651A25B3C8A712EF6 /* BookUpdateMgr+Fetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF895F9D92955AAAFEDAB0D /* BookUpdateMgr+Fetch.swift */; };
 		3D81E55799D30EEFA6FA3567 /* FtsMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */; };
+		3E525085C7B65029AC6F69FE /* BookUpdateMgr+SQLite.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF12F3B64BA5BCD81051D4A /* BookUpdateMgr+SQLite.swift */; };
+		46A51203823D5043BF80094C /* BookUpdateMgr+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D02EECA3B25A6AB11ECCE2 /* BookUpdateMgr+Import.swift */; };
 		4B0139E02EEAFC3000424CFA /* CustomSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139DF2EEAFC3000424CFA /* CustomSplitView.swift */; };
 		4B0139E22EEB281C00424CFA /* BookPageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E12EEB281C00424CFA /* BookPageCache.swift */; };
 		4B0139E42EEB2FDF00424CFA /* StringInterner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E32EEB2FDF00424CFA /* StringInterner.swift */; };
@@ -276,29 +286,50 @@
 		4BFCD84F2F10746600E41F8A /* Lateef-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84D2F10746600E41F8A /* Lateef-Regular.ttf */; };
 		4BFCD8502F10746600E41F8A /* Lateef-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4BFCD84E2F10746600E41F8A /* Lateef-Bold.ttf */; };
 		4FF4B458CEE44D408514FFEA /* AnVC+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4921EC4B33C46338E59F39B /* AnVC+Search.swift */; };
+		5093291DC9E85B94A5904CCE /* String+TextCleaning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4EAB1DD225A56B028D45C /* String+TextCleaning.swift */; };
 		5319FEAD9AE94DEEA1F5E1EE /* AnVC+LineMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D7BAF818D3447A9204EB5D /* AnVC+LineMenu.swift */; };
 		5D5E85B531CCA1E447711566 /* FtsMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */; };
+		61E541116F98573BBE08ECCA /* String+Arabic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBCA0D58CF45F7A9AB19D4B /* String+Arabic.swift */; };
 		61FB988FFF20432B9CEAB7E2 /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
 		67948424D93A49DDBE7BCBF9 /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
 		6887BD8B032642F5A57143DC /* AnVC+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */; };
+		6B6091BCD8845F3394BEFED2 /* BookUpdateMgr+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D02EECA3B25A6AB11ECCE2 /* BookUpdateMgr+Import.swift */; };
+		772E47588E795286B3873AA0 /* String+TextCleaning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4EAB1DD225A56B028D45C /* String+TextCleaning.swift */; };
+		79D930819C9D5E36A1D33521 /* String+TextCleaning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CF4EAB1DD225A56B028D45C /* String+TextCleaning.swift */; };
 		7BFCEA3770834B8A8323DB63 /* AnVC+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4921EC4B33C46338E59F39B /* AnVC+Search.swift */; };
+		8709DDD4FDFC5CA7B817F77C /* BookUpdateMgr+Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */; };
+		88AB9BE487EF5A47A12F6253 /* ResultsCRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AE316343835CA0B29721BE /* ResultsCRUD.swift */; };
+		95F0F6564DBE5419B51813EB /* ResultsCRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AE316343835CA0B29721BE /* ResultsCRUD.swift */; };
 		9651F1789A8046C0AAFDCD0C /* AnVC+TagFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */; };
 		968368763A32E39F80A9D1A1 /* FtsMigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */; };
 		99C284B099C445D9B6E3F948 /* AnVC+Panel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00F222F577745268CA496C9 /* AnVC+Panel.swift */; };
+		9B3D18D5A5E65F0384493433 /* BookUpdateMgr+SQLite.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF12F3B64BA5BCD81051D4A /* BookUpdateMgr+SQLite.swift */; };
 		9F0065627B7E1290539A29ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
+		A3513533B33D584EB2EFFDEE /* BookUpdateMgr+Fetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF895F9D92955AAAFEDAB0D /* BookUpdateMgr+Fetch.swift */; };
+		A783A35F341B56A6BE926352 /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71100FB42F3F579689D3A60F /* String+Search.swift */; };
 		AF7789715DB04E0D96BB8B2B /* AnVC+TagPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */; };
+		AF8A7ED90B455E979D30412E /* ResultsCloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */; };
+		AF8A7EDA0B455E979D30412E /* ResultsOrphans.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */; };
 		B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
 		B483563522A5498E6D6452ED /* HistoryDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */; };
+		B55BBF33ABA75F559BAFACF4 /* ResultsCloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */; };
+		B55BBF34ABA75F559BAFACF4 /* ResultsOrphans.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */; };
+		B58B9D1D23F95091BA2F5E2A /* ResultsFolders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344307D010B55FE69E3E8724 /* ResultsFolders.swift */; };
+		B93269C280D053028631F636 /* BookUpdateMgr+Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */; };
 		BE8DDB8A461345B1B88DE69F /* AnVC+Sort.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */; };
+		C5CCCE8D2B735A45A5F70A09 /* String+Arabic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBCA0D58CF45F7A9AB19D4B /* String+Arabic.swift */; };
 		C9F8C26BCEED4B839B837BAE /* AnVC+Sort.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */; };
 		CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
+		CB610699E40B5678946AC4F9 /* BookUpdateMgr+SQLite.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACF12F3B64BA5BCD81051D4A /* BookUpdateMgr+SQLite.swift */; };
 		CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C09DE835C53C6EFC0748C3 /* MaktabahApp.swift */; };
 		CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
 		DB899712AF55D9ABF944D61F /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44342A3B384B7605A1AF676A /* NetworkMonitor.swift */; };
 		DD1D2EC05C1549108061B993 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
+		E1EEAB7921BC5F17865787D6 /* String+Arabic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBCA0D58CF45F7A9AB19D4B /* String+Arabic.swift */; };
 		E87C90E22F83494200454BE1 /* FtsQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C90E12F83494200454BE1 /* FtsQueryParser.swift */; };
 		E87C90E32F83494200454BE1 /* FtsQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C90E12F83494200454BE1 /* FtsQueryParser.swift */; };
 		E87C90E42F83494200454BE1 /* FtsQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87C90E12F83494200454BE1 /* FtsQueryParser.swift */; };
+		EBA9A66858B35459A6898AAD /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71100FB42F3F579689D3A60F /* String+Search.swift */; };
 		F300A2EC2F2DCE860095015E /* StorageError.swift in Sources */ = {isa = PBXBuildFile; fileRef = F300A2EB2F2DCE860095015E /* StorageError.swift */; };
 		F30576E52FA46222005732C6 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B01CA2F2EFD366E002A66FA /* AppConfig.swift */; };
 		F30576EC2FA46222005732C6 /* SettingsActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB98D2F69E957007D0945 /* SettingsActions.swift */; };
@@ -374,6 +405,12 @@
 		F30577962FA4987B005732C6 /* NotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577942FA4987B005732C6 /* NotificationName.swift */; };
 		F30577972FA4987B005732C6 /* NotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577942FA4987B005732C6 /* NotificationName.swift */; };
 		F30577992FA4BE8D005732C6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F30577982FA4BE8D005732C6 /* LaunchScreen.storyboard */; };
+		F30C5099303FA12200627AF8 /* ResultsViewTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */; };
+		F30C509A303FA12200627AF8 /* ResultsViewTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */; };
+		F30C509C303FA15B00627AF8 /* ResultsViewMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */; };
+		F30C509D303FA15B00627AF8 /* ResultsViewMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */; };
+		F30C509F303FA19800627AF8 /* ResultsViewDrag.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C509E303FA19800627AF8 /* ResultsViewDrag.swift */; };
+		F30C50A0303FA19800627AF8 /* ResultsViewDrag.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C509E303FA19800627AF8 /* ResultsViewDrag.swift */; };
 		F31111912FC008F30024B638 /* ActiveIntegrationStatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31111902FC008F30024B638 /* ActiveIntegrationStatesView.swift */; };
 		F31111962FC00F060024B638 /* iOSResultWriterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31111922FC00F060024B638 /* iOSResultWriterView.swift */; };
 		F31111972FC00F060024B638 /* iOSSavedResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31111932FC00F060024B638 /* iOSSavedResultsView.swift */; };
@@ -403,7 +440,30 @@
 		F32BA47B300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F32BA47D300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
+		F32D440B303CFB3500429664 /* DBConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D440A303CFB3500429664 /* DBConnectionType.swift */; };
+		F32D440C303CFB3500429664 /* DBConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D440A303CFB3500429664 /* DBConnectionType.swift */; };
+		F32D440D303CFB3500429664 /* DBConnectionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D440A303CFB3500429664 /* DBConnectionType.swift */; };
+		F32D440F303CFB6200429664 /* PauseController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D440E303CFB6200429664 /* PauseController.swift */; };
+		F32D4410303CFB6200429664 /* PauseController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D440E303CFB6200429664 /* PauseController.swift */; };
+		F32D4411303CFB6200429664 /* PauseController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D440E303CFB6200429664 /* PauseController.swift */; };
+		F32D4413303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4412303CFB7400429664 /* SQLiteConnectionPool.swift */; };
+		F32D4414303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4412303CFB7400429664 /* SQLiteConnectionPool.swift */; };
+		F32D4415303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4412303CFB7400429664 /* SQLiteConnectionPool.swift */; };
+		F32D4417303CFB8300429664 /* SearchWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4416303CFB8300429664 /* SearchWorker.swift */; };
+		F32D4418303CFB8300429664 /* SearchWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4416303CFB8300429664 /* SearchWorker.swift */; };
+		F32D4419303CFB8300429664 /* SearchWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4416303CFB8300429664 /* SearchWorker.swift */; };
+		F32D441B303CFB9A00429664 /* SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D441A303CFB9A00429664 /* SQLiteConnection.swift */; };
+		F32D441C303CFB9A00429664 /* SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D441A303CFB9A00429664 /* SQLiteConnection.swift */; };
+		F32D441D303CFB9A00429664 /* SQLiteConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D441A303CFB9A00429664 /* SQLiteConnection.swift */; };
+		F32D441F303CFBF900429664 /* SQLValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D441E303CFBF900429664 /* SQLValue.swift */; };
+		F32D4420303CFBF900429664 /* SQLValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D441E303CFBF900429664 /* SQLValue.swift */; };
+		F32D4421303CFBF900429664 /* SQLValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D441E303CFBF900429664 /* SQLValue.swift */; };
+		F32D4423303CFC0800429664 /* ArchiveInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4422303CFC0800429664 /* ArchiveInfo.swift */; };
+		F32D4424303CFC0800429664 /* ArchiveInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4422303CFC0800429664 /* ArchiveInfo.swift */; };
+		F32D4425303CFC0800429664 /* ArchiveInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4422303CFC0800429664 /* ArchiveInfo.swift */; };
 		F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33214392FC2750E006EC214 /* ThemeComponents.swift */; };
+		F334EB33303F382C001121BE /* ReaderSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334EB32303F3808001121BE /* ReaderSplitView.swift */; };
+		F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334EB32303F3808001121BE /* ReaderSplitView.swift */; };
 		F34047CC30367EBC003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
 		F34047CD30367EBC003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
 		F34047CE303680D0003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
@@ -414,6 +474,14 @@
 		F347296F3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F349073F2F3064A10036CDAF /* IconMaktabah.icon in Resources */ = {isa = PBXBuildFile; fileRef = F349073E2F3064A10036CDAF /* IconMaktabah.icon */; };
 		F34B708C2FC87BFF00BBE904 /* UserFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */; };
+		F34D9FC2303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */; };
+		F34D9FC3303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */; };
+		F34D9FC4303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */; };
+		F34D9FC5303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */; };
+		F34D9FC7303D64D10000FB79 /* AnnotationMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */; };
+		F34D9FC8303D64D10000FB79 /* AnnotationMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */; };
+		F34D9FCA303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */; };
+		F34D9FCB303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */; };
 		F34E11522FDAE32900E5A703 /* BaseHierarchicalListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */; };
 		F34E11542FDAE84600E5A703 /* ListLayoutMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */; };
 		F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */; };
@@ -472,6 +540,21 @@
 		F3902E8D2F9EE1CA004BA5D1 /* AnnotationTagVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */; };
 		F3902EAF2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */; };
 		F3902EB02F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */; };
+		F3A000022FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
+		F3A000032FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
+		F3A000042FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
+		F3A000062FBB000100000001 /* SyncPendingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000052FBB000100000001 /* SyncPendingStore.swift */; };
+		F3A000072FBB000100000001 /* SyncPendingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000052FBB000100000001 /* SyncPendingStore.swift */; };
+		F3A000082FBB000100000001 /* SyncPendingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000052FBB000100000001 /* SyncPendingStore.swift */; };
+		F3A0000A2FBB000100000001 /* SingleFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000092FBB000100000001 /* SingleFlight.swift */; };
+		F3A0000B2FBB000100000001 /* SingleFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000092FBB000100000001 /* SingleFlight.swift */; };
+		F3A0000C2FBB000100000001 /* SingleFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000092FBB000100000001 /* SingleFlight.swift */; };
+		F3A0000E2FBB000100000001 /* ZstdDecompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A0000D2FBB000100000001 /* ZstdDecompressor.swift */; };
+		F3A0000F2FBB000100000001 /* ZstdDecompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A0000D2FBB000100000001 /* ZstdDecompressor.swift */; };
+		F3A001002FBB000100000001 /* ZstdDecompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A0000D2FBB000100000001 /* ZstdDecompressor.swift */; };
+		F3A002012FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A002002FBB000100000001 /* CloudKitUploadDebouncer.swift */; };
+		F3A002022FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A002002FBB000100000001 /* CloudKitUploadDebouncer.swift */; };
+		F3A002032FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A002002FBB000100000001 /* CloudKitUploadDebouncer.swift */; };
 		F3A20B142FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A20B132FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift */; };
 		F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44342A3B384B7605A1AF676A /* NetworkMonitor.swift */; };
 		F3A77FC12FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44342A3B384B7605A1AF676A /* NetworkMonitor.swift */; };
@@ -552,12 +635,16 @@
 		F3F3FEAD30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
 		F3F3FEAE30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
 		F3F3FEAF30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
+		F3FBF233303F1C6F00A7EB6C /* OptionSearchPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */; };
+		F3FBF234303F1C6F00A7EB6C /* OptionSearchPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */; };
 		F3FF136A2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F3FF136C2FE757B500E74201 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FF13692FE757B500E74201 /* TextStorage.swift */; };
 		F7619505363C4134841E0BFE /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
 		F98231AA5FBD41F496614AA3 /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
 		FB254BD29A50C530E907662A /* CloudKitSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */; };
+		FC6A0443A0F45826B344EB51 /* BookUpdateMgr+Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D02EECA3B25A6AB11ECCE2 /* BookUpdateMgr+Import.swift */; };
+		FC8D8810939C50568834FB3D /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71100FB42F3F579689D3A60F /* String+Search.swift */; };
 		FCEE7463632B425A8C6EC39F /* AnVC+TagFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */; };
 		FDB5242B5960EB1507BD74A6 /* iOSHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */; };
 		FF34047318724E38BF0C64DD /* AnVC+TagPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */; };
@@ -565,6 +652,8 @@
 
 /* Begin PBXFileReference section */
 		3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncManager.swift; sourceTree = "<group>"; };
+		344307D010B55FE69E3E8724 /* ResultsFolders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsFolders.swift; sourceTree = "<group>"; };
+		36D02EECA3B25A6AB11ECCE2 /* BookUpdateMgr+Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookUpdateMgr+Import.swift"; sourceTree = "<group>"; };
 		44342A3B384B7605A1AF676A /* NetworkMonitor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		49D7BAF818D3447A9204EB5D /* AnVC+LineMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+LineMenu.swift"; sourceTree = "<group>"; };
 		4B0000012F3612D50018D902 /* BookImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookImportView.swift; sourceTree = "<group>"; };
@@ -710,13 +799,22 @@
 		4BFCD84B2F10744800E41F8A /* ScheherazadeNew-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "ScheherazadeNew-Regular.ttf"; sourceTree = "<group>"; };
 		4BFCD84D2F10746600E41F8A /* Lateef-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lateef-Regular.ttf"; sourceTree = "<group>"; };
 		4BFCD84E2F10746600E41F8A /* Lateef-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Lateef-Bold.ttf"; sourceTree = "<group>"; };
+		4CF4EAB1DD225A56B028D45C /* String+TextCleaning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+TextCleaning.swift"; sourceTree = "<group>"; };
+		51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookUpdateMgr+Metadata.swift"; sourceTree = "<group>"; };
+		52AE316343835CA0B29721BE /* ResultsCRUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsCRUD.swift; sourceTree = "<group>"; };
+		5EBCA0D58CF45F7A9AB19D4B /* String+Arabic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Arabic.swift"; sourceTree = "<group>"; };
+		71100FB42F3F579689D3A60F /* String+Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Search.swift"; sourceTree = "<group>"; };
 		88C09DE835C53C6EFC0748C3 /* MaktabahApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MaktabahApp.swift; sourceTree = "<group>"; };
 		90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FtsMigrationProgressView.swift; sourceTree = "<group>"; };
 		9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = iOSHistoryView.swift; sourceTree = "<group>"; };
 		9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FtsMigrationManager.swift; sourceTree = "<group>"; };
 		A4921EC4B33C46338E59F39B /* AnVC+Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+Search.swift"; sourceTree = "<group>"; };
+		ACF12F3B64BA5BCD81051D4A /* BookUpdateMgr+SQLite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookUpdateMgr+SQLite.swift"; sourceTree = "<group>"; };
+		BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsCloudKit.swift; sourceTree = "<group>"; };
+		BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsOrphans.swift; sourceTree = "<group>"; };
 		BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+TagFilter.swift"; sourceTree = "<group>"; };
 		C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncable.swift; sourceTree = "<group>"; };
+		CAF895F9D92955AAAFEDAB0D /* BookUpdateMgr+Fetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookUpdateMgr+Fetch.swift"; sourceTree = "<group>"; };
 		CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+TagPopover.swift"; sourceTree = "<group>"; };
 		D00F222F577745268CA496C9 /* AnVC+Panel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+Panel.swift"; sourceTree = "<group>"; };
 		DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+Sort.swift"; sourceTree = "<group>"; };
@@ -738,6 +836,9 @@
 		F30577812FA463B1005732C6 /* iOSIbarotTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSIbarotTextView.swift; sourceTree = "<group>"; };
 		F30577942FA4987B005732C6 /* NotificationName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationName.swift; sourceTree = "<group>"; };
 		F30577982FA4BE8D005732C6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewTextField.swift; sourceTree = "<group>"; };
+		F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewMenu.swift; sourceTree = "<group>"; };
+		F30C509E303FA19800627AF8 /* ResultsViewDrag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewDrag.swift; sourceTree = "<group>"; };
 		F31111902FC008F30024B638 /* ActiveIntegrationStatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveIntegrationStatesView.swift; sourceTree = "<group>"; };
 		F31111922FC00F060024B638 /* iOSResultWriterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSResultWriterView.swift; sourceTree = "<group>"; };
 		F31111932FC00F060024B638 /* iOSSavedResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSSavedResultsView.swift; sourceTree = "<group>"; };
@@ -752,12 +853,24 @@
 		F323BCA32F2EE71800EFD4F4 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F323BCA42F2EE71A00EFD4F4 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		F32D440A303CFB3500429664 /* DBConnectionType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBConnectionType.swift; sourceTree = "<group>"; };
+		F32D440E303CFB6200429664 /* PauseController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseController.swift; sourceTree = "<group>"; };
+		F32D4412303CFB7400429664 /* SQLiteConnectionPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteConnectionPool.swift; sourceTree = "<group>"; };
+		F32D4416303CFB8300429664 /* SearchWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchWorker.swift; sourceTree = "<group>"; };
+		F32D441A303CFB9A00429664 /* SQLiteConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteConnection.swift; sourceTree = "<group>"; };
+		F32D441E303CFBF900429664 /* SQLValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLValue.swift; sourceTree = "<group>"; };
+		F32D4422303CFC0800429664 /* ArchiveInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveInfo.swift; sourceTree = "<group>"; };
 		F33214392FC2750E006EC214 /* ThemeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeComponents.swift; sourceTree = "<group>"; };
+		F334EB32303F3808001121BE /* ReaderSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSplitView.swift; sourceTree = "<group>"; };
 		F34047CB30367EBC003B4B57 /* DonationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationSheetView.swift; sourceTree = "<group>"; };
 		F347296A3031D5D10094BF0A /* TagFilterMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterMode.swift; sourceTree = "<group>"; };
 		F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterSelectionView.swift; sourceTree = "<group>"; };
 		F349073E2F3064A10036CDAF /* IconMaktabah.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = IconMaktabah.icon; sourceTree = "<group>"; };
 		F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFontManager.swift; sourceTree = "<group>"; };
+		F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRTFExporter.swift; sourceTree = "<group>"; };
+		F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRowHeightCalculator.swift; sourceTree = "<group>"; };
+		F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationMenu.swift; sourceTree = "<group>"; };
+		F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsOutlineDelegate.swift; sourceTree = "<group>"; };
 		F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseHierarchicalListViewController.swift; sourceTree = "<group>"; };
 		F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListLayoutMetrics.swift; sourceTree = "<group>"; };
 		F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTOCViewModel.swift; sourceTree = "<group>"; };
@@ -787,6 +900,11 @@
 		F38FF4352FA89EEE003E7B71 /* iOSReaderTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSReaderTabView.swift; sourceTree = "<group>"; };
 		F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationTagVC.swift; sourceTree = "<group>"; };
 		F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMergePopoverVC.swift; sourceTree = "<group>"; };
+		F3A000012FBB000100000001 /* FileManager+Size.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Size.swift"; sourceTree = "<group>"; };
+		F3A000052FBB000100000001 /* SyncPendingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPendingStore.swift; sourceTree = "<group>"; };
+		F3A000092FBB000100000001 /* SingleFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleFlight.swift; sourceTree = "<group>"; };
+		F3A0000D2FBB000100000001 /* ZstdDecompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZstdDecompressor.swift; sourceTree = "<group>"; };
+		F3A002002FBB000100000001 /* CloudKitUploadDebouncer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitUploadDebouncer.swift; sourceTree = "<group>"; };
 		F3A20B132FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSCoreUpdateProgressOverlayView.swift; sourceTree = "<group>"; };
 		F3A775572FB2288E00C82F7B /* iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS-Info.plist"; sourceTree = "<group>"; };
 		F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
@@ -828,6 +946,7 @@
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
 		F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTLScrollView.swift; sourceTree = "<group>"; };
 		F3F3FEAC30360EC700507E9A /* DonationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationManager.swift; sourceTree = "<group>"; };
+		F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionSearchPopover.swift; sourceTree = "<group>"; };
 		F3FF13692FE757B500E74201 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
 		F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnVC+Share.swift"; sourceTree = "<group>"; };
 		F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationJsonDocument.swift; sourceTree = "<group>"; };
@@ -891,6 +1010,7 @@
 				F300A2EB2F2DCE860095015E /* StorageError.swift */,
 				F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */,
 				4B9C83052F7EAE1C00CE1800 /* ZstdShim.swift */,
+				F3A000012FBB000100000001 /* FileManager+Size.swift */,
 			);
 			path = "App Config";
 			sourceTree = "<group>";
@@ -965,11 +1085,12 @@
 			isa = PBXGroup;
 			children = (
 				F37F1C35300268E3002B5618 /* AnnotationManager */,
+				F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */,
+				F34D9FBE303D2DA80000FB79 /* ResultsHandler */,
 				4B8C9DCE2F6984120049E4EF /* ArchiveDatabaseTools.swift */,
 				4B8C9DCF2F6984120049E4EF /* BookArchiveIntegrator.swift */,
 				4B540F462EDF25A4001D8C0B /* BookConnection.swift */,
 				4B8C9DD02F6984120049E4EF /* BookDownloadManager.swift */,
-				4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */,
 				3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */,
 				4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */,
 				F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */,
@@ -980,8 +1101,10 @@
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
 				4B6100EA2EFA769200CCBED6 /* QuranDataManager.swift */,
-				4B5EC2982EE334C600991F39 /* ResultsHandler.swift */,
 				F321672C2FBB2C0D00601DB3 /* SQLiteDatabase.swift */,
+				F3A000052FBB000100000001 /* SyncPendingStore.swift */,
+				F3A000092FBB000100000001 /* SingleFlight.swift */,
+				F3A0000D2FBB000100000001 /* ZstdDecompressor.swift */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -993,6 +1116,7 @@
 				4B32022B2EDAFE85003B95D1 /* AppDelegate.swift */,
 				C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */,
 				4BCCCB612F9C41310027EC18 /* CopyableResult.swift */,
+				F32D440A303CFB3500429664 /* DBConnectionType.swift */,
 				4B3202482EDB10FA003B95D1 /* Protocols.swift */,
 				4B47F3982EE9A36D009A399F /* RowiProtocols.swift */,
 				F3D122782FF5C9A900F44E89 /* TextRenderable.swift */,
@@ -1038,6 +1162,7 @@
 				4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */,
 				4BD6C33B2EE6AA7F008684E3 /* MainWindow.swift */,
 				4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */,
+				F334EB32303F3808001121BE /* ReaderSplitView.swift */,
 				F3D66912303215530030510C /* RightAlignedClipView.swift */,
 				F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */,
 				4BDAB98B2F69E860007D0945 /* SettingsView.swift */,
@@ -1093,6 +1218,9 @@
 			isa = PBXGroup;
 			children = (
 				4BAB8A482F28682200732FC9 /* ArabicTextRenderer.swift */,
+				5EBCA0D58CF45F7A9AB19D4B /* String+Arabic.swift */,
+				71100FB42F3F579689D3A60F /* String+Search.swift */,
+				4CF4EAB1DD225A56B028D45C /* String+TextCleaning.swift */,
 				4BD728242EE4544C00ACEB7C /* StringExt.swift */,
 				4B0139E32EEB2FDF00424CFA /* StringInterner.swift */,
 				F3FF13692FE757B500E74201 /* TextStorage.swift */,
@@ -1103,11 +1231,8 @@
 		4B5695572EEFDA8000ABEB48 /* Annotations */ = {
 			isa = PBXGroup;
 			children = (
-				4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */,
-				4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */,
-				4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */,
+				F34D9FCC303D66BB0000FB79 /* OutlineView */,
 				4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */,
-				F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */,
 				49D7BAF818D3447A9204EB5D /* AnVC+LineMenu.swift */,
 				D00F222F577745268CA496C9 /* AnVC+Panel.swift */,
 				A4921EC4B33C46338E59F39B /* AnVC+Search.swift */,
@@ -1116,7 +1241,6 @@
 				BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */,
 				CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */,
 				F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */,
-				F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */,
 			);
 			path = Annotations;
 			sourceTree = "<group>";
@@ -1124,7 +1248,10 @@
 		4B58EDCC2EE3DDB000073495 /* Bookmark */ = {
 			isa = PBXGroup;
 			children = (
+				F30C509E303FA19800627AF8 /* ResultsViewDrag.swift */,
 				4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */,
+				F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */,
+				F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */,
 				4B5EC29C2EE33E3200991F39 /* ResultWriter.swift */,
 				4B5EC2942EE331D500991F39 /* SavedResults.swift */,
 			);
@@ -1185,6 +1312,7 @@
 			isa = PBXGroup;
 			children = (
 				4B58EDCC2EE3DDB000073495 /* Bookmark */,
+				F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */,
 				4B65CCB62EE059B60085CEB4 /* OptionSearchVC.swift */,
 				4B65CCB22EE059700085CEB4 /* SearchSidebarVC.swift */,
 			);
@@ -1194,11 +1322,17 @@
 		4B65CCBE2EE0A1050085CEB4 /* Engine */ = {
 			isa = PBXGroup;
 			children = (
-				4B2FAD992EED472E008E933E /* TOCLoader.swift */,
+				F32D4422303CFC0800429664 /* ArchiveInfo.swift */,
+				E87C90E12F83494200454BE1 /* FtsQueryParser.swift */,
+				F32D440E303CFB6200429664 /* PauseController.swift */,
 				4B65CCBF2EE0A10F0085CEB4 /* SearchEngine.swift */,
 				4B20DB7E2EE7EE1F00B97126 /* SearchMode.swift */,
-				E87C90E12F83494200454BE1 /* FtsQueryParser.swift */,
+				F32D4416303CFB8300429664 /* SearchWorker.swift */,
 				F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */,
+				F32D441A303CFB9A00429664 /* SQLiteConnection.swift */,
+				F32D4412303CFB7400429664 /* SQLiteConnectionPool.swift */,
+				F32D441E303CFBF900429664 /* SQLValue.swift */,
+				4B2FAD992EED472E008E933E /* TOCLoader.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -1397,6 +1531,7 @@
 				F321E01C2FC7050F00CB37DD /* CloudKitCoreManager.swift */,
 				F321E01D2FC7050F00CB37DD /* HistorySyncHandler.swift */,
 				F321E01E2FC7050F00CB37DD /* ResultSyncHandler.swift */,
+				F3A002002FBB000100000001 /* CloudKitUploadDebouncer.swift */,
 			);
 			path = CloudKit;
 			sourceTree = "<group>";
@@ -1407,6 +1542,46 @@
 				F33214392FC2750E006EC214 /* ThemeComponents.swift */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		F34D9FBE303D2DA80000FB79 /* ResultsHandler */ = {
+			isa = PBXGroup;
+			children = (
+				BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */,
+				52AE316343835CA0B29721BE /* ResultsCRUD.swift */,
+				344307D010B55FE69E3E8724 /* ResultsFolders.swift */,
+				4B5EC2982EE334C600991F39 /* ResultsHandler.swift */,
+				BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */,
+			);
+			path = ResultsHandler;
+			sourceTree = "<group>";
+		};
+		F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */ = {
+			isa = PBXGroup;
+			children = (
+				4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */,
+				CAF895F9D92955AAAFEDAB0D /* BookUpdateMgr+Fetch.swift */,
+				36D02EECA3B25A6AB11ECCE2 /* BookUpdateMgr+Import.swift */,
+				51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */,
+				ACF12F3B64BA5BCD81051D4A /* BookUpdateMgr+SQLite.swift */,
+			);
+			path = BookUpdateManager;
+			sourceTree = "<group>";
+		};
+		F34D9FCC303D66BB0000FB79 /* OutlineView */ = {
+			isa = PBXGroup;
+			children = (
+				4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */,
+				4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */,
+				4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */,
+				F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */,
+				F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */,
+				F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */,
+				F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */,
+				F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */,
+				F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */,
+			);
+			path = OutlineView;
 			sourceTree = "<group>";
 		};
 		F363824F2FA6F9F10006636C /* Bootstrap */ = {
@@ -1721,10 +1896,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F34D9FC4303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */,
+				3B530CC651A25B3C8A712EF6 /* BookUpdateMgr+Fetch.swift in Sources */,
+				46A51203823D5043BF80094C /* BookUpdateMgr+Import.swift in Sources */,
+				B93269C280D053028631F636 /* BookUpdateMgr+Metadata.swift in Sources */,
+				9B3D18D5A5E65F0384493433 /* BookUpdateMgr+SQLite.swift in Sources */,
+				2EB66E3FDF915C2C84229978 /* ResultsCloudKit.swift in Sources */,
+				2EB66E40DF915C2C84229978 /* ResultsOrphans.swift in Sources */,
+				29BEACCCC38B577FA2584336 /* ResultsFolders.swift in Sources */,
+				95F0F6564DBE5419B51813EB /* ResultsCRUD.swift in Sources */,
+				C5CCCE8D2B735A45A5F70A09 /* String+Arabic.swift in Sources */,
+				EBA9A66858B35459A6898AAD /* String+Search.swift in Sources */,
+				772E47588E795286B3873AA0 /* String+TextCleaning.swift in Sources */,
 				4BD6C33C2EE6AA7F008684E3 /* MainWindow.swift in Sources */,
 				4BDAB98C2F69E860007D0945 /* SettingsView.swift in Sources */,
 				4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */,
 				4B73BF452EF0799E001ED591 /* AnnotationCellView.swift in Sources */,
+				F30C509D303FA15B00627AF8 /* ResultsViewMenu.swift in Sources */,
 				4B5DF9342EDC2FE60082DE7F /* LibraryVC.swift in Sources */,
 				F32167292FBAA39F00601DB3 /* BookImportView.swift in Sources */,
 				4B5EC2962EE331D500991F39 /* SavedResults.swift in Sources */,
@@ -1734,6 +1922,8 @@
 				F3D122772FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */,
 				4B0EED392EFAB38800585C31 /* QuranTafseerVC.swift in Sources */,
 				4B47F3992EE9A36D009A399F /* RowiProtocols.swift in Sources */,
+				F34D9FCA303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */,
+				F32D441D303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				4B6100F22EFA8C7F00CCBED6 /* QuranNashVC.swift in Sources */,
 				4B3252CF2F7E0A8300521AF9 /* BundledArabicTextField.swift in Sources */,
 				4B3252D02F7E0A8300521AF9 /* BundledArabicButton.swift in Sources */,
@@ -1746,10 +1936,12 @@
 				4B20DB792EE7D1BB00B97126 /* ReusableFunc.swift in Sources */,
 				4B3B966D2F35A74400B57E1D /* BookUpdateManager.swift in Sources */,
 				4B73BF472EF09D67001ED591 /* AnnotationDelegate.swift in Sources */,
+				F334EB33303F382C001121BE /* ReaderSplitView.swift in Sources */,
 				4BD728232EE44C5500ACEB7C /* IbarotTextView.swift in Sources */,
 				4BAB8A4C2F286C8A00732FC9 /* AnnotationCoordinator.swift in Sources */,
 				4B540F472EDF25A4001D8C0B /* BookConnection.swift in Sources */,
 				4B63E1E02EE9412900D58F3B /* RowiSidebarVC.swift in Sources */,
+				F32D440D303CFB3500429664 /* DBConnectionType.swift in Sources */,
 				4B96D3532F3675290018D902 /* BookUpdateModels.swift in Sources */,
 				4BDAB9882F69E4CC007D0945 /* BulkDownloadVC.swift in Sources */,
 				4B9A0AE72EEC53320049202E /* CellIViewIdentifier.swift in Sources */,
@@ -1759,7 +1951,9 @@
 				4B33928B2EE02E710028C706 /* LibraryDataManager.swift in Sources */,
 				4B32023D2EDB0F76003B95D1 /* WindowController.swift in Sources */,
 				4B03D9D12F42DB5B004E0FDB /* ReaderState.swift in Sources */,
+				F30C50A0303FA19800627AF8 /* ResultsViewDrag.swift in Sources */,
 				4B5DF93B2EDC43FB0082DE7F /* UserDefaults.swift in Sources */,
+				F3FBF233303F1C6F00A7EB6C /* OptionSearchPopover.swift in Sources */,
 				4B6AF22F2EE5692A002EBFFC /* AppMode.swift in Sources */,
 				F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				4B3202492EDB10FA003B95D1 /* Protocols.swift in Sources */,
@@ -1770,8 +1964,10 @@
 				4B9DDA892EFC343F0003A9FF /* QuranWindow.swift in Sources */,
 				4BCCCB622F9C41310027EC18 /* CopyableResult.swift in Sources */,
 				F347296E3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */,
+				F32D4411303CFB6200429664 /* PauseController.swift in Sources */,
 				4BEC35912F34BA330038FC0F /* DatabaseError.swift in Sources */,
 				4B8C9DD12F6984120049E4EF /* ArchiveDatabaseTools.swift in Sources */,
+				F30C5099303FA12200627AF8 /* ResultsViewTextField.swift in Sources */,
 				4B8C9DD22F6984120049E4EF /* BookArchiveIntegrator.swift in Sources */,
 				4B8C9DD32F6984120049E4EF /* BookDownloadManager.swift in Sources */,
 				4B8C9DD72F69848F0049E4EF /* IntegrationCache.swift in Sources */,
@@ -1832,10 +2028,12 @@
 				F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */,
 				4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */,
 				4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */,
+				F34D9FC8303D64D10000FB79 /* AnnotationMenu.swift in Sources */,
 				4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */,
 				4B63E1E92EE9671000D58F3B /* RowiModel.swift in Sources */,
 				4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
 				4B6AF2332EE57CCD002EBFFC /* Toolbar.swift in Sources */,
+				F34D9FC2303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */,
 				F3D02D5D2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				4B5E70692EF4FEFC00E7D351 /* SharedPopover.swift in Sources */,
 				4B56955B2EEFDAAE00ABEB48 /* Annotations.swift in Sources */,
@@ -1857,6 +2055,7 @@
 				F321E02A2FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F3D02D5A2FE0522E0054807F /* SearchViewModel.swift in Sources */,
 				F321E02B2FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
+				F3A002012FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */,
 				F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */,
 				4B65CCB82EE059B60085CEB4 /* OptionSearchVC.swift in Sources */,
 				4B0139E22EEB281C00424CFA /* BookPageCache.swift in Sources */,
@@ -1867,18 +2066,26 @@
 				4B5DF9382EDC3DBF0082DE7F /* ViewOptions.swift in Sources */,
 				F3F3FEAD30360EC700507E9A /* DonationManager.swift in Sources */,
 				4BA393642EF0D30200736DFF /* ArabicFont.swift in Sources */,
+				F32D4425303CFC0800429664 /* ArchiveInfo.swift in Sources */,
 				4B9A0AE22EEC17CC0049202E /* TarjamahDataManager.swift in Sources */,
+				F32D4417303CFB8300429664 /* SearchWorker.swift in Sources */,
 				4B20DB822EE7EEE400B97126 /* BookInfo.swift in Sources */,
 				4B65CCB42EE059700085CEB4 /* SearchSidebarVC.swift in Sources */,
 				F3D02D4A2FE04D580054807F /* ViewModelProtocols.swift in Sources */,
 				F364898A30131EAE00B9285B /* NotificationToken.swift in Sources */,
 				F3D02D4B2FE04D580054807F /* ReaderViewModel.swift in Sources */,
 				F3D02D4E2FE04D580054807F /* ViewModelBase.swift in Sources */,
+				F32D4413303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */,
 				CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */,
 				DB899712AF55D9ABF944D61F /* NetworkMonitor.swift in Sources */,
 				61FB988FFF20432B9CEAB7E2 /* HistoryDatabaseManager.swift in Sources */,
+				F32D441F303CFBF900429664 /* SQLValue.swift in Sources */,
 				5D5E85B531CCA1E447711566 /* FtsMigrationManager.swift in Sources */,
+				F3A000022FBB000100000001 /* FileManager+Size.swift in Sources */,
+				F3A000062FBB000100000001 /* SyncPendingStore.swift in Sources */,
+				F3A0000A2FBB000100000001 /* SingleFlight.swift in Sources */,
+				F3A0000E2FBB000100000001 /* ZstdDecompressor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1886,6 +2093,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2EB1013341A95032A69A7357 /* BookUpdateMgr+Fetch.swift in Sources */,
+				6B6091BCD8845F3394BEFED2 /* BookUpdateMgr+Import.swift in Sources */,
+				8709DDD4FDFC5CA7B817F77C /* BookUpdateMgr+Metadata.swift in Sources */,
+				3E525085C7B65029AC6F69FE /* BookUpdateMgr+SQLite.swift in Sources */,
+				B55BBF33ABA75F559BAFACF4 /* ResultsCloudKit.swift in Sources */,
+				B55BBF34ABA75F559BAFACF4 /* ResultsOrphans.swift in Sources */,
+				1AA44A4BF22C527A9B715C40 /* ResultsFolders.swift in Sources */,
+				88AB9BE487EF5A47A12F6253 /* ResultsCRUD.swift in Sources */,
+				61E541116F98573BBE08ECCA /* String+Arabic.swift in Sources */,
+				A783A35F341B56A6BE926352 /* String+Search.swift in Sources */,
+				5093291DC9E85B94A5904CCE /* String+TextCleaning.swift in Sources */,
 				4B7C90A62F83494200454BE1 /* MainWindow.swift in Sources */,
 				4B7C90A72F83494200454BE1 /* SettingsView.swift in Sources */,
 				4B7C90A82F83494200454BE1 /* AppConfig.swift in Sources */,
@@ -1898,7 +2116,9 @@
 				F37F1C38300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
 				F37F1C39300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
 				F37F1C3A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */,
+				F34D9FCB303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */,
 				F37F1C3B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
+				F32D4419303CFB8300429664 /* SearchWorker.swift in Sources */,
 				F37F1C3C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
 				F37F1C3D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
 				F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
@@ -1910,11 +2130,14 @@
 				4B7C90B22F83494200454BE1 /* QuranNashVC.swift in Sources */,
 				4BCCCB632F9C41310027EC18 /* CopyableResult.swift in Sources */,
 				4B7C90B32F83494200454BE1 /* BundledArabicTextField.swift in Sources */,
+				F30C509F303FA19800627AF8 /* ResultsViewDrag.swift in Sources */,
 				4B7C90B42F83494200454BE1 /* BundledArabicButton.swift in Sources */,
 				F3D122672FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
 				4B7C90B52F83494200454BE1 /* ArchiveErrors.swift in Sources */,
 				F321E02C2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */,
 				F347296F3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */,
+				F34D9FC3303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */,
+				F32D441C303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				4B7C90B62F83494200454BE1 /* AppDelegate.swift in Sources */,
 				4B7C90B72F83494200454BE1 /* LibraryViewManager.swift in Sources */,
 				F3D9CB203009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
@@ -1922,12 +2145,16 @@
 				4B7C90B82F83494200454BE1 /* StringExt.swift in Sources */,
 				F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				4B7C90B92F83494200454BE1 /* ArabicTextRenderer.swift in Sources */,
+				F34D9FC5303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */,
 				4B7C90BA2F83494200454BE1 /* ReusableFunc.swift in Sources */,
 				F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
 				4B7C90BB2F83494200454BE1 /* BookUpdateManager.swift in Sources */,
+				F30C509A303FA12200627AF8 /* ResultsViewTextField.swift in Sources */,
 				F321672A2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
 				F34047CD30367EBC003B4B57 /* DonationSheetView.swift in Sources */,
 				F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */,
+				F30C509C303FA15B00627AF8 /* ResultsViewMenu.swift in Sources */,
+				F32D440F303CFB6200429664 /* PauseController.swift in Sources */,
 				4B7C90BC2F83494200454BE1 /* AnnotationDelegate.swift in Sources */,
 				F3D46E9C2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */,
 				4B7C90BD2F83494200454BE1 /* IbarotTextView.swift in Sources */,
@@ -1947,6 +2174,7 @@
 				4B7C90C72F83494200454BE1 /* WindowController.swift in Sources */,
 				4B7C90C82F83494200454BE1 /* ReaderState.swift in Sources */,
 				4B7C90C92F83494200454BE1 /* UserDefaults.swift in Sources */,
+				F32D4415303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				4B7C90CA2F83494200454BE1 /* AppMode.swift in Sources */,
 				4B7C90CB2F83494200454BE1 /* Protocols.swift in Sources */,
 				4B7C90CC2F83494200454BE1 /* AnnotationColorMenuView.swift in Sources */,
@@ -1958,14 +2186,17 @@
 				F3902E8C2F9EE1CA004BA5D1 /* AnnotationTagVC.swift in Sources */,
 				F3902EAF2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */,
 				F3F3FEA73035E85B00507E9A /* RTLScrollView.swift in Sources */,
+				F34D9FC7303D64D10000FB79 /* AnnotationMenu.swift in Sources */,
 				4B7C90D12F83494200454BE1 /* BookArchiveIntegrator.swift in Sources */,
 				4B7C90D22F83494200454BE1 /* BookDownloadManager.swift in Sources */,
+				F32D4423303CFC0800429664 /* ArchiveInfo.swift in Sources */,
 				4B7C90D32F83494200454BE1 /* IntegrationCache.swift in Sources */,
 				4B7C90D42F83494200454BE1 /* SearchCellView.swift in Sources */,
 				4B7C90D52F83494200454BE1 /* TOCLoader.swift in Sources */,
 				4B7C90D62F83494200454BE1 /* SearchMode.swift in Sources */,
 				E87C90E32F83494200454BE1 /* FtsQueryParser.swift in Sources */,
 				4B7C90D72F83494200454BE1 /* LoadMoreCell.swift in Sources */,
+				F32D4421303CFBF900429664 /* SQLValue.swift in Sources */,
 				F3D02D5F2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				4B7C90D82F83494200454BE1 /* RowiResultsVC.swift in Sources */,
 				4B7C90D92F83494200454BE1 /* CoreDownloadProgressView.swift in Sources */,
@@ -1978,6 +2209,7 @@
 				4B7C90DC2F83494200454BE1 /* BookUpdateVM.swift in Sources */,
 				4B7C90DD2F83494200454BE1 /* AnnotationsOutlineDataSource.swift in Sources */,
 				4B7C90DE2F83494200454BE1 /* CustomSplitView.swift in Sources */,
+				F32D440B303CFB3500429664 /* DBConnectionType.swift in Sources */,
 				4B7C90DF2F83494200454BE1 /* BackgroundOptions.swift in Sources */,
 				4B7C90E02F83494200454BE1 /* AnnotationsVC.swift in Sources */,
 				BE8DDB8A461345B1B88DE69F /* AnVC+Sort.swift in Sources */,
@@ -2007,6 +2239,7 @@
 				F3F3FEAE30360EC700507E9A /* DonationManager.swift in Sources */,
 				4B7C90ED2F83494200454BE1 /* ResultsViewModel.swift in Sources */,
 				4B7C90EE2F83494200454BE1 /* ViewerSplitVC.swift in Sources */,
+				F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */,
 				4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */,
 				4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */,
 				4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */,
@@ -2034,6 +2267,7 @@
 				4B7C91032F83494200454BE1 /* ArabicFont.swift in Sources */,
 				4B7C91042F83494200454BE1 /* TarjamahDataManager.swift in Sources */,
 				F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
+				F3FBF234303F1C6F00A7EB6C /* OptionSearchPopover.swift in Sources */,
 				4B7C91052F83494200454BE1 /* BookInfo.swift in Sources */,
 				4B7C91062F83494200454BE1 /* SearchSidebarVC.swift in Sources */,
 				FB254BD29A50C530E907662A /* CloudKitSyncManager.swift in Sources */,
@@ -2042,10 +2276,15 @@
 				F321E0252FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0262FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F321E0272FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
+				F3A002022FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */,
 				2519CB6A1E669FBF7124993E /* HistoryDatabaseManager.swift in Sources */,
 				3090DBCA5F8C3E3A3E5921B5 /* (null) in Sources */,
 				968368763A32E39F80A9D1A1 /* FtsMigrationManager.swift in Sources */,
 				9F0065627B7E1290539A29ED /* FtsMigrationProgressView.swift in Sources */,
+				F3A000032FBB000100000001 /* FileManager+Size.swift in Sources */,
+				F3A000072FBB000100000001 /* SyncPendingStore.swift in Sources */,
+				F3A0000B2FBB000100000001 /* SingleFlight.swift in Sources */,
+				F3A0000F2FBB000100000001 /* ZstdDecompressor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2053,7 +2292,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3513533B33D584EB2EFFDEE /* BookUpdateMgr+Fetch.swift in Sources */,
+				FC6A0443A0F45826B344EB51 /* BookUpdateMgr+Import.swift in Sources */,
+				09BABD2120005583A760399B /* BookUpdateMgr+Metadata.swift in Sources */,
+				CB610699E40B5678946AC4F9 /* BookUpdateMgr+SQLite.swift in Sources */,
+				AF8A7ED90B455E979D30412E /* ResultsCloudKit.swift in Sources */,
+				AF8A7EDA0B455E979D30412E /* ResultsOrphans.swift in Sources */,
+				B58B9D1D23F95091BA2F5E2A /* ResultsFolders.swift in Sources */,
+				2782B44B51D55ECFBFC055F4 /* ResultsCRUD.swift in Sources */,
+				E1EEAB7921BC5F17865787D6 /* String+Arabic.swift in Sources */,
+				FC8D8810939C50568834FB3D /* String+Search.swift in Sources */,
+				79D930819C9D5E36A1D33521 /* String+TextCleaning.swift in Sources */,
 				F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */,
+				F3A000042FBB000100000001 /* FileManager+Size.swift in Sources */,
+				F3A000082FBB000100000001 /* SyncPendingStore.swift in Sources */,
+				F3A0000C2FBB000100000001 /* SingleFlight.swift in Sources */,
+				F3A001002FBB000100000001 /* ZstdDecompressor.swift in Sources */,
 				F3B60E2C2FC7FFA500A9EF58 /* iOSTOCView.swift in Sources */,
 				F31111912FC008F30024B638 /* ActiveIntegrationStatesView.swift in Sources */,
 				F3DD69E32FA4F76100BFEA0F /* ProgressBooksDownload.swift in Sources */,
@@ -2075,12 +2329,14 @@
 				F305778C2FA463B1005732C6 /* AnnotationListView.swift in Sources */,
 				F305778D2FA463B1005732C6 /* iOSLibraryView.swift in Sources */,
 				F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */,
+				F32D4410303CFB6200429664 /* PauseController.swift in Sources */,
 				F305778D2FA463B1005732C7 /* iOSLibraryViewController.swift in Sources */,
 				F3D02D432FE04D580054807F /* ViewModelProtocols.swift in Sources */,
 				F3D02D442FE04D580054807F /* ReaderViewModel.swift in Sources */,
 				F3D02D472FE04D580054807F /* ViewModelBase.swift in Sources */,
 				F3B60E2A2FC7CDE600A9EF58 /* ReaderTabItemView.swift in Sources */,
 				F305778D2FA463B1005732C8 /* LibraryViewControllerWrapper.swift in Sources */,
+				F32D4418303CFB8300429664 /* SearchWorker.swift in Sources */,
 				F321672B2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
 				F3D9CB213009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
 				F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */,
@@ -2113,6 +2369,7 @@
 				F30576FE2FA46222005732C6 /* BookUpdateModels.swift in Sources */,
 				F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */,
 				F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
+				F32D4424303CFC0800429664 /* ArchiveInfo.swift in Sources */,
 				F30577012FA46222005732C6 /* StorageError.swift in Sources */,
 				F30577032FA46222005732C6 /* LibraryDataManager.swift in Sources */,
 				F34E11542FDAE84600E5A703 /* ListLayoutMetrics.swift in Sources */,
@@ -2170,18 +2427,21 @@
 				F305772B2FA46222005732C6 /* ResultsViewModel.swift in Sources */,
 				F305772D2FA46222005732C6 /* DatabaseManager.swift in Sources */,
 				F35A7AC82FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
+				F32D441B303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				F321672D2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,
 				F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */,
 				F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */,
 				F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */,
 				F30577302FA46222005732C6 /* RowiModel.swift in Sources */,
 				F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,
+				F32D440C303CFB3500429664 /* DBConnectionType.swift in Sources */,
 				F3B60E262FC7CDA400A9EF58 /* iOSReaderNavigationPopoverView.swift in Sources */,
 				F321E0202FC7050F00CB37DD /* CloudKitCoreManager.swift in Sources */,
 				F321E0212FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0222FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */,
 				F321E0232FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
+				F3A002032FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */,
 				F30577342FA46222005732C6 /* Annotations.swift in Sources */,
 				F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */,
 				F3B60E282FC7CDCA00A9EF58 /* iOSReaderBottomToolbarView.swift in Sources */,
@@ -2190,6 +2450,7 @@
 				F305773B2FA46222005732C6 /* ResultsHandler.swift in Sources */,
 				F305773C2FA46222005732C6 /* ZstdShim.swift in Sources */,
 				F3A77FC12FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */,
+				F32D4420303CFBF900429664 /* SQLValue.swift in Sources */,
 				F305773F2FA46222005732C6 /* BookPageCache.swift in Sources */,
 				F30577402FA46222005732C6 /* StringInterner.swift in Sources */,
 				F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */,
@@ -2200,6 +2461,7 @@
 				F363825D2FA702D10006636C /* iPadLayout.swift in Sources */,
 				FDB5242B5960EB1507BD74A6 /* iOSHistoryView.swift in Sources */,
 				F34E11522FDAE32900E5A703 /* BaseHierarchicalListViewController.swift in Sources */,
+				F32D4414303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				F3D02D612FE0616B0054807F /* NarratorViewModel.swift in Sources */,
 				F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */,
 				240682637A5169A63619E577 /* CloudKitSyncManager.swift in Sources */,

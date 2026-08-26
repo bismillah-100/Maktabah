@@ -13,14 +13,13 @@ struct iOSLibraryView: View {
             get: { viewModel.importErrorMessage != nil },
             set: { if !$0 { viewModel.importErrorMessage = nil } }
         )
-        
+
         let singleDeleteBinding = Binding<Bool>(
             get: { viewModel.singleBookToDelete != nil },
             set: { if !$0 { viewModel.singleBookToDelete = nil } }
         )
 
-        mainZStack(viewModel: viewModel)
-            .animation(.interpolatingSpring(stiffness: 300, damping: 20), value: navigationManager.activeIntegrationStates.count)
+        libraryVC(viewModel: viewModel)
             .onChange(of: viewModel.selectedBookIds) { _, _ in
                 handleSelectionChange(viewModel: viewModel)
             }
@@ -73,44 +72,34 @@ struct iOSLibraryView: View {
             }
     }
 
-    @ViewBuilder
-    private func mainZStack(viewModel: LibraryViewModel) -> some View {
-        ZStack {
-            LibraryViewControllerWrapper(
-                navigationManager: navigationManager,
-                viewModel: viewModel,
-                showOnlyDownloaded: Binding(
-                    get: { viewModel.showOnlyDownloaded },
-                    set: { viewModel.showOnlyDownloaded = $0 }
-                ),
-                onDeleteSingleBook: { book in
-                    viewModel.singleBookToDelete = book
-                },
-                onDownloadSingleBook: { book in
-                    navigationManager.showBookIntegrationConfirmation(
-                        for: book,
-                        initialContentId: nil
-                    )
-                }
-            )
-            .themeTint()
-            .ignoresSafeArea(edges: [.vertical])
-
+    private func libraryVC(viewModel: LibraryViewModel) -> some View {
+        LibraryViewControllerWrapper(
+            navigationManager: navigationManager,
+            viewModel: viewModel,
+            showOnlyDownloaded: Binding(
+                get: { viewModel.showOnlyDownloaded },
+                set: { viewModel.showOnlyDownloaded = $0 }
+            ),
+            onDeleteSingleBook: { book in
+                viewModel.singleBookToDelete = book
+            },
+            onDownloadSingleBook: { book in
+                navigationManager.showBookIntegrationConfirmation(
+                    for: book,
+                    initialContentId: nil
+                )
+            }
+        )
+        .themeTint()
+        .ignoresSafeArea(edges: [.vertical])
+        .overlay {
             if viewModel.state == .loading {
                 ProgressView("Loading Library...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .themeBackground()
             }
-
-            if !navigationManager.activeIntegrationStates.isEmpty {
-                VStack(spacing: 0) {
-                    Spacer()
-                    ActiveIntegrationStatesView()
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .zIndex(10)
-            }
         }
+        .withActiveIntegrationStates()
     }
 
     private func handleSelectionChange(viewModel: LibraryViewModel) {
@@ -190,7 +179,6 @@ struct iOSLibraryView: View {
         }
     }
 
-    @ViewBuilder
     private func groupByMenu(viewModel: LibraryViewModel) -> some View {
         Menu {
             Section("Group By") {
@@ -209,7 +197,6 @@ struct iOSLibraryView: View {
         }
     }
 
-    @ViewBuilder
     private func downloadedFilterToggle(viewModel: LibraryViewModel) -> some View {
         Toggle(isOn: Binding(
             get: { viewModel.showOnlyDownloaded },
@@ -221,7 +208,6 @@ struct iOSLibraryView: View {
         .toggleStyle(.button)
     }
 
-    @ViewBuilder
     private func optionsMenu(viewModel: LibraryViewModel) -> some View {
         Menu {
             Button {

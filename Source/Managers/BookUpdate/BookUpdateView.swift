@@ -189,8 +189,7 @@ struct UpdateView: View {
             bookUpdateInfo
             updateBookButton
         }
-        .padding()
-        .padding(.bottom, 8)
+        .padding(.bottom, 32)
     }
 
     @ViewBuilder
@@ -208,7 +207,10 @@ struct UpdateView: View {
             .padding(.horizontal, 6)
             #endif
         }
-        .buttonStyle(.borderedProminent)
+        #if os(iOS)
+        .tint(.green)
+        .prominentButtonStyleIfAvailable()
+        #endif
         .controlSize(.large)
         .clipShape(.capsule)
         .disabled(viewModel.isUpdating || viewModel.selectedCount == 0)

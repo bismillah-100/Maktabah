@@ -239,25 +239,40 @@ final class LibraryViewModel: ViewModelBase {
     }
 
     func updateDisplayedCategories() {
-        var base: [CategoryData]
-        if isFlatMode {
-            base = baseCategories
-        } else {
-            if viewMode == .author {
-                if !_hasBuiltAuthorHierarchy {
-                    _authorHierarchy = dataManager.buildAuthorHierarchy()
-                    _hasBuiltAuthorHierarchy = true
-                }
-                base = _authorHierarchy
-            } else {
-                base = baseCategories
-            }
-        }
+        var base = resolveBaseCategories()
 
         if showOnlyDownloaded, !isFlatMode {
             base = dataManager.filterIntegrated(base: base)
         }
 
+        applySearchFilter(base: base)
+        finalizeDisplayedCategories()
+
+        #if os(iOS)
+        updateTrigger += 1
+        #else
+        updateSubject.send(.reloadData)
+        if !searchQuery.isEmpty {
+            updateSubject.send(.expandItem(nil))
+        }
+        #endif
+    }
+
+    private func resolveBaseCategories() -> [CategoryData] {
+        if isFlatMode {
+            return baseCategories
+        }
+        if viewMode == .author {
+            if !_hasBuiltAuthorHierarchy {
+                _authorHierarchy = dataManager.buildAuthorHierarchy()
+                _hasBuiltAuthorHierarchy = true
+            }
+            return _authorHierarchy
+        }
+        return baseCategories
+    }
+
+    private func applySearchFilter(base: [CategoryData]) {
         if searchQuery.isEmpty {
             _cachedDisplayedCategories = showOnlyDownloaded ? base : (isFlatMode ? baseCategories : base)
         } else {
@@ -274,8 +289,9 @@ final class LibraryViewModel: ViewModelBase {
                 _cachedDisplayedCategories = filtered
             }
         }
+    }
 
-        // Finalize displayedCategories
+    private func finalizeDisplayedCategories() {
         if viewMode == .author, !isFlatMode {
             if !searchQuery.isEmpty {
                 displayedCategories = Array(_allFilteredAuthors.prefix(_displayedFilteredCount))
@@ -287,20 +303,11 @@ final class LibraryViewModel: ViewModelBase {
         } else {
             displayedCategories = _cachedDisplayedCategories
         }
-
-        #if os(iOS)
-        updateTrigger += 1
-        #else
-        updateSubject.send(.reloadData)
-        if !searchQuery.isEmpty {
-            updateSubject.send(.expandItem(nil))
-        }
-        #endif
     }
 
     // MARK: - Migration Support
 
-    func migrateBookId(from oldId: Int, to newId: Int) {
+    override func migrateBookId(from oldId: Int, to newId: Int) {
         if selectedBookIds.contains(oldId) {
             selectedBookIds.remove(oldId)
             selectedBookIds.insert(newId)
@@ -438,19 +445,7 @@ final class LibraryViewModel: ViewModelBase {
     }
 
     func getAllBooks(in category: CategoryData) -> [BooksData] {
-        var books: [BooksData] = []
-        _getAllBooks(in: category, books: &books)
-        return books
-    }
-
-    private func _getAllBooks(in category: CategoryData, books: inout [BooksData]) {
-        for child in category.children {
-            if let book = child as? BooksData {
-                books.append(book)
-            } else if let sub = child as? CategoryData {
-                _getAllBooks(in: sub, books: &books)
-            }
-        }
+        category.allBooks
     }
 
     var selectedDeleteBooks: [BooksData] {
@@ -545,44 +540,86 @@ final class LibraryViewModel: ViewModelBase {
         progressState: BundleArchiveDownloadProgressState,
         onFinished: @escaping (String?) -> Void
     ) async {
+        var (downloadResults, stoppedByNetwork) = await performBulkDownloadPhase(
+            books: books,
+            progressState: progressState
+        )
+
+        let successfulDownloads = books.filter {
+            if case .success = downloadResults[$0.id] { return true }
+            return false
+        }
+
+        let completedIntegrations = await performBulkIntegrationPhase(
+            successfulDownloads: successfulDownloads,
+            downloadResults: &downloadResults,
+            progressState: progressState
+        )
+
+        let failedCount = books.filter {
+            if case .failure = downloadResults[$0.id] { return true }
+            return false
+        }.count
+
+        selectedBookIds.subtract(books.map(\.id))
+        isBulkDownloading = false
+        bulkDownloadTask = nil
+
+        let message = buildBulkCompletionMessage(
+            isCancelled: Task.isCancelled,
+            stoppedByNetwork: stoppedByNetwork,
+            completedIntegrations: completedIntegrations,
+            failedCount: failedCount
+        )
+        onFinished(message)
+    }
+
+    @MainActor
+    private func performBulkDownloadPhase(
+        books: [BooksData],
+        progressState: BundleArchiveDownloadProgressState
+    ) async -> ([Int: Result<URL, Error>], Bool) {
         let total = books.count
         var downloadedCount = 0
-        var completedIntegrations = 0
         var downloadResults: [Int: Result<URL, Error>] = [:]
         var stoppedByNetwork = false
 
         if await !NetworkMonitor.shared.isConnected {
-            stoppedByNetwork = true
-        } else {
-            await withTaskGroup(of: (Int, Result<URL, Error>).self) { group in
-                for book in books {
-                    guard !Task.isCancelled else { break }
-                    group.addTask {
-                        do {
-                            let url = try await BookDownloadManager.shared.ensureBookDownloaded(bookId: book.id)
-                            return (book.id, .success(url))
-                        } catch {
-                            return (book.id, .failure(error))
-                        }
-                    }
+            return (downloadResults, true)
+        }
+
+        await withTaskGroup(of: (Int, Result<URL, Error>).self) { group in
+            for book in books {
+                guard !Task.isCancelled else { break }
+                group.addTask {
+                    await BookDownloadManager.shared.downloadBookResult(bookId: book.id)
                 }
-                for await (bookId, result) in group {
-                    if Task.isCancelled { group.cancelAll(); break }
-                    downloadResults[bookId] = result
-                    downloadedCount += 1
-                    progressState.message = String(localized: "Downloading \(downloadedCount) of \(total) books...")
-                    progressState.detail = "\(downloadedCount) / \(total)"
-                    progressState.progress = total > 0 ? Double(downloadedCount) / Double(total) : 0
-                    if case let .failure(error) = result, isNetworkFailure(error) {
-                        stoppedByNetwork = true
-                        group.cancelAll()
-                    }
+            }
+            for await (bookId, result) in group {
+                if Task.isCancelled { group.cancelAll(); break }
+                downloadResults[bookId] = result
+                downloadedCount += 1
+                progressState.message = String(localized: "Downloading \(downloadedCount) of \(total) books...")
+                progressState.detail = "\(downloadedCount) / \(total)"
+                progressState.progress = total > 0 ? Double(downloadedCount) / Double(total) : 0
+                if case let .failure(error) = result, isNetworkFailure(error) {
+                    stoppedByNetwork = true
+                    group.cancelAll()
                 }
             }
         }
+        return (downloadResults, stoppedByNetwork)
+    }
 
-        let successfulDownloads = books.filter { if case .success = downloadResults[$0.id] { return true }; return false }
+    @MainActor
+    private func performBulkIntegrationPhase(
+        successfulDownloads: [BooksData],
+        downloadResults: inout [Int: Result<URL, Error>],
+        progressState: BundleArchiveDownloadProgressState
+    ) async -> Int {
         let integrateTotal = successfulDownloads.count
+        var completedIntegrations = 0
+
         progressState.mode = .integrating
         progressState.message = String(localized: "Download Complete. Begin integrating...")
         progressState.detail = "0 / \(integrateTotal)"
@@ -593,7 +630,8 @@ final class LibraryViewModel: ViewModelBase {
             if !BookArchiveIntegrator.shared.isBookIntegrated(book) {
                 do {
                     try await BookArchiveIntegrator.shared.ensureBookIntegrated(
-                        book, onIntegrating: {},
+                        book,
+                        onIntegrating: {},
                         onProgress: { phase in
                             await MainActor.run {
                                 progressState.message = "\(phase == .fts ? "FTS" : "Data"): \(book.book)"
@@ -608,13 +646,16 @@ final class LibraryViewModel: ViewModelBase {
             progressState.detail = "\(completedIntegrations) / \(integrateTotal)"
             progressState.progress = integrateTotal > 0 ? Double(completedIntegrations) / Double(integrateTotal) : 0
         }
+        return completedIntegrations
+    }
 
-        let failedCount = books.filter { if case .failure = downloadResults[$0.id] { return true }; return false }.count
-        selectedBookIds.subtract(books.map(\.id))
-        isBulkDownloading = false
-        bulkDownloadTask = nil
-
-        let message: String? = if Task.isCancelled {
+    private func buildBulkCompletionMessage(
+        isCancelled: Bool,
+        stoppedByNetwork: Bool,
+        completedIntegrations: Int,
+        failedCount: Int
+    ) -> String? {
+        if isCancelled {
             String(localized: "Stopped. \(completedIntegrations) books completed.", comment: "")
         } else if stoppedByNetwork {
             NSLocalizedString("Please check your internet connection", comment: "")
@@ -623,12 +664,19 @@ final class LibraryViewModel: ViewModelBase {
         } else {
             String(localized: "All \(completedIntegrations) books processed successfully.", comment: "")
         }
-        onFinished(message)
     }
 
     // MARK: - Observers
 
     private func setupObservers() {
+        setupDebouncedStreams()
+        observeBookIntegrated()
+        observeBooksChanged()
+        enableBookIdMigrationObserver()
+        observeLibraryFolderChanged()
+    }
+
+    private func setupDebouncedStreams() {
         refreshSubject
             .debounce(for: .seconds(0.3), scheduler: RunLoop.current)
             .sink { [weak self] in
@@ -652,10 +700,10 @@ final class LibraryViewModel: ViewModelBase {
                 self?.updateDisplayedCategories()
             }
             .store(in: &cancellables)
+    }
 
-        addObserver(
-            forName: .bookIntegrated, object: nil, queue: .current
-        ) { [weak self] notification in
+    private func observeBookIntegrated() {
+        addObserver(forName: .bookIntegrated, object: nil, queue: .current) { [weak self] notification in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 #if os(macOS)
@@ -667,10 +715,10 @@ final class LibraryViewModel: ViewModelBase {
                 #endif
             }
         }
+    }
 
-        addObserver(
-            forName: .booksChanged, object: nil, queue: .current
-        ) { [weak self] notification in
+    private func observeBooksChanged() {
+        addObserver(forName: .booksChanged, object: nil, queue: .current) { [weak self] notification in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 #if os(macOS)
@@ -681,22 +729,10 @@ final class LibraryViewModel: ViewModelBase {
                 checkBookUpdatesPeriodically(force: true)
             }
         }
+    }
 
-        addObserver(
-            forName: .bookIdMigrated, object: nil, queue: .main
-        ) { [weak self] notification in
-            Task { @MainActor [weak self] in
-                guard let self,
-                      let userInfo = notification.userInfo,
-                      let oldId = userInfo["oldId"] as? Int,
-                      let newId = userInfo["newId"] as? Int else { return }
-                migrateBookId(from: oldId, to: newId)
-            }
-        }
-
-        addObserver(
-            forName: .libraryFolderChanged, object: nil, queue: .current
-        ) { [weak self] _ in
+    private func observeLibraryFolderChanged() {
+        addObserver(forName: .libraryFolderChanged, object: nil, queue: .current) { [weak self] _ in
             guard let self, reloadTask == nil else { return }
             reloadTask?.cancel()
             reloadTask = Task { @MainActor [weak self] in
@@ -708,6 +744,7 @@ final class LibraryViewModel: ViewModelBase {
     }
 
     // MARK: macOS Implementation
+
     #if os(macOS)
     private func setupMacOSBindings() {
         $searchQuery
@@ -722,27 +759,39 @@ final class LibraryViewModel: ViewModelBase {
         historyManager.$historyBooks
             .receive(on: RunLoop.main)
             .debounce(for: .seconds(3), scheduler: RunLoop.main)
-            .sink { [weak self] newBooks in self?.updateFlatListFromHistory(newBooks) }
+            .sink { [weak self] newBooks in
+                self?.updateFlatList(for: .history, newBooks: newBooks, categoryId: -2, categoryName: String(localized: "History"))
+            }
             .store(in: &cancellables)
 
         historyManager.$favoriteBooks
             .receive(on: RunLoop.main)
             .debounce(for: .seconds(3), scheduler: RunLoop.main)
-            .sink { [weak self] newBooks in self?.updateFlatListFromFavorites(newBooks) }
+            .sink { [weak self] newBooks in
+                self?.updateFlatList(for: .favorites, newBooks: newBooks, categoryId: -1, categoryName: String(localized: "Favorites"))
+            }
             .store(in: &cancellables)
     }
 
-    private func updateFlatListFromHistory(_ newBooks: [BooksData]) {
-        guard isFlatMode, filterMode == .history else { return }
-        updateFlatListIncrementally(newBooks: newBooks, fallbackCategoryId: -2, fallbackCategoryName: String(localized: "History"))
+    private func updateFlatList(
+        for mode: LibraryFilterMode,
+        newBooks: [BooksData],
+        categoryId: Int,
+        categoryName: String
+    ) {
+        guard isFlatMode, filterMode == mode else { return }
+        updateFlatListIncrementally(
+            newBooks: newBooks,
+            fallbackCategoryId: categoryId,
+            fallbackCategoryName: categoryName
+        )
     }
 
-    private func updateFlatListFromFavorites(_ newBooks: [BooksData]) {
-        guard isFlatMode, filterMode == .favorites else { return }
-        updateFlatListIncrementally(newBooks: newBooks, fallbackCategoryId: -1, fallbackCategoryName: String(localized: "Favorites"))
-    }
-
-    private func updateFlatListIncrementally(newBooks: [BooksData], fallbackCategoryId: Int, fallbackCategoryName: String) {
+    private func updateFlatListIncrementally(
+        newBooks: [BooksData],
+        fallbackCategoryId: Int,
+        fallbackCategoryName: String
+    ) {
         guard let firstCat = displayedCategories.first else {
             displayedCategories = newBooks.isEmpty ? [] : [{
                 let cat = CategoryData(id: fallbackCategoryId, name: fallbackCategoryName, level: 1, order: 0)
@@ -765,11 +814,9 @@ final class LibraryViewModel: ViewModelBase {
 
         // Hapus item lama yang sudah tidak ada
         let newIdSet = Set(newIds)
-        for (index, oldBook) in currentBooks.enumerated().reversed() {
-            if !newIdSet.contains(oldBook.id) {
-                updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
-                currentBooks.remove(at: index)
-            }
+        for (index, oldBook) in currentBooks.enumerated().reversed() where !newIdSet.contains(oldBook.id) {
+            updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
+            currentBooks.remove(at: index)
         }
 
         firstCat.children = currentBooks
@@ -916,14 +963,12 @@ final class LibraryViewModel: ViewModelBase {
         var list = displayedCategories
         if findAndRemove(in: &list, parent: nil) {
             var rootChanged = false
-            for i in (0 ..< list.count).reversed() {
-                if list[i].children.isEmpty {
-                    #if os(macOS)
-                    updateSubject.send(.removeItems(IndexSet(integer: i), parent: nil))
-                    #endif
-                    list.remove(at: i)
-                    rootChanged = true
-                }
+            for i in (0 ..< list.count).reversed() where list[i].children.isEmpty {
+                #if os(macOS)
+                updateSubject.send(.removeItems(IndexSet(integer: i), parent: nil))
+                #endif
+                list.remove(at: i)
+                rootChanged = true
             }
 
             if rootChanged {
@@ -1008,7 +1053,7 @@ final class LibraryViewModel: ViewModelBase {
                 if let existing = parent.children.compactMap({ $0 as? CategoryData }).first(where: { $0.id == category.id }) {
                     currentParent = existing
                 } else {
-                    let clone = category.copy() as! CategoryData
+                    let clone = category.copy()
                     clone.children = []
                     let insertIndex = insertCategory(clone, into: &parent.children)
                     updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: parent))
@@ -1018,7 +1063,7 @@ final class LibraryViewModel: ViewModelBase {
                 if let existing = displayedCategories.first(where: { $0.id == category.id }) {
                     currentParent = existing
                 } else {
-                    let clone = category.copy() as! CategoryData
+                    let clone = category.copy()
                     clone.children = []
                     var list = displayedCategories
                     let insertIndex = insertCategory(clone, into: &list)

@@ -49,16 +49,27 @@ open class ViewModelBase {
         observerTokens.removeAll()
     }
 
-    // MARK: - Combine Helpers
-
-    public func bind<P: Publisher, S: Scheduler>(
+    public func bind<P: Publisher>(
         _ publisher: P,
-        on scheduler: S = RunLoop.main,
+        on scheduler: some Scheduler = RunLoop.main,
         to callback: @escaping (P.Output) -> Void
     ) where P.Failure == Never {
         publisher
             .receive(on: scheduler)
             .sink { callback($0) }
             .store(in: &cancellables)
+    }
+
+    // MARK: - Book Migration Observer Helper
+
+    open func migrateBookId(from oldId: Int, to newId: Int) {}
+
+    public func enableBookIdMigrationObserver() {
+        addObserver(forName: .bookIdMigrated, object: nil, queue: .main) { notification in
+            Task { @MainActor [weak self] in
+                guard let self, let migration = notification.bookIdMigration else { return }
+                migrateBookId(from: migration.oldId, to: migration.newId)
+            }
+        }
     }
 }

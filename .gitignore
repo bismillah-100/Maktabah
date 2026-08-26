@@ -62,3 +62,7 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

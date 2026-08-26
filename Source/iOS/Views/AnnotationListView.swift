@@ -51,10 +51,7 @@ struct AnnotationListView: View {
         .onChange(of: hideMissingBookAnnotations) { _, _ in
             viewModel.applyFilter()
         }
-        .alert(
-            .bookNotFound(bookID: missingBookId),
-            isPresented: $showMissingBookAlert
-        ) {
+        .alert(.bookNotFound(bookID: missingBookId), isPresented: $showMissingBookAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(.bookMissingOnAnnotationClick)
@@ -62,58 +59,7 @@ struct AnnotationListView: View {
         .withActiveIntegrationStates()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Picker("Group By", selection: $viewModel.groupingMode) {
-                        Text("Book").tag(AnnotationGroupingMode.book)
-                        Text("Tag").tag(AnnotationGroupingMode.tag)
-                    }
-
-                    Divider()
-
-                    Picker("Sort By", selection: $viewModel.sortField) {
-                        Text("Date Created").tag(AnnotationSortField.createdAt)
-                        Text("Context").tag(AnnotationSortField.context)
-                        Text("Page").tag(AnnotationSortField.page)
-                        Text("Part").tag(AnnotationSortField.part)
-                    }
-
-                    Picker("Order", selection: $viewModel.sortAscending) {
-                        Text("Ascending").tag(true)
-                        Text("Descending").tag(false)
-                    }
-
-                    Divider()
-
-                    Button {
-                        Task.detached(priority: .userInitiated) {
-                            let allAnnotations = AnnotationManager.shared.loadAnnotations()
-                            if let jsonString = AnnotationJsonSerializer.encode(annotations: allAnnotations) {
-                                await MainActor.run {
-                                    exportDocument = AnnotationJsonDocument(jsonString: jsonString)
-                                    isExporting = true
-                                }
-                            }
-                        }
-                    } label: {
-                        Label("Export Annotations (JSON)".localized, systemImage: "square.and.arrow.up")
-                    }
-
-                    Button {
-                        isImporting = true
-                    } label: {
-                        Label("Import Annotations (JSON)".localized, systemImage: "square.and.arrow.down")
-                    }
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        CloudKitSyncManager.shared.resetChangeToken()
-                    } label: {
-                        Label("Re-Synchronise All Data", systemImage: "arrow.counterclockwise.icloud")
-                    }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down.circle")
-                }
+                annotationToolbarMenu(viewModel: viewModel)
             }
         }
         .fileExporter(
@@ -123,54 +69,15 @@ struct AnnotationListView: View {
             defaultFilename: "maktabah_annotations.json"
         ) { result in
             if case let .failure(error) = result {
-                importAlertTitle = "Export Failed".localized
-                importAlertMessage = error.localizedDescription
-                showImportAlert = true
+                showImportAlert(title: "Export Failed".localized, message: error.localizedDescription)
             }
         }
         .fileImporter(
             isPresented: $isImporting,
             allowedContentTypes: [.json],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case let .success(urls):
-                guard let url = urls.first else { return }
-                guard url.startAccessingSecurityScopedResource() else {
-                    importAlertTitle = "Import Failed".localized
-                    importAlertMessage = "Unable to access selected file.".localized
-                    showImportAlert = true
-                    return
-                }
-                Task.detached(priority: .userInitiated) {
-                    defer { url.stopAccessingSecurityScopedResource() }
-                    do {
-                        let data = try Data(contentsOf: url)
-                        let decoded = try AnnotationJsonSerializer.decode(from: data)
-                        await MainActor.run {
-                            guard !decoded.isEmpty else {
-                                importAlertTitle = "Import Annotations".localized
-                                importAlertMessage = "No annotations found in the selected file.".localized
-                                showImportAlert = true
-                                return
-                            }
-                            pendingImportAnnotations = decoded
-                            showOverwriteDialog = true
-                        }
-                    } catch {
-                        await MainActor.run {
-                            importAlertTitle = "Import Failed".localized
-                            importAlertMessage = error.localizedDescription
-                            showImportAlert = true
-                        }
-                    }
-                }
-            case let .failure(error):
-                importAlertTitle = "Import Failed".localized
-                importAlertMessage = error.localizedDescription
-                showImportAlert = true
-            }
-        }
+            allowsMultipleSelection: false,
+            onCompletion: handleImportResult
+        )
         .confirmationDialog(
             "Import Annotations".localized,
             isPresented: $showOverwriteDialog,
@@ -203,6 +110,105 @@ struct AnnotationListView: View {
                 Text(msg)
             }
         }
+    }
+
+    @ViewBuilder
+    private func annotationToolbarMenu(viewModel: AnnotationViewModel) -> some View {
+        @Bindable var viewModel = viewModel
+        Menu {
+            Picker("Group By", selection: $viewModel.groupingMode) {
+                Text("Book").tag(AnnotationGroupingMode.book)
+                Text("Tag").tag(AnnotationGroupingMode.tag)
+            }
+
+            Divider()
+
+            Picker("Sort By", selection: $viewModel.sortField) {
+                Text("Date Created").tag(AnnotationSortField.createdAt)
+                Text("Context").tag(AnnotationSortField.context)
+                Text("Page").tag(AnnotationSortField.page)
+                Text("Part").tag(AnnotationSortField.part)
+            }
+
+            Picker("Order", selection: $viewModel.sortAscending) {
+                Text("Ascending").tag(true)
+                Text("Descending").tag(false)
+            }
+
+            Divider()
+
+            Button {
+                exportAnnotations()
+            } label: {
+                Label("Export Annotations (JSON)".localized, systemImage: "square.and.arrow.up")
+            }
+
+            Button {
+                isImporting = true
+            } label: {
+                Label("Import Annotations (JSON)".localized, systemImage: "square.and.arrow.down")
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                CloudKitSyncManager.shared.resetChangeToken()
+            } label: {
+                Label("Re-Synchronise All Data", systemImage: "arrow.counterclockwise.icloud")
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down.circle")
+        }
+    }
+
+    private func exportAnnotations() {
+        Task.detached(priority: .userInitiated) {
+            let allAnnotations = AnnotationManager.shared.loadAnnotations()
+            if let jsonString = AnnotationJsonSerializer.encode(annotations: allAnnotations) {
+                await MainActor.run {
+                    exportDocument = AnnotationJsonDocument(jsonString: jsonString)
+                    isExporting = true
+                }
+            }
+        }
+    }
+
+    private func handleImportResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case let .success(urls):
+            guard let url = urls.first else { return }
+            guard url.startAccessingSecurityScopedResource() else {
+                showImportAlert(title: "Import Failed".localized, message: "Unable to access selected file.".localized)
+                return
+            }
+            Task.detached(priority: .userInitiated) {
+                defer { url.stopAccessingSecurityScopedResource() }
+                do {
+                    let data = try Data(contentsOf: url)
+                    let decoded = try AnnotationJsonSerializer.decode(from: data)
+                    await MainActor.run {
+                        guard !decoded.isEmpty else {
+                            showImportAlert(title: "Import Annotations".localized, message: "No annotations found in the selected file.".localized)
+                            return
+                        }
+                        pendingImportAnnotations = decoded
+                        showOverwriteDialog = true
+                    }
+                } catch {
+                    await MainActor.run {
+                        showImportAlert(title: "Import Failed".localized, message: error.localizedDescription)
+                    }
+                }
+            }
+        case let .failure(error):
+            showImportAlert(title: "Import Failed".localized, message: error.localizedDescription)
+        }
+    }
+
+    private func showImportAlert(title: String, message: String) {
+        importAlertTitle = title
+        importAlertMessage = message
+        showImportAlert = true
     }
 
     private func performImport(overwrite: Bool, viewModel: AnnotationViewModel) {

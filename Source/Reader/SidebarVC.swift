@@ -49,15 +49,11 @@ class SidebarVC: NSViewController {
         outlineView.dataSource = self
         outlineView.allowsMultipleSelection = false
         outlineView.allowsEmptySelection = true
-        ReusableFunc.setupSearchField(searchField)
-        ReusableFunc.setupSearchField(
-            searchField,
-            systemSymbolName: "line.3.horizontal.decrease.circle"
-        )
-
         outlineView.target = self
         outlineView.doubleAction = #selector(onDoubleClick(_:))
 
+        ReusableFunc.setupSearchField(searchField)
+        searchField.focusRingType = .none
         searchField.searchSubmitCallback = { [weak self] query in
             self?.startSearch(query)
         }
@@ -212,10 +208,12 @@ extension SidebarVC: NSOutlineViewDataSource {
                      child index: Int,
                      ofItem item: Any?) -> Any {
         let source = isFiltering ? filteredTree : tocTree
-        if item == nil {
+
+        guard let item = item as? TOCNode else {
             return source[index]
         }
-        return (item as! TOCNode).children[index]
+
+        return item.children[index]
     }
 
     func outlineView(_ outlineView: NSOutlineView,

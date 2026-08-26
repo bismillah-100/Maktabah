@@ -6,9 +6,7 @@
 //
 
 import Foundation
-#if canImport(UIKit)
 import SwiftUI
-#endif
 
 struct TOCRange {
     let start: Int
@@ -149,15 +147,7 @@ class BookTOCViewModel {
     /// Mencari path lengkap dari root ke node terdalam yang mencakup contentId.
     /// Menggunakan tocRanges (endID yang sudah benar) lalu pathToNode untuk full path.
     func deepestPath(forContentId contentId: Int) -> [TOCNode]? {
-        let matches = tocRanges.filter { contentId >= $0.start && contentId <= $0.end }
-        guard let deepest = matches.min(by: {
-            let r0 = $0.end - $0.start
-            let r1 = $1.end - $1.start
-            if r0 != r1 {
-                return r0 < r1
-            }
-            return $0.node.level > $1.node.level
-        })?.node else {
+        guard let deepest = findNode(forContentId: contentId) else {
             return nil
         }
         return pathToNode(deepest)

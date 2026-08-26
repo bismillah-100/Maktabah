@@ -57,7 +57,7 @@ class LibraryVC: NSViewController {
                 outlineView.deselectAll(nil)
                 setupUI()
             }
-        } ))
+        }))
 
         setupViewModelSink()
     }
@@ -117,49 +117,24 @@ class LibraryVC: NSViewController {
     }
 
     private func setupFilterSegment() {
-        // Hapus segment lama jika ada (mencegah tumpukan saat dipanggil ulang)
         bg?.removeFromSuperview()
         bg = nil
         filterSegment = nil
 
-        var images = [
-            NSImage(systemSymbolName: "list.bullet", accessibilityDescription: "All")!,
-            NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Favorites")!,
-            NSImage(systemSymbolName: "clock.fill", accessibilityDescription: "History")!,
-        ]
-
-        if AppConfig.isUsingBundleMode {
-            images.append(NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: "Downloaded")!)
-        }
-
+        let images = createSegmentedControlImages()
         let segment = NSSegmentedControl(
             images: images,
             trackingMode: .selectOne,
             target: self,
             action: #selector(filterSegmentChanged(_:))
         )
-
         segment.segmentStyle = .capsule
         segment.setToolTip(String(localized: "Library"), forSegment: 0)
         segment.setToolTip(String(localized: "Favorites"), forSegment: 1)
         segment.setToolTip(String(localized: "History"), forSegment: 2)
         segment.setToolTip(String(localized: "Downloaded"), forSegment: 3)
 
-        if #available(macOS 26, *) {
-            segment.borderShape = .capsule
-            segment.selectedSegmentBezelColor = .systemOrange
-                .shadow(withLevel: 0.3) ?? .header
-            let glass = NSGlassEffectView()
-            glass.cornerRadius = 999
-            glass.style = .clear
-            glass.addSubview(segment)
-            bg = glass
-        } else {
-            let view = NSView()
-            bg = view
-            bg.addSubview(segment)
-        }
-
+        bg = createFilterSegmentContainer(segment: segment)
         view.addSubview(bg)
 
         segment.translatesAutoresizingMaskIntoConstraints = false
@@ -175,15 +150,39 @@ class LibraryVC: NSViewController {
         ])
 
         let savedSegment = UserDefaults.standard.integer(forKey: LibraryViewManager.filterSegmentIndexKey)
-        if savedSegment >= images.count {
-            segment.selectedSegment = 0
-        } else {
-            segment.selectedSegment = savedSegment
-        }
+        segment.selectedSegment = savedSegment >= images.count ? 0 : savedSegment
 
         filterSegment = segment
         dataVM.viewModel.applyDownloadFilter(forSegmentIndex: segment.selectedSegment)
         updateScrollViewConstraint(filterSegment: true)
+    }
+
+    private func createSegmentedControlImages() -> [NSImage] {
+        var images = [
+            NSImage(systemSymbolName: "list.bullet", accessibilityDescription: "All")!,
+            NSImage(systemSymbolName: "star.fill", accessibilityDescription: "Favorites")!,
+            NSImage(systemSymbolName: "clock.fill", accessibilityDescription: "History")!,
+        ]
+        if AppConfig.isUsingBundleMode {
+            images.append(NSImage(systemSymbolName: "arrow.down.circle.fill", accessibilityDescription: "Downloaded")!)
+        }
+        return images
+    }
+
+    private func createFilterSegmentContainer(segment: NSSegmentedControl) -> NSView {
+        if #available(macOS 26, *) {
+            segment.borderShape = .capsule
+            segment.selectedSegmentBezelColor = .systemOrange.shadow(withLevel: 0.3) ?? .header
+            let glass = NSGlassEffectView()
+            glass.cornerRadius = 999
+            glass.style = .clear
+            glass.addSubview(segment)
+            return glass
+        } else {
+            let container = NSView()
+            container.addSubview(segment)
+            return container
+        }
     }
 
     private func updateScrollViewConstraint(filterSegment: Bool) {
