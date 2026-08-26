@@ -34,17 +34,16 @@ final class HistorySyncHandler: CloudKitRecordParser {
 
 extension ReadingEntry: CloudKitSyncable {
     func toCKRecord(zoneID: CKRecordZone.ID) -> CKRecord? {
-        guard let ckRecordIdStr = self.ckRecordId else { return nil }
-        let recordId = CKRecord.ID(recordName: ckRecordIdStr, zoneID: zoneID)
-        let record = CKRecord(recordType: HistorySyncHandler.recordType, recordID: recordId)
+        guard let ckRecordIdStr = ckRecordId else { return nil }
+        let record = createRecord(type: HistorySyncHandler.recordType, recordName: ckRecordIdStr, zoneID: zoneID)
 
-        record["bookId"] = self.bookId
-        record["lastContentId"] = self.lastContentId
-        record["lastOpenedAt"] = self.lastOpenedAt
-        record["favoritedAt"] = self.favoritedAt
-        record["positionUpdatedAt"] = self.positionUpdatedAt
-        record["isFavorite"] = self.isFavorite
-        record["lastModified"] = Int64(self.updatedAt.timeIntervalSince1970)
+        record["bookId"] = bookId
+        record["lastContentId"] = lastContentId
+        record["lastOpenedAt"] = lastOpenedAt
+        record["favoritedAt"] = favoritedAt
+        record["positionUpdatedAt"] = positionUpdatedAt
+        record["isFavorite"] = isFavorite
+        record["lastModified"] = Int64(updatedAt.timeIntervalSince1970)
 
         return record
     }

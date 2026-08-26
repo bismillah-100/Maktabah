@@ -7,6 +7,19 @@
 
 import Foundation
 
+struct SaveHighlightParams {
+    let text: String
+    let range: NSRange
+    let color: PlatformColor
+    let bkId: Int
+    let contentId: Int
+    let page: Int
+    let part: Int
+    var diacriticsText: String? = nil
+    var showHarakat: Bool = false
+    var mode: AnnotationMode = .highlight
+}
+
 class AnnotationCoordinator {
     private let manager = AnnotationManager.shared
 
@@ -61,44 +74,33 @@ class AnnotationCoordinator {
     }
 
     @discardableResult
-    func saveHighlight(
-        text: String,
-        range: NSRange,
-        color: PlatformColor,
-        bkId: Int,
-        contentId: Int,
-        page: Int,
-        part: Int,
-        diacriticsText: String?,
-        showHarakat: Bool,
-        mode: AnnotationMode = .highlight
-    ) throws -> Annotation {
+    func saveHighlight(_ params: SaveHighlightParams) throws -> Annotation {
         let calculator = ArabicRangeCalculator()
         let ranges = calculator.calculateRanges(
-            for: range,
-            in: text,
-            selectedText: (text as NSString).substring(with: range),
-            diacriticsText: diacriticsText,
-            showHarakat: showHarakat
+            for: params.range,
+            in: params.text,
+            selectedText: (params.text as NSString).substring(with: params.range),
+            diacriticsText: params.diacriticsText,
+            showHarakat: params.showHarakat
         )
 
-        let hex = color.hexString()
+        let hex = params.color.hexString()
 
         let ann = Annotation(
             id: nil,
-            bkId: bkId,
-            contentId: contentId,
+            bkId: params.bkId,
+            contentId: params.contentId,
             range: ranges.withoutDiacritics,
             rangeDiacritics: ranges.withDiacritics,
             colorHex: hex,
-            type: mode,
+            type: params.mode,
             note: nil,
             createdAt: Int64(Date().timeIntervalSince1970),
-            context: (text as NSString).substring(with: range),
-            page: page,
-            part: part,
-            pageArb: String(page).convertToArabicDigits(),
-            partArb: String(part).convertToArabicDigits()
+            context: (params.text as NSString).substring(with: params.range),
+            page: params.page,
+            part: params.part,
+            pageArb: String(params.page).convertToArabicDigits(),
+            partArb: String(params.part).convertToArabicDigits()
         )
 
         try manager.addAnnotation(ann)

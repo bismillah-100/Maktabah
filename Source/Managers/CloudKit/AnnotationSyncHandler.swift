@@ -60,25 +60,24 @@ final class AnnotationSyncHandler: CloudKitRecordParser {
 
 extension Annotation: CloudKitSyncable {
     func toCKRecord(zoneID: CKRecordZone.ID) -> CKRecord? {
-        guard let ckRecordIdStr = self.ckRecordId else { return nil }
-        let recordId = CKRecord.ID(recordName: ckRecordIdStr, zoneID: zoneID)
-        let record = CKRecord(recordType: AnnotationSyncHandler.recordType, recordID: recordId)
+        guard let ckRecordIdStr = ckRecordId else { return nil }
+        let record = createRecord(type: AnnotationSyncHandler.recordType, recordName: ckRecordIdStr, zoneID: zoneID)
 
-        record["bkId"] = self.bkId
-        record["contentId"] = self.contentId
-        record["rangeLocation"] = self.range.location
-        record["rangeLength"] = self.range.length
-        record["rangeDiacLocation"] = self.rangeDiacritics.location
-        record["rangeDiacLength"] = self.rangeDiacritics.length
-        record["colorHex"] = self.colorHex
-        record["type"] = self.type.rawValue
-        record["note"] = self.note
-        record["createdAt"] = self.createdAt
-        record["context"] = self.context
-        record["page"] = self.page
-        record["part"] = self.part
-        record["lastModified"] = self.lastModified ?? Int64(Date().timeIntervalSince1970)
-        record["tags"] = self.tags
+        record["bkId"] = bkId
+        record["contentId"] = contentId
+        record["rangeLocation"] = range.location
+        record["rangeLength"] = range.length
+        record["rangeDiacLocation"] = rangeDiacritics.location
+        record["rangeDiacLength"] = rangeDiacritics.length
+        record["colorHex"] = colorHex
+        record["type"] = type.rawValue
+        record["note"] = note
+        record["createdAt"] = createdAt
+        record["context"] = context
+        record["page"] = page
+        record["part"] = part
+        record["lastModified"] = lastModified ?? Int64(Date().timeIntervalSince1970)
+        record["tags"] = tags
 
         return record
     }
