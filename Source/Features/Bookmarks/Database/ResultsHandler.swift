@@ -333,7 +333,6 @@ class ResultsHandler: SyncPendingManaging {
     func createUniqueIndex() {
         do {
             try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_folders_parent_name ON folders (COALESCE(parent, 0), name)")
-            try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_results_folder_name ON results (COALESCE(folder_id, 0), name)")
             try exec("DROP INDEX IF EXISTS idx_results_folder_name")
             try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_results_folder_name_bk ON results (COALESCE(folder_id, 0), name, bkId)")
         } catch {
