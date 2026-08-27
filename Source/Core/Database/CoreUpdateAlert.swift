@@ -17,7 +17,7 @@ enum CoreUpdateCheckResult {
 
 // MARK: - Core Update Checker (version.txt + tabel v based)
 
-struct CoreUpdateChecker {
+enum CoreUpdateChecker {
     /// Cek apakah ada update core database
     /// Logic:
     /// 1. Cek throttle 6 bulan - skip jika belum waktunya
@@ -69,11 +69,11 @@ enum CoreUpdateError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid version URL"
+            "Invalid version URL"
         case .networkError:
-            return "Network error while checking for updates"
+            "Network error while checking for updates"
         case .invalidResponse:
-            return "Invalid response from server"
+            "Invalid response from server"
         }
     }
 }
@@ -178,13 +178,13 @@ struct CoreUpdateAlertView: View {
     private func buttonActions() -> some View {
         Button {
             #if os(iOS)
-                dismiss()
+            dismiss()
             #endif
             onDismiss()
         } label: {
             Text("Later")
                 #if os(iOS)
-                    .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)
                 #endif
         }
         .tint(.secondary)
@@ -192,13 +192,13 @@ struct CoreUpdateAlertView: View {
 
         Button {
             #if os(iOS)
-                dismiss()
+            dismiss()
             #endif
             onUpdate()
         } label: {
             Label("Update Now", systemImage: "arrow.down.circle")
                 #if os(iOS)
-                    .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)
                 #endif
         }
         .buttonStyle(.borderedProminent)
@@ -244,11 +244,10 @@ extension AppDelegate {
         guard AppConfig.isUsingBundleMode else { return }
 
         Task.detached(priority: .low) { [weak self] in
-
             // Check update
             let result = await CoreUpdateChecker.checkAsync()
 
-            guard case .updateAvailable(let newVersion) = result else { return }
+            guard case let .updateAvailable(newVersion) = result else { return }
 
             await MainActor.run { [weak self] in
                 self?.showCoreUpdateAlert(newVersion: newVersion)
@@ -262,14 +261,14 @@ extension AppDelegate {
             onUpdate: { [weak self] in
                 guard let self else { return }
                 NSApp.stopModal()
-                self.coreUpdateAlertWindow?.orderOut(nil)
-                self.performCoreDatabaseUpdate(to: newVersion)
+                coreUpdateAlertWindow?.orderOut(nil)
+                performCoreDatabaseUpdate(to: newVersion)
             },
             onDismiss: { [weak self] in
                 guard let self else { return }
                 NSApp.stopModal()
-                self.coreUpdateAlertWindow?.orderOut(nil)
-                self.coreUpdateAlertWindow = nil
+                coreUpdateAlertWindow?.orderOut(nil)
+                coreUpdateAlertWindow = nil
             }
         )
 
@@ -279,47 +278,17 @@ extension AppDelegate {
     private func performCoreDatabaseUpdate(to newVersion: String) {
         let downloader = CoreDatabaseDownloader()
         coreDownloader = downloader
+
         let state = CoreDownloadProgressState()
         state.phase = .downloading
         state.progress = 0
         state.detail = ""
         coreDownloadProgressState = state
 
-        let view = CoreDownloadProgressView(
-            state: state,
-            onDownload: {},
-            onChooseFolder: {},
-            onQuit: {}
-        )
-
-        coreDownloadProgressView = view
-
-        let hosting = NSHostingView(rootView: view)
-        hosting.frame = NSRect(x: 0, y: 0, width: 400, height: 1)
-        hosting.layoutSubtreeIfNeeded()
-        let fittedSize = hosting.fittingSize
-        hosting.frame = NSRect(origin: .zero, size: fittedSize)
-
-        let window = ReusableFunc.makeTitlelessWindow(
-            contentView: hosting, size: fittedSize
-        )
-
-        window.center()
-
+        let window = setupDownloadProgressWindow(with: state)
         coreDownloadProgressWindow = window
+
         NSApp.activate(ignoringOtherApps: true)
-
-        let closeProgressWindow: () -> Void = { [weak self] in
-            guard let self, let window = self.coreDownloadProgressWindow else { return }
-            if let parent = NSApp.keyWindow, parent.sheets.contains(window) {
-                parent.endSheet(window)
-            } else {
-                window.orderOut(nil)
-            }
-            window.close()
-            cleanUpUpdaterState()
-        }
-
         if let parent = NSApp.keyWindow {
             parent.beginSheet(window)
         } else {
@@ -335,27 +304,59 @@ extension AppDelegate {
                 state.detail = detail
             },
             onCompletion: { [weak self] error in
-                guard let self else { return }
-                if let error {
-                    coreDownloadProgressState?.phase = .error(error.localizedDescription)
-                    closeProgressWindow()
-                    ReusableFunc.showAlert(
-                        title: "Update Failed",
-                        message: error.localizedDescription
-                    )
-                } else {
-                    // Berhasil - reload database
-                    DatabaseManager.shared.reloadConnectionAndLibrary()
-
-                    closeProgressWindow()
-
-                    ReusableFunc.showAlert(
-                        title: "Update Complete",
-                        message: "Core database has been updated to \(newVersion)."
-                    )
-                }
+                self?.handleUpdateCompletion(error: error, newVersion: newVersion)
             }
         )
+    }
+
+    private func setupDownloadProgressWindow(with state: CoreDownloadProgressState) -> NSWindow {
+        let view = CoreDownloadProgressView(
+            state: state,
+            onDownload: {},
+            onChooseFolder: {},
+            onQuit: {}
+        )
+        coreDownloadProgressView = view
+
+        let hosting = NSHostingView(rootView: view)
+        hosting.frame = NSRect(x: 0, y: 0, width: 400, height: 1)
+        hosting.layoutSubtreeIfNeeded()
+
+        let fittedSize = hosting.fittingSize
+        hosting.frame = NSRect(origin: .zero, size: fittedSize)
+
+        let window = ReusableFunc.makeTitlelessWindow(contentView: hosting, size: fittedSize)
+        window.center()
+        return window
+    }
+
+    private func handleUpdateCompletion(error: Error?, newVersion: String) {
+        let closeProgressWindow: () -> Void = { [weak self] in
+            guard let self, let window = coreDownloadProgressWindow else { return }
+            if let parent = NSApp.keyWindow, parent.sheets.contains(window) {
+                parent.endSheet(window)
+            } else {
+                window.orderOut(nil)
+            }
+            window.close()
+            cleanUpUpdaterState()
+        }
+
+        if let error {
+            coreDownloadProgressState?.phase = .error(error.localizedDescription)
+            closeProgressWindow()
+            ReusableFunc.showAlert(
+                title: "Update Failed",
+                message: error.localizedDescription
+            )
+        } else {
+            DatabaseManager.shared.reloadConnectionAndLibrary()
+            closeProgressWindow()
+            ReusableFunc.showAlert(
+                title: "Update Complete",
+                message: "Core database has been updated to \(newVersion)."
+            )
+        }
     }
 
     private func cleanUpUpdaterState() {

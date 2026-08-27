@@ -20,8 +20,6 @@ enum ArchiveDatabaseTools {
         let isPrimaryKey: Bool
     }
 
-<<<<<<< HEAD
-=======
     private enum SQL {
         static let dropTable = "DROP TABLE IF EXISTS %@;"
         static let insertSelect = "INSERT INTO \"%@\" SELECT * FROM %@.\"%@\";"

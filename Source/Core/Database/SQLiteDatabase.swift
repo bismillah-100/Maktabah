@@ -316,7 +316,7 @@ extension OpaquePointer {
         if type == SQLITE_TEXT {
             return columnString(index) ?? ""
         } else if type == SQLITE_BLOB, let raw = columnRawBlob(index) {
-            return ReusableFunc.decompressData(from: raw)
+            return ZstdDecompressor.decompressData(from: raw)
         }
         return ""
     }

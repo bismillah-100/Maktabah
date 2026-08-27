@@ -87,11 +87,18 @@ enum ZstdDecompressor {
 
         let expectedSizeInt = Int(expectedSize)
         return String(unsafeUninitializedCapacity: expectedSizeInt) { outBuffer in
-            let wrapper = ZSTDContextPool.shared.get()
-            defer { ZSTDContextPool.shared.release(wrapper) }
+            let dict = Thread.current.threadDictionary
+            let dctx: OpaquePointer
+            if let wrapper = dict["Maktabah.ZSTDDCtx"] as? ZSTDContextWrapper {
+                dctx = wrapper.dctx
+            } else {
+                let wrapper = ZSTDContextWrapper()
+                dict["Maktabah.ZSTDDCtx"] = wrapper
+                dctx = wrapper.dctx
+            }
 
             let decompressedSize = ZSTD_decompressDCtx(
-                wrapper.dctx,
+                dctx,
                 outBuffer.baseAddress,
                 expectedSizeInt,
                 ptr.baseAddress,

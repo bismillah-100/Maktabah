@@ -369,7 +369,7 @@ extension BookUpdateManager {
     }
 
     private func bindCompressedNass(from selectStmt: OpaquePointer?, to insertStmt: OpaquePointer?, colIndex: Int32) {
-        if let text = selectStmt?.columnString(colIndex), let compressed = ReusableFunc.compressData(text) {
+        if let text = selectStmt?.columnString(colIndex), let compressed = ZstdDecompressor.compressData(text) {
             _ = compressed.withUnsafeBytes { bytes in
                 sqlite3_bind_blob(insertStmt, colIndex + 1, bytes.baseAddress, Int32(compressed.count), sqliteTransient)
             }

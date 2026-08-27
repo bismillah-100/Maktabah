@@ -18,6 +18,8 @@ final class CloudKitSyncManager {
 
     private let syncQueue = DispatchQueue(label: "com.maktabah.cloudkitsync", attributes: .concurrent)
     private var accountChangeObserver: NSObjectProtocol?
+    private let upload: String = "upload"
+    private let delete: String = "delete"
 
     private var core: CloudKitCoreManager {
         CloudKitCoreManager.shared
@@ -57,11 +59,11 @@ final class CloudKitSyncManager {
         for id in ids {
             switch target {
             case .annotation:
-                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: upload)
             case .result:
-                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: upload)
             case .history:
-                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: "upload")
+                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: upload)
             }
         }
     }
@@ -81,11 +83,11 @@ final class CloudKitSyncManager {
         for id in ids {
             switch target {
             case .annotation:
-                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: delete)
             case .result:
-                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: delete)
             case .history:
-                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: "delete")
+                try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: id, operation: delete)
             }
         }
     }
@@ -104,9 +106,9 @@ final class CloudKitSyncManager {
     // MARK: - Retry Logic
 
     private func retryPendingUploads(retryCount: Int = 0) {
-        let annPending = AnnotationManager.shared.fetchPendingSync(operation: "upload")
-        let resPending = ResultsHandler.shared.fetchPendingSync(operation: "upload")
-        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: "upload")
+        let annPending = AnnotationManager.shared.fetchPendingSync(operation: upload)
+        let resPending = ResultsHandler.shared.fetchPendingSync(operation: upload)
+        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: upload)
 
         guard !annPending.isEmpty || !resPending.isEmpty || !histPending.isEmpty else { return }
 
@@ -149,16 +151,21 @@ final class CloudKitSyncManager {
         }
 
         // Prune orphaned records from pending queues to prevent infinite retry loops
-        if !annOrphans.isEmpty { removePendingUploads(annOrphans, target: .annotation) }
-        if !resOrphans.isEmpty { removePendingUploads(resOrphans, target: .result) }
-        if !histOrphans.isEmpty { removePendingUploads(histOrphans, target: .history) }
+        if !annOrphans.isEmpty {
+            removePendingUploads(annOrphans, target: .annotation)
+        }
+        if !resOrphans.isEmpty {
+            removePendingUploads(resOrphans, target: .result)
+        }
+        if !histOrphans.isEmpty {
+            removePendingUploads(histOrphans, target: .history)
+        }
     }
 
-
     private func retryPendingDeletes(retryCount: Int = 0) {
-        let annPending = AnnotationManager.shared.fetchPendingSync(operation: "delete")
-        let resPending = ResultsHandler.shared.fetchPendingSync(operation: "delete")
-        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: "delete")
+        let annPending = AnnotationManager.shared.fetchPendingSync(operation: delete)
+        let resPending = ResultsHandler.shared.fetchPendingSync(operation: delete)
+        let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: delete)
 
         if !annPending.isEmpty {
             delete(ckRecordIds: annPending, target: .annotation, trackPending: false, retryCount: retryCount)
@@ -223,7 +230,9 @@ final class CloudKitSyncManager {
 
         if let _ = AnnotationManager.shared.db {
             try? AnnotationManager.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
-                if !isInitialUpload, !backfilled.isEmpty { self?.upload(annotations: backfilled, debounce: false) }
+                if !isInitialUpload, !backfilled.isEmpty {
+                    self?.upload(annotations: backfilled, debounce: false)
+                }
             }
         }
 
@@ -232,7 +241,9 @@ final class CloudKitSyncManager {
         }
 
         HistoryViewModel.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
-            if !isInitialUpload, !backfilled.isEmpty { self?.uploadHistory(entries: backfilled, debounce: false) }
+            if !isInitialUpload, !backfilled.isEmpty {
+                self?.uploadHistory(entries: backfilled, debounce: false)
+            }
         }
 
         if isInitialUpload {
@@ -253,7 +264,9 @@ final class CloudKitSyncManager {
         for batch in allAnnotations.chunked(into: batchSize) {
             group.enter()
             upload(annotations: batch, debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
@@ -262,7 +275,9 @@ final class CloudKitSyncManager {
         for batch in allFolders.chunked(into: batchSize) {
             group.enter()
             uploadResultsData(folders: batch, results: [], debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
@@ -271,7 +286,9 @@ final class CloudKitSyncManager {
         for batch in allResults.chunked(into: batchSize) {
             group.enter()
             uploadResultsData(folders: [], results: batch, debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
@@ -280,7 +297,9 @@ final class CloudKitSyncManager {
         for batch in allHistory.chunked(into: batchSize) {
             group.enter()
             uploadHistory(entries: batch, debounce: false) { result in
-                if case .failure = result { hasError = true }
+                if case .failure = result {
+                    hasError = true
+                }
                 group.leave()
             }
         }
@@ -335,7 +354,9 @@ final class CloudKitSyncManager {
 
         syncQueue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            debouncer.add(items: pairedItems, completion: completion, debounce: debounce) { [weak self] itemsToUpload, completions in
+            debouncer.add(
+                items: pairedItems, completion: completion, debounce: debounce
+            ) { [weak self] itemsToUpload, completions in
                 guard let self else { return }
                 let records = itemsToUpload.compactMap { $0.toCKRecord(zoneID: self.core.zoneId) }
                 executeBatchedRecordsUpload(
@@ -547,9 +568,7 @@ final class CloudKitSyncManager {
         guard shouldProceed else { return }
 
         let previousToken = core.loadToken()
-        let fetchStateQueue = DispatchQueue(
-            label: "com.maktabah.cloudkitsync.fetch-state"
-        )
+        let fetchStateQueue = DispatchQueue(label: "com.maktabah.cloudkitsync.fetch-state")
         var changedRecords: [CKRecord] = []
         var deletedRecordIds: [CKRecord.ID] = []
 
@@ -562,43 +581,53 @@ final class CloudKitSyncManager {
                 fetchStateQueue.sync { deletedRecordIds.append(recordId) }
             },
             completion: { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case let .success((finalToken, moreComing)):
-                    let records = fetchStateQueue.sync { changedRecords }
-                    let deletes = fetchStateQueue.sync { deletedRecordIds }
-
-                    syncQueue.async {
-                        var applySuccess = true
-                        if !records.isEmpty || !deletes.isEmpty {
-                            applySuccess = self.applyChangesLocally(
-                                recordsToSave: records,
-                                recordIDsToDelete: deletes
-                            )
-                        }
-
-                        DispatchQueue.main.async {
-                            if let token = finalToken, applySuccess {
-                                self.core.saveToken(token)
-                            }
-
-                            self.core.setSyncing(false) {
-                                if moreComing {
-                                    self.fetchChanges(retryCount: 0)
-                                }
-                            }
-                        }
-                    }
-                case let .failure(error):
-                    handleCloudKitError(
-                        error,
-                        operationType: .fetchChanges,
-                        retryCount: retryCount
-                    )
-                    core.setSyncing(false)
-                }
+                self?.handleFetchChangesCompletion(
+                    result: result,
+                    fetchStateQueue: fetchStateQueue,
+                    changedRecords: changedRecords,
+                    deletedRecordIds: deletedRecordIds,
+                    retryCount: retryCount
+                )
             }
         )
+    }
+
+    private func handleFetchChangesCompletion(
+        result: Result<(CKServerChangeToken?, Bool), Error>,
+        fetchStateQueue: DispatchQueue,
+        changedRecords: [CKRecord],
+        deletedRecordIds: [CKRecord.ID],
+        retryCount: Int
+    ) {
+        switch result {
+        case let .success((finalToken, moreComing)):
+            let records = fetchStateQueue.sync { changedRecords }
+            let deletes = fetchStateQueue.sync { deletedRecordIds }
+
+            syncQueue.async { [weak self] in
+                guard let self else { return }
+                var applySuccess = true
+                if !records.isEmpty || !deletes.isEmpty {
+                    applySuccess = applyChangesLocally(recordsToSave: records, recordIDsToDelete: deletes)
+                }
+
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    if let token = finalToken, applySuccess {
+                        core.saveToken(token)
+                    }
+
+                    core.setSyncing(false) { [weak self] in
+                        if moreComing {
+                            self?.fetchChanges(retryCount: 0)
+                        }
+                    }
+                }
+            }
+        case let .failure(error):
+            handleCloudKitError(error, operationType: .fetchChanges, retryCount: retryCount)
+            core.setSyncing(false)
+        }
     }
 
     private struct ParsedChanges {
@@ -881,11 +910,12 @@ final class CloudKitSyncManager {
     private func checkUserIdentityChange() {
         core.container.fetchUserRecordID { [weak self] recordID, _ in
             guard let self, let currentID = recordID?.recordName else { return }
-            let lastID = UserDefaults.standard.string(forKey: "CloudKitSyncManager_LastUserRecordID")
+            let key = "CloudKitSyncManager_LastUserRecordID"
+            let lastID = UserDefaults.standard.string(forKey: key)
             if let lastID, lastID != currentID {
                 resetChangeToken()
             }
-            UserDefaults.standard.set(currentID, forKey: "CloudKitSyncManager_LastUserRecordID")
+            UserDefaults.standard.set(currentID, forKey: key)
         }
     }
 

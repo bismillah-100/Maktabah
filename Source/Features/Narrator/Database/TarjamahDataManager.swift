@@ -112,7 +112,7 @@ class TarjamahGlobalManager {
     }
 
     private func bindCompressedBlob(stmt: OpaquePointer?, index: Int32, text: String?) {
-        guard let text, let compressed = ReusableFunc.compressData(text, level: 10) else {
+        guard let text, let compressed = ZstdDecompressor.compressData(text, level: 10) else {
             sqlite3_bind_null(stmt, index)
             return
         }
