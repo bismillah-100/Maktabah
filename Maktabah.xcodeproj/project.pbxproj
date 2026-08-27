@@ -673,6 +673,15 @@
 		FE4500020000000000000002 /* SavedResultsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4500010000000000000001 /* SavedResultsItem.swift */; };
 		FE4500030000000000000003 /* SavedResultsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4500010000000000000001 /* SavedResultsItem.swift */; };
 		FE4500040000000000000004 /* SavedResultsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4500010000000000000001 /* SavedResultsItem.swift */; };
+		FE5000020000000000000002 /* SearchResultItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5000010000000000000001 /* SearchResultItem.swift */; };
+		FE5000030000000000000003 /* SearchResultItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5000010000000000000001 /* SearchResultItem.swift */; };
+		FE5000040000000000000004 /* SearchResultItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5000010000000000000001 /* SearchResultItem.swift */; };
+		FE5100020000000000000002 /* SearchSortKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5100010000000000000001 /* SearchSortKey.swift */; };
+		FE5100030000000000000003 /* SearchSortKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5100010000000000000001 /* SearchSortKey.swift */; };
+		FE5100040000000000000004 /* SearchSortKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5100010000000000000001 /* SearchSortKey.swift */; };
+		FE5200020000000000000002 /* SearchResultsSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5200010000000000000001 /* SearchResultsSorter.swift */; };
+		FE5200030000000000000003 /* SearchResultsSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5200010000000000000001 /* SearchResultsSorter.swift */; };
+		FE5200040000000000000004 /* SearchResultsSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5200010000000000000001 /* SearchResultsSorter.swift */; };
 		FEA100020000000000000002 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
 		FEA100030000000000000003 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
 		FEA100040000000000000004 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
@@ -1000,6 +1009,9 @@
 		FE4300010000000000000001 /* SearchResultWithPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultWithPath.swift; sourceTree = "<group>"; };
 		FE4400010000000000000001 /* BookmarkTreeChange.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BookmarkTreeChange.swift; sourceTree = "<group>"; };
 		FE4500010000000000000001 /* SavedResultsItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SavedResultsItem.swift; sourceTree = "<group>"; };
+		FE5000010000000000000001 /* SearchResultItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultItem.swift; sourceTree = "<group>"; };
+		FE5100010000000000000001 /* SearchSortKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchSortKey.swift; sourceTree = "<group>"; };
+		FE5200010000000000000001 /* SearchResultsSorter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultsSorter.swift; sourceTree = "<group>"; };
 		FEA100010000000000000001 /* AnnotationNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationNode.swift; sourceTree = "<group>"; };
 		FEA200010000000000000001 /* AnnotationSortOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationSortOption.swift; sourceTree = "<group>"; };
 		FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "RandomAccessCollection+Insertion.swift"; sourceTree = "<group>"; };
@@ -1098,7 +1110,6 @@
 				4B4C970A2F1EFCAB0051503E /* Models */,
 				4B4C97092F1EFC7E0051503E /* Protocols */,
 				4B6AF2382EE58751002EBFFC /* Reader */,
-				4B65CCB12EE058AA0085CEB4 /* Search */,
 				4B4C970B2F1EFCD40051503E /* View */,
 				4B4C970C2F1EFD150051503E /* XIB */,
 				4B32022D2EDAFE88003B95D1 /* Assets.xcassets */,
@@ -1274,8 +1285,6 @@
 				4B63E1EC2EE9758A00D58F3B /* LoadMoreCell.swift */,
 				4B63E1EA2EE9752F00D58F3B /* LoadMoreCell.xib */,
 				4B9A0AE42EEC51C20049202E /* Result.xib */,
-				F3C449542F2B12E200DA7032 /* SearchCellView.swift */,
-				F3C449552F2B12E200DA7032 /* SearchCellView.xib */,
 			);
 			path = TableCellViews;
 			sourceTree = "<group>";
@@ -1287,16 +1296,6 @@
 				4B65CCBA2EE06C5D0085CEB4 /* LibraryViewManager.swift */,
 			);
 			path = BooksLibrary;
-			sourceTree = "<group>";
-		};
-		4B65CCB12EE058AA0085CEB4 /* Search */ = {
-			isa = PBXGroup;
-			children = (
-				F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */,
-				4B65CCB62EE059B60085CEB4 /* OptionSearchVC.swift */,
-				4B65CCB22EE059700085CEB4 /* SearchSidebarVC.swift */,
-			);
-			path = Search;
 			sourceTree = "<group>";
 		};
 		4B65CCBE2EE0A1050085CEB4 /* Engine */ = {
@@ -1412,7 +1411,6 @@
 				F363824F2FA6F9F10006636C /* Bootstrap */,
 				F36382672FA7610F0006636C /* Common */,
 				F30577762FA463B1005732C6 /* Reader */,
-				F31111952FC00F060024B638 /* Search */,
 				F30577772FA463B1005732C6 /* AnnotationListView.swift */,
 				F30577782FA463B1005732C6 /* AuthorModeView.swift */,
 				F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */,
@@ -1425,8 +1423,6 @@
 				F363825C2FA702D10006636C /* iPadLayout.swift */,
 				F363825A2FA702A00006636C /* iPhoneLayout.swift */,
 				F30577982FA4BE8D005732C6 /* LaunchScreen.storyboard */,
-				F305777B2FA463B1005732C6 /* SearchModeView.swift */,
-				F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */,
 				F305777D2FA463B1005732C6 /* ViewOptionsView.swift */,
 			);
 			path = Views;
@@ -1452,14 +1448,6 @@
 				F30577822FA463B1005732C6 /* Wrappers */,
 			);
 			path = iOS;
-			sourceTree = "<group>";
-		};
-		F31111952FC00F060024B638 /* Search */ = {
-			isa = PBXGroup;
-			children = (
-				F374C00B2FDD69A2009D6807 /* SearchComponents.swift */,
-			);
-			path = Search;
 			sourceTree = "<group>";
 		};
 		F321E01F2FC7050F00CB37DD /* CloudKit */ = {
@@ -1509,7 +1497,6 @@
 				F31111902FC008F30024B638 /* ActiveIntegrationStatesView.swift */,
 				F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */,
 				F36382632FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift */,
-				F36382652FA761070006636C /* iOSSearchFilterViewController.swift */,
 				F3B509702FD85BD300313BAD /* ListContentView.swift */,
 				F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */,
 			);
@@ -1556,7 +1543,6 @@
 				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
-				F3D02D582FE0522E0054807F /* SearchViewModel.swift */,
 				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
@@ -1568,6 +1554,7 @@
 				FE0000030000000000000003 /* Annotations */,
 				FE2000000000000000000000 /* Narrator */,
 				FE4000000000000000000000 /* Bookmarks */,
+				FE5000000000000000000000 /* Search */,
 				FE3000000000000000000000 /* Quran */,
 			);
 			path = Features;
@@ -1901,6 +1888,58 @@
 			path = ViewModel;
 			sourceTree = "<group>";
 		};
+		FE5000000000000000000000 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				FE5000080000000000000008 /* iOS */,
+				FE5000070000000000000007 /* macOS */,
+				FE5000060000000000000006 /* Models */,
+				FE5001000000000000000010 /* ViewModel */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		FE5000060000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FE5000010000000000000001 /* SearchResultItem.swift */,
+				FE5100010000000000000001 /* SearchSortKey.swift */,
+				FE5200010000000000000001 /* SearchResultsSorter.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FE5000070000000000000007 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */,
+				4B65CCB62EE059B60085CEB4 /* OptionSearchVC.swift */,
+				F3C449542F2B12E200DA7032 /* SearchCellView.swift */,
+				F3C449552F2B12E200DA7032 /* SearchCellView.xib */,
+				4B65CCB22EE059700085CEB4 /* SearchSidebarVC.swift */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		FE5000080000000000000008 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F36382652FA761070006636C /* iOSSearchFilterViewController.swift */,
+				F374C00B2FDD69A2009D6807 /* SearchComponents.swift */,
+				F305777B2FA463B1005732C6 /* SearchModeView.swift */,
+				F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		FE5001000000000000000010 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				F3D02D582FE0522E0054807F /* SearchViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -2114,6 +2153,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE5000020000000000000002 /* SearchResultItem.swift in Sources */,
+				FE5100020000000000000002 /* SearchSortKey.swift in Sources */,
+				FE5200020000000000000002 /* SearchResultsSorter.swift in Sources */,
 				FE0100020000000000000002 /* NSAttributedString+Archiving.swift in Sources */,
 				FE0200020000000000000002 /* NSAttributedString+Trimming.swift in Sources */,
 				FE4000020000000000000002 /* FolderNode.swift in Sources */,
@@ -2325,6 +2367,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE5000030000000000000003 /* SearchResultItem.swift in Sources */,
+				FE5100030000000000000003 /* SearchSortKey.swift in Sources */,
+				FE5200030000000000000003 /* SearchResultsSorter.swift in Sources */,
 				FE0100030000000000000003 /* NSAttributedString+Archiving.swift in Sources */,
 				FE0200030000000000000003 /* NSAttributedString+Trimming.swift in Sources */,
 				FE4000030000000000000003 /* FolderNode.swift in Sources */,
@@ -2538,6 +2583,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE5000040000000000000004 /* SearchResultItem.swift in Sources */,
+				FE5100040000000000000004 /* SearchSortKey.swift in Sources */,
+				FE5200040000000000000004 /* SearchResultsSorter.swift in Sources */,
 				FE0100040000000000000004 /* NSAttributedString+Archiving.swift in Sources */,
 				FE0200040000000000000004 /* NSAttributedString+Trimming.swift in Sources */,
 				FE4000040000000000000004 /* FolderNode.swift in Sources */,
