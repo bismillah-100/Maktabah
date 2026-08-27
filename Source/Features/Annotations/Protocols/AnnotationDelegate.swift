@@ -11,7 +11,6 @@ protocol AnnotationDelegate: AnyObject {
     func didSelect(annotation: Annotation)
 }
 
-#if os(macOS)
 extension IbarotTextVC: AnnotationDelegate {
     func didSelect(annotation: Annotation) {
         let bkId = annotation.bkId
@@ -50,5 +49,4 @@ extension IbarotTextVC: AnnotationDelegate {
         }
     }
 }
-#endif
 

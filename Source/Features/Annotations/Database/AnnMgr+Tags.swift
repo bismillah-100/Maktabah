@@ -13,39 +13,44 @@ extension AnnotationManager {
     ///   semua anotasi dari tag lama dipindah ke tag yang sudah ada, tag lama dihapus.
     /// - Jika tidak → **simple rename**: hanya nama di DB & cache yang diperbarui.
     /// - Throws `NSError(domain:"EmptyTagName")` jika `newName` kosong setelah trim.
-    func renameTag(from oldName: String, to newName: String) throws {
-        guard let _db else { throw NSError(domain: "DBNil", code: 1) }
-
-        let trimmedNew = newName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let oldNormalized = normalizedTagName(oldName)
-        let newNormalized = normalizedTagName(trimmedNew)
-
-        guard !newNormalized.isEmpty else {
-            throw NSError(
-                domain: "EmptyTagName", code: 3,
-                userInfo: [NSLocalizedDescriptionKey: "Tag name cannot be empty."]
-            )
-        }
-        if oldNormalized == newNormalized, oldName == trimmedNew { return }
-
-        var oldTagId: Int64 = -1
-        let findOldSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1"
-        if let fetchedId = try _db.fetch(query: findOldSql, parameters: [oldNormalized], mapping: { $0.int64(at: 0) }).first {
-            oldTagId = fetchedId
+    private enum TagSQL {
+        static func findTagId(table: String, colId: String, colNormalizedName: String) -> String {
+            "SELECT \(colId) FROM \(table) WHERE \(colNormalizedName) = ? LIMIT 1"
         }
 
-        if oldTagId == -1 { return }
-
-        let findAffectedSql = "SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?"
-        let affectedIds = try _db.fetch(query: findAffectedSql, parameters: [oldTagId], mapping: { $0.int64(at: 0) })
-
-        var existingNewTagId: Int64 = -1
-        let findNewSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1"
-        if let fetchedId = try _db.fetch(query: findNewSql, parameters: [newNormalized], mapping: { $0.int64(at: 0) }).first {
-            existingNewTagId = fetchedId
+        static func findAffectedIds(table: String, colAnnotationId: String, colTagId: String) -> String {
+            "SELECT \(colAnnotationId) FROM \(table) WHERE \(colTagId) = ?"
         }
+    }
 
-        let renameContext = TagRenameContext(
+    private func fetchTagId(normalizedName: String, db: SQLiteDatabase) throws -> Int64 {
+        let query = TagSQL.findTagId(table: tagsTable, colId: colTagId, colNormalizedName: colTagNormalizedName)
+        if let fetchedId = try db.fetch(query: query, parameters: [normalizedName], mapping: { $0.int64(at: 0) }).first {
+            return fetchedId
+        }
+        return -1
+    }
+
+    private func getTagRenameContext(
+        oldNormalized: String,
+        newNormalized: String,
+        trimmedNew: String,
+        db: SQLiteDatabase,
+        now: Int64
+    ) throws -> (context: TagRenameContext, existingNewTagId: Int64)? {
+        let oldTagId = try fetchTagId(normalizedName: oldNormalized, db: db)
+        guard oldTagId != -1 else { return nil }
+
+        let affectedQuery = TagSQL.findAffectedIds(
+            table: annotationTagsTable,
+            colAnnotationId: colAnnotationTagAnnotationId,
+            colTagId: colAnnotationTagTagId
+        )
+        let affectedIds = try db.fetch(query: affectedQuery, parameters: [oldTagId], mapping: { $0.int64(at: 0) })
+
+        let existingNewTagId = try fetchTagId(normalizedName: newNormalized, db: db)
+
+        let context = TagRenameContext(
             oldTagId: oldTagId,
             oldNormalized: oldNormalized,
             newNormalized: newNormalized,
@@ -54,15 +59,35 @@ extension AnnotationManager {
             now: now
         )
 
-        let updatedAnnotations: [Annotation] = if existingNewTagId != -1 {
-            try performTagMerge(
-                context: renameContext,
-                existingNewTagId: existingNewTagId
-            )
+        return (context, existingNewTagId)
+    }
+
+    func renameTag(from oldName: String, to newName: String) throws {
+        guard let _db else { throw NSError(domain: "DBNil", code: 1) }
+
+        let trimmedNew = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let oldNormalized = normalizedTagName(oldName)
+        let newNormalized = normalizedTagName(trimmedNew)
+
+        guard !newNormalized.isEmpty else {
+            throw NSError(domain: "EmptyTagName", code: 3, userInfo: [NSLocalizedDescriptionKey: "Tag name cannot be empty."])
+        }
+        if oldNormalized == newNormalized, oldName == trimmedNew {
+            return
+        }
+
+        guard let result = try getTagRenameContext(
+            oldNormalized: oldNormalized,
+            newNormalized: newNormalized,
+            trimmedNew: trimmedNew,
+            db: _db,
+            now: now
+        ) else { return }
+
+        let updatedAnnotations: [Annotation] = if result.existingNewTagId != -1 {
+            try performTagMerge(context: result.context, existingNewTagId: result.existingNewTagId)
         } else {
-            try performSimpleTagRename(
-                context: renameContext
-            )
+            try performSimpleTagRename(context: result.context)
         }
 
         applyBatchTagUpdates(updatedAnnotations)
@@ -208,7 +233,9 @@ extension AnnotationManager {
             deletedTagId = fetchedId
         }
 
-        if deletedTagId == -1 { return }
+        if deletedTagId == -1 {
+            return
+        }
 
         let findAffectedSql = "SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?"
         let affectedIds = try _db.fetch(query: findAffectedSql, parameters: [deletedTagId], mapping: { $0.int64(at: 0) })
