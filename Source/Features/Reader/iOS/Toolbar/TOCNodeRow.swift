@@ -61,7 +61,7 @@ struct TOCNodeRow: View {
             }
             // Berikan indentasi di sebelah kanan berdasarkan level (RTL: leading = kanan)
             .padding(.leading, CGFloat(max(0, item.level - 1)) * 24)
-            .id(ObjectIdentifier(item))
+            .id(item.id)
             .environment(\.layoutDirection, .rightToLeft)
             
             // Rekursif untuk menampilkan sub-bab di bawahnya jika sedang diekspansi
