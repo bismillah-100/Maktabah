@@ -682,6 +682,9 @@
 		FE5200020000000000000002 /* SearchResultsSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5200010000000000000001 /* SearchResultsSorter.swift */; };
 		FE5200030000000000000003 /* SearchResultsSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5200010000000000000001 /* SearchResultsSorter.swift */; };
 		FE5200040000000000000004 /* SearchResultsSorter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE5200010000000000000001 /* SearchResultsSorter.swift */; };
+		FE6000020000000000000002 /* ReadingEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6000010000000000000001 /* ReadingEntry.swift */; };
+		FE6000030000000000000003 /* ReadingEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6000010000000000000001 /* ReadingEntry.swift */; };
+		FE6000040000000000000004 /* ReadingEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6000010000000000000001 /* ReadingEntry.swift */; };
 		FEA100020000000000000002 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
 		FEA100030000000000000003 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
 		FEA100040000000000000004 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
@@ -1012,6 +1015,7 @@
 		FE5000010000000000000001 /* SearchResultItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultItem.swift; sourceTree = "<group>"; };
 		FE5100010000000000000001 /* SearchSortKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchSortKey.swift; sourceTree = "<group>"; };
 		FE5200010000000000000001 /* SearchResultsSorter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultsSorter.swift; sourceTree = "<group>"; };
+		FE6000010000000000000001 /* ReadingEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReadingEntry.swift; sourceTree = "<group>"; };
 		FEA100010000000000000001 /* AnnotationNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationNode.swift; sourceTree = "<group>"; };
 		FEA200010000000000000001 /* AnnotationSortOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationSortOption.swift; sourceTree = "<group>"; };
 		FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "RandomAccessCollection+Insertion.swift"; sourceTree = "<group>"; };
@@ -1085,6 +1089,7 @@
 				4B32022A2EDAFE85003B95D1 /* Source */,
 				4B3202292EDAFE85003B95D1 /* Products */,
 				4BA3936B2EF15F0200736DFF /* Frameworks */,
+				F3F625693040611A00887FD7 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1156,7 +1161,6 @@
 				4BEC35902F34BA330038FC0F /* DatabaseError.swift */,
 				4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */,
 				9E4593850FE48263B93695A4 /* FtsMigrationManager.swift */,
-				F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */,
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
 				F321672C2FBB2C0D00601DB3 /* SQLiteDatabase.swift */,
@@ -1413,9 +1417,6 @@
 				F30577762FA463B1005732C6 /* Reader */,
 				F30577772FA463B1005732C6 /* AnnotationListView.swift */,
 				F30577782FA463B1005732C6 /* AuthorModeView.swift */,
-				F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */,
-				F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */,
-				9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */,
 				F30577792FA463B1005732C6 /* iOSLibraryView.swift */,
 				F30577792FA463B1005732C7 /* iOSLibraryViewController.swift */,
 				F30577792FA463B1005732C8 /* LibraryViewControllerWrapper.swift */,
@@ -1431,7 +1432,6 @@
 		F30577822FA463B1005732C6 /* Wrappers */ = {
 			isa = PBXGroup;
 			children = (
-				F305777F2FA463B1005732C6 /* BookListViewController.swift */,
 				F30577802FA463B1005732C6 /* BookListWrapper.swift */,
 				F30577812FA463B1005732C6 /* iOSIbarotTextView.swift */,
 			);
@@ -1540,12 +1540,19 @@
 				F3D02D3A2FE04D580054807F /* Base */,
 				F3D02D3C2FE04D580054807F /* Protocols */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
-				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
 				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		F3F625693040611A00887FD7 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				F305777F2FA463B1005732C6 /* BookListViewController.swift */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 		FE0000010000000000000001 /* Features */ = {
@@ -1554,6 +1561,7 @@
 				FE0000030000000000000003 /* Annotations */,
 				FE2000000000000000000000 /* Narrator */,
 				FE4000000000000000000000 /* Bookmarks */,
+				FE6000000000000000000000 /* History */,
 				FE5000000000000000000000 /* Search */,
 				FE3000000000000000000000 /* Quran */,
 			);
@@ -1940,6 +1948,51 @@
 			path = ViewModel;
 			sourceTree = "<group>";
 		};
+		FE6000000000000000000000 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				FE6000050000000000000005 /* Database */,
+				FE6000080000000000000008 /* iOS */,
+				FE6000060000000000000006 /* Models */,
+				FE6001000000000000000010 /* ViewModel */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		FE6000050000000000000005 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		FE6000060000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FE6000010000000000000001 /* ReadingEntry.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FE6000080000000000000008 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */,
+				F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */,
+				9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		FE6001000000000000000010 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -2153,6 +2206,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE6000020000000000000002 /* ReadingEntry.swift in Sources */,
 				FE5000020000000000000002 /* SearchResultItem.swift in Sources */,
 				FE5100020000000000000002 /* SearchSortKey.swift in Sources */,
 				FE5200020000000000000002 /* SearchResultsSorter.swift in Sources */,
@@ -2367,6 +2421,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE6000030000000000000003 /* ReadingEntry.swift in Sources */,
 				FE5000030000000000000003 /* SearchResultItem.swift in Sources */,
 				FE5100030000000000000003 /* SearchSortKey.swift in Sources */,
 				FE5200030000000000000003 /* SearchResultsSorter.swift in Sources */,
@@ -2583,6 +2638,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE6000040000000000000004 /* ReadingEntry.swift in Sources */,
 				FE5000040000000000000004 /* SearchResultItem.swift in Sources */,
 				FE5100040000000000000004 /* SearchSortKey.swift in Sources */,
 				FE5200040000000000000004 /* SearchResultsSorter.swift in Sources */,
