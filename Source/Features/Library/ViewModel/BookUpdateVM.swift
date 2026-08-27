@@ -119,7 +119,6 @@ class BookUpdateViewModel: ObservableObject {
 
     func performSelectedUpdates() {
         let selectedItems = availableUpdates.filter { $0.isSelected && $0.needsUpdate }
-
         guard !selectedItems.isEmpty else {
             progressMessage = String(localized: "No books selected")
             return
@@ -130,59 +129,58 @@ class BookUpdateViewModel: ObservableObject {
         updateResults.removeAll()
 
         Task { @MainActor [weak self] in
-            defer { 
-                self?.isUpdating = false 
+            defer {
+                self?.isUpdating = false
                 BookUpdateManager.shared.cleanupWorkingDirectory()
             }
-            guard let self else { return }
+            await self?.executeBookUpdates(selectedItems: selectedItems)
+        }
+    }
 
-            do {
-                let authEntries = try await BookUpdateManager.shared.fetchAuthIndexEntriesIfNeeded(from: Self.authCSVURL)
-                let authIndexMap = Dictionary(uniqueKeysWithValues: authEntries.map { ($0.authId, $0) })
+    @MainActor
+    private func executeBookUpdates(selectedItems: [BookUpdateItem]) async {
+        do {
+            let authEntries = try await BookUpdateManager.shared.fetchAuthIndexEntriesIfNeeded(from: Self.authCSVURL)
+            let authIndexMap = Dictionary(uniqueKeysWithValues: authEntries.map { ($0.authId, $0) })
 
-                let selectedContexts = selectedItems.enumerated().map { index, item in
-                    SelectedBookContext(
-                        index: index,
-                        item: item,
-                        entry: BookIndexEntry(
-                            bkid: item.id,
-                            bk: item.bookName,
-                            category: item.category,
-                            versionName: item.newVersion,
-                            downloadURL: item.downloadURL,
-                            fileSize: item.fileSize
-                        )
-                    )
-                }
-
-                for context in selectedContexts {
-                    context.item.status = .downloading
-                }
-
-                let stagedUpdates = await downloadSelectedBooksInParallel(
-                    selectedContexts: selectedContexts,
-                    authIndexMap: authIndexMap,
-                    maxConcurrentDownloads: 3
-                )
-
-                progressMessage = String(localized:
-                    "Download phase completed (\(stagedUpdates.count)/\(selectedItems.count)). Starting processing...")
-
-                let results = await processStagedUpdates(
-                    selectedContexts: selectedContexts,
-                    stagedUpdates: stagedUpdates,
-                    totalCount: selectedItems.count
-                )
-                updateResults = results
-
-                try await LibraryDataManager.shared.processBookUpdates(results)
-                refreshAvailableUpdatesState()
-            } catch {
-                progressMessage = "Error: \(error.localizedDescription)"
-                #if DEBUG
-                print("❌ [Perform Updates] Error: \(error)")
-                #endif
+            let selectedContexts = createSelectedContexts(from: selectedItems)
+            for context in selectedContexts {
+                context.item.status = .downloading
             }
+
+            let stagedUpdates = await downloadSelectedBooksInParallel(
+                selectedContexts: selectedContexts,
+                authIndexMap: authIndexMap,
+                maxConcurrentDownloads: 3
+            )
+
+            progressMessage = String(localized: "Download phase completed (\(stagedUpdates.count)/\(selectedItems.count)). Starting processing...")
+
+            let results = await processStagedUpdates(
+                selectedContexts: selectedContexts, stagedUpdates: stagedUpdates, totalCount: selectedItems.count
+            )
+            updateResults = results
+
+            try await LibraryDataManager.shared.processBookUpdates(results)
+            refreshAvailableUpdatesState()
+        } catch {
+            progressMessage = "Error: \(error.localizedDescription)"
+            #if DEBUG
+            print("❌ [Perform Updates] Error: \(error)")
+            #endif
+        }
+    }
+
+    private func createSelectedContexts(from selectedItems: [BookUpdateItem]) -> [SelectedBookContext] {
+        selectedItems.enumerated().map { index, item in
+            SelectedBookContext(
+                index: index,
+                item: item,
+                entry: BookIndexEntry(
+                    bkid: item.id, bk: item.bookName, category: item.category,
+                    versionName: item.newVersion, downloadURL: item.downloadURL, fileSize: item.fileSize
+                )
+            )
         }
     }
 
