@@ -23,11 +23,6 @@ protocol ResultsDelegate: AnyObject {
     func didSelect(savedResults: [SavedResultsItem])
 }
 
-protocol TarjamahBDelegate: AnyObject {
-    func didSelectRowi(rowi: Rowi)
-    func didSelect(tarjamahB: TarjamahMen, query: String?) async
-}
-
 protocol LibraryViewDelegate: AnyObject {
     func didSelectItem(_ row: Int) async
 }
