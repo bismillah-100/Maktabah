@@ -9,8 +9,9 @@ import Foundation
 
 final class ZSTDContextWrapper: @unchecked Sendable {
     let dctx: OpaquePointer
-    init() {
-        dctx = ZSTD_createDCtx()!
+    init?() {
+        guard let ctx = ZSTD_createDCtx() else { return nil }
+        dctx = ctx
     }
 
     deinit { ZSTD_freeDCtx(dctx) }
@@ -21,7 +22,7 @@ final class ZSTDContextPool: @unchecked Sendable {
     private var pool: [ZSTDContextWrapper] = []
     private let lock = NSLock()
 
-    func get() -> ZSTDContextWrapper {
+    func get() -> ZSTDContextWrapper? {
         lock.lock()
         defer { lock.unlock() }
         if !pool.isEmpty {

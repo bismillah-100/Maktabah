@@ -91,7 +91,7 @@ class BookConnection {
                 let part = row.int64(at: 3)
 
                 if let nassBlob = row.rawBlob(at: 1) {
-                    let nass = ReusableFunc.decompressData(from: nassBlob)
+                    let nass = ZstdDecompressor.decompressData(from: nassBlob)
 
                     return BookContent(
                         id: Int(id),
@@ -170,7 +170,7 @@ extension BookConnection {
 
     private func parseBookContent(row: SQLiteRow, bkid: String, quran: Bool = false) -> BookContent? {
         guard let nassBlob = row.rawBlob(at: 0) else { return nil }
-        let decompressedNass = ReusableFunc.decompressData(from: nassBlob)
+        let decompressedNass = ZstdDecompressor.decompressData(from: nassBlob)
 
         let page = row.int64(at: 1)
         let id = row.int64(at: 2)

@@ -52,7 +52,9 @@ final class FtsMigrationManager {
         static let pragmaTempStoreMemory = "PRAGMA temp_store = MEMORY;"
         static let createFtsMetadata = "CREATE TABLE IF NOT EXISTS fts_db.metadata (key TEXT PRIMARY KEY, value INTEGER);"
         static let insertFtsVersion = "INSERT OR REPLACE INTO fts_db.metadata (key, value) VALUES ('fts_version', 2);"
-        static func dropFtsTable(_ table: String) -> String { "DROP TABLE IF EXISTS main.\(table)_fts;" }
+        static func dropFtsTable(_ table: String) -> String {
+            "DROP TABLE IF EXISTS main.\(table)_fts;"
+        }
     }
 
     private func getArchiveFtsVersion(ftsPath: String) -> Int {
@@ -127,7 +129,7 @@ final class FtsMigrationManager {
 
     @MainActor
     private func finalizeMigration(error: Error? = nil) {
-        if error == nil && !isCancelled {
+        if error == nil, !isCancelled {
             archivesToMigrate.removeAll()
             checkNeedsMigration()
         }
@@ -149,7 +151,9 @@ final class FtsMigrationManager {
             }
 
             while try await group.next() != nil {
-                if self.isCancelled { break }
+                if self.isCancelled {
+                    break
+                }
                 if let nextId = iterator.next() {
                     group.addTask {
                         try await self.migrateSingleArchive(archiveId: nextId)
@@ -202,33 +206,30 @@ final class FtsMigrationManager {
         return try await work()
     }
 
-    private func migrateSingleArchive(archiveId: Int) async throws {
+    private struct MigrationPaths {
+        let archiveOrig: String
+        let ftsOrig: String
+        let archiveWrite: String
+        let ftsWrite: String
+    }
+
+    private func getMigrationPaths(archiveId: Int) -> MigrationPaths? {
         guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
               let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
-        else {
-            return
-        }
+        else { return nil }
 
         let archiveWritePath = prepareWritableDatabasePath(archivePath)
         let ftsWritePath = prepareWritableDatabasePath(ftsPath)
 
-        var isSuccess = false
-        defer {
-            if !isSuccess {
-                cleanupTempDatabases(archiveWritePath: archiveWritePath, originalArchivePath: archivePath, ftsWritePath: ftsWritePath, originalFtsPath: ftsPath)
-            }
-        }
+        return MigrationPaths(
+            archiveOrig: archivePath,
+            ftsOrig: ftsPath,
+            archiveWrite: archiveWritePath,
+            ftsWrite: ftsWritePath
+        )
+    }
 
-        var archiveDb: OpaquePointer? = try openDatabase(path: archiveWritePath)
-        defer {
-            if let db = archiveDb {
-                try? exec(db, SQL.detachFtsDb)
-                sqlite3_close(db)
-            }
-        }
-
-        guard let db = archiveDb else { return }
-
+    private func executeMigrationSteps(db: OpaquePointer, ftsWritePath: String, archiveId: Int) async throws {
         // Detach if already attached from previous run
         try? exec(db, SQL.detachFtsDb)
 
@@ -248,6 +249,34 @@ final class FtsMigrationManager {
 
         try? exec(db, SQL.createFtsMetadata)
         try? exec(db, SQL.insertFtsVersion)
+    }
+
+    private func migrateSingleArchive(archiveId: Int) async throws {
+        guard let paths = getMigrationPaths(archiveId: archiveId) else { return }
+
+        var isSuccess = false
+        defer {
+            if !isSuccess {
+                cleanupTempDatabases(
+                    archiveWritePath: paths.archiveWrite,
+                    originalArchivePath: paths.archiveOrig,
+                    ftsWritePath: paths.ftsWrite,
+                    originalFtsPath: paths.ftsOrig
+                )
+            }
+        }
+
+        var archiveDb: OpaquePointer? = try openDatabase(path: paths.archiveWrite)
+        defer {
+            if let db = archiveDb {
+                try? exec(db, SQL.detachFtsDb)
+                sqlite3_close(db)
+            }
+        }
+
+        guard let db = archiveDb else { return }
+
+        try await executeMigrationSteps(db: db, ftsWritePath: paths.ftsWrite, archiveId: archiveId)
 
         try? exec(db, SQL.detachFtsDb)
         sqlite3_close(db)
@@ -258,8 +287,8 @@ final class FtsMigrationManager {
         }
 
         // Atomic Replace
-        try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archivePath)
-        try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsPath)
+        try replaceDatabaseIfNeeded(tempPath: paths.archiveWrite, originalPath: paths.archiveOrig)
+        try replaceDatabaseIfNeeded(tempPath: paths.ftsWrite, originalPath: paths.ftsOrig)
 
         isSuccess = true
     }
@@ -356,7 +385,9 @@ final class FtsMigrationManager {
             nil
         ) == SQLITE_OK, let validDb = db else {
             let errorMsg = db.flatMap { String(cString: sqlite3_errmsg($0)) } ?? "Unknown error"
-            if let db { sqlite3_close(db) }
+            if let db {
+                sqlite3_close(db)
+            }
             throw NSError(domain: "FtsMigration", code: 1, userInfo: [NSLocalizedDescriptionKey: "Open failed: \(errorMsg)"])
         }
         return validDb
