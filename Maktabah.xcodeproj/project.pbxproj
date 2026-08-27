@@ -67,7 +67,6 @@
 		4B56955B2EEFDAAE00ABEB48 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */; };
 		4B5695642EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */; };
-		4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		4B58EDCB2EE3DBE800073495 /* ResultsViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */; };
 		4B58EDCE2EE3DDEE00073495 /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */; };
 		4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
@@ -174,7 +173,6 @@
 		4B7C90EE2F83494200454BE1 /* ViewerSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3202442EDB1099003B95D1 /* ViewerSplitVC.swift */; };
 		4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */; };
 		4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100E42EFA73DD00CCBED6 /* QuranSplitVC.swift */; };
-		4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		4B7C90F12F83494200454BE2 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
 		4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB174412F1AFAFF00BF1A2F /* ScreenTimeManager.swift */; };
 		4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6AF2322EE57CCD002EBFFC /* Toolbar.swift */; };
@@ -357,7 +355,6 @@
 		F30577262FA46222005732C6 /* DataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024F2EDB1B5A003B95D1 /* DataModel.swift */; };
 		F305772B2FA46222005732C6 /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */; };
 		F305772D2FA46222005732C6 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */; };
-		F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
 		F30577342FA46222005732C6 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */; };
@@ -634,6 +631,12 @@
 		FC8D8810939C50568834FB3D /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71100FB42F3F579689D3A60F /* String+Search.swift */; };
 		FCEE7463632B425A8C6EC39F /* AnVC+TagFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */; };
 		FDB5242B5960EB1507BD74A6 /* iOSHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */; };
+		FE0100020000000000000002 /* NSAttributedString+Archiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0100010000000000000001 /* NSAttributedString+Archiving.swift */; };
+		FE0100030000000000000003 /* NSAttributedString+Archiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0100010000000000000001 /* NSAttributedString+Archiving.swift */; };
+		FE0100040000000000000004 /* NSAttributedString+Archiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0100010000000000000001 /* NSAttributedString+Archiving.swift */; };
+		FE0200020000000000000002 /* NSAttributedString+Trimming.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0200010000000000000001 /* NSAttributedString+Trimming.swift */; };
+		FE0200030000000000000003 /* NSAttributedString+Trimming.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0200010000000000000001 /* NSAttributedString+Trimming.swift */; };
+		FE0200040000000000000004 /* NSAttributedString+Trimming.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0200010000000000000001 /* NSAttributedString+Trimming.swift */; };
 		FE2000020000000000000002 /* Rowi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2000010000000000000001 /* Rowi.swift */; };
 		FE2000030000000000000003 /* Rowi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2000010000000000000001 /* Rowi.swift */; };
 		FE2000040000000000000004 /* Rowi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2000010000000000000001 /* Rowi.swift */; };
@@ -652,6 +655,24 @@
 		FE3100030000000000000003 /* SurahNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3100010000000000000001 /* SurahNode.swift */; };
 		FE3200020000000000000002 /* QuranDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3200010000000000000001 /* QuranDelegate.swift */; };
 		FE3200030000000000000003 /* QuranDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3200010000000000000001 /* QuranDelegate.swift */; };
+		FE4000020000000000000002 /* FolderNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4000010000000000000001 /* FolderNode.swift */; };
+		FE4000030000000000000003 /* FolderNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4000010000000000000001 /* FolderNode.swift */; };
+		FE4000040000000000000004 /* FolderNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4000010000000000000001 /* FolderNode.swift */; };
+		FE4100020000000000000002 /* ResultNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4100010000000000000001 /* ResultNode.swift */; };
+		FE4100030000000000000003 /* ResultNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4100010000000000000001 /* ResultNode.swift */; };
+		FE4100040000000000000004 /* ResultNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4100010000000000000001 /* ResultNode.swift */; };
+		FE4200020000000000000002 /* GroupedResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4200010000000000000001 /* GroupedResult.swift */; };
+		FE4200030000000000000003 /* GroupedResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4200010000000000000001 /* GroupedResult.swift */; };
+		FE4200040000000000000004 /* GroupedResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4200010000000000000001 /* GroupedResult.swift */; };
+		FE4300020000000000000002 /* SearchResultWithPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4300010000000000000001 /* SearchResultWithPath.swift */; };
+		FE4300030000000000000003 /* SearchResultWithPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4300010000000000000001 /* SearchResultWithPath.swift */; };
+		FE4300040000000000000004 /* SearchResultWithPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4300010000000000000001 /* SearchResultWithPath.swift */; };
+		FE4400020000000000000002 /* BookmarkTreeChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4400010000000000000001 /* BookmarkTreeChange.swift */; };
+		FE4400030000000000000003 /* BookmarkTreeChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4400010000000000000001 /* BookmarkTreeChange.swift */; };
+		FE4400040000000000000004 /* BookmarkTreeChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4400010000000000000001 /* BookmarkTreeChange.swift */; };
+		FE4500020000000000000002 /* SavedResultsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4500010000000000000001 /* SavedResultsItem.swift */; };
+		FE4500030000000000000003 /* SavedResultsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4500010000000000000001 /* SavedResultsItem.swift */; };
+		FE4500040000000000000004 /* SavedResultsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4500010000000000000001 /* SavedResultsItem.swift */; };
 		FEA100020000000000000002 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
 		FEA100030000000000000003 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
 		FEA100040000000000000004 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
@@ -717,7 +738,6 @@
 		4B5695582EEFDAAE00ABEB48 /* Annotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotation.swift; sourceTree = "<group>"; };
 		4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationEditorVC.swift; sourceTree = "<group>"; };
 		4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsOutlineDataSource.swift; sourceTree = "<group>"; };
-		4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkModel.swift; sourceTree = "<group>"; };
 		4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewManager.swift; sourceTree = "<group>"; };
 		4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewModel.swift; sourceTree = "<group>"; };
 		4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatter.swift; sourceTree = "<group>"; };
@@ -965,6 +985,8 @@
 		F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationJsonDocument.swift; sourceTree = "<group>"; };
 		F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HistoryDatabaseManager.swift; sourceTree = "<group>"; };
+		FE0100010000000000000001 /* NSAttributedString+Archiving.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Archiving.swift"; sourceTree = "<group>"; };
+		FE0200010000000000000001 /* NSAttributedString+Trimming.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Trimming.swift"; sourceTree = "<group>"; };
 		FE2000010000000000000001 /* Rowi.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Rowi.swift; sourceTree = "<group>"; };
 		FE2100010000000000000001 /* TabaqaGroup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabaqaGroup.swift; sourceTree = "<group>"; };
 		FE2200010000000000000001 /* TarjamahMen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TarjamahMen.swift; sourceTree = "<group>"; };
@@ -972,6 +994,12 @@
 		FE3000010000000000000001 /* Quran.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Quran.swift; sourceTree = "<group>"; };
 		FE3100010000000000000001 /* SurahNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SurahNode.swift; sourceTree = "<group>"; };
 		FE3200010000000000000001 /* QuranDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuranDelegate.swift; sourceTree = "<group>"; };
+		FE4000010000000000000001 /* FolderNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolderNode.swift; sourceTree = "<group>"; };
+		FE4100010000000000000001 /* ResultNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultNode.swift; sourceTree = "<group>"; };
+		FE4200010000000000000001 /* GroupedResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupedResult.swift; sourceTree = "<group>"; };
+		FE4300010000000000000001 /* SearchResultWithPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultWithPath.swift; sourceTree = "<group>"; };
+		FE4400010000000000000001 /* BookmarkTreeChange.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BookmarkTreeChange.swift; sourceTree = "<group>"; };
+		FE4500010000000000000001 /* SavedResultsItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SavedResultsItem.swift; sourceTree = "<group>"; };
 		FEA100010000000000000001 /* AnnotationNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationNode.swift; sourceTree = "<group>"; };
 		FEA200010000000000000001 /* AnnotationSortOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationSortOption.swift; sourceTree = "<group>"; };
 		FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "RandomAccessCollection+Insertion.swift"; sourceTree = "<group>"; };
@@ -1107,7 +1135,6 @@
 			isa = PBXGroup;
 			children = (
 				F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */,
-				F34D9FBE303D2DA80000FB79 /* ResultsHandler */,
 				4B8C9DCE2F6984120049E4EF /* ArchiveDatabaseTools.swift */,
 				4B8C9DCF2F6984120049E4EF /* BookArchiveIntegrator.swift */,
 				4B540F462EDF25A4001D8C0B /* BookConnection.swift */,
@@ -1147,7 +1174,6 @@
 			children = (
 				4B8C9DD82F6985210049E4EF /* ArchiveErrors.swift */,
 				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
-				4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */,
 				4B96D3522F3675290018D902 /* BookUpdateModels.swift */,
 				F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */,
 				4B32024F2EDB1B5A003B95D1 /* DataModel.swift */,
@@ -1155,7 +1181,6 @@
 				F30577942FA4987B005732C6 /* NotificationName.swift */,
 				F364898830131EAE00B9285B /* NotificationToken.swift */,
 				4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */,
-				4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1229,19 +1254,6 @@
 			path = String;
 			sourceTree = "<group>";
 		};
-		4B58EDCC2EE3DDB000073495 /* Bookmark */ = {
-			isa = PBXGroup;
-			children = (
-				F30C509E303FA19800627AF8 /* ResultsViewDrag.swift */,
-				4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */,
-				F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */,
-				F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */,
-				4B5EC29C2EE33E3200991F39 /* ResultWriter.swift */,
-				4B5EC2942EE331D500991F39 /* SavedResults.swift */,
-			);
-			path = Bookmark;
-			sourceTree = "<group>";
-		};
 		4B5DF93C2EDC495C0082DE7F /* Fonts */ = {
 			isa = PBXGroup;
 			children = (
@@ -1257,7 +1269,6 @@
 		4B63E1D72EE93FED00D58F3B /* TableCellViews */ = {
 			isa = PBXGroup;
 			children = (
-				4B9A0AE82EEC56830049202E /* Bookmark */,
 				4B9A0AE32EEC51980049202E /* OutlineView */,
 				4B9A0AE62EEC53320049202E /* CellIViewIdentifier.swift */,
 				4B63E1EC2EE9758A00D58F3B /* LoadMoreCell.swift */,
@@ -1281,7 +1292,6 @@
 		4B65CCB12EE058AA0085CEB4 /* Search */ = {
 			isa = PBXGroup;
 			children = (
-				4B58EDCC2EE3DDB000073495 /* Bookmark */,
 				F3FBF232303F1C6700A7EB6C /* OptionSearchPopover.swift */,
 				4B65CCB62EE059B60085CEB4 /* OptionSearchVC.swift */,
 				4B65CCB22EE059700085CEB4 /* SearchSidebarVC.swift */,
@@ -1348,16 +1358,6 @@
 				F3D0815C2F9EFE5C00E017C7 /* Tag.xib */,
 			);
 			path = OutlineView;
-			sourceTree = "<group>";
-		};
-		4B9A0AE82EEC56830049202E /* Bookmark */ = {
-			isa = PBXGroup;
-			children = (
-				4B20DB7A2EE7D81B00B97126 /* FolderCellView.xib */,
-				4B20DB7C2EE7D84100B97126 /* ResultCellView.xib */,
-				4B313A202F9A0FC60061FCC1 /* ResultCellView.swift */,
-			);
-			path = Bookmark;
 			sourceTree = "<group>";
 		};
 		4BA3936B2EF15F0200736DFF /* Frameworks */ = {
@@ -1454,21 +1454,9 @@
 			path = iOS;
 			sourceTree = "<group>";
 		};
-		F31111942FC00F060024B638 /* Bookmark */ = {
-			isa = PBXGroup;
-			children = (
-				F311119A2FC0A9D60024B638 /* iOSMoveItemView.swift */,
-				F31111982FC0A9C00024B638 /* iOSFolderSelectionGroup.swift */,
-				F31111922FC00F060024B638 /* iOSResultWriterView.swift */,
-				F31111932FC00F060024B638 /* iOSSavedResultsView.swift */,
-			);
-			path = Bookmark;
-			sourceTree = "<group>";
-		};
 		F31111952FC00F060024B638 /* Search */ = {
 			isa = PBXGroup;
 			children = (
-				F31111942FC00F060024B638 /* Bookmark */,
 				F374C00B2FDD69A2009D6807 /* SearchComponents.swift */,
 			);
 			path = Search;
@@ -1492,18 +1480,6 @@
 				F33214392FC2750E006EC214 /* ThemeComponents.swift */,
 			);
 			path = Theme;
-			sourceTree = "<group>";
-		};
-		F34D9FBE303D2DA80000FB79 /* ResultsHandler */ = {
-			isa = PBXGroup;
-			children = (
-				BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */,
-				52AE316343835CA0B29721BE /* ResultsCRUD.swift */,
-				344307D010B55FE69E3E8724 /* ResultsFolders.swift */,
-				4B5EC2982EE334C600991F39 /* ResultsHandler.swift */,
-				BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */,
-			);
-			path = ResultsHandler;
 			sourceTree = "<group>";
 		};
 		F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */ = {
@@ -1591,6 +1567,7 @@
 			children = (
 				FE0000030000000000000003 /* Annotations */,
 				FE2000000000000000000000 /* Narrator */,
+				FE4000000000000000000000 /* Bookmarks */,
 				FE3000000000000000000000 /* Quran */,
 			);
 			path = Features;
@@ -1601,6 +1578,8 @@
 			children = (
 				FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */,
 				FEA400010000000000000001 /* PlatformColor+Hex.swift */,
+				FE0100010000000000000001 /* NSAttributedString+Archiving.swift */,
+				FE0200010000000000000001 /* NSAttributedString+Trimming.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -1842,6 +1821,86 @@
 			path = Protocols;
 			sourceTree = "<group>";
 		};
+		FE4000000000000000000000 /* Bookmarks */ = {
+			isa = PBXGroup;
+			children = (
+				FE4000050000000000000005 /* Database */,
+				FE4000080000000000000008 /* iOS */,
+				FE4000070000000000000007 /* macOS */,
+				FE4000060000000000000006 /* Models */,
+				FE4001000000000000000010 /* ViewModel */,
+			);
+			path = Bookmarks;
+			sourceTree = "<group>";
+		};
+		FE4000050000000000000005 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				4B5EC2982EE334C600991F39 /* ResultsHandler.swift */,
+				BA3E8E8A60E954D4B1116F15 /* ResultsCloudKit.swift */,
+				52AE316343835CA0B29721BE /* ResultsCRUD.swift */,
+				344307D010B55FE69E3E8724 /* ResultsFolders.swift */,
+				BA3E8E8B60E954D4B1116F15 /* ResultsOrphans.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		FE4000060000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FE4400010000000000000001 /* BookmarkTreeChange.swift */,
+				FE4000010000000000000001 /* FolderNode.swift */,
+				FE4200010000000000000001 /* GroupedResult.swift */,
+				FE4100010000000000000001 /* ResultNode.swift */,
+				FE4500010000000000000001 /* SavedResultsItem.swift */,
+				FE4300010000000000000001 /* SearchResultWithPath.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FE4000070000000000000007 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				FE4000090000000000000009 /* CellViews */,
+				4B5EC29C2EE33E3200991F39 /* ResultWriter.swift */,
+				F30C509E303FA19800627AF8 /* ResultsViewDrag.swift */,
+				4B58EDCA2EE3DBE800073495 /* ResultsViewManager.swift */,
+				F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */,
+				F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */,
+				4B5EC2942EE331D500991F39 /* SavedResults.swift */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		FE4000080000000000000008 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F31111982FC0A9C00024B638 /* iOSFolderSelectionGroup.swift */,
+				F311119A2FC0A9D60024B638 /* iOSMoveItemView.swift */,
+				F31111922FC00F060024B638 /* iOSResultWriterView.swift */,
+				F31111932FC00F060024B638 /* iOSSavedResultsView.swift */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		FE4000090000000000000009 /* CellViews */ = {
+			isa = PBXGroup;
+			children = (
+				4B20DB7A2EE7D81B00B97126 /* FolderCellView.xib */,
+				4B313A202F9A0FC60061FCC1 /* ResultCellView.swift */,
+				4B20DB7C2EE7D84100B97126 /* ResultCellView.xib */,
+			);
+			path = CellViews;
+			sourceTree = "<group>";
+		};
+		FE4001000000000000000010 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -2055,6 +2114,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE0100020000000000000002 /* NSAttributedString+Archiving.swift in Sources */,
+				FE0200020000000000000002 /* NSAttributedString+Trimming.swift in Sources */,
+				FE4000020000000000000002 /* FolderNode.swift in Sources */,
+				FE4100020000000000000002 /* ResultNode.swift in Sources */,
+				FE4200020000000000000002 /* GroupedResult.swift in Sources */,
+				FE4300020000000000000002 /* SearchResultWithPath.swift in Sources */,
+				FE4400020000000000000002 /* BookmarkTreeChange.swift in Sources */,
+				FE4500020000000000000002 /* SavedResultsItem.swift in Sources */,
 				FE3000020000000000000002 /* Quran.swift in Sources */,
 				FE3100020000000000000002 /* SurahNode.swift in Sources */,
 				FE3200020000000000000002 /* QuranDelegate.swift in Sources */,
@@ -2196,7 +2263,6 @@
 				4B32024E2EDB13C0003B95D1 /* DatabaseManager.swift in Sources */,
 				F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */,
 				4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */,
-				4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */,
 				F34D9FC8303D64D10000FB79 /* AnnotationMenu.swift in Sources */,
 				4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */,
 				4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
@@ -2259,6 +2325,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE0100030000000000000003 /* NSAttributedString+Archiving.swift in Sources */,
+				FE0200030000000000000003 /* NSAttributedString+Trimming.swift in Sources */,
+				FE4000030000000000000003 /* FolderNode.swift in Sources */,
+				FE4100030000000000000003 /* ResultNode.swift in Sources */,
+				FE4200030000000000000003 /* GroupedResult.swift in Sources */,
+				FE4300030000000000000003 /* SearchResultWithPath.swift in Sources */,
+				FE4400030000000000000003 /* BookmarkTreeChange.swift in Sources */,
+				FE4500030000000000000003 /* SavedResultsItem.swift in Sources */,
 				FE3000030000000000000003 /* Quran.swift in Sources */,
 				FE3100030000000000000003 /* SurahNode.swift in Sources */,
 				FE3200030000000000000003 /* QuranDelegate.swift in Sources */,
@@ -2417,7 +2491,6 @@
 				F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */,
 				4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */,
 				4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */,
-				4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */,
 				4B7C90F12F83494200454BE2 /* DateFormatter.swift in Sources */,
 				F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */,
 				4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */,
@@ -2465,6 +2538,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE0100040000000000000004 /* NSAttributedString+Archiving.swift in Sources */,
+				FE0200040000000000000004 /* NSAttributedString+Trimming.swift in Sources */,
+				FE4000040000000000000004 /* FolderNode.swift in Sources */,
+				FE4100040000000000000004 /* ResultNode.swift in Sources */,
+				FE4200040000000000000004 /* GroupedResult.swift in Sources */,
+				FE4300040000000000000004 /* SearchResultWithPath.swift in Sources */,
+				FE4400040000000000000004 /* BookmarkTreeChange.swift in Sources */,
+				FE4500040000000000000004 /* SavedResultsItem.swift in Sources */,
 				FE2000040000000000000004 /* Rowi.swift in Sources */,
 				FE2100040000000000000004 /* TabaqaGroup.swift in Sources */,
 				FE2200040000000000000004 /* TarjamahMen.swift in Sources */,
@@ -2607,7 +2688,6 @@
 				F35A7AC82FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				F32D441B303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				F321672D2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,
-				F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */,
 				F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */,
 				F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */,
 				F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,
