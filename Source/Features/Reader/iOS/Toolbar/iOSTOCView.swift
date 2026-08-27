@@ -69,16 +69,22 @@ struct iOSTOCView: View {
                     }
                 }
                 .onAppear {
-                    computeExpandedPaths()
-                    if let selectedId = selectedId {
-                        Task {
-                            try await Task.sleep(for: .seconds(0.5))
-                            withAnimation {
-                                proxy.scrollTo(selectedId, anchor: .center)
-                            }
-                        }
-                    }
+                    scrollSelected(proxy: proxy)
                 }
+                .onChange(of: tocViewModel.tocRanges.count) { _, _ in
+                    scrollSelected(proxy: proxy)
+                }
+            }
+        }
+    }
+
+    private func scrollSelected(proxy: ScrollViewProxy) {
+        computeExpandedPaths()
+        guard let selectedId else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            withAnimation {
+                proxy.scrollTo(selectedId, anchor: .center)
             }
         }
     }
