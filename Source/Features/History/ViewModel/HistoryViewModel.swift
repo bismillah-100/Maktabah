@@ -2,55 +2,6 @@ import Combine
 import Foundation
 import SwiftUI
 
-struct ReadingEntry: Codable, Identifiable, Hashable {
-    let bookId: Int
-    var lastContentId: Int?
-    var lastOpenedAt: Date?
-    var favoritedAt: Date?
-    var positionUpdatedAt: Date?
-    var updatedAt: Date
-    var isFavorite: Bool
-
-    var ckRecordId: String?
-
-    var id: Int {
-        bookId
-    }
-
-    init(
-        bookId: Int,
-        lastContentId: Int? = nil,
-        lastOpenedAt: Date? = nil,
-        favoritedAt: Date? = nil,
-        positionUpdatedAt: Date? = nil,
-        updatedAt: Date = Date(),
-        isFavorite: Bool = false,
-        ckRecordId: String? = nil
-    ) {
-        self.bookId = bookId
-        self.lastContentId = lastContentId
-        self.lastOpenedAt = lastOpenedAt
-        self.favoritedAt = favoritedAt
-        self.positionUpdatedAt = positionUpdatedAt
-        self.updatedAt = updatedAt
-        self.isFavorite = isFavorite
-        self.ckRecordId = ckRecordId ?? String(bookId)
-    }
-
-    init(defaultForBookId bookId: Int) {
-        self.init(
-            bookId: bookId,
-            lastContentId: nil,
-            lastOpenedAt: nil,
-            favoritedAt: nil,
-            positionUpdatedAt: nil,
-            updatedAt: Date(),
-            isFavorite: false,
-            ckRecordId: String(bookId)
-        )
-    }
-}
-
 class HistoryViewModel: ViewModelBase, ObservableObject {
     static let shared = HistoryViewModel()
 
@@ -105,7 +56,9 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 // saat user membaca buku, membuat posisinya naik ke atas.
                 let lDate = lhs.favoritedAt ?? Date.distantPast
                 let rDate = rhs.favoritedAt ?? Date.distantPast
-                if lDate != rDate { return lDate > rDate }
+                if lDate != rDate {
+                    return lDate > rDate
+                }
                 return lhs.bookId < rhs.bookId
             }
             .map(\.bookId)
@@ -426,74 +379,85 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         let block = { [weak self] in
             guard let self else { return }
             var didChange = false
-            // Deletions
-            let bookIdsToDelete = entriesByBookId.values
-                .compactMap { entry -> Int? in
-                    guard let ckId = entry.ckRecordId, recordIdsToDelete.contains(ckId) else { return nil }
-                    return entry.bookId
-                }
-
             var deletedIds = [Int]()
-            for bookId in bookIdsToDelete {
-                entriesByBookId.removeValue(forKey: bookId)
-                historyOrder.removeAll(where: { $0 == bookId })
-                deletedIds.append(bookId)
-                didChange = true
-            }
-
-            // Updates/Insertions
             var upsertedEntries = [ReadingEntry]()
-            for remoteEntry in entriesToSave {
-                if let localEntry = entriesByBookId[remoteEntry.bookId] {
-                    let localModified = localEntry.updatedAt.timeIntervalSince1970
-                    let remoteModified = remoteEntry.updatedAt.timeIntervalSince1970
 
-                    if remoteModified > localModified {
-                        entriesByBookId[remoteEntry.bookId] = remoteEntry
-                        upsertedEntries.append(remoteEntry)
-                        didChange = true
-                    }
-                } else {
-                    entriesByBookId[remoteEntry.bookId] = remoteEntry
-                    upsertedEntries.append(remoteEntry)
-                    didChange = true
-                }
-            }
+            didChange = applyDeletions(recordIdsToDelete: recordIdsToDelete, deletedIds: &deletedIds) || didChange
+            didChange = applyUpserts(entriesToSave: entriesToSave, upsertedEntries: &upsertedEntries) || didChange
 
             if didChange {
-                // Sinkronkan urutan history di semua devices berdasarkan `lastOpenedAt`.
-                let validHistoryEntries = entriesByBookId.values.filter { $0.lastOpenedAt != nil }
-                let sortedIds = validHistoryEntries
-                    .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
-                    .map(\.bookId)
-                historyOrder = Array(sortedIds.prefix(maxHistoryCount))
-
-                let prunedIds = pruneOrphanedEntries(deleteFromDB: false)
-                deletedIds.append(contentsOf: prunedIds)
-
-                let finalOrder = historyOrder
-                loadBooksData()
-
-                DispatchQueue.global(qos: .background).async {
-                    do {
-                        try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: deletedIds, upsertedEntries: upsertedEntries, finalOrder: finalOrder)
-                    } catch {
-                        #if DEBUG
-                        print("Failed to applyCloudKitChanges: \(error)")
-                        #endif
-                    }
-                }
+                synchronizeHistoryOrder(deletedIds: &deletedIds, upsertedEntries: upsertedEntries)
             }
         }
 
         if Thread.isMainThread {
             block()
         } else {
-            DispatchQueue.main.async {
-                block()
-            }
+            DispatchQueue.main.async { block() }
         }
         return true
+    }
+
+    private func applyDeletions(recordIdsToDelete: [String], deletedIds: inout [Int]) -> Bool {
+        let bookIdsToDelete = entriesByBookId.values.compactMap { entry -> Int? in
+            guard let ckId = entry.ckRecordId, recordIdsToDelete.contains(ckId) else { return nil }
+            return entry.bookId
+        }
+
+        var didChange = false
+        for bookId in bookIdsToDelete {
+            entriesByBookId.removeValue(forKey: bookId)
+            historyOrder.removeAll(where: { $0 == bookId })
+            deletedIds.append(bookId)
+            didChange = true
+        }
+        return didChange
+    }
+
+    private func applyUpserts(entriesToSave: [ReadingEntry], upsertedEntries: inout [ReadingEntry]) -> Bool {
+        var didChange = false
+        for remoteEntry in entriesToSave {
+            if let localEntry = entriesByBookId[remoteEntry.bookId] {
+                let localModified = localEntry.updatedAt.timeIntervalSince1970
+                let remoteModified = remoteEntry.updatedAt.timeIntervalSince1970
+
+                if remoteModified > localModified {
+                    entriesByBookId[remoteEntry.bookId] = remoteEntry
+                    upsertedEntries.append(remoteEntry)
+                    didChange = true
+                }
+            } else {
+                entriesByBookId[remoteEntry.bookId] = remoteEntry
+                upsertedEntries.append(remoteEntry)
+                didChange = true
+            }
+        }
+        return didChange
+    }
+
+    private func synchronizeHistoryOrder(deletedIds: inout [Int], upsertedEntries: [ReadingEntry]) {
+        let validHistoryEntries = entriesByBookId.values.filter { $0.lastOpenedAt != nil }
+        let sortedIds = validHistoryEntries
+            .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
+            .map(\.bookId)
+        historyOrder = Array(sortedIds.prefix(maxHistoryCount))
+
+        let prunedIds = pruneOrphanedEntries(deleteFromDB: false)
+        deletedIds.append(contentsOf: prunedIds)
+
+        let finalOrder = historyOrder
+        loadBooksData()
+
+        let finalDeleted = deletedIds
+        DispatchQueue.global(qos: .background).async {
+            do {
+                try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: finalDeleted, upsertedEntries: upsertedEntries, finalOrder: finalOrder)
+            } catch {
+                #if DEBUG
+                print("Failed to applyCloudKitChanges: \(error)")
+                #endif
+            }
+        }
     }
 
     // MARK: - KVS Migration (Legacy)
@@ -532,7 +496,9 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     }
 
     private func migrateLegacyKVSDataIfNeeded() {
-        if UserDefaults.standard.bool(forKey: "HistoryViewModel_LegacyMigrated_v2") { return }
+        if UserDefaults.standard.bool(forKey: "HistoryViewModel_LegacyMigrated_v2") {
+            return
+        }
 
         if let legacy = loadLegacyPayload() {
             loadFromDatabase()
