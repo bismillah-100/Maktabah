@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var clickEditAnnotationMenuItem: NSMenuItem!
     @IBOutlet weak var screenTimeMenuItem: NSMenuItem!
     @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
-    
+
     fileprivate var mainWindowController: NSWindowController!
 
     fileprivate weak var quranWindow: NSWindow?
@@ -94,10 +94,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         UserDefaults.standard.register(
             defaults: [UserDefaults.autoCheckAppUpdatesKey: true]
         )
-        Task.detached(priority: .low) { [unowned self] in
+        Task.detached(priority: .low) { [weak self] in
             if !UserDefaults.standard.autoCheckAppUpdates { return }
             await Task.yield()
-            await checkAppUpdates(true)
+            await self?.checkAppUpdates(true)
         }
         #else
         appUpdatesMenuItem.isHidden = true
@@ -211,8 +211,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             forName: NSWindow.didBecomeKeyNotification,
             object: nil,
             queue: .current,
-            using: { [unowned self] notif in
-                guard let window = notif.object as? MainWindow,
+            using: { [weak self] notif in
+                guard let self, let window = notif.object as? MainWindow,
                       let windowController = window.windowController as? WindowController
                 else {
                     return
@@ -228,8 +228,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             forName: NSWindow.willCloseNotification,
             object: nil,
             queue: .current
-        ) { [unowned self] notif in
-            guard let window = notif.object as? MainWindow else {
+        ) { [weak self] notif in
+            guard let self, let window = notif.object as? MainWindow else {
                 return
             }
 
@@ -309,8 +309,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @IBAction fileprivate func checkUpdatesClicked(_ sender: Any?) {
         #if DIRECT_DISTRIBUTION
-        Task.detached { [unowned self] in
-            await checkAppUpdates(false)
+        Task.detached { [weak self] in
+            await self?.checkAppUpdates(false)
         }
         #endif
     }
@@ -362,8 +362,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showOfflineImportWindow() {
-        let contentView = OfflineImportFormView(onImport: { [unowned self]
+        let contentView = OfflineImportFormView(onImport: { [weak self]
             (url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async in
+            guard let self else { return }
                 await performCustomImport(
                     url: url,
                     metadata: metadata,

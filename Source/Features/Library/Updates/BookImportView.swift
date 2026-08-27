@@ -83,149 +83,149 @@ struct OfflineImportFormView: View {
         }
         .formStyle(.grouped)
         #if os(macOS)
-            .safeAreaInset(edge: .top, spacing: 0) {
-                topHeaderView
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                bottomActionView
-            }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            topHeaderView
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            bottomActionView
+        }
         #endif
-            .overlay {
-                #if !os(macOS)
-                if isImporting {
-                    ZStack {
-                        Color.black.opacity(0.25)
-                            .ignoresSafeArea()
+        .overlay {
+            #if !os(macOS)
+            if isImporting {
+                ZStack {
+                    Color.black.opacity(0.25)
+                        .ignoresSafeArea()
 
-                        VStack(spacing: 16) {
-                            ProgressView()
-                                .controlSize(.large)
-                            Text("Importing Book...")
-                                .font(.headline)
-                        }
-                        .padding(32)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(16)
-                        .shadow(radius: 10)
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .controlSize(.large)
+                        Text("Importing Book...")
+                            .font(.headline)
                     }
-                    .transition(.opacity)
+                    .padding(32)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(16)
+                    .shadow(radius: 10)
                 }
-                #endif
+                .transition(.opacity)
             }
-            .animation(.easeInOut, value: isImporting)
-            .sheet(isPresented: $showBookPicker) {
-                SearchSelectionView(
-                    title: "Select Book to Replace",
-                    items: books.map {
-                        SearchSelectionItem(id: $0.id, title: $0.book, subtitle: "ID: \($0.id)")
-                    },
-                    onSelect: { item in
-                        selectedBookId = item.id
-                        if let book = books.first(where: { $0.id == item.id }) {
-                            bookName = book.book
-                            archiveId = book.archive
-                            categoryId = book.catId ?? 0
-                        }
-                        showBookPicker = false
+            #endif
+        }
+        .animation(.easeInOut, value: isImporting)
+        .sheet(isPresented: $showBookPicker) {
+            SearchSelectionView(
+                title: "Select Book to Replace",
+                items: books.map {
+                    SearchSelectionItem(id: $0.id, title: $0.book, subtitle: "ID: \($0.id)")
+                },
+                onSelect: { item in
+                    selectedBookId = item.id
+                    if let book = books.first(where: { $0.id == item.id }) {
+                        bookName = book.book
+                        archiveId = book.archive
+                        categoryId = book.catId ?? 0
                     }
-                )
-            }
-            .sheet(isPresented: $showAuthorPicker) {
-                SearchSelectionView(
-                    title: "Select Registered Author".localized,
-                    items: authors.map {
-                        SearchSelectionItem(id: $0.id, title: $0.muallif.nama, subtitle: "ID: \($0.id)")
-                    },
-                    onSelect: { item in
-                        selectedAuthorId = item.id
-                        showAuthorPicker = false
-                    }
-                )
-            }
-            .fileImporter(
-                isPresented: $showFilePicker,
-                allowedContentTypes: [.database, .data, .item],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case let .success(urls):
-                    guard let selectedURL = urls.first else { return }
-
-                    let shouldStopAccessing = selectedURL.startAccessingSecurityScopedResource()
-                    defer {
-                        if shouldStopAccessing {
-                            selectedURL.stopAccessingSecurityScopedResource()
-                        }
-                    }
-
-                    do {
-                        let tempURL = FileManager.default.temporaryDirectory
-                            .appendingPathComponent(UUID().uuidString)
-                            .appendingPathExtension(selectedURL.pathExtension)
-
-                        if FileManager.default.fileExists(atPath: tempURL.path) {
-                            try FileManager.default.removeItem(at: tempURL)
-                        }
-
-                        try FileManager.default.copyItem(at: selectedURL, to: tempURL)
-                        sqliteURL = tempURL
-                    } catch {
-                        print("Error copying file: \(error.localizedDescription)")
-                    }
-
-                case let .failure(error):
-                    print("Error picking file: \(error.localizedDescription)")
+                    showBookPicker = false
                 }
+            )
+        }
+        .sheet(isPresented: $showAuthorPicker) {
+            SearchSelectionView(
+                title: "Select Registered Author".localized,
+                items: authors.map {
+                    SearchSelectionItem(id: $0.id, title: $0.muallif.nama, subtitle: "ID: \($0.id)")
+                },
+                onSelect: { item in
+                    selectedAuthorId = item.id
+                    showAuthorPicker = false
+                }
+            )
+        }
+        .fileImporter(
+            isPresented: $showFilePicker,
+            allowedContentTypes: [.database, .data, .item],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case let .success(urls):
+                guard let selectedURL = urls.first else { return }
+
+                let shouldStopAccessing = selectedURL.startAccessingSecurityScopedResource()
+                defer {
+                    if shouldStopAccessing {
+                        selectedURL.stopAccessingSecurityScopedResource()
+                    }
+                }
+
+                do {
+                    let tempURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent(UUID().uuidString)
+                        .appendingPathExtension(selectedURL.pathExtension)
+
+                    if FileManager.default.fileExists(atPath: tempURL.path) {
+                        try FileManager.default.removeItem(at: tempURL)
+                    }
+
+                    try FileManager.default.copyItem(at: selectedURL, to: tempURL)
+                    sqliteURL = tempURL
+                } catch {
+                    print("Error copying file: \(error.localizedDescription)")
+                }
+
+            case let .failure(error):
+                print("Error picking file: \(error.localizedDescription)")
             }
-            .textFieldStyle(.roundedBorder)
+        }
+        .textFieldStyle(.roundedBorder)
         #if os(iOS)
-            .scrollContentBackground(.hidden)
-            .background(Color.appBackground)
-            .onChange(of: importMode) { _, newMode in
-                if newMode == 2, let selectedBookId {
-                    customBookIdText = "\(selectedBookId)"
-                }
+        .scrollContentBackground(.hidden)
+        .background(Color.appBackground)
+        .onChange(of: importMode) { _, newMode in
+            if newMode == 2, let selectedBookId {
+                customBookIdText = "\(selectedBookId)"
+            }
+            updateAnnotationCount()
+        }
+        .onChange(of: selectedBookId) { _, newId in
+            if importMode == 2, let newId {
+                customBookIdText = "\(newId)"
+            }
+            updateAnnotationCount()
+        }
+        .onChange(of: customBookIdText) { _, newValue in
+            let filtered = newValue.filter(\.isNumber)
+            if filtered != newValue {
+                customBookIdText = filtered
+            } else {
                 updateAnnotationCount()
             }
-            .onChange(of: selectedBookId) { _, newId in
-                if importMode == 2, let newId {
-                    customBookIdText = "\(newId)"
-                }
-                updateAnnotationCount()
-            }
-            .onChange(of: customBookIdText) { _, newValue in
-                let filtered = newValue.filter(\.isNumber)
-                if filtered != newValue {
-                    customBookIdText = filtered
-                } else {
-                    updateAnnotationCount()
-                }
-            }
+        }
         #elseif os(macOS)
-            .onChange(of: importMode, perform: { newMode in
-                if newMode == 2, let selectedBookId {
-                    customBookIdText = "\(selectedBookId)"
-                }
-                updateAnnotationCount()
-            })
-            .onChange(of: selectedBookId, perform: { newId in
-                if importMode == 2, let newId {
-                    customBookIdText = "\(newId)"
-                }
-                updateAnnotationCount()
-            })
-            .onChange(of: customBookIdText, perform: { newValue in
-                let filtered = newValue.filter(\.isNumber)
-                if filtered != newValue {
-                    customBookIdText = filtered
-                } else {
-                    updateAnnotationCount()
-                }
-            })
-        #endif
-            .task(priority: .userInitiated) {
-                await setupData()
+        .onChange(of: importMode, perform: { newMode in
+            if newMode == 2, let selectedBookId {
+                customBookIdText = "\(selectedBookId)"
             }
+            updateAnnotationCount()
+        })
+        .onChange(of: selectedBookId, perform: { newId in
+            if importMode == 2, let newId {
+                customBookIdText = "\(newId)"
+            }
+            updateAnnotationCount()
+        })
+        .onChange(of: customBookIdText, perform: { newValue in
+            let filtered = newValue.filter(\.isNumber)
+            if filtered != newValue {
+                customBookIdText = filtered
+            } else {
+                updateAnnotationCount()
+            }
+        })
+        #endif
+        .task(priority: .userInitiated) {
+            await setupData()
+        }
     }
 
     // MARK: - Extracted UI Components
@@ -417,45 +417,44 @@ struct OfflineImportFormView: View {
         }
     }
 
+    @ViewBuilder
     private var bookMetadataFields: some View {
-        Group {
-            AdaptiveLabeledContent("Book Name (bk)") {
-                TextField("", text: $bookName, prompt: Text("e.g., Sahih Bukhari"))
-            }
+        AdaptiveLabeledContent("Book Name (bk)") {
+            TextField("", text: $bookName, prompt: Text("e.g., Sahih Bukhari"))
+        }
 
-            AdaptiveLabeledContent("Category (cat)") {
-                Picker("", selection: $categoryId) {
-                    Text("Select Category...").tag(0)
-                    ForEach(categories, id: \.id) { cat in
-                        Text(cat.name).tag(cat.id)
-                    }
+        AdaptiveLabeledContent("Category (cat)") {
+            Picker("", selection: $categoryId) {
+                Text("Select Category...").tag(0)
+                ForEach(categories, id: \.id) { cat in
+                    Text(cat.name).tag(cat.id)
                 }
-                .environment(\.layoutDirection, .rightToLeft)
-                .labelsHidden()
             }
+            .environment(\.layoutDirection, .rightToLeft)
+            .labelsHidden()
+        }
 
-            AdaptiveLabeledContent("Archive ID") {
-                Stepper("\(archiveId)", value: $archiveId, in: 1 ... 20)
-                    .disabled(importMode != 0)
-            }
+        AdaptiveLabeledContent("Archive ID") {
+            Stepper("\(archiveId)", value: $archiveId, in: 1 ... 20)
+                .disabled(importMode != 0)
+        }
 
-            Toggle("Multi-Language", isOn: $isMultiLanguage)
+        Toggle("Multi-Language", isOn: $isMultiLanguage)
 
-            AdaptiveLabeledContent("Edition") {
-                TextField("", text: $betaka, prompt: Text("Optional"))
-            }
+        AdaptiveLabeledContent("Edition") {
+            TextField("", text: $betaka, prompt: Text("Optional"))
+        }
 
-            AdaptiveLabeledContent("Information (inf)") {
-                TextField("", text: $inf, prompt: Text("Optional"))
-            }
+        AdaptiveLabeledContent("Information (inf)") {
+            TextField("", text: $inf, prompt: Text("Optional"))
+        }
 
-            AdaptiveLabeledContent("Tafseer Name") {
-                TextField("", text: $tafseerNam, prompt: Text("Optional"))
-            }
+        AdaptiveLabeledContent("Tafseer Name") {
+            TextField("", text: $tafseerNam, prompt: Text("Optional"))
+        }
 
-            AdaptiveLabeledContent("Version") {
-                TextField("", text: $bVerText, prompt: Text("1"))
-            }
+        AdaptiveLabeledContent("Version") {
+            TextField("", text: $bVerText, prompt: Text("1"))
         }
     }
 
@@ -490,32 +489,31 @@ struct OfflineImportFormView: View {
         }
     }
 
+    @ViewBuilder
     private var newAuthorFields: some View {
-        Group {
-            AdaptiveLabeledContent("New Author ID") {
-                Text("\(maxAuthid + 1)")
-                    .foregroundColor(.secondary)
-            }
+        AdaptiveLabeledContent("New Author ID") {
+            Text("\(maxAuthid + 1)")
+                .foregroundColor(.secondary)
+        }
 
-            AdaptiveLabeledContent("Author Name") {
-                TextField("", text: $authorName, prompt: Text("e.g., Al-Bukhari"))
-            }
+        AdaptiveLabeledContent("Author Name") {
+            TextField("", text: $authorName, prompt: Text("e.g., Al-Bukhari"))
+        }
 
-            AdaptiveLabeledContent("Author Info") {
-                TextField("", text: $authorInf, prompt: Text("Optional"))
-            }
+        AdaptiveLabeledContent("Author Info") {
+            TextField("", text: $authorInf, prompt: Text("Optional"))
+        }
 
-            AdaptiveLabeledContent("Full Name (Lng)") {
-                TextField("", text: $authorLng, prompt: Text("Optional"))
-            }
+        AdaptiveLabeledContent("Full Name (Lng)") {
+            TextField("", text: $authorLng, prompt: Text("Optional"))
+        }
 
-            AdaptiveLabeledContent("Death Year") {
-                TextField("", text: $authorHigriD, prompt: Text("e.g., 256 AH"))
-            }
+        AdaptiveLabeledContent("Death Year") {
+            TextField("", text: $authorHigriD, prompt: Text("e.g., 256 AH"))
+        }
 
-            AdaptiveLabeledContent("Version") {
-                TextField("", text: $oVerText, prompt: Text("1"))
-            }
+        AdaptiveLabeledContent("Version") {
+            TextField("", text: $oVerText, prompt: Text("1"))
         }
     }
 
@@ -579,31 +577,53 @@ struct OfflineImportFormView: View {
     private var isValid: Bool {
         if importMode == 2 {
             guard let oldId = selectedBookId else { return false }
-            if customBookIdText.isEmpty { return false }
+            if customBookIdText.isEmpty {
+                return false
+            }
             guard let newId = Int(customBookIdText), newId > 0 else { return false }
-            if newId == oldId { return false }
-            if isBookIdTaken { return false }
+            if newId == oldId {
+                return false
+            }
+            if isBookIdTaken {
+                return false
+            }
             return true
         }
 
-        if sqliteURL == nil { return false }
+        if sqliteURL == nil {
+            return false
+        }
         if importMode == 0 {
-            if customBookIdText.isEmpty { return false }
+            if customBookIdText.isEmpty {
+                return false
+            }
             guard let id = Int(customBookIdText), id > 0 else { return false }
             if isBookIdTaken {
                 let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
                 let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
-                if system { return false }
+                if system {
+                    return false
+                }
             }
         } else {
-            if selectedBookId == nil { return false }
+            if selectedBookId == nil {
+                return false
+            }
         }
-        if bookName.isEmpty { return false }
-        if categoryId == 0 { return false }
+        if bookName.isEmpty {
+            return false
+        }
+        if categoryId == 0 {
+            return false
+        }
         if isNewAuthor {
-            if authorName.isEmpty { return false }
+            if authorName.isEmpty {
+                return false
+            }
         } else {
-            if selectedAuthorId == nil { return false }
+            if selectedAuthorId == nil {
+                return false
+            }
         }
         return true
     }
@@ -667,10 +687,10 @@ struct OfflineImportFormView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 #if !os(macOS)
-                    .tint(.brown)
-                    .buttonBorderShape(.capsule)
+                .tint(.brown)
+                .buttonBorderShape(.capsule)
                 #else
-                    .controlSize(.large)
+                .controlSize(.large)
                 #endif
             }
             .padding()
@@ -706,18 +726,18 @@ struct OfflineImportFormView: View {
             dismiss()
         } label: {
             Text("Close")
-            #if !os(macOS)
+                #if !os(macOS)
                 .frame(maxWidth: .infinity)
-            #endif
+                #endif
         }
         .buttonStyle(.borderedProminent)
         .tint(.red)
         .disabled(isImporting)
         #if !os(macOS)
-            .frame(maxWidth: .infinity)
-            .buttonBorderShape(.capsule)
+        .frame(maxWidth: .infinity)
+        .buttonBorderShape(.capsule)
         #else
-            .controlSize(.large)
+        .controlSize(.large)
         #endif
     }
 
@@ -739,18 +759,18 @@ struct OfflineImportFormView: View {
                 }
             } label: {
                 Text(importMode == 2 ? "Change Book ID" : "Import Now")
-                #if !os(macOS)
+                    #if !os(macOS)
                     .frame(maxWidth: .infinity)
-                #endif
+                    #endif
             }
             .buttonStyle(.borderedProminent)
             .disabled(!isValid || isImporting)
             #if !os(macOS)
-                .tint(.green)
-                .buttonBorderShape(.capsule)
-                .frame(maxWidth: .infinity)
+            .tint(.green)
+            .buttonBorderShape(.capsule)
+            .frame(maxWidth: .infinity)
             #else
-                .controlSize(.large)
+            .controlSize(.large)
             #endif
         }
         #if !os(macOS)
@@ -806,45 +826,11 @@ struct OfflineImportFormView: View {
         defer { isImporting = false }
 
         do {
-            // Phase 1: Operasi DB (changeBookId + updateAnnotations) di background thread.
-            // updateAnnotationsBookId mengembalikan anotasi yang perlu di-upload.
-            let (annotationsToSync, resultsToSync) = try await Task.detached(priority: .userInitiated) {
-                try BookUpdateManager.shared.changeBookId(oldId: oldId, newId: newId)
-                let annotations = try AnnotationManager.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
-                let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
-                return (annotations, results)
-            }.value
+            let (annotationsToSync, resultsToSync) = try await executeDatabaseChanges(oldId: oldId, newId: newId)
+            await reloadLocalCache(oldId: oldId, newId: newId)
+            uploadToCloudKit(annotationsToSync: annotationsToSync, resultsToSync: resultsToSync)
 
-            // Phase 2: Reload library cache SEBELUM upload ke CloudKit.
-            // Ini memastikan device ini sudah mengenal newId sebelum device lain menerima anotasi.
-            await LibraryDataManager.shared.reloadAllData()
-
-            if let book = LibraryDataManager.shared.booksById[newId] {
-                IntegrationCache.shared.unmarkIntegrated(bookId: oldId, archiveId: book.archive)
-                IntegrationCache.shared.markIntegrated(bookId: newId, archiveId: book.archive)
-            }
-
-            BookPageCache.shared.remove(bookId: oldId)
-            BookConnection.invalidateTOC(for: oldId)
-            BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(oldId)))
-
-            // Phase 3: Upload ke CloudKit SETELAH library data segar.
-            // Urutan ini mencegah race condition di mana device lain menerima
-            // anotasi dengan newId sebelum book newId terdaftar di library lokal.
-            if !annotationsToSync.isEmpty || !resultsToSync.isEmpty {
-                DispatchQueue.global(qos: .background).async {
-                    if !annotationsToSync.isEmpty {
-                        CloudKitSyncManager.shared.upload(annotations: annotationsToSync)
-                    }
-                    if !resultsToSync.isEmpty {
-                        CloudKitSyncManager.shared.uploadResultsData(folders: [], results: resultsToSync)
-                    }
-                }
-            }
-
-            // Update UI
             await setupData()
-
             selectedBookId = newId
 
             await MainActor.run {
@@ -864,6 +850,41 @@ struct OfflineImportFormView: View {
                 title: "Error changing ID",
                 message: error.localizedDescription
             )
+        }
+    }
+
+    private func executeDatabaseChanges(oldId: Int, newId: Int) async throws -> ([Annotation], [SyncResult]) {
+        try await Task.detached(priority: .userInitiated) {
+            try BookUpdateManager.shared.changeBookId(oldId: oldId, newId: newId)
+            let annotations = try AnnotationManager.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
+            let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
+            return (annotations, results)
+        }.value
+    }
+
+    private func reloadLocalCache(oldId: Int, newId: Int) async {
+        await LibraryDataManager.shared.reloadAllData()
+
+        if let book = LibraryDataManager.shared.booksById[newId] {
+            IntegrationCache.shared.unmarkIntegrated(bookId: oldId, archiveId: book.archive)
+            IntegrationCache.shared.markIntegrated(bookId: newId, archiveId: book.archive)
+        }
+
+        BookPageCache.shared.remove(bookId: oldId)
+        BookConnection.invalidateTOC(for: oldId)
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(oldId)))
+    }
+
+    private func uploadToCloudKit(annotationsToSync: [Annotation], resultsToSync: [SyncResult]) {
+        if !annotationsToSync.isEmpty || !resultsToSync.isEmpty {
+            DispatchQueue.global(qos: .background).async {
+                if !annotationsToSync.isEmpty {
+                    CloudKitSyncManager.shared.upload(annotations: annotationsToSync)
+                }
+                if !resultsToSync.isEmpty {
+                    CloudKitSyncManager.shared.uploadResultsData(folders: [], results: resultsToSync)
+                }
+            }
         }
     }
 }
