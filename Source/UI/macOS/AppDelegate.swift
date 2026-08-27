@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var clickEditAnnotationMenuItem: NSMenuItem!
     @IBOutlet weak var screenTimeMenuItem: NSMenuItem!
     @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
-    
+
     fileprivate var mainWindowController: NSWindowController!
 
     fileprivate weak var quranWindow: NSWindow?

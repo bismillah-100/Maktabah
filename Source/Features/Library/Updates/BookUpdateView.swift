@@ -134,7 +134,7 @@ struct UpdateView: View {
     private var macOSHeaderView: some View {
         if !viewModel.isLoadingList,
            !viewModel.progressMessage.isEmpty ||
-            viewModel.isUpdating
+           viewModel.isUpdating
         {
             progressStatusView
                 .padding(.bottom, 8)
@@ -210,6 +210,8 @@ struct UpdateView: View {
         #if os(iOS)
         .tint(.green)
         .prominentButtonStyleIfAvailable()
+        #else
+        .buttonStyle(.borderedProminent)
         #endif
         .controlSize(.large)
         .clipShape(.capsule)
@@ -303,7 +305,7 @@ struct UpdateView: View {
 struct BookUpdateRow: View {
     @ObservedObject var item: BookUpdateItem
     let fontSize: Double
-    var onToggle: (() -> Void)? = nil
+    var onToggle: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -387,7 +389,7 @@ struct BookUpdateRow: View {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
 
-        case .failed(let msg):
+        case let .failed(msg):
             HStack(spacing: 4) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.red)
