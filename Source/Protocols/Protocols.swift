@@ -42,11 +42,13 @@ protocol OptionSearchDelegate: AnyObject {
 }
 
 #if os(macOS)
+@MainActor
 protocol SearchableLibrarySidebar: AnyObject {
     var searchField: DSFSearchField! { get set }
     func connectSearchField(_ field: DSFSearchField)
 }
 
+@MainActor
 extension SearchableLibrarySidebar {
     func bindSearchField(
         _ field: DSFSearchField,
