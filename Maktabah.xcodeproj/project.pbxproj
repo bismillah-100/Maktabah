@@ -65,7 +65,7 @@
 		4B4846262EF06F3800EAA36C /* AnnotationsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */; };
 		4B4C97122F1F026C0051503E /* Narrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4C97112F1F026C0051503E /* Narrator.swift */; };
 		4B540F472EDF25A4001D8C0B /* BookConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B540F462EDF25A4001D8C0B /* BookConnection.swift */; };
-		4B56955B2EEFDAAE00ABEB48 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotations.swift */; };
+		4B56955B2EEFDAAE00ABEB48 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */; };
 		4B5695642EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */; };
 		4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
@@ -184,7 +184,7 @@
 		4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB174412F1AFAFF00BF1A2F /* ScreenTimeManager.swift */; };
 		4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6AF2322EE57CCD002EBFFC /* Toolbar.swift */; };
 		4B7C90F52F83494200454BE1 /* SharedPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E70682EF4FEFC00E7D351 /* SharedPopover.swift */; };
-		4B7C90F62F83494200454BE1 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotations.swift */; };
+		4B7C90F62F83494200454BE1 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		4B7C90F72F83494200454BE1 /* QuranSidebarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100E82EFA740B00CCBED6 /* QuranSidebarVC.swift */; };
 		4B7C90F82F83494200454BE1 /* RowiDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */; };
 		4B7C90F92F83494200454BE1 /* Quran.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100EC2EFA773C00CCBED6 /* Quran.swift */; };
@@ -368,7 +368,7 @@
 		F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
 		F30577302FA46222005732C6 /* RowiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E82EE9671000D58F3B /* RowiModel.swift */; };
-		F30577342FA46222005732C6 /* Annotations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotations.swift */; };
+		F30577342FA46222005732C6 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */; };
 		F30577372FA46222005732C6 /* Quran.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100EC2EFA773C00CCBED6 /* Quran.swift */; };
 		F305773B2FA46222005732C6 /* ResultsHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5EC2982EE334C600991F39 /* ResultsHandler.swift */; };
@@ -467,9 +467,6 @@
 		F34047CC30367EBC003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
 		F34047CD30367EBC003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
 		F34047CE303680D0003B4B57 /* DonationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34047CB30367EBC003B4B57 /* DonationSheetView.swift */; };
-		F347296B3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
-		F347296C3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
-		F347296D3031D5D10094BF0A /* TagFilterMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296A3031D5D10094BF0A /* TagFilterMode.swift */; };
 		F347296E3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F347296F3031D5EB0094BF0A /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F349073F2F3064A10036CDAF /* IconMaktabah.icon in Resources */ = {isa = PBXBuildFile; fileRef = F349073E2F3064A10036CDAF /* IconMaktabah.icon */; };
@@ -647,6 +644,18 @@
 		FC8D8810939C50568834FB3D /* String+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71100FB42F3F579689D3A60F /* String+Search.swift */; };
 		FCEE7463632B425A8C6EC39F /* AnVC+TagFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */; };
 		FDB5242B5960EB1507BD74A6 /* iOSHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCE06036EE212C652A4D740 /* iOSHistoryView.swift */; };
+		FEA100020000000000000002 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
+		FEA100030000000000000003 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
+		FEA100040000000000000004 /* AnnotationNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA100010000000000000001 /* AnnotationNode.swift */; };
+		FEA200020000000000000002 /* AnnotationSortOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA200010000000000000001 /* AnnotationSortOption.swift */; };
+		FEA200030000000000000003 /* AnnotationSortOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA200010000000000000001 /* AnnotationSortOption.swift */; };
+		FEA200040000000000000004 /* AnnotationSortOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA200010000000000000001 /* AnnotationSortOption.swift */; };
+		FEA300020000000000000002 /* RandomAccessCollection+Insertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */; };
+		FEA300030000000000000003 /* RandomAccessCollection+Insertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */; };
+		FEA300040000000000000004 /* RandomAccessCollection+Insertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */; };
+		FEA400020000000000000002 /* PlatformColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA400010000000000000001 /* PlatformColor+Hex.swift */; };
+		FEA400030000000000000003 /* PlatformColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA400010000000000000001 /* PlatformColor+Hex.swift */; };
+		FEA400040000000000000004 /* PlatformColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA400010000000000000001 /* PlatformColor+Hex.swift */; };
 		FF34047318724E38BF0C64DD /* AnVC+TagPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */; };
 /* End PBXBuildFile section */
 
@@ -698,7 +707,7 @@
 		4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsVC.swift; sourceTree = "<group>"; };
 		4B4C97112F1F026C0051503E /* Narrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Narrator.swift; sourceTree = "<group>"; };
 		4B540F462EDF25A4001D8C0B /* BookConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookConnection.swift; sourceTree = "<group>"; };
-		4B5695582EEFDAAE00ABEB48 /* Annotations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotations.swift; sourceTree = "<group>"; };
+		4B5695582EEFDAAE00ABEB48 /* Annotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotation.swift; sourceTree = "<group>"; };
 		4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationEditorVC.swift; sourceTree = "<group>"; };
 		4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsOutlineDataSource.swift; sourceTree = "<group>"; };
 		4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkModel.swift; sourceTree = "<group>"; };
@@ -863,7 +872,6 @@
 		F33214392FC2750E006EC214 /* ThemeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeComponents.swift; sourceTree = "<group>"; };
 		F334EB32303F3808001121BE /* ReaderSplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSplitView.swift; sourceTree = "<group>"; };
 		F34047CB30367EBC003B4B57 /* DonationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationSheetView.swift; sourceTree = "<group>"; };
-		F347296A3031D5D10094BF0A /* TagFilterMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterMode.swift; sourceTree = "<group>"; };
 		F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagFilterSelectionView.swift; sourceTree = "<group>"; };
 		F349073E2F3064A10036CDAF /* IconMaktabah.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = IconMaktabah.icon; sourceTree = "<group>"; };
 		F34B708B2FC87BFF00BBE904 /* UserFontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFontManager.swift; sourceTree = "<group>"; };
@@ -952,6 +960,10 @@
 		F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationJsonDocument.swift; sourceTree = "<group>"; };
 		F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		F87A6247BC6183CE4E42296D /* HistoryDatabaseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HistoryDatabaseManager.swift; sourceTree = "<group>"; };
+		FEA100010000000000000001 /* AnnotationNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationNode.swift; sourceTree = "<group>"; };
+		FEA200010000000000000001 /* AnnotationSortOption.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationSortOption.swift; sourceTree = "<group>"; };
+		FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "RandomAccessCollection+Insertion.swift"; sourceTree = "<group>"; };
+		FEA400010000000000000001 /* PlatformColor+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "PlatformColor+Hex.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1037,6 +1049,8 @@
 		4B32022A2EDAFE85003B95D1 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				FE0000020000000000000002 /* Extensions */,
+				FE0000010000000000000001 /* Features */,
 				4B0139E52EEB3C9900424CFA /* Add-On View */,
 				4B6100DB2EFA720F00CCBED6 /* Al-Qur'an */,
 				4B65CCB02EE058570085CEB4 /* BooksLibrary */,
@@ -1066,7 +1080,6 @@
 			isa = PBXGroup;
 			children = (
 				4B96D33F2F3612A10018D902 /* BookUpdate */,
-				4BAB8A4A2F286C7D00732FC9 /* Annotations */,
 				4B01CA2E2EFD3656002A66FA /* App Config */,
 				F321E01F2FC7050F00CB37DD /* CloudKit */,
 				4B4C97082F1EFC380051503E /* Database */,
@@ -1084,7 +1097,6 @@
 		4B4C97082F1EFC380051503E /* Database */ = {
 			isa = PBXGroup;
 			children = (
-				F37F1C35300268E3002B5618 /* AnnotationManager */,
 				F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */,
 				F34D9FBE303D2DA80000FB79 /* ResultsHandler */,
 				4B8C9DCE2F6984120049E4EF /* ArchiveDatabaseTools.swift */,
@@ -1112,7 +1124,6 @@
 		4B4C97092F1EFC7E0051503E /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
-				4B73BF462EF09D67001ED591 /* AnnotationDelegate.swift */,
 				4B32022B2EDAFE85003B95D1 /* AppDelegate.swift */,
 				C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */,
 				4BCCCB612F9C41310027EC18 /* CopyableResult.swift */,
@@ -1127,10 +1138,6 @@
 		4B4C970A2F1EFCAB0051503E /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */,
-				F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */,
-				F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */,
-				4B5695582EEFDAAE00ABEB48 /* Annotations.swift */,
 				4B8C9DD82F6985210049E4EF /* ArchiveErrors.swift */,
 				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
 				4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */,
@@ -1145,7 +1152,6 @@
 				4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */,
 				4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */,
 				4B63E1E82EE9671000D58F3B /* RowiModel.swift */,
-				F347296A3031D5D10094BF0A /* TagFilterMode.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1228,23 +1234,6 @@
 			path = String;
 			sourceTree = "<group>";
 		};
-		4B5695572EEFDA8000ABEB48 /* Annotations */ = {
-			isa = PBXGroup;
-			children = (
-				F34D9FCC303D66BB0000FB79 /* OutlineView */,
-				4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */,
-				49D7BAF818D3447A9204EB5D /* AnVC+LineMenu.swift */,
-				D00F222F577745268CA496C9 /* AnVC+Panel.swift */,
-				A4921EC4B33C46338E59F39B /* AnVC+Search.swift */,
-				F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */,
-				DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */,
-				BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */,
-				CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */,
-				F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */,
-			);
-			path = Annotations;
-			sourceTree = "<group>";
-		};
 		4B58EDCC2EE3DDB000073495 /* Bookmark */ = {
 			isa = PBXGroup;
 			children = (
@@ -1288,7 +1277,6 @@
 			children = (
 				4B9A0AE82EEC56830049202E /* Bookmark */,
 				4B9A0AE32EEC51980049202E /* OutlineView */,
-				4B73BF442EF0799E001ED591 /* AnnotationCellView.swift */,
 				4B9A0AE62EEC53320049202E /* CellIViewIdentifier.swift */,
 				4B63E1EC2EE9758A00D58F3B /* LoadMoreCell.swift */,
 				4B63E1EA2EE9752F00D58F3B /* LoadMoreCell.xib */,
@@ -1349,7 +1337,6 @@
 		4B6AF2382EE58751002EBFFC /* Reader */ = {
 			isa = PBXGroup;
 			children = (
-				4B5695572EEFDA8000ABEB48 /* Annotations */,
 				4B20DB802EE7EEE400B97126 /* BookInfo.swift */,
 				4B6AF2342EE58394002EBFFC /* IbarotTextVC.swift */,
 				4B5DF9322EDC2FE60082DE7F /* LibraryVC.swift */,
@@ -1415,14 +1402,6 @@
 			path = TextView;
 			sourceTree = "<group>";
 		};
-		4BAB8A4A2F286C7D00732FC9 /* Annotations */ = {
-			isa = PBXGroup;
-			children = (
-				4BAB8A4B2F286C8A00732FC9 /* AnnotationCoordinator.swift */,
-			);
-			path = Annotations;
-			sourceTree = "<group>";
-		};
 		4BBC97692EE2659E00C1E22B /* Narrator */ = {
 			isa = PBXGroup;
 			children = (
@@ -1457,7 +1436,6 @@
 		F305777E2FA463B1005732C6 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				F3BEC5662FD97ACD00FA0400 /* Annotation */,
 				F363824F2FA6F9F10006636C /* Bootstrap */,
 				F36382672FA7610F0006636C /* Common */,
 				F30577762FA463B1005732C6 /* Reader */,
@@ -1568,22 +1546,6 @@
 			path = BookUpdateManager;
 			sourceTree = "<group>";
 		};
-		F34D9FCC303D66BB0000FB79 /* OutlineView */ = {
-			isa = PBXGroup;
-			children = (
-				4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */,
-				4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */,
-				4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */,
-				F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */,
-				F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */,
-				F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */,
-				F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */,
-				F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */,
-				F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */,
-			);
-			path = OutlineView;
-			sourceTree = "<group>";
-		};
 		F363824F2FA6F9F10006636C /* Bootstrap */ = {
 			isa = PBXGroup;
 			children = (
@@ -1607,22 +1569,6 @@
 			path = Common;
 			sourceTree = "<group>";
 		};
-		F37F1C35300268E3002B5618 /* AnnotationManager */ = {
-			isa = PBXGroup;
-			children = (
-				F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */,
-				F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */,
-				F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */,
-				F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */,
-				F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */,
-				F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */,
-				F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */,
-				F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */,
-				F37F1C2D300268E3002B5618 /* AnnotationManager.swift */,
-			);
-			path = AnnotationManager;
-			sourceTree = "<group>";
-		};
 		F3B60E242FC7CC6E00A9EF58 /* Toolbar */ = {
 			isa = PBXGroup;
 			children = (
@@ -1636,18 +1582,6 @@
 				F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */,
 			);
 			path = Toolbar;
-			sourceTree = "<group>";
-		};
-		F3BEC5662FD97ACD00FA0400 /* Annotation */ = {
-			isa = PBXGroup;
-			children = (
-				F3BEC5672FD97AD600FA0400 /* AnnotationContentView.swift */,
-				F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */,
-				F3BEC5642FD958D100FA0400 /* iOSAnnotationViewController.swift */,
-				F3BEC56C2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift */,
-				F3BEC56A2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift */,
-			);
-			path = Annotation;
 			sourceTree = "<group>";
 		};
 		F3D02D3A2FE04D580054807F /* Base */ = {
@@ -1671,7 +1605,6 @@
 			children = (
 				F3D02D3A2FE04D580054807F /* Base */,
 				F3D02D3C2FE04D580054807F /* Protocols */,
-				F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
 				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
@@ -1681,6 +1614,144 @@
 				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		FE0000010000000000000001 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				FE0000030000000000000003 /* Annotations */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		FE0000020000000000000002 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				FEA300010000000000000001 /* RandomAccessCollection+Insertion.swift */,
+				FEA400010000000000000001 /* PlatformColor+Hex.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		FE0000030000000000000003 /* Annotations */ = {
+			isa = PBXGroup;
+			children = (
+				FE0000070000000000000007 /* Coordinator */,
+				FE0000060000000000000006 /* Database */,
+				FE00000C000000000000000C /* iOS */,
+				FE0000090000000000000009 /* macOS */,
+				FE0000040000000000000004 /* Models */,
+				FE0000050000000000000005 /* Protocols */,
+				FE0000080000000000000008 /* ViewModel */,
+			);
+			path = Annotations;
+			sourceTree = "<group>";
+		};
+		FE0000040000000000000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				4B5695582EEFDAAE00ABEB48 /* Annotation.swift */,
+				FEA100010000000000000001 /* AnnotationNode.swift */,
+				FEA200010000000000000001 /* AnnotationSortOption.swift */,
+				F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */,
+				F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */,
+				F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FE0000050000000000000005 /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				4B73BF462EF09D67001ED591 /* AnnotationDelegate.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		FE0000060000000000000006 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */,
+				F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */,
+				F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */,
+				F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */,
+				F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */,
+				F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */,
+				F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */,
+				F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */,
+				F37F1C2D300268E3002B5618 /* AnnotationManager.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		FE0000070000000000000007 /* Coordinator */ = {
+			isa = PBXGroup;
+			children = (
+				4BAB8A4B2F286C8A00732FC9 /* AnnotationCoordinator.swift */,
+			);
+			path = Coordinator;
+			sourceTree = "<group>";
+		};
+		FE0000080000000000000008 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		FE0000090000000000000009 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */,
+				49D7BAF818D3447A9204EB5D /* AnVC+LineMenu.swift */,
+				D00F222F577745268CA496C9 /* AnVC+Panel.swift */,
+				A4921EC4B33C46338E59F39B /* AnVC+Search.swift */,
+				F5B24EBA21B744A68FB0E0BB /* AnVC+Share.swift */,
+				DEA6E156516C4CE0B2C53601 /* AnVC+Sort.swift */,
+				BEC076CB67A649FEB4A2E06C /* AnVC+TagFilter.swift */,
+				CC0F3B4745FB4F15962E767F /* AnVC+TagPopover.swift */,
+				F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */,
+				FE00000A000000000000000A /* CellViews */,
+				FE00000B000000000000000B /* OutlineView */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		FE00000A000000000000000A /* CellViews */ = {
+			isa = PBXGroup;
+			children = (
+				4B73BF442EF0799E001ED591 /* AnnotationCellView.swift */,
+			);
+			path = CellViews;
+			sourceTree = "<group>";
+		};
+		FE00000B000000000000000B /* OutlineView */ = {
+			isa = PBXGroup;
+			children = (
+				4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */,
+				4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */,
+				4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */,
+				F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */,
+				F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */,
+				F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */,
+				F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */,
+				F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */,
+				F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */,
+			);
+			path = OutlineView;
+			sourceTree = "<group>";
+		};
+		FE00000C000000000000000C /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F3BEC5672FD97AD600FA0400 /* AnnotationContentView.swift */,
+				F3D08C742FDC739900A0E733 /* AnnotationViewControllerWrapper.swift */,
+				F3BEC5642FD958D100FA0400 /* iOSAnnotationViewController.swift */,
+				F3BEC56C2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift */,
+				F3BEC56A2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift */,
+			);
+			path = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1896,6 +1967,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA100020000000000000002 /* AnnotationNode.swift in Sources */,
+				FEA200020000000000000002 /* AnnotationSortOption.swift in Sources */,
+				FEA300020000000000000002 /* RandomAccessCollection+Insertion.swift in Sources */,
+				FEA400020000000000000002 /* PlatformColor+Hex.swift in Sources */,
 				F34D9FC4303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */,
 				3B530CC651A25B3C8A712EF6 /* BookUpdateMgr+Fetch.swift in Sources */,
 				46A51203823D5043BF80094C /* BookUpdateMgr+Import.swift in Sources */,
@@ -2036,7 +2111,7 @@
 				F34D9FC2303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */,
 				F3D02D5D2FE05A650054807F /* LibraryViewModel.swift in Sources */,
 				4B5E70692EF4FEFC00E7D351 /* SharedPopover.swift in Sources */,
-				4B56955B2EEFDAAE00ABEB48 /* Annotations.swift in Sources */,
+				4B56955B2EEFDAAE00ABEB48 /* Annotation.swift in Sources */,
 				4B6100E92EFA740B00CCBED6 /* QuranSidebarVC.swift in Sources */,
 				F3D122682FF5459900F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
 				4B63E1E72EE965E800D58F3B /* RowiDataManager.swift in Sources */,
@@ -2059,7 +2134,6 @@
 				F3FF136B2FE757B500E74201 /* TextStorage.swift in Sources */,
 				4B65CCB82EE059B60085CEB4 /* OptionSearchVC.swift in Sources */,
 				4B0139E22EEB281C00424CFA /* BookPageCache.swift in Sources */,
-				F347296C3031D5D10094BF0A /* TagFilterMode.swift in Sources */,
 				4B0139E42EEB2FDF00424CFA /* StringInterner.swift in Sources */,
 				F3ABDF762FBF429700A8965E /* WelcomeScreenView.swift in Sources */,
 				4BDAB9842F69B946007D0945 /* CoreDatabaseDownloader.swift in Sources */,
@@ -2093,6 +2167,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA100030000000000000003 /* AnnotationNode.swift in Sources */,
+				FEA200030000000000000003 /* AnnotationSortOption.swift in Sources */,
+				FEA300030000000000000003 /* RandomAccessCollection+Insertion.swift in Sources */,
+				FEA400030000000000000003 /* PlatformColor+Hex.swift in Sources */,
 				2EB1013341A95032A69A7357 /* BookUpdateMgr+Fetch.swift in Sources */,
 				6B6091BCD8845F3394BEFED2 /* BookUpdateMgr+Import.swift in Sources */,
 				8709DDD4FDFC5CA7B817F77C /* BookUpdateMgr+Metadata.swift in Sources */,
@@ -2178,7 +2256,6 @@
 				4B7C90CA2F83494200454BE1 /* AppMode.swift in Sources */,
 				4B7C90CB2F83494200454BE1 /* Protocols.swift in Sources */,
 				4B7C90CC2F83494200454BE1 /* AnnotationColorMenuView.swift in Sources */,
-				F347296B3031D5D10094BF0A /* TagFilterMode.swift in Sources */,
 				4B7C90CD2F83494200454BE1 /* QuranDataManager.swift in Sources */,
 				4B7C90CE2F83494200454BE1 /* QuranWindow.swift in Sources */,
 				4B7C90CF2F83494200454BE1 /* DatabaseError.swift in Sources */,
@@ -2250,7 +2327,7 @@
 				4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */,
 				4B7C90F52F83494200454BE1 /* SharedPopover.swift in Sources */,
 				F3D122762FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */,
-				4B7C90F62F83494200454BE1 /* Annotations.swift in Sources */,
+				4B7C90F62F83494200454BE1 /* Annotation.swift in Sources */,
 				4B7C90F72F83494200454BE1 /* QuranSidebarVC.swift in Sources */,
 				4B7C90F82F83494200454BE1 /* RowiDataManager.swift in Sources */,
 				4B7C90F92F83494200454BE1 /* Quran.swift in Sources */,
@@ -2292,6 +2369,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FEA100040000000000000004 /* AnnotationNode.swift in Sources */,
+				FEA200040000000000000004 /* AnnotationSortOption.swift in Sources */,
+				FEA300040000000000000004 /* RandomAccessCollection+Insertion.swift in Sources */,
+				FEA400040000000000000004 /* PlatformColor+Hex.swift in Sources */,
 				A3513533B33D584EB2EFFDEE /* BookUpdateMgr+Fetch.swift in Sources */,
 				FC6A0443A0F45826B344EB51 /* BookUpdateMgr+Import.swift in Sources */,
 				09BABD2120005583A760399B /* BookUpdateMgr+Metadata.swift in Sources */,
@@ -2392,7 +2473,6 @@
 				F37F1C43300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
 				F37F1C44300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
 				F37F1C45300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
-				F347296D3031D5D10094BF0A /* TagFilterMode.swift in Sources */,
 				F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
 				006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */,
 				B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */,
@@ -2442,7 +2522,7 @@
 				F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */,
 				F321E0232FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
 				F3A002032FBB000100000001 /* CloudKitUploadDebouncer.swift in Sources */,
-				F30577342FA46222005732C6 /* Annotations.swift in Sources */,
+				F30577342FA46222005732C6 /* Annotation.swift in Sources */,
 				F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */,
 				F3B60E282FC7CDCA00A9EF58 /* iOSReaderBottomToolbarView.swift in Sources */,
 				F3FF136A2FE757B500E74201 /* TextStorage.swift in Sources */,
