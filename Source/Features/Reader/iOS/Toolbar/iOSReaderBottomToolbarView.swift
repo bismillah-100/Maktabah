@@ -108,8 +108,8 @@ struct iOSReaderBottomToolbarView: View {
         .sheet(isPresented: $showingTOC) {
             iOSTOCView(
                 tocViewModel: viewModel.tocViewModel,
-                selectedId: viewModel.tocViewModel.findNodeById(
-                    viewModel.currentContentId
+                selectedId: viewModel.tocViewModel.findNode(
+                    forContentId: viewModel.currentContentId
                 )?.id,
                 onSelect: { id in
                     viewModel.didSelectTOCNode(id: id)

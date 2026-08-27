@@ -56,11 +56,13 @@ class ViewerSplitVC: ReaderSplitVC {
         let sidebar: NSSplitViewItem
 
         if #available(macOS 26, *) {
-            ibarot = NSSplitViewItem(viewController: ibarotVC)
-            sidebar = ltr ? NSSplitViewItem(inspectorWithViewController: sidebarVC) : NSSplitViewItem(viewController: sidebarVC)
+            ibarot = .init(viewController: ibarotVC)
+            sidebar = ltr
+                ? .init(inspectorWithViewController: sidebarVC)
+                : .init(viewController: sidebarVC)
         } else {
-            sidebar = NSSplitViewItem(viewController: sidebarVC)
-            ibarot = NSSplitViewItem(viewController: ibarotVC)
+            sidebar = .init(viewController: sidebarVC)
+            ibarot = .init(viewController: ibarotVC)
         }
         return (ibarot, sidebar)
     }
