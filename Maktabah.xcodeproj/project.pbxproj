@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FE2000020000000000000002 /* Rowi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2000010000000000000001 /* Rowi.swift */; };
+		FE2000030000000000000003 /* Rowi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2000010000000000000001 /* Rowi.swift */; };
+		FE2000040000000000000004 /* Rowi.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2000010000000000000001 /* Rowi.swift */; };
+		FE2100020000000000000002 /* TabaqaGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2100010000000000000001 /* TabaqaGroup.swift */; };
+		FE2100030000000000000003 /* TabaqaGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2100010000000000000001 /* TabaqaGroup.swift */; };
+		FE2100040000000000000004 /* TabaqaGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2100010000000000000001 /* TabaqaGroup.swift */; };
+		FE2200020000000000000002 /* TarjamahMen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2200010000000000000001 /* TarjamahMen.swift */; };
+		FE2200030000000000000003 /* TarjamahMen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2200010000000000000001 /* TarjamahMen.swift */; };
+		FE2200040000000000000004 /* TarjamahMen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2200010000000000000001 /* TarjamahMen.swift */; };
+		FE2300020000000000000002 /* TarjamahResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2300010000000000000001 /* TarjamahResult.swift */; };
+		FE2300030000000000000003 /* TarjamahResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2300010000000000000001 /* TarjamahResult.swift */; };
+		FE2300040000000000000004 /* TarjamahResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2300010000000000000001 /* TarjamahResult.swift */; };
 		006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */; };
 		09BABD2120005583A760399B /* BookUpdateMgr+Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */; };
 		17475414BB0B621BFDC173ED /* FtsMigrationProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */; };
@@ -63,7 +75,6 @@
 		4B3B966D2F35A74400B57E1D /* BookUpdateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */; };
 		4B47F3992EE9A36D009A399F /* RowiProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B47F3982EE9A36D009A399F /* RowiProtocols.swift */; };
 		4B4846262EF06F3800EAA36C /* AnnotationsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */; };
-		4B4C97122F1F026C0051503E /* Narrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4C97112F1F026C0051503E /* Narrator.swift */; };
 		4B540F472EDF25A4001D8C0B /* BookConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B540F462EDF25A4001D8C0B /* BookConnection.swift */; };
 		4B56955B2EEFDAAE00ABEB48 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */; };
@@ -91,7 +102,6 @@
 		4B63E1E02EE9412900D58F3B /* RowiSidebarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1DE2EE9412900D58F3B /* RowiSidebarVC.swift */; };
 		4B63E1E42EE9425400D58F3B /* RowiResultsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E22EE9425400D58F3B /* RowiResultsVC.swift */; };
 		4B63E1E72EE965E800D58F3B /* RowiDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */; };
-		4B63E1E92EE9671000D58F3B /* RowiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E82EE9671000D58F3B /* RowiModel.swift */; };
 		4B63E1EB2EE9752F00D58F3B /* LoadMoreCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B63E1EA2EE9752F00D58F3B /* LoadMoreCell.xib */; };
 		4B63E1ED2EE9758A00D58F3B /* LoadMoreCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1EC2EE9758A00D58F3B /* LoadMoreCell.swift */; };
 		4B65CCB42EE059700085CEB4 /* SearchSidebarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B65CCB22EE059700085CEB4 /* SearchSidebarVC.swift */; };
@@ -163,7 +173,6 @@
 		4B7C90DF2F83494200454BE1 /* BackgroundOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */; };
 		4B7C90E02F83494200454BE1 /* AnnotationsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */; };
 		4B7C90E12F83494200454BE1 /* IbarotTextVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6AF2342EE58394002EBFFC /* IbarotTextVC.swift */; };
-		4B7C90E22F83494200454BE1 /* Narrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4C97112F1F026C0051503E /* Narrator.swift */; };
 		4B7C90E32F83494200454BE1 /* AnnotationEditorVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */; };
 		4B7C90E42F83494200454BE1 /* BookUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3422F3612D50018D902 /* BookUpdateView.swift */; };
 		4B7C90E52F83494200454BE1 /* ProgressBooksDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */; };
@@ -180,7 +189,6 @@
 		4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100E42EFA73DD00CCBED6 /* QuranSplitVC.swift */; };
 		4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		4B7C90F12F83494200454BE2 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
-		4B7C90F22F83494200454BE1 /* RowiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E82EE9671000D58F3B /* RowiModel.swift */; };
 		4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB174412F1AFAFF00BF1A2F /* ScreenTimeManager.swift */; };
 		4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6AF2322EE57CCD002EBFFC /* Toolbar.swift */; };
 		4B7C90F52F83494200454BE1 /* SharedPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5E70682EF4FEFC00E7D351 /* SharedPopover.swift */; };
@@ -360,14 +368,12 @@
 		F30577142FA46222005732C6 /* SearchMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B20DB7E2EE7EE1F00B97126 /* SearchMode.swift */; };
 		F305771A2FA46222005732C6 /* BookUpdateVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3402F3612BD0018D902 /* BookUpdateVM.swift */; };
 		F305771B2FA46222005732C6 /* BookUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3422F3612D50018D902 /* BookUpdateView.swift */; };
-		F30577202FA46222005732C6 /* Narrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4C97112F1F026C0051503E /* Narrator.swift */; };
 		F30577252FA46222005732C6 /* SearchEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B65CCBF2EE0A10F0085CEB4 /* SearchEngine.swift */; };
 		F30577262FA46222005732C6 /* DataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024F2EDB1B5A003B95D1 /* DataModel.swift */; };
 		F305772B2FA46222005732C6 /* ResultsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */; };
 		F305772D2FA46222005732C6 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024D2EDB13C0003B95D1 /* DatabaseManager.swift */; };
 		F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDC82EE3D1E000073495 /* BookmarkModel.swift */; };
 		F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */; };
-		F30577302FA46222005732C6 /* RowiModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E82EE9671000D58F3B /* RowiModel.swift */; };
 		F30577342FA46222005732C6 /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5695582EEFDAAE00ABEB48 /* Annotation.swift */; };
 		F30577362FA46222005732C6 /* RowiDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */; };
 		F30577372FA46222005732C6 /* Quran.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6100EC2EFA773C00CCBED6 /* Quran.swift */; };
@@ -660,6 +666,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		FE2000010000000000000001 /* Rowi.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Rowi.swift; sourceTree = "<group>"; };
+		FE2100010000000000000001 /* TabaqaGroup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabaqaGroup.swift; sourceTree = "<group>"; };
+		FE2200010000000000000001 /* TarjamahMen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TarjamahMen.swift; sourceTree = "<group>"; };
+		FE2300010000000000000001 /* TarjamahResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TarjamahResult.swift; sourceTree = "<group>"; };
 		3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudKitSyncManager.swift; sourceTree = "<group>"; };
 		344307D010B55FE69E3E8724 /* ResultsFolders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsFolders.swift; sourceTree = "<group>"; };
 		36D02EECA3B25A6AB11ECCE2 /* BookUpdateMgr+Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BookUpdateMgr+Import.swift"; sourceTree = "<group>"; };
@@ -705,7 +715,6 @@
 		4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookUpdateManager.swift; sourceTree = "<group>"; };
 		4B47F3982EE9A36D009A399F /* RowiProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiProtocols.swift; sourceTree = "<group>"; };
 		4B4846242EF06F3800EAA36C /* AnnotationsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsVC.swift; sourceTree = "<group>"; };
-		4B4C97112F1F026C0051503E /* Narrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Narrator.swift; sourceTree = "<group>"; };
 		4B540F462EDF25A4001D8C0B /* BookConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookConnection.swift; sourceTree = "<group>"; };
 		4B5695582EEFDAAE00ABEB48 /* Annotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Annotation.swift; sourceTree = "<group>"; };
 		4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationEditorVC.swift; sourceTree = "<group>"; };
@@ -733,7 +742,6 @@
 		4B63E1DE2EE9412900D58F3B /* RowiSidebarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiSidebarVC.swift; sourceTree = "<group>"; };
 		4B63E1E22EE9425400D58F3B /* RowiResultsVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiResultsVC.swift; sourceTree = "<group>"; };
 		4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiDataManager.swift; sourceTree = "<group>"; };
-		4B63E1E82EE9671000D58F3B /* RowiModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowiModel.swift; sourceTree = "<group>"; };
 		4B63E1EA2EE9752F00D58F3B /* LoadMoreCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LoadMoreCell.xib; sourceTree = "<group>"; };
 		4B63E1EC2EE9758A00D58F3B /* LoadMoreCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadMoreCell.swift; sourceTree = "<group>"; };
 		4B65CCB22EE059700085CEB4 /* SearchSidebarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSidebarVC.swift; sourceTree = "<group>"; };
@@ -1057,7 +1065,6 @@
 				F30577832FA463B1005732C6 /* iOS */,
 				4B4C97072F1EFC310051503E /* Managers */,
 				4B4C970A2F1EFCAB0051503E /* Models */,
-				4BBC97692EE2659E00C1E22B /* Narrator */,
 				4B4C97092F1EFC7E0051503E /* Protocols */,
 				4B6AF2382EE58751002EBFFC /* Reader */,
 				4B65CCB12EE058AA0085CEB4 /* Search */,
@@ -1085,7 +1092,6 @@
 				4B4C97082F1EFC380051503E /* Database */,
 				4B65CCBE2EE0A1050085CEB4 /* Engine */,
 				4B4C970E2F1F016D0051503E /* Library */,
-				4B4C970D2F1F01510051503E /* Narrator */,
 				4B4C97132F1F031C0051503E /* String */,
 				4BAB8A442F28679600732FC9 /* TextView */,
 				4B6AF22D2EE568FD002EBFFC /* ViewCordinatoor */,
@@ -1129,7 +1135,6 @@
 				4BCCCB612F9C41310027EC18 /* CopyableResult.swift */,
 				F32D440A303CFB3500429664 /* DBConnectionType.swift */,
 				4B3202482EDB10FA003B95D1 /* Protocols.swift */,
-				4B47F3982EE9A36D009A399F /* RowiProtocols.swift */,
 				F3D122782FF5C9A900F44E89 /* TextRenderable.swift */,
 			);
 			path = Protocols;
@@ -1145,14 +1150,12 @@
 				F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */,
 				4B32024F2EDB1B5A003B95D1 /* DataModel.swift */,
 				4B58EDDE2EE3D1E000073495 /* DateFormatter.swift */,
-				4B4C97112F1F026C0051503E /* Narrator.swift */,
-				F30577942FA4987B005732C6 /* NotificationName.swift */,
+						F30577942FA4987B005732C6 /* NotificationName.swift */,
 				F364898830131EAE00B9285B /* NotificationToken.swift */,
 				4B6100EC2EFA773C00CCBED6 /* Quran.swift */,
 				4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */,
 				4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */,
-				4B63E1E82EE9671000D58F3B /* RowiModel.swift */,
-			);
+					);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -1201,15 +1204,6 @@
 				4BA726A02EFC76C0003CA0ED /* ViewOptions.xib */,
 			);
 			path = XIB;
-			sourceTree = "<group>";
-		};
-		4B4C970D2F1F01510051503E /* Narrator */ = {
-			isa = PBXGroup;
-			children = (
-				4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */,
-				4B9A0AE12EEC17CC0049202E /* TarjamahDataManager.swift */,
-			);
-			path = Narrator;
 			sourceTree = "<group>";
 		};
 		4B4C970E2F1F016D0051503E /* Library */ = {
@@ -1402,15 +1396,6 @@
 			path = TextView;
 			sourceTree = "<group>";
 		};
-		4BBC97692EE2659E00C1E22B /* Narrator */ = {
-			isa = PBXGroup;
-			children = (
-				4B63E1E22EE9425400D58F3B /* RowiResultsVC.swift */,
-				4B63E1DE2EE9412900D58F3B /* RowiSidebarVC.swift */,
-			);
-			path = Narrator;
-			sourceTree = "<group>";
-		};
 		F30577742FA463B1005732C6 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
@@ -1449,7 +1434,6 @@
 				F30577792FA463B1005732C7 /* iOSLibraryViewController.swift */,
 				F30577792FA463B1005732C8 /* LibraryViewControllerWrapper.swift */,
 				F305777A2FA463B1005732C6 /* iOSMainView.swift */,
-				F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */,
 				F363825C2FA702D10006636C /* iPadLayout.swift */,
 				F363825A2FA702A00006636C /* iPhoneLayout.swift */,
 				F30577982FA4BE8D005732C6 /* LaunchScreen.storyboard */,
@@ -1562,7 +1546,6 @@
 				F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */,
 				F36382632FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift */,
 				F36382652FA761070006636C /* iOSSearchFilterViewController.swift */,
-				F38FF4312FA82059003E7B71 /* iOSRowiHierarchicalCollectionViewController.swift */,
 				F3B509702FD85BD300313BAD /* ListContentView.swift */,
 				F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */,
 			);
@@ -1608,7 +1591,6 @@
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
 				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
-				F3D02D602FE0616B0054807F /* NarratorViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
 				F3D02D582FE0522E0054807F /* SearchViewModel.swift */,
 				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
@@ -1620,8 +1602,76 @@
 			isa = PBXGroup;
 			children = (
 				FE0000030000000000000003 /* Annotations */,
+				FE2000000000000000000000 /* Narrator */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+				FE2000000000000000000000 /* Narrator */ = {
+			isa = PBXGroup;
+			children = (
+				FE2000050000000000000005 /* Database */,
+				FE2000080000000000000008 /* iOS */,
+				FE2000070000000000000007 /* macOS */,
+				FE2000060000000000000006 /* Models */,
+				FE2000090000000000000009 /* Protocols */,
+				FE2000100000000000000010 /* ViewModel */,
+			);
+			path = Narrator;
+			sourceTree = "<group>";
+		};
+		FE2000050000000000000005 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				4B63E1E62EE965E800D58F3B /* RowiDataManager.swift */,
+				4B9A0AE12EEC17CC0049202E /* TarjamahDataManager.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		FE2000060000000000000006 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FE2000010000000000000001 /* Rowi.swift */,
+				FE2100010000000000000001 /* TabaqaGroup.swift */,
+				FE2200010000000000000001 /* TarjamahMen.swift */,
+				FE2300010000000000000001 /* TarjamahResult.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		FE2000070000000000000007 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				4B63E1E22EE9425400D58F3B /* RowiResultsVC.swift */,
+				4B63E1DE2EE9412900D58F3B /* RowiSidebarVC.swift */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		FE2000080000000000000008 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F38FF4312FA82059003E7B71 /* iOSRowiHierarchicalCollectionViewController.swift */,
+				F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		FE2000090000000000000009 /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				4B47F3982EE9A36D009A399F /* RowiProtocols.swift */,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		FE2000100000000000000010 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				F3D02D602FE0616B0054807F /* NarratorViewModel.swift */,
+			);
+			path = ViewModel;
 			sourceTree = "<group>";
 		};
 		FE0000020000000000000002 /* Extensions */ = {
@@ -1967,6 +2017,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE2000020000000000000002 /* Rowi.swift in Sources */,
+				FE2100020000000000000002 /* TabaqaGroup.swift in Sources */,
+				FE2200020000000000000002 /* TarjamahMen.swift in Sources */,
+				FE2300020000000000000002 /* TarjamahResult.swift in Sources */,
 				FEA100020000000000000002 /* AnnotationNode.swift in Sources */,
 				FEA200020000000000000002 /* AnnotationSortOption.swift in Sources */,
 				FEA300020000000000000002 /* RandomAccessCollection+Insertion.swift in Sources */,
@@ -2084,8 +2138,7 @@
 				F37F1C4D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
 				F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
 				F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
-				4B4C97122F1F026C0051503E /* Narrator.swift in Sources */,
-				4B313A212F9A0FC60061FCC1 /* ResultCellView.swift in Sources */,
+						4B313A212F9A0FC60061FCC1 /* ResultCellView.swift in Sources */,
 				4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */,
 				4B96D3432F3612D50018D902 /* BookUpdateView.swift in Sources */,
 				F32BA47D300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
@@ -2105,8 +2158,7 @@
 				4B58EDC92EE3D1E000073495 /* BookmarkModel.swift in Sources */,
 				F34D9FC8303D64D10000FB79 /* AnnotationMenu.swift in Sources */,
 				4B58EDDF2EE3D1E000073495 /* DateFormatter.swift in Sources */,
-				4B63E1E92EE9671000D58F3B /* RowiModel.swift in Sources */,
-				4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
+						4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
 				4B6AF2332EE57CCD002EBFFC /* Toolbar.swift in Sources */,
 				F34D9FC2303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */,
 				F3D02D5D2FE05A650054807F /* LibraryViewModel.swift in Sources */,
@@ -2167,6 +2219,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE2000030000000000000003 /* Rowi.swift in Sources */,
+				FE2100030000000000000003 /* TabaqaGroup.swift in Sources */,
+				FE2200030000000000000003 /* TarjamahMen.swift in Sources */,
+				FE2300030000000000000003 /* TarjamahResult.swift in Sources */,
 				FEA100030000000000000003 /* AnnotationNode.swift in Sources */,
 				FEA200030000000000000003 /* AnnotationSortOption.swift in Sources */,
 				FEA300030000000000000003 /* RandomAccessCollection+Insertion.swift in Sources */,
@@ -2299,8 +2355,7 @@
 				F98231AA5FBD41F496614AA3 /* AnnotationJsonDocument.swift in Sources */,
 				DD1D2EC05C1549108061B993 /* Color+Hex.swift in Sources */,
 				4B7C90E12F83494200454BE1 /* IbarotTextVC.swift in Sources */,
-				4B7C90E22F83494200454BE1 /* Narrator.swift in Sources */,
-				4B7C90E32F83494200454BE1 /* AnnotationEditorVC.swift in Sources */,
+						4B7C90E32F83494200454BE1 /* AnnotationEditorVC.swift in Sources */,
 				F3FF136C2FE757B500E74201 /* TextStorage.swift in Sources */,
 				4B7C90E42F83494200454BE1 /* BookUpdateView.swift in Sources */,
 				4B7C90E52F83494200454BE1 /* ProgressBooksDownload.swift in Sources */,
@@ -2321,8 +2376,7 @@
 				4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */,
 				4B7C90F12F83494200454BE1 /* BookmarkModel.swift in Sources */,
 				4B7C90F12F83494200454BE2 /* DateFormatter.swift in Sources */,
-				4B7C90F22F83494200454BE1 /* RowiModel.swift in Sources */,
-				F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */,
+						F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */,
 				4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */,
 				4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */,
 				4B7C90F52F83494200454BE1 /* SharedPopover.swift in Sources */,
@@ -2369,6 +2423,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE2000040000000000000004 /* Rowi.swift in Sources */,
+				FE2100040000000000000004 /* TabaqaGroup.swift in Sources */,
+				FE2200040000000000000004 /* TarjamahMen.swift in Sources */,
+				FE2300040000000000000004 /* TarjamahResult.swift in Sources */,
 				FEA100040000000000000004 /* AnnotationNode.swift in Sources */,
 				FEA200040000000000000004 /* AnnotationSortOption.swift in Sources */,
 				FEA300040000000000000004 /* RandomAccessCollection+Insertion.swift in Sources */,
@@ -2495,8 +2553,7 @@
 				F305771A2FA46222005732C6 /* BookUpdateVM.swift in Sources */,
 				F305771B2FA46222005732C6 /* BookUpdateView.swift in Sources */,
 				F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */,
-				F30577202FA46222005732C6 /* Narrator.swift in Sources */,
-				F3A20B142FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift in Sources */,
+						F3A20B142FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift in Sources */,
 				F30577252FA46222005732C6 /* SearchEngine.swift in Sources */,
 				F30577952FA4987B005732C6 /* NotificationName.swift in Sources */,
 				F31111992FC0A9C00024B638 /* iOSFolderSelectionGroup.swift in Sources */,
@@ -2512,8 +2569,7 @@
 				F305772F2FA46222005732C6 /* BookmarkModel.swift in Sources */,
 				F305772F2FA46222005732C7 /* DateFormatter.swift in Sources */,
 				F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */,
-				F30577302FA46222005732C6 /* RowiModel.swift in Sources */,
-				F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,
+						F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,
 				F32D440C303CFB3500429664 /* DBConnectionType.swift in Sources */,
 				F3B60E262FC7CDA400A9EF58 /* iOSReaderNavigationPopoverView.swift in Sources */,
 				F321E0202FC7050F00CB37DD /* CloudKitCoreManager.swift in Sources */,
