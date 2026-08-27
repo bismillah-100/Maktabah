@@ -57,43 +57,10 @@ class LibraryDataManager {
             if let existing = _loadingTask {
                 return existing
             }
+
             let newTask = Task { [self] in
-                do {
-                    let results = try await Task.detached(priority: .userInitiated) { [self] in
-                        let allCategories = try db.fetchAllCategories()
-                        let (localRootCats, localCategoryMap) =
-                            buildCategoryHierarchy(from: allCategories)
-                        let localBooksById = try loadBooksAndIndex(
-                            for: allCategories
-                        )
-                        return (localRootCats, localCategoryMap, localBooksById)
-                    }.value
-
-                    lock.withLock {
-                        _allRootCategories = results.0
-                        _categoryMap = results.1
-                        _booksById = results.2
-                    }
-
-                    await applyBundleDownloadMetadataIfNeeded()
-
-                    lock.withLock {
-                        _isDataLoaded = true
-                    }
-
-                    // Bangun integration cache di background setelah data siap.
-                    Task.detached(priority: .background) {
-                        IntegrationCache.shared.buildAllIfNeeded()
-                    }
-                } catch {
-                    #if DEBUG
-                    print("Error loading data: \(error)")
-                    #endif
-                }
-
-                lock.withLock {
-                    _loadingTask = nil
-                }
+                await performDataLoad()
+                lock.withLock { _loadingTask = nil }
             }
             _loadingTask = newTask
             return newTask
@@ -102,6 +69,40 @@ class LibraryDataManager {
         if let task = taskToAwait {
             await task.value
         }
+    }
+
+    private func performDataLoad() async {
+        do {
+            let results = try await fetchDatabaseCategoriesAndBooks()
+            lock.withLock {
+                _allRootCategories = results.0
+                _categoryMap = results.1
+                _booksById = results.2
+            }
+
+            await applyBundleDownloadMetadataIfNeeded()
+
+            lock.withLock {
+                _isDataLoaded = true
+            }
+
+            Task.detached(priority: .background) {
+                IntegrationCache.shared.buildAllIfNeeded()
+            }
+        } catch {
+            #if DEBUG
+            print("Error loading data: \(error)")
+            #endif
+        }
+    }
+
+    private func fetchDatabaseCategoriesAndBooks() async throws -> ([CategoryData], [Int: CategoryData], [Int: BooksData]) {
+        try await Task.detached(priority: .userInitiated) { [self] in
+            let allCategories = try db.fetchAllCategories()
+            let (localRootCats, localCategoryMap) = buildCategoryHierarchy(from: allCategories)
+            let localBooksById = try loadBooksAndIndex(for: allCategories)
+            return (localRootCats, localCategoryMap, localBooksById)
+        }.value
     }
 
     func reloadAllData() async {
@@ -277,7 +278,9 @@ class LibraryDataManager {
         let (built, isLoaded, rootCats) = lock.withLock {
             (_archivesBuiltFromFullData, _isDataLoaded, _allRootCategories)
         }
-        if built || !isLoaded { return }
+        if built || !isLoaded {
+            return
+        }
 
         // gunakan var lokal agar thread-safe selama build
         var archives: [Int: ArchiveInfo] = [:]
@@ -523,7 +526,9 @@ extension LibraryDataManager {
         var totalTables = 0
 
         for archiveId in allowedByArchive.keys.sorted() {
-            if Task.isCancelled { return totalTables }
+            if Task.isCancelled {
+                return totalTables
+            }
 
             guard let archiveInfo = archives[archiveId],
                   let dbPath = getDatabasePath(forArchive: archiveId)
@@ -854,7 +859,7 @@ extension LibraryDataManager {
     /// Cek apakah Book ID memenuhi syarat untuk dihapus berdasarkan versi core
     static func shouldRemoveBook(id: Int) -> Bool {
         let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-        return coreVersion >= 1.0 ? id > 151203 : id > 32792
+        return coreVersion >= 1.0 ? id > 151_203 : id > 32792
     }
 
     /// Cek apakah Author ID memenuhi syarat untuk dihapus berdasarkan versi core
@@ -901,8 +906,8 @@ extension LibraryDataManager {
     ) {
         let key = "last_book_update_check"
         let lastCheck = UserDefaults.standard.double(forKey: key)
-        let oneDayInSeconds: TimeInterval = 86_400
-        var count: Int = 0
+        let oneDayInSeconds: TimeInterval = 86400
+        var count = 0
 
         if !force, Date().timeIntervalSince1970 - lastCheck < oneDayInSeconds {
             Task { @MainActor in
