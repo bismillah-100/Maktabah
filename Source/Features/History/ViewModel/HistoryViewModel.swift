@@ -44,6 +44,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
             pruneOrphanedEntries()
             HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
             loadBooksData()
+            notifyHistoryChanged()
         }
     }
 
@@ -66,6 +67,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
     override init() {
         super.init()
+
         HistoryDatabaseManager.shared.setupDatabase()
         HistoryDatabaseManager.shared.migrateFromUserDefaultsIfNeeded()
         migrateLegacyKVSDataIfNeeded()
@@ -82,7 +84,18 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         enableBookIdMigrationObserver()
     }
 
+    // MARK: - Notifications
+
+    private func notifyHistoryChanged() {
+        NotificationCenter.default.post(name: .historyDidChange, object: self)
+    }
+
     // MARK: - Load from Database
+
+    func reloadFromDatabase() {
+        loadFromDatabase()
+        loadBooksData()
+    }
 
     private func loadFromDatabase() {
         let data = HistoryDatabaseManager.shared.loadFromDatabase()
@@ -105,6 +118,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         if reloadUI {
             loadBooksData()
         }
+        notifyHistoryChanged()
         CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
     }
 
@@ -157,6 +171,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
     func removeHistory(for bookId: Int) {
         historyOrder.removeAll { $0 == bookId }
+        notifyHistoryChanged()
         guard let entry = entriesByBookId[bookId] else { return }
 
         if entry.isFavorite {
@@ -242,6 +257,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
     func clearHistory() {
         let historyIdsToRemove = historyOrder
         historyOrder.removeAll()
+        notifyHistoryChanged()
 
         var ckIdsToDelete = [String]()
         var upserted = [ReadingEntry]()
@@ -375,7 +391,8 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         Array(entriesByBookId.values)
     }
 
-    @discardableResult func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) -> Bool {
+    @discardableResult
+    func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) -> Bool {
         let block = { [weak self] in
             guard let self else { return }
             var didChange = false
@@ -421,9 +438,22 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 let localModified = localEntry.updatedAt.timeIntervalSince1970
                 let remoteModified = remoteEntry.updatedAt.timeIntervalSince1970
 
-                if remoteModified > localModified {
-                    entriesByBookId[remoteEntry.bookId] = remoteEntry
-                    upsertedEntries.append(remoteEntry)
+                if remoteModified >= localModified {
+                    var merged = remoteEntry
+                    if merged.lastOpenedAt == nil {
+                        merged.lastOpenedAt = localEntry.lastOpenedAt
+                    }
+                    if merged.lastContentId == nil {
+                        merged.lastContentId = localEntry.lastContentId
+                    }
+                    if merged.favoritedAt == nil {
+                        merged.favoritedAt = localEntry.favoritedAt
+                    }
+                    if merged.positionUpdatedAt == nil {
+                        merged.positionUpdatedAt = localEntry.positionUpdatedAt
+                    }
+                    entriesByBookId[remoteEntry.bookId] = merged
+                    upsertedEntries.append(merged)
                     didChange = true
                 }
             } else {
@@ -447,6 +477,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
         let finalOrder = historyOrder
         loadBooksData()
+        notifyHistoryChanged()
 
         let finalDeleted = deletedIds
         DispatchQueue.global(qos: .background).async {
@@ -584,6 +615,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
 
         // Upload entry baru
         loadBooksData()
+        notifyHistoryChanged()
         CloudKitSyncManager.shared.uploadHistory(entries: [migrated], trackPending: false)
     }
 }

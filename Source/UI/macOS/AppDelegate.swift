@@ -7,7 +7,6 @@
 //
 
 import CloudKit
-import Cocoa
 import SwiftUI
 import UniformTypeIdentifiers
 #if DIRECT_DISTRIBUTION
@@ -56,6 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         super.init()
         ArabicFont.registerCustomFonts()
         AppConfig.initializeMode()
+        AppConfig.setupAnnotationsAndResults()
         CoreDatabaseBootstrap.run()
 
         UserDefaults.standard.register(defaults: ["AplFirstLaunch": true])
@@ -69,6 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        NSAppleEventManager.shared().setEventHandler(self, andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)), forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
         NSApplication.shared.activate(ignoringOtherApps: true)
         restorePersistedState(mainWindowController.window as? MainWindow)
         buildViewMenu()
@@ -80,6 +81,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         controlMenu.delegate = self
         _ = ScreenTimeManager.shared // untuk init supaya pengaturan diload.
+        _ = WidgetUpdateCoordinator.shared // untuk init observer widget & snapshot awal
 
         UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.lineHeight: 1.0])
         UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorDark: 3])
@@ -103,7 +105,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appUpdatesMenuItem.isHidden = true
         #endif
 
-        AppConfig.setupAnnotationsAndResults()
         CloudKitSyncManager.shared.initializeOnLaunch()
         // Register for CloudKit remote notifications
         NSApplication.shared.registerForRemoteNotifications()
@@ -132,9 +133,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             try await Task.sleep(for: .seconds(5))
             CloudKitSyncManager.shared.fetchChanges()
         }
+        WidgetUpdateCoordinator.shared.handleSilentPush { _ in }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
+        HistoryViewModel.shared.reloadFromDatabase()
         CloudKitSyncManager.shared.fetchChanges()
         DonationManager.shared.recordActivation()
         DonationManager.shared.checkAndPromptMacOSSheet(on: keyWindow ?? mainWindowController?.window)
@@ -182,6 +185,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       */
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        flushPendingWidgetUpdates(cloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
         ScreenTimeManager.shared.cancel()
@@ -627,6 +631,73 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func newTabWindow(_ sender: Any?) {
         guard let keyWindow else { return }
         keyWindow.newWindowForTab(sender)
+    }
+
+    @discardableResult
+    func ensureActiveMainWindow() -> MainWindow? {
+        NSApp.activate(ignoringOtherApps: true)
+
+        if let existingWindow = (NSApp.windows.first(where: { $0 is MainWindow && !$0.isMiniaturized }) as? MainWindow) ?? (keyWindow ?? mainWindowController?.window as? MainWindow) {
+            existingWindow.makeKeyAndOrderFront(nil)
+            return existingWindow
+        }
+
+        if let minimizedWindow = NSApp.windows.first(where: { $0 is MainWindow && $0.isMiniaturized }) as? MainWindow {
+            minimizedWindow.deminiaturize(nil)
+            minimizedWindow.makeKeyAndOrderFront(nil)
+            return minimizedWindow
+        }
+
+        newWindow(self)
+        return keyWindow ?? (mainWindowController?.window as? MainWindow)
+    }
+
+    @objc func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
+        guard let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
+              let url = URL(string: urlString),
+              let deepLink = WidgetDeepLink.parse(from: url),
+              let targetWindow = ensureActiveMainWindow()
+        else { return }
+
+        switch deepLink {
+        case let .annotation(annId):
+            guard let annotation = AnnotationManager.shared.loadAnnotationById(annId) else { return }
+
+            Task { @MainActor in
+                targetWindow.switchToMode(.viewer)
+                targetWindow.splitVC.ibarotTextVC.didSelect(annotation: annotation)
+            }
+
+        case let .history(bkId, contentId):
+            guard let book = LibraryDataManager.shared.getBook([bkId]).first else { return }
+
+            Task { @MainActor in
+                targetWindow.switchToMode(.viewer)
+                let splitVC = targetWindow.splitVC
+                do {
+                    if splitVC.ibarotTextVC.currentBook?.id != book.id {
+                        try await splitVC.ibarotTextVC.displayBook(book, loadContent: contentId == nil)
+                    }
+                    if let contentId {
+                        splitVC.ibarotTextVC.handleDelegate(contentId)
+                    }
+                } catch {
+                    #if DEBUG
+                    print("Failed to open history book: \(error)")
+                    #endif
+                }
+            }
+        }
+    }
+
+    func applicationDidResignActive(_ notification: Notification) {
+        flushPendingWidgetUpdates(cloudKit: true)
+    }
+
+    private func flushPendingWidgetUpdates(cloudKit: Bool = false) {
+        WidgetUpdateCoordinator.shared.flushPendingUpdates(
+            forceCloudKit: cloudKit
+        )
     }
 
     deinit {

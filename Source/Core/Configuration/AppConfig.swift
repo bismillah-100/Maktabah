@@ -12,7 +12,7 @@ import AppKit
 import UIKit
 #endif
 
-struct AppConfig {
+enum AppConfig {
     static let storageKey = "selected_shamela_bookmark" // Ubah key agar fresh
     static let annotationsAndResultsFolder = "annotations_FolderPath"
     static let bundleModeKey = "use_bundle_database_mode"
@@ -21,8 +21,12 @@ struct AppConfig {
     static let bookReleaseBaseURLKey = "book_release_base_url"
     static let bookIndexURLKey = "book_index_url"
     static let appcastURLKey = "appcast_url"
+    static let databasesFileName = ["main.sqlite", "special.sqlite", "special_fts.sqlite"]
+    static let walShmSuffix = ["", "-wal", "-shm"]
+    static let userDatabasesFileName = ["Annotations.sqlite", "SearchResults.sqlite", "History.sqlite"]
 
     // MARK: - Archive Cache Path (untuk Bundle Mode)
+
     /// Path untuk archive files saat menggunakan Bundle Mode
     /// Located at: ~/Library/Application Support/Maktabah/Caches/
     static var archiveCachePath: String? {
@@ -42,6 +46,7 @@ struct AppConfig {
     }
 
     // MARK: - Custom Database Path
+
     /// Path ke custom folder yang dipilih user
     /// Ketika user memilih folder, SEMUA files (main, special, archives) di sini
     static var customDatabasePath: String? {
@@ -50,6 +55,7 @@ struct AppConfig {
     }
 
     // MARK: - Bundle Mode Flag
+
     /// True jika aplikasi sedang menggunakan Bundle Mode (database dari bundle)
     static var isUsingBundleMode: Bool {
         get {
@@ -61,6 +67,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Get appropriate path untuk database files (main.sqlite, special.sqlite)
+
     /// Return path untuk main.sqlite dan special.sqlite
     /// - Bundle Mode: ~/Library/Application Support/Maktabah/Caches/
     ///   (diunduh saat first launch, bukan di-bundle ke .app)
@@ -89,7 +96,8 @@ struct AppConfig {
     /// Default: "v0-core". Override via UserDefaults key: core_release_tag
     static var coreReleaseTag: String? {
         if let raw = UserDefaults.standard.string(forKey: coreReleaseTagKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty {
+            .trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty
+        {
             return raw
         }
         return "v1.0-core"
@@ -101,7 +109,8 @@ struct AppConfig {
     static var coreReleaseBaseURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: coreReleaseBaseURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty, let url = URL(string: raw) {
+            !raw.isEmpty, let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://github.com/bismillah-100/Kitab/releases/download")
@@ -111,13 +120,14 @@ struct AppConfig {
 
     /// Folder untuk menyimpan main.sqlite + special.sqlite yang diunduh.
     /// Hanya relevan untuk Bundle Mode.
-    /// Path: ~/Library/Application Support/Maktabah/Caches/
+    /// Default: App Group Caches/ (jika tersedia) atau ~/Library/Application Support/Maktabah/Caches/
     static var coreDatabasePath: String? {
         guard !hasCustomDatabaseFolder() else { return nil }
         return archiveCachePath
     }
 
     // MARK: - Helper: Database File Paths
+
     static var mainDatabasePath: String? {
         guard let base = databaseFilesPath else { return nil }
         return "\(base)/main.sqlite"
@@ -129,6 +139,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Get appropriate path untuk archive files (1-20.sqlite)
+
     /// Return path untuk archive files
     /// - Bundle Mode: ~/Library/Application Support/Maktabah/Caches/
     /// - Custom Mode: {custom_folder}/
@@ -158,6 +169,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Get appropriate path untuk buku hasil split (per-kitab)
+
     /// Return path untuk file kitab tunggal (bkid.sqlite)
     /// - Bundle Mode: ~/Library/Application Support/Maktabah/Caches/Books/
     /// - Custom Mode: {custom_folder}/Books/
@@ -176,14 +188,16 @@ struct AppConfig {
     }
 
     // MARK: - Download Base URL (per-kitab)
+
     /// Legacy fallback base URL (direct file hosting).
     /// Jika tidak diset, fallback ini tidak digunakan.
     /// Override via UserDefaults key: book_download_base_url
     static var bookDownloadBaseURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: bookDownloadBaseURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return nil
@@ -191,21 +205,24 @@ struct AppConfig {
 
     static var hasCustomBookDownloadBaseURL: Bool {
         if let raw = UserDefaults.standard.string(forKey: bookDownloadBaseURLKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) {
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        {
             return !raw.isEmpty
         }
         return false
     }
 
     // MARK: - GitHub Releases (per-kitab)
+
     /// Base URL untuk download asset GitHub Releases.
     /// Default: https://github.com/bismillah-100/Kitab/releases/download
     /// Override via UserDefaults key: book_release_base_url
     static var bookReleaseBaseURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: bookReleaseBaseURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://github.com/bismillah-100/Kitab/releases/download")
@@ -217,8 +234,9 @@ struct AppConfig {
     static var bookIndexURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: bookIndexURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://raw.githubusercontent.com/bismillah-100/Kitab/main/index.json")
@@ -235,8 +253,9 @@ struct AppConfig {
     static var coreVersionURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: coreVersionURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://raw.githubusercontent.com/bismillah-100/Kitab/main/version.txt")
@@ -293,11 +312,13 @@ struct AppConfig {
     }
 
     // MARK: - App Updates
+
     static var appcastURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: appcastURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
 
@@ -379,6 +400,7 @@ struct AppConfig {
     static let useCrossPlatformSyncKey = "use_cross_platform_sync"
 
     // MARK: - iCloud Support
+
     static var useICloud: Bool {
         get { UserDefaults.standard.bool(forKey: useICloudKey) }
         set { UserDefaults.standard.set(newValue, forKey: useICloudKey) }
@@ -396,7 +418,8 @@ struct AppConfig {
 
     static var iCloudFolderURL: URL? {
         guard let url = FileManager.default.url(forUbiquityContainerIdentifier: nil)?
-            .appendingPathComponent("Documents", isDirectory: true) else {
+            .appendingPathComponent("Documents", isDirectory: true)
+        else {
             return nil
         }
 
@@ -405,6 +428,17 @@ struct AppConfig {
             try? fm.createDirectory(at: url, withIntermediateDirectories: true)
         }
 
+        return url
+    }
+
+    static var appGroupDir: URL? {
+        guard let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.Drn.maktabah") else {
+            return nil
+        }
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: url.path) {
+            try? fm.createDirectory(at: url, withIntermediateDirectories: true)
+        }
         return url
     }
 
@@ -436,7 +470,7 @@ struct AppConfig {
 
     /// Hanya menetapkan mode (custom/bundle), tanpa menyentuh DatabaseManager.
     /// Dipanggil dari AppDelegate.init() sebelum CoreDatabaseBootstrap berjalan.
-    static func initializeMode() {
+    static func initializeMode() {        
         if hasCustomDatabaseFolder() {
             // Custom mode sudah set, tidak perlu perubahan
         } else if isUsingBundleMode {
@@ -469,15 +503,15 @@ struct AppConfig {
                     withIntermediateDirectories: true
                 )
                 #if DEBUG
-                    print("Created archive cache directory")
+                print("Created archive cache directory")
                 #endif
             }
 
             // Set Bundle Mode flag
             isUsingBundleMode = true
             #if DEBUG
-                print("Bundle Mode setup selesai")
-                print("Archive cache: \(cachePath)")
+            print("Bundle Mode setup selesai")
+            print("Archive cache: \(cachePath)")
             #endif
             return true
         } catch {
@@ -507,6 +541,9 @@ struct AppConfig {
     /// - Returns: True jika migration berhasil
     static func migrateToCustomMode(folderUrl: URL) -> Bool {
         do {
+            // Capture source path before changing the bookmark so it resolves correctly
+            let sourceDir = databaseFilesPath
+
             // 1. Save custom folder bookmark
             saveBookmark(url: folderUrl, key: customDatabaseFolderKey)
 
@@ -518,22 +555,24 @@ struct AppConfig {
                 try fm.createDirectory(at: filesDir, withIntermediateDirectories: true)
             }
 
-            // 3. Copy bundle databases ke custom folder jika belum ada
-            if let bundlePath = archiveCachePath {
+            // 3. Copy existing databases ke custom folder jika belum ada
+            if let sourceDir {
                 let mainSqFile = "main.sqlite"
                 let specialSqFile = "special.sqlite"
-                 let specialFtsSqFile = "special_fts.sqlite"
+                let specialFtsSqFile = "special_fts.sqlite"
 
                 for fileName in [mainSqFile, specialSqFile, specialFtsSqFile] {
-                    let sourcePath = "\(bundlePath)/\(fileName)"
-                    let destPath = filesDir.appendingPathComponent(fileName).path
+                    for suffix in walShmSuffix {
+                        let sourcePath = "\(sourceDir)/\(fileName)\(suffix)"
+                        let destPath = filesDir.appendingPathComponent("\(fileName)\(suffix)").path
 
-                    // Copy hanya jika destination belum ada (respect existing user files)
-                    if !fm.fileExists(atPath: destPath) && fm.fileExists(atPath: sourcePath) {
-                        try fm.copyItem(atPath: sourcePath, toPath: destPath)
-                        #if DEBUG
-                            print("Copied \(fileName) ke custom folder")
-                        #endif
+                        // Copy hanya jika destination belum ada (respect existing user files)
+                        if !fm.fileExists(atPath: destPath), fm.fileExists(atPath: sourcePath) {
+                            try fm.copyItem(atPath: sourcePath, toPath: destPath)
+                            #if DEBUG
+                            print("Copied \(fileName)\(suffix) ke custom folder")
+                            #endif
+                        }
                     }
                 }
             }
@@ -541,12 +580,12 @@ struct AppConfig {
             // 4. Disable Bundle Mode
             isUsingBundleMode = false
             #if DEBUG
-                print("Migrated to Custom Mode: \(folderUrl.path)")
+            print("Migrated to Custom Mode: \(folderUrl.path)")
             #endif
             return true
         } catch {
             #if DEBUG
-                print("Error migrating to Custom Mode:", error)
+            print("Error migrating to Custom Mode:", error)
             #endif
             return false
         }
@@ -554,17 +593,19 @@ struct AppConfig {
 
     /// Check jika user sudah setup custom database folder
     static func hasCustomDatabaseFolder() -> Bool {
-        return UserDefaults.standard.data(forKey: customDatabaseFolderKey) != nil
+        UserDefaults.standard.data(forKey: customDatabaseFolderKey) != nil
     }
 
     static func setupAnnotationsAndResults() {
-        let activeFolder = AppConfig.folder(for: AppConfig.annotationsAndResultsFolder)
+        let activeFolder = AppConfig.folder(for: AppConfig.annotationsAndResultsFolder) ?? appSupportDir
 
         // Migrasi dari iCloud Drive ke folder aktif jika aktif
         if useICloud, let iCloud = iCloudFolderURL, let dest = activeFolder,
-           iCloud.standardized != dest.standardized {
+           iCloud.standardized != dest.standardized
+        {
             AnnotationManager.shared.disconnect()
             ResultsHandler.shared.disconnect()
+            HistoryDatabaseManager.shared.disconnect()
             migrateFiles(from: iCloud, to: dest)
         }
 
@@ -589,24 +630,63 @@ struct AppConfig {
                 message: error.localizedDescription
             )
         }
+
+        HistoryDatabaseManager.shared.setupDatabase()
+        HistoryViewModel.shared.reloadFromDatabase()
     }
 
-    private static func migrateFiles(from sourceURL: URL, to destURL: URL) {
+    private static func migrateDatabaseFiles(
+        named files: [String],
+        from sourceDir: URL,
+        to destDir: URL,
+        replaceIfDestinationEmptyOrSmaller: Bool = true
+    ) {
         let fm = FileManager.default
-        let files = ["Annotations.sqlite", "SearchResults.sqlite", "History.sqlite"]
-        let exts = ["", "-wal", "-shm"]
+        let exts = walShmSuffix
+
+        if !fm.fileExists(atPath: destDir.path) {
+            try? fm.createDirectory(at: destDir, withIntermediateDirectories: true)
+        }
 
         for file in files {
-            for ext in exts {
-                let fullFile = file + ext
-                let source = sourceURL.appendingPathComponent(fullFile)
-                let destination = destURL.appendingPathComponent(fullFile)
+            let sourceMain = sourceDir.appendingPathComponent(file)
+            let destMain = destDir.appendingPathComponent(file)
 
-                if fm.fileExists(atPath: source.path), !fm.fileExists(atPath: destination.path) {
-                    try? fm.moveItem(at: source, to: destination)
+            guard fm.fileExists(atPath: sourceMain.path) else { continue }
+
+            let srcSize = (try? fm.attributesOfItem(atPath: sourceMain.path)[.size] as? Int64) ?? 0
+            let dstSize = (try? fm.attributesOfItem(atPath: destMain.path)[.size] as? Int64) ?? 0
+
+            let shouldMove = !fm.fileExists(atPath: destMain.path) ||
+                (replaceIfDestinationEmptyOrSmaller && dstSize <= 4096 && srcSize > dstSize)
+
+            if shouldMove {
+                for ext in exts {
+                    let src = sourceDir.appendingPathComponent(file + ext)
+                    let dst = destDir.appendingPathComponent(file + ext)
+                    if fm.fileExists(atPath: dst.path) {
+                        try? fm.removeItem(at: dst)
+                    }
+                    if fm.fileExists(atPath: src.path) {
+                        try? fm.moveItem(at: src, to: dst)
+                    }
+                }
+            } else if fm.fileExists(atPath: destMain.path) {
+                for ext in exts {
+                    let src = sourceDir.appendingPathComponent(file + ext)
+                    try? fm.removeItem(at: src)
                 }
             }
         }
+    }
+
+    private static func migrateFiles(from sourceURL: URL, to destURL: URL) {
+        migrateDatabaseFiles(
+            named: userDatabasesFileName,
+            from: sourceURL,
+            to: destURL,
+            replaceIfDestinationEmptyOrSmaller: false
+        )
     }
 
     enum MigrationResolution {
@@ -626,8 +706,9 @@ struct AppConfig {
         useICloud = use
 
         if use {
-            // 1. Move files from CURRENT folder (could be custom or old iCloud Drive) to appSupportDir
-            if let source = oldFolder, let dest = appSupportDir, source.standardized != dest.standardized {
+            // 1. Move files from CURRENT folder (could be custom or old iCloud Drive) to activeFolder
+            let defaultDest = AppConfig.folder(for: annotationsAndResultsFolder) ?? appSupportDir
+            if let source = oldFolder, let dest = defaultDest, source.standardized != dest.standardized {
                 migrateFiles(from: source, to: dest)
             }
 

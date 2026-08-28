@@ -41,15 +41,18 @@ final class CloudKitCoreManager {
 
     // MARK: - Save Token
 
+    private let defaults: UserDefaults = .standard
+
     func saveToken(_ token: CKServerChangeToken?) {
         guard let token else { return }
         if let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true) {
+            defaults.set(data, forKey: changeTokenKey)
             UserDefaults.standard.set(data, forKey: changeTokenKey)
         }
     }
 
     func loadToken() -> CKServerChangeToken? {
-        guard let data = UserDefaults.standard.data(forKey: changeTokenKey) else { return nil }
+        guard let data = defaults.data(forKey: changeTokenKey) ?? UserDefaults.standard.data(forKey: changeTokenKey) else { return nil }
         do {
             let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
             unarchiver.requiresSecureCoding = true
@@ -60,6 +63,7 @@ final class CloudKitCoreManager {
     }
 
     func resetToken() {
+        defaults.removeObject(forKey: changeTokenKey)
         UserDefaults.standard.removeObject(forKey: changeTokenKey)
         UserDefaults.standard.removeObject(forKey: "CloudKitSyncManager_InitialUploadDone")
         setSyncing(false)

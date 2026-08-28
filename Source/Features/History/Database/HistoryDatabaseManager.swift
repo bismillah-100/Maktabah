@@ -21,7 +21,13 @@ class HistoryDatabaseManager: SyncPendingManaging {
     var syncPendingStore: SyncPendingStore?
 
     private init() {
-        setupDatabase()
+        // Database setup is called explicitly via AppConfig.setupAnnotationsAndResults()
+    }
+
+    func disconnect() {
+        _db?.checkpoint()
+        _db = nil
+        syncPendingStore = nil
     }
 
     func setupDatabase() {

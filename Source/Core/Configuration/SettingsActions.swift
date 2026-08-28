@@ -216,6 +216,13 @@ enum SettingsActions {
         let previousCustomBookmark = UserDefaults.standard.data(
             forKey: AppConfig.customDatabaseFolderKey
         )
+        
+        // Purge polluted AppGroup files if coming from Custom Mode so it forces a fresh download
+        if !wasBundleMode, let groupURL = AppConfig.appGroupDir {
+            let cachePath = groupURL.appendingPathComponent("Caches", isDirectory: true)
+            try? FileManager.default.removeItem(at: cachePath.appendingPathComponent("main.sqlite"))
+            try? FileManager.default.removeItem(at: cachePath.appendingPathComponent("special.sqlite"))
+        }
 
         AppConfig.migrateToBundleMode()
 

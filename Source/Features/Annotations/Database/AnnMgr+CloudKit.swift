@@ -139,8 +139,21 @@ extension AnnotationManager {
             }
             return (nil, nil)
         } else {
-            let added = try insertCloudKitAnnotation(db: db, ann: ann)
-            return (added, nil)
+            // Check if there is an un-synced local row (ckRecordId IS NULL) at the same position
+            let checkSql = "SELECT \(colAnnId), \(colAnnLastModified) FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IS NULL AND \(colAnnBkId) = ? AND \(colAnnContentId) = ? AND \(colAnnStart) = ? AND \(colAnnLength) = ? LIMIT 1;"
+            let existingByPos = try db.fetch(
+                query: checkSql,
+                parameters: [ann.bkId, ann.contentId, ann.range.location, ann.range.length],
+                mapping: { ($0.int64(at: 0), $0.int64(at: 1)) }
+            ).first
+
+            if let existingByPos {
+                let updated = try updateCloudKitAnnotation(db: db, ann: ann, existingId: existingByPos.0)
+                return (nil, updated)
+            } else {
+                let added = try insertCloudKitAnnotation(db: db, ann: ann)
+                return (added, nil)
+            }
         }
     }
 
@@ -151,7 +164,7 @@ extension AnnotationManager {
     ) throws -> Annotation {
         var annCopy = ann
         annCopy.id = existingId
-        let updateSql = "UPDATE \(annotationsTable) SET \(colAnnBkId) = ?, \(colAnnContentId) = ?, \(colAnnStart) = ?, \(colAnnLength) = ?, \(colAnnStartDiac) = ?, \(colAnnLengthDiac) = ?, \(colAnnColor) = ?, \(colAnnType) = ?, \(colAnnNote) = ?, \(colAnnLastModified) = ?, \(colAnnPart) = ?, \(colAnnPage) = ? WHERE \(colAnnId) = ?;"
+        let updateSql = "UPDATE \(annotationsTable) SET \(colAnnBkId) = ?, \(colAnnContentId) = ?, \(colAnnStart) = ?, \(colAnnLength) = ?, \(colAnnStartDiac) = ?, \(colAnnLengthDiac) = ?, \(colAnnColor) = ?, \(colAnnType) = ?, \(colAnnNote) = ?, \(colAnnLastModified) = ?, \(colAnnPart) = ?, \(colAnnPage) = ?, \(colAnnCkRecordId) = ? WHERE \(colAnnId) = ?;"
 
         let params: [Any] = [
             annCopy.bkId,
@@ -166,6 +179,7 @@ extension AnnotationManager {
             annCopy.lastModified ?? 0,
             annCopy.part,
             annCopy.page,
+            annCopy.ckRecordId ?? NSNull(),
             existingId,
         ]
 
