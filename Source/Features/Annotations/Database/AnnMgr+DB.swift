@@ -42,8 +42,8 @@ extension AnnotationManager {
     // MARK: - Schema Setup
 
     func setupAnnotationsDatabase() throws {
-        try createAnnotationsTableAndSchemaIfNeeded()
         try createTagsTablesIfNeeded()
+        try createAnnotationsTableAndSchemaIfNeeded()
         try createSyncPendingTableIfNeeded()
 
         try backfillCloudKitFieldsIfNeeded { backfilled in
@@ -82,7 +82,30 @@ extension AnnotationManager {
         }
 
         try exec("CREATE INDEX IF NOT EXISTS idx_ann_bk_content ON \(annotationsTable) (\(colAnnBkId), \(colAnnContentId));")
-        try exec("CREATE INDEX IF NOT EXISTS idx_ann_ck_record_id ON \(annotationsTable) (\(colAnnCkRecordId));")
+        try exec("DROP INDEX IF EXISTS idx_ann_unique_pos;")
+
+        // Deduplicate any duplicate ckRecordIds, keeping the lowest id
+        try exec("""
+        DELETE FROM \(annotationsTable)
+        WHERE \(colAnnCkRecordId) IS NOT NULL
+          AND \(colAnnId) NOT IN (
+            SELECT MIN(\(colAnnId))
+            FROM \(annotationsTable)
+            WHERE \(colAnnCkRecordId) IS NOT NULL
+            GROUP BY \(colAnnCkRecordId)
+          );
+        """)
+
+        // Clean up any orphaned tags for deleted duplicates
+        try exec("""
+        DELETE FROM \(annotationTagsTable)
+        WHERE \(colAnnotationTagAnnotationId) NOT IN (
+            SELECT \(colAnnId) FROM \(annotationsTable)
+        );
+        """)
+
+        try exec("DROP INDEX IF EXISTS idx_ann_ck_record_id;")
+        try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_ann_ck_record_id ON \(annotationsTable) (\(colAnnCkRecordId));")
     }
 
     private func createTagsTablesIfNeeded() throws {

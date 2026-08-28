@@ -114,7 +114,7 @@ final class CoreDatabaseDownloader: NSObject {
 
     func areBundleCoreFilesReady() -> Bool {
         CoreFile.allCases.allSatisfy { fileExistsAndHasSize(
-            for: $0, path: AppConfig.archiveCachePath
+            for: $0, path: AppConfig.coreDatabasePath
         )
         }
     }

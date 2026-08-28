@@ -79,37 +79,36 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func checkBundledData() {
-        guard let path = AppConfig.archiveCachePath else {
-            hasBundledData = false
-            return
-        }
         let fm = FileManager.default
-        guard let items = try? fm.contentsOfDirectory(atPath: path) else {
-            hasBundledData = false
-            return
+        let paths = [AppConfig.archiveCachePath, AppConfig.coreDatabasePath].compactMap { $0 }
+        for path in paths {
+            if let items = try? fm.contentsOfDirectory(atPath: path),
+               items.contains(where: { $0.hasSuffix(".sqlite") || $0 == "index.json" || $0 == "integration_cache" || $0 == "Books" })
+            {
+                hasBundledData = true
+                return
+            }
         }
-        // Check if any relevant files exist
-        hasBundledData = items.contains {
-            $0.hasSuffix(".sqlite") || $0 == "index.json" || $0 == "integration_cache" || $0 == "Books"
-        }
+        hasBundledData = false
     }
 
     func cleanupBundledData() {
-        guard let path = AppConfig.archiveCachePath else { return }
-        let url = URL(fileURLWithPath: path)
         let fm = FileManager.default
-
-        do {
-            let items = try fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
-            for item in items {
-                try fm.removeItem(at: item)
+        let paths = Set([AppConfig.archiveCachePath, AppConfig.coreDatabasePath].compactMap { $0 })
+        for path in paths {
+            let url = URL(fileURLWithPath: path)
+            do {
+                let items = try fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
+                for item in items {
+                    try fm.removeItem(at: item)
+                }
+            } catch {
+                #if DEBUG
+                print("Failed to cleanup bundled data at \(path):", error)
+                #endif
             }
-            refreshPaths()
-        } catch {
-            #if DEBUG
-            print("Failed to cleanup bundled data:", error)
-            #endif
         }
+        refreshPaths()
     }
 
     func setBundleMode(_ enabled: Bool) {
@@ -133,12 +132,10 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
-
-
     func chooseAnnotationsFolder(onCompletion: ((Bool) -> Void)? = nil) {
         SettingsActions.chooseAnnotationsAndResultsFolder(resolution: .ask) { [weak self] result in
             DispatchQueue.main.async {
-                guard let self = self else {
+                guard let self else {
                     onCompletion?(false)
                     return
                 }
@@ -146,9 +143,9 @@ final class SettingsViewModel: ObservableObject {
                 case .success:
                     self.refreshPaths()
                     onCompletion?(true)
-                case .failure(let error):
+                case let .failure(error):
                     if let storageError = error as? StorageError,
-                       case .collision(let url) = storageError, let safeUrl = url
+                       case let .collision(url) = storageError, let safeUrl = url
                     {
                         self.pendingCollisionAction = .moveFolder(url: safeUrl)
                         self.showCollisionAlert = true
@@ -205,39 +202,39 @@ final class SettingsViewModel: ObservableObject {
             isProcessingICloud = true
             AppConfig.setUseICloud(true, resolution: .ask) { [weak self] error in
                 guard let self else { return }
-                self.isProcessingICloud = false
+                isProcessingICloud = false
 
                 if let error {
-                    self.useICloud = false // rollback
+                    useICloud = false // rollback
                     ReusableFunc.showAlert(
                         title: String(localized: "errorICloud"),
                         message: error.localizedDescription
                     )
                 }
-                self.refreshPaths()
+                refreshPaths()
             }
         } else {
             // Must choose folder before disabling
             chooseAnnotationsFolder { [weak self] success in
-                guard let self = self else { return }
+                guard let self else { return }
                 if success {
-                    self.isProcessingICloud = true
+                    isProcessingICloud = true
                     AppConfig.setUseICloud(false, resolution: .ask) { [weak self] error in
-                        guard let self = self else { return }
-                        self.isProcessingICloud = false
+                        guard let self else { return }
+                        isProcessingICloud = false
                         if let error {
-                            self.useICloud = true // rollback
+                            useICloud = true // rollback
                             ReusableFunc.showAlert(
                                 title: String(localized: "errorICloud"),
                                 message: error.localizedDescription
                             )
                         }
-                        self.refreshPaths()
+                        refreshPaths()
                     }
                 } else {
                     // Revert toggle if folder selection was cancelled
-                    self.useICloud = true
-                    self.refreshPaths()
+                    useICloud = true
+                    refreshPaths()
                 }
             }
         }
@@ -255,7 +252,7 @@ final class SettingsViewModel: ObservableObject {
         guard let action = pendingCollisionAction else { return }
 
         switch action {
-        case .moveFolder(let url):
+        case let .moveFolder(url):
             if resolution == .ask {
                 pendingCollisionAction = nil
                 return
@@ -263,12 +260,12 @@ final class SettingsViewModel: ObservableObject {
 
             SettingsActions.chooseAnnotationsAndResultsFolder(resolution: resolution, retryURL: url) { [weak self] result in
                 DispatchQueue.main.async {
-                    guard let self = self else { return }
+                    guard let self else { return }
                     self.pendingCollisionAction = nil
                     switch result {
                     case .success:
                         self.refreshPaths()
-                    case .failure(let error):
+                    case let .failure(error):
                         ReusableFunc.showAlert(
                             title: String(localized: "errorFolderAnnotations"),
                             message: error.localizedDescription

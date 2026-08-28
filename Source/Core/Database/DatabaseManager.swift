@@ -65,6 +65,15 @@ class DatabaseManager {
 
     private init() {
         setupFolders()
+        for name in [Notification.Name.bookIntegrated, .booksChanged] {
+            NotificationCenter.default.addObserver(
+                forName: name,
+                object: nil,
+                queue: nil
+            ) { _ in
+
+            }
+        }
     }
 
     func setupFolders() {

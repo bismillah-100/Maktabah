@@ -29,6 +29,7 @@ enum ArabicFont: String, CaseIterable {
             "Lateef-Regular.ttf",
             "Lateef-Bold.ttf",
             "ScheherazadeNew-Regular.ttf",
+            "NotoNaskhArabic-Medium.ttf",
         ]
 
         for fontFile in fontFiles {
@@ -39,9 +40,13 @@ enum ArabicFont: String, CaseIterable {
             let fileNameWithoutExtension = tempURL.deletingPathExtension().lastPathComponent
             let fileExtension = tempURL.pathExtension
 
-            guard let fontURL = Bundle.main.url(forResource: fileNameWithoutExtension,
-                                                withExtension: fileExtension)
-            else {
+            let fontURL = Bundle.main.url(forResource: fileNameWithoutExtension,
+                                          withExtension: fileExtension,
+                                          subdirectory: "Fonts")
+                ?? Bundle.main.url(forResource: fileNameWithoutExtension,
+                                   withExtension: fileExtension)
+
+            guard let fontURL else {
                 print("Font file tidak ditemukan: \(fontFile)")
                 continue
             }
