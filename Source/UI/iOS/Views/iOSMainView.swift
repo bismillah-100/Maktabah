@@ -73,6 +73,9 @@ struct iOSMainView: View {
             }
         }
         .environment(navigationManager)
+        .onOpenURL { url in
+            handleOpenURL(url, bManager: bManager)
+        }
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()
@@ -109,8 +112,31 @@ struct iOSMainView: View {
             }
         }
     }
-}
 
+    private func handleOpenURL(_ url: URL, bManager: iOSNavigationManager) {
+        guard let deepLink = WidgetDeepLink.parse(from: url) else { return }
+
+        Task {
+            switch deepLink {
+            case let .annotation(annId):
+                if let annotation = AnnotationManager.shared.loadAnnotationById(annId),
+                   let book = LibraryDataManager.shared.getBook([annotation.bkId]).first
+                {
+                    await MainActor.run {
+                        bManager.openBook(book, initialContentId: Int(annotation.contentId), targetAnnotation: annotation)
+                    }
+                }
+
+            case let .history(bkId, contentId):
+                if let book = LibraryDataManager.shared.getBook([bkId]).first {
+                    await MainActor.run {
+                        bManager.openBook(book, initialContentId: contentId)
+                    }
+                }
+            }
+        }
+    }
+}
 
 // MARK: - Navigation Helper
 
@@ -118,7 +144,7 @@ extension View {
     func adaptiveReaderPush(item: Binding<BooksData?>, manager: iOSNavigationManager) -> some View {
         navigationDestination(item: item) { book in
             let tab = manager.openTabs.first(where: { $0.book.id == book.id && $0.id == manager.activeTabId })
-                   ?? manager.openTabs.first(where: { $0.book.id == book.id })
+                ?? manager.openTabs.first(where: { $0.book.id == book.id })
             iOSReaderView(book: book, viewModel: tab?.viewModel, initialContentId: manager.selectedContentId)
         }
     }
