@@ -1,5 +1,5 @@
-import SwiftUI
 import CloudKit
+import SwiftUI
 
 @main
 struct MaktabahApp: App {
@@ -19,17 +19,17 @@ struct MaktabahApp: App {
     }
 
     /*
-    @AppStorage("lastVersionPrompted") var lastVersionPrompted = ""
-    @State private var showWelcomeScreen = false
-     */
+     @AppStorage("lastVersionPrompted") var lastVersionPrompted = ""
+     @State private var showWelcomeScreen = false
+      */
 
     @AppStorage("useDefaultTheme") private var useDefaultTheme: Bool = false
 
     /*
-    var currentVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
-     */
+     var currentVersion: String {
+         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+     }
+      */
 
     init() {
         AppConfig.initializeMode()
@@ -40,6 +40,7 @@ struct MaktabahApp: App {
         }
         AppConfig.setupAnnotationsAndResults()
         CloudKitSyncManager.shared.initializeOnLaunch()
+        _ = WidgetUpdateCoordinator.shared
         // CoreDatabaseBootstrap.run()
         setupGlobalAppearances()
     }
@@ -74,25 +75,38 @@ struct MaktabahApp: App {
                 .id(useDefaultTheme)
                 .toggleStyle(SwitchToggleStyle(tint: .green))
                 /*
-                .onAppear {
-                    if lastVersionPrompted != currentVersion {
-                        showWelcomeScreen = true
+                 .onAppear {
+                     if lastVersionPrompted != currentVersion {
+                         showWelcomeScreen = true
+                     }
+                 }
+                 .sheet(isPresented: $showWelcomeScreen) {
+                     WelcomeScreenView(onDismiss: {
+                         lastVersionPrompted = currentVersion
+                         showWelcomeScreen = false
+                     })
+                     .interactiveDismissDisabled()
+                 }
+                  */
+                .onChange(of: scenePhase) { _, newPhase in
+                    switch newPhase {
+                    case .active:
+                        HistoryViewModel.shared.reloadFromDatabase()
+                        CloudKitSyncManager.shared.fetchChanges()
+                    case .background, .inactive:
+                        WidgetUpdateCoordinator.shared.flushPendingUpdates(
+                            forceCloudKit: true
+                        )
+                    @unknown default:
+                        break
                     }
                 }
-                .sheet(isPresented: $showWelcomeScreen) {
-                    WelcomeScreenView(onDismiss: {
-                        lastVersionPrompted = currentVersion
-                        showWelcomeScreen = false
-                    })
-                    .interactiveDismissDisabled()
-                }
-                 */
                 .onChange(of: useDefaultTheme) { _, _ in
                     setupGlobalAppearances()
                     // Force navigation bars and tab bars in all windows to redraw their appearances
                     for scene in UIApplication.shared.connectedScenes {
                         if let windowScene = scene as? UIWindowScene {
-                            windowScene.windows.forEach { window in
+                            for window in windowScene.windows {
                                 for view in window.subviews {
                                     view.removeFromSuperview()
                                     window.addSubview(view)
@@ -109,13 +123,19 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func applicationDidFinishLaunching(_ application: UIApplication) {
         application.registerForRemoteNotifications()
     }
+
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
+    {
         CloudKitSyncManager.shared.fetchChanges()
-        completionHandler(.newData)
+        WidgetUpdateCoordinator.shared.handleSilentPush { _ in
+            completionHandler(.newData)
+        }
     }
+
     func applicationWillTerminate(_ application: UIApplication) {
+        WidgetUpdateCoordinator.shared.flushPendingUpdates(forceCloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
     }
 }
@@ -124,7 +144,7 @@ extension View {
     @ViewBuilder
     func applyIpadColorScheme(isIpad: Bool, isDarkMode: Bool) -> some View {
         if isIpad {
-            self.preferredColorScheme(isDarkMode ? .dark : .light)
+            preferredColorScheme(isDarkMode ? .dark : .light)
         } else {
             self // Tidak menerapkan modifier apa-apa jika bukan iPad
         }
@@ -157,7 +177,7 @@ extension UIColor {
         case .dark:
             return UIColor.bgSepiaDark.adjustBrightness(to: 0.60)
         default:
-            return UIColor(red: 237/255, green: 217/255, blue: 184/255, alpha: 1.0)
+            return UIColor(red: 237 / 255, green: 217 / 255, blue: 184 / 255, alpha: 1.0)
         }
     }
 
@@ -182,18 +202,18 @@ extension UIColor {
             return UIColor.bgSepiaDark.adjustBrightness(to: 0.85)
         default:
             // Mid-tone light sepia for toolbars / headers
-            return UIColor(red: 229/255, green: 217/255, blue: 194/255, alpha: 1.0)
+            return UIColor(red: 229 / 255, green: 217 / 255, blue: 194 / 255, alpha: 1.0)
         }
     }
 
     /// Menyesuaikan brightness warna dengan rasio (0.0 - 1.0)
     func adjustBrightness(to ratio: CGFloat) -> UIColor {
         var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        if self.getHue(&h, saturation: &s, brightness: &b, alpha: &a) {
+        if getHue(&h, saturation: &s, brightness: &b, alpha: &a) {
             return UIColor(hue: h, saturation: s, brightness: b * ratio, alpha: a)
         }
         var white: CGFloat = 0
-        if self.getWhite(&white, alpha: &a) {
+        if getWhite(&white, alpha: &a) {
             return UIColor(white: white * ratio, alpha: a)
         }
         return self

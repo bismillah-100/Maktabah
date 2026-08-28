@@ -202,6 +202,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     override init() {
         super.init()
+
         Task { @MainActor in
             searchSubject
                 .debounce(for: .seconds(0.3), scheduler: RunLoop.main)

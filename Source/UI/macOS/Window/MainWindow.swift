@@ -169,13 +169,12 @@ class MainWindow: NSWindow {
         switchToMode(mode)
     }
 
-    private func switchToMode(_ mode: AppMode) {
-        guard mode != currentMode else { return }
-
-        // Save preference
+    func switchToMode(_ mode: AppMode) {
         UserDefaults.standard.lastAppMode = mode
 
-        splitVC.switchToMode(mode)
+        if mode != currentMode {
+            splitVC.switchToMode(mode)
+        }
         updateDelegateAndSegment()
     }
 
@@ -434,7 +433,7 @@ extension MainWindow: NSToolbarDelegate {
         let paletteLabel: String
         let toolTip: String?
         let view: NSView
-        var image: NSImage? = nil
+        var image: NSImage?
         var isNavigational: Bool = false
     }
 

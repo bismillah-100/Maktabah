@@ -2,10 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>SUFeedURL</key>
-	<string>https://bismillah-100.github.io/Maktabah/appcast.xml</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.Drn.maktabah</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>maktabah</string>
+			</array>
+		</dict>
+	</array>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
+	<key>SUFeedURL</key>
+	<string>https://bismillah-100.github.io/Maktabah/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>0CmyvFiWdVbs95tlTGWmSQcEcknDNjYxJYUBJTnaO2A=</string>
 	<key>WorkerURL</key>

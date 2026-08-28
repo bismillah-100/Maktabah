@@ -8,9 +8,14 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release (e.g., v1.0.0)"
-        required: true
+        description: "Tag to release (leave blank for test build)"
+        required: false
         type: string
+      test_build_only:
+        description: "Test build only (skip Release and Pages deployment)"
+        required: false
+        type: boolean
+        default: false
       skip_deployment:
         description: "Skip deploying appcast to GitHub Pages"
         required: false
@@ -30,7 +35,7 @@ jobs:
       # Checkout source
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '') && github.event.inputs.tag || github.ref }}
           fetch-depth: 0
 
       # Pilih Xcode
@@ -54,12 +59,22 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_TAG: ${{ github.event.inputs.tag }}
+          TEST_ONLY: ${{ github.event.inputs.test_build_only }}
           REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
         run: |
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "TAG_NAME=$INPUT_TAG" >> $GITHUB_OUTPUT
+            if [[ "$TEST_ONLY" == "true" ]] || [[ -z "$INPUT_TAG" ]]; then
+              TAG="${INPUT_TAG:-test-build-${RUN_NUMBER}}"
+              echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
+              echo "IS_TEST=true" >> $GITHUB_OUTPUT
+            else
+              echo "TAG_NAME=$INPUT_TAG" >> $GITHUB_OUTPUT
+              echo "IS_TEST=false" >> $GITHUB_OUTPUT
+            fi
           else
             echo "TAG_NAME=$REF_NAME" >> $GITHUB_OUTPUT
+            echo "IS_TEST=false" >> $GITHUB_OUTPUT
           fi
 
       # Nama produk
@@ -86,15 +101,21 @@ jobs:
         env:
           PROFILE_DATA: ${{ secrets.MAKTABAH_DIRECT_PROVISIONING_PROFILE }}
           UUID_PROFILE: ${{ secrets.UUID_PROFILE }}
+          WIDGET_PROFILE_DATA: ${{ secrets.MAKTABAH_WIDGET_PROVISIONING_PROFILE }}
+          UUID_WIDGET_PROFILE: ${{ secrets.UUID_WIDGET_PROFILE }}
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$PROFILE_DATA" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/$UUID_PROFILE.provisionprofile
+          if [ -n "$WIDGET_PROFILE_DATA" ] && [ -n "$UUID_WIDGET_PROFILE" ]; then
+            echo "$WIDGET_PROFILE_DATA" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/$UUID_WIDGET_PROFILE.provisionprofile
+          fi
 
       # Build archive macOS
       - name: Build archive
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           UUID_PROFILE: ${{ secrets.UUID_PROFILE }}
+          UUID_WIDGET_PROFILE: ${{ secrets.UUID_WIDGET_PROFILE }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
         run: |
           python3 - <<EOF
@@ -102,27 +123,49 @@ jobs:
           path = 'Maktabah.xcodeproj/project.pbxproj'
           with open(path, 'r') as f:
               content = f.read()
-          
-          # 1. Patch Target-level (Maktabah-Direct Release)
-          target_config_id = '4B7C912D2F83494200454BE1'
-          uuid = os.environ['UUID_PROFILE']
-          team = os.environ['TEAM_ID']
-          
-          pattern = r'(' + target_config_id + r' /\* Release \*/ = \{[^{]*buildSettings = \{)(.*?)(\};)'
-          def replace_target(match):
-              h, s, f = match.group(1), match.group(2), match.group(3)
-              for k in ['CODE_SIGN_STYLE', 'CODE_SIGN_IDENTITY', 'PROVISIONING_PROFILE_SPECIFIER', 'DEVELOPMENT_TEAM']:
-                  s = re.sub(rf'\s+{k}\s+=\s+[^;]+;', '', s)
-              new = f'\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Developer ID Application";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{uuid}";\n\t\t\t\tDEVELOPMENT_TEAM = {team};'
-              return h + new + s + f
-          content = re.sub(pattern, replace_target, content, flags=re.DOTALL)
 
-          # 2. Patch Project-level (agar tidak fallback ke Development)
+          def get_release_config_id(target_name):
+              target_pattern = rf'([A-F0-9]+)\s*/\*\s*{re.escape(target_name)}\s*\*/\s*=\s*\{{[^}}]*buildConfigurationList\s*=\s*([A-F0-9]+)'
+              target_match = re.search(target_pattern, content)
+              if not target_match:
+                  return None
+              config_list_id = target_match.group(2)
+              list_pattern = rf'{config_list_id}\s*/\*[^*]*\*/\s*=\s*\{{[^}}]*buildConfigurations\s*=\s*\((.*?)\);'
+              list_match = re.search(list_pattern, content, re.DOTALL)
+              if not list_match:
+                  return None
+              release_match = re.search(r'([A-F0-9]+)\s*/\*\s*Release\s*\*/', list_match.group(1))
+              return release_match.group(1) if release_match else None
+
+          team = os.environ['TEAM_ID']
+
+          def patch_target_release(config_id, uuid):
+              global content
+              if not config_id or not uuid:
+                  return
+              pattern = r'(' + config_id + r' /\* Release \*/ = \{[^{]*buildSettings = \{)(.*?)(\};)'
+              def replace_target(match):
+                  h, s, f = match.group(1), match.group(2), match.group(3)
+                  for k in ['CODE_SIGN_STYLE', 'CODE_SIGN_IDENTITY', 'PROVISIONING_PROFILE_SPECIFIER', 'DEVELOPMENT_TEAM']:
+                      s = re.sub(rf'\s+{k}\s+=\s+[^;]+;', '', s)
+                  new = f'\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Developer ID Application";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{uuid}";\n\t\t\t\tDEVELOPMENT_TEAM = {team};'
+                  return h + new + s + f
+              content = re.sub(pattern, replace_target, content, flags=re.DOTALL)
+
+          # 1. Patch Maktabah-Direct
+          direct_config_id = get_release_config_id('Maktabah-Direct')
+          patch_target_release(direct_config_id, os.environ.get('UUID_PROFILE', ''))
+
+          # 2. Patch MaktabahWidgetExtension
+          widget_config_id = get_release_config_id('MaktabahWidgetExtension')
+          patch_target_release(widget_config_id, os.environ.get('UUID_WIDGET_PROFILE', ''))
+
+          # 3. Patch Project-level (agar tidak fallback ke Development)
           content = content.replace('CODE_SIGN_IDENTITY = "Apple Development";', 'CODE_SIGN_IDENTITY = "Developer ID Application";')
           
           with open(path, 'w') as f:
               f.write(content)
-          print("Successfully patched project for manual Developer ID signing.")
+          print(f"Successfully patched project for manual Developer ID signing (Direct: {direct_config_id}, Widget: {widget_config_id}).")
           EOF
 
           xcodebuild archive \
@@ -138,6 +181,7 @@ jobs:
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           UUID_PROFILE: ${{ secrets.UUID_PROFILE }}
+          UUID_WIDGET_PROFILE: ${{ secrets.UUID_WIDGET_PROFILE }}
         run: |
           cat > build/ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -154,6 +198,8 @@ jobs:
             <dict>
               <key>com.Drn.maktabah</key>
               <string>${UUID_PROFILE}</string>
+              <key>com.Drn.maktabah.MaktabahWidget</key>
+              <string>${UUID_WIDGET_PROFILE}</string>
             </dict>
           </dict>
           </plist>
@@ -213,15 +259,24 @@ jobs:
             "build/exported/Maktabah.app" \
             "build/${ZIP_NAME}"
 
+      # Upload artifact ke GitHub Actions Run (agar hasil build bisa langsung didownload & ditest)
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: ${{ steps.vars.outputs.PRODUCT_NAME }}-${{ steps.tag.outputs.TAG_NAME }}
+          path: build/${{ steps.vars.outputs.PRODUCT_NAME }}-${{ steps.tag.outputs.TAG_NAME }}.zip
+          retention-days: 7
+
       # Attest Build Provenance
       - name: Attest Build Provenance
+        if: steps.tag.outputs.IS_TEST != 'true'
         uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
         with:
           subject-path: "build/${{ steps.vars.outputs.PRODUCT_NAME }}-${{ steps.tag.outputs.TAG_NAME }}.zip"
 
       # Upload ke GitHub Release
       - name: Upload Release Asset
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        if: (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch') && steps.tag.outputs.IS_TEST != 'true'
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ steps.tag.outputs.TAG_NAME }}
@@ -233,6 +288,7 @@ jobs:
 
       # Generate appcast.xml dengan Sparkle
       - name: Generate Appcast
+        if: steps.tag.outputs.IS_TEST != 'true'
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
           PRODUCT_NAME: ${{ steps.vars.outputs.PRODUCT_NAME }}
@@ -283,7 +339,7 @@ jobs:
 
       # Push appcast.xml dan releases-notes.html ke gh-pages sekaligus
       - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.skip_deployment)
+        if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.skip_deployment)) && steps.tag.outputs.IS_TEST != 'true'
         env:
           TAG_NAME: ${{ steps.tag.outputs.TAG_NAME }}
         run: |

@@ -8,7 +8,7 @@
 import Foundation
 
 extension Notification.Name {
-    // static let backgroundDidChange = Notification.Name("backgroundDidChange")
+    static let historyDidChange = Notification.Name("historyDidChange")
     static let didChangeClickableAnnotation = Notification.Name("didChangeClickableAnnotation")
     static let didChangeHarakat = Notification.Name("didChangeHarakat")
     static let didChangeBackground = Notification.Name("didChangeBackground")
