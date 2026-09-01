@@ -60,3 +60,13 @@ extension iOSCustomIbarotTextView: NSTextLayoutManagerDelegate {
     }
 }
 #endif
+
+extension NSTextLayoutManager {
+    func ensureFullDocumentLayout() {
+        enumerateTextLayoutFragments(
+            from: documentRange.location,
+            options: [.ensuresLayout]
+        ) { _ in true }
+    }
+}
+
