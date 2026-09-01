@@ -48,6 +48,7 @@ struct UpdateView: View {
                     viewModel.loadAvailableUpdates()
                 }
         }
+        .interactiveDismissDisabled(viewModel.isUpdating)
         #endif
     }
 
