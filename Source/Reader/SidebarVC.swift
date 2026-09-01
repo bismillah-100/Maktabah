@@ -12,7 +12,7 @@ class SidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var scrollView: NSScrollView!
     @IBOutlet weak var searchField: DSFSearchField!
-    @IBOutlet weak var searchContainer: NSView!
+    @IBOutlet weak var searchContainer: NSVisualEffectView!
     @IBOutlet weak var xBtn: NSButton!
 
     weak var delegate: SidebarDelegate?
@@ -116,8 +116,8 @@ class SidebarVC: NSViewController {
         // Update outline view
         outlineView.backgroundColor = .clear
         searchContainer.wantsLayer = true
-        searchContainer.layer?.backgroundColor =
-            color.nsColor.cgColor
+        searchContainer.material = .fullScreenUI
+        searchContainer.blendingMode = .withinWindow
     }
 
     @IBAction func hideSearchFieldEsc(_ sender: Any?) {
@@ -138,7 +138,7 @@ class SidebarVC: NSViewController {
         if !searchFieldHidden {
             scrollView.automaticallyAdjustsContentInsets = false
             scrollView.contentInsets.top = view.safeAreaInsets.top +
-                                           searchContainer.frame.height + 8
+                                           searchContainer.frame.height
             searchField.becomeFirstResponder()
         } else {
             scrollView.automaticallyAdjustsContentInsets = true
