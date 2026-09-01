@@ -671,13 +671,14 @@ final class LibraryViewModel: ViewModelBase {
         addObserver(
             forName: .booksChanged, object: nil, queue: .current
         ) { [weak self] notification in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 #if os(macOS)
-                self.handleBooksChanged(notification)
+                handleBooksChanged(notification)
                 #else
-                self.refreshSubject.send(())
+                refreshSubject.send(())
                 #endif
+                checkBookUpdatesPeriodically(force: true)
             }
         }
 
@@ -1104,11 +1105,13 @@ final class LibraryViewModel: ViewModelBase {
 
     // MARK: - Periodic Book Update Check
 
+    @MainActor
     func checkBookUpdatesPeriodically(force: Bool = false) {
         dataManager.checkBookUpdatesPeriodically(
-            force: force) { [weak self] count in
-                self?.availableUpdateCount = count
-            }
+            force: force
+        ) { [weak self] count in
+            self?.availableUpdateCount = count
+        }
     }
 }
 

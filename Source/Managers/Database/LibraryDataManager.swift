@@ -866,34 +866,43 @@ extension LibraryDataManager {
     /// Pemeriksaan pembaruan buku dengan jeda satu hari.
     /// - Parameters:
     ///   - force: Menjalankan pemeriksaan pembaruan buku lebih dari sekali dalam satu hari.
-    ///   - completion: Nilai `int` pembaruan yang tersedia.
+    ///   - completion: Nilai `int` pembaruan yang tersedia yang dijalankan di main thread.
     func checkBookUpdatesPeriodically(
         force: Bool = false,
-        completion: @escaping (Int) -> Void
+        completion: @escaping @MainActor @Sendable (Int) -> Void
     ) {
-        let lastCheck = UserDefaults.standard.double(forKey: "last_book_update_check")
+        let key = "last_book_update_check"
+        let lastCheck = UserDefaults.standard.double(forKey: key)
         let oneDayInSeconds: TimeInterval = 86_400
         var count: Int = 0
 
-        defer { completion(count) }
-
         if !force, Date().timeIntervalSince1970 - lastCheck < oneDayInSeconds {
+            Task { @MainActor in
+                completion(count)
+            }
             return
         }
 
         Task.detached(priority: .utility) {
-            defer { completion(count) }
             guard let items = try? await BookUpdateManager.shared
                 .fetchAvailableUpdates(from: BookUpdateViewModel.mainCSVURL)
-            else { return }
+            else {
+                await MainActor.run {
+                    completion(0)
+                }
+                return
+            }
 
-            count = items.filter { $0.needsUpdate || $0.newBook }.count
-            completion(count)
+            count = items.filter(\.needsUpdate).count
 
             UserDefaults.standard.set(
                 Date().timeIntervalSince1970,
-                forKey: "last_book_update_check"
+                forKey: key
             )
+
+            await MainActor.run { [count] in
+                completion(count)
+            }
         }
     }
 

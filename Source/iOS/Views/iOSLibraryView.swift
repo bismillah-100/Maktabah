@@ -38,12 +38,7 @@ struct iOSLibraryView: View {
                 UpdateView()
             }
             .task {
-                viewModel.checkBookUpdatesPeriodically()
-            }
-            .onChange(of: viewModel.showingUpdateSheet) { _, isShowing in
-                if !isShowing {
-                    viewModel.checkBookUpdatesPeriodically(force: true)
-                }
+                viewModel.checkBookUpdatesPeriodically(force: true)
             }
             .alert("Import Success", isPresented: $viewModel.showImportSuccessAlert) {
                 Button("OK", role: .cancel) {}
@@ -150,100 +145,112 @@ struct iOSLibraryView: View {
     @ToolbarContentBuilder
     private func toolbarContent(viewModel: LibraryViewModel) -> some ToolbarContent {
         if viewModel.isSelectionMode {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Done") {
-                    viewModel.exitSelectionMode()
-                }
-                .disabled(viewModel.isBulkDownloading)
-            }
-
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button {
-                    viewModel.showingDeleteConfirmation = true
-                } label: {
-                    Label(
-                        "Delete",
-                        systemImage: "trash"
-                    )
-                }
-                .disabled(viewModel.selectedDeleteCount == 0 || viewModel.isBulkDownloading)
-                .tint(.red)
-            }
+            selectionToolbarItems(viewModel: viewModel)
         } else {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Section("Group By") {
-                        Button { viewModel.viewMode = .category } label: {
-                            Label("Category", systemImage: "folder")
-                        }
-                        Button { viewModel.viewMode = .author } label: {
-                            Label("Author", systemImage: "person")
-                        }
-                    }
-                } label: {
-                    Label(
-                        "Group By",
-                        systemImage: viewModel.viewMode == .category
-                            ? "folder"
-                            : "person"
-                    )
-                }
+            standardToolbarItems(viewModel: viewModel)
+        }
+    }
+
+    @ToolbarContentBuilder
+    private func selectionToolbarItems(viewModel: LibraryViewModel) -> some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("Done") {
+                viewModel.exitSelectionMode()
             }
+            .disabled(viewModel.isBulkDownloading)
+        }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                if AppConfig.isUsingBundleMode {
-                    Toggle(isOn: Binding(
-                        get: { viewModel.showOnlyDownloaded },
-                        set: { viewModel.showOnlyDownloaded = $0 }
-                    )) {
-                        Label("Downloaded", systemImage: "line.3.horizontal.decrease")
-                    }
-                    .labelStyle(.iconOnly)
-                    .toggleStyle(.button)
-                }
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            Button {
+                viewModel.showingDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash")
             }
+            .disabled(viewModel.selectedDeleteCount == 0 || viewModel.isBulkDownloading)
+            .tint(.red)
+        }
+    }
 
-            CustomToolbarSpacer(placement: .topBarTrailing)
+    @ToolbarContentBuilder
+    private func standardToolbarItems(viewModel: LibraryViewModel) -> some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            groupByMenu(viewModel: viewModel)
+        }
 
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        viewModel.enterSelectionMode()
-                    } label: {
-                        Label("Select".localized + "...", systemImage: "checkmark.circle")
-                    }
-
-                    Button {
-                        viewModel.showingUpdateSheet = true
-                    } label: {
-                        Label(
-                            viewModel.availableUpdateCount > 0
-                                ? "\("Update Books".localized) (\(viewModel.availableUpdateCount))"
-                                : "Update Books".localized,
-                            systemImage: "arrow.triangle.2.circlepath"
-                        )
-                    }
-
-                    Button {
-                        viewModel.showingImportSheet = true
-                    } label: {
-                        Label("Import Book", systemImage: "plus.viewfinder")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .overlay(alignment: .topTrailing) {
-                            if viewModel.availableUpdateCount > 0 {
-                                Circle()
-                                    .fill(.red)
-                                    .frame(width: 7, height: 7)
-                                    .offset(x: 2, y: -2)
-                            }
-                        }
-                }
-                .accessibilityLabel(String(localized: "Library Options"))
-                .help(String(localized: "Library Options"))
+        ToolbarItem(placement: .topBarTrailing) {
+            if AppConfig.isUsingBundleMode {
+                downloadedFilterToggle(viewModel: viewModel)
             }
         }
+
+        CustomToolbarSpacer(placement: .topBarTrailing)
+
+        ToolbarItem(placement: .topBarTrailing) {
+            optionsMenu(viewModel: viewModel)
+        }
+    }
+
+    @ViewBuilder
+    private func groupByMenu(viewModel: LibraryViewModel) -> some View {
+        Menu {
+            Section("Group By") {
+                Button { viewModel.viewMode = .category } label: {
+                    Label("Category", systemImage: "folder")
+                }
+                Button { viewModel.viewMode = .author } label: {
+                    Label("Author", systemImage: "person")
+                }
+            }
+        } label: {
+            Label(
+                "Group By",
+                systemImage: viewModel.viewMode == .category ? "folder" : "person"
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func downloadedFilterToggle(viewModel: LibraryViewModel) -> some View {
+        Toggle(isOn: Binding(
+            get: { viewModel.showOnlyDownloaded },
+            set: { viewModel.showOnlyDownloaded = $0 }
+        )) {
+            Label("Downloaded", systemImage: "line.3.horizontal.decrease")
+        }
+        .labelStyle(.iconOnly)
+        .toggleStyle(.button)
+    }
+
+    @ViewBuilder
+    private func optionsMenu(viewModel: LibraryViewModel) -> some View {
+        Menu {
+            Button {
+                viewModel.enterSelectionMode()
+            } label: {
+                Label("Select".localized + "...", systemImage: "checkmark.circle")
+            }
+
+            Button {
+                viewModel.showingUpdateSheet = true
+            } label: {
+                Label(
+                    viewModel.availableUpdateCount > 0
+                        ? "\("Update Books".localized) (\(viewModel.availableUpdateCount))"
+                        : "Update Books".localized,
+                    systemImage: "arrow.triangle.2.circlepath"
+                )
+            }
+
+            Button {
+                viewModel.showingImportSheet = true
+            } label: {
+                Label("Import Book", systemImage: "plus.viewfinder")
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+        }
+        .accessibilityLabel(String(localized: "Library Options"))
+        .help(String(localized: "Library Options"))
     }
 
     private func startSelectedDownloads(using viewModel: LibraryViewModel) {

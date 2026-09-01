@@ -117,6 +117,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Check for book updates in background (throttled 24h, low priority)
         checkBookUpdatesPeriodically()
+
+        NotificationCenter.default.addObserver(
+            forName: .booksChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.checkBookUpdatesPeriodically(force: true)
+        }
     }
 
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
