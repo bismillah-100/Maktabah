@@ -988,20 +988,15 @@ extension IbarotTextView: TextViewRenderable {
     func highlightAndScrollToAnns(_ ann: Annotation) async {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
-            let targetRange: NSRange? = await MainActor.run { [weak self] in
-                guard let self else { return nil }
+            await MainActor.run { [weak self] in
+                guard let self else { return }
                 let r = displayedRange(for: ann)
                 textLayoutManager?.ensureFullDocumentLayout()
                 needsLayout = true
                 scrollRangeToVisible(r)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
                 layoutSubtreeIfNeeded()
-                return r
-            }
-            guard let targetRange, !Task.isCancelled else { return }
-            await MainActor.run { [weak self] in
-                guard let self, !Task.isCancelled else { return }
-                showFindIndicator(for: targetRange)
+                showFindIndicator(for: r)
             }
         }
     }
@@ -1010,8 +1005,8 @@ extension IbarotTextView: TextViewRenderable {
     func highlightAndScrollToText(_ searchText: String, mode: SearchMode?, nearDistance: Int) async {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
-            let targetRange: NSRange? = await MainActor.run { [weak self] in
-                guard let self else { return nil }
+            await MainActor.run { [weak self] in
+                guard let self else { return }
                 let ranges = textStorage?.highlightSearchText(
                     searchText: searchText,
                     mode: mode,
@@ -1019,19 +1014,14 @@ extension IbarotTextView: TextViewRenderable {
                     nearDistance: nearDistance
                 ) ?? []
 
-                guard let firstRange = ranges.first else { return nil }
+                guard let firstRange = ranges.first else { return }
 
                 textLayoutManager?.ensureFullDocumentLayout()
                 needsLayout = true
                 scrollRangeToVisible(firstRange)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
                 layoutSubtreeIfNeeded()
-                return firstRange
-            }
-            guard let targetRange, !Task.isCancelled else { return }
-            await MainActor.run { [weak self] in
-                guard let self, !Task.isCancelled else { return }
-                showFindIndicator(for: targetRange)
+                showFindIndicator(for: firstRange)
             }
         }
     }
