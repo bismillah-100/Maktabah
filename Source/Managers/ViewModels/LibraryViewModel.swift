@@ -71,6 +71,7 @@ final class LibraryViewModel: ViewModelBase {
 
     var showingDeleteConfirmation = false
     var showingImportSheet = false
+    var showingUpdateSheet = false
     var importErrorMessage: String?
     var showImportSuccessAlert = false
 

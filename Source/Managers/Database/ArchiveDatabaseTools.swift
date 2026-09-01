@@ -20,29 +20,6 @@ enum ArchiveDatabaseTools {
         let isPrimaryKey: Bool
     }
 
-    static func replaceTable(
-        db: OpaquePointer,
-        tableName: String,
-        sourceSchema: String
-    ) throws {
-        let columns = try loadTableColumns(
-            tableName: tableName,
-            db: db,
-            schemaName: sourceSchema
-        )
-
-        let createSQL = makeCreateTableSQL(
-            tableName: tableName,
-            columns: columns
-        )
-
-        try exec(db, "DROP TABLE IF EXISTS \(tableName);")
-        try exec(db, createSQL)
-        try exec(
-            db,
-            "INSERT INTO \"\(tableName)\" SELECT * FROM \(sourceSchema).\"\(tableName)\";"
-        )
-    }
 
 
     /// Menyalin satu tabel dari `sourceSchema` ke `main`.

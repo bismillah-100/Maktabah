@@ -335,6 +335,9 @@ final class BookUpdateManager {
             throw error
         }
 
+        try renameTablesIfNeeded(at: downloadedBookURL, to: metadata.bkid)
+        try renameTablesIfNeeded(at: ftsSourceURL, to: metadata.bkid)
+
         var authorContext: AuthorContext?
         if let authId = metadata.authno, let authEntry = authIndex[authId],
             let authDownloadURL = URL(string: authEntry.downloadURL)
@@ -1450,29 +1453,29 @@ final class BookUpdateManager {
             try? exec(db, "DETACH DATABASE source_db;")
         }
 
-        try withTransaction(db) {
-            let tableName = "b\(bookId)"
-            let ftsTable = "\(tableName)_fts"
-            try ArchiveDatabaseTools.replaceTable(
-                db: db,
-                tableName: tableName,
-                sourceSchema: "source_db"
-            )
+        let tableName = "b\(bookId)"
+        let tocTable = "t\(bookId)"
+        let ftsTable = "\(tableName)_fts"
 
-            try ArchiveDatabaseTools.replaceTable(
-                db: db,
-                tableName: "t\(bookId)",
-                sourceSchema: "source_db"
-            )
+        try ArchiveDatabaseTools.copyTable(
+            db: db,
+            sourceSchema: "source_db",
+            tableName: tableName
+        )
 
-            try ArchiveDatabaseTools.buildFTS(
-                db: db,
-                ftsSchema: "fts_db",
-                ftsTable: ftsTable,
-                sourceSchema: "fts_source_db",
-                sourceTable: tableName
-            )
-        }
+        try ArchiveDatabaseTools.copyTable(
+            db: db,
+            sourceSchema: "source_db",
+            tableName: tocTable
+        )
+
+        try ArchiveDatabaseTools.buildFTS(
+            db: db,
+            ftsSchema: "fts_db",
+            ftsTable: ftsTable,
+            sourceSchema: "fts_source_db",
+            sourceTable: tableName
+        )
 
         IntegrationCache.shared.markIntegrated(
             bookId: bookId,

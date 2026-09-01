@@ -34,6 +34,9 @@ struct iOSLibraryView: View {
                     }
                 }
             }
+            .sheet(isPresented: $viewModel.showingUpdateSheet) {
+                UpdateView()
+            }
             .alert("Import Success", isPresented: $viewModel.showImportSuccessAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -200,6 +203,12 @@ struct iOSLibraryView: View {
                         viewModel.enterSelectionMode()
                     } label: {
                         Label("Select".localized + "...", systemImage: "checkmark.circle")
+                    }
+
+                    Button {
+                        viewModel.showingUpdateSheet = true
+                    } label: {
+                        Label("Update Books", systemImage: "arrow.triangle.2.circlepath")
                     }
 
                     Button {
