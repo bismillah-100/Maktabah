@@ -38,7 +38,7 @@ struct iOSLibraryView: View {
                 UpdateView()
             }
             .task {
-                viewModel.checkBookUpdatesPeriodically(force: true)
+                viewModel.checkBookUpdatesPeriodically()
             }
             .alert("Import Success", isPresented: $viewModel.showImportSuccessAlert) {
                 Button("OK", role: .cancel) {}
