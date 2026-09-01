@@ -89,7 +89,7 @@ struct UpdateView: View {
         }
         .accessibilityLabel(clearSelection)
         .help(clearSelection)
-        .disabled(viewModel.isUpdating)
+        .disabled(viewModel.isUpdating || viewModel.selectedCount == 0)
 
         Button {
             viewModel.selectOnlyUpdates()
@@ -98,7 +98,7 @@ struct UpdateView: View {
         }
         .help(updateOnly)
         .accessibilityLabel(updateOnly)
-        .disabled(viewModel.isUpdating)
+        .disabled(viewModel.isUpdating || viewModel.needsUpdateCount == 0)
 
         Button {
             viewModel.selectAll()
@@ -107,7 +107,7 @@ struct UpdateView: View {
         }
         .help(selectAll)
         .accessibilityLabel(selectAll)
-        .disabled(viewModel.isUpdating)
+        .disabled(viewModel.isUpdating || viewModel.needsUpdateCount == 0)
     }
 
     // MARK: - macOS Layout
@@ -277,11 +277,15 @@ struct UpdateView: View {
     private var bookListView: some View {
         #if os(iOS)
         ThemeList(filteredUpdates, isGrouped: true) { item in
-            BookUpdateRow(item: item, fontSize: 17)
+            BookUpdateRow(item: item, fontSize: 17) {
+                viewModel.toggleSelection(for: item)
+            }
         }
         #else
         List(filteredUpdates, rowContent: { item in
-            BookUpdateRow(item: item, fontSize: 15)
+            BookUpdateRow(item: item, fontSize: 15) {
+                viewModel.toggleSelection(for: item)
+            }
         })
         #endif
     }
@@ -292,6 +296,7 @@ struct UpdateView: View {
 struct BookUpdateRow: View {
     @ObservedObject var item: BookUpdateItem
     let fontSize: Double
+    var onToggle: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -318,14 +323,26 @@ struct BookUpdateRow: View {
 
             Spacer()
 
-            // Checkbox Icon
-            Image(systemName: item.isSelected ? "checkmark.circle.fill" : "circle")
-                .font(.title3)
-                .foregroundStyle(item.isSelected ? Color.accentColor : Color.secondary)
+            // Checkbox / Up to Date Icon
+            if item.needsUpdate {
+                Image(systemName: item.isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(item.isSelected ? Color.accentColor : Color.secondary)
+            } else {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(Color.secondary.opacity(0.4))
+            }
         }
+        .opacity(item.needsUpdate ? 1.0 : 0.7)
         .contentShape(Rectangle())
         .onTapGesture {
-            item.isSelected.toggle()
+            guard item.needsUpdate else { return }
+            if let onToggle {
+                onToggle()
+            } else {
+                item.isSelected.toggle()
+            }
         }
         .lineLimit(1)
         .environment(\.layoutDirection, .rightToLeft)

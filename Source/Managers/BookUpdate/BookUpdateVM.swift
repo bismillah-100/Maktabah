@@ -24,35 +24,45 @@ class BookUpdateViewModel: ObservableObject {
         string: driveLink + "1Aekhq21Ihsxr1sAhnJSxZxA59yCxmEmq"
     )!
 
-    // MARK: - Computed Properties
+    // MARK: - Published Selection Summary
 
-    var selectedCount: Int {
-        availableUpdates.reduce(into: 0) { count, update in
-            if update.isSelected { count += 1 }
-        }
-    }
-
-    var totalSelectedSize: Int64 {
-        availableUpdates.reduce(into: 0 as Int64) { size, update in
-            if update.isSelected { size += update.fileSize }
-        }
-    }
-
-    var totalSelectedSizeFormatted: String {
-        ByteCountFormatter.string(
-            fromByteCount: totalSelectedSize,
-            countStyle: .file
-        )
-    }
+    @Published var selectedCount: Int = 0
+    @Published var totalSelectedSize: Int64 = 0
+    @Published var totalSelectedSizeFormatted: String = "0 B"
+    @Published var needsUpdateCount: Int = 0
 
     var hasUpdates: Bool {
         !availableUpdates.isEmpty
     }
 
-    var needsUpdateCount: Int {
-        availableUpdates.reduce(into: 0) { count, update in
-            if update.needsUpdate { count += 1 }
+    // MARK: - Update Selection Summary
+
+    func updateSelectionSummary() {
+        var count = 0
+        var size: Int64 = 0
+        var needsCount = 0
+        for item in availableUpdates {
+            if item.isSelected {
+                count += 1
+                size += item.fileSize
+            }
+            if item.needsUpdate {
+                needsCount += 1
+            }
         }
+        selectedCount = count
+        totalSelectedSize = size
+        totalSelectedSizeFormatted = ByteCountFormatter.string(
+            fromByteCount: size,
+            countStyle: .file
+        )
+        needsUpdateCount = needsCount
+    }
+
+    func toggleSelection(for item: BookUpdateItem) {
+        guard item.needsUpdate else { return }
+        item.isSelected.toggle()
+        updateSelectionSummary()
     }
 
     // MARK: - Load Available Updates
@@ -68,6 +78,7 @@ class BookUpdateViewModel: ObservableObject {
                     .fetchAvailableUpdates(from: Self.mainCSVURL)
 
                 availableUpdates = items
+                updateSelectionSummary()
                 progressMessage = String(localized: "Found \(needsUpdateCount) books that need to be updated")
 
             } catch {
@@ -85,26 +96,29 @@ class BookUpdateViewModel: ObservableObject {
 
     func selectAll() {
         for item in availableUpdates {
-            item.isSelected = true
+            item.isSelected = item.needsUpdate
         }
+        updateSelectionSummary()
     }
 
     func deselectAll() {
         for item in availableUpdates {
             item.isSelected = false
         }
+        updateSelectionSummary()
     }
 
     func selectOnlyUpdates() {
         for item in availableUpdates {
             item.isSelected = item.needsUpdate
         }
+        updateSelectionSummary()
     }
 
     // MARK: - Perform Selective Update
 
     func performSelectedUpdates() {
-        let selectedItems = availableUpdates.filter { $0.isSelected }
+        let selectedItems = availableUpdates.filter { $0.isSelected && $0.needsUpdate }
 
         guard !selectedItems.isEmpty else {
             progressMessage = String(localized: "No books selected")
@@ -299,7 +313,6 @@ class BookUpdateViewModel: ObservableObject {
     }
 
     private func refreshAvailableUpdatesState() {
-        // Reassign array agar computed property di SwiftUI ikut refresh
-        availableUpdates = availableUpdates
+        updateSelectionSummary()
     }
 }
