@@ -7588,7 +7588,7 @@
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Update selected (%lld)"
+            "value": "Perbarui yang dipilih (%lld)"
           }
         }
       }
@@ -7678,20 +7678,6 @@
           }
         }
       }
-    },
-    "v? → v%lld": {
-      "shouldTranslate": false
-    },
-    "v%lld → v%lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "v%1$lld → v%2$lld"
-          }
-        }
-      },
-      "shouldTranslate": false
     },
     "Version": {
       "localizations": {
