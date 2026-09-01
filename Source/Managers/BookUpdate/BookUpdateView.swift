@@ -168,25 +168,26 @@ struct UpdateView: View {
 
     #if !os(macOS)
     private var iOSLayout: some View {
-        VStack(spacing: 0) {
-            contentView
-
-            if viewModel.hasUpdates {
-                Divider()
-                iOSFooterView
+        contentView
+            .toolbar {
+                if viewModel.hasUpdates {
+                    ToolbarItem(placement: .bottomBar) {
+                        iOSFooterView
+                    }
+                }
             }
-        }
     }
     #endif
 
     // MARK: - Shared Views
 
     private var iOSFooterView: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             bookUpdateInfo
             updateBookButton
         }
         .padding()
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder
@@ -213,9 +214,10 @@ struct UpdateView: View {
     @ViewBuilder
     private var bookUpdateInfo: some View {
         if viewModel.needsUpdateCount > 0 {
-            Text("\(viewModel.needsUpdateCount) books needs updates")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            statusBadge(
+                text: "\(viewModel.needsUpdateCount) books needs updates",
+                color: .orange
+            )
         }
     }
 
@@ -391,8 +393,10 @@ struct BookUpdateRow: View {
             }
         }
     }
+}
 
-    private func statusBadge(text: String, color: Color = .blue) -> some View {
+private extension View {
+    func statusBadge(text: String, color: Color = .blue) -> some View {
         Text(text)
             .font(.caption)
             .fontWeight(.medium)
