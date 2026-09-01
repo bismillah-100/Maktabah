@@ -12,6 +12,7 @@ class SidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var scrollView: NSScrollView!
     @IBOutlet weak var searchField: DSFSearchField!
+    @IBOutlet weak var searchContainer: NSView!
     @IBOutlet weak var xBtn: NSButton!
 
     weak var delegate: SidebarDelegate?
@@ -88,7 +89,7 @@ class SidebarVC: NSViewController {
         ) { _,_ in
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                updateScrollViewInsets(searchField.isHidden)
+                updateScrollViewInsets(searchContainer.isHidden)
             }
         }
 
@@ -97,7 +98,7 @@ class SidebarVC: NSViewController {
             object: nil, queue: .main,
             using: { [weak self] _ in
                 guard let self else { return }
-                updateScrollViewInsets(searchField.isHidden)
+                updateScrollViewInsets(searchContainer.isHidden)
             }
         )
     }
@@ -114,6 +115,9 @@ class SidebarVC: NSViewController {
         }
         // Update outline view
         outlineView.backgroundColor = .clear
+        searchContainer.wantsLayer = true
+        searchContainer.layer?.backgroundColor =
+            color.nsColor.cgColor
     }
 
     @IBAction func hideSearchFieldEsc(_ sender: Any?) {
@@ -126,7 +130,7 @@ class SidebarVC: NSViewController {
         searchFieldIsHidden.toggle()
         let hide = searchFieldIsHidden
 
-        searchField.isHidden = hide
+        searchContainer.isHidden = hide
         updateScrollViewInsets(hide)
     }
 
@@ -134,7 +138,7 @@ class SidebarVC: NSViewController {
         if !searchFieldHidden {
             scrollView.automaticallyAdjustsContentInsets = false
             scrollView.contentInsets.top = view.safeAreaInsets.top +
-                                           searchField.frame.height + 8
+                                           searchContainer.frame.height + 8
             searchField.becomeFirstResponder()
         } else {
             scrollView.automaticallyAdjustsContentInsets = true
