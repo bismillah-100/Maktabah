@@ -34,6 +34,7 @@ final class LibraryViewModel: ViewModelBase {
     var isDownloadModal = false
     var singleBookToDelete: BooksData?
     var reloadTask: Task<Void, Never>?
+    var availableUpdateCount: Int = 0
     private var historySelectionTask: Task<Void, Never>?
 
     #if os(macOS)
@@ -1099,6 +1100,15 @@ final class LibraryViewModel: ViewModelBase {
             }
         }
         return false
+    }
+
+    // MARK: - Periodic Book Update Check
+
+    func checkBookUpdatesPeriodically(force: Bool = false) {
+        dataManager.checkBookUpdatesPeriodically(
+            force: force) { [weak self] count in
+                self?.availableUpdateCount = count
+            }
     }
 }
 

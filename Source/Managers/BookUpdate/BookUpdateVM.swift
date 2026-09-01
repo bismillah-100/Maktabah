@@ -17,10 +17,10 @@ class BookUpdateViewModel: ObservableObject {
 
     static let driveLink = "https://drive.google.com/uc?export=download&id="
 
-    private let mainCSVURL = URL(
+    static let mainCSVURL = URL(
         string: driveLink + "1FYrscpCBIuIym2ZHB6QBwYfy9eswYDna"
     )!
-    private let authCSVURL = URL(
+    static let authCSVURL = URL(
         string: driveLink + "1Aekhq21Ihsxr1sAhnJSxZxA59yCxmEmq"
     )!
 
@@ -65,7 +65,7 @@ class BookUpdateViewModel: ObservableObject {
             guard let self else { return }
             do {
                 let items = try await BookUpdateManager.shared
-                    .fetchAvailableUpdates(from: mainCSVURL)
+                    .fetchAvailableUpdates(from: Self.mainCSVURL)
 
                 availableUpdates = items
                 progressMessage = String(localized: "Found \(needsUpdateCount) books that need to be updated")
@@ -122,7 +122,7 @@ class BookUpdateViewModel: ObservableObject {
             do {
                 let authEntries = try await BookUpdateManager.shared
                     .fetchAuthIndexEntriesIfNeeded(
-                        from: authCSVURL
+                        from: Self.authCSVURL
                     )
                 let authIndexMap = Dictionary(
                     uniqueKeysWithValues: authEntries.map { ($0.authId, $0) }

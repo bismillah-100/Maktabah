@@ -862,6 +862,40 @@ class LibraryDataManager {
 }
 
 extension LibraryDataManager {
+    
+    /// Pemeriksaan pembaruan buku dengan jeda satu hari.
+    /// - Parameters:
+    ///   - force: Menjalankan pemeriksaan pembaruan buku lebih dari sekali dalam satu hari.
+    ///   - completion: Nilai `int` pembaruan yang tersedia.
+    func checkBookUpdatesPeriodically(
+        force: Bool = false,
+        completion: @escaping (Int) -> Void
+    ) {
+        let lastCheck = UserDefaults.standard.double(forKey: "last_book_update_check")
+        let oneDayInSeconds: TimeInterval = 86_400
+        var count: Int = 0
+
+        defer { completion(count) }
+
+        if !force, Date().timeIntervalSince1970 - lastCheck < oneDayInSeconds {
+            return
+        }
+
+        Task.detached(priority: .utility) {
+            defer { completion(count) }
+            guard let items = try? await BookUpdateManager.shared
+                .fetchAvailableUpdates(from: BookUpdateViewModel.mainCSVURL)
+            else { return }
+
+            count = items.filter { $0.needsUpdate || $0.newBook }.count
+            completion(count)
+
+            UserDefaults.standard.set(
+                Date().timeIntervalSince1970,
+                forKey: "last_book_update_check"
+            )
+        }
+    }
 
     /// Update atau insert books berdasarkan BookUpdateResult
     /// - Parameter updateResults: Results dari book update process

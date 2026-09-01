@@ -15,6 +15,7 @@
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="Maktabah" customModuleProvider="target">
             <connections>
                 <outlet property="appUpdatesMenuItem" destination="eWT-Pc-0td" id="2uG-Mn-yNq"/>
+                <outlet property="bookUpdatesMenuItem" destination="YaK-Pt-jJO" id="BWi-4n-Y9c"/>
                 <outlet property="clickEditAnnotationMenuItem" destination="CTQ-BL-o1M" id="6iV-FM-rBT"/>
                 <outlet property="controlMenu" destination="PWj-n5-XEq" id="PCJ-2c-OPC"/>
                 <outlet property="menu" destination="AYu-sK-qS6" id="46G-1l-30G"/>

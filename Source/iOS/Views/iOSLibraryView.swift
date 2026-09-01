@@ -37,6 +37,14 @@ struct iOSLibraryView: View {
             .sheet(isPresented: $viewModel.showingUpdateSheet) {
                 UpdateView()
             }
+            .task {
+                viewModel.checkBookUpdatesPeriodically()
+            }
+            .onChange(of: viewModel.showingUpdateSheet) { _, isShowing in
+                if !isShowing {
+                    viewModel.checkBookUpdatesPeriodically(force: true)
+                }
+            }
             .alert("Import Success", isPresented: $viewModel.showImportSuccessAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -208,7 +216,12 @@ struct iOSLibraryView: View {
                     Button {
                         viewModel.showingUpdateSheet = true
                     } label: {
-                        Label("Update Books", systemImage: "arrow.triangle.2.circlepath")
+                        Label(
+                            viewModel.availableUpdateCount > 0
+                                ? "\("Update Books".localized) (\(viewModel.availableUpdateCount))"
+                                : "Update Books".localized,
+                            systemImage: "arrow.triangle.2.circlepath"
+                        )
                     }
 
                     Button {
@@ -218,6 +231,14 @@ struct iOSLibraryView: View {
                     }
                 } label: {
                     Image(systemName: "ellipsis")
+                        .overlay(alignment: .topTrailing) {
+                            if viewModel.availableUpdateCount > 0 {
+                                Circle()
+                                    .fill(.red)
+                                    .frame(width: 7, height: 7)
+                                    .offset(x: 2, y: -2)
+                            }
+                        }
                 }
                 .accessibilityLabel(String(localized: "Library Options"))
                 .help(String(localized: "Library Options"))
