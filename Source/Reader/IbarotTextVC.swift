@@ -287,12 +287,7 @@ class IbarotTextVC: NSViewController {
             )
             textView.typingAttributes[.font] = NSFont(name: fontName, size: fontSize)
 
-            if let textLayoutManager = textView.textLayoutManager {
-                textLayoutManager.enumerateTextLayoutFragments(
-                    from: textLayoutManager.documentRange.location,
-                    options: [.ensuresLayout]
-                ) { _ in true }
-            }
+            textView.textLayoutManager?.ensureFullDocumentLayout()
 
             let newTotalHeight = scrollView.documentView?.frame.size.height ?? 0
             let targetY = scrollPercentage * newTotalHeight
@@ -309,9 +304,7 @@ class IbarotTextVC: NSViewController {
 
     func applyBackgroundColor(_ color: NSColor) {
         textView.backgroundColor = color
-        if let textLayoutManager = textView.textLayoutManager {
-            textLayoutManager.invalidateLayout(for: textLayoutManager.documentRange)
-        }
+        textView.textLayoutManager?.ensureFullDocumentLayout()
     }
 
     // MARK: - Actions
