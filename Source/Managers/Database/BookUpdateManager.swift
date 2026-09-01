@@ -1457,25 +1457,27 @@ final class BookUpdateManager {
         let tocTable = "t\(bookId)"
         let ftsTable = "\(tableName)_fts"
 
-        try ArchiveDatabaseTools.copyTable(
-            db: db,
-            sourceSchema: "source_db",
-            tableName: tableName
-        )
+        try ArchiveDatabaseTools.withTransaction(db: db) {
+            try ArchiveDatabaseTools.copyTable(
+                db: db,
+                sourceSchema: "source_db",
+                tableName: tableName
+            )
 
-        try ArchiveDatabaseTools.copyTable(
-            db: db,
-            sourceSchema: "source_db",
-            tableName: tocTable
-        )
+            try ArchiveDatabaseTools.copyTable(
+                db: db,
+                sourceSchema: "source_db",
+                tableName: tocTable
+            )
 
-        try ArchiveDatabaseTools.buildFTS(
-            db: db,
-            ftsSchema: "fts_db",
-            ftsTable: ftsTable,
-            sourceSchema: "fts_source_db",
-            sourceTable: tableName
-        )
+            try ArchiveDatabaseTools.buildFTS(
+                db: db,
+                ftsSchema: "fts_db",
+                ftsTable: ftsTable,
+                sourceSchema: "fts_source_db",
+                sourceTable: tableName
+            )
+        }
 
         IntegrationCache.shared.markIntegrated(
             bookId: bookId,

@@ -36,6 +36,28 @@ enum ArchiveDatabaseTools {
         )
     }
 
+    /// Menjalankan block operasi di dalam SQLite transaction jika belum ada transaksi aktif.
+    static func withTransaction(
+        db: OpaquePointer,
+        _ block: () throws -> Void
+    ) throws {
+        let isInTransaction = sqlite3_get_autocommit(db) == 0
+        if !isInTransaction {
+            try exec(db, "BEGIN TRANSACTION;")
+        }
+        do {
+            try block()
+            if !isInTransaction {
+                try exec(db, "COMMIT;")
+            }
+        } catch {
+            if !isInTransaction {
+                try? exec(db, "ROLLBACK;")
+            }
+            throw error
+        }
+    }
+
     /// Membangun FTS dari `sourceSchema.<sourceTable>` ke `ftsSchema.<ftsTable>`.
     /// Kolom `nass` diasumsikan TEXT.
     static func buildFTS(
@@ -70,11 +92,7 @@ enum ArchiveDatabaseTools {
         }
         defer { sqlite3_finalize(insertStmt) }
 
-        let isInTransaction = sqlite3_get_autocommit(db) == 0
-        if !isInTransaction {
-            try exec(db, "BEGIN TRANSACTION;")
-        }
-        do {
+        try withTransaction(db: db) {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
                     let rawText: String
@@ -110,14 +128,6 @@ enum ArchiveDatabaseTools {
                     }
                 }
             }
-            if !isInTransaction {
-                try exec(db, "COMMIT;")
-            }
-        } catch {
-            if !isInTransaction {
-                try? exec(db, "ROLLBACK;")
-            }
-            throw error
         }
         
         let checkMetadataSql = "SELECT name FROM \(ftsSchema).sqlite_master WHERE type='table' AND name='metadata';"
