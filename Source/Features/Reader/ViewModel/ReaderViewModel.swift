@@ -6,11 +6,8 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
-
-#if os(macOS)
-extension ReaderViewModel: ObservableObject {}
-#endif
 
 #if os(macOS)
 struct ContentRenderPayload: Equatable {
@@ -30,9 +27,7 @@ struct ContentRenderPayload: Equatable {
 }
 #endif
 
-#if os(iOS)
 @Observable
-#endif
 class ReaderViewModel: ViewModelBase {
     // MARK: - Shared State
 
@@ -42,30 +37,24 @@ class ReaderViewModel: ViewModelBase {
     var currentContentId: Int = 0
     var recordHistory: Bool = true
 
-    #if os(macOS)
-    @Published var contentPayload: ContentRenderPayload = .init(text: "", keepScrollPosition: false)
-    @Published var state: ViewModelState = .idle
-    @Published var totalParts: Int = 0
-    @Published var minPageInPart: Int = 0
-    @Published var maxPageInPart: Int = 0
-
-    var contentText: String {
-        get { contentPayload.text }
-        set { contentPayload = ContentRenderPayload(text: newValue, keepScrollPosition: false) }
-    }
-    #else
     var contentText: String = ""
+    #if os(macOS)
+    var contentPayload: ContentRenderPayload = .init(
+        text: "", keepScrollPosition: false
+    )
+    #endif
+    var currentAnnotations: [Annotation] = []
+
     var state: ViewModelState = .idle
     var totalParts: Int = 0
     var minPageInPart: Int = 0
     var maxPageInPart: Int = 0
-    #endif
 
     // MARK: - macOS-Only State
 
     #if os(macOS)
-    @Published var windowTitle: String = ""
-    @Published var windowSubtitle: String = ""
+    var windowTitle: String = ""
+    var windowSubtitle: String = ""
 
     /// Called when content changes — UI should update text view
     var onContentChanged: ((BookContent) -> Void)?
@@ -75,16 +64,10 @@ class ReaderViewModel: ViewModelBase {
     var onError: ((Error) -> Void)?
     /// Called when window title should be updated
     var onWindowTitleChanged: ((String, String) -> Void)?
-
-    /// macOS Annotations Support.
-    /// Dibuat sebagai computed property yang didelegasikan langsung ke `AnnotationManager.shared`
-    /// sebagai single source of truth. Performa tetap optimal karena `loadAnnotations` sudah di-cache in-memory.
-    var currentAnnotations: [Annotation] {
-        guard let bkId = currentBook?.id else { return .init() }
-        return annotationManager.loadAnnotations(
-            bkId: bkId, contentId: currentContentId
-        )
-    }
+    /// Callen when ``contentPayload`` changed.
+    var onPayloadChanged: ((ContentRenderPayload) -> Void)?
+    /// Called when navigation limits/page/part update
+    var onNavigationLimitsChanged: (() -> Void)?
     #endif
 
     // MARK: - iOS-Only State
@@ -108,21 +91,14 @@ class ReaderViewModel: ViewModelBase {
     var needsScrollRestore: Bool = false
     var fetchScrollPosition: (() -> CGPoint?)?
     var fetchSelectedRange: (() -> NSRange?)?
-    var currentAnnotations: [Annotation] = []
     #endif
 
     // MARK: - Computed Properties
 
-    #if os(macOS)
-    lazy var tocViewModel: BookTOCViewModel = .init(connFactory: { [weak self] in
-        self?.bookConnection ?? BookConnection()
-    })
-    #elseif os(iOS)
     @ObservationIgnored
     lazy var tocViewModel: BookTOCViewModel = .init(connFactory: { [weak self] in
         self?.bookConnection ?? BookConnection()
     })
-    #endif
 
     /// Tasykil/Harokat
     var showHarakat: Bool {
@@ -376,10 +352,10 @@ class ReaderViewModel: ViewModelBase {
     // MARK: - Private: Core Update
 
     func updateContentState(with content: BookContent) {
+        contentText = content.nash
         #if os(macOS)
         contentPayload = ContentRenderPayload(text: content.nash, content: content, keepScrollPosition: false)
-        #else
-        contentText = content.nash
+        onPayloadChanged?(contentPayload)
         #endif
         currentPart = content.part
         currentPage = content.page
@@ -397,6 +373,7 @@ class ReaderViewModel: ViewModelBase {
         updateWindowTitle(
             book: currentBook, page: currentPage, part: currentPart
         )
+        onNavigationLimitsChanged?()
         #endif
 
         #if os(iOS)
@@ -422,6 +399,7 @@ class ReaderViewModel: ViewModelBase {
         else { return }
 
         contentPayload = ContentRenderPayload(text: content.nash, content: content, keepScrollPosition: keepScrollPosition)
+        onPayloadChanged?(contentPayload)
         onContentChanged?(content)
     }
 
@@ -478,6 +456,9 @@ class ReaderViewModel: ViewModelBase {
                 self.totalParts = total
                 self.minPageInPart = minPg
                 self.maxPageInPart = maxPg
+                #if os(macOS)
+                self.onNavigationLimitsChanged?()
+                #endif
             }
         }
     }
@@ -648,9 +629,7 @@ class ReaderViewModel: ViewModelBase {
             contentId: currentContentId
         )
 
-        #if os(iOS)
         currentAnnotations = anns
-        #endif
     }
 
     func findBestAnnotation(for range: NSRange) -> Annotation? {
