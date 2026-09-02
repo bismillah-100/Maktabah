@@ -27,7 +27,6 @@ struct UpdateView: View {
         #if os(macOS)
         macOSLayout
             .frame(minWidth: 500, minHeight: 500)
-            .searchable(text: $searchText, prompt: "Search books...")
             .toolbar {
                 toolbarContent
             }
@@ -115,29 +114,32 @@ struct UpdateView: View {
 
     #if os(macOS)
     private var macOSLayout: some View {
-        VStack(spacing: 0) {
-            macOSHeaderView
-            Divider()
-
+        NavigationStack {
             contentView
-
-            Divider()
-            macOSFooterView
+                .searchable(text: $searchText, prompt: "Search books...")
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    macOSHeaderView
+                }
+                .safeAreaInset(edge: .bottom) {
+                    VStack(spacing: 0) {
+                        Divider()
+                        macOSFooterView
+                            .background(.bar)
+                    }
+                }
         }
     }
 
+    @ViewBuilder
     private var macOSHeaderView: some View {
-        VStack(alignment: .center, spacing: 0) {
-            Text("Books Updates")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.top, 12)
-                .padding(.bottom, 6)
-
-            if !viewModel.progressMessage.isEmpty || viewModel.isUpdating {
-                progressStatusView
-                    .padding(.bottom, 8)
-            }
+        if !viewModel.isLoadingList,
+           !viewModel.progressMessage.isEmpty ||
+            viewModel.isUpdating
+        {
+            progressStatusView
+                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity)
+                .background(.bar)
         }
     }
 

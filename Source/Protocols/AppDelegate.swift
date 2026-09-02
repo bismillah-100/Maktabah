@@ -330,10 +330,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             title: "Books Updates".localized
         )
 
-        window.titlebarAppearsTransparent = true
-        window.titlebarSeparatorStyle = .none
-        window.titleVisibility = .hidden
-
         // 4. Jalankan sebagai Modal
         NSApp.runModal(for: window)
         checkBookUpdatesPeriodically(force: true)
