@@ -71,10 +71,8 @@ struct SwiftUIAnnotationNode: Identifiable {
     }
 }
 
-@MainActor
-#if os(iOS)
 @Observable
-#endif
+@MainActor
 class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
     var state: ViewModelState = .loading
 
@@ -94,10 +92,15 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         filteredNodes.map { SwiftUIAnnotationNode(from: $0) }
     }
 
+    private var searchTask: Task<Void, Never>?
     var searchText: String = "" {
         didSet {
-            if oldValue != searchText {
-                searchSubject.send(searchText)
+            guard oldValue != searchText else { return }
+            searchTask?.cancel()
+            searchTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(0.3))
+                guard !Task.isCancelled else { return }
+                self?.applyFilter()
             }
         }
     }
@@ -110,8 +113,6 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             }
         }
     }
-
-    private let searchSubject = PassthroughSubject<String, Never>()
 
     var groupingMode: AnnotationGroupingMode = UserDefaults.standard.selectedAnnGroupingMode {
         didSet {
@@ -202,15 +203,6 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     override init() {
         super.init()
-
-        Task { @MainActor in
-            searchSubject
-                .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
-                .sink { [weak self] _ in
-                    self?.applyFilter()
-                }
-                .store(in: &cancellables)
-        }
 
         addObserver(
             forName: .annotationTreeDidUpdate,
@@ -474,6 +466,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
 extension UserDefaults {
     @objc dynamic var hideMissingBookAnnotations: Bool {
-        bool(forKey: "hideMissingBookAnnotations")
+        get { bool(forKey: "hideMissingBookAnnotations") }
+        set { set(newValue, forKey: "hideMissingBookAnnotations") }
     }
 }

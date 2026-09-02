@@ -51,7 +51,7 @@ struct iOSMainView: View {
     @State private var selectedTab: iOSTab = .viewer
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showSettings = false
-    @ObservedObject private var donationManager = DonationManager.shared
+    @State private var donationManager = DonationManager.shared
 
     var body: some View {
         @Bindable var bManager = navigationManager

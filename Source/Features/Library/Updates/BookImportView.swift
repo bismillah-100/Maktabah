@@ -181,6 +181,7 @@ struct OfflineImportFormView: View {
         #if os(iOS)
         .scrollContentBackground(.hidden)
         .background(Color.appBackground)
+        #endif
         .onChange(of: importMode) { _, newMode in
             if newMode == 2, let selectedBookId {
                 customBookIdText = "\(selectedBookId)"
@@ -201,28 +202,6 @@ struct OfflineImportFormView: View {
                 updateAnnotationCount()
             }
         }
-        #elseif os(macOS)
-        .onChange(of: importMode, perform: { newMode in
-            if newMode == 2, let selectedBookId {
-                customBookIdText = "\(selectedBookId)"
-            }
-            updateAnnotationCount()
-        })
-        .onChange(of: selectedBookId, perform: { newId in
-            if importMode == 2, let newId {
-                customBookIdText = "\(newId)"
-            }
-            updateAnnotationCount()
-        })
-        .onChange(of: customBookIdText, perform: { newValue in
-            let filtered = newValue.filter(\.isNumber)
-            if filtered != newValue {
-                customBookIdText = filtered
-            } else {
-                updateAnnotationCount()
-            }
-        })
-        #endif
         .task(priority: .userInitiated) {
             await setupData()
         }

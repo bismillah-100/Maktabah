@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Combine
 
 class Navigation: NSViewController {
 
@@ -30,22 +29,18 @@ class Navigation: NSViewController {
     private var workItem: DispatchWorkItem?
     private var juzWorkItem: DispatchWorkItem?
 
-    private var cancellables = Set<AnyCancellable>()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         xBtn.isHidden = popover
+        setupCallbacks()
+    }
 
-        Publishers.Merge3(
-            viewModel.$totalParts,
-            viewModel.$minPageInPart,
-            viewModel.$maxPageInPart
-        )
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] _ in
-            self?.syncSlidersWithViewModel()
+    private func setupCallbacks() {
+        viewModel.onNavigationLimitsChanged = { [weak self] in
+            DispatchQueue.main.async { [weak self] in
+                self?.syncSlidersWithViewModel()
+            }
         }
-        .store(in: &cancellables)
     }
 
     override func viewDidAppear() {
@@ -111,9 +106,5 @@ class Navigation: NSViewController {
         }
         juzWorkItem = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
-    }
-
-    deinit {
-        cancellables.removeAll()
     }
 }

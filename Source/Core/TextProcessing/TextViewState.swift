@@ -13,10 +13,8 @@ import AppKit
 import UIKit
 #endif
 
-// TextViewState.swift - NEW FILE
-#if os(iOS)
+// TextViewState.swift
 @Observable
-#endif
 class TextViewState {
     static let shared = TextViewState()
 

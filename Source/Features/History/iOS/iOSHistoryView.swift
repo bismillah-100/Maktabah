@@ -6,9 +6,9 @@
 import SwiftUI
 
 struct iOSHistoryView: View {
-    @StateObject private var viewModel = HistoryViewModel.shared
+    @State private var viewModel = HistoryViewModel.shared
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
-    @ObservedObject private var donationManager = DonationManager.shared
+    @State private var donationManager = DonationManager.shared
 
     var body: some View {
         let filteredFavorites = viewModel.filteredFavorites
@@ -76,7 +76,7 @@ struct iOSHistoryView: View {
 
 struct iOSAddFavoriteSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var viewModel: HistoryViewModel
+    var viewModel: HistoryViewModel
     @State private var searchText = ""
     @State private var searchViewModel = SearchViewModel()
 

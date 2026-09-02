@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -6,10 +7,11 @@ import UIKit
 #endif
 import UniformTypeIdentifiers
 
-class UserFontManager: ObservableObject {
+@Observable
+class UserFontManager {
     static let shared = UserFontManager()
     
-    @Published var userFontNames: [String] = []
+    var userFontNames: [String] = []
     private var fontURLs: [String: URL] = [:]
     
     private let fileManager = FileManager.default

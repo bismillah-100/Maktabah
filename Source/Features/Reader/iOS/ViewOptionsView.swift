@@ -5,7 +5,7 @@ struct ViewOptionsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var state = TextViewState.shared
-    @ObservedObject private var userFontManager = UserFontManager.shared
+    @State private var userFontManager = UserFontManager.shared
     
     @State private var isImportingFont = false
     @State private var showImportError = false

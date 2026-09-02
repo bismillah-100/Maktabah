@@ -46,7 +46,6 @@ class QuranWindow: NSWindow {
         mainToolbar.delegate = self
         mainToolbar.displayMode = .iconAndLabel
         mainToolbar.sizeMode = .regular
-        mainToolbar.showsBaselineSeparator = false
         mainToolbar.allowsUserCustomization = false
         mainToolbar.autosavesConfiguration = false
         toolbar = mainToolbar
