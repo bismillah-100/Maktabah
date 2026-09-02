@@ -6,13 +6,9 @@
 //
 
 import Foundation
-#if os(iOS)
 import Observation
-#endif
 
-#if os(iOS)
 @Observable
-#endif
 @MainActor
 class ResultsViewModel {
     static var shared: ResultsViewModel = .init()

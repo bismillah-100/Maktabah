@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 
 struct TOCRange {
@@ -14,9 +15,7 @@ struct TOCRange {
     let node: TOCNode
 }
 
-#if os(iOS)
 @Observable
-#endif
 class BookTOCViewModel {
     private let tocLoader: TOCLoaderRefCount
 

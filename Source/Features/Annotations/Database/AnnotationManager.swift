@@ -5,12 +5,6 @@
 //  Created by MacBook on 15/12/25.
 //
 
-#if canImport(AppKit)
-import AppKit
-#elseif canImport(UIKit)
-import UIKit
-#endif
-import Combine
 import Foundation
 import SQLite3
 
@@ -80,7 +74,7 @@ final class AnnotationManager: SyncPendingManaging {
     /// Serial queue to protect caches
     let _cacheQueue = DispatchQueue(label: "com.maktab.annotationManager.cacheQueue", qos: .userInitiated)
 
-    var cancellables = Set<AnyCancellable>()
+    private var hideMissingObservation: NSKeyValueObservation?
 
     var now: Int64 {
         Int64(Date().timeIntervalSince1970)
@@ -91,12 +85,13 @@ final class AnnotationManager: SyncPendingManaging {
     // MARK: - Init
 
     private init() {
-        UserDefaults.standard.publisher(for: \.hideMissingBookAnnotations)
-            .dropFirst()
-            .sink { [weak self] _ in
-                self?.buildAnnotationTree()
-            }
-            .store(in: &cancellables)
+        hideMissingObservation = UserDefaults.standard.observe(\.hideMissingBookAnnotations, options: [.new]) { [weak self] _, _ in
+            self?.buildAnnotationTree()
+        }
+    }
+
+    deinit {
+        hideMissingObservation?.invalidate()
     }
 
     // MARK: - Post Notification

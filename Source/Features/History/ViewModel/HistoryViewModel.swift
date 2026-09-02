@@ -1,16 +1,17 @@
-import Combine
 import Foundation
+import Observation
 import SwiftUI
 
-class HistoryViewModel: ViewModelBase, ObservableObject {
+@Observable
+class HistoryViewModel: ViewModelBase {
     static let shared = HistoryViewModel()
 
-    @Published private(set) var entriesByBookId: [Int: ReadingEntry] = [:]
-    @Published private(set) var historyOrder: [Int] = []
+    private(set) var entriesByBookId: [Int: ReadingEntry] = [:]
+    private(set) var historyOrder: [Int] = []
 
-    @Published var historyBooks: [BooksData] = []
-    @Published var favoriteBooks: [BooksData] = []
-    @Published var searchText: String = ""
+    var historyBooks: [BooksData] = []
+    var favoriteBooks: [BooksData] = []
+    var searchText: String = ""
 
     private func filterBooks(_ books: [BooksData]) -> [BooksData] {
         guard !searchText.isEmpty else { return books }

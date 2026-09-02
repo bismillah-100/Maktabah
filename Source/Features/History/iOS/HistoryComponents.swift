@@ -15,7 +15,7 @@ final class ScrollState {
 // MARK: - Main Grid View
 struct HistoryHorizontalGrid: View {
     let books: [BooksData]
-    @ObservedObject var viewModel: HistoryViewModel
+    var viewModel: HistoryViewModel
     @Environment(\.layoutDirection) var layoutDirection
     @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
 
@@ -77,7 +77,7 @@ struct HistoryHorizontalGrid: View {
 struct SyncedScrollRow: View {
     let rowIndex: Int
     let rowBooks: [BooksData]
-    @ObservedObject var viewModel: HistoryViewModel
+    var viewModel: HistoryViewModel
     var scrollState: ScrollState
     let cardHeight: CGFloat
     let cardSpacing: CGFloat
@@ -221,7 +221,7 @@ struct BookCard: View {
     let book: BooksData
     let cardHeight: CGFloat
     let isFavorite: Bool
-    @ObservedObject var viewModel: HistoryViewModel
+    var viewModel: HistoryViewModel
     let historySection: Bool
     let action: () -> Void
 

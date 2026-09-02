@@ -6,7 +6,7 @@
 //
 
 import Cocoa
-import Combine
+import Observation
 
 class IbarotTextVC: NSViewController {
     // MARK: - IBOutlets
@@ -63,19 +63,17 @@ class IbarotTextVC: NSViewController {
     }
 
     private func bindContentPayload() {
-        viewModel.$contentPayload
-            .sink { [weak self] payload in
-                guard let self, !payload.text.isEmpty else { return }
-                let options = IbarotTextOptions(
-                    content: payload.content,
-                    color: NSColor.header,
-                    isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
-                    isImported: viewModel.currentBook?.isImported ?? false,
-                    keepScrollPosition: payload.keepScrollPosition
-                )
-                textDelegate?.loadIbarotText(payload.text, options: options)
-            }
-            .store(in: &viewModel.cancellables)
+        viewModel.onPayloadChanged = { [weak self] payload in
+            guard let self, !payload.text.isEmpty else { return }
+            let options = IbarotTextOptions(
+                content: payload.content,
+                color: NSColor.header,
+                isMultiLanguage: viewModel.currentBook?.isMultiLanguage,
+                isImported: viewModel.currentBook?.isImported ?? false,
+                keepScrollPosition: payload.keepScrollPosition
+            )
+            textDelegate?.loadIbarotText(payload.text, options: options)
+        }
     }
 
     private func bindViewModelCallbacks() {
@@ -574,21 +572,17 @@ extension IbarotTextVC: ReaderStateComponent {
             return
         }
 
-        Task { [weak self] in
+        viewModel.restore(from: state)
+
+        if let range = state.selectedRange {
+            textView.setSelectedRange(range)
+            view.window?.makeFirstResponder(textView)
+        }
+
+        libraryVC?.dataVM.viewModel.selectedBookName = book.book
+
+        Task { @MainActor [weak self] in
             guard let self else { return }
-
-            await MainActor.run { [weak self] in
-                guard let self else { return }
-
-                viewModel.restore(from: state)
-
-                if let range = state.selectedRange {
-                    textView.setSelectedRange(range)
-                    view.window?.makeFirstResponder(textView)
-                }
-
-                libraryVC?.dataVM.viewModel.selectedBookName = book.book
-            }
 
             if let query = state.searchQuery {
                 let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }

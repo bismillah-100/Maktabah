@@ -6,11 +6,7 @@
 import SwiftUI
 
 struct FtsMigrationProgressView: View {
-    #if os(iOS)
     var ftsManager: FtsMigrationManager = .shared
-    #else
-    @ObservedObject var ftsManager: FtsMigrationManager = .shared
-    #endif
 
     var onCancel: (() -> Void)? = nil
     var onUpdate: (() async throws -> Void)? = nil
@@ -102,11 +98,7 @@ struct FtsMigrationProgressView: View {
 }
 
 struct FtsMigrationProgressSection: View {
-    #if os(iOS)
     var ftsManager: FtsMigrationManager = .shared
-    #else
-    @ObservedObject var ftsManager: FtsMigrationManager = .shared
-    #endif
 
     var body: some View {
         VStack(spacing: 8) {

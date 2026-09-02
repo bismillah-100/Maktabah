@@ -14,7 +14,7 @@ import SwiftUI
 /// Tambahkan ke dalam `List` / `ThemeList` yang sudah ada.
 struct HistorySection: View {
     let books: [BooksData]
-    @ObservedObject var viewModel: HistoryViewModel
+    var viewModel: HistoryViewModel
 
     var body: some View {
         Section(header: Text("History")) {
@@ -33,7 +33,7 @@ struct HistorySection: View {
 /// Tambahkan ke dalam `List` / `ThemeList` yang sudah ada.
 struct FavoritesSection: View {
     let books: [BooksData]
-    @ObservedObject var viewModel: HistoryViewModel
+    var viewModel: HistoryViewModel
     let onOpen: (BooksData) -> Void
 
     var body: some View {
@@ -77,7 +77,7 @@ struct HistoryEmptyState: View {
 struct DonationHistoryButton: View {
     let cardHeight: CGFloat
     let action: () -> Void
-    @ObservedObject private var donationManager = DonationManager.shared
+    @State private var donationManager = DonationManager.shared
 
     init(
         cardHeight: CGFloat = 50,

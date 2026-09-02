@@ -5,28 +5,42 @@
 //  Created by Ghoys Mawahib on 21/07/26.
 //
 
+import Observation
 import SQLite3
 import SwiftUI
 
-final class SettingsViewModel: ObservableObject {
+@Observable
+final class SettingsViewModel {
     static var shared: SettingsViewModel = .init()
-    @Published var isBundleMode: Bool = AppConfig.isUsingBundleMode
-    @Published var databaseFilesPath: String = "N/A"
-    @Published var archiveFilesPath: String = "N/A"
-    @Published var annotationsPath: String = "N/A"
-    @Published var useICloud: Bool = AppConfig.useICloud
-    @Published var useCrossPlatformSync: Bool = AppConfig.useCrossPlatformSync
-    @Published var customWorkerURL: String = AppConfig.customWorkerURL
-    @Published var isProcessingICloud = false
-    @Published var showCollisionAlert = false
-    @Published var hasBundledData: Bool = false
-    @Published var hasPendingVacuum: Bool = false
-    @Published var isVacuuming: Bool = false
-    @Published var enableAutoCoreVersionCheck: Bool = true
+    var isBundleMode: Bool = AppConfig.isUsingBundleMode
+    var databaseFilesPath: String = "N/A"
+    var archiveFilesPath: String = "N/A"
+    var annotationsPath: String = "N/A"
+    var useICloud: Bool = AppConfig.useICloud
+    var useCrossPlatformSync: Bool = AppConfig.useCrossPlatformSync
+    var customWorkerURL: String = AppConfig.customWorkerURL
+    var isProcessingICloud = false
+    var showCollisionAlert = false
+    var hasBundledData: Bool = false
+    var hasPendingVacuum: Bool = false
+    var isVacuuming: Bool = false
+    var enableAutoCoreVersionCheck: Bool = true
 
-    @AppStorage("hideMissingBookAnnotations") var hideMissingBookAnnotations: Bool = false
-    @AppStorage("useDefaultTheme") var useDefaultTheme: Bool = false
-    @AppStorage("recordSearchHistory") var recordSearchHistory: Bool = true
+    var hideMissingBookAnnotations: Bool = UserDefaults.standard.hideMissingBookAnnotations {
+        didSet {
+            UserDefaults.standard.hideMissingBookAnnotations = hideMissingBookAnnotations
+        }
+    }
+    var useDefaultTheme: Bool = UserDefaults.standard.bool(forKey: "useDefaultTheme") {
+        didSet {
+            UserDefaults.standard.set(useDefaultTheme, forKey: "useDefaultTheme")
+        }
+    }
+    var recordSearchHistory: Bool = UserDefaults.standard.recordSearchHistory {
+        didSet {
+            UserDefaults.standard.recordSearchHistory = recordSearchHistory
+        }
+    }
 
     enum PendingCollisionAction {
         case moveFolder(url: URL)
@@ -35,7 +49,7 @@ final class SettingsViewModel: ObservableObject {
     private var pendingCollisionAction: PendingCollisionAction?
 
     #if DIRECT_DISTRIBUTION
-    @Published var autoCheckAppUpdates: Bool = true
+    var autoCheckAppUpdates: Bool = true
 
     func setAutoCheckAppUpdates(_ enabled: Bool) {
         UserDefaults.standard.autoCheckAppUpdates = enabled

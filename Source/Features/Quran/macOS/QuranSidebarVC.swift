@@ -11,6 +11,7 @@ class QuranSidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var scrollView: NSScrollView!
     @IBOutlet weak var searchField: DSFSearchField!
+    @IBOutlet weak var searchContainer: NSVisualEffectView!
     @IBOutlet weak var xBtn: NSButton!
 
     private let manager: QuranDataManager = .shared
@@ -58,6 +59,9 @@ class QuranSidebarVC: NSViewController {
     func setupAppereance() {
         outlineView.backgroundColor = .clear
         outlineView.enclosingScrollView?.backgroundColor = .clear
+        searchContainer.state = .inactive
+        searchContainer.wantsLayer = true
+        searchContainer.layer?.backgroundColor = NSColor.bgSepia.cgColor
         xBtn.isHidden = true
     }
 
@@ -104,15 +108,15 @@ class QuranSidebarVC: NSViewController {
     }
 
     @IBAction func hideSearchFieldEsc(_ sender: Any?) {
-        if !searchField.isHidden {
+        if !searchContainer.isHidden {
             unhideSearchField()
         }
     }
 
     @objc func unhideSearchField() {
-        let hide = searchField.isHidden
+        let hide = searchContainer.isHidden
 
-        searchField.isHidden = !hide
+        searchContainer.isHidden = !hide
 
         // 3. Buat Constraint yang Baru
         if hide {

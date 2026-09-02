@@ -6,14 +6,16 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 
-class BookUpdateViewModel: ObservableObject {
-    @Published var availableUpdates: [BookUpdateItem] = []
-    @Published var isLoadingList = false
-    @Published var isUpdating = false
-    @Published var progressMessage = ""
-    @Published var updateResults: [BookUpdateResult] = []
+@Observable
+class BookUpdateViewModel {
+    var availableUpdates: [BookUpdateItem] = []
+    var isLoadingList = false
+    var isUpdating = false
+    var progressMessage = ""
+    var updateResults: [BookUpdateResult] = []
 
     static let driveLink = "https://drive.google.com/uc?export=download&id="
 
@@ -24,12 +26,12 @@ class BookUpdateViewModel: ObservableObject {
         string: driveLink + "1Aekhq21Ihsxr1sAhnJSxZxA59yCxmEmq"
     )!
 
-    // MARK: - Published Selection Summary
+    // MARK: - Selection Summary
 
-    @Published var selectedCount: Int = 0
-    @Published var totalSelectedSize: Int64 = 0
-    @Published var totalSelectedSizeFormatted: String = "0 B"
-    @Published var needsUpdateCount: Int = 0
+    var selectedCount: Int = 0
+    var totalSelectedSize: Int64 = 0
+    var totalSelectedSizeFormatted: String = "0 B"
+    var needsUpdateCount: Int = 0
 
     var hasUpdates: Bool {
         !availableUpdates.isEmpty

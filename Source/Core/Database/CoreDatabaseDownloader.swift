@@ -6,11 +6,8 @@
 //  ke ~/Library/Application Support/Maktabah/Caches/
 //
 
-import Foundation
+import Observation
 import SwiftUI
-#if os(macOS)
-import AppKit
-#endif
 
 // MARK: - CoreFile
 
@@ -752,24 +749,9 @@ final class CoreDownloadModalCenter {
         return size > 0
     }
 }
+#endif
 
 // MARK: - Progress State
-
-final class CoreDownloadProgressState: ObservableObject {
-    enum Phase: Equatable {
-        case confirmation
-        case downloading
-        case error(String)
-    }
-
-    @Published var phase: Phase = .confirmation
-    @Published var progress: Double = 0
-    @Published var detail: String = ""
-    @Published var totalSizeString: String = ""
-}
-
-#elseif os(iOS)
-import Observation
 
 @Observable
 final class CoreDownloadProgressState {
@@ -784,4 +766,3 @@ final class CoreDownloadProgressState {
     var detail: String = ""
     var totalSizeString: String = ""
 }
-#endif

@@ -5,8 +5,8 @@
 //  Created by Ghoys Mawahib on 18/06/26.
 //
 
-import Combine
 import Foundation
+import Observation
 
 #if os(iOS)
 import UIKit
@@ -36,9 +36,7 @@ enum RowiDisplayMode: Int, CaseIterable, Identifiable {
 
 // MARK: - ViewModel
 
-#if os(iOS)
 @Observable
-#endif
 final class NarratorViewModel: ViewModelBase {
     // MARK: - State
     var tabaqaGroups: [TabaqaGroup] = []
@@ -57,11 +55,20 @@ final class NarratorViewModel: ViewModelBase {
     var sidebarTarjamahList: [TarjamahResult] = []
     var searchTarjamahList: [TarjamahResult] = []
 
+    private var searchDebounceTask: Task<Void, Never>?
+
     /// Teks search dengan debounce — dipakai iOS via .searchable binding.
     var searchText: String = "" {
         didSet {
             guard oldValue != searchText else { return }
-            searchSubject.send(searchText)
+            searchDebounceTask?.cancel()
+            searchDebounceTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(0.3))
+                guard !Task.isCancelled else { return }
+                guard let self else { return }
+                self.lastSearchQuery = self.searchText
+                self.searchRowis(query: self.searchText)
+            }
         }
     }
 
@@ -101,34 +108,23 @@ final class NarratorViewModel: ViewModelBase {
     private let pauseController: PauseController = .init()
     private var searchTask: Task<Void, Never>?
     private var isStopped: Bool = false
-    private let searchSubject = PassthroughSubject<String, Never>()
 
     // MARK: - Init
 
     override init() {
         super.init()
-        setupSearchDebounce()
         #if os(iOS)
         setupNotifications()
         #endif
     }
 
-    private func setupSearchDebounce() {
-        searchSubject
-            .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
-            .sink { [weak self] query in
-                guard let self else { return }
-                lastSearchQuery = query
-                searchRowis(query: query)
-            }
-            .store(in: &cancellables)
-    }
-
     #if os(iOS)
     private func setupNotifications() {
-        NotificationCenter.default.publisher(for: .didChangeHarakat)
-            .sink { [weak self] _ in self?.updateRowiContent() }
-            .store(in: &cancellables)
+        addObserver(forName: .didChangeHarakat) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateRowiContent()
+            }
+        }
     }
     #endif
 

@@ -4,13 +4,9 @@
 //
 
 import Foundation
-#if canImport(Observation)
 import Observation
-#endif
 
-#if os(iOS)
 @Observable
-#endif
 class ResultNode: Identifiable, Hashable {
     var id: Int64
     var parentId: Int64?

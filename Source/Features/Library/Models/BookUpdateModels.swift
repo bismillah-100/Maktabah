@@ -85,19 +85,20 @@ enum UpdateStatus: Equatable {
 }
 
 // MARK: - Book Update Item untuk ditampilkan di List
-class BookUpdateItem: ObservableObject, Identifiable {
+@Observable
+class BookUpdateItem: Identifiable {
     let id: Int
     let bookName: String
     let category: Int
     let existsInLibrary: Bool
-    @Published var currentVersion: Int64?
+    var currentVersion: Int64?
     let newVersion: Int64
     let fileSize: Int64
     let downloadURL: String
 
-    @Published var isSelected: Bool = false
-    @Published var status: UpdateStatus = .pending
-    // @Published var progress: Double = 0.0
+    var isSelected: Bool = false
+    var status: UpdateStatus = .pending
+    // var progress: Double = 0.0
 
     var needsUpdate: Bool {
         guard existsInLibrary else { return true }

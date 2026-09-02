@@ -11,10 +11,8 @@ import SwiftUI
 import AppKit
 #endif
 
-@MainActor
-#if os(iOS)
 @Observable
-#endif
+@MainActor
 final class BundleArchiveDownloadProgressState: Identifiable {
     let id = UUID()
 
@@ -31,22 +29,12 @@ final class BundleArchiveDownloadProgressState: Identifiable {
 
     var pendingData: PendingData?
 
-    #if os(macOS)
-    @Published var title: String
-    @Published var message: String
-    @Published var detail: String
-    @Published var progress: Double
-    @Published var mode: Mode
-    @Published var totalSizeString: String
-
-    #elseif os(iOS)
     var title: String
     var message: String
     var detail: String
     var progress: Double
     var mode: Mode
     var totalSizeString: String
-    #endif
 
     init(
         title: String,
@@ -87,9 +75,6 @@ final class BundleArchiveDownloadProgressState: Identifiable {
 }
 
 struct BundleArchiveDownloadProgressView: View {
-    #if os(macOS)
-    @ObservedObject
-    #endif
     var state: BundleArchiveDownloadProgressState
     let onConfirm: () -> Void
     let onCancel: () -> Void
@@ -336,8 +321,6 @@ extension View {
 // MARK: - BookIntegrateModalCenter
 
 #if os(macOS)
-
-extension BundleArchiveDownloadProgressState: ObservableObject {}
 
 /// Modal konfirmasi + progress untuk proses integrasi per-book
 /// (download kitab → copy tables → rebuild FTS).

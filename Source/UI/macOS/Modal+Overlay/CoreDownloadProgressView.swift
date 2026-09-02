@@ -8,11 +8,7 @@
 import SwiftUI
 
 struct CoreDownloadProgressView: View {
-    #if os(macOS)
-    @ObservedObject var state: CoreDownloadProgressState
-    #else
     var state: CoreDownloadProgressState
-    #endif
 
     let onDownload: () -> Void
     let onChooseFolder: () -> Void

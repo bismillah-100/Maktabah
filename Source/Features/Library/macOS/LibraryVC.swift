@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import Combine
 
 class LibraryVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
@@ -23,8 +22,6 @@ class LibraryVC: NSViewController {
     weak var delegate: LibraryDelegate?
 
     var isDataLoaded: Bool = false
-
-    private var cancellables = Set<AnyCancellable>()
 
     weak var bg: NSView!
     private var filterSegment: NSSegmentedControl?
@@ -59,7 +56,7 @@ class LibraryVC: NSViewController {
             }
         }))
 
-        setupViewModelSink()
+        setupViewModelCallbacks()
     }
 
     override func viewDidAppear() {
@@ -68,7 +65,6 @@ class LibraryVC: NSViewController {
     }
 
     deinit {
-        cancellables.removeAll()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -90,11 +86,9 @@ class LibraryVC: NSViewController {
         isDataLoaded = true
     }
 
-    private func setupViewModelSink() {
-        dataVM.viewModel.$state
-            .dropFirst()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
+    private func setupViewModelCallbacks() {
+        dataVM.viewModel.onStateChanged = { state in
+            DispatchQueue.main.sync { [weak self] in
                 guard let self else { return }
                 if state == .loading {
                     ReusableFunc.showProgressWindow(view)
@@ -103,7 +97,7 @@ class LibraryVC: NSViewController {
                     ReusableFunc.closeProgressWindow(view)
                 }
             }
-            .store(in: &cancellables)
+        }
     }
 
     // MARK: - Filter Segment (Bundle Mode only)
