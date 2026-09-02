@@ -328,6 +328,7 @@
 		F30577132FA46222005732C6 /* TOCLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B2FAD992EED472E008E933E /* TOCLoader.swift */; };
 		F30577142FA46222005732C6 /* SearchMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B20DB7E2EE7EE1F00B97126 /* SearchMode.swift */; };
 		F305771A2FA46222005732C6 /* BookUpdateVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3402F3612BD0018D902 /* BookUpdateVM.swift */; };
+		F305771B2FA46222005732C6 /* BookUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B96D3422F3612D50018D902 /* BookUpdateView.swift */; };
 		F30577202FA46222005732C6 /* Narrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4C97112F1F026C0051503E /* Narrator.swift */; };
 		F30577252FA46222005732C6 /* SearchEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B65CCBF2EE0A10F0085CEB4 /* SearchEngine.swift */; };
 		F30577262FA46222005732C6 /* DataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B32024F2EDB1B5A003B95D1 /* DataModel.swift */; };
@@ -2155,6 +2156,7 @@
 				E87C90E42F83494200454BE1 /* FtsQueryParser.swift in Sources */,
 				F36382692FA7BFB40006636C /* iOSAnnotationEditorSheet.swift in Sources */,
 				F305771A2FA46222005732C6 /* BookUpdateVM.swift in Sources */,
+				F305771B2FA46222005732C6 /* BookUpdateView.swift in Sources */,
 				F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */,
 				F30577202FA46222005732C6 /* Narrator.swift in Sources */,
 				F3A20B142FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift in Sources */,
@@ -2733,7 +2735,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.3;
+				MARKETING_VERSION = 3.4;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;
@@ -2775,7 +2777,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
-				MARKETING_VERSION = 3.3;
+				MARKETING_VERSION = 3.4;
 				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;

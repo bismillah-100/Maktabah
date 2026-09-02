@@ -335,6 +335,9 @@ final class BookUpdateManager {
             throw error
         }
 
+        try renameTablesIfNeeded(at: downloadedBookURL, to: metadata.bkid)
+        try renameTablesIfNeeded(at: ftsSourceURL, to: metadata.bkid)
+
         var authorContext: AuthorContext?
         if let authId = metadata.authno, let authEntry = authIndex[authId],
             let authDownloadURL = URL(string: authEntry.downloadURL)
@@ -1450,19 +1453,21 @@ final class BookUpdateManager {
             try? exec(db, "DETACH DATABASE source_db;")
         }
 
-        try withTransaction(db) {
-            let tableName = "b\(bookId)"
-            let ftsTable = "\(tableName)_fts"
-            try ArchiveDatabaseTools.replaceTable(
+        let tableName = "b\(bookId)"
+        let tocTable = "t\(bookId)"
+        let ftsTable = "\(tableName)_fts"
+
+        try ArchiveDatabaseTools.withTransaction(db: db) {
+            try ArchiveDatabaseTools.copyTable(
                 db: db,
-                tableName: tableName,
-                sourceSchema: "source_db"
+                sourceSchema: "source_db",
+                tableName: tableName
             )
 
-            try ArchiveDatabaseTools.replaceTable(
+            try ArchiveDatabaseTools.copyTable(
                 db: db,
-                tableName: "t\(bookId)",
-                sourceSchema: "source_db"
+                sourceSchema: "source_db",
+                tableName: tocTable
             )
 
             try ArchiveDatabaseTools.buildFTS(

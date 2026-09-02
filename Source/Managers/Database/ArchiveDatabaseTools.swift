@@ -20,29 +20,6 @@ enum ArchiveDatabaseTools {
         let isPrimaryKey: Bool
     }
 
-    static func replaceTable(
-        db: OpaquePointer,
-        tableName: String,
-        sourceSchema: String
-    ) throws {
-        let columns = try loadTableColumns(
-            tableName: tableName,
-            db: db,
-            schemaName: sourceSchema
-        )
-
-        let createSQL = makeCreateTableSQL(
-            tableName: tableName,
-            columns: columns
-        )
-
-        try exec(db, "DROP TABLE IF EXISTS \(tableName);")
-        try exec(db, createSQL)
-        try exec(
-            db,
-            "INSERT INTO \"\(tableName)\" SELECT * FROM \(sourceSchema).\"\(tableName)\";"
-        )
-    }
 
 
     /// Menyalin satu tabel dari `sourceSchema` ke `main`.
@@ -57,6 +34,28 @@ enum ArchiveDatabaseTools {
             db,
             "CREATE TABLE main.\"\(tableName)\" AS SELECT * FROM \(sourceSchema).\"\(tableName)\";"
         )
+    }
+
+    /// Menjalankan block operasi di dalam SQLite transaction jika belum ada transaksi aktif.
+    static func withTransaction(
+        db: OpaquePointer,
+        _ block: () throws -> Void
+    ) throws {
+        let isInTransaction = sqlite3_get_autocommit(db) == 0
+        if !isInTransaction {
+            try exec(db, "BEGIN TRANSACTION;")
+        }
+        do {
+            try block()
+            if !isInTransaction {
+                try exec(db, "COMMIT;")
+            }
+        } catch {
+            if !isInTransaction {
+                try? exec(db, "ROLLBACK;")
+            }
+            throw error
+        }
     }
 
     /// Membangun FTS dari `sourceSchema.<sourceTable>` ke `ftsSchema.<ftsTable>`.
@@ -93,11 +92,7 @@ enum ArchiveDatabaseTools {
         }
         defer { sqlite3_finalize(insertStmt) }
 
-        let isInTransaction = sqlite3_get_autocommit(db) == 0
-        if !isInTransaction {
-            try exec(db, "BEGIN TRANSACTION;")
-        }
-        do {
+        try withTransaction(db: db) {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
                     let rawText: String
@@ -133,14 +128,6 @@ enum ArchiveDatabaseTools {
                     }
                 }
             }
-            if !isInTransaction {
-                try exec(db, "COMMIT;")
-            }
-        } catch {
-            if !isInTransaction {
-                try? exec(db, "ROLLBACK;")
-            }
-            throw error
         }
         
         let checkMetadataSql = "SELECT name FROM \(ftsSchema).sqlite_master WHERE type='table' AND name='metadata';"

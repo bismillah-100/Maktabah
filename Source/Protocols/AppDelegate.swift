@@ -24,7 +24,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var controlMenu: NSMenu!
     @IBOutlet weak var clickEditAnnotationMenuItem: NSMenuItem!
     @IBOutlet weak var screenTimeMenuItem: NSMenuItem!
-
+    @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
+    
     fileprivate var mainWindowController: NSWindowController!
 
     fileprivate weak var quranWindow: NSWindow?
@@ -113,6 +114,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Check for core database updates (blocking, throttled 6 months)
         checkCoreDatabaseUpdate()
+
+        // Check for book updates in background (throttled 24h, low priority)
+        checkBookUpdatesPeriodically()
+
+        NotificationCenter.default.addObserver(
+            forName: .booksChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.checkBookUpdatesPeriodically(force: true)
+        }
     }
 
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
@@ -318,12 +330,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             title: "Books Updates".localized
         )
 
-        window.titlebarAppearsTransparent = true
-        window.titlebarSeparatorStyle = .none
-        window.titleVisibility = .hidden
-
         // 4. Jalankan sebagai Modal
         NSApp.runModal(for: window)
+        checkBookUpdatesPeriodically(force: true)
+    }
+
+    // MARK: - Book Updates Periodic Check & Badge
+
+    fileprivate func checkBookUpdatesPeriodically(force: Bool = false) {
+        LibraryDataManager.shared.checkBookUpdatesPeriodically(
+            force: force
+        ) { [weak self] count in
+            self?.updateBookUpdatesBadge(count: count)
+        }
+    }
+
+    fileprivate func updateBookUpdatesBadge(count: Int) {
+        if #available(macOS 14.0, *) {
+            bookUpdatesMenuItem?.badge = count > 0 ? .init(count: count) : nil
+        } else {
+            if count > 0 {
+                bookUpdatesMenuItem?.title = "\("Books Updates".localized) (\(count))"
+            } else {
+                bookUpdatesMenuItem?.title = "Books Updates".localized
+            }
+        }
     }
 
     @IBAction func importOfflineBook(_ sender: Any?) {
