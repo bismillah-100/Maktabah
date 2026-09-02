@@ -59,6 +59,9 @@ class QuranSidebarVC: NSViewController {
     func setupAppereance() {
         outlineView.backgroundColor = .clear
         outlineView.enclosingScrollView?.backgroundColor = .clear
+        searchContainer.state = .inactive
+        searchContainer.wantsLayer = true
+        searchContainer.layer?.backgroundColor = NSColor.bgSepia.cgColor
         xBtn.isHidden = true
     }
 

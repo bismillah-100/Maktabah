@@ -4,23 +4,16 @@
 //
 
 import Foundation
+import Observation
 import SQLite3
 #if canImport(UIKit)
 import UIKit
 #endif
-import Combine
 
-#if os(macOS)
-extension FtsMigrationManager: ObservableObject {}
-#endif
-
-#if os(iOS)
 @Observable
-#endif
 final class FtsMigrationManager {
     static let shared = FtsMigrationManager()
 
-    #if os(iOS)
     var isMigrating = false
     var isCancelled = false
     var progress: Double = 0.0
@@ -31,18 +24,6 @@ final class FtsMigrationManager {
     var completedBooksCount: Int = 0
     var activeArchiveStatuses: [Int: String] = [:]
     var archivesToMigrate: [Int] = []
-    #elseif os(macOS)
-    @Published var isMigrating = false
-    @Published var isCancelled = false
-    @Published var progress: Double = 0.0
-    @Published var totalArchivesToMigrate: Int = 0
-    @Published var currentArchiveIndex: Int = 0
-    @Published var needsMigration: Bool = false
-    @Published var totalBooksToMigrate: Int = 0
-    @Published var completedBooksCount: Int = 0
-    @Published var activeArchiveStatuses: [Int: String] = [:]
-    @Published var archivesToMigrate: [Int] = []
-    #endif
 
     private enum SQL {
         static let getFtsVersion = "SELECT value FROM metadata WHERE key = 'fts_version';"

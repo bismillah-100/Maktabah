@@ -6,13 +6,15 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 #if os(macOS)
 import AppKit
 #endif
 
+@Observable
 @MainActor
-final class DonationManager: ObservableObject {
+final class DonationManager {
     static let shared = DonationManager()
 
     let donationURL = URL(string: "https://sociabuzz.com/ghoysmawahib/support")!
@@ -22,7 +24,7 @@ final class DonationManager: ObservableObject {
     private let cooldownDays: Double = 30 // 1 bulan cooldown
     private let promptDelayNanoseconds: UInt64 = 2_000_000_000 // 2 detik delay untuk cold start
 
-    @Published var showDonationSheet: Bool = false
+    var showDonationSheet: Bool = false
 
     private init() {}
 
@@ -32,7 +34,7 @@ final class DonationManager: ObservableObject {
         UserDefaults.standard.appActivationCount
     }
 
-    @Published var hasDonated: Bool = UserDefaults.standard.hasDonated
+    var hasDonated: Bool = UserDefaults.standard.hasDonated
 
     var isInCooldown: Bool {
         let lastDismissed = UserDefaults.standard.donationLastDismissed

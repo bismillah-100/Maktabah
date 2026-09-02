@@ -30,7 +30,7 @@ struct DonationSheetView: View {
     @State private var contentHeight: CGFloat = 0
     #endif
 
-    @ObservedObject private var donationManager = DonationManager.shared
+    @State private var donationManager = DonationManager.shared
 
     var body: some View {
         NavigationStack {

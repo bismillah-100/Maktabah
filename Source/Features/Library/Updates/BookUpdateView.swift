@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct UpdateView: View {
-    @StateObject var viewModel = BookUpdateViewModel()
+    @State var viewModel = BookUpdateViewModel()
     @State private var searchText = ""
     @Environment(\.dismiss) private var dismiss
 
@@ -303,7 +303,7 @@ struct UpdateView: View {
 // MARK: - Book Update Row
 
 struct BookUpdateRow: View {
-    @ObservedObject var item: BookUpdateItem
+    var item: BookUpdateItem
     let fontSize: Double
     var onToggle: (() -> Void)?
 

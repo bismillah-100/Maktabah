@@ -4,13 +4,9 @@
 //
 
 import Foundation
-#if canImport(Observation)
 import Observation
-#endif
 
-#if os(iOS)
 @Observable
-#endif
 class FolderNode: Identifiable, Hashable {
     let id: Int64
     var name: String

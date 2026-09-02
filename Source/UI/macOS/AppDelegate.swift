@@ -345,19 +345,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         LibraryDataManager.shared.checkBookUpdatesPeriodically(
             force: force
         ) { [weak self] count in
-            self?.updateBookUpdatesBadge(count: count)
-        }
-    }
-
-    fileprivate func updateBookUpdatesBadge(count: Int) {
-        if #available(macOS 14.0, *) {
-            bookUpdatesMenuItem?.badge = count > 0 ? .init(count: count) : nil
-        } else {
-            if count > 0 {
-                bookUpdatesMenuItem?.title = "\("Books Updates".localized) (\(count))"
-            } else {
-                bookUpdatesMenuItem?.title = "Books Updates".localized
-            }
+            self?.bookUpdatesMenuItem?.badge = count > 0
+                ? .init(count: count) : nil
         }
     }
 
