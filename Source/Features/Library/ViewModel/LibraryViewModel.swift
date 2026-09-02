@@ -7,14 +7,9 @@
 
 import Combine
 import Foundation
+import Observation
 
-#if os(macOS)
-extension LibraryViewModel: ObservableObject {}
-#endif
-
-#if os(iOS)
 @Observable
-#endif
 final class LibraryViewModel: ViewModelBase {
     // MARK: - Shared
 
@@ -37,36 +32,49 @@ final class LibraryViewModel: ViewModelBase {
     var availableUpdateCount: Int = 0
     private var historySelectionTask: Task<Void, Never>?
 
-    #if os(macOS)
-    @Published var searchQuery: String = ""
-    @Published var state: ViewModelState = .loading
-    @Published var showingImportSheet = false
-    @Published var importErrorMessage: String?
-    @Published var showImportSuccessAlert = false
-    var showOnlyDownloaded: Bool = false
-    var viewMode: LibraryViewMode = .category
-    let updateSubject = PassthroughSubject<LibraryUpdate, Never>()
-    #else
-    var state: ViewModelState = .loading
-    var showOnlyDownloaded: Bool {
-        get {
-            _ = _showOnlyDownloadedTracker
-            return UserDefaults.standard.integer(forKey: "filterSegmentIndex") == 1
+    var onStateChanged: ((ViewModelState) -> Void)?
+    var state: ViewModelState = .loading {
+        didSet {
+            onStateChanged?(state)
         }
-        set {
-            UserDefaults.standard.set(newValue ? 1 : 0, forKey: "filterSegmentIndex")
-            _showOnlyDownloadedTracker = newValue
+    }
+
+    var showOnlyDownloaded: Bool = UserDefaults.standard.integer(forKey: "filterSegmentIndex") == 1 {
+        didSet {
+            #if os(iOS)
+            UserDefaults.standard.set(showOnlyDownloaded ? 1 : 0, forKey: "filterSegmentIndex")
+            #endif
             resetAuthorPagination()
             updateDisplayedCategories()
         }
     }
 
-    var _showOnlyDownloadedTracker: Bool = false
     var searchQuery: String = "" {
         didSet {
-            if oldValue != searchQuery {
-                searchSubject.send(searchQuery)
+            searchTask?.cancel()
+            searchTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+                self?.performSearch(self?.searchQuery ?? "")
             }
+        }
+    }
+
+    private var searchTask: Task<Void, Never>?
+
+    var viewMode: LibraryViewMode = .init(
+        rawValue: UserDefaults.standard.integer(forKey: "libraryViewMode")
+    ) ?? .category {
+        didSet {
+            #if os(iOS)
+            UserDefaults.standard.set(viewMode.rawValue, forKey: "libraryViewMode")
+            #endif
+            if viewMode == .author, !_hasBuiltAuthorHierarchy {
+                _authorHierarchy = dataManager.buildAuthorHierarchy()
+                _hasBuiltAuthorHierarchy = true
+            }
+            resetAuthorPagination()
+            updateDisplayedCategories()
         }
     }
 
@@ -76,36 +84,23 @@ final class LibraryViewModel: ViewModelBase {
     var importErrorMessage: String?
     var showImportSuccessAlert = false
 
-    var viewMode: LibraryViewMode {
-        didSet {
-            UserDefaults.standard.set(viewMode.rawValue, forKey: "libraryViewMode")
-            if viewMode == .author, !_hasBuiltAuthorHierarchy {
-                _authorHierarchy = dataManager.buildAuthorHierarchy()
-                _hasBuiltAuthorHierarchy = true
-            }
-            resetAuthorPagination()
-            updateDisplayedCategories()
-        }
-    }
+    #if os(macOS)
+    let updateSubject = PassthroughSubject<LibraryUpdate, Never>()
     #endif
 
     // MARK: - Internal Trackers & Subscriptions
 
-    #if os(iOS)
     var updateTrigger: Int = 0
-    #endif
 
     var selectedAuthorId: Int? {
         didSet {
-            #if os(iOS)
-            #endif
             resetAuthorPagination()
             updateDisplayedCategories()
         }
     }
 
-    private var baseCategories: [CategoryData] = []
-    private var bookLookup: [String: (category: CategoryData, book: BooksData)] = [:]
+    var baseCategories: [CategoryData] = []
+    var bookLookup: [String: (category: CategoryData, book: BooksData)] = [:]
     private let lookupQueue = SerialTaskQueue()
 
     private var hasLoadedLibrary = false
@@ -118,22 +113,12 @@ final class LibraryViewModel: ViewModelBase {
     private var _displayedFilteredCount: Int = 0
 
     private let refreshSubject = PassthroughSubject<Void, Never>()
-    let searchSubject = PassthroughSubject<String, Never>()
     private var bulkDownloadTask: Task<Void, Never>?
 
     // MARK: - Init
 
     override init() {
-        #if os(iOS)
-        viewMode = LibraryViewMode(
-            rawValue: UserDefaults.standard.integer(forKey: "libraryViewMode")
-        ) ?? .category
-        #endif
         super.init()
-
-        #if os(macOS)
-        setupMacOSBindings()
-        #endif
         setupObservers()
     }
 
@@ -691,27 +676,13 @@ final class LibraryViewModel: ViewModelBase {
                 }
             }
             .store(in: &cancellables)
-
-        searchSubject
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-            .sink { [weak self] query in
-                self?.searchQuery = query
-                self?.resetAuthorPagination()
-                self?.updateDisplayedCategories()
-            }
-            .store(in: &cancellables)
     }
 
     private func observeBookIntegrated() {
-        addObserver(forName: .bookIntegrated, object: nil, queue: .current) { [weak self] notification in
+        addObserver(forName: .bookIntegrated, object: nil, queue: .current) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let self else { return }
-                #if os(macOS)
-                if let bookId = notification.object as? Int {
-                    reloadParentCategory(ofBookId: bookId)
-                }
-                #else
-                refreshSubject.send(())
+                #if os(iOS)
+                self?.refreshSubject.send(())
                 #endif
             }
         }
@@ -720,13 +691,10 @@ final class LibraryViewModel: ViewModelBase {
     private func observeBooksChanged() {
         addObserver(forName: .booksChanged, object: nil, queue: .current) { [weak self] notification in
             Task { @MainActor [weak self] in
-                guard let self else { return }
-                #if os(macOS)
-                handleBooksChanged(notification)
-                #else
-                refreshSubject.send(())
+                #if os(iOS)
+                self?.refreshSubject.send(())
                 #endif
-                checkBookUpdatesPeriodically(force: true)
+                self?.checkBookUpdatesPeriodically(force: true)
             }
         }
     }
@@ -742,372 +710,6 @@ final class LibraryViewModel: ViewModelBase {
             }
         }
     }
-
-    // MARK: macOS Implementation
-
-    #if os(macOS)
-    private func setupMacOSBindings() {
-        $searchQuery
-            .dropFirst()
-            .removeDuplicates()
-            .debounce(for: .seconds(0.3), scheduler: DispatchQueue.main)
-            .sink { [weak self] newQuery in
-                self?.performSearch(newQuery)
-            }
-            .store(in: &cancellables)
-
-        historyManager.$historyBooks
-            .receive(on: RunLoop.main)
-            .debounce(for: .seconds(3), scheduler: RunLoop.main)
-            .sink { [weak self] newBooks in
-                self?.updateFlatList(for: .history, newBooks: newBooks, categoryId: -2, categoryName: String(localized: "History"))
-            }
-            .store(in: &cancellables)
-
-        historyManager.$favoriteBooks
-            .receive(on: RunLoop.main)
-            .debounce(for: .seconds(3), scheduler: RunLoop.main)
-            .sink { [weak self] newBooks in
-                self?.updateFlatList(for: .favorites, newBooks: newBooks, categoryId: -1, categoryName: String(localized: "Favorites"))
-            }
-            .store(in: &cancellables)
-    }
-
-    private func updateFlatList(
-        for mode: LibraryFilterMode,
-        newBooks: [BooksData],
-        categoryId: Int,
-        categoryName: String
-    ) {
-        guard isFlatMode, filterMode == mode else { return }
-        updateFlatListIncrementally(
-            newBooks: newBooks,
-            fallbackCategoryId: categoryId,
-            fallbackCategoryName: categoryName
-        )
-    }
-
-    private func updateFlatListIncrementally(
-        newBooks: [BooksData],
-        fallbackCategoryId: Int,
-        fallbackCategoryName: String
-    ) {
-        guard let firstCat = displayedCategories.first else {
-            displayedCategories = newBooks.isEmpty ? [] : [{
-                let cat = CategoryData(id: fallbackCategoryId, name: fallbackCategoryName, level: 1, order: 0)
-                cat.children = newBooks
-                return cat
-            }()]
-            updateSubject.send(.reloadData)
-            return
-        }
-
-        let oldBooks = firstCat.children.compactMap { $0 as? BooksData }
-
-        let oldIds = oldBooks.map(\.id)
-        let newIds = newBooks.map(\.id)
-
-        if oldIds == newIds { return } // Tidak ada perubahan urutan atau penambahan/pengurangan
-
-        var currentBooks = oldBooks
-        updateSubject.send(.beginUpdates)
-
-        // Hapus item lama yang sudah tidak ada
-        let newIdSet = Set(newIds)
-        for (index, oldBook) in currentBooks.enumerated().reversed() where !newIdSet.contains(oldBook.id) {
-            updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
-            currentBooks.remove(at: index)
-        }
-
-        firstCat.children = currentBooks
-
-        for (newIndex, newBook) in newBooks.enumerated() {
-            if let oldIndex = currentBooks.firstIndex(where: { $0.id == newBook.id }) {
-                if oldIndex != newIndex {
-                    updateSubject.send(.moveItem(from: oldIndex, to: newIndex, parent: nil))
-                    let movedBook = currentBooks.remove(at: oldIndex)
-                    currentBooks.insert(movedBook, at: newIndex)
-                    firstCat.children = currentBooks
-                }
-            } else {
-                currentBooks.insert(newBook, at: newIndex)
-                firstCat.children = currentBooks
-                updateSubject.send(.insertItems(IndexSet(integer: newIndex), parent: nil))
-            }
-        }
-        updateSubject.send(.endUpdates)
-    }
-
-    private func handleBooksChanged(_ notification: Notification) {
-        guard let payload = notification.object as? BooksChangedNotification else { return }
-        for (categoryId, book) in payload.insertedBooks {
-            if let category = findCategoryInDisplayed(categoryId) {
-                bookLookup[book.book] = (category, book)
-
-                if searchQuery.isEmpty {
-                    updateSubject.send(.expandItem(category))
-                    updateSubject.send(.reloadItem(category, reloadChildren: true))
-                    updateSubject.send(.scrollRowToVisible(book))
-                } else {
-                    let currentQuery = searchQuery
-                    let base = baseCategories.isEmpty ? displayedCategories : baseCategories
-                    var filtered: [CategoryData] = []
-                    _ = dataManager.filterContent(
-                        with: currentQuery,
-                        displayedCategories: &filtered,
-                        baseCategories: base
-                    )
-                    displayedCategories = filtered
-                    updateSubject.send(.reloadData)
-                }
-            }
-        }
-        if !payload.updatedBookIds.isEmpty {
-            reloadUpdatedBooks(payload.updatedBookIds)
-        }
-    }
-
-    private func reloadUpdatedBooks(_ bookIds: Set<Int>) {
-        for bookId in bookIds {
-            guard let book = dataManager.booksById[bookId] else { continue }
-            for (oldName, value) in bookLookup where value.book.id == bookId {
-                bookLookup.removeValue(forKey: oldName)
-                bookLookup[book.book] = (value.category, book)
-                break
-            }
-            updateSubject.send(.reloadItem(book, reloadChildren: false))
-        }
-    }
-
-    /// Dipanggil setelah kitab selesai diintegrasikan ke archive.
-    /// Reload parent category agar status/icon ter-update.
-    private func reloadParentCategory(ofBookId bookId: Int) {
-        if showOnlyDownloaded {
-            handleIntegratedBookUpdate(bookId)
-            return
-        }
-        guard let parent = findParentCategory(ofBookId: bookId, in: displayedCategories) else { return }
-
-        if isDownloadModal {
-            if let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
-                updateSubject.send(.beginUpdates)
-
-                if parent.children.count == 1 {
-                    parent.children.remove(at: childIndex)
-                    selectedBookIds.remove(bookId)
-                    if let index = displayedCategories.firstIndex(where: { $0 === parent }) {
-                        displayedCategories.remove(at: index)
-                        updateSubject.send(.removeItems(IndexSet(integer: index), parent: nil))
-                    }
-                    baseCategories = displayedCategories
-                } else {
-                    parent.children.remove(at: childIndex)
-                    updateSubject.send(.removeItems(IndexSet(integer: childIndex), parent: parent))
-                }
-
-                updateSubject.send(.endUpdates)
-                updateSubject.send(.reloadItem(parent, reloadChildren: false))
-            }
-        } else {
-            if let book = parent.children.first(where: { ($0 as? BooksData)?.id == bookId }) {
-                updateSubject.send(.reloadItem(book, reloadChildren: false))
-            }
-        }
-    }
-
-    private func handleIntegratedBookUpdate(_ bookId: Int) {
-        guard let book = dataManager.booksById[bookId] else {
-            removeBookFromDisplayed(bookId: bookId)
-            return
-        }
-        if BookArchiveIntegrator.shared.isBookIntegrated(book) {
-            insertIntegratedBookIntoDisplayed(book)
-        } else if showOnlyDownloaded {
-            removeBookFromDisplayed(bookId: bookId)
-        }
-    }
-
-    private func removeBookFromDisplayed(bookId: Int) {
-        func findAndRemove(in list: inout [CategoryData], parent: CategoryData?) -> Bool {
-            var anyChanged = false
-            for i in (0 ..< list.count).reversed() {
-                let category = list[i]
-
-                if let bookIndex = category.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
-                    updateSubject.send(.removeItems(IndexSet(integer: bookIndex), parent: category))
-                    category.children.remove(at: bookIndex)
-                    anyChanged = true
-                }
-
-                var subChanged = false
-                for j in (0 ..< category.children.count).reversed() {
-                    if let sub = category.children[j] as? CategoryData {
-                        var subList = [sub]
-                        if findAndRemove(in: &subList, parent: category) {
-                            if subList.isEmpty {
-                                updateSubject.send(.removeItems(IndexSet(integer: j), parent: category))
-                                category.children.remove(at: j)
-                            }
-                            subChanged = true
-                        }
-                    }
-                }
-
-                if subChanged || anyChanged {
-                    return true
-                }
-            }
-            return false
-        }
-
-        var list = displayedCategories
-        if findAndRemove(in: &list, parent: nil) {
-            var rootChanged = false
-            for i in (0 ..< list.count).reversed() where list[i].children.isEmpty {
-                #if os(macOS)
-                updateSubject.send(.removeItems(IndexSet(integer: i), parent: nil))
-                #endif
-                list.remove(at: i)
-                rootChanged = true
-            }
-
-            if rootChanged {
-                displayedCategories = list
-                baseCategories = displayedCategories
-            } else {
-                baseCategories = list
-            }
-        }
-    }
-
-    private func findParentCategory(ofBookId bookId: Int, in categories: [CategoryData]) -> CategoryData? {
-        for category in categories {
-            for child in category.children {
-                if let b = child as? BooksData, b.id == bookId { return category }
-                if let sub = child as? CategoryData,
-                   let found = findParentCategory(ofBookId: bookId, in: [sub]) { return found }
-            }
-        }
-        return nil
-    }
-
-    private func findPathToBook(bookId: Int, in categories: [CategoryData]) -> [CategoryData]? {
-        for category in categories {
-            for child in category.children {
-                if let b = child as? BooksData, b.id == bookId { return [category] }
-                if let sub = child as? CategoryData,
-                   let path = findPathToBook(bookId: bookId, in: [sub]) { return [category] + path }
-            }
-        }
-        return nil
-    }
-
-    @discardableResult
-    private func insertBook(
-        _ book: BooksData,
-        originalCategory: CategoryData,
-        targetCategory: CategoryData
-    ) -> Int? {
-        if targetCategory.children.contains(where: { ($0 as? BooksData)?.id == book.id }) {
-            return nil
-        }
-        let existingBooks = targetCategory.children.compactMap { $0 as? BooksData }
-        let originalIndex = originalCategory.children.firstIndex { ($0 as? BooksData)?.id == book.id } ?? originalCategory.children.count
-        var insertBookIndex = 0
-        for existingBook in existingBooks {
-            let existingIndex = originalCategory.children.firstIndex { ($0 as? BooksData)?.id == existingBook.id } ?? originalCategory.children.count
-            if existingIndex > originalIndex { break }
-            insertBookIndex += 1
-        }
-        let firstBookIndex = targetCategory.children.firstIndex { $0 is BooksData } ?? targetCategory.children.count
-        targetCategory.children.insert(book, at: firstBookIndex + insertBookIndex)
-        return firstBookIndex + insertBookIndex
-    }
-
-    @discardableResult
-    private func insertCategory(_ category: CategoryData, into list: inout [CategoryData]) -> Int {
-        let insertIndex = list.firstIndex { $0.order > category.order } ?? list.count
-        list.insert(category, at: insertIndex)
-        return insertIndex
-    }
-
-    @discardableResult
-    private func insertCategory(_ category: CategoryData, into children: inout [Any]) -> Int {
-        let firstBookIndex = children.firstIndex { $0 is BooksData } ?? children.count
-        let categoryIndex = children.enumerated().first { _, element in
-            guard let existing = element as? CategoryData else { return false }
-            return existing.order > category.order
-        }?.offset ?? firstBookIndex
-        let insertIndex = min(categoryIndex, firstBookIndex)
-        children.insert(category, at: insertIndex)
-        return insertIndex
-    }
-
-    private func insertIntegratedBookIntoDisplayed(_ book: BooksData) {
-        guard let path = findPathToBook(bookId: book.id, in: dataManager.allRootCategories),
-              let originalLeaf = path.last else { return }
-
-        var currentParent: CategoryData?
-        for category in path {
-            if let parent = currentParent {
-                if let existing = parent.children.compactMap({ $0 as? CategoryData }).first(where: { $0.id == category.id }) {
-                    currentParent = existing
-                } else {
-                    let clone = category.copy()
-                    clone.children = []
-                    let insertIndex = insertCategory(clone, into: &parent.children)
-                    updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: parent))
-                    currentParent = clone
-                }
-            } else {
-                if let existing = displayedCategories.first(where: { $0.id == category.id }) {
-                    currentParent = existing
-                } else {
-                    let clone = category.copy()
-                    clone.children = []
-                    var list = displayedCategories
-                    let insertIndex = insertCategory(clone, into: &list)
-                    displayedCategories = list
-                    updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: nil))
-                    currentParent = clone
-                }
-            }
-        }
-
-        guard let leaf = currentParent else { return }
-
-        let insertIndex = insertBook(book, originalCategory: originalLeaf, targetCategory: leaf)
-
-        if let insertIndex {
-            updateSubject.send(.insertItems(IndexSet(integer: insertIndex), parent: leaf))
-        }
-
-        if let bookName = selectedBookName {
-            // Optional string routing handled by view manager if needed,
-            // but typically restore selection handles it.
-            updateSubject.send(.expandItem(bookName))
-
-            /* Removed iOS implementation cause this func is
-             macOS only. see line 701 #if os(macOS)
-             func setupMacOSBinding its closed #endif
-             on line 1054 func findCategoryInDisplayed. */
-        }
-    }
-
-    func findCategoryInDisplayed(_ categoryId: Int) -> CategoryData? {
-        func search(_ category: CategoryData) -> CategoryData? {
-            if category.id == categoryId { return category }
-            for child in category.children {
-                if let sub = child as? CategoryData, let found = search(sub) { return found }
-            }
-            return nil
-        }
-        for root in displayedCategories {
-            if let found = search(root) { return found }
-        }
-        return nil
-    }
-    #endif
 
     // MARK: - General Helpers
 

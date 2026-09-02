@@ -24,7 +24,9 @@ class LibraryViewManager: NSObject {
     var initialLoad: Bool = true
     var isSetupComplete: Bool = false
 
-    private var cancellables = Set<AnyCancellable>()
+    var cancellables = Set<AnyCancellable>()
+    let dataManager = LibraryDataManager.shared
+    let historyManager = HistoryViewModel.shared
 
     init(
         outlineView: NSOutlineView,
@@ -44,6 +46,7 @@ class LibraryViewManager: NSObject {
         setupDSFSearchField()
         setupContextMenu()
         bindToViewModel()
+        setupNotificationObservers()
 
         outlineView.target = self
         outlineView.doubleAction = #selector(onDoubleClick(_:))
@@ -166,7 +169,7 @@ class LibraryViewManager: NSObject {
         safelySelectOutlineRow(for: book)
     }
 
-    private func restoreFlatSelection(byBookName bookName: String?) {
+    func restoreFlatSelection(byBookName bookName: String?) {
         guard let bookName,
               let firstCat = viewModel.displayedCategories.first,
               let book = firstCat.children.compactMap({

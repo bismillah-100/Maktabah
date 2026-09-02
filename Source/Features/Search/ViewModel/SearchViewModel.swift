@@ -7,16 +7,11 @@
 
 import Combine
 import Foundation
+import Observation
 
 // MARK: - SearchViewModel
 
-#if os(macOS)
-extension SearchViewModel: ObservableObject {}
-#endif
-
-#if os(iOS)
 @Observable
-#endif
 final class SearchViewModel: ViewModelBase {
     // MARK: - Shared State
 
@@ -37,12 +32,15 @@ final class SearchViewModel: ViewModelBase {
     private(set) var totalRowsInTable: Int = 0
     private(set) var completedRowsInTable: Int = 0
     private(set) var selectedBookIds: Set<Int> = []
+    var onStateChanged: ((ViewModelState) -> Void)?
 
-    #if os(macOS)
-    @Published var state: ViewModelState = .loading
-    #elseif os(iOS)
-    var state: ViewModelState = .loading
-    #endif
+    var state: ViewModelState = .loading {
+        didSet {
+            onStateChanged?(state)
+        }
+    }
+
+    var targetBookId: String = ""
 
     // MARK: - iOS-only
 
@@ -61,11 +59,9 @@ final class SearchViewModel: ViewModelBase {
     private let historyKey = "SearchHistory"
     #endif
 
-    // MARK: - macOS-only
+    // MARK: - macOS Progress Streams
 
     #if os(macOS)
-    var targetBookId: String = ""
-
     /// Dikirim sekali saat search dimulai; value = jumlah total tabel
     let searchDidInitialize = PassthroughSubject<Int, Never>()
     /// Dikirim tiap kali ada hasil baru ditambahkan ke `results`
@@ -203,14 +199,13 @@ final class SearchViewModel: ViewModelBase {
             )
         }
 
-        #if os(macOS)
         if targetBookId == String(oldId) {
             targetBookId = String(newId)
         }
-        searchNeedsReload.send(())
-        #endif
 
-        #if os(iOS)
+        #if os(macOS)
+        searchNeedsReload.send(())
+        #else
         updateDisplayedCategories()
         #endif
     }
@@ -272,9 +267,8 @@ final class SearchViewModel: ViewModelBase {
     }
     #endif
 
-    // MARK: - macOS: Helpers
+    // MARK: - Helpers
 
-    #if os(macOS)
     func setSearchMode(_ mode: SearchMode) {
         searchMode = mode
     }
@@ -318,6 +312,7 @@ final class SearchViewModel: ViewModelBase {
         return ldm.getBook([tableInt]).first
     }
 
+    #if os(macOS)
     /// Load data library lalu isi `libraryViewManager` dengan kategori.
     func loadLibraryDataForDisplay(
         libraryViewManager: LibraryViewManager?,
@@ -549,55 +544,66 @@ final class SearchViewModel: ViewModelBase {
     }
 
     private func resolveTablesToScan() -> Set<String> {
-        #if os(iOS)
-        if selectedBookIds.isEmpty {
-            return ldm.getCheckedTables(displayedCategories)
-        } else {
-            return Set(selectedBookIds.map { "b\($0)" })
-        }
-        #else
         if !selectedBookIds.isEmpty {
             return Set(selectedBookIds.map { "b\($0)" })
-        } else if !targetBookId.isEmpty {
-            return [targetBookId]
-        } else {
-            return []
         }
+        #if os(iOS)
+        return ldm.getCheckedTables(displayedCategories)
+        #else
+        if !targetBookId.isEmpty {
+            return [targetBookId]
+        }
+        return []
+        #endif
+    }
+
+    private func emitInitialize(total: Int) {
+        totalTables = total
+        completedTables = 0
+        #if os(macOS)
+        searchDidInitialize.send(total)
+        #endif
+    }
+
+    private func emitTableProgress(completed: Int) {
+        completedTables = completed
+        #if os(macOS)
+        searchProgressDidUpdate.send((completed: completed, totalTables))
+        #endif
+    }
+
+    private func emitRowProgress(tableName: String, current: Int, total: Int) {
+        currentTable = tableName
+        completedRowsInTable = current
+        totalRowsInTable = total
+        #if os(macOS)
+        rowProgressDidUpdate.send((completed: current, total: total))
+        #endif
+    }
+
+    private func emitResult(item: SearchResultItem) {
+        results.append(item)
+        #if os(macOS)
+        searchDidReceiveResult.send()
+        #endif
+    }
+
+    private func emitComplete() {
+        #if os(macOS)
+        completedTables = totalTables
+        searchDidComplete.send()
         #endif
     }
 
     private func makeLibrarySearchCallbacks() -> LibrarySearchCallbacks {
         LibrarySearchCallbacks(
-            onInitialize: { [weak self] total in
-                self?.totalTables = total
-                self?.completedTables = 0
-                #if os(macOS)
-                self?.searchDidInitialize.send(total)
-                #endif
-            },
-            onTableProgress: { [weak self] completed in
-                self?.completedTables = completed
-                #if os(macOS)
-                self?.searchProgressDidUpdate.send((completed: completed, self?.totalTables ?? 0))
-                #endif
-            },
+            onInitialize: { [weak self] total in self?.emitInitialize(total: total) },
+            onTableProgress: { [weak self] completed in self?.emitTableProgress(completed: completed) },
             onRowProgress: { [weak self] _, tableName, current, total in
-                self?.currentTable = tableName
-                self?.completedRowsInTable = current
-                self?.totalRowsInTable = total
-                #if os(macOS)
-                self?.rowProgressDidUpdate.send((completed: current, total: total))
-                #endif
+                self?.emitRowProgress(tableName: tableName, current: current, total: total)
             },
-            completion: { [weak self] item in
-                self?.results.append(item)
-                #if os(macOS)
-                self?.searchDidReceiveResult.send()
-                #endif
-            },
-            onComplete: { [weak self] in
-                self?.stopSearch()
-            }
+            completion: { [weak self] item in self?.emitResult(item: item) },
+            onComplete: { [weak self] in self?.stopSearch() }
         )
     }
 
@@ -607,11 +613,7 @@ final class SearchViewModel: ViewModelBase {
         searchWork = nil
         isSearching = false
         isPaused = false
-
-        #if os(macOS)
-        completedTables = totalTables
-        searchDidComplete.send()
-        #endif
+        emitComplete()
     }
 
     func clearResults() {

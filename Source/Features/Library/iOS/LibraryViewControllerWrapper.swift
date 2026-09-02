@@ -29,7 +29,6 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
         Task {
             await context.coordinator.viewModel.loadLibrary()
             await MainActor.run {
-                context.coordinator.viewModel._showOnlyDownloadedTracker = context.coordinator.viewModel.showOnlyDownloaded
                 let categories = context.coordinator.viewModel.displayedCategories
                 let showLoadMore = context.coordinator.viewModel.hasMoreAuthors
                 vc.showLoadMore = showLoadMore
