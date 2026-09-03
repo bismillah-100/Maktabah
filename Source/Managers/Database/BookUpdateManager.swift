@@ -80,52 +80,7 @@ final class BookUpdateManager {
             print("📋 [Fetch Updates] Found \(entries.count) entries in CSV")
         #endif
 
-        // Convert ke BookUpdateItem dengan informasi dari database
-        var items: [BookUpdateItem] = []
-
-        for entry in entries {
-            // Ambil nama buku dari LibraryDataManager
-            let bookName =
-            LibraryDataManager.shared.getBook([entry.bkid]).first?.book
-                ?? entry.bk
-
-            // Periksa status versi saat ini di database
-            let versionState = (try? getBookVersionState(bookId: entry.bkid))
-                ?? .unknownVersion
-            let currentVersion = versionState.currentVersion
-
-            let item = BookUpdateItem(
-                id: entry.bkid,
-                bookName: bookName,
-                category: entry.category,
-                existsInLibrary: versionState.existsInLibrary,
-                currentVersion: currentVersion,
-                newVersion: entry.versionName,
-                fileSize: entry.fileSize,
-                downloadURL: entry.downloadURL
-            )
-
-            // Set status awal
-            if item.newBook {
-                item.status = .new
-            } else if item.needsUpdate {
-                item.status = .needsUpdate
-            } else {
-                item.status = .upToDate
-            }
-
-            items.append(item)
-
-            #if DEBUG
-                if item.needsUpdate {
-                    let currentVersionText = currentVersion.map(String.init) ??
-                        (item.newBook ? "NEW" : "NULL")
-                    print(
-                        "🔄 [Fetch Updates] Book \(entry.bkid) needs update: \(currentVersionText) → \(entry.versionName)"
-                    )
-                }
-            #endif
-        }
+        let items = entries.map { makeUpdateItem(from: $0) }
 
         #if DEBUG
             let needsUpdateCount = items.reduce(into: 0) { count, item in
@@ -139,12 +94,48 @@ final class BookUpdateManager {
         return items
     }
 
+    private func makeUpdateItem(from entry: BookIndexEntry) -> BookUpdateItem {
+        let bookName = LibraryDataManager.shared.getBook([entry.bkid]).first?.book ?? entry.bk
+        let versionState = (try? getBookVersionState(bookId: entry.bkid)) ?? .unknownVersion
+        let currentVersion = versionState.currentVersion
+
+        let item = BookUpdateItem(
+            id: entry.bkid,
+            bookName: bookName,
+            category: entry.category,
+            existsInLibrary: versionState.existsInLibrary,
+            currentVersion: currentVersion,
+            newVersion: entry.versionName,
+            fileSize: entry.fileSize,
+            downloadURL: entry.downloadURL
+        )
+
+        if item.newBook {
+            item.status = .new
+        } else if item.needsUpdate {
+            item.status = .needsUpdate
+        } else {
+            item.status = .upToDate
+        }
+
+        #if DEBUG
+            if item.needsUpdate {
+                let currentVersionText = currentVersion.map(String.init) ?? (item.newBook ? "NEW" : "NULL")
+                print(
+                    "🔄 [Fetch Updates] Book \(entry.bkid) needs update: \(currentVersionText) → \(entry.versionName)"
+                )
+            }
+        #endif
+
+        return item
+    }
+
     private func getBookVersionState(bookId: Int) throws -> BookVersionState {
         guard let mainPath = AppConfig.mainDatabasePath else {
             return .unknownVersion
         }
         let db = try openDatabase(path: mainPath)
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
 
         guard let versionColumn = resolveVersionColumn(in: db) else {
             return .unknownVersion
@@ -320,23 +311,11 @@ final class BookUpdateManager {
             SQLite: true,
             filePrefix: "book_\(metadata.bkid)"
         )
-
-        let ftsSourceURL = newWorkingDirectory.appendingPathComponent(
-            "b\(metadata.bkid)_fts_source_\(UUID().uuidString).sqlite"
+        let ftsSourceURL = try prepareFtsSourceAndRename(
+            downloadedBookURL: downloadedBookURL,
+            bookId: metadata.bkid,
+            workingDirectory: newWorkingDirectory
         )
-        do {
-            if FileManager.default.fileExists(atPath: ftsSourceURL.path) {
-                try FileManager.default.removeItem(at: ftsSourceURL)
-            }
-            try FileManager.default.copyItem(at: downloadedBookURL, to: ftsSourceURL)
-        } catch {
-            try? FileManager.default.removeItem(at: ftsSourceURL)
-            try? FileManager.default.removeItem(at: downloadedBookURL)
-            throw error
-        }
-
-        try renameTablesIfNeeded(at: downloadedBookURL, to: metadata.bkid)
-        try renameTablesIfNeeded(at: ftsSourceURL, to: metadata.bkid)
 
         var authorContext: AuthorContext?
         if let authId = metadata.authno, let authEntry = authIndex[authId],
@@ -357,6 +336,30 @@ final class BookUpdateManager {
             authorContext: authorContext,
             workingDirectory: workingDirectory
         )
+    }
+
+    private func prepareFtsSourceAndRename(
+        downloadedBookURL: URL,
+        bookId: Int,
+        workingDirectory: URL
+    ) throws -> URL {
+        let ftsSourceURL = workingDirectory.appendingPathComponent(
+            "b\(bookId)_fts_source_\(UUID().uuidString).sqlite"
+        )
+        do {
+            if FileManager.default.fileExists(atPath: ftsSourceURL.path) {
+                try FileManager.default.removeItem(at: ftsSourceURL)
+            }
+            try FileManager.default.copyItem(at: downloadedBookURL, to: ftsSourceURL)
+        } catch {
+            try? FileManager.default.removeItem(at: ftsSourceURL)
+            try? FileManager.default.removeItem(at: downloadedBookURL)
+            throw error
+        }
+
+        try renameTablesIfNeeded(at: downloadedBookURL, to: bookId)
+        try renameTablesIfNeeded(at: ftsSourceURL, to: bookId)
+        return ftsSourceURL
     }
 
     func importOfflineUpdate(
@@ -398,17 +401,11 @@ final class BookUpdateManager {
         )
         try FileManager.default.copyItem(at: url, to: downloadedBookURL)
 
-        let ftsSourceURL = workingDirectory.appendingPathComponent(
-            "b\(metadata.bkid)_fts_source_\(UUID().uuidString).sqlite"
+        let ftsSourceURL = try prepareFtsSourceAndRename(
+            downloadedBookURL: downloadedBookURL,
+            bookId: metadata.bkid,
+            workingDirectory: workingDirectory
         )
-        try FileManager.default.copyItem(at: url, to: ftsSourceURL)
-
-        #if DEBUG
-            print("[Import] Initial: \(listAllTables(at: downloadedBookURL))")
-        #endif
-
-        try renameTablesIfNeeded(at: downloadedBookURL, to: metadata.bkid)
-        try renameTablesIfNeeded(at: ftsSourceURL, to: metadata.bkid)
 
         let entry = BookIndexEntry(
             bkid: metadata.bkid,
@@ -423,7 +420,7 @@ final class BookUpdateManager {
         if let authorRow = authorRow, let specialPath = AppConfig.specialDatabasePath {
             do {
                 let specialDb = try openDatabase(path: specialPath)
-                defer { sqlite3_close(specialDb) }
+                defer { sqlite3_close_v2(specialDb) }
                 try insertAuthorRow(authorRow, into: specialDb)
             } catch {
                 DispatchQueue.main.async {
@@ -435,47 +432,24 @@ final class BookUpdateManager {
             }
         }
 
-        let exists = try bookExists(id: metadata.bkid)
-
-        try convertBookDatabase(
-            at: downloadedBookURL,
-            bookId: metadata.bkid
+        let stagedUpdate = StagedBookUpdate(
+            entry: entry,
+            metadata: metadata,
+            downloadedBookURL: downloadedBookURL,
+            ftsSourceURL: ftsSourceURL,
+            authorContext: nil,
+            workingDirectory: workingDirectory
         )
 
-        try replaceArchiveDatabase(
-            with: downloadedBookURL,
-            archiveId: metadata.archive,
-            bookId: metadata.bkid,
-            ftsSourceURL: ftsSourceURL
-        )
-
-        if !exists {
-            try insertBookMetadata(metadata)
-        } else {
-            try updateBookMetadata(metadata)
-        }
-
-        // Cleanup
-        try? FileManager.default.removeItem(at: downloadedBookURL)
-        try? FileManager.default.removeItem(at: ftsSourceURL)
-
-        return BookUpdateResult(
-            bookId: metadata.bkid,
-            catId: entry.category,
-            action: exists ? .updated : .inserted
-        )
+        return try await applyStagedBookUpdate(stagedUpdate, isOfflineImport: true)
     }
 
     private func preCreateArchiveTables(archiveId: Int, bookId: Int) throws {
         guard let targetPath = AppConfig.archiveDatabasePath(archiveId: archiveId) else { return }
 
         // Membuka database arsip (misal 20.sqlite)
-        var db: OpaquePointer?
-        guard sqlite3_open_v2(targetPath, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nil) == SQLITE_OK, let db else {
-            sqlite3_close(db)
-            return
-        }
-        defer { sqlite3_close(db) }
+        let db = try openDatabase(path: targetPath)
+        defer { sqlite3_close_v2(db) }
 
         #if DEBUG
             print("[Import] Pre-creating tables in archive \(archiveId)...")
@@ -489,7 +463,7 @@ final class BookUpdateManager {
     #if DEBUG
     private func listAllTables(at url: URL) -> [String] {
         guard let db = try? openDatabase(path: url.path) else { return [] }
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
         var objects: [String] = []
         let sql = "SELECT name FROM sqlite_master WHERE type IN ('table', 'view');"
         var stmt: OpaquePointer?
@@ -523,7 +497,8 @@ final class BookUpdateManager {
 
     func applyStagedBookUpdate(
         _ stagedUpdate: StagedBookUpdate,
-        knownExists: Bool? = nil
+        knownExists: Bool? = nil,
+        isOfflineImport: Bool = false
     ) async throws -> BookUpdateResult {
         defer {
             try? FileManager.default.removeItem(at: stagedUpdate.ftsSourceURL)
@@ -536,17 +511,20 @@ final class BookUpdateManager {
         } else {
             exists = try bookExists(id: stagedUpdate.metadata.bkid)
         }
-        let needsUpdate = try bookNeedsUpdate(
-            id: stagedUpdate.metadata.bkid,
-            newVersion: stagedUpdate.entry.versionName
-        )
-
-        if exists, !needsUpdate {
-            return BookUpdateResult(
-                bookId: stagedUpdate.metadata.bkid,
-                catId: stagedUpdate.entry.category,
-                action: .skipped
+        
+        if !isOfflineImport {
+            let needsUpdate = try bookNeedsUpdate(
+                id: stagedUpdate.metadata.bkid,
+                newVersion: stagedUpdate.entry.versionName
             )
+
+            if exists, !needsUpdate {
+                return BookUpdateResult(
+                    bookId: stagedUpdate.metadata.bkid,
+                    catId: stagedUpdate.entry.category,
+                    action: .skipped
+                )
+            }
         }
 
         if let authorContext = stagedUpdate.authorContext {
@@ -562,15 +540,23 @@ final class BookUpdateManager {
             at: stagedUpdate.downloadedBookURL,
             bookId: stagedUpdate.metadata.bkid
         )
-        try replaceArchiveDatabase(
-            with: stagedUpdate.downloadedBookURL,
+        try await BookArchiveSingleFlight.shared.run(
             archiveId: stagedUpdate.metadata.archive,
-            bookId: stagedUpdate.metadata.bkid,
-            ftsSourceURL: stagedUpdate.ftsSourceURL
-        )
+            bookId: stagedUpdate.metadata.bkid
+        ) { [weak self] in
+            guard let self else { return }
+            try self.replaceArchiveDatabase(
+                with: stagedUpdate.downloadedBookURL,
+                archiveId: stagedUpdate.metadata.archive,
+                bookId: stagedUpdate.metadata.bkid,
+                ftsSourceURL: stagedUpdate.ftsSourceURL
+            )
+        }
 
         if !exists {
             try insertBookMetadata(stagedUpdate.metadata)
+        } else if isOfflineImport {
+            try updateBookMetadata(stagedUpdate.metadata)
         } else {
             try updateBookVersion(stagedUpdate.metadata)
         }
@@ -601,7 +587,7 @@ final class BookUpdateManager {
         #endif
 
         let db = try openDatabase(path: mainPath)
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
 
         guard let versionColumn = resolveVersionColumn(in: db) else {
             #if DEBUG
@@ -669,30 +655,39 @@ final class BookUpdateManager {
         return needsUpdate
     }
 
+    private func bindBookMetadataPayload(
+        _ metadata: BookMetadata,
+        to stmt: OpaquePointer?,
+        startingAt baseIndex: Int32
+    ) {
+        sqlite3_bind_int64(stmt, baseIndex, Int64(metadata.cat ?? 0))
+        sqlite3_bind_text(stmt, baseIndex + 1, metadata.bk, -1, sqliteTransient)
+        sqlite3_bind_int64(stmt, baseIndex + 2, Int64(metadata.archive))
+        sqlite3_bind_text(stmt, baseIndex + 3, metadata.betaka ?? "", -1, sqliteTransient)
+        sqlite3_bind_int64(stmt, baseIndex + 4, Int64(metadata.authno ?? 0))
+        sqlite3_bind_text(stmt, baseIndex + 5, metadata.inf ?? "", -1, sqliteTransient)
+        if let tafseerNam = metadata.tafseerNam {
+            sqlite3_bind_text(stmt, baseIndex + 6, tafseerNam, -1, sqliteTransient)
+        } else {
+            sqlite3_bind_null(stmt, baseIndex + 6)
+        }
+        if let bVer = metadata.bVer {
+            sqlite3_bind_int64(stmt, baseIndex + 7, Int64(bVer))
+        } else {
+            sqlite3_bind_null(stmt, baseIndex + 7)
+        }
+        if let pdfCs = metadata.pdfCs {
+            sqlite3_bind_int64(stmt, baseIndex + 8, Int64(pdfCs))
+        } else {
+            sqlite3_bind_null(stmt, baseIndex + 8)
+        }
+    }
+
     private func insertBookMetadata(_ metadata: BookMetadata) throws {
         guard let mainPath = AppConfig.mainDatabasePath else { return }
 
-        var db: OpaquePointer?
-        guard
-            sqlite3_open_v2(
-                mainPath,
-                &db,
-                SQLITE_OPEN_READWRITE,
-                nil
-            ) == SQLITE_OK,
-            let db
-        else {
-            let message =
-            db.map { String(cString: sqlite3_errmsg($0)) }
-            ?? "Failed to open main.sqlite"
-            sqlite3_close(db)
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: message]
-            )
-        }
-        defer { sqlite3_close(db) }
+        let db = try openDatabase(path: mainPath)
+        defer { sqlite3_close_v2(db) }
 
         let sql = """
         INSERT INTO `0bok` (`bkid`, `cat`, `bk`, `Archive`, `betaka`, `authno`, `inf`, `TafseerNam`, `bVer`, `PdfCs`)
@@ -700,85 +695,28 @@ final class BookUpdateManager {
         """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(db))
-                ]
-            )
+            throw sqliteError(db, message: "Gagal prepare INSERT metadata")
         }
         defer { sqlite3_finalize(stmt) }
 
         sqlite3_bind_int64(stmt, 1, Int64(metadata.bkid))
-        sqlite3_bind_int64(stmt, 2, Int64(metadata.cat ?? 0))
-        sqlite3_bind_text(stmt, 3, metadata.bk, -1, sqliteTransient)
-        sqlite3_bind_int64(stmt, 4, Int64(metadata.archive))
-        sqlite3_bind_text(stmt, 5, metadata.betaka ?? "", -1, sqliteTransient)
-        sqlite3_bind_int64(stmt, 6, Int64(metadata.authno ?? 0))
-        sqlite3_bind_text(stmt, 7, metadata.inf ?? "", -1, sqliteTransient)
-        if let tafseerNam = metadata.tafseerNam {
-            sqlite3_bind_text(stmt, 8, tafseerNam, -1, sqliteTransient)
-        } else {
-            sqlite3_bind_null(stmt, 8)
-        }
-        if let bVer = metadata.bVer {
-            sqlite3_bind_int64(stmt, 9, Int64(bVer))
-        } else {
-            sqlite3_bind_null(stmt, 9)
-        }
-        if let pdfCs = metadata.pdfCs {
-            sqlite3_bind_int64(stmt, 10, Int64(pdfCs))
-        } else {
-            sqlite3_bind_null(stmt, 10)
-        }
+        bindBookMetadataPayload(metadata, to: stmt, startingAt: 2)
 
         guard sqlite3_step(stmt) == SQLITE_DONE else {
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(db))
-                ]
-            )
+            throw sqliteError(db, message: "Gagal insert metadata")
         }
     }
 
     private func updateBookVersion(_ metadata: BookMetadata) throws {
         guard let mainPath = AppConfig.mainDatabasePath else { return }
 
-        var db: OpaquePointer?
-        guard
-            sqlite3_open_v2(
-                mainPath,
-                &db,
-                SQLITE_OPEN_READWRITE,
-                nil
-            ) == SQLITE_OK,
-            let db
-        else {
-            let message =
-            db.map { String(cString: sqlite3_errmsg($0)) }
-            ?? "Failed to open main.sqlite"
-            sqlite3_close(db)
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: message]
-            )
-        }
-        defer { sqlite3_close(db) }
+        let db = try openDatabase(path: mainPath)
+        defer { sqlite3_close_v2(db) }
 
         let sql = "UPDATE `0bok` SET `bVer` = ? WHERE `bkid` = ?;"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(db))
-                ]
-            )
+            throw sqliteError(db, message: "Gagal prepare update version")
         }
         defer { sqlite3_finalize(stmt) }
 
@@ -790,13 +728,7 @@ final class BookUpdateManager {
         sqlite3_bind_int64(stmt, 2, Int64(metadata.bkid))
 
         guard sqlite3_step(stmt) == SQLITE_DONE else {
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(db))
-                ]
-            )
+            throw sqliteError(db, message: "Gagal update version")
         }
         #if DEBUG
             print("[Update Version] bVer berhasil diperbarui ke \(metadata.bVer ?? 0) untuk book \(metadata.bkid)")
@@ -806,27 +738,8 @@ final class BookUpdateManager {
     private func updateBookMetadata(_ metadata: BookMetadata) throws {
         guard let mainPath = AppConfig.mainDatabasePath else { return }
 
-        var db: OpaquePointer?
-        guard
-            sqlite3_open_v2(
-                mainPath,
-                &db,
-                SQLITE_OPEN_READWRITE,
-                nil
-            ) == SQLITE_OK,
-            let db
-        else {
-            let message =
-            db.map { String(cString: sqlite3_errmsg($0)) }
-            ?? "Failed to open main.sqlite"
-            sqlite3_close(db)
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: message]
-            )
-        }
-        defer { sqlite3_close(db) }
+        let db = try openDatabase(path: mainPath)
+        defer { sqlite3_close_v2(db) }
 
         let sql = """
         UPDATE `0bok` SET 
@@ -843,47 +756,15 @@ final class BookUpdateManager {
         """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(db))
-                ]
-            )
+            throw sqliteError(db, message: "Gagal prepare UPDATE metadata")
         }
         defer { sqlite3_finalize(stmt) }
 
-        sqlite3_bind_int64(stmt, 1, Int64(metadata.cat ?? 0))
-        sqlite3_bind_text(stmt, 2, metadata.bk, -1, sqliteTransient)
-        sqlite3_bind_int64(stmt, 3, Int64(metadata.archive))
-        sqlite3_bind_text(stmt, 4, metadata.betaka ?? "", -1, sqliteTransient)
-        sqlite3_bind_int64(stmt, 5, Int64(metadata.authno ?? 0))
-        sqlite3_bind_text(stmt, 6, metadata.inf ?? "", -1, sqliteTransient)
-        if let tafseerNam = metadata.tafseerNam {
-            sqlite3_bind_text(stmt, 7, tafseerNam, -1, sqliteTransient)
-        } else {
-            sqlite3_bind_null(stmt, 7)
-        }
-        if let bVer = metadata.bVer {
-            sqlite3_bind_int64(stmt, 8, Int64(bVer))
-        } else {
-            sqlite3_bind_null(stmt, 8)
-        }
-        if let pdfCs = metadata.pdfCs {
-            sqlite3_bind_int64(stmt, 9, Int64(pdfCs))
-        } else {
-            sqlite3_bind_null(stmt, 9)
-        }
+        bindBookMetadataPayload(metadata, to: stmt, startingAt: 1)
         sqlite3_bind_int64(stmt, 10, Int64(metadata.bkid))
 
         guard sqlite3_step(stmt) == SQLITE_DONE else {
-            throw NSError(
-                domain: "BookUpdate",
-                code: -1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: String(cString: sqlite3_errmsg(db))
-                ]
-            )
+            throw sqliteError(db, message: "Gagal update metadata")
         }
         #if DEBUG
             print("[Update Metadata] Metadata berhasil diperbarui untuk book \(metadata.bkid)")
@@ -894,77 +775,89 @@ final class BookUpdateManager {
         guard let mainPath = AppConfig.mainDatabasePath else { return }
 
         let db = try openDatabase(path: mainPath)
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
 
-        // Step 0: Ambil archiveId dari main DB
+        let archiveId = resolveArchiveId(for: oldId, in: db)
+        let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId)
+        let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
+
+        if let archivePath {
+            try renameArchiveTables(archivePath: archivePath, oldId: oldId, newId: newId)
+        }
+
+        if let ftsPath {
+            do {
+                try renameFtsTables(ftsPath: ftsPath, oldId: oldId, newId: newId)
+            } catch {
+                rollbackBookIdRenames(archivePath: archivePath, ftsPath: nil, oldId: oldId, newId: newId)
+                throw error
+            }
+        }
+
+        do {
+            try updateBookIdInMainDb(db: db, oldId: oldId, newId: newId)
+        } catch {
+            rollbackBookIdRenames(archivePath: archivePath, ftsPath: ftsPath, oldId: oldId, newId: newId)
+            throw error
+        }
+    }
+
+    private func resolveArchiveId(for bookId: Int, in db: OpaquePointer) -> Int {
         var archiveId: Int = 20
         let selectSql = "SELECT `Archive` FROM `0bok` WHERE `bkid` = ? LIMIT 1;"
         var stmt: OpaquePointer?
         if sqlite3_prepare_v2(db, selectSql, -1, &stmt, nil) == SQLITE_OK {
-            sqlite3_bind_int64(stmt, 1, Int64(oldId))
+            sqlite3_bind_int64(stmt, 1, Int64(bookId))
             if sqlite3_step(stmt) == SQLITE_ROW {
                 archiveId = Int(sqlite3_column_int64(stmt, 0))
             }
         }
         sqlite3_finalize(stmt)
+        return archiveId
+    }
 
-        let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId)
-        let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
+    private func renameArchiveTables(archivePath: String, oldId: Int, newId: Int) throws {
+        let archiveDb = try openDatabase(path: archivePath)
+        defer { sqlite3_close_v2(archiveDb) }
 
-        // Phase 1: Rename tabel archive DULU (sebelum main DB disentuh).
-        if let archivePath {
-            let archiveDb = try openDatabase(path: archivePath)
-            defer { sqlite3_close(archiveDb) }
+        _ = sqlite3_exec(archiveDb, "DROP TABLE IF EXISTS \"b\(newId)\";", nil, nil, nil)
+        _ = sqlite3_exec(archiveDb, "DROP INDEX IF EXISTS \"b\(newId)\";", nil, nil, nil)
+        _ = sqlite3_exec(archiveDb, "DROP TABLE IF EXISTS \"t\(newId)\";", nil, nil, nil)
+        _ = sqlite3_exec(archiveDb, "DROP INDEX IF EXISTS \"t\(newId)\";", nil, nil, nil)
 
-            // Tambahan Proteksi: Hapus tabel atau indeks target lama jika sudah ada
-            // untuk menghindari bentrok nama (Error: table or index already exists)
-            _ = sqlite3_exec(archiveDb, "DROP TABLE IF EXISTS \"b\(newId)\";", nil, nil, nil)
-            _ = sqlite3_exec(archiveDb, "DROP INDEX IF EXISTS \"b\(newId)\";", nil, nil, nil)
-            _ = sqlite3_exec(archiveDb, "DROP TABLE IF EXISTS \"t\(newId)\";", nil, nil, nil)
-            _ = sqlite3_exec(archiveDb, "DROP INDEX IF EXISTS \"t\(newId)\";", nil, nil, nil)
-
-            let sqlB = "ALTER TABLE \"b\(oldId)\" RENAME TO \"b\(newId)\";"
-            guard sqlite3_exec(archiveDb, sqlB, nil, nil, nil) == SQLITE_OK else {
-                throw NSError(
-                    domain: "BookUpdate", code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel b\(oldId) di archive."]
-                )
-            }
-
-            let sqlT = "ALTER TABLE \"t\(oldId)\" RENAME TO \"t\(newId)\";"
-            if sqlite3_exec(archiveDb, sqlT, nil, nil, nil) != SQLITE_OK {
-                // Rollback: kembalikan b rename
-                _ = sqlite3_exec(archiveDb,
-                    "ALTER TABLE \"b\(newId)\" RENAME TO \"b\(oldId)\";", nil, nil, nil)
-                throw NSError(
-                    domain: "BookUpdate", code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel t\(oldId) di archive."]
-                )
-            }
+        let sqlB = "ALTER TABLE \"b\(oldId)\" RENAME TO \"b\(newId)\";"
+        guard sqlite3_exec(archiveDb, sqlB, nil, nil, nil) == SQLITE_OK else {
+            throw NSError(
+                domain: "BookUpdate", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel b\(oldId) di archive."]
+            )
         }
 
-        // Phase 2: Rename tabel FTS.
-        if let ftsPath {
-            let ftsDb = try openDatabase(path: ftsPath)
-            defer { sqlite3_close(ftsDb) }
-
-            // Tambahan Proteksi: Hapus tabel FTS target lama jika ada
-            _ = sqlite3_exec(ftsDb, "DROP TABLE IF EXISTS \"b\(newId)_fts\";", nil, nil, nil)
-
-            let sqlFTS = "ALTER TABLE \"b\(oldId)_fts\" RENAME TO \"b\(newId)_fts\";"
-            if sqlite3_exec(ftsDb, sqlFTS, nil, nil, nil) != SQLITE_OK {
-                rollbackBookIdRenames(archivePath: archivePath, ftsPath: nil,
-                                      oldId: oldId, newId: newId)
-                throw NSError(
-                    domain: "BookUpdate", code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel FTS b\(oldId)_fts."]
-                )
-            }
+        let sqlT = "ALTER TABLE \"t\(oldId)\" RENAME TO \"t\(newId)\";"
+        if sqlite3_exec(archiveDb, sqlT, nil, nil, nil) != SQLITE_OK {
+            _ = sqlite3_exec(archiveDb, "ALTER TABLE \"b\(newId)\" RENAME TO \"b\(oldId)\";", nil, nil, nil)
+            throw NSError(
+                domain: "BookUpdate", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel t\(oldId) di archive."]
+            )
         }
+    }
 
-        // Phase 3: Update main DB TERAKHIR.
-        // Tambahan Proteksi: Hapus baris dengan newId di main DB jika sudah ada.
-        // Ini krusial agar query UPDATE di bawah tidak melanggar constraint PRIMARY KEY atau UNIQUE pada `0bok`.
+    private func renameFtsTables(ftsPath: String, oldId: Int, newId: Int) throws {
+        let ftsDb = try openDatabase(path: ftsPath)
+        defer { sqlite3_close_v2(ftsDb) }
+
+        _ = sqlite3_exec(ftsDb, "DROP TABLE IF EXISTS \"b\(newId)_fts\";", nil, nil, nil)
+        let sqlFTS = "ALTER TABLE \"b\(oldId)_fts\" RENAME TO \"b\(newId)_fts\";"
+        guard sqlite3_exec(ftsDb, sqlFTS, nil, nil, nil) == SQLITE_OK else {
+            throw NSError(
+                domain: "BookUpdate", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel FTS b\(oldId)_fts."]
+            )
+        }
+    }
+
+    private func updateBookIdInMainDb(db: OpaquePointer, oldId: Int, newId: Int) throws {
         let deleteSql = "DELETE FROM `0bok` WHERE `bkid` = ?;"
         var deleteStmt: OpaquePointer?
         if sqlite3_prepare_v2(db, deleteSql, -1, &deleteStmt, nil) == SQLITE_OK {
@@ -976,21 +869,17 @@ final class BookUpdateManager {
         let updateSql = "UPDATE `0bok` SET `bkid` = ? WHERE `bkid` = ?;"
         var updateStmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, updateSql, -1, &updateStmt, nil) == SQLITE_OK else {
-            rollbackBookIdRenames(archivePath: archivePath, ftsPath: ftsPath,
-                                  oldId: oldId, newId: newId)
             throw NSError(
                 domain: "BookUpdate", code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Gagal prepare update bkid di main database."]
             )
         }
+        defer { sqlite3_finalize(updateStmt) }
+
         sqlite3_bind_int64(updateStmt, 1, Int64(newId))
         sqlite3_bind_int64(updateStmt, 2, Int64(oldId))
-        let stepResult = sqlite3_step(updateStmt)
-        sqlite3_finalize(updateStmt)
 
-        if stepResult != SQLITE_DONE {
-            rollbackBookIdRenames(archivePath: archivePath, ftsPath: ftsPath,
-                                  oldId: oldId, newId: newId)
+        guard sqlite3_step(updateStmt) == SQLITE_DONE else {
             throw NSError(
                 domain: "BookUpdate", code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Gagal update bkid di main database."]
@@ -1007,14 +896,14 @@ final class BookUpdateManager {
         newId: Int
     ) {
         if let archivePath, let archiveDb = try? openDatabase(path: archivePath) {
-            defer { sqlite3_close(archiveDb) }
+            defer { sqlite3_close_v2(archiveDb) }
             _ = sqlite3_exec(archiveDb,
                 "ALTER TABLE \"b\(newId)\" RENAME TO \"b\(oldId)\";", nil, nil, nil)
             _ = sqlite3_exec(archiveDb,
                 "ALTER TABLE \"t\(newId)\" RENAME TO \"t\(oldId)\";", nil, nil, nil)
         }
         if let ftsPath, let ftsDb = try? openDatabase(path: ftsPath) {
-            defer { sqlite3_close(ftsDb) }
+            defer { sqlite3_close_v2(ftsDb) }
             _ = sqlite3_exec(ftsDb,
                 "ALTER TABLE \"b\(newId)_fts\" RENAME TO \"b\(oldId)_fts\";", nil, nil, nil)
         }
@@ -1028,14 +917,17 @@ final class BookUpdateManager {
     ) async throws {
         guard let specialPath = AppConfig.specialDatabasePath else { return }
 
-        let specialDb = try openDatabase(path: specialPath)
-        defer { sqlite3_close(specialDb) }
+        let needsUpdate: Bool = {
+            guard let checkDb = try? openDatabase(path: specialPath) else { return true }
+            defer { sqlite3_close_v2(checkDb) }
+            return authorNeedsUpdate(
+                authId: authId,
+                newVersion: newVersion,
+                in: checkDb
+            )
+        }()
 
-        if !authorNeedsUpdate(
-            authId: authId,
-            newVersion: newVersion,
-            in: specialDb
-        ) {
+        if !needsUpdate {
             return  // Skip jika versi sudah up-to-date
         }
 
@@ -1049,7 +941,7 @@ final class BookUpdateManager {
         }
 
         let newAuthDb = try openDatabase(path: downloadedAuthURL.path)
-        defer { sqlite3_close(newAuthDb) }
+        defer { sqlite3_close_v2(newAuthDb) }
 
         guard let row = fetchAuthorRow(authId: authId, in: newAuthDb) else {
             throw NSError(
@@ -1059,6 +951,8 @@ final class BookUpdateManager {
             )
         }
 
+        let specialDb = try openDatabase(path: specialPath)
+        defer { sqlite3_close_v2(specialDb) }
         try insertAuthorRow(row, into: specialDb)
     }
 
@@ -1091,7 +985,7 @@ final class BookUpdateManager {
         #endif
 
         let db = try openDatabase(path: url.path)
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
 
         let sql = """
             SELECT bkid, bk, cat, betaka, inf, authno, archive, TafseerNam, bVer, link, PdfCs
@@ -1115,35 +1009,26 @@ final class BookUpdateManager {
         sqlite3_bind_int64(stmt, 1, Int64(fallbackBookId))
         guard sqlite3_step(stmt) == SQLITE_ROW else { return nil }
 
-        let bkid = Int(sqlite3_column_int64(stmt, 0))
-        let bk = columnText(stmt, index: 1)
-        let cat = Int(sqlite3_column_int64(stmt, 2))
-        let betaka = columnText(stmt, index: 3)
-        let inf = columnText(stmt, index: 4)
-        let authno = Int(sqlite3_column_int64(stmt, 5))
-        let archive = Int(sqlite3_column_int64(stmt, 6))
-        let tafseerNam = columnText(stmt, index: 7)
-        let bVer = Int(sqlite3_column_int64(stmt, 8))
-        let link = columnText(stmt, index: 9)
-
-        var pdfCs: Int? = nil
-        if sqlite3_column_count(stmt) > 10 {
-            pdfCs = Int(sqlite3_column_int64(stmt, 10))
-        }
+        let pdfCs: Int? = sqlite3_column_count(stmt) > 10 ? Int(sqlite3_column_int64(stmt, 10)) : nil
 
         return BookMetadata(
-            bkid: bkid,
-            cat: cat,
-            bk: bk,
-            archive: archive,
-            betaka: betaka.isEmpty ? nil : betaka,
-            authno: authno,
-            inf: inf.isEmpty ? nil : inf,
-            tafseerNam: tafseerNam.isEmpty ? nil : tafseerNam,
-            bVer: bVer,
-            link: link.isEmpty ? nil : link,
+            bkid: Int(sqlite3_column_int64(stmt, 0)),
+            cat: Int(sqlite3_column_int64(stmt, 2)),
+            bk: columnText(stmt, index: 1),
+            archive: Int(sqlite3_column_int64(stmt, 6)),
+            betaka: optionalText(stmt, index: 3),
+            authno: Int(sqlite3_column_int64(stmt, 5)),
+            inf: optionalText(stmt, index: 4),
+            tafseerNam: optionalText(stmt, index: 7),
+            bVer: Int(sqlite3_column_int64(stmt, 8)),
+            link: optionalText(stmt, index: 9),
             pdfCs: pdfCs
         )
+    }
+
+    private func optionalText(_ stmt: OpaquePointer?, index: Int32) -> String? {
+        let text = columnText(stmt, index: index)
+        return text.isEmpty ? nil : text
     }
 
     private func getAuthorVersion(
@@ -1276,7 +1161,7 @@ final class BookUpdateManager {
 
     func convertBookDatabase(at url: URL, bookId: Int) throws {
         let db = try openDatabase(path: url.path)
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
 
         let tableName = "b\(bookId)"
         let tempTable = "\(tableName)_zstd"
@@ -1289,7 +1174,7 @@ final class BookUpdateManager {
             throw sqliteError(db, message: "Tabel \(tableName) tidak ditemukan di file sumber.")
         }
 
-        try withTransaction(db) {
+        try ArchiveDatabaseTools.withTransaction(db: db) {
             try exec(db, "DROP TABLE IF EXISTS \(tempTable);")
             let createSQL = ArchiveDatabaseTools.makeCreateTableSQL(
                 tableName: tempTable,
@@ -1336,38 +1221,12 @@ final class BookUpdateManager {
                 sqlite3_reset(insertStmt)
 
                 for (index, column) in columns.enumerated() {
-                    let colIndex = Int32(index)
-                    if column.name.lowercased() == "nass" {
-                        if let textPtr = sqlite3_column_text(selectStmt, colIndex)
-                        {
-                            let bytes = sqlite3_column_bytes(selectStmt, colIndex)
-                            let buffer = UnsafeBufferPointer(start: textPtr, count: Int(bytes))
-                            let text = String(decoding: buffer, as: UTF8.self)
-                            if let compressed = ReusableFunc.compressData(text) {
-                                _ = compressed.withUnsafeBytes { bytes in
-                                    sqlite3_bind_blob(
-                                        insertStmt,
-                                        colIndex + 1,
-                                        bytes.baseAddress,
-                                        Int32(compressed.count),
-                                        sqliteTransient
-                                    )
-                                }
-                            } else {
-                                sqlite3_bind_null(insertStmt, colIndex + 1)
-                            }
-                        } else {
-                            sqlite3_bind_null(insertStmt, colIndex + 1)
-                        }
-                    } else {
-                        if let selectStmt, let insertStmt {
-                            bindColumnValue(
-                                from: selectStmt,
-                                to: insertStmt,
-                                columnIndex: colIndex
-                            )
-                        }
-                    }
+                    bindConvertedColumn(
+                        from: selectStmt!,
+                        to: insertStmt!,
+                        column: column,
+                        colIndex: Int32(index)
+                    )
                 }
 
                 if sqlite3_step(insertStmt) != SQLITE_DONE {
@@ -1380,9 +1239,46 @@ final class BookUpdateManager {
         }
     }
 
+    private func bindConvertedColumn(
+        from selectStmt: OpaquePointer,
+        to insertStmt: OpaquePointer,
+        column: ArchiveDatabaseTools.TableColumnInfo,
+        colIndex: Int32
+    ) {
+        let bindIndex = colIndex + 1
+        if column.name.caseInsensitiveCompare("nass") == .orderedSame {
+            guard let textPtr = sqlite3_column_text(selectStmt, colIndex) else {
+                sqlite3_bind_null(insertStmt, bindIndex)
+                return
+            }
+            let bytes = sqlite3_column_bytes(selectStmt, colIndex)
+            let buffer = UnsafeBufferPointer(start: textPtr, count: Int(bytes))
+            let text = String(decoding: buffer, as: UTF8.self)
+            if let compressed = ReusableFunc.compressData(text) {
+                _ = compressed.withUnsafeBytes { rawBytes in
+                    sqlite3_bind_blob(
+                        insertStmt,
+                        bindIndex,
+                        rawBytes.baseAddress,
+                        Int32(compressed.count),
+                        sqliteTransient
+                    )
+                }
+            } else {
+                sqlite3_bind_null(insertStmt, bindIndex)
+            }
+        } else {
+            bindColumnValue(
+                from: selectStmt,
+                to: insertStmt,
+                columnIndex: colIndex
+            )
+        }
+    }
+
     private func renameTablesIfNeeded(at url: URL, to targetId: Int) throws {
         let db = try openDatabase(path: url.path)
-        defer { sqlite3_close(db) }
+        defer { sqlite3_close_v2(db) }
 
         let targetBTable = "b\(targetId)"
         let targetTTable = "t\(targetId)"
@@ -1441,22 +1337,26 @@ final class BookUpdateManager {
         guard let targetPath = AppConfig.archiveDatabasePath(archiveId: archiveId),
               let ftsDBPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
         else { return }
-        let db = try openDatabase(path: targetPath)
-        defer { sqlite3_close(db) }
+        var dbPtr: OpaquePointer? = try openDatabase(path: targetPath)
+        guard let db = dbPtr else { return }
+        defer {
+            if let db = dbPtr {
+                try? exec(db, "DETACH DATABASE fts_db;")
+                try? exec(db, "DETACH DATABASE fts_source_db;")
+                try? exec(db, "DETACH DATABASE source_db;")
+                sqlite3_close_v2(db)
+            }
+        }
 
         try db.safeAttachDatabase(path: sourceURL.path, schema: "source_db")
         try db.safeAttachDatabase(path: ftsSourceURL.path, schema: "fts_source_db")
         try db.safeAttachDatabase(path: ftsDBPath, schema: "fts_db")
-        defer {
-            try? exec(db, "DETACH DATABASE fts_db;")
-            try? exec(db, "DETACH DATABASE fts_source_db;")
-            try? exec(db, "DETACH DATABASE source_db;")
-        }
 
         let tableName = "b\(bookId)"
         let tocTable = "t\(bookId)"
         let ftsTable = "\(tableName)_fts"
 
+        // 1. Copy tabel data dan TOC ke main dalam transaksi atomik
         try ArchiveDatabaseTools.withTransaction(db: db) {
             try ArchiveDatabaseTools.copyTable(
                 db: db,
@@ -1469,15 +1369,23 @@ final class BookUpdateManager {
                 sourceSchema: "source_db",
                 tableName: tocTable
             )
-
-            try ArchiveDatabaseTools.buildFTS(
-                db: db,
-                ftsSchema: "fts_db",
-                ftsTable: ftsTable,
-                sourceSchema: "fts_source_db",
-                sourceTable: tableName
-            )
         }
+
+        // 2. Build FTS terpisah di luar transaksi main
+        // (buildFTS memiliki transaksi internal sendiri untuk batch insert)
+        try ArchiveDatabaseTools.buildFTS(
+            db: db,
+            ftsSchema: "fts_db",
+            ftsTable: ftsTable,
+            sourceSchema: "fts_source_db",
+            sourceTable: tableName
+        )
+
+        try? exec(db, "DETACH DATABASE fts_db;")
+        try? exec(db, "DETACH DATABASE fts_source_db;")
+        try? exec(db, "DETACH DATABASE source_db;")
+        sqlite3_close_v2(db)
+        dbPtr = nil
 
         IntegrationCache.shared.markIntegrated(
             bookId: bookId,
@@ -1605,38 +1513,20 @@ final class BookUpdateManager {
         var db: OpaquePointer?
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX
         if sqlite3_open_v2(path, &db, flags, nil) == SQLITE_OK {
-            sqlite3_busy_timeout(db, 5000)
+            sqlite3_busy_timeout(db, 30000)
+            _ = sqlite3_exec(db, "PRAGMA journal_mode=WAL;", nil, nil, nil)
+            _ = sqlite3_exec(db, "PRAGMA synchronous=NORMAL;", nil, nil, nil)
             return db!
         } else {
-            throw sqliteError(db, message: "Gagal membuka database \(path)")
+            let error = sqliteError(db, message: "Gagal membuka database \(path)")
+            if let db { sqlite3_close_v2(db) }
+            throw error
         }
     }
 
     private func exec(_ db: OpaquePointer, _ sql: String) throws {
         if sqlite3_exec(db, sql, nil, nil, nil) != SQLITE_OK {
             throw sqliteError(db, message: "SQL gagal dieksekusi.")
-        }
-    }
-
-    private func withTransaction(
-        _ db: OpaquePointer,
-        mode: String = "IMMEDIATE",
-        _ work: () throws -> Void
-    ) throws {
-        let isInTransaction = sqlite3_get_autocommit(db) == 0
-        if !isInTransaction {
-            try exec(db, "BEGIN \(mode) TRANSACTION;")
-        }
-        do {
-            try work()
-            if !isInTransaction {
-                try exec(db, "COMMIT;")
-            }
-        } catch {
-            if !isInTransaction {
-                try? exec(db, "ROLLBACK;")
-            }
-            throw error
         }
     }
 
