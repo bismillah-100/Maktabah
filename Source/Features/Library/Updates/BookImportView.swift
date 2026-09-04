@@ -7,50 +7,15 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct OfflineImportFormView: View {
-    @State private var sqliteURL: URL?
+    @State private var viewModel: BookImportViewModel
     let onImport: (URL, BookMetadata, [String: Any]?) async -> Void
     @Environment(\.dismiss) var dismiss
     @Environment(\.openURL) var openURL
 
-    @State private var isImporting: Bool = false
-    @State private var importMode: Int = 0 // 0 = New, 1 = Replace, 2 = Change ID
-    @State private var selectedBookId: Int? = nil
-    @State private var bookName: String = ""
-    @State private var categoryId: Int = 0
-    @State private var archiveId: Int = 20
-    @State private var customBookIdText: String = ""
-    @State private var newIdAnnotationCount: Int = 0
-    @State private var betaka: String = ""
-    @State private var inf: String = ""
-    @State private var tafseerNam: String = ""
-    @State private var bVerText: String = "1"
-
-    @State private var isNewAuthor: Bool = false
-    @State private var selectedAuthorId: Int? = nil
-    @State private var authorName: String = ""
-    @State private var authorInf: String = ""
-    @State private var authorLng: String = ""
-    @State private var authorHigriD: String = ""
-    @State private var oVerText: String = "1"
-    @State private var isMultiLanguage: Bool = true
-
-    @State private var maxBkid: Int = 0
-    @State private var maxAuthid: Int = 0
-
-    @State private var categories: [CategoryData] = []
-    @State private var authors: [(id: Int, muallif: Muallif)] = []
-    @State private var books: [BooksData] = []
-
-    @State private var showBookPicker = false
-    @State private var showAuthorPicker = false
-    @State private var showFilePicker = false
-    @State private var showHelpPopover = false
-    @State private var isLoadingData: Bool = true
-    @State private var showAnnotationsPopover = false
-
-    private let converterURL = URL(
-        string: "https://maktabah-web-converter-dfbmqvd2wyzupyxlb38p5y.streamlit.app"
-    )
+    init(onImport: @escaping (URL, BookMetadata, [String: Any]?) async -> Void) {
+        self.onImport = onImport
+        _viewModel = .init(wrappedValue: BookImportViewModel.init())
+    }
 
     var body: some View {
         Form {
@@ -62,12 +27,12 @@ struct OfflineImportFormView: View {
             .listRowBackground(Color.appCellBackground)
             #endif
 
-            if isLoadingData {
+            if viewModel.isLoadingData {
                 loadingView
             } else {
                 bookInformationSection
 
-                if importMode != 2 {
+                if viewModel.importMode != 2 {
                     authorInformationSection
                 }
             }
@@ -92,7 +57,7 @@ struct OfflineImportFormView: View {
         #endif
         .overlay {
             #if !os(macOS)
-            if isImporting {
+            if viewModel.isImporting {
                 ZStack {
                     Color.black.opacity(0.25)
                         .ignoresSafeArea()
@@ -112,98 +77,52 @@ struct OfflineImportFormView: View {
             }
             #endif
         }
-        .animation(.easeInOut, value: isImporting)
-        .sheet(isPresented: $showBookPicker) {
+        .animation(.easeInOut, value: viewModel.isImporting)
+        .sheet(isPresented: $viewModel.showBookPicker) {
             SearchSelectionView(
                 title: "Select Book to Replace",
-                items: books.map {
+                items: viewModel.books.map {
                     SearchSelectionItem(id: $0.id, title: $0.book, subtitle: "ID: \($0.id)")
                 },
                 onSelect: { item in
-                    selectedBookId = item.id
-                    if let book = books.first(where: { $0.id == item.id }) {
-                        bookName = book.book
-                        archiveId = book.archive
-                        categoryId = book.catId ?? 0
-                    }
-                    showBookPicker = false
+                    viewModel.selectBook(id: item.id)
                 }
             )
         }
-        .sheet(isPresented: $showAuthorPicker) {
+        .sheet(isPresented: $viewModel.showAuthorPicker) {
             SearchSelectionView(
                 title: "Select Registered Author".localized,
-                items: authors.map {
+                items: viewModel.authors.map {
                     SearchSelectionItem(id: $0.id, title: $0.muallif.nama, subtitle: "ID: \($0.id)")
                 },
                 onSelect: { item in
-                    selectedAuthorId = item.id
-                    showAuthorPicker = false
+                    viewModel.selectAuthor(id: item.id)
                 }
             )
         }
         .fileImporter(
-            isPresented: $showFilePicker,
+            isPresented: $viewModel.showFilePicker,
             allowedContentTypes: [.database, .data, .item],
             allowsMultipleSelection: false
         ) { result in
-            switch result {
-            case let .success(urls):
-                guard let selectedURL = urls.first else { return }
-
-                let shouldStopAccessing = selectedURL.startAccessingSecurityScopedResource()
-                defer {
-                    if shouldStopAccessing {
-                        selectedURL.stopAccessingSecurityScopedResource()
-                    }
-                }
-
-                do {
-                    let tempURL = FileManager.default.temporaryDirectory
-                        .appendingPathComponent(UUID().uuidString)
-                        .appendingPathExtension(selectedURL.pathExtension)
-
-                    if FileManager.default.fileExists(atPath: tempURL.path) {
-                        try FileManager.default.removeItem(at: tempURL)
-                    }
-
-                    try FileManager.default.copyItem(at: selectedURL, to: tempURL)
-                    sqliteURL = tempURL
-                } catch {
-                    print("Error copying file: \(error.localizedDescription)")
-                }
-
-            case let .failure(error):
-                print("Error picking file: \(error.localizedDescription)")
-            }
+            viewModel.handlePickedFileResult(result)
         }
         .textFieldStyle(.roundedBorder)
         #if os(iOS)
         .scrollContentBackground(.hidden)
         .background(Color.appBackground)
         #endif
-        .onChange(of: importMode) { _, newMode in
-            if newMode == 2, let selectedBookId {
-                customBookIdText = "\(selectedBookId)"
-            }
-            updateAnnotationCount()
+        .onChange(of: viewModel.importMode) { _, newMode in
+            viewModel.handleImportModeChanged(newMode: newMode)
         }
-        .onChange(of: selectedBookId) { _, newId in
-            if importMode == 2, let newId {
-                customBookIdText = "\(newId)"
-            }
-            updateAnnotationCount()
+        .onChange(of: viewModel.selectedBookId) { _, newId in
+            viewModel.handleSelectedBookIdChanged(newId: newId)
         }
-        .onChange(of: customBookIdText) { _, newValue in
-            let filtered = newValue.filter(\.isNumber)
-            if filtered != newValue {
-                customBookIdText = filtered
-            } else {
-                updateAnnotationCount()
-            }
+        .onChange(of: viewModel.customBookIdText) { _, newValue in
+            viewModel.handleCustomBookIdTextChanged(newValue: newValue)
         }
         .task(priority: .userInitiated) {
-            await setupData()
+            await viewModel.setupData()
         }
     }
 
@@ -230,23 +149,23 @@ struct OfflineImportFormView: View {
 
     private var bookInformationSection: some View {
         Section("Book Information") {
-            Picker("Book Type", selection: $importMode) {
+            Picker("Book Type", selection: $viewModel.importMode) {
                 Text("New Book").tag(0)
                 Text("Replace Existing Book").tag(1)
                 Text("Change Book ID").tag(2)
             }
             .pickerStyle(.segmented)
 
-            if importMode == 0 {
+            if viewModel.importMode == 0 {
                 newBookIdField
-            } else if importMode == 1 {
+            } else if viewModel.importMode == 1 {
                 selectBookField
-            } else if importMode == 2 {
+            } else if viewModel.importMode == 2 {
                 selectBookField
                 changeBookIdField
             }
 
-            if importMode != 2 {
+            if viewModel.importMode != 2 {
                 bookMetadataFields
             }
         }
@@ -259,8 +178,8 @@ struct OfflineImportFormView: View {
     private var newBookIdField: some View {
         AdaptiveLabeledContent("New Book ID") {
             HStack {
-                if isBookIdTaken {
-                    if let id = Int(customBookIdText) {
+                if viewModel.isBookIdTaken {
+                    if let id = Int(viewModel.customBookIdText) {
                         let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
                         let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
                         statusBadge(
@@ -273,7 +192,7 @@ struct OfflineImportFormView: View {
                     }
                 }
 
-                TextField("", text: $customBookIdText, prompt: Text("e.g., \(maxBkid + 1)"))
+                TextField("", text: $viewModel.customBookIdText, prompt: Text("e.g., \(viewModel.maxBkid + 1)"))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 120)
             }
@@ -305,11 +224,11 @@ struct OfflineImportFormView: View {
 
     private var selectBookField: some View {
         AdaptiveLabeledContent("Select Book") {
-            let title = selectedBookId.flatMap { bookId in
+            let title = viewModel.selectedBookId.flatMap { bookId in
                 LibraryDataManager.shared.booksById[bookId].map { "\($0.book) (ID: \(bookId))" }
             }
             pickerSelectorButton(title: title) {
-                showBookPicker = true
+                viewModel.showBookPicker = true
             }
         }
     }
@@ -317,7 +236,7 @@ struct OfflineImportFormView: View {
     private var changeBookIdField: some View {
         AdaptiveLabeledContent("New Book ID") {
             HStack {
-                if isBookIdTaken {
+                if viewModel.isBookIdTaken {
                     statusBadge(
                         text: "ID already taken".localized,
                         color: .red,
@@ -325,7 +244,7 @@ struct OfflineImportFormView: View {
                     )
                 }
 
-                TextField("", text: $customBookIdText, prompt: Text("e.g., 32793"))
+                TextField("", text: $viewModel.customBookIdText, prompt: Text("e.g., 32793"))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 120)
             }
@@ -334,32 +253,19 @@ struct OfflineImportFormView: View {
 
     private var annotationsExist: some View {
         statusBadge(
-            text: "\(newIdAnnotationCount) Annotations Exist".localized,
+            text: "\(viewModel.newIdAnnotationCount) Annotations Exist".localized,
             color: .orange,
             cornerRadius: 24
         )
         .onTapGesture {
-            showAnnotationsPopover = true
+            viewModel.showAnnotationsPopover = true
         }
-        .popover(isPresented: $showAnnotationsPopover) {
-            Text("ID \(customBookIdText) already has \(newIdAnnotationCount) local annotations, possibly from CloudKit synchronization with another device for a different book. Proceed only if you are sure these annotations belong to this book.")
+        .popover(isPresented: $viewModel.showAnnotationsPopover) {
+            Text("ID \(viewModel.customBookIdText) already has \(viewModel.newIdAnnotationCount) local annotations, possibly from CloudKit synchronization with another device for a different book. Proceed only if you are sure these annotations belong to this book.")
                 .font(.caption)
                 .padding()
                 .frame(width: 280)
                 .presentationCompactAdaptation(.popover)
-        }
-    }
-
-    private var targetBookIdForAnnotationCheck: Int? {
-        switch importMode {
-        case 0:
-            Int(customBookIdText)
-        case 1:
-            selectedBookId
-        case 2:
-            Int(customBookIdText)
-        default:
-            nil
         }
     }
 
@@ -382,30 +288,16 @@ struct OfflineImportFormView: View {
             )
     }
 
-    private func updateAnnotationCount() {
-        guard let id = targetBookIdForAnnotationCheck, id > 0 else {
-            newIdAnnotationCount = 0
-            return
-        }
-
-        Task {
-            let count = await Task.detached(priority: .utility) {
-                AnnotationManager.shared.loadAnnotations(bkId: id).count
-            }.value
-            await MainActor.run { newIdAnnotationCount = count }
-        }
-    }
-
     @ViewBuilder
     private var bookMetadataFields: some View {
         AdaptiveLabeledContent("Book Name (bk)") {
-            TextField("", text: $bookName, prompt: Text("e.g., Sahih Bukhari"))
+            TextField("", text: $viewModel.bookName, prompt: Text("e.g., Sahih Bukhari"))
         }
 
         AdaptiveLabeledContent("Category (cat)") {
-            Picker("", selection: $categoryId) {
+            Picker("", selection: $viewModel.categoryId) {
                 Text("Select Category...").tag(0)
-                ForEach(categories, id: \.id) { cat in
+                ForEach(viewModel.categories, id: \.id) { cat in
                     Text(cat.name).tag(cat.id)
                 }
             }
@@ -414,38 +306,38 @@ struct OfflineImportFormView: View {
         }
 
         AdaptiveLabeledContent("Archive ID") {
-            Stepper("\(archiveId)", value: $archiveId, in: 1 ... 20)
-                .disabled(importMode != 0)
+            Stepper("\(viewModel.archiveId)", value: $viewModel.archiveId, in: 1 ... 20)
+                .disabled(viewModel.importMode != 0)
         }
 
-        Toggle("Multi-Language", isOn: $isMultiLanguage)
+        Toggle("Multi-Language", isOn: $viewModel.isMultiLanguage)
 
         AdaptiveLabeledContent("Edition") {
-            TextField("", text: $betaka, prompt: Text("Optional"))
+            TextField("", text: $viewModel.betaka, prompt: Text("Optional"))
         }
 
         AdaptiveLabeledContent("Information (inf)") {
-            TextField("", text: $inf, prompt: Text("Optional"))
+            TextField("", text: $viewModel.inf, prompt: Text("Optional"))
         }
 
         AdaptiveLabeledContent("Tafseer Name") {
-            TextField("", text: $tafseerNam, prompt: Text("Optional"))
+            TextField("", text: $viewModel.tafseerNam, prompt: Text("Optional"))
         }
 
         AdaptiveLabeledContent("Version") {
-            TextField("", text: $bVerText, prompt: Text("1"))
+            TextField("", text: $viewModel.bVerText, prompt: Text("1"))
         }
     }
 
     private var authorInformationSection: some View {
         Section("Author Information") {
-            Picker("Author Type", selection: $isNewAuthor) {
+            Picker("Author Type", selection: $viewModel.isNewAuthor) {
                 Text("Existing Author").tag(false)
                 Text("New Author").tag(true)
             }
             .pickerStyle(.segmented)
 
-            if !isNewAuthor {
+            if !viewModel.isNewAuthor {
                 selectAuthorField
             } else {
                 newAuthorFields
@@ -459,11 +351,11 @@ struct OfflineImportFormView: View {
 
     private var selectAuthorField: some View {
         AdaptiveLabeledContent("Select Author") {
-            let title = selectedAuthorId.flatMap { authId in
-                authors.first(where: { $0.id == authId }).map { "\($0.muallif.nama) (ID: \(authId))" }
+            let title = viewModel.selectedAuthorId.flatMap { authId in
+                viewModel.authors.first(where: { $0.id == authId }).map { "\($0.muallif.nama) (ID: \(authId))" }
             }
             pickerSelectorButton(title: title) {
-                showAuthorPicker = true
+                viewModel.showAuthorPicker = true
             }
         }
     }
@@ -471,34 +363,34 @@ struct OfflineImportFormView: View {
     @ViewBuilder
     private var newAuthorFields: some View {
         AdaptiveLabeledContent("New Author ID") {
-            Text("\(maxAuthid + 1)")
+            Text("\(viewModel.maxAuthid + 1)")
                 .foregroundColor(.secondary)
         }
 
         AdaptiveLabeledContent("Author Name") {
-            TextField("", text: $authorName, prompt: Text("e.g., Al-Bukhari"))
+            TextField("", text: $viewModel.authorName, prompt: Text("e.g., Al-Bukhari"))
         }
 
         AdaptiveLabeledContent("Author Info") {
-            TextField("", text: $authorInf, prompt: Text("Optional"))
+            TextField("", text: $viewModel.authorInf, prompt: Text("Optional"))
         }
 
         AdaptiveLabeledContent("Full Name (Lng)") {
-            TextField("", text: $authorLng, prompt: Text("Optional"))
+            TextField("", text: $viewModel.authorLng, prompt: Text("Optional"))
         }
 
         AdaptiveLabeledContent("Death Year") {
-            TextField("", text: $authorHigriD, prompt: Text("e.g., 256 AH"))
+            TextField("", text: $viewModel.authorHigriD, prompt: Text("e.g., 256 AH"))
         }
 
         AdaptiveLabeledContent("Version") {
-            TextField("", text: $oVerText, prompt: Text("1"))
+            TextField("", text: $viewModel.oVerText, prompt: Text("1"))
         }
     }
 
     private var headerContent: some View {
         HStack {
-            if importMode == 2 {
+            if viewModel.importMode == 2 {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Change Book ID")
                         .font(.title2)
@@ -513,11 +405,11 @@ struct OfflineImportFormView: View {
                         .font(.title2)
                         .bold()
                     HStack {
-                        Text("File: \(sqliteURL?.lastPathComponent ?? "None selected")")
+                        Text("File: \(viewModel.sqliteURL?.lastPathComponent ?? "None selected")")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Button("Select File") {
-                            showFilePicker = true
+                            viewModel.showFilePicker = true
                         }
                         .font(.caption)
                         .buttonStyle(.bordered)
@@ -548,95 +440,9 @@ struct OfflineImportFormView: View {
         .background(.ultraThinMaterial)
     }
 
-    private var isBookIdTaken: Bool {
-        guard let id = Int(customBookIdText) else { return false }
-        return LibraryDataManager.shared.booksById[id] != nil
-    }
-
-    private var isValid: Bool {
-        if importMode == 2 {
-            guard let oldId = selectedBookId else { return false }
-            if customBookIdText.isEmpty {
-                return false
-            }
-            guard let newId = Int(customBookIdText), newId > 0 else { return false }
-            if newId == oldId {
-                return false
-            }
-            if isBookIdTaken {
-                return false
-            }
-            return true
-        }
-
-        if sqliteURL == nil {
-            return false
-        }
-        if importMode == 0 {
-            if customBookIdText.isEmpty {
-                return false
-            }
-            guard let id = Int(customBookIdText), id > 0 else { return false }
-            if isBookIdTaken {
-                let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-                let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
-                if system {
-                    return false
-                }
-            }
-        } else {
-            if selectedBookId == nil {
-                return false
-            }
-        }
-        if bookName.isEmpty {
-            return false
-        }
-        if categoryId == 0 {
-            return false
-        }
-        if isNewAuthor {
-            if authorName.isEmpty {
-                return false
-            }
-        } else {
-            if selectedAuthorId == nil {
-                return false
-            }
-        }
-        return true
-    }
-
-    private func setupData() async {
-        isLoadingData = true
-        defer { isLoadingData = false }
-
-        let results = await Task.detached(priority: .userInitiated) {
-            let maxBkid = DatabaseManager.shared.getMaxBookId()
-            let maxAuthid = DatabaseManager.shared.getMaxAuthId()
-
-            let categories = Array(LibraryDataManager.shared.categoryMap.values).sorted(by: {
-                $0.id < $1.id
-            })
-
-            let authors = LibraryDataManager.shared.getAllAuthors().sorted(by: { $0.id < $1.id })
-
-            let books = Array(LibraryDataManager.shared.booksById.values).sorted(by: { $0.book < $1.book })
-
-            return (maxBkid, maxAuthid, categories, authors, books)
-        }.value
-
-        maxBkid = results.0
-        maxAuthid = results.1
-        categories = results.2
-        authors = results.3
-        books = results.4
-        customBookIdText = "\(results.0 + 1)"
-    }
-
     private var helpButton: some View {
         Button {
-            showHelpPopover = true
+            viewModel.showHelpPopover = true
         } label: {
             Image(systemName: "questionmark.circle.fill")
                 .foregroundColor(.secondary)
@@ -644,7 +450,7 @@ struct OfflineImportFormView: View {
         }
         .buttonStyle(.plain)
         .help("Converter Tool & Help")
-        .popover(isPresented: $showHelpPopover) {
+        .popover(isPresented: $viewModel.showHelpPopover) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(.convertImportHelpTitle)
                     .font(.headline)
@@ -656,10 +462,10 @@ struct OfflineImportFormView: View {
                 Divider()
 
                 Button {
-                    if let converterURL {
+                    if let converterURL = viewModel.converterURL {
                         openURL(converterURL)
                     }
-                    showHelpPopover = false
+                    viewModel.showHelpPopover = false
                 } label: {
                     Label("Open Web Converter", systemImage: "safari")
                         .frame(maxWidth: .infinity)
@@ -685,14 +491,14 @@ struct OfflineImportFormView: View {
             closeButton
             Spacer()
             annotationsExist
-                .opacity(newIdAnnotationCount > 0 ? 1 : 0)
+                .opacity(viewModel.newIdAnnotationCount > 0 ? 1 : 0)
             importButtonGroup
         }
         #else
         VStack(spacing: 12) {
             annotationsExist
-                .opacity(newIdAnnotationCount > 0 ? 1 : 0)
-                .frame(height: newIdAnnotationCount > 0 ? nil : 0)
+                .opacity(viewModel.newIdAnnotationCount > 0 ? 1 : 0)
+                .frame(height: viewModel.newIdAnnotationCount > 0 ? nil : 0)
                 .clipped()
             importButtonGroup
             closeButton
@@ -711,7 +517,7 @@ struct OfflineImportFormView: View {
         }
         .buttonStyle(.borderedProminent)
         .tint(.red)
-        .disabled(isImporting)
+        .disabled(viewModel.isImporting)
         #if !os(macOS)
         .frame(maxWidth: .infinity)
         .buttonBorderShape(.capsule)
@@ -722,7 +528,7 @@ struct OfflineImportFormView: View {
 
     private var importButtonGroup: some View {
         HStack {
-            if isImporting {
+            if viewModel.isImporting {
                 ProgressView()
                     .controlSize(.small)
                     .padding(.trailing, 8)
@@ -730,20 +536,20 @@ struct OfflineImportFormView: View {
 
             Button {
                 Task {
-                    if importMode == 2 {
-                        await performChangeBookId()
+                    if viewModel.importMode == 2 {
+                        await viewModel.performChangeBookId()
                     } else {
-                        await performImport()
+                        await viewModel.performImport(onImport: onImport)
                     }
                 }
             } label: {
-                Text(importMode == 2 ? "Change Book ID" : "Import Now")
+                Text(viewModel.importMode == 2 ? "Change Book ID" : "Import Now")
                     #if !os(macOS)
                     .frame(maxWidth: .infinity)
                     #endif
             }
             .buttonStyle(.borderedProminent)
-            .disabled(!isValid || isImporting)
+            .disabled(!viewModel.isValid || viewModel.isImporting)
             #if !os(macOS)
             .tint(.green)
             .buttonBorderShape(.capsule)
@@ -754,251 +560,6 @@ struct OfflineImportFormView: View {
         }
         #if !os(macOS)
         .frame(maxWidth: .infinity)
-        #endif
-    }
-
-    private func performImport() async {
-        guard let url = sqliteURL else { return }
-        isImporting = true
-        defer { isImporting = false }
-
-        let finalBookId = importMode == 0 ? (Int(customBookIdText) ?? (maxBkid + 1)) : (selectedBookId ?? 0)
-        var finalAuthId: Int? = nil
-        var authorRow: [String: Any]? = nil
-
-        if isNewAuthor {
-            finalAuthId = maxAuthid + 1
-            authorRow = [
-                "authid": finalAuthId!,
-                "auth": authorName,
-                "inf": authorInf,
-                "Lng": authorLng,
-                "HigriD": authorHigriD,
-                "oVer": Int(oVerText) ?? 1,
-            ]
-        } else {
-            finalAuthId = selectedAuthorId
-        }
-
-        let metadata = BookMetadata(
-            bkid: finalBookId,
-            cat: categoryId == 0 ? nil : categoryId,
-            bk: bookName,
-            archive: archiveId,
-            betaka: betaka.isEmpty ? nil : betaka,
-            authno: finalAuthId,
-            inf: inf.isEmpty ? nil : inf,
-            tafseerNam: tafseerNam.isEmpty ? nil : tafseerNam,
-            bVer: Int(bVerText) ?? 1,
-            link: nil,
-            pdfCs: isMultiLanguage ? 3 : 0
-        )
-
-        await onImport(url, metadata, authorRow)
-    }
-
-    private func performChangeBookId() async {
-        guard let oldId = selectedBookId else { return }
-        guard let newId = Int(customBookIdText), newId > 0 else { return }
-
-        isImporting = true
-        defer { isImporting = false }
-
-        do {
-            let (annotationsToSync, resultsToSync) = try await executeDatabaseChanges(oldId: oldId, newId: newId)
-            await reloadLocalCache(oldId: oldId, newId: newId)
-            uploadToCloudKit(annotationsToSync: annotationsToSync, resultsToSync: resultsToSync)
-
-            await setupData()
-            selectedBookId = newId
-
-            await MainActor.run {
-                NotificationCenter.default.post(
-                    name: .bookIdMigrated,
-                    object: nil,
-                    userInfo: ["oldId": oldId, "newId": newId]
-                )
-            }
-
-            ReusableFunc.showAlert(
-                title: "Success",
-                message: "Book ID has been successfully changed from \(oldId) to \(newId), and annotations have been migrated."
-            )
-        } catch {
-            ReusableFunc.showAlert(
-                title: "Error changing ID",
-                message: error.localizedDescription
-            )
-        }
-    }
-
-    private func executeDatabaseChanges(oldId: Int, newId: Int) async throws -> ([Annotation], [SyncResult]) {
-        try await Task.detached(priority: .userInitiated) {
-            try BookUpdateManager.shared.changeBookId(oldId: oldId, newId: newId)
-            let annotations = try AnnotationManager.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
-            let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
-            return (annotations, results)
-        }.value
-    }
-
-    private func reloadLocalCache(oldId: Int, newId: Int) async {
-        await LibraryDataManager.shared.reloadAllData()
-
-        if let book = LibraryDataManager.shared.booksById[newId] {
-            IntegrationCache.shared.unmarkIntegrated(bookId: oldId, archiveId: book.archive)
-            IntegrationCache.shared.markIntegrated(bookId: newId, archiveId: book.archive)
-        }
-
-        BookPageCache.shared.remove(bookId: oldId)
-        BookConnection.invalidateTOC(for: oldId)
-        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(oldId)))
-    }
-
-    private func uploadToCloudKit(annotationsToSync: [Annotation], resultsToSync: [SyncResult]) {
-        if !annotationsToSync.isEmpty || !resultsToSync.isEmpty {
-            DispatchQueue.global(qos: .background).async {
-                if !annotationsToSync.isEmpty {
-                    CloudKitSyncManager.shared.upload(annotations: annotationsToSync)
-                }
-                if !resultsToSync.isEmpty {
-                    CloudKitSyncManager.shared.uploadResultsData(folders: [], results: resultsToSync)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Search Selection Helper
-
-struct SearchSelectionItem: Identifiable {
-    let id: Int
-    let title: String
-    let subtitle: String
-}
-
-struct SearchSelectionView: View {
-    let title: String
-    let items: [SearchSelectionItem]
-    let onSelect: (SearchSelectionItem) -> Void
-    @Environment(\.dismiss) var dismiss
-
-    @State private var searchText = ""
-
-    var filteredItems: [SearchSelectionItem] {
-        if searchText.isEmpty {
-            return items
-        }
-        return items.filter {
-            $0.title.localizedCaseInsensitiveContains(searchText)
-                || $0.subtitle.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-
-    var body: some View {
-        #if os(macOS)
-        VStack(spacing: 0) {
-            HStack {
-                Text(title)
-                    .font(.headline)
-                Spacer()
-                Button("Cancel") {
-                    dismiss()
-                }
-                .buttonStyle(.plain)
-            }
-            .padding()
-
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField("Search...", text: $searchText)
-                    .textFieldStyle(.plain)
-
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(10)
-            .background(Color.gray.opacity(0.1))
-            .padding(.horizontal)
-            .padding(.bottom, 12)
-
-            Divider()
-
-            List(filteredItems) { item in
-                itemRow(for: item)
-            }
-        }
-        .environment(\.layoutDirection, .rightToLeft)
-        .frame(width: 400, height: 500)
-        #else
-        NavigationStack {
-            ThemeList(filteredItems) { item in
-                itemRow(for: item)
-            }
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search...")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .environment(\.layoutDirection, .rightToLeft)
-        .scrollContentBackground(.hidden)
-        .themeBackground()
-        #endif
-    }
-
-    private func itemRow(for item: SearchSelectionItem) -> some View {
-        Button(action: { onSelect(item) }) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                    .font(.body)
-                    .fontWeight(.medium)
-                Text(item.subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.vertical, 4)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Adaptive Labeled Content
-
-struct AdaptiveLabeledContent<Content: View>: View {
-    let title: LocalizedStringKey
-    @ViewBuilder let content: Content
-
-    init(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        #if os(macOS)
-        LabeledContent(title) {
-            content
-        }
-        #else
-        VStack(alignment: .leading) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            content
-        }
-        .padding(.vertical, 4)
         #endif
     }
 }
