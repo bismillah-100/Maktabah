@@ -541,6 +541,15 @@
 		F3902E8D2F9EE1CA004BA5D1 /* AnnotationTagVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */; };
 		F3902EAF2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */; };
 		F3902EB02F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */; };
+		F3919DF4304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DF2304A44BC00FC3760 /* AdaptiveLabeledContent.swift */; };
+		F3919DF5304A44BC00FC3760 /* SearchSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DF3304A44BC00FC3760 /* SearchSelectionView.swift */; };
+		F3919DF6304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DF2304A44BC00FC3760 /* AdaptiveLabeledContent.swift */; };
+		F3919DF7304A44BC00FC3760 /* SearchSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DF3304A44BC00FC3760 /* SearchSelectionView.swift */; };
+		F3919DF8304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DF2304A44BC00FC3760 /* AdaptiveLabeledContent.swift */; };
+		F3919DF9304A44BC00FC3760 /* SearchSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DF3304A44BC00FC3760 /* SearchSelectionView.swift */; };
+		F3919DFB304A44F200FC3760 /* BookImportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */; };
+		F3919DFC304A44F200FC3760 /* BookImportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */; };
+		F3919DFD304A44F200FC3760 /* BookImportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */; };
 		F3A000022FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
 		F3A000032FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
 		F3A000042FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
@@ -1081,6 +1090,9 @@
 		F38FF4352FA89EEE003E7B71 /* iOSReaderTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSReaderTabView.swift; sourceTree = "<group>"; };
 		F3902E8B2F9EE1CA004BA5D1 /* AnnotationTagVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationTagVC.swift; sourceTree = "<group>"; };
 		F3902EAE2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagMergePopoverVC.swift; sourceTree = "<group>"; };
+		F3919DF2304A44BC00FC3760 /* AdaptiveLabeledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveLabeledContent.swift; sourceTree = "<group>"; };
+		F3919DF3304A44BC00FC3760 /* SearchSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSelectionView.swift; sourceTree = "<group>"; };
+		F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookImportViewModel.swift; sourceTree = "<group>"; };
 		F3A000012FBB000100000001 /* FileManager+Size.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Size.swift"; sourceTree = "<group>"; };
 		F3A000052FBB000100000001 /* SyncPendingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPendingStore.swift; sourceTree = "<group>"; };
 		F3A000092FBB000100000001 /* SingleFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleFlight.swift; sourceTree = "<group>"; };
@@ -2216,8 +2228,10 @@
 		FE70000A000000000000000A /* Updates */ = {
 			isa = PBXGroup;
 			children = (
+				F3919DF2304A44BC00FC3760 /* AdaptiveLabeledContent.swift */,
 				4B0000012F3612D50018D902 /* BookImportView.swift */,
 				4B96D3422F3612D50018D902 /* BookUpdateView.swift */,
+				F3919DF3304A44BC00FC3760 /* SearchSelectionView.swift */,
 			);
 			path = Updates;
 			sourceTree = "<group>";
@@ -2225,6 +2239,7 @@
 		FE7001000000000000000010 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */,
 				4B96D3402F3612BD0018D902 /* BookUpdateVM.swift */,
 				F3D02D5C2FE05A650054807F /* LibraryViewModel.swift */,
 			);
@@ -2690,6 +2705,7 @@
 				F3D122772FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */,
 				4B0EED392EFAB38800585C31 /* QuranTafseerVC.swift in Sources */,
 				4B47F3992EE9A36D009A399F /* RowiProtocols.swift in Sources */,
+				F3919DFC304A44F200FC3760 /* BookImportViewModel.swift in Sources */,
 				F34D9FCA303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */,
 				F32D441D303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				4B6100F22EFA8C7F00CCBED6 /* QuranNashVC.swift in Sources */,
@@ -2837,6 +2853,8 @@
 				F364898A30131EAE00B9285B /* NotificationToken.swift in Sources */,
 				F3D02D4B2FE04D580054807F /* ReaderViewModel.swift in Sources */,
 				F3D02D4E2FE04D580054807F /* ViewModelBase.swift in Sources */,
+				F3919DF6304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */,
+				F3919DF7304A44BC00FC3760 /* SearchSelectionView.swift in Sources */,
 				F32D4413303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				CFEC4F5ACD6D4ADC1B7C5ECA /* CloudKitSyncManager.swift in Sources */,
 				CA267055B8205DAFE55D7442 /* CloudKitSyncable.swift in Sources */,
@@ -2979,6 +2997,8 @@
 				4B7C90C92F83494200454BE1 /* UserDefaults.swift in Sources */,
 				F32D4415303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				4B7C90CA2F83494200454BE1 /* AppMode.swift in Sources */,
+				F3919DF4304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */,
+				F3919DF5304A44BC00FC3760 /* SearchSelectionView.swift in Sources */,
 				F3D330032FA4987B005732C3 /* WidgetUpdateCoordinator.swift in Sources */,
 				4B7C90CC2F83494200454BE1 /* AnnotationColorMenuView.swift in Sources */,
 				4B7C90CD2F83494200454BE1 /* QuranDataManager.swift in Sources */,
@@ -3047,6 +3067,7 @@
 				4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */,
 				4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */,
 				4B7C90F52F83494200454BE1 /* SharedPopover.swift in Sources */,
+				F3919DFB304A44F200FC3760 /* BookImportViewModel.swift in Sources */,
 				F3D122762FF5C85600F44E89 /* SerialTaskQueue.swift in Sources */,
 				4B7C90F62F83494200454BE1 /* Annotation.swift in Sources */,
 				4B7C90F72F83494200454BE1 /* QuranSidebarVC.swift in Sources */,
@@ -3156,6 +3177,8 @@
 				F305778D2FA463B1005732C6 /* iOSLibraryView.swift in Sources */,
 				F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */,
 				F32D4410303CFB6200429664 /* PauseController.swift in Sources */,
+				F3919DF8304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */,
+				F3919DF9304A44BC00FC3760 /* SearchSelectionView.swift in Sources */,
 				F305778D2FA463B1005732C7 /* iOSLibraryViewController.swift in Sources */,
 				F3D02D432FE04D580054807F /* ViewModelProtocols.swift in Sources */,
 				F3D02D442FE04D580054807F /* ReaderViewModel.swift in Sources */,
@@ -3183,6 +3206,7 @@
 				F3ABDF772FBF429700A8965E /* WelcomeScreenView.swift in Sources */,
 				F30576F82FA46222005732C6 /* BookUpdateManager.swift in Sources */,
 				F3D08C752FDC739900A0E733 /* AnnotationViewControllerWrapper.swift in Sources */,
+				F3919DFD304A44F200FC3760 /* BookImportViewModel.swift in Sources */,
 				F3D46E9D2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */,
 				F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */,
 				F3D122692FF55B2600F44E89 /* CachedArabicLayoutFragment.swift in Sources */,
