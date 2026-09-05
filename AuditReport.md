@@ -56,7 +56,7 @@ This report outlines critical issues involving concurrency, memory constraints, 
 
             coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
                 do {
-                    try data.write(to: newURL, options: .atomic)
+                    try data.write(to: newURL)
                 } catch {
                     print("Failed to write coordinated data: \(error)")
                 }
@@ -124,18 +124,30 @@ public protocol WidgetSnapshotRecord: Codable, Sendable {
 Update `resolve` logic (assuming async signatures are applied from Section 1):
 ```swift
 <<<<<<< SEARCH
+        if remote.items != local.items {
+            remote.saveLocal()
+            return (remote, true)
+        }
         if remote.lastUpdated > local.lastUpdated {
             remote.saveLocal()
             return (remote, false)
         }
+        return (local, false)
 =======
-        // Implementasi resolve yang lebih tangguh berdasarkan generation/changeTag
-        if remote.generation > local.generation {
+        // Implementasi resolve yang lebih tangguh berdasarkan generation/lastUpdated
+        let isRemoteNewer: Bool
+        if remote.generation != local.generation {
+            isRemoteNewer = remote.generation > local.generation
+        } else {
+            isRemoteNewer = remote.lastUpdated > local.lastUpdated
+        }
+
+        if isRemoteNewer {
+            let itemsChanged = remote.items != local.items
             await remote.saveLocal()
-            return (remote, true)
-        } else if remote.generation == local.generation && remote.lastUpdated > local.lastUpdated {
-            await remote.saveLocal()
-            return (remote, false)
+            return (remote, itemsChanged)
+        } else {
+            return (local, false)
         }
 >>>>>>> REPLACE
 ```
@@ -194,16 +206,16 @@ Update `resolve` logic (assuming async signatures are applied from Section 1):
     /// Mengambil snapshot aktif secara generik dari CloudKit atau fallback ke lokal
     func fetchActive<T: WidgetSnapshotRecord>(completion: @escaping (T?) -> Void) {
         Task {
-            let localSnapshot = await T.loadLocal()
             let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self)
 
             guard let remoteSnapshot = remoteSnapshot else {
+                let localSnapshot = await T.loadLocal()
                 completion(localSnapshot)
                 return
             }
 
             // Assume T.resolve is updated to an async context
-            let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: localSnapshot)
+            let (resolved, _) = await T.resolve(remote: remoteSnapshot)
             completion(resolved)
         }
     }
@@ -231,8 +243,8 @@ Update `resolve` logic (assuming async signatures are applied from Section 1):
                             }
                         }
 
-                        operation.fetchRecordsResultBlock = { _ in
-                            if Task.isCancelled {
+                        operation.fetchRecordsResultBlock = { [weak operation] _ in
+                            if operation?.isCancelled == true {
                                 continuation.resume(returning: nil)
                                 return
                             }

@@ -34,7 +34,7 @@ public actor FileCoordinator {
 
         coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
             do {
-                try data.write(to: newURL, options: .atomic)
+                try data.write(to: newURL)
             } catch {
                 print("Failed to write coordinated data: \(error)")
             }
@@ -112,19 +112,18 @@ public extension WidgetSnapshotRecord {
             return (remote, true)
         }
 
-        if remote.items != currentLocal.items {
-            await remote.saveLocal()
-            return (remote, true)
+        let isRemoteNewer: Bool = if remote.generation != currentLocal.generation {
+            remote.generation > currentLocal.generation
+        } else {
+            remote.lastUpdated > currentLocal.lastUpdated
         }
 
-        if remote.generation > currentLocal.generation {
+        if isRemoteNewer {
+            let itemsChanged = remote.items != currentLocal.items
             await remote.saveLocal()
-            return (remote, true)
-        } else if remote.generation == currentLocal.generation && remote.lastUpdated > currentLocal.lastUpdated {
-            await remote.saveLocal()
-            return (remote, false)
+            return (remote, itemsChanged)
+        } else {
+            return (currentLocal, false)
         }
-
-        return (currentLocal, false)
     }
 }

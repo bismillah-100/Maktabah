@@ -19,15 +19,15 @@ final class CloudKitFetcher: @unchecked Sendable {
     /// Mengambil snapshot aktif secara generik dari CloudKit atau fallback ke lokal
     func fetchActive<T: WidgetSnapshotRecord>(completion: @escaping (T?) -> Void) {
         Task {
-            let localSnapshot = await T.loadLocal()
             let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self)
 
-            guard let remoteSnapshot = remoteSnapshot else {
+            guard let remoteSnapshot else {
+                let localSnapshot = await T.loadLocal()
                 completion(localSnapshot)
                 return
             }
 
-            let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: localSnapshot)
+            let (resolved, _) = await T.resolve(remote: remoteSnapshot)
             completion(resolved)
         }
     }
@@ -57,8 +57,8 @@ final class CloudKitFetcher: @unchecked Sendable {
                             }
                         }
 
-                        operation.fetchRecordsResultBlock = { _ in
-                            if Task.isCancelled {
+                        operation.fetchRecordsResultBlock = { [weak operation] _ in
+                            if operation?.isCancelled == true {
                                 continuation.resume(returning: nil)
                                 return
                             }
