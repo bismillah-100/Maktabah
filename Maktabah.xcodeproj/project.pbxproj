@@ -610,6 +610,24 @@
 		F3AE62F4304C5C43002569BB /* Reader+Citation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DB304C5C43002569BB /* Reader+Citation.swift */; };
 		F3AE62F5304C5C43002569BB /* Reader+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */; };
 		F3AE62F6304C5C43002569BB /* Reader+iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DD304C5C43002569BB /* Reader+iOS.swift */; };
+		F3AE62FF304C5E7C002569BB /* Search+macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FA304C5E7C002569BB /* Search+macOS.swift */; };
+		F3AE6300304C5E7C002569BB /* Search+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FB304C5E7C002569BB /* Search+Observers.swift */; };
+		F3AE6302304C5E7C002569BB /* Search+Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F9304C5E7C002569BB /* Search+Library.swift */; };
+		F3AE6303304C5E7C002569BB /* Search+SavedResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */; };
+		F3AE6304304C5E7C002569BB /* Search+Execution.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F7304C5E7C002569BB /* Search+Execution.swift */; };
+		F3AE6305304C5E7C002569BB /* Search+Restoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */; };
+		F3AE6307304C5E7C002569BB /* Search+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FB304C5E7C002569BB /* Search+Observers.swift */; };
+		F3AE6308304C5E7C002569BB /* Search+iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F8304C5E7C002569BB /* Search+iOS.swift */; };
+		F3AE6309304C5E7C002569BB /* Search+Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F9304C5E7C002569BB /* Search+Library.swift */; };
+		F3AE630A304C5E7C002569BB /* Search+SavedResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */; };
+		F3AE630B304C5E7C002569BB /* Search+Execution.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F7304C5E7C002569BB /* Search+Execution.swift */; };
+		F3AE630C304C5E7C002569BB /* Search+Restoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */; };
+		F3AE630D304C5E7C002569BB /* Search+macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FA304C5E7C002569BB /* Search+macOS.swift */; };
+		F3AE630E304C5E7C002569BB /* Search+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FB304C5E7C002569BB /* Search+Observers.swift */; };
+		F3AE6310304C5E7C002569BB /* Search+Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F9304C5E7C002569BB /* Search+Library.swift */; };
+		F3AE6311304C5E7C002569BB /* Search+SavedResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */; };
+		F3AE6312304C5E7C002569BB /* Search+Execution.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F7304C5E7C002569BB /* Search+Execution.swift */; };
+		F3AE6313304C5E7C002569BB /* Search+Restoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */; };
 		F3B509712FD85BD300313BAD /* ListContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B509702FD85BD300313BAD /* ListContentView.swift */; };
 		F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */; };
 		F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */; };
@@ -1155,6 +1173,13 @@
 		F3AE62DE304C5C43002569BB /* Reader+macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+macOS.swift"; sourceTree = "<group>"; };
 		F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Navigation.swift"; sourceTree = "<group>"; };
 		F3AE62E0304C5C43002569BB /* Reader+Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Observers.swift"; sourceTree = "<group>"; };
+		F3AE62F7304C5E7C002569BB /* Search+Execution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Execution.swift"; sourceTree = "<group>"; };
+		F3AE62F8304C5E7C002569BB /* Search+iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+iOS.swift"; sourceTree = "<group>"; };
+		F3AE62F9304C5E7C002569BB /* Search+Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Library.swift"; sourceTree = "<group>"; };
+		F3AE62FA304C5E7C002569BB /* Search+macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+macOS.swift"; sourceTree = "<group>"; };
+		F3AE62FB304C5E7C002569BB /* Search+Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Observers.swift"; sourceTree = "<group>"; };
+		F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Restoration.swift"; sourceTree = "<group>"; };
+		F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+SavedResults.swift"; sourceTree = "<group>"; };
 		F3B509702FD85BD300313BAD /* ListContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListContentView.swift; sourceTree = "<group>"; };
 		F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOCNodeRow.swift; sourceTree = "<group>"; };
 		F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookSearchView.swift; sourceTree = "<group>"; };
@@ -1744,6 +1769,20 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		F3AE62FE304C5E7C002569BB /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				F3AE62F7304C5E7C002569BB /* Search+Execution.swift */,
+				F3AE62F8304C5E7C002569BB /* Search+iOS.swift */,
+				F3AE62F9304C5E7C002569BB /* Search+Library.swift */,
+				F3AE62FA304C5E7C002569BB /* Search+macOS.swift */,
+				F3AE62FB304C5E7C002569BB /* Search+Observers.swift */,
+				F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */,
+				F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		F3D02D3A2FE04D580054807F /* Base */ = {
 			isa = PBXGroup;
 			children = (
@@ -2197,6 +2236,7 @@
 		FE5001000000000000000010 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				F3AE62FE304C5E7C002569BB /* Extensions */,
 				F3D02D582FE0522E0054807F /* SearchViewModel.swift */,
 			);
 			path = ViewModel;
@@ -2782,6 +2822,12 @@
 				4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */,
 				F3AE62E9304C5C43002569BB /* Reader+Observers.swift in Sources */,
 				F3AE62EA304C5C43002569BB /* Reader+Content.swift in Sources */,
+				F3AE630D304C5E7C002569BB /* Search+macOS.swift in Sources */,
+				F3AE630E304C5E7C002569BB /* Search+Observers.swift in Sources */,
+				F3AE6310304C5E7C002569BB /* Search+Library.swift in Sources */,
+				F3AE6311304C5E7C002569BB /* Search+SavedResults.swift in Sources */,
+				F3AE6312304C5E7C002569BB /* Search+Execution.swift in Sources */,
+				F3AE6313304C5E7C002569BB /* Search+Restoration.swift in Sources */,
 				F3AE62EB304C5C43002569BB /* Reader+macOS.swift in Sources */,
 				F3AE62EC304C5C43002569BB /* Reader+Annotation.swift in Sources */,
 				F3AE62ED304C5C43002569BB /* Reader+Citation.swift in Sources */,
@@ -3168,6 +3214,12 @@
 				4B7C90EB2F83494200454BE1 /* DSFSearchField.swift in Sources */,
 				4B7C90EC2F83494200454BE1 /* Navigation.swift in Sources */,
 				F3F3FEAE30360EC700507E9A /* DonationManager.swift in Sources */,
+				F3AE62FF304C5E7C002569BB /* Search+macOS.swift in Sources */,
+				F3AE6300304C5E7C002569BB /* Search+Observers.swift in Sources */,
+				F3AE6302304C5E7C002569BB /* Search+Library.swift in Sources */,
+				F3AE6303304C5E7C002569BB /* Search+SavedResults.swift in Sources */,
+				F3AE6304304C5E7C002569BB /* Search+Execution.swift in Sources */,
+				F3AE6305304C5E7C002569BB /* Search+Restoration.swift in Sources */,
 				4B7C90ED2F83494200454BE1 /* ResultsViewModel.swift in Sources */,
 				4B7C90EE2F83494200454BE1 /* ViewerSplitVC.swift in Sources */,
 				F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */,
@@ -3370,6 +3422,12 @@
 				F305770E2FA46222005732C6 /* ArchiveDatabaseTools.swift in Sources */,
 				F3B60E232FC7CC5600A9EF58 /* iOSBookAnnotationsView.swift in Sources */,
 				F305770F2FA46222005732C6 /* BookArchiveIntegrator.swift in Sources */,
+				F3AE6307304C5E7C002569BB /* Search+Observers.swift in Sources */,
+				F3AE6308304C5E7C002569BB /* Search+iOS.swift in Sources */,
+				F3AE6309304C5E7C002569BB /* Search+Library.swift in Sources */,
+				F3AE630A304C5E7C002569BB /* Search+SavedResults.swift in Sources */,
+				F3AE630B304C5E7C002569BB /* Search+Execution.swift in Sources */,
+				F3AE630C304C5E7C002569BB /* Search+Restoration.swift in Sources */,
 				F38FF4322FA82059003E7B71 /* iOSRowiHierarchicalCollectionViewController.swift in Sources */,
 				F30577102FA46222005732C6 /* BookDownloadManager.swift in Sources */,
 				F30577112FA46222005732C6 /* IntegrationCache.swift in Sources */,
