@@ -240,25 +240,29 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         await saveRecordToCloudKit(record: record, payloadData: data, taskName: taskName)
     }
 
+    #if canImport(UIKit)
+    private final class TaskBox: @unchecked Sendable {
+        var id: UIBackgroundTaskIdentifier = .invalid
+    }
+    #endif
+
+    @MainActor
     private func saveRecordToCloudKit(record: CKRecord, payloadData: Data, taskName: String) async {
         #if canImport(UIKit)
-        let bgTaskID = await Task { @MainActor in
-            var identifier: UIBackgroundTaskIdentifier = .invalid
-            identifier = UIApplication.shared.beginBackgroundTask(withName: taskName) {
-                if identifier != .invalid {
-                    UIApplication.shared.endBackgroundTask(identifier)
-                }
+        let box = TaskBox()
+        box.id = UIApplication.shared.beginBackgroundTask(withName: taskName) {
+            let expiredId = box.id
+            if expiredId != .invalid {
+                UIApplication.shared.endBackgroundTask(expiredId)
             }
-            return identifier
-        }.value
+        }
+        let bgTaskID = box.id
         #endif
 
         defer {
             #if canImport(UIKit)
-            Task { @MainActor in
-                if bgTaskID != .invalid {
-                    UIApplication.shared.endBackgroundTask(bgTaskID)
-                }
+            if bgTaskID != .invalid {
+                UIApplication.shared.endBackgroundTask(bgTaskID)
             }
             #endif
         }
