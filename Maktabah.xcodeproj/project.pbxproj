@@ -592,6 +592,24 @@
 		F3AE62D7304C59AE002569BB /* FilterLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62D6304C59AE002569BB /* FilterLibrary.swift */; };
 		F3AE62D8304C59AE002569BB /* FilterLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62D6304C59AE002569BB /* FilterLibrary.swift */; };
 		F3AE62D9304C59AE002569BB /* FilterLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62D6304C59AE002569BB /* FilterLibrary.swift */; };
+		F3AE62E2304C5C43002569BB /* Reader+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62E0304C5C43002569BB /* Reader+Observers.swift */; };
+		F3AE62E3304C5C43002569BB /* Reader+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DC304C5C43002569BB /* Reader+Content.swift */; };
+		F3AE62E4304C5C43002569BB /* Reader+macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DE304C5C43002569BB /* Reader+macOS.swift */; };
+		F3AE62E5304C5C43002569BB /* Reader+Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DA304C5C43002569BB /* Reader+Annotation.swift */; };
+		F3AE62E6304C5C43002569BB /* Reader+Citation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DB304C5C43002569BB /* Reader+Citation.swift */; };
+		F3AE62E7304C5C43002569BB /* Reader+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */; };
+		F3AE62E9304C5C43002569BB /* Reader+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62E0304C5C43002569BB /* Reader+Observers.swift */; };
+		F3AE62EA304C5C43002569BB /* Reader+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DC304C5C43002569BB /* Reader+Content.swift */; };
+		F3AE62EB304C5C43002569BB /* Reader+macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DE304C5C43002569BB /* Reader+macOS.swift */; };
+		F3AE62EC304C5C43002569BB /* Reader+Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DA304C5C43002569BB /* Reader+Annotation.swift */; };
+		F3AE62ED304C5C43002569BB /* Reader+Citation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DB304C5C43002569BB /* Reader+Citation.swift */; };
+		F3AE62EE304C5C43002569BB /* Reader+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */; };
+		F3AE62F0304C5C43002569BB /* Reader+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62E0304C5C43002569BB /* Reader+Observers.swift */; };
+		F3AE62F1304C5C43002569BB /* Reader+Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DC304C5C43002569BB /* Reader+Content.swift */; };
+		F3AE62F3304C5C43002569BB /* Reader+Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DA304C5C43002569BB /* Reader+Annotation.swift */; };
+		F3AE62F4304C5C43002569BB /* Reader+Citation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DB304C5C43002569BB /* Reader+Citation.swift */; };
+		F3AE62F5304C5C43002569BB /* Reader+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */; };
+		F3AE62F6304C5C43002569BB /* Reader+iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62DD304C5C43002569BB /* Reader+iOS.swift */; };
 		F3B509712FD85BD300313BAD /* ListContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B509702FD85BD300313BAD /* ListContentView.swift */; };
 		F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */; };
 		F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */; };
@@ -1130,6 +1148,13 @@
 		F3AE62CE304C5838002569BB /* LibraryFilterMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryFilterMode.swift; sourceTree = "<group>"; };
 		F3AE62D2304C58B0002569BB /* LibraryUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryUpdate.swift; sourceTree = "<group>"; };
 		F3AE62D6304C59AE002569BB /* FilterLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterLibrary.swift; sourceTree = "<group>"; };
+		F3AE62DA304C5C43002569BB /* Reader+Annotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Annotation.swift"; sourceTree = "<group>"; };
+		F3AE62DB304C5C43002569BB /* Reader+Citation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Citation.swift"; sourceTree = "<group>"; };
+		F3AE62DC304C5C43002569BB /* Reader+Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Content.swift"; sourceTree = "<group>"; };
+		F3AE62DD304C5C43002569BB /* Reader+iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+iOS.swift"; sourceTree = "<group>"; };
+		F3AE62DE304C5C43002569BB /* Reader+macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+macOS.swift"; sourceTree = "<group>"; };
+		F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Navigation.swift"; sourceTree = "<group>"; };
+		F3AE62E0304C5C43002569BB /* Reader+Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reader+Observers.swift"; sourceTree = "<group>"; };
 		F3B509702FD85BD300313BAD /* ListContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListContentView.swift; sourceTree = "<group>"; };
 		F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOCNodeRow.swift; sourceTree = "<group>"; };
 		F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookSearchView.swift; sourceTree = "<group>"; };
@@ -1701,6 +1726,20 @@
 				F3AE62B5304C5760002569BB /* ObserversLibrary.swift */,
 				F3AE62B6304C5760002569BB /* PaginationLibrary.swift */,
 				F3AE62B7304C5760002569BB /* SelectionLibrary.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		F3AE62E1304C5C43002569BB /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				F3AE62DA304C5C43002569BB /* Reader+Annotation.swift */,
+				F3AE62DB304C5C43002569BB /* Reader+Citation.swift */,
+				F3AE62DC304C5C43002569BB /* Reader+Content.swift */,
+				F3AE62DD304C5C43002569BB /* Reader+iOS.swift */,
+				F3AE62DE304C5C43002569BB /* Reader+macOS.swift */,
+				F3AE62DF304C5C43002569BB /* Reader+Navigation.swift */,
+				F3AE62E0304C5C43002569BB /* Reader+Observers.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -2370,6 +2409,7 @@
 		FE8001000000000000000010 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				F3AE62E1304C5C43002569BB /* Extensions */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
 				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
@@ -2740,6 +2780,12 @@
 				4BD6C33C2EE6AA7F008684E3 /* MainWindow.swift in Sources */,
 				4BDAB98C2F69E860007D0945 /* SettingsView.swift in Sources */,
 				4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */,
+				F3AE62E9304C5C43002569BB /* Reader+Observers.swift in Sources */,
+				F3AE62EA304C5C43002569BB /* Reader+Content.swift in Sources */,
+				F3AE62EB304C5C43002569BB /* Reader+macOS.swift in Sources */,
+				F3AE62EC304C5C43002569BB /* Reader+Annotation.swift in Sources */,
+				F3AE62ED304C5C43002569BB /* Reader+Citation.swift in Sources */,
+				F3AE62EE304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				4B73BF452EF0799E001ED591 /* AnnotationCellView.swift in Sources */,
 				F30C509D303FA15B00627AF8 /* ResultsViewMenu.swift in Sources */,
 				4B5DF9342EDC2FE60082DE7F /* LibraryVC.swift in Sources */,
@@ -3048,6 +3094,12 @@
 				4B7C90C62F83494200454BE1 /* LibraryDataManager.swift in Sources */,
 				F3D02D622FE0616B0054807F /* NarratorViewModel.swift in Sources */,
 				4B7C90C72F83494200454BE1 /* WindowController.swift in Sources */,
+				F3AE62E2304C5C43002569BB /* Reader+Observers.swift in Sources */,
+				F3AE62E3304C5C43002569BB /* Reader+Content.swift in Sources */,
+				F3AE62E4304C5C43002569BB /* Reader+macOS.swift in Sources */,
+				F3AE62E5304C5C43002569BB /* Reader+Annotation.swift in Sources */,
+				F3AE62E6304C5C43002569BB /* Reader+Citation.swift in Sources */,
+				F3AE62E7304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				4B7C90C82F83494200454BE1 /* ReaderState.swift in Sources */,
 				4B7C90C92F83494200454BE1 /* UserDefaults.swift in Sources */,
 				F32D4415303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
@@ -3190,6 +3242,12 @@
 				FE4100040000000000000004 /* ResultNode.swift in Sources */,
 				FE4200040000000000000004 /* GroupedResult.swift in Sources */,
 				FE4300040000000000000004 /* SearchResultWithPath.swift in Sources */,
+				F3AE62F0304C5C43002569BB /* Reader+Observers.swift in Sources */,
+				F3AE62F1304C5C43002569BB /* Reader+Content.swift in Sources */,
+				F3AE62F3304C5C43002569BB /* Reader+Annotation.swift in Sources */,
+				F3AE62F4304C5C43002569BB /* Reader+Citation.swift in Sources */,
+				F3AE62F5304C5C43002569BB /* Reader+Navigation.swift in Sources */,
+				F3AE62F6304C5C43002569BB /* Reader+iOS.swift in Sources */,
 				FE4400040000000000000004 /* BookmarkTreeChange.swift in Sources */,
 				FE4500040000000000000004 /* SavedResultsItem.swift in Sources */,
 				FE2000040000000000000004 /* Rowi.swift in Sources */,
