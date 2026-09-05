@@ -37,7 +37,9 @@ class Navigation: NSViewController {
 
     private func setupCallbacks() {
         viewModel.onNavigationLimitsChanged = { [weak self] in
-            self?.syncSlidersWithViewModel()
+            DispatchQueue.main.async { [weak self] in
+                self?.syncSlidersWithViewModel()
+            }
         }
     }
 

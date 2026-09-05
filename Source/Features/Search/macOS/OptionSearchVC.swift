@@ -222,11 +222,13 @@ class OptionSearchVC: NSViewController {
             .store(in: &cancellables)
 
         viewModel.onStateChanged = { [weak self] state in
-            guard let self else { return }
-            let loaded = state == .loaded
-            loaded
-                ? self.resetIndeterminateProgress(loaded)
-                : self.setupUI()
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                let loaded = state == .loaded
+                loaded
+                    ? resetIndeterminateProgress(loaded)
+                    : setupUI()
+            }
         }
     }
 

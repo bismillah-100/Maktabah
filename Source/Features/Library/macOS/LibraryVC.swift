@@ -88,7 +88,7 @@ class LibraryVC: NSViewController {
 
     private func setupViewModelCallbacks() {
         dataVM.viewModel.onStateChanged = { state in
-            DispatchQueue.main.sync { [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 if state == .loading {
                     ReusableFunc.showProgressWindow(view)
