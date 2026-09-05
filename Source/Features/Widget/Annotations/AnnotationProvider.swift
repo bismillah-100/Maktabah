@@ -5,9 +5,15 @@
 //  Created by Ghoys Mawahib on 28/08/26.
 //
 
+import AppIntents
 import WidgetKit
 
-struct AnnotationProvider: TimelineProvider {
+struct AnnotationConfigurationIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Annotation Widget"
+    static var description = IntentDescription("Displays your recent annotations.")
+}
+
+struct AnnotationProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> AnnotationEntry {
         AnnotationEntry(
             date: Date(),
@@ -26,31 +32,22 @@ struct AnnotationProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(
-        in context: Context,
-        completion: @escaping (AnnotationEntry) -> Void
-    ) {
-        Task {
-            let snapshot = await AnnotationSnapshot.loadLocal()
-            let items = snapshot.map(mapAnnotationItems) ?? []
-            completion(AnnotationEntry(date: Date(), annotations: items))
-        }
+    func snapshot(for configuration: AnnotationConfigurationIntent, in context: Context) async -> AnnotationEntry {
+        let snapshot = await AnnotationSnapshot.loadLocal()
+        let items = snapshot.map(mapAnnotationItems) ?? []
+        return AnnotationEntry(date: Date(), annotations: items)
     }
 
-    func getTimeline(
-        in context: Context,
-        completion: @escaping (Timeline<AnnotationEntry>) -> Void
-    ) {
-        CloudKitFetcher.shared.fetchActive { (snapshot: AnnotationSnapshot?) in
-            let items = snapshot.map(mapAnnotationItems) ?? []
-            let entry = AnnotationEntry(date: Date(), annotations: items)
-            #if DEBUG
-            let nextRefresh = Calendar.current.date(byAdding: .minute, value: 1, to: Date())!
-            #else
-            let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
-            #endif
-            completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
-        }
+    func timeline(for configuration: AnnotationConfigurationIntent, in context: Context) async -> Timeline<AnnotationEntry> {
+        let snapshot: AnnotationSnapshot? = await CloudKitFetcher.shared.fetchActive()
+        let items = snapshot.map(mapAnnotationItems) ?? []
+        let entry = AnnotationEntry(date: Date(), annotations: items)
+        #if DEBUG
+        let nextRefresh = Calendar.current.date(byAdding: .minute, value: 1, to: Date())!
+        #else
+        let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+        #endif
+        return Timeline(entries: [entry], policy: .after(nextRefresh))
     }
 
     private func mapAnnotationItems(from snapshot: AnnotationSnapshot) -> [AnnotationWidgetItem] {

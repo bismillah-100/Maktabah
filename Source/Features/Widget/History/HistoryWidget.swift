@@ -8,11 +8,16 @@
 import SwiftUI
 import WidgetKit
 
+@available(iOS 17.0, macOS 14.0, *)
 struct HistoryWidget: Widget {
     let kind: String = "HistoryWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: HistoryProvider()) { entry in
+        AppIntentConfiguration(
+            kind: kind,
+            intent: HistoryConfigurationIntent.self,
+            provider: HistoryProvider()
+        ) { entry in
             HistoryView(entry: entry)
         }
         .configurationDisplayName(.history)

@@ -8,11 +8,16 @@
 import SwiftUI
 import WidgetKit
 
+@available(iOS 17.0, macOS 14.0, *)
 struct AnnotationWidget: Widget {
     let kind: String = "AnnotationWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: AnnotationProvider()) { entry in
+        AppIntentConfiguration(
+            kind: kind,
+            intent: AnnotationConfigurationIntent.self,
+            provider: AnnotationProvider()
+        ) { entry in
             AnnotationView(entry: entry)
         }
         .configurationDisplayName(.annotations)
