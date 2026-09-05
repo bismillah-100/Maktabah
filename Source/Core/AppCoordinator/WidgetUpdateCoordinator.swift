@@ -34,6 +34,8 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     private let sharedAnnotationSnapshot = "SharedAnnotationSnapshot"
     private let sharedHistorySnapshot = "SharedHistorySnapshot"
 
+    private let defaults = UserDefaults.standard
+
     private init() {
         setupObservers()
         setupCloudKitSubscription()
@@ -63,24 +65,6 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         ) { [weak self] _ in
             self?.markHistoryDirty()
         }
-
-        #if canImport(UIKit)
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.flushPendingUpdates(forceCloudKit: true)
-        }
-        #elseif canImport(AppKit)
-        NotificationCenter.default.addObserver(
-            forName: NSApplication.didResignActiveNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.flushPendingUpdates(forceCloudKit: true)
-        }
-        #endif
     }
 
     // MARK: - Core Logic
@@ -97,7 +81,13 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         }
     }
 
-    func flushPendingUpdates(forceCloudKit: Bool = false) {
+    func flushPendingUpdatesTask(forceCloudKit: Bool = false) {
+        Task {
+            await flushPendingUpdates(forceCloudKit: forceCloudKit)
+        }
+    }
+
+    func flushPendingUpdates(forceCloudKit: Bool = false) async {
         // Read dan langsung reset flag secara atomik
         let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
             let result = (isHistoryDirty, isAnnotationDirty)
@@ -109,63 +99,59 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         guard historyNeeded || annotationNeeded else { return }
 
         if historyNeeded {
-            flushHistory(bypassThrottle: forceCloudKit)
+            await flushHistory(bypassThrottle: forceCloudKit)
         }
 
         if annotationNeeded {
-            flushAnnotations(bypassThrottle: forceCloudKit)
+            await flushAnnotations(bypassThrottle: forceCloudKit)
         }
     }
 
-    private func flushHistory(bypassThrottle: Bool) {
-        Task {
-            var snapshot = compileHistorySnapshot()
-            let currentLocal = await HistorySnapshot.loadLocal()
-            if let currentLocal {
-                snapshot.generation = currentLocal.generation + 1
-            } else {
-                snapshot.generation = 1
-            }
+    private func flushHistory(bypassThrottle: Bool) async{
+        var snapshot = compileHistorySnapshot()
+        let currentLocal = await HistorySnapshot.loadLocal()
+        if let currentLocal {
+            snapshot.generation = currentLocal.generation + 1
+        } else {
+            snapshot.generation = 1
+        }
 
-            let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
+        let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
-            if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
-            }
+        if didChange {
+            WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
+        }
 
-            let lastUpload = UserDefaults.standard.object(forKey: lastHistoryUploadKey) as? Date ?? .distantPast
-            let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
+        let lastUpload = defaults.object(forKey: lastHistoryUploadKey) as? Date ?? .distantPast
+        let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
 
-            if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
-                uploadSnapshotToCloudKit(snapshot, taskName: "HistorySnapshotUpload")
-                UserDefaults.standard.set(Date(), forKey: lastHistoryUploadKey)
-            }
+        if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
+            await uploadSnapshotToCloudKit(snapshot, taskName: "HistorySnapshotUpload")
+            defaults.set(Date(), forKey: lastHistoryUploadKey)
         }
     }
 
-    private func flushAnnotations(bypassThrottle: Bool) {
-        Task {
-            var snapshot = compileAnnotationSnapshot()
-            let currentLocal = await AnnotationSnapshot.loadLocal()
-            if let currentLocal {
-                snapshot.generation = currentLocal.generation + 1
-            } else {
-                snapshot.generation = 1
-            }
+    private func flushAnnotations(bypassThrottle: Bool) async {
+        var snapshot = compileAnnotationSnapshot()
+        let currentLocal = await AnnotationSnapshot.loadLocal()
+        if let currentLocal {
+            snapshot.generation = currentLocal.generation + 1
+        } else {
+            snapshot.generation = 1
+        }
 
-            let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
+        let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
-            if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
-            }
+        if didChange {
+            WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
+        }
 
-            let lastUpload = UserDefaults.standard.object(forKey: lastAnnotationUploadKey) as? Date ?? .distantPast
-            let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
+        let lastUpload = defaults.object(forKey: lastAnnotationUploadKey) as? Date ?? .distantPast
+        let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
 
-            if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
-                uploadSnapshotToCloudKit(snapshot, taskName: "WidgetAnnotationSnapshotUpload")
-                UserDefaults.standard.set(Date(), forKey: lastAnnotationUploadKey)
-            }
+        if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
+            await uploadSnapshotToCloudKit(snapshot, taskName: "WidgetAnnotationSnapshotUpload")
+            defaults.set(Date(), forKey: lastAnnotationUploadKey)
         }
     }
 
@@ -246,63 +232,61 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     // MARK: - CloudKit Upload
 
-    private func uploadSnapshotToCloudKit<T: WidgetSnapshotRecord>(_ snapshot: T, taskName: String) {
+    private func uploadSnapshotToCloudKit<T: WidgetSnapshotRecord>(_ snapshot: T, taskName: String) async {
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         let recordId = CKRecord.ID(recordName: T.ckRecordName, zoneID: CloudKitCoreManager.shared.zoneId)
         let record = CKRecord(recordType: T.ckRecordType, recordID: recordId)
         record["payload"] = data as NSData
-        saveRecordToCloudKit(record: record, payloadData: data, taskName: taskName)
+        await saveRecordToCloudKit(record: record, payloadData: data, taskName: taskName)
     }
 
-    private func saveRecordToCloudKit(record: CKRecord, payloadData: Data, taskName: String) {
-        Task {
+    private func saveRecordToCloudKit(record: CKRecord, payloadData: Data, taskName: String) async {
+        #if canImport(UIKit)
+        let bgTaskID = await Task { @MainActor in
+            var identifier: UIBackgroundTaskIdentifier = .invalid
+            identifier = UIApplication.shared.beginBackgroundTask(withName: taskName) {
+                if identifier != .invalid {
+                    UIApplication.shared.endBackgroundTask(identifier)
+                }
+            }
+            return identifier
+        }.value
+        #endif
+
+        defer {
             #if canImport(UIKit)
-            let bgTaskID = await Task { @MainActor in
-                var identifier: UIBackgroundTaskIdentifier = .invalid
-                identifier = UIApplication.shared.beginBackgroundTask(withName: taskName) {
-                    if identifier != .invalid {
-                        UIApplication.shared.endBackgroundTask(identifier)
-                    }
+            Task { @MainActor in
+                if bgTaskID != .invalid {
+                    UIApplication.shared.endBackgroundTask(bgTaskID)
                 }
-                return identifier
-            }.value
+            }
             #endif
+        }
 
-            defer {
-                #if canImport(UIKit)
-                Task { @MainActor in
-                    if bgTaskID != .invalid {
-                        UIApplication.shared.endBackgroundTask(bgTaskID)
-                    }
-                }
-                #endif
-            }
-
-            do {
-                _ = try await ckDatabase.modifyRecords(
-                    saving: [record],
-                    deleting: [],
-                    savePolicy: .allKeys,
-                    atomically: false
+        do {
+            _ = try await ckDatabase.modifyRecords(
+                saving: [record],
+                deleting: [],
+                savePolicy: .allKeys,
+                atomically: false
+            )
+            #if DEBUG
+            print("WidgetUpdateCoordinator: Uploaded \(taskName) to CloudKit")
+            #endif
+        } catch let error as CKError where error.code == .serverRecordChanged {
+            if let serverRecord = error.serverRecord {
+                serverRecord["payload"] = payloadData as NSData
+                // Retry recursively
+                await self.saveRecordToCloudKit(
+                    record: serverRecord,
+                    payloadData: payloadData,
+                    taskName: taskName
                 )
-                #if DEBUG
-                print("WidgetUpdateCoordinator: Uploaded \(taskName) to CloudKit")
-                #endif
-            } catch let error as CKError where error.code == .serverRecordChanged {
-                if let serverRecord = error.serverRecord {
-                    serverRecord["payload"] = payloadData as NSData
-                    // Retry recursively
-                    self.saveRecordToCloudKit(
-                        record: serverRecord,
-                        payloadData: payloadData,
-                        taskName: taskName
-                    )
-                }
-            } catch {
-                #if DEBUG
-                print("WidgetUpdateCoordinator: CloudKit upload error for \(taskName) - \(error)")
-                #endif
             }
+        } catch {
+            #if DEBUG
+            print("WidgetUpdateCoordinator: CloudKit upload error for \(taskName) - \(error)")
+            #endif
         }
     }
 
@@ -312,7 +296,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     private func setupCloudKitSubscription() {
         let key = "hasSubscribedToWidgetSnapshot"
-        let isSubscribed = UserDefaults.standard.bool(forKey: key)
+        let isSubscribed = defaults.bool(forKey: key)
         guard !isSubscribed else { return }
 
         let subscription = CKRecordZoneSubscription(
@@ -324,9 +308,9 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         notificationInfo.shouldSendContentAvailable = true
         subscription.notificationInfo = notificationInfo
 
-        ckDatabase.save(subscription) { _, error in
+        ckDatabase.save(subscription) { [weak self] _, error in
             if error == nil {
-                UserDefaults.standard.set(true, forKey: key)
+                self?.defaults.set(true, forKey: key)
             }
         }
     }
@@ -380,7 +364,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
             }
 
             group.addTask {
-                try? await Task.sleep(nanoseconds: 25_000_000_000)
+                try? await Task.sleep(for: .seconds(25))
                 return false
             }
 

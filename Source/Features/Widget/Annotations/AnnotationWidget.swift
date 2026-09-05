@@ -20,8 +20,8 @@ struct AnnotationWidget: Widget {
         ) { entry in
             AnnotationView(entry: entry)
         }
-        .configurationDisplayName(.annotations)
-        .description(.quickAccessYourRecentAnnotations)
+        .configurationDisplayName("Annotations")
+        .description("quick access your recent annotations.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }

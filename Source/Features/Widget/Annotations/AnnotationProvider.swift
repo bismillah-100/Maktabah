@@ -6,6 +6,7 @@
 //
 
 import AppIntents
+import Foundation
 import WidgetKit
 
 struct AnnotationConfigurationIntent: WidgetConfigurationIntent {

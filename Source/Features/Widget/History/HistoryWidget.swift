@@ -20,8 +20,8 @@ struct HistoryWidget: Widget {
         ) { entry in
             HistoryView(entry: entry)
         }
-        .configurationDisplayName(.history)
-        .description(.quickAccessToYourRecentlyReadBooks)
+        .configurationDisplayName("History")
+        .description("Quick access to your recently read books.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }

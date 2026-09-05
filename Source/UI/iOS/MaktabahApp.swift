@@ -94,7 +94,7 @@ struct MaktabahApp: App {
                         HistoryViewModel.shared.reloadFromDatabase()
                         CloudKitSyncManager.shared.fetchChanges()
                     case .background, .inactive:
-                        WidgetUpdateCoordinator.shared.flushPendingUpdates(
+                        WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(
                             forceCloudKit: true
                         )
                     @unknown default:
@@ -136,7 +136,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        WidgetUpdateCoordinator.shared.flushPendingUpdates(forceCloudKit: true)
+        WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(forceCloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
     }
 }

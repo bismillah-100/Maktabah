@@ -186,6 +186,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
      }
       */
 
+    func applicationWillResignActive(_ notification: Notification) {
+        flushPendingWidgetUpdates(cloudKit: true)
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
         flushPendingWidgetUpdates(cloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
@@ -687,7 +691,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func flushPendingWidgetUpdates(cloudKit: Bool = false) {
-        WidgetUpdateCoordinator.shared.flushPendingUpdates(
+        WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(
             forceCloudKit: cloudKit
         )
     }
