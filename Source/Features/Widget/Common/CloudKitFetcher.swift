@@ -32,44 +32,20 @@ final class CloudKitFetcher: @unchecked Sendable {
         let recordId = CKRecord.ID(recordName: T.ckRecordName, zoneID: customZoneID)
 
         return await withTaskGroup(of: T?.self) { group in
-            // Task 1: CloudKit Fetch dengan pembatalan eksplisit
+            // Task 1: CloudKit Fetch dengan async murni
             group.addTask {
-                let operation = CKFetchRecordsOperation(recordIDs: [recordId])
-                operation.desiredKeys = ["payload"]
-
-                let config = CKOperation.Configuration()
-                config.timeoutIntervalForRequest = 8.0
-                operation.configuration = config
-
-                return await withTaskCancellationHandler {
-                    await withCheckedContinuation { continuation in
-                        var fetchedData: Data?
-                        var fetchedChangeTag: String?
-
-                        operation.perRecordResultBlock = { _, result in
-                            if case let .success(record) = result {
-                                fetchedData = record["payload"] as? Data
-                                fetchedChangeTag = record.recordChangeTag
-                            }
-                        }
-
-                        operation.fetchRecordsResultBlock = { [weak operation] _ in
-                            if operation?.isCancelled == true {
-                                continuation.resume(returning: nil)
-                                return
-                            }
-                            if let data = fetchedData, var decoded = try? JSONDecoder().decode(T.self, from: data) {
-                                decoded.recordChangeTag = fetchedChangeTag
-                                continuation.resume(returning: decoded)
-                            } else {
-                                continuation.resume(returning: nil)
-                            }
-                        }
-
-                        self.ckDatabase.add(operation)
+                do {
+                    let result = try await self.ckDatabase.records(for: [recordId], desiredKeys: ["payload"])
+                    guard let recordRes = result[recordId],
+                          case let .success(record) = recordRes,
+                          let data = record["payload"] as? Data,
+                          var decoded = try? JSONDecoder().decode(T.self, from: data) else {
+                        return nil
                     }
-                } onCancel: {
-                    operation.cancel() // Batalkan CloudKit seketika jika Task 2 menang. Dilarang memanggil resume di sini!
+                    decoded.recordChangeTag = record.recordChangeTag
+                    return decoded
+                } catch {
+                    return nil
                 }
             }
 
@@ -79,7 +55,7 @@ final class CloudKitFetcher: @unchecked Sendable {
                 return nil
             }
 
-            // Ambil pemenang pertama
+            // Ambil pemenang pertama (Implicit cancellation akan menghentikan request CloudKit jika timeout menang)
             let firstResult = await group.next() ?? nil
             group.cancelAll()
             return firstResult

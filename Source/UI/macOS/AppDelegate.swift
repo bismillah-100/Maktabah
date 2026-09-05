@@ -133,7 +133,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             try await Task.sleep(for: .seconds(5))
             CloudKitSyncManager.shared.fetchChanges()
         }
-        WidgetUpdateCoordinator.shared.handleSilentPush { _ in }
+        Task {
+            _ = await WidgetUpdateCoordinator.shared.handleSilentPush()
+        }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {

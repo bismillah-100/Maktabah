@@ -129,8 +129,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void)
     {
         CloudKitSyncManager.shared.fetchChanges()
-        WidgetUpdateCoordinator.shared.handleSilentPush { _ in
-            completionHandler(.newData)
+        Task {
+            let updated = await WidgetUpdateCoordinator.shared.handleSilentPush()
+            completionHandler(updated ? .newData : .noData)
         }
     }
 
