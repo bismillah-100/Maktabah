@@ -23,6 +23,6 @@ struct HistoryWidget: Widget {
         .configurationDisplayName(.history)
         .description(.quickAccessToYourRecentlyReadBooks)
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
-        .contentMarginsDisabledIfAvailable()
+        .contentMarginsDisabled()
     }
 }

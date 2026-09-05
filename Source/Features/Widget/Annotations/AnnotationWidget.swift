@@ -23,6 +23,6 @@ struct AnnotationWidget: Widget {
         .configurationDisplayName(.annotations)
         .description(.quickAccessYourRecentAnnotations)
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
-        .contentMarginsDisabledIfAvailable()
+        .contentMarginsDisabled()
     }
 }
