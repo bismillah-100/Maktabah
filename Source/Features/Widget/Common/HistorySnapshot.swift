@@ -13,7 +13,7 @@ public struct HistorySnapshot: WidgetSnapshotRecord {
     public static let ckRecordName = "SharedHistorySnapshot"
     public static let ckRecordType = "HistorySnapshot"
 
-    public struct Item: Codable, Identifiable, Equatable {
+    public struct Item: Codable, Identifiable, Equatable, Sendable {
         public let id: String
         public let bookId: Int
         public let bookTitle: String
@@ -23,9 +23,13 @@ public struct HistorySnapshot: WidgetSnapshotRecord {
 
     public var items: [Item]
     public var lastUpdated: Date
+    public var generation: Int64 = 0
+    public var recordChangeTag: String? = nil
 
-    public init(items: [Item], lastUpdated: Date = Date()) {
+    public init(items: [Item], lastUpdated: Date = Date(), generation: Int64 = 0, recordChangeTag: String? = nil) {
         self.items = items
         self.lastUpdated = lastUpdated
+        self.generation = generation
+        self.recordChangeTag = recordChangeTag
     }
 }

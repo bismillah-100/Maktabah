@@ -30,8 +30,11 @@ struct AnnotationProvider: TimelineProvider {
         in context: Context,
         completion: @escaping (AnnotationEntry) -> Void
     ) {
-        let items = AnnotationSnapshot.loadLocal().map(mapAnnotationItems) ?? []
-        completion(AnnotationEntry(date: Date(), annotations: items))
+        Task {
+            let snapshot = await AnnotationSnapshot.loadLocal()
+            let items = snapshot.map(mapAnnotationItems) ?? []
+            completion(AnnotationEntry(date: Date(), annotations: items))
+        }
     }
 
     func getTimeline(
