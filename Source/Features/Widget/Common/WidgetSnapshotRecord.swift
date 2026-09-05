@@ -7,9 +7,44 @@
 
 import Foundation
 
+/// Actor untuk menangani sinkronisasi file I/O secara aman tanpa memblokir thread
+public actor FileCoordinator {
+    public static let shared = FileCoordinator()
+
+    public func read(url: URL) -> Data? {
+        var error: NSError?
+        var fileData: Data?
+
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { newURL in
+            // Pada first-launch, berkas mungkin belum ada. `try?` aman mengembalikan nil.
+            fileData = try? Data(contentsOf: newURL)
+        }
+
+        return fileData
+    }
+
+    public func write(data: Data, to url: URL) {
+        // Ensure directory exists
+        let dirURL = url.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
+
+        var error: NSError?
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+
+        coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
+            do {
+                try data.write(to: newURL, options: .atomic)
+            } catch {
+                print("Failed to write coordinated data: \(error)")
+            }
+        }
+    }
+}
+
 /// Protocol umum untuk record snapshot widget.
-public protocol WidgetSnapshotRecord: Codable {
-    associatedtype Item: Codable, Equatable
+public protocol WidgetSnapshotRecord: Codable, Sendable {
+    associatedtype Item: Codable, Equatable, Sendable
 
     static var fileName: String { get }
     static var ckRecordName: String { get }
@@ -17,6 +52,8 @@ public protocol WidgetSnapshotRecord: Codable {
 
     var items: [Item] { get }
     var lastUpdated: Date { get set }
+    var generation: Int64 { get set }
+    var recordChangeTag: String? { get set }
 }
 
 public extension WidgetSnapshotRecord {
@@ -26,32 +63,36 @@ public extension WidgetSnapshotRecord {
             forSecurityApplicationGroupIdentifier: "group.com.Drn.maktabah"
         ) else { return nil }
 
-        return groupURL.appendingPathComponent(fileName)
+        // Use Application Support directory for isolation
+        let appSupportURL = groupURL.appendingPathComponent("Library/Application Support", isDirectory: true)
+        return appSupportURL.appendingPathComponent(fileName)
     }
 
     /// Membaca snapshot lokal dari App Group container
-    static func loadLocal() -> Self? {
-        guard let url = appGroupURL,
-              let data = try? Data(contentsOf: url) else { return nil }
+    static func loadLocal() async -> Self? {
+        guard let url = appGroupURL else { return nil }
+        guard let data = await FileCoordinator.shared.read(url: url) else { return nil }
         return try? JSONDecoder().decode(Self.self, from: data)
     }
 
     /// Menyimpan snapshot ke App Group container
-    func saveLocal() {
+    func saveLocal() async {
         guard let url = Self.appGroupURL,
               let data = try? JSONEncoder().encode(self) else { return }
-        try? data.write(to: url, options: .atomic)
+        await FileCoordinator.shared.write(data: data, to: url)
     }
 
     /// Bandingkan data lokal dan baru berdasarkan items. Simpan dan kembalikan true HANYA jika items berbeda.
     @discardableResult
-    func saveIfChanged(comparingWith current: Self? = Self.loadLocal()) -> Bool {
-        guard let current else {
-            saveLocal()
+    func saveIfChanged(comparingWith current: Self? = nil) async -> Bool {
+        let currentLocal = await (current != nil ? current : Self.loadLocal())
+
+        guard let currentLocal else {
+            await saveLocal()
             return true
         }
-        if items != current.items {
-            saveLocal()
+        if items != currentLocal.items {
+            await saveLocal()
             return true
         }
         return false
@@ -61,21 +102,29 @@ public extension WidgetSnapshotRecord {
     @discardableResult
     static func resolve(
         remote: Self?,
-        local: Self? = Self.loadLocal()
-    ) -> (snapshot: Self?, didChange: Bool) {
-        guard let remote else { return (local, false) }
-        guard let local else {
-            remote.saveLocal()
+        local: Self? = nil
+    ) async -> (snapshot: Self?, didChange: Bool) {
+        let currentLocal = await (local != nil ? local : Self.loadLocal())
+
+        guard let remote else { return (currentLocal, false) }
+        guard let currentLocal else {
+            await remote.saveLocal()
             return (remote, true)
         }
-        if remote.items != local.items {
-            remote.saveLocal()
+
+        if remote.items != currentLocal.items {
+            await remote.saveLocal()
             return (remote, true)
         }
-        if remote.lastUpdated > local.lastUpdated {
-            remote.saveLocal()
+
+        if remote.generation > currentLocal.generation {
+            await remote.saveLocal()
+            return (remote, true)
+        } else if remote.generation == currentLocal.generation && remote.lastUpdated > currentLocal.lastUpdated {
+            await remote.saveLocal()
             return (remote, false)
         }
-        return (local, false)
+
+        return (currentLocal, false)
     }
 }

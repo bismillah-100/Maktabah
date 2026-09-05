@@ -27,8 +27,11 @@ struct HistoryProvider: TimelineProvider {
         in context: Context,
         completion: @escaping (HistoryEntry) -> Void
     ) {
-        let items = HistorySnapshot.loadLocal().map(mapHistoryItems) ?? []
-        completion(HistoryEntry(date: Date(), history: items))
+        Task {
+            let snapshot = await HistorySnapshot.loadLocal()
+            let items = snapshot.map(mapHistoryItems) ?? []
+            completion(HistoryEntry(date: Date(), history: items))
+        }
     }
 
     func getTimeline(
