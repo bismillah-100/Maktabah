@@ -120,13 +120,14 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     private func flushHistory(bypassThrottle: Bool) {
         Task {
             var snapshot = compileHistorySnapshot()
-            if let currentLocal = await HistorySnapshot.loadLocal() {
+            let currentLocal = await HistorySnapshot.loadLocal()
+            if let currentLocal {
                 snapshot.generation = currentLocal.generation + 1
             } else {
                 snapshot.generation = 1
             }
 
-            let didChange = await snapshot.saveIfChanged()
+            let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
             if didChange {
                 WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
@@ -145,13 +146,14 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     private func flushAnnotations(bypassThrottle: Bool) {
         Task {
             var snapshot = compileAnnotationSnapshot()
-            if let currentLocal = await AnnotationSnapshot.loadLocal() {
+            let currentLocal = await AnnotationSnapshot.loadLocal()
+            if let currentLocal {
                 snapshot.generation = currentLocal.generation + 1
             } else {
                 snapshot.generation = 1
             }
 
-            let didChange = await snapshot.saveIfChanged()
+            let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
             if didChange {
                 WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
@@ -332,50 +334,62 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         let annotationId = CKRecord.ID(recordName: sharedAnnotationSnapshot, zoneID: zoneId)
 
         let operation = CKFetchRecordsOperation(recordIDs: [historyId, annotationId])
+        operation.desiredKeys = ["payload"]
         operation.qualityOfService = .userInitiated
 
-        var didUpdateAny = false
+        let config = CKOperation.Configuration()
+        config.timeoutIntervalForRequest = 25.0
+        operation.configuration = config
+
+        var fetchedRecords: [CKRecord.ID: (data: Data, tag: String?)] = [:]
         let lock = NSLock()
 
-        operation.perRecordResultBlock = { [weak self] recordID, result in
-            guard let self,
-                  case let .success(record) = result,
+        operation.perRecordResultBlock = { _, result in
+            guard case let .success(record) = result,
                   let payload = record["payload"] as? Data else { return }
-
-            if recordID.recordName == sharedHistorySnapshot,
-               var remoteHistory = try? JSONDecoder().decode(
-                   HistorySnapshot.self, from: payload
-               )
-            {
-                remoteHistory.recordChangeTag = record.recordChangeTag
-                Task {
-                    let (_, didChange) = await HistorySnapshot.resolve(remote: remoteHistory)
-                    if didChange {
-                        WidgetCenter.shared.reloadTimelines(ofKind: self.historyKind)
-                        lock.withLock { didUpdateAny = true }
-                    }
-                }
-            } else if recordID.recordName == sharedAnnotationSnapshot,
-                      var remoteAnnotation = try? JSONDecoder().decode(
-                          AnnotationSnapshot.self, from: payload
-                      )
-            {
-                remoteAnnotation.recordChangeTag = record.recordChangeTag
-                Task {
-                    let (_, didChange) = await AnnotationSnapshot.resolve(remote: remoteAnnotation)
-                    if didChange {
-                        WidgetCenter.shared.reloadTimelines(ofKind: self.annotationKind)
-                        lock.withLock { didUpdateAny = true }
-                    }
-                }
+            lock.withLock {
+                fetchedRecords[record.recordID] = (payload, record.recordChangeTag)
             }
         }
 
-        operation.fetchRecordsResultBlock = { _ in
-            // Wait briefly for Tasks to spawn and execute, a more robust way would be a TaskGroup
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                let result = lock.withLock { didUpdateAny }
-                completion(result)
+        operation.fetchRecordsResultBlock = { [weak self] _ in
+            guard let self else {
+                completion(false)
+                return
+            }
+
+            let records = lock.withLock { fetchedRecords }
+
+            Task {
+                var didUpdateAny = false
+
+                if let historyRecord = records[historyId],
+                   var remoteHistory = try? JSONDecoder().decode(
+                       HistorySnapshot.self, from: historyRecord.data
+                   )
+                {
+                    remoteHistory.recordChangeTag = historyRecord.tag
+                    let (_, didChange) = await HistorySnapshot.resolve(remote: remoteHistory)
+                    if didChange {
+                        WidgetCenter.shared.reloadTimelines(ofKind: self.historyKind)
+                        didUpdateAny = true
+                    }
+                }
+
+                if let annotationRecord = records[annotationId],
+                   var remoteAnnotation = try? JSONDecoder().decode(
+                       AnnotationSnapshot.self, from: annotationRecord.data
+                   )
+                {
+                    remoteAnnotation.recordChangeTag = annotationRecord.tag
+                    let (_, didChange) = await AnnotationSnapshot.resolve(remote: remoteAnnotation)
+                    if didChange {
+                        WidgetCenter.shared.reloadTimelines(ofKind: self.annotationKind)
+                        didUpdateAny = true
+                    }
+                }
+
+                completion(didUpdateAny)
             }
         }
 
