@@ -642,25 +642,10 @@ class IbarotTextView: NSTextView {
             return NSIntersectionRange(r, sourceSelection).length > 0
         }
 
-        if let existing = overlapping {
-            let updated = Annotation(
-                id: existing.id,
-                bkId: existing.bkId,
-                contentId: existing.contentId,
-                range: existing.range,
-                rangeDiacritics: existing.rangeDiacritics,
-                colorHex: color.hexString(),
-                type: mode,
-                note: existing.note,
-                createdAt: existing.createdAt,
-                context: existing.context,
-                page: existing.page,
-                part: existing.part,
-                pageArb: existing.pageArb,
-                partArb: existing.partArb,
-                tags: existing.tags
-            )
-            onUpdateAnnotation?(updated)
+        if var existing = overlapping {
+            existing.colorHex = color.hexString()
+            existing.type = mode
+            onUpdateAnnotation?(existing)
         } else {
             onAddAnnotation?(sourceSelection, color, mode, sourceTextForAnnotations())
         }
