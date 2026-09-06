@@ -311,7 +311,7 @@ class HistoryDatabaseManager: SyncPendingManaging {
 }
 
 /// Legacy struct — used only for migration from UserDefaults
-private struct StoredReadingEntries: Codable {
+struct StoredReadingEntries: Codable {
     let historyOrder: [Int]
     let entries: [ReadingEntry]
 }
