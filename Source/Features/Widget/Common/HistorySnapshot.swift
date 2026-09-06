@@ -8,25 +8,33 @@
 import Foundation
 
 /// Model data snapshot independen untuk Widget Riwayat Bacaan.
-public struct HistorySnapshot: WidgetSnapshotRecord {
+public struct HistorySnapshotItem: Codable, Identifiable, Equatable, Sendable {
+    public let id: String
+    public let bookId: Int
+    public let bookTitle: String
+    public let contentId: Int?
+    public let date: Date
+
+    public init(
+        id: String,
+        bookId: Int,
+        bookTitle: String,
+        contentId: Int?,
+        date: Date
+    ) {
+        self.id = id
+        self.bookId = bookId
+        self.bookTitle = bookTitle
+        self.contentId = contentId
+        self.date = date
+    }
+}
+
+public enum HistorySnapshotDescriptor: WidgetSnapshotDescriptor {
+    public typealias Item = HistorySnapshotItem
     public static let fileName = "WidgetHistorySnapshot.json"
     public static let ckRecordName = "SharedHistorySnapshot"
     public static let ckRecordType = "HistorySnapshot"
-
-    public struct Item: Codable, Identifiable, Equatable, Sendable {
-        public let id: String
-        public let bookId: Int
-        public let bookTitle: String
-        public let contentId: Int?
-        public let date: Date
-    }
-
-    public var items: [Item]
-    public var lastUpdated: Date = Date()
-    public var generation: Int64 = 0
-    public var recordChangeTag: String?
-
-    public init(items: [Item]) {
-        self.items = items
-    }
 }
+
+public typealias HistorySnapshot = WidgetSnapshot<HistorySnapshotDescriptor>

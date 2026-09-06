@@ -67,6 +67,41 @@ public extension WidgetSnapshotRecord {
     }
 }
 
+/// Descriptor yang mendefinisikan metadata unik untuk jenis snapshot tertentu.
+public protocol WidgetSnapshotDescriptor: Sendable {
+    associatedtype Item: Codable, Equatable, Sendable
+
+    static var fileName: String { get }
+    static var ckRecordName: String { get }
+    static var ckRecordType: String { get }
+}
+
+/// Struktur snapshot widget generik untuk menghindari duplikasi deklarasi stored property.
+public struct WidgetSnapshot<Descriptor: WidgetSnapshotDescriptor>: WidgetSnapshotRecord {
+    public typealias Item = Descriptor.Item
+
+    public static var fileName: String {
+        Descriptor.fileName
+    }
+
+    public static var ckRecordName: String {
+        Descriptor.ckRecordName
+    }
+
+    public static var ckRecordType: String {
+        Descriptor.ckRecordType
+    }
+
+    public var items: [Item]
+    public var lastUpdated: Date = .init()
+    public var generation: Int64 = 0
+    public var recordChangeTag: String?
+
+    public init(items: [Item]) {
+        self.items = items
+    }
+}
+
 public extension WidgetSnapshotRecord {
     /// Lokasi file JSON di App Group
     static var appGroupURL: URL? {
