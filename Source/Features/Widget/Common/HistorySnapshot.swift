@@ -22,14 +22,11 @@ public struct HistorySnapshot: WidgetSnapshotRecord {
     }
 
     public var items: [Item]
-    public var lastUpdated: Date
+    public var lastUpdated: Date = Date()
     public var generation: Int64 = 0
-    public var recordChangeTag: String? = nil
+    public var recordChangeTag: String?
 
-    public init(items: [Item], lastUpdated: Date = Date(), generation: Int64 = 0, recordChangeTag: String? = nil) {
+    public init(items: [Item]) {
         self.items = items
-        self.lastUpdated = lastUpdated
-        self.generation = generation
-        self.recordChangeTag = recordChangeTag
     }
 }

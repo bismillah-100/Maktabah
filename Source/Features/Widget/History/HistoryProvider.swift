@@ -8,7 +8,9 @@
 import Foundation
 import WidgetKit
 
-struct HistoryProvider: TimelineProvider {
+struct HistoryProvider: SnapshotTimelineProvider {
+    typealias Snapshot = HistorySnapshot
+
     func placeholder(in context: Context) -> HistoryEntry {
         HistoryEntry(
             date: Date(),
@@ -23,34 +25,11 @@ struct HistoryProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(
-        in context: Context,
-        completion: @escaping (HistoryEntry) -> Void
-    ) {
-        Task {
-            let snapshot = await HistorySnapshot.loadLocal()
-            let items = snapshot.map(mapHistoryItems) ?? []
-            completion(HistoryEntry(date: Date(), history: items))
-        }
+    func makeEntry(date: Date, items: [HistoryItem]) -> HistoryEntry {
+        HistoryEntry(date: date, history: items)
     }
 
-    func getTimeline(
-        in context: Context,
-        completion: @escaping (Timeline<HistoryEntry>) -> Void
-    ) {
-        CloudKitFetcher.shared.fetchActive { (snapshot: HistorySnapshot?) in
-            let items = snapshot.map(mapHistoryItems) ?? []
-            let entry = HistoryEntry(date: Date(), history: items)
-            #if DEBUG
-            let nextRefresh = Calendar.current.date(byAdding: .minute, value: 1, to: Date())!
-            #else
-            let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
-            #endif
-            completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
-        }
-    }
-
-    private func mapHistoryItems(from snapshot: HistorySnapshot) -> [HistoryItem] {
+    func mapItems(from snapshot: HistorySnapshot) -> [HistoryItem] {
         snapshot.items.map {
             HistoryItem(
                 bkId: $0.bookId,

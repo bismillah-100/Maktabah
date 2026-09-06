@@ -7,7 +7,9 @@
 
 import WidgetKit
 
-struct AnnotationProvider: TimelineProvider {
+struct AnnotationProvider: SnapshotTimelineProvider {
+    typealias Snapshot = AnnotationSnapshot
+
     func placeholder(in context: Context) -> AnnotationEntry {
         AnnotationEntry(
             date: Date(),
@@ -26,34 +28,11 @@ struct AnnotationProvider: TimelineProvider {
         )
     }
 
-    func getSnapshot(
-        in context: Context,
-        completion: @escaping (AnnotationEntry) -> Void
-    ) {
-        Task {
-            let snapshot = await AnnotationSnapshot.loadLocal()
-            let items = snapshot.map(mapAnnotationItems) ?? []
-            completion(AnnotationEntry(date: Date(), annotations: items))
-        }
+    func makeEntry(date: Date, items: [AnnotationWidgetItem]) -> AnnotationEntry {
+        AnnotationEntry(date: date, annotations: items)
     }
 
-    func getTimeline(
-        in context: Context,
-        completion: @escaping (Timeline<AnnotationEntry>) -> Void
-    ) {
-        CloudKitFetcher.shared.fetchActive { (snapshot: AnnotationSnapshot?) in
-            let items = snapshot.map(mapAnnotationItems) ?? []
-            let entry = AnnotationEntry(date: Date(), annotations: items)
-            #if DEBUG
-            let nextRefresh = Calendar.current.date(byAdding: .minute, value: 1, to: Date())!
-            #else
-            let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
-            #endif
-            completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
-        }
-    }
-
-    private func mapAnnotationItems(from snapshot: AnnotationSnapshot) -> [AnnotationWidgetItem] {
+    func mapItems(from snapshot: AnnotationSnapshot) -> [AnnotationWidgetItem] {
         snapshot.items.map {
             AnnotationWidgetItem(
                 id: Int64($0.id) ?? Int64($0.id.hashValue),

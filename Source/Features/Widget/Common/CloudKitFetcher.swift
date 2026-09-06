@@ -7,6 +7,7 @@
 
 import CloudKit
 import Foundation
+import WidgetKit
 
 final class CloudKitFetcher: @unchecked Sendable {
     static let shared = CloudKitFetcher()
@@ -87,6 +88,45 @@ final class CloudKitFetcher: @unchecked Sendable {
             let firstResult = await group.next() ?? nil
             group.cancelAll()
             return firstResult
+        }
+    }
+}
+
+// MARK: - Snapshot Timeline Provider Protocol
+
+protocol SnapshotTimelineProvider: TimelineProvider where Entry: TimelineEntry {
+    associatedtype Snapshot: WidgetSnapshotRecord
+    associatedtype Item
+
+    func mapItems(from snapshot: Snapshot) -> [Item]
+    func makeEntry(date: Date, items: [Item]) -> Entry
+}
+
+extension SnapshotTimelineProvider {
+    func getSnapshot(
+        in context: Context,
+        completion: @escaping (Entry) -> Void
+    ) {
+        Task {
+            let snapshot = await Snapshot.loadLocal()
+            let items = snapshot.map(mapItems) ?? []
+            completion(makeEntry(date: Date(), items: items))
+        }
+    }
+
+    func getTimeline(
+        in context: Context,
+        completion: @escaping (Timeline<Entry>) -> Void
+    ) {
+        CloudKitFetcher.shared.fetchActive { (snapshot: Snapshot?) in
+            let items = snapshot.map(mapItems) ?? []
+            let entry = makeEntry(date: Date(), items: items)
+            #if DEBUG
+            let nextRefresh = Calendar.current.date(byAdding: .minute, value: 1, to: Date())!
+            #else
+            let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+            #endif
+            completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
         }
     }
 }

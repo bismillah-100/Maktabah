@@ -50,10 +50,21 @@ public protocol WidgetSnapshotRecord: Codable, Sendable {
     static var ckRecordName: String { get }
     static var ckRecordType: String { get }
 
-    var items: [Item] { get }
+    var items: [Item] { get set }
     var lastUpdated: Date { get set }
     var generation: Int64 { get set }
     var recordChangeTag: String? { get set }
+
+    init(items: [Item])
+}
+
+public extension WidgetSnapshotRecord {
+    init(items: [Item], lastUpdated: Date = Date(), generation: Int64 = 0, recordChangeTag: String? = nil) {
+        self.init(items: items)
+        self.lastUpdated = lastUpdated
+        self.generation = generation
+        self.recordChangeTag = recordChangeTag
+    }
 }
 
 public extension WidgetSnapshotRecord {

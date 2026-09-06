@@ -465,6 +465,7 @@
 		F32D4424303CFC0800429664 /* ArchiveInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4422303CFC0800429664 /* ArchiveInfo.swift */; };
 		F32D4425303CFC0800429664 /* ArchiveInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32D4422303CFC0800429664 /* ArchiveInfo.swift */; };
 		F3304ED63043912600B9023C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F3304ED53043912600B9023C /* Localizable.xcstrings */; };
+		F3314ED2304D8A2300D6BE2B /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */; };
 		F332143B2FC2750E006EC214 /* ThemeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F33214392FC2750E006EC214 /* ThemeComponents.swift */; };
 		F334EB33303F382C001121BE /* ReaderSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334EB32303F3808001121BE /* ReaderSplitView.swift */; };
 		F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334EB32303F3808001121BE /* ReaderSplitView.swift */; };
@@ -2602,6 +2603,7 @@
 				F3D33FF03041BC970036D4DE /* CloudKitFetcher.swift in Sources */,
 				33725C484A2C59E21B804C4B /* AnnotationModel.swift in Sources */,
 				F3D2FBED30447552007197E0 /* TightArabicText.swift in Sources */,
+				F3314ED2304D8A2300D6BE2B /* Color+Hex.swift in Sources */,
 				B231461DB6A4E4D36FD4471F /* AnnotationProvider.swift in Sources */,
 				56D0490180AAAA48E5DEA414 /* AnnotationView.swift in Sources */,
 				A7B0F617E4CA388C4EE8DB75 /* AnnotationWidget.swift in Sources */,
