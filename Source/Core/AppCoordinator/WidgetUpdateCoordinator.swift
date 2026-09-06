@@ -130,7 +130,9 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
             let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
             if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
+                await MainActor.run {
+                    WidgetCenter.shared.reloadTimelines(ofKind: self.historyKind)
+                }
             }
 
             let lastUpload = UserDefaults.standard.object(forKey: lastHistoryUploadKey) as? Date ?? .distantPast
@@ -156,7 +158,9 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
             let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
             if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
+                await MainActor.run {
+                    WidgetCenter.shared.reloadTimelines(ofKind: self.annotationKind)
+                }
             }
 
             let lastUpload = UserDefaults.standard.object(forKey: lastAnnotationUploadKey) as? Date ?? .distantPast
@@ -254,7 +258,13 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         saveRecordToCloudKit(record: record, payloadData: data, taskName: taskName)
     }
 
-    private func saveRecordToCloudKit(record: CKRecord, payloadData: Data, taskName: String) {
+    private func saveRecordToCloudKit(
+        record: CKRecord,
+        payloadData: Data,
+        taskName: String,
+        retryCount: Int = 0
+    ) {
+        let maxRetries = 3
         let operation = CKModifyRecordsOperation(recordsToSave: [record], recordIDsToDelete: nil)
         operation.savePolicy = .allKeys
         operation.qualityOfService = .userInitiated
@@ -283,13 +293,20 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
                 print("WidgetUpdateCoordinator: Uploaded \(taskName) to CloudKit")
                 #endif
             case let .failure(error as CKError) where error.code == .serverRecordChanged:
+                guard retryCount < maxRetries else {
+                    #if DEBUG
+                    print("WidgetUpdateCoordinator: Reached max retry limit for \(taskName)")
+                    #endif
+                    return
+                }
                 if let serverRecord = error.serverRecord {
                     serverRecord["payload"] = payloadData as NSData
                     // Retry rekursif dipanggil setelah defer membersihkan bgTask saat ini
                     self?.saveRecordToCloudKit(
                         record: serverRecord,
                         payloadData: payloadData,
-                        taskName: taskName
+                        taskName: taskName,
+                        retryCount: retryCount + 1
                     )
                 }
             case let .failure(error):
@@ -393,7 +410,9 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
             remoteHistory.recordChangeTag = historyRecord.tag
             let (_, didChange) = await HistorySnapshot.resolve(remote: remoteHistory)
             if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: self.historyKind)
+                await MainActor.run {
+                    WidgetCenter.shared.reloadTimelines(ofKind: self.historyKind)
+                }
                 didUpdateAny = true
             }
         }
@@ -406,7 +425,9 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
             remoteAnnotation.recordChangeTag = annotationRecord.tag
             let (_, didChange) = await AnnotationSnapshot.resolve(remote: remoteAnnotation)
             if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: self.annotationKind)
+                await MainActor.run {
+                    WidgetCenter.shared.reloadTimelines(ofKind: self.annotationKind)
+                }
                 didUpdateAny = true
             }
         }

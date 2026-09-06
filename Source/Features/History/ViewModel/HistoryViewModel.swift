@@ -437,7 +437,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
                 let localModified = localEntry.updatedAt.timeIntervalSince1970
                 let remoteModified = remoteEntry.updatedAt.timeIntervalSince1970
 
-                if remoteModified >= localModified {
+                if remoteModified > localModified {
                     entriesByBookId[remoteEntry.bookId] = remoteEntry
                     upsertedEntries.append(remoteEntry)
                     didChange = true

@@ -5,16 +5,21 @@ enum WidgetDeepLink: Equatable {
     case history(bkId: Int, contentId: Int?)
 
     var url: URL {
+        var components = URLComponents()
+        components.scheme = "maktabah"
         switch self {
         case let .annotation(id):
-            return URL(string: "maktabah://annotation?id=\(id)")!
+            components.host = "annotation"
+            components.queryItems = [URLQueryItem(name: "id", value: String(id))]
         case let .history(bkId, contentId):
+            components.host = "history"
+            var queryItems = [URLQueryItem(name: "bkId", value: String(bkId))]
             if let contentId {
-                return URL(string: "maktabah://history?bkId=\(bkId)&contentId=\(contentId)")!
-            } else {
-                return URL(string: "maktabah://history?bkId=\(bkId)")!
+                queryItems.append(URLQueryItem(name: "contentId", value: String(contentId)))
             }
+            components.queryItems = queryItems
         }
+        return components.url ?? URL(fileURLWithPath: "/")
     }
 
     static func parse(from url: URL) -> WidgetDeepLink? {
