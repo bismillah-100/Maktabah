@@ -628,6 +628,18 @@
 		F3AE6311304C5E7C002569BB /* Search+SavedResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */; };
 		F3AE6312304C5E7C002569BB /* Search+Execution.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62F7304C5E7C002569BB /* Search+Execution.swift */; };
 		F3AE6313304C5E7C002569BB /* Search+Restoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */; };
+		F3AE6319304CFBC4002569BB /* History+Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6316304CFBC4002569BB /* History+Database.swift */; };
+		F3AE631A304CFBC4002569BB /* History+Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6317304CFBC4002569BB /* History+Migration.swift */; };
+		F3AE631B304CFBC4002569BB /* History+Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6315304CFBC4002569BB /* History+Core.swift */; };
+		F3AE631C304CFBC4002569BB /* History+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6314304CFBC4002569BB /* History+CloudKit.swift */; };
+		F3AE631D304CFBC4002569BB /* History+Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6316304CFBC4002569BB /* History+Database.swift */; };
+		F3AE631E304CFBC4002569BB /* History+Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6317304CFBC4002569BB /* History+Migration.swift */; };
+		F3AE631F304CFBC4002569BB /* History+Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6315304CFBC4002569BB /* History+Core.swift */; };
+		F3AE6320304CFBC4002569BB /* History+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6314304CFBC4002569BB /* History+CloudKit.swift */; };
+		F3AE6321304CFBC4002569BB /* History+Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6316304CFBC4002569BB /* History+Database.swift */; };
+		F3AE6322304CFBC4002569BB /* History+Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6317304CFBC4002569BB /* History+Migration.swift */; };
+		F3AE6323304CFBC4002569BB /* History+Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6315304CFBC4002569BB /* History+Core.swift */; };
+		F3AE6324304CFBC4002569BB /* History+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6314304CFBC4002569BB /* History+CloudKit.swift */; };
 		F3B509712FD85BD300313BAD /* ListContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B509702FD85BD300313BAD /* ListContentView.swift */; };
 		F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */; };
 		F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */; };
@@ -1180,6 +1192,10 @@
 		F3AE62FB304C5E7C002569BB /* Search+Observers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Observers.swift"; sourceTree = "<group>"; };
 		F3AE62FC304C5E7C002569BB /* Search+Restoration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+Restoration.swift"; sourceTree = "<group>"; };
 		F3AE62FD304C5E7C002569BB /* Search+SavedResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Search+SavedResults.swift"; sourceTree = "<group>"; };
+		F3AE6314304CFBC4002569BB /* History+CloudKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+CloudKit.swift"; sourceTree = "<group>"; };
+		F3AE6315304CFBC4002569BB /* History+Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Core.swift"; sourceTree = "<group>"; };
+		F3AE6316304CFBC4002569BB /* History+Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Database.swift"; sourceTree = "<group>"; };
+		F3AE6317304CFBC4002569BB /* History+Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Migration.swift"; sourceTree = "<group>"; };
 		F3B509702FD85BD300313BAD /* ListContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListContentView.swift; sourceTree = "<group>"; };
 		F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOCNodeRow.swift; sourceTree = "<group>"; };
 		F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookSearchView.swift; sourceTree = "<group>"; };
@@ -1783,6 +1799,17 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		F3AE6318304CFBC4002569BB /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				F3AE6314304CFBC4002569BB /* History+CloudKit.swift */,
+				F3AE6315304CFBC4002569BB /* History+Core.swift */,
+				F3AE6316304CFBC4002569BB /* History+Database.swift */,
+				F3AE6317304CFBC4002569BB /* History+Migration.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		F3D02D3A2FE04D580054807F /* Base */ = {
 			isa = PBXGroup;
 			children = (
@@ -2282,6 +2309,7 @@
 		FE6001000000000000000010 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				F3AE6318304CFBC4002569BB /* Extensions */,
 				F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */,
 			);
 			path = ViewModel;
@@ -2932,6 +2960,10 @@
 				F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
 				F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				F3AE62D3304C58B0002569BB /* LibraryUpdate.swift in Sources */,
+				F3AE631D304CFBC4002569BB /* History+Database.swift in Sources */,
+				F3AE631E304CFBC4002569BB /* History+Migration.swift in Sources */,
+				F3AE631F304CFBC4002569BB /* History+Core.swift in Sources */,
+				F3AE6320304CFBC4002569BB /* History+CloudKit.swift in Sources */,
 				4B313A212F9A0FC60061FCC1 /* ResultCellView.swift in Sources */,
 				4B56955C2EEFDAAE00ABEB48 /* AnnotationEditorVC.swift in Sources */,
 				4B96D3432F3612D50018D902 /* BookUpdateView.swift in Sources */,
@@ -3193,6 +3225,10 @@
 				4B7C90E02F83494200454BE1 /* AnnotationsVC.swift in Sources */,
 				BE8DDB8A461345B1B88DE69F /* AnVC+Sort.swift in Sources */,
 				5319FEAD9AE94DEEA1F5E1EE /* AnVC+LineMenu.swift in Sources */,
+				F3AE6319304CFBC4002569BB /* History+Database.swift in Sources */,
+				F3AE631A304CFBC4002569BB /* History+Migration.swift in Sources */,
+				F3AE631B304CFBC4002569BB /* History+Core.swift in Sources */,
+				F3AE631C304CFBC4002569BB /* History+CloudKit.swift in Sources */,
 				FF34047318724E38BF0C64DD /* AnVC+TagPopover.swift in Sources */,
 				1878A376483C464F9B105C5F /* AnVC+Share.swift in Sources */,
 				9651F1789A8046C0AAFDCD0C /* AnVC+TagFilter.swift in Sources */,
@@ -3334,6 +3370,10 @@
 				F34047CE303680D0003B4B57 /* DonationSheetView.swift in Sources */,
 				F30576E52FA46222005732C6 /* AppConfig.swift in Sources */,
 				F30576EC2FA46222005732C6 /* SettingsActions.swift in Sources */,
+				F3AE6321304CFBC4002569BB /* History+Database.swift in Sources */,
+				F3AE6322304CFBC4002569BB /* History+Migration.swift in Sources */,
+				F3AE6323304CFBC4002569BB /* History+Core.swift in Sources */,
+				F3AE6324304CFBC4002569BB /* History+CloudKit.swift in Sources */,
 				F30576F22FA46222005732C6 /* ArchiveErrors.swift in Sources */,
 				F3B60E312FC8017D00A9EF58 /* iOSReaderTabsPopoverView.swift in Sources */,
 				F30577842FA463B1005732C6 /* iOSMainView.swift in Sources */,
