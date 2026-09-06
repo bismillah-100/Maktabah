@@ -642,7 +642,11 @@ class IbarotTextView: NSTextView {
             return NSIntersectionRange(r, sourceSelection).length > 0
         }
 
-        if let existing = overlapping {
+        // TODO: - Make mutated changes with var
+        // instead of create a new one. this bug is really high.
+        // causing existing synced annotation marked as non-synced
+        // with null ckRecordId and lastModified type.
+        if var existing = overlapping {
             let updated = Annotation(
                 id: existing.id,
                 bkId: existing.bkId,
@@ -658,7 +662,9 @@ class IbarotTextView: NSTextView {
                 part: existing.part,
                 pageArb: existing.pageArb,
                 partArb: existing.partArb,
-                tags: existing.tags
+                tags: existing.tags,
+                ckRecordId: existing.ckRecordId,
+                lastModified: existing.lastModified
             )
             onUpdateAnnotation?(updated)
         } else {
