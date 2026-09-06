@@ -1,8 +1,15 @@
 name: "CodeQL Advanced"
 
 on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
   schedule:
     - cron: '32 13 * * 5'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:

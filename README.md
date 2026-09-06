@@ -34,12 +34,6 @@
   <a href="https://app.codacy.com/gh/bismillah-100/Maktabah/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade">
     <img src="https://app.codacy.com/project/badge/Grade/1e56e8340d844ba28959d9d1cc7efd98" alt="Codacy Grade">
   </a>
-  <a>
-    <img src="https://img.shields.io/badge/complexity-36-informational" alt="Complexity">
-  </a>
-  <a>
-    <img src="https://img.shields.io/badge/duplication-17%25-orange" alt="Duplication">
-  </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License">
   </a>
