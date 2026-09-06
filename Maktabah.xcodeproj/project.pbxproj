@@ -640,6 +640,21 @@
 		F3AE6322304CFBC4002569BB /* History+Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6317304CFBC4002569BB /* History+Migration.swift */; };
 		F3AE6323304CFBC4002569BB /* History+Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6315304CFBC4002569BB /* History+Core.swift */; };
 		F3AE6324304CFBC4002569BB /* History+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6314304CFBC4002569BB /* History+CloudKit.swift */; };
+		F3AE632B304CFF34002569BB /* Results+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6328304CFF34002569BB /* Results+Search.swift */; };
+		F3AE632C304CFF34002569BB /* Results+ResultOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6327304CFF34002569BB /* Results+ResultOps.swift */; };
+		F3AE632D304CFF34002569BB /* Results+FolderOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6325304CFF34002569BB /* Results+FolderOps.swift */; };
+		F3AE632E304CFF34002569BB /* Results+Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6329304CFF34002569BB /* Results+Tree.swift */; };
+		F3AE632F304CFF34002569BB /* Results+Load.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6326304CFF34002569BB /* Results+Load.swift */; };
+		F3AE6330304CFF34002569BB /* Results+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6328304CFF34002569BB /* Results+Search.swift */; };
+		F3AE6331304CFF34002569BB /* Results+ResultOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6327304CFF34002569BB /* Results+ResultOps.swift */; };
+		F3AE6332304CFF34002569BB /* Results+FolderOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6325304CFF34002569BB /* Results+FolderOps.swift */; };
+		F3AE6333304CFF34002569BB /* Results+Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6329304CFF34002569BB /* Results+Tree.swift */; };
+		F3AE6334304CFF34002569BB /* Results+Load.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6326304CFF34002569BB /* Results+Load.swift */; };
+		F3AE6335304CFF34002569BB /* Results+Search.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6328304CFF34002569BB /* Results+Search.swift */; };
+		F3AE6336304CFF34002569BB /* Results+ResultOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6327304CFF34002569BB /* Results+ResultOps.swift */; };
+		F3AE6337304CFF34002569BB /* Results+FolderOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6325304CFF34002569BB /* Results+FolderOps.swift */; };
+		F3AE6338304CFF34002569BB /* Results+Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6329304CFF34002569BB /* Results+Tree.swift */; };
+		F3AE6339304CFF34002569BB /* Results+Load.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AE6326304CFF34002569BB /* Results+Load.swift */; };
 		F3B509712FD85BD300313BAD /* ListContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B509702FD85BD300313BAD /* ListContentView.swift */; };
 		F3B60E1E2FC7CC1600A9EF58 /* TOCNodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */; };
 		F3B60E202FC7CC3A00A9EF58 /* iOSBookSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */; };
@@ -1196,6 +1211,11 @@
 		F3AE6315304CFBC4002569BB /* History+Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Core.swift"; sourceTree = "<group>"; };
 		F3AE6316304CFBC4002569BB /* History+Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Database.swift"; sourceTree = "<group>"; };
 		F3AE6317304CFBC4002569BB /* History+Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Migration.swift"; sourceTree = "<group>"; };
+		F3AE6325304CFF34002569BB /* Results+FolderOps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Results+FolderOps.swift"; sourceTree = "<group>"; };
+		F3AE6326304CFF34002569BB /* Results+Load.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Results+Load.swift"; sourceTree = "<group>"; };
+		F3AE6327304CFF34002569BB /* Results+ResultOps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Results+ResultOps.swift"; sourceTree = "<group>"; };
+		F3AE6328304CFF34002569BB /* Results+Search.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Results+Search.swift"; sourceTree = "<group>"; };
+		F3AE6329304CFF34002569BB /* Results+Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Results+Tree.swift"; sourceTree = "<group>"; };
 		F3B509702FD85BD300313BAD /* ListContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListContentView.swift; sourceTree = "<group>"; };
 		F3B60E1D2FC7CC0D00A9EF58 /* TOCNodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOCNodeRow.swift; sourceTree = "<group>"; };
 		F3B60E1F2FC7CC3A00A9EF58 /* iOSBookSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookSearchView.swift; sourceTree = "<group>"; };
@@ -1810,6 +1830,18 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		F3AE632A304CFF34002569BB /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				F3AE6325304CFF34002569BB /* Results+FolderOps.swift */,
+				F3AE6326304CFF34002569BB /* Results+Load.swift */,
+				F3AE6327304CFF34002569BB /* Results+ResultOps.swift */,
+				F3AE6328304CFF34002569BB /* Results+Search.swift */,
+				F3AE6329304CFF34002569BB /* Results+Tree.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		F3D02D3A2FE04D580054807F /* Base */ = {
 			isa = PBXGroup;
 			children = (
@@ -2209,6 +2241,7 @@
 		FE4001000000000000000010 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				F3AE632A304CFF34002569BB /* Extensions */,
 				4B58EDCD2EE3DDEE00073495 /* ResultsViewModel.swift */,
 			);
 			path = ViewModel;
@@ -2898,6 +2931,11 @@
 				F300A2EC2F2DCE860095015E /* StorageError.swift in Sources */,
 				F3D02D632FE0616B0054807F /* NarratorViewModel.swift in Sources */,
 				4B3202432EDB1068003B95D1 /* SidebarVC.swift in Sources */,
+				F3AE632B304CFF34002569BB /* Results+Search.swift in Sources */,
+				F3AE632C304CFF34002569BB /* Results+ResultOps.swift in Sources */,
+				F3AE632D304CFF34002569BB /* Results+FolderOps.swift in Sources */,
+				F3AE632E304CFF34002569BB /* Results+Tree.swift in Sources */,
+				F3AE632F304CFF34002569BB /* Results+Load.swift in Sources */,
 				4B33928B2EE02E710028C706 /* LibraryDataManager.swift in Sources */,
 				4B32023D2EDB0F76003B95D1 /* WindowController.swift in Sources */,
 				4B03D9D12F42DB5B004E0FDB /* ReaderState.swift in Sources */,
@@ -3289,6 +3327,11 @@
 				FB254BD29A50C530E907662A /* CloudKitSyncManager.swift in Sources */,
 				F321672F2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,
 				F321E0242FC7050F00CB37DD /* CloudKitCoreManager.swift in Sources */,
+				F3AE6330304CFF34002569BB /* Results+Search.swift in Sources */,
+				F3AE6331304CFF34002569BB /* Results+ResultOps.swift in Sources */,
+				F3AE6332304CFF34002569BB /* Results+FolderOps.swift in Sources */,
+				F3AE6333304CFF34002569BB /* Results+Tree.swift in Sources */,
+				F3AE6334304CFF34002569BB /* Results+Load.swift in Sources */,
 				F321E0252FC7050F00CB37DD /* AnnotationSyncHandler.swift in Sources */,
 				F321E0262FC7050F00CB37DD /* HistorySyncHandler.swift in Sources */,
 				F321E0272FC7050F00CB37DD /* ResultSyncHandler.swift in Sources */,
@@ -3337,6 +3380,11 @@
 				F3AE62F5304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				F3AE62F6304C5C43002569BB /* Reader+iOS.swift in Sources */,
 				FE4400040000000000000004 /* BookmarkTreeChange.swift in Sources */,
+				F3AE6335304CFF34002569BB /* Results+Search.swift in Sources */,
+				F3AE6336304CFF34002569BB /* Results+ResultOps.swift in Sources */,
+				F3AE6337304CFF34002569BB /* Results+FolderOps.swift in Sources */,
+				F3AE6338304CFF34002569BB /* Results+Tree.swift in Sources */,
+				F3AE6339304CFF34002569BB /* Results+Load.swift in Sources */,
 				FE4500040000000000000004 /* SavedResultsItem.swift in Sources */,
 				FE2000040000000000000004 /* Rowi.swift in Sources */,
 				FE2100040000000000000004 /* TabaqaGroup.swift in Sources */,
