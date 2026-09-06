@@ -118,57 +118,51 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     }
 
     private func flushHistory(bypassThrottle: Bool) {
-        Task {
-            var snapshot = compileHistorySnapshot()
-            let currentLocal = await HistorySnapshot.loadLocal()
-            if let currentLocal {
-                snapshot.generation = currentLocal.generation + 1
-            } else {
-                snapshot.generation = 1
-            }
-
-            let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
-
-            if didChange {
-                await MainActor.run {
-                    WidgetCenter.shared.reloadTimelines(ofKind: self.historyKind)
-                }
-            }
-
-            let lastUpload = UserDefaults.standard.object(forKey: lastHistoryUploadKey) as? Date ?? .distantPast
-            let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
-
-            if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
-                uploadSnapshotToCloudKit(snapshot, taskName: "HistorySnapshotUpload")
-                UserDefaults.standard.set(Date(), forKey: lastHistoryUploadKey)
-            }
-        }
+        flushSnapshot(
+            snapshot: compileHistorySnapshot(),
+            widgetKind: historyKind,
+            lastUploadKey: lastHistoryUploadKey,
+            taskName: "HistorySnapshotUpload",
+            bypassThrottle: bypassThrottle
+        )
     }
 
     private func flushAnnotations(bypassThrottle: Bool) {
+        flushSnapshot(
+            snapshot: compileAnnotationSnapshot(),
+            widgetKind: annotationKind,
+            lastUploadKey: lastAnnotationUploadKey,
+            taskName: "WidgetAnnotationSnapshotUpload",
+            bypassThrottle: bypassThrottle
+        )
+    }
+
+    private func flushSnapshot<T: WidgetSnapshotRecord>(
+        snapshot: T,
+        widgetKind: String,
+        lastUploadKey: String,
+        taskName: String,
+        bypassThrottle: Bool
+    ) {
         Task {
-            var snapshot = compileAnnotationSnapshot()
-            let currentLocal = await AnnotationSnapshot.loadLocal()
-            if let currentLocal {
-                snapshot.generation = currentLocal.generation + 1
-            } else {
-                snapshot.generation = 1
-            }
+            var snapshot = snapshot
+            let currentLocal = await T.loadLocal()
+            snapshot.generation = (currentLocal?.generation ?? 0) + 1
 
             let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
 
             if didChange {
                 await MainActor.run {
-                    WidgetCenter.shared.reloadTimelines(ofKind: self.annotationKind)
+                    WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
                 }
             }
 
-            let lastUpload = UserDefaults.standard.object(forKey: lastAnnotationUploadKey) as? Date ?? .distantPast
+            let lastUpload = UserDefaults.standard.object(forKey: lastUploadKey) as? Date ?? .distantPast
             let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
 
             if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
-                uploadSnapshotToCloudKit(snapshot, taskName: "WidgetAnnotationSnapshotUpload")
-                UserDefaults.standard.set(Date(), forKey: lastAnnotationUploadKey)
+                uploadSnapshotToCloudKit(snapshot, taskName: taskName)
+                UserDefaults.standard.set(Date(), forKey: lastUploadKey)
             }
         }
     }
