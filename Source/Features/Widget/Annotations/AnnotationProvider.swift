@@ -5,11 +5,16 @@
 //  Created by Ghoys Mawahib on 28/08/26.
 //
 
+import AppIntents
+import Foundation
 import WidgetKit
 
-struct AnnotationProvider: SnapshotTimelineProvider {
-    typealias Snapshot = AnnotationSnapshot
+struct AnnotationConfigurationIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Annotation Widget"
+    static var description = IntentDescription("Displays your recent annotations.")
+}
 
+struct AnnotationProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> AnnotationEntry {
         AnnotationEntry(
             date: Date(),
@@ -28,11 +33,20 @@ struct AnnotationProvider: SnapshotTimelineProvider {
         )
     }
 
-    func makeEntry(date: Date, items: [AnnotationWidgetItem]) -> AnnotationEntry {
-        AnnotationEntry(date: date, annotations: items)
+    func snapshot(for configuration: AnnotationConfigurationIntent, in context: Context) async -> AnnotationEntry {
+        let snapshot = await AnnotationSnapshot.loadLocal()
+        let items = snapshot.map(mapAnnotationItems) ?? []
+        return AnnotationEntry(date: Date(), annotations: items)
     }
 
-    func mapItems(from snapshot: AnnotationSnapshot) -> [AnnotationWidgetItem] {
+    func timeline(for configuration: AnnotationConfigurationIntent, in context: Context) async -> Timeline<AnnotationEntry> {
+        let snapshot: AnnotationSnapshot? = await CloudKitFetcher.shared.fetchActive()
+        let items = snapshot.map(mapAnnotationItems) ?? []
+        let entry = AnnotationEntry(date: Date(), annotations: items)
+        return Timeline(entries: [entry], policy: .nextRefresh)
+    }
+
+    private func mapAnnotationItems(from snapshot: AnnotationSnapshot) -> [AnnotationWidgetItem] {
         snapshot.items.map {
             AnnotationWidgetItem(
                 id: Int64($0.id) ?? Int64($0.id.hashValue),
