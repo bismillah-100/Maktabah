@@ -92,17 +92,22 @@ extension AnnotationManager {
     }
 
     private func updateTreeNodesForBatch(annotations: [Annotation], uploadToCloudKit: Bool) {
+        guard !annotations.isEmpty else { return }
+
         if _groupingMode == .book {
             for annotation in annotations {
                 guard let annotationId = annotation.id,
                       let node = findAnnotationNode(by: annotationId)
-                else {
-                    postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
-                    continue
-                }
+                else { continue }
                 node.update(with: annotation)
-                postChangeNotification(type: .updated, annotation: annotation, uploadToCloudKit: uploadToCloudKit)
             }
+            postChangeNotification(
+                type: .updated,
+                annotation: annotations.first,
+                annotationsToSync: annotations,
+                annotationId: annotations.count == 1 ? annotations.first?.id : nil,
+                uploadToCloudKit: uploadToCloudKit
+            )
         } else {
             performBatchTagTreeUpdate(annotations, uploadToCloudKit: uploadToCloudKit)
         }

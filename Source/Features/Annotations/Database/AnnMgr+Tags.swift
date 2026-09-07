@@ -117,6 +117,9 @@ extension AnnotationManager {
                 ann.tags = sanitizeTagNames(tags)
                 ann.lastModified = context.now
                 updatedAnnotations.append(ann)
+                if let ckId = ann.ckRecordId, !ckId.isEmpty {
+                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
             }
 
             let insertRelSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) SELECT \(colAnnotationTagAnnotationId), ? FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;"
@@ -144,6 +147,9 @@ extension AnnotationManager {
                 ann.tags = sanitizeTagNames(ann.tags)
                 ann.lastModified = context.now
                 updatedAnnotations.append(ann)
+                if let ckId = ann.ckRecordId, !ckId.isEmpty {
+                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
             }
 
             let updateAnnSql = "UPDATE \(annotationsTable) SET \(colAnnLastModified) = ? WHERE \(colAnnId) IN (SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?);"
@@ -176,6 +182,9 @@ extension AnnotationManager {
                 annotation.lastModified = now
                 updatedAnnotations.append(annotation)
                 updatedIDs.append(annotationID)
+                if let ckId = annotation.ckRecordId, !ckId.isEmpty {
+                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
             }
 
             try updateAnnotationsLastModified(for: updatedIDs, timestamp: now)
@@ -245,6 +254,15 @@ extension AnnotationManager {
             try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
 
             try updateAnnotationsLastModified(for: affectedIds, timestamp: now)
+
+            for chunk in affectedIds.chunked(into: 500) {
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                let fetchCkSql = "SELECT \(colAnnCkRecordId) FROM \(annotationsTable) WHERE \(colAnnId) IN (\(placeholders)) AND \(colAnnCkRecordId) IS NOT NULL AND \(colAnnCkRecordId) != '';"
+                let ckIds = try _db.fetch(query: fetchCkSql, parameters: chunk) { $0.string(at: 0) ?? "" }
+                for ckId in ckIds where !ckId.isEmpty {
+                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+                }
+            }
         }
 
         let updatedAnnotations = purgeCachedTagAnnotations(affectedIds: affectedIds, normalized: normalized, now: now)

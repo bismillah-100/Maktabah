@@ -236,12 +236,32 @@ extension AnnotationManager {
         updatedAnnotations: [Annotation]
     ) {
         _treeQueue.async { [weak self] in
-            guard let self, let root = _rootNode else { return }
+            guard let self else { return }
+
+            guard let root = _rootNode else {
+                if !updatedAnnotations.isEmpty {
+                    postChangeNotification(
+                        type: .updated,
+                        annotation: updatedAnnotations.first,
+                        annotationsToSync: updatedAnnotations,
+                        annotationId: updatedAnnotations.count == 1 ? updatedAnnotations.first?.id : nil
+                    )
+                }
+                return
+            }
 
             guard _groupingMode == .tag else {
                 for ann in updatedAnnotations {
-                    postChangeNotification(type: .updated, annotation: ann)
+                    if let annId = ann.id, let node = findAnnotationNode(by: annId) {
+                        node.update(with: ann)
+                    }
                 }
+                postChangeNotification(
+                    type: .updated,
+                    annotation: updatedAnnotations.first,
+                    annotationsToSync: updatedAnnotations,
+                    annotationId: updatedAnnotations.count == 1 ? updatedAnnotations.first?.id : nil
+                )
                 return
             }
 
@@ -252,6 +272,14 @@ extension AnnotationManager {
                 let tagIndex = root.children.firstIndex(where: { $0 === tagNode })
             else {
                 buildAnnotationTree()
+                if !updatedAnnotations.isEmpty {
+                    postChangeNotification(
+                        type: .updated,
+                        annotation: updatedAnnotations.first,
+                        annotationsToSync: updatedAnnotations,
+                        annotationId: updatedAnnotations.count == 1 ? updatedAnnotations.first?.id : nil
+                    )
+                }
                 return
             }
 
@@ -319,7 +347,18 @@ extension AnnotationManager {
     // MARK: - Batch Tag Tree Update
 
     func performBatchTagTreeUpdate(_ annotations: [Annotation], uploadToCloudKit: Bool = true) {
-        guard let root = _rootNode else { return }
+        guard let root = _rootNode else {
+            if !annotations.isEmpty {
+                postChangeNotification(
+                    type: .updated,
+                    annotation: annotations.first,
+                    annotationsToSync: annotations,
+                    annotationId: annotations.count == 1 ? annotations.first?.id : nil,
+                    uploadToCloudKit: uploadToCloudKit
+                )
+            }
+            return
+        }
 
         let updatedAnnsDict = Dictionary(uniqueKeysWithValues: annotations.compactMap { ann in ann.id.map { ($0, ann) } })
         let (removedEntries, updatedNodes) = processBatchTagUpdates(root: root, updatedAnnsDict: updatedAnnsDict)
@@ -339,6 +378,14 @@ extension AnnotationManager {
                 annotationsToSync: annotations,
                 annotationId: representativeId,
                 diff: diff,
+                uploadToCloudKit: uploadToCloudKit
+            )
+        } else if !annotations.isEmpty {
+            postChangeNotification(
+                type: .updated,
+                annotation: annotations.first,
+                annotationsToSync: annotations,
+                annotationId: annotations.count == 1 ? annotations.first?.id : nil,
                 uploadToCloudKit: uploadToCloudKit
             )
         }
