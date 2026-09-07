@@ -31,6 +31,15 @@ extension AnnotationManager {
         return -1
     }
 
+    private func fetchAffectedAnnotationIds(forTagId tagId: Int64, db: SQLiteDatabase) throws -> [Int64] {
+        let affectedQuery = TagSQL.findAffectedIds(
+            table: annotationTagsTable,
+            colAnnotationId: colAnnotationTagAnnotationId,
+            colTagId: colAnnotationTagTagId
+        )
+        return try db.fetch(query: affectedQuery, parameters: [tagId], mapping: { $0.int64(at: 0) })
+    }
+
     private func getTagRenameContext(
         oldNormalized: String,
         newNormalized: String,
@@ -41,12 +50,7 @@ extension AnnotationManager {
         let oldTagId = try fetchTagId(normalizedName: oldNormalized, db: db)
         guard oldTagId != -1 else { return nil }
 
-        let affectedQuery = TagSQL.findAffectedIds(
-            table: annotationTagsTable,
-            colAnnotationId: colAnnotationTagAnnotationId,
-            colTagId: colAnnotationTagTagId
-        )
-        let affectedIds = try db.fetch(query: affectedQuery, parameters: [oldTagId], mapping: { $0.int64(at: 0) })
+        let affectedIds = try fetchAffectedAnnotationIds(forTagId: oldTagId, db: db)
 
         let existingNewTagId = try fetchTagId(normalizedName: newNormalized, db: db)
 
@@ -107,9 +111,9 @@ extension AnnotationManager {
         existingNewTagId: Int64
     ) throws -> [Annotation] {
         var updatedAnnotations: [Annotation] = []
+        let annotations = loadAnnotationsByIds(context.affectedIds)
         try transaction {
-            for annId in context.affectedIds {
-                guard var ann = loadAnnotationById(annId) else { continue }
+            for var ann in annotations {
                 var tags = ann.tags.filter { normalizedTagName($0) != context.oldNormalized }
                 if !tags.contains(where: { normalizedTagName($0) == context.newNormalized }) {
                     tags.append(context.trimmedNew)
@@ -138,9 +142,9 @@ extension AnnotationManager {
         context: TagRenameContext
     ) throws -> [Annotation] {
         var updatedAnnotations: [Annotation] = []
+        let annotations = loadAnnotationsByIds(context.affectedIds)
         try transaction {
-            for annId in context.affectedIds {
-                guard var ann = loadAnnotationById(annId) else { continue }
+            for var ann in annotations {
                 ann.tags = ann.tags.map {
                     normalizedTagName($0) == context.oldNormalized ? context.trimmedNew : $0
                 }
@@ -170,9 +174,10 @@ extension AnnotationManager {
 
         var updatedAnnotations: [Annotation] = []
         var updatedIDs: [Int64] = []
+        let annotations = loadAnnotationsByIds(uniqueIDs)
         try transaction {
-            for annotationID in uniqueIDs {
-                guard var annotation = loadAnnotationById(annotationID) else { continue }
+            for var annotation in annotations {
+                guard let annotationID = annotation.id else { continue }
                 var tags = annotation.tags
                 guard mutation(&tags) else { continue }
                 let sanitizedTags = sanitizeTagNames(tags)
@@ -236,44 +241,59 @@ extension AnnotationManager {
         guard let _db else { throw NSError(domain: "DBNil", code: 1) }
 
         let normalized = normalizedTagName(tagNameToDelete)
-        var deletedTagId: Int64 = -1
-        let findTagSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1"
-        if let fetchedId = try _db.fetch(query: findTagSql, parameters: [normalized], mapping: { $0.int64(at: 0) }).first {
-            deletedTagId = fetchedId
-        }
+        let deletedTagId = try fetchTagId(normalizedName: normalized, db: _db)
+        guard deletedTagId != -1 else { return }
 
-        if deletedTagId == -1 {
-            return
-        }
+        let affectedIds = try fetchAffectedAnnotationIds(forTagId: deletedTagId, db: _db)
 
-        let findAffectedSql = "SELECT \(colAnnotationTagAnnotationId) FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?"
-        let affectedIds = try _db.fetch(query: findAffectedSql, parameters: [deletedTagId], mapping: { $0.int64(at: 0) })
-
-        try transaction {
-            try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [deletedTagId])
-            try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [deletedTagId])
-
-            try updateAnnotationsLastModified(for: affectedIds, timestamp: now)
-
-            for chunk in affectedIds.chunked(into: 500) {
-                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-                let fetchCkSql = "SELECT \(colAnnCkRecordId) FROM \(annotationsTable) WHERE \(colAnnId) IN (\(placeholders)) AND \(colAnnCkRecordId) IS NOT NULL AND \(colAnnCkRecordId) != '';"
-                let ckIds = try _db.fetch(query: fetchCkSql, parameters: chunk) { $0.string(at: 0) ?? "" }
-                for ckId in ckIds where !ckId.isEmpty {
-                    try addPendingSync(ckRecordId: ckId, operation: "upload")
-                }
-            }
-        }
-
-        let updatedAnnotations = purgeCachedTagAnnotations(affectedIds: affectedIds, normalized: normalized, now: now)
-
-        deleteTagFromTree(
+        try executeTagDeletion(tagId: deletedTagId, affectedIds: affectedIds, timestamp: now)
+        applyTagDeletionToCacheAndTree(
             tagName: tagNameToDelete,
             normalizedName: normalized,
+            affectedIds: affectedIds,
+            timestamp: now
+        )
+    }
+
+    private func executeTagDeletion(tagId: Int64, affectedIds: [Int64], timestamp: Int64) throws {
+        try transaction {
+            try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagTagId) = ?;", parameters: [tagId])
+            try exec("DELETE FROM \(tagsTable) WHERE \(colTagId) = ?;", parameters: [tagId])
+
+            try updateAnnotationsLastModified(for: affectedIds, timestamp: timestamp)
+            try enqueuePendingUploads(for: affectedIds)
+        }
+    }
+
+    private func applyTagDeletionToCacheAndTree(
+        tagName: String,
+        normalizedName: String,
+        affectedIds: [Int64],
+        timestamp: Int64
+    ) {
+        purgeCachedTagAnnotations(affectedIds: affectedIds, normalized: normalizedName, now: timestamp)
+        let updatedAnnotations = loadAnnotationsByIds(affectedIds)
+
+        deleteTagFromTree(
+            tagName: tagName,
+            normalizedName: normalizedName,
             updatedAnnotations: updatedAnnotations
         )
     }
 
+    private func enqueuePendingUploads(for annotationIDs: [Int64]) throws {
+        guard let _db, !annotationIDs.isEmpty else { return }
+        for chunk in annotationIDs.chunked(into: 500) {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let fetchCkSql = "SELECT \(colAnnCkRecordId) FROM \(annotationsTable) WHERE \(colAnnId) IN (\(placeholders)) AND \(colAnnCkRecordId) IS NOT NULL AND \(colAnnCkRecordId) != '';"
+            let ckIds = try _db.fetch(query: fetchCkSql, parameters: chunk) { $0.string(at: 0) ?? "" }
+            for ckId in ckIds where !ckId.isEmpty {
+                try addPendingSync(ckRecordId: ckId, operation: "upload")
+            }
+        }
+    }
+
+    @discardableResult
     private func purgeCachedTagAnnotations(affectedIds: [Int64], normalized: String, now: Int64) -> [Annotation] {
         var updatedAnnotations: [Annotation] = []
         _cacheQueue.sync {
@@ -329,24 +349,26 @@ extension AnnotationManager {
 
         var result: [Int64: [String]] = [:]
 
-        let placeholders = String(repeating: "?,", count: ids.count).dropLast()
-        let sql = """
-        SELECT at.\(colAnnotationTagAnnotationId), t.\(colTagName)
-        FROM \(tagsTable) t
-        JOIN \(annotationTagsTable) at ON t.\(colTagId) = at.\(colAnnotationTagTagId)
-        WHERE at.\(colAnnotationTagAnnotationId) IN (\(placeholders))
-        ORDER BY t.\(colTagName) COLLATE NOCASE
-        """
+        for chunk in ids.chunked(into: 500) {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let sql = """
+            SELECT at.\(colAnnotationTagAnnotationId), t.\(colTagName)
+            FROM \(tagsTable) t
+            JOIN \(annotationTagsTable) at ON t.\(colTagId) = at.\(colAnnotationTagTagId)
+            WHERE at.\(colAnnotationTagAnnotationId) IN (\(placeholders))
+            ORDER BY t.\(colTagName) COLLATE NOCASE
+            """
 
-        do {
-            let rows = try _db.fetch(query: sql, parameters: ids) { row -> (Int64, String) in
-                (row.int64(at: 0), row.string(at: 1) ?? "")
+            do {
+                let rows = try _db.fetch(query: sql, parameters: chunk) { row -> (Int64, String) in
+                    (row.int64(at: 0), row.string(at: 1) ?? "")
+                }
+                for row in rows {
+                    result[row.0, default: []].append(row.1)
+                }
+            } catch {
+                print("Failed to fetch bulk tags: \(error)")
             }
-            for row in rows {
-                result[row.0, default: []].append(row.1)
-            }
-        } catch {
-            print("Failed to fetch bulk tags: \(error)")
         }
 
         return result

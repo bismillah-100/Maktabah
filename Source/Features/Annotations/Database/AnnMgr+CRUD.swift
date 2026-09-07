@@ -156,7 +156,9 @@ extension AnnotationManager {
             _cacheQueue.sync {
                 _cacheByContent[key] = result
                 for ann in result {
-                    if let id = ann.id { _cacheById[id] = ann }
+                    if let id = ann.id {
+                        _cacheById[id] = ann
+                    }
                 }
             }
         } catch {
@@ -188,7 +190,9 @@ extension AnnotationManager {
                     _cacheByContent[key] = anns
                 }
                 for ann in result {
-                    if let id = ann.id { _cacheById[id] = ann }
+                    if let id = ann.id {
+                        _cacheById[id] = ann
+                    }
                 }
             }
         } catch {
@@ -197,33 +201,51 @@ extension AnnotationManager {
         return result
     }
 
-    func loadAnnotationById(_ id: Int64) -> Annotation? {
-        if let cached = _cacheQueue.sync(execute: { _cacheById[id] }) {
-            return cached
-        }
+    func loadAnnotationsByIds(_ ids: [Int64]) -> [Annotation] {
+        guard !ids.isEmpty else { return [] }
 
-        guard let _db else { return nil }
-        let sql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnId) = ? LIMIT 1"
-        do {
-            if var ann = try _db.fetch(query: sql, parameters: [id], mapping: { self.makeAnnotation(from: $0) }).first {
-                ann.tags = loadTags(for: id)
+        var result: [Annotation] = []
+        var missingIds: [Int64] = []
 
-                _cacheQueue.sync {
-                    _cacheById[id] = ann
-                    let key = ContentKey(bkId: ann.bkId, contentId: ann.contentId)
-                    var arr = _cacheByContent[key] ?? []
-                    if !arr.contains(where: { $0.id == ann.id }) {
-                        let idx = arr.insertionIndex(for: ann) { $0.range.location < $1.range.location }
-                        arr.insert(ann, at: idx)
-                        _cacheByContent[key] = arr
-                    }
+        _cacheQueue.sync {
+            for id in ids {
+                if let cached = _cacheById[id] {
+                    result.append(cached)
+                } else {
+                    missingIds.append(id)
                 }
-                return ann
             }
-        } catch {
-            print("Failed to load annotation by ID: \(error)")
         }
-        return nil
+
+        guard !missingIds.isEmpty, let _db else { return result }
+
+        var fetchedAll: [Annotation] = []
+        for chunk in missingIds.chunked(into: 500) {
+            let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            let sql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnId) IN (\(placeholders))"
+
+            if let fetched = try? _db.fetch(query: sql, parameters: chunk, mapping: { self.makeAnnotation(from: $0) }) {
+                fetchedAll.append(contentsOf: fetched)
+            }
+        }
+
+        guard !fetchedAll.isEmpty else { return result }
+        hydrateTags(for: &fetchedAll)
+
+        _cacheQueue.sync {
+            for ann in fetchedAll {
+                if let id = ann.id {
+                    _cacheById[id] = ann
+                }
+            }
+        }
+
+        result.append(contentsOf: fetchedAll)
+        return result
+    }
+
+    func loadAnnotationById(_ id: Int64) -> Annotation? {
+        loadAnnotationsByIds([id]).first
     }
 
     func fetchAnnotations(byCkRecordIds ckRecordIds: [String]) -> [Annotation] {
