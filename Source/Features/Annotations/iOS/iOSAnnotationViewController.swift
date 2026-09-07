@@ -101,6 +101,8 @@ class iOSAnnotationViewController: UIViewController {
             }
 
             updateItemInSections(with: updatedAnnotation)
+        } else {
+            onNeedFullReload?()
         }
     }
 
@@ -122,7 +124,9 @@ class iOSAnnotationViewController: UIViewController {
             let targetAnnotationId = entry.annotationNode.annotation?.id
 
             let itemsToDelete = sectionSnap.items.filter {
-                if case let .annotation(node) = $0 { return node.annotation?.id == targetAnnotationId }
+                if case let .annotation(node) = $0 {
+                    return node.annotation?.id == targetAnnotationId
+                }
                 return false
             }
 
@@ -152,7 +156,9 @@ class iOSAnnotationViewController: UIViewController {
 
             var sectionSnap = dataSource.snapshot(for: sectionID)
             let existingGroupItem = sectionSnap.items.first {
-                if case .group = $0 { return true }
+                if case .group = $0 {
+                    return true
+                }
                 return false
             }
 
@@ -191,7 +197,9 @@ class iOSAnnotationViewController: UIViewController {
             var sectionSnap = dataSource.snapshot(for: sectionID)
 
             let itemsToDelete = sectionSnap.items.filter {
-                if case let .annotation(node) = $0 { return node.annotation?.id == annotationId }
+                if case let .annotation(node) = $0 {
+                    return node.annotation?.id == annotationId
+                }
                 return false
             }
 
@@ -202,7 +210,9 @@ class iOSAnnotationViewController: UIViewController {
 
             // Remove section if no annotations remain
             let hasAnnotations = dataSource.snapshot(for: sectionID).items.contains {
-                if case .annotation = $0 { return true }
+                if case .annotation = $0 {
+                    return true
+                }
                 return false
             }
             if !hasAnnotations {
@@ -239,7 +249,9 @@ class iOSAnnotationViewController: UIViewController {
                     )
                     let updatedItem = AnnotationItem.annotation(updatedNode)
 
-                    if oldItem == updatedItem { continue }
+                    if oldItem == updatedItem {
+                        continue
+                    }
 
                     sectionSnapshot.insert([updatedItem], after: oldItem)
                     sectionSnapshot.delete([oldItem])
@@ -461,14 +473,20 @@ class iOSAnnotationViewController: UIViewController {
         let wasExpanded = expandedGroups.contains(id)
         let willExpand = !wasExpanded
 
-        if willExpand { expandedGroups.insert(id) }
-        else { expandedGroups.remove(id) }
+        if willExpand {
+            expandedGroups.insert(id)
+        } else {
+            expandedGroups.remove(id)
+        }
 
         let groupItem = AnnotationItem.group(node)
         var sectionSnapshot = dataSource.snapshot(for: id)
 
-        if willExpand { sectionSnapshot.expand([groupItem]) }
-        else { sectionSnapshot.collapse([groupItem]) }
+        if willExpand {
+            sectionSnapshot.expand([groupItem])
+        } else {
+            sectionSnapshot.collapse([groupItem])
+        }
 
         dataSource.apply(sectionSnapshot, to: id, animatingDifferences: true)
         if let indexPath = dataSource.indexPath(for: groupItem),

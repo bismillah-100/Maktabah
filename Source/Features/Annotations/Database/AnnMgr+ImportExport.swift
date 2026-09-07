@@ -78,8 +78,18 @@ extension AnnotationManager {
         existingId: Int64,
         currentTimestamp: Int64
     ) throws -> Annotation {
+        var resolvedCkRecordId = ann.ckRecordId
+        if resolvedCkRecordId == nil || resolvedCkRecordId?.isEmpty == true {
+            let fetchSql = "SELECT \(colAnnCkRecordId) FROM \(annotationsTable) WHERE \(colAnnId) = ? LIMIT 1;"
+            resolvedCkRecordId = try db.fetch(query: fetchSql, parameters: [existingId]) { $0.string(at: 0) }.first ?? nil
+            if resolvedCkRecordId == nil || resolvedCkRecordId?.isEmpty == true {
+                resolvedCkRecordId = UUID().uuidString
+            }
+        }
+
         let updateSql = """
         UPDATE \(annotationsTable) SET
+            \(colAnnCkRecordId) = ?,
             \(colAnnColor) = ?,
             \(colAnnType) = ?,
             \(colAnnNote) = ?,
@@ -95,6 +105,7 @@ extension AnnotationManager {
 
         let lastMod = ann.lastModified ?? currentTimestamp
         let params: [Any] = [
+            resolvedCkRecordId ?? NSNull(),
             ann.colorHex,
             ann.type.rawValue,
             ann.note ?? NSNull(),
@@ -116,8 +127,9 @@ extension AnnotationManager {
         updatedAnn.id = existingId
         updatedAnn.tags = normalizedTags
         updatedAnn.lastModified = lastMod
+        updatedAnn.ckRecordId = resolvedCkRecordId
 
-        if let ckId = ann.ckRecordId, !ckId.isEmpty {
+        if let ckId = resolvedCkRecordId, !ckId.isEmpty {
             try addPendingSync(ckRecordId: ckId, operation: "upload")
         }
         return updatedAnn
