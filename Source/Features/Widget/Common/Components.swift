@@ -182,8 +182,6 @@ struct WidgetContainerView<Content: View>: View {
             content()
         }
         .padding(family == .systemSmall ? 10 : 12)
-        .widgetBackground {
-            Rectangle().fill(.thickMaterial)
-        }
+        .containerBackground(.thickMaterial, for: .widget)
     }
 }

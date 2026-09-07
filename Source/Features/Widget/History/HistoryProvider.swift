@@ -5,12 +5,16 @@
 //  Created by Ghoys Mawahib on 28/08/26.
 //
 
+import AppIntents
 import Foundation
 import WidgetKit
 
-struct HistoryProvider: SnapshotTimelineProvider {
-    typealias Snapshot = HistorySnapshot
+struct HistoryConfigurationIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "History Widget"
+    static var description = IntentDescription("Displays your recently read books.")
+}
 
+struct HistoryProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> HistoryEntry {
         HistoryEntry(
             date: Date(),
@@ -25,11 +29,20 @@ struct HistoryProvider: SnapshotTimelineProvider {
         )
     }
 
-    func makeEntry(date: Date, items: [HistoryItem]) -> HistoryEntry {
-        HistoryEntry(date: date, history: items)
+    func snapshot(for configuration: HistoryConfigurationIntent, in context: Context) async -> HistoryEntry {
+        let snapshot = await HistorySnapshot.loadLocal()
+        let items = snapshot.map(mapHistoryItems) ?? []
+        return HistoryEntry(date: Date(), history: items)
     }
 
-    func mapItems(from snapshot: HistorySnapshot) -> [HistoryItem] {
+    func timeline(for configuration: HistoryConfigurationIntent, in context: Context) async -> Timeline<HistoryEntry> {
+        let snapshot: HistorySnapshot? = await CloudKitFetcher.shared.fetchActive()
+        let items = snapshot.map(mapHistoryItems) ?? []
+        let entry = HistoryEntry(date: Date(), history: items)
+        return Timeline(entries: [entry], policy: .nextRefresh)
+    }
+
+    private func mapHistoryItems(from snapshot: HistorySnapshot) -> [HistoryItem] {
         snapshot.items.map {
             HistoryItem(
                 bkId: $0.bookId,

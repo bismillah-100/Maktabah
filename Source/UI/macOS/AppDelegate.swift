@@ -133,7 +133,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             try await Task.sleep(for: .seconds(5))
             CloudKitSyncManager.shared.fetchChanges()
         }
-        WidgetUpdateCoordinator.shared.handleSilentPush { _ in }
+        Task {
+            _ = await WidgetUpdateCoordinator.shared.handleSilentPush()
+        }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
@@ -183,6 +185,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
          }
      }
       */
+
+    func applicationWillResignActive(_ notification: Notification) {
+        flushPendingWidgetUpdates(cloudKit: true)
+    }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         flushPendingWidgetUpdates(cloudKit: true)
@@ -685,7 +691,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func flushPendingWidgetUpdates(cloudKit: Bool = false) {
-        WidgetUpdateCoordinator.shared.flushPendingUpdates(
+        WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(
             forceCloudKit: cloudKit
         )
     }
