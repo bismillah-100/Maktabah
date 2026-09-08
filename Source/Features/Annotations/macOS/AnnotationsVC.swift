@@ -63,6 +63,7 @@ class AnnotationsVC: NSViewController {
         static let descending = 202
         static let groupingBook = 301
         static let groupingTag = 302
+        static let groupingTimeline = 303
     }
 
     var selectedSortField: AnnotationSortField {

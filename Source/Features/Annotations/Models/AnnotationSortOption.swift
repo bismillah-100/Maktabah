@@ -15,6 +15,7 @@ enum AnnotationSortField: Int {
 enum AnnotationGroupingMode: Int {
     case book
     case tag
+    case timeline
 }
 
 enum TagFilterMode {

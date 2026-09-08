@@ -5,7 +5,6 @@
 //  Created by Ghoys Mawahib on 25/08/26.
 //
 
-
 import Cocoa
 
 extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegate {
@@ -67,7 +66,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         switch groupingMode {
         case .book:
             return page + tags
-        case .tag:
+        case .tag, .timeline:
             let bookTitle = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book ?? String(localized: .bookNotFound(bookID: annotation.bkId))
             return page + tags + "\n" + bookTitle
         }
@@ -120,7 +119,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         if let outlineView,
            let node = outlineView.item(atRow: row) as? AnnotationNode,
            node.annotation == nil,
-           node.kind == AnnotationNodeKind.tag || node.kind == AnnotationNodeKind.untagged
+           node.kind == AnnotationNodeKind.tag || node.kind == AnnotationNodeKind.untagged || node.kind == AnnotationNodeKind.dateBucket
         {
             return []
         }

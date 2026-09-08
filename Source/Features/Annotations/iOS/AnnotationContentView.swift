@@ -144,7 +144,7 @@ class AnnotationContentView: UIView, UIContentView {
         for ann: Annotation,
         groupingMode: AnnotationGroupingMode
     ) -> SecondaryInfo {
-        if groupingMode == .tag {
+        if groupingMode == .tag || groupingMode == .timeline {
             if let book = LibraryDataManager.shared.getBook([ann.bkId]).first {
                 SecondaryInfo(text: book.book, color: .secondaryLabel, isHidden: false)
             } else {
