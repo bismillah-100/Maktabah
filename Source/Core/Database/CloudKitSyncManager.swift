@@ -59,7 +59,7 @@ final class CloudKitSyncManager {
         for id in ids {
             switch target {
             case .annotation:
-                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: upload)
+                try? AnnotationRepository.shared.addPendingSync(ckRecordId: id, operation: upload)
             case .result:
                 try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: upload)
             case .history:
@@ -72,7 +72,7 @@ final class CloudKitSyncManager {
         for id in ids {
             switch target {
             case .annotation:
-                try? AnnotationManager.shared.addPendingSync(ckRecordId: id, operation: delete)
+                try? AnnotationRepository.shared.addPendingSync(ckRecordId: id, operation: delete)
             case .result:
                 try? ResultsHandler.shared.addPendingSync(ckRecordId: id, operation: delete)
             case .history:
@@ -84,7 +84,7 @@ final class CloudKitSyncManager {
     private func removePendingSync(_ ids: [String], target: SyncTarget) {
         switch target {
         case .annotation:
-            AnnotationManager.shared.removePendingSync(ckRecordIds: ids)
+            AnnotationRepository.shared.removePendingSync(ckRecordIds: ids)
         case .result:
             ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
         case .history:
@@ -95,7 +95,7 @@ final class CloudKitSyncManager {
     // MARK: - Retry Logic
 
     private func retryPendingUploads(retryCount: Int = 0) {
-        let annPending = AnnotationManager.shared.fetchPendingSync(operation: upload)
+        let annPending = AnnotationRepository.shared.fetchPendingSync(operation: upload)
         let resPending = ResultsHandler.shared.fetchPendingSync(operation: upload)
         let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: upload)
 
@@ -106,7 +106,7 @@ final class CloudKitSyncManager {
         var histOrphans: [String] = []
 
         if !annPending.isEmpty {
-            let toUploadAnn = AnnotationManager.shared.fetchAnnotations(byCkRecordIds: annPending)
+            let toUploadAnn = AnnotationRepository.shared.fetchAnnotations(byCkRecordIds: annPending)
             if !toUploadAnn.isEmpty {
                 upload(annotations: toUploadAnn, debounce: false, retryCount: retryCount, trackPending: false)
             }
@@ -152,7 +152,7 @@ final class CloudKitSyncManager {
     }
 
     private func retryPendingDeletes(retryCount: Int = 0) {
-        let annPending = AnnotationManager.shared.fetchPendingSync(operation: delete)
+        let annPending = AnnotationRepository.shared.fetchPendingSync(operation: delete)
         let resPending = ResultsHandler.shared.fetchPendingSync(operation: delete)
         let histPending = HistoryDatabaseManager.shared.fetchPendingSync(operation: delete)
 
@@ -217,8 +217,8 @@ final class CloudKitSyncManager {
         // agar data yang dibuat saat CloudKit off tidak terlewat.
         let isInitialUpload = !UserDefaults.standard.bool(forKey: "CloudKitSyncManager_InitialUploadDone")
 
-        if let _ = AnnotationManager.shared.db {
-            try? AnnotationManager.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
+        if let _ = AnnotationRepository.shared.db {
+            try? AnnotationStore.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
                 if !isInitialUpload, !backfilled.isEmpty {
                     self?.upload(annotations: backfilled, debounce: false)
                 }
@@ -249,7 +249,7 @@ final class CloudKitSyncManager {
         var hasError = false
         let batchSize = 200
 
-        let allAnnotations = AnnotationManager.shared.loadAnnotations()
+        let allAnnotations = AnnotationStore.shared.loadAnnotations()
         for batch in allAnnotations.chunked(into: batchSize) {
             group.enter()
             upload(annotations: batch, debounce: false) { result in
@@ -659,7 +659,7 @@ final class CloudKitSyncManager {
         var success = true
 
         if !parsed.annotations.isEmpty || !idsToDelete.isEmpty {
-            let annSuccess = AnnotationManager.shared.applyCloudKitChanges(
+            let annSuccess = AnnotationStore.shared.applyCloudKitChanges(
                 annotationsToSave: parsed.annotations,
                 recordIdsToDelete: idsToDelete
             )
@@ -925,7 +925,7 @@ final class CloudKitSyncManager {
     }
 
     func resetChangeToken() {
-        AnnotationManager.shared.db?.checkpoint()
+        AnnotationRepository.shared.db?.checkpoint()
         ResultsHandler.shared.db?.checkpoint()
         core.resetToken()
         fetchChanges()

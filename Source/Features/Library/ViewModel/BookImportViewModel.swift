@@ -198,7 +198,7 @@ final class BookImportViewModel {
 
         Task {
             let count = await Task.detached(priority: .utility) {
-                AnnotationManager.shared.loadAnnotations(bkId: id).count
+                AnnotationStore.shared.loadAnnotations(bkId: id).count
             }.value
             await MainActor.run { [weak self] in
                 self?.newIdAnnotationCount = count
@@ -324,7 +324,7 @@ final class BookImportViewModel {
     private func executeDatabaseChanges(oldId: Int, newId: Int) async throws -> ([Annotation], [SyncResult]) {
         try await Task.detached(priority: .userInitiated) {
             try BookUpdateManager.shared.changeBookId(oldId: oldId, newId: newId)
-            let annotations = try AnnotationManager.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
+            let annotations = try AnnotationStore.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
             let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
             return (annotations, results)
         }.value

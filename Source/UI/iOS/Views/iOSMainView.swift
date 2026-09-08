@@ -119,7 +119,7 @@ struct iOSMainView: View {
         Task {
             switch deepLink {
             case let .annotation(annId):
-                if let annotation = AnnotationManager.shared.loadAnnotationById(annId),
+                if let annotation = AnnotationStore.shared.loadAnnotationById(annId),
                    let book = LibraryDataManager.shared.getBook([annotation.bkId]).first
                 {
                     await MainActor.run {

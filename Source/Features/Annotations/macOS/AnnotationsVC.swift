@@ -97,7 +97,9 @@ class AnnotationsVC: NSViewController {
 
         scopeSegment.translatesAutoresizingMaskIntoConstraints = false
         scopeSegment.trackingMode = .selectOne
-        if #available(macOS 26, *) { scopeSegment.borderShape = .capsule }
+        if #available(macOS 26, *) {
+            scopeSegment.borderShape = .capsule
+        }
 
         NSLayoutConstraint.activate([
             scopeSegment.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
@@ -157,7 +159,9 @@ class AnnotationsVC: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        if isDataLoaded { return }
+        if isDataLoaded {
+            return
+        }
         ReusableFunc.showProgressWindow(view)
         xBtn.isHidden = popover
         dataSource.onSelectItem = { [weak self] row in self?.isRowUnselected = row == -1 }
@@ -192,7 +196,9 @@ class AnnotationsVC: NSViewController {
     // MARK: - Actions
 
     @IBAction func reloadAnnotations(_ sender: Any?) {
-        if sender != nil { AnnotationManager.shared.connect() }
+        if sender != nil {
+            AnnotationStore.shared.connect()
+        }
         outlineView.dataSource = dataSource
         outlineView.delegate = dataSource
         outlineView.usesAutomaticRowHeights = true

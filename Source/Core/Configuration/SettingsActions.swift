@@ -83,7 +83,7 @@ enum SettingsActions {
         let processURL = { (url: URL) in
             do {
                 try changeAnnotationsBaseUrl(to: url, resolution: resolution)
-                AnnotationManager.shared.buildAnnotationTree()
+                AnnotationTreeBuilder.shared.buildAnnotationTree()
                 onCompletion(.success(url))
             } catch {
                 onCompletion(.failure(error))
@@ -345,7 +345,7 @@ enum SettingsActions {
             newURL.stopAccessingSecurityScopedResource()
         }
 
-        AnnotationManager.shared.disconnect()
+        AnnotationStore.shared.disconnect()
         ResultsHandler.shared.disconnect()
 
         if let oldURL, fm.fileExists(atPath: oldURL.path) {
@@ -357,7 +357,7 @@ enum SettingsActions {
             key: AppConfig.annotationsAndResultsFolder
         )
 
-        try AnnotationManager.shared.setupAnnotations(at: newURL)
+        try AnnotationStore.shared.setup(at: newURL)
         try ResultsHandler.shared.setupResultDatabase(at: newURL)
     }
 

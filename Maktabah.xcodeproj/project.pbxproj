@@ -505,30 +505,18 @@
 		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374C00B2FDD69A2009D6807 /* SearchComponents.swift */; };
 		F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
-		F37F1C36300268E3002B5618 /* AnnotationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2D300268E3002B5618 /* AnnotationManager.swift */; };
-		F37F1C37300268E3002B5618 /* AnnMgr+Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */; };
-		F37F1C38300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */; };
-		F37F1C39300268E3002B5618 /* AnnMgr+DB.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */; };
-		F37F1C3A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */; };
-		F37F1C3B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */; };
-		F37F1C3C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */; };
-		F37F1C3D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */; };
-		F37F1C3E300268E3002B5618 /* AnnotationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2D300268E3002B5618 /* AnnotationManager.swift */; };
-		F37F1C3F300268E3002B5618 /* AnnMgr+Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */; };
-		F37F1C40300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */; };
-		F37F1C41300268E3002B5618 /* AnnMgr+DB.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */; };
-		F37F1C42300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */; };
-		F37F1C43300268E3002B5618 /* AnnMgr+Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */; };
-		F37F1C44300268E3002B5618 /* AnnMgr+Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */; };
-		F37F1C45300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */; };
-		F37F1C46300268E3002B5618 /* AnnotationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2D300268E3002B5618 /* AnnotationManager.swift */; };
-		F37F1C47300268E3002B5618 /* AnnMgr+Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */; };
-		F37F1C48300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */; };
-		F37F1C49300268E3002B5618 /* AnnMgr+DB.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */; };
-		F37F1C4A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */; };
-		F37F1C4B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */; };
-		F37F1C4C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */; };
-		F37F1C4D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */; };
+		F365E709304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */; };
+		F365E70A304F6513009FF69C /* AnnotationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E706304F6513009FF69C /* AnnotationRepository.swift */; };
+		F365E70B304F6513009FF69C /* AnnotationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E707304F6513009FF69C /* AnnotationStore.swift */; };
+		F365E70C304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */; };
+		F365E70D304F6513009FF69C /* AnnotationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E706304F6513009FF69C /* AnnotationRepository.swift */; };
+		F365E70E304F6513009FF69C /* AnnotationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E707304F6513009FF69C /* AnnotationStore.swift */; };
+		F365E70F304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */; };
+		F365E710304F6513009FF69C /* AnnotationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E706304F6513009FF69C /* AnnotationRepository.swift */; };
+		F365E711304F6513009FF69C /* AnnotationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E707304F6513009FF69C /* AnnotationStore.swift */; };
+		F365E713304F65CD009FF69C /* AnnotationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E712304F65CD009FF69C /* AnnotationEvent.swift */; };
+		F365E714304F65CD009FF69C /* AnnotationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E712304F65CD009FF69C /* AnnotationEvent.swift */; };
+		F365E715304F65CD009FF69C /* AnnotationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E712304F65CD009FF69C /* AnnotationEvent.swift */; };
 		F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
@@ -736,9 +724,6 @@
 		F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
 		F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
 		F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
-		F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
-		F3E900072FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
-		F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */; };
 		F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */; };
 		F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
@@ -1159,14 +1144,10 @@
 		F364898830131EAE00B9285B /* NotificationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationToken.swift; sourceTree = "<group>"; };
 		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
-		F37F1C2D300268E3002B5618 /* AnnotationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationManager.swift; sourceTree = "<group>"; };
-		F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+Cache.swift"; sourceTree = "<group>"; };
-		F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+CloudKit.swift"; sourceTree = "<group>"; };
-		F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+CRUD.swift"; sourceTree = "<group>"; };
-		F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+DB.swift"; sourceTree = "<group>"; };
-		F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+Tags.swift"; sourceTree = "<group>"; };
-		F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+TagTree.swift"; sourceTree = "<group>"; };
-		F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AnnMgr+Tree.swift"; sourceTree = "<group>"; };
+		F365E706304F6513009FF69C /* AnnotationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRepository.swift; sourceTree = "<group>"; };
+		F365E707304F6513009FF69C /* AnnotationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationStore.swift; sourceTree = "<group>"; };
+		F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationTreeBuilder.swift; sourceTree = "<group>"; };
+		F365E712304F65CD009FF69C /* AnnotationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEvent.swift; sourceTree = "<group>"; };
 		F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationChangeTypes.swift; sourceTree = "<group>"; };
 		F38A74ED2FF43E9300198CDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookInfoView.swift; sourceTree = "<group>"; };
@@ -1261,7 +1242,6 @@
 		F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZSTDContextWrapper.swift; sourceTree = "<group>"; };
 		F3DD0CEB3048964D00C0227C /* LibraryView+Diffing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryView+Diffing.swift"; sourceTree = "<group>"; };
 		F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationJsonSerializer.swift; sourceTree = "<group>"; };
-		F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "AnnMgr+ImportExport.swift"; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
 		F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTLScrollView.swift; sourceTree = "<group>"; };
@@ -1949,6 +1929,7 @@
 				FEA100010000000000000001 /* AnnotationNode.swift */,
 				FEA200010000000000000001 /* AnnotationSortOption.swift */,
 				F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */,
+				F365E712304F65CD009FF69C /* AnnotationEvent.swift */,
 				F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */,
 				F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */,
 			);
@@ -1966,15 +1947,9 @@
 		FE0000060000000000000006 /* Database */ = {
 			isa = PBXGroup;
 			children = (
-				F37F1C2E300268E3002B5618 /* AnnMgr+Cache.swift */,
-				F37F1C2F300268E3002B5618 /* AnnMgr+CloudKit.swift */,
-				F37F1C30300268E3002B5618 /* AnnMgr+CRUD.swift */,
-				F37F1C31300268E3002B5618 /* AnnMgr+DB.swift */,
-				F3E900052FC0000100000001 /* AnnMgr+ImportExport.swift */,
-				F37F1C32300268E3002B5618 /* AnnMgr+Tags.swift */,
-				F37F1C33300268E3002B5618 /* AnnMgr+TagTree.swift */,
-				F37F1C34300268E3002B5618 /* AnnMgr+Tree.swift */,
-				F37F1C2D300268E3002B5618 /* AnnotationManager.swift */,
+				F365E706304F6513009FF69C /* AnnotationRepository.swift */,
+				F365E707304F6513009FF69C /* AnnotationStore.swift */,
+				F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -2988,17 +2963,12 @@
 				67948424D93A49DDBE7BCBF9 /* AnnotationJsonDocument.swift in Sources */,
 				F7619505363C4134841E0BFE /* Color+Hex.swift in Sources */,
 				4B6AF2362EE58394002EBFFC /* IbarotTextVC.swift in Sources */,
-				F37F1C46300268E3002B5618 /* AnnotationManager.swift in Sources */,
-				F37F1C47300268E3002B5618 /* AnnMgr+Cache.swift in Sources */,
+				F365E713304F65CD009FF69C /* AnnotationEvent.swift in Sources */,
+				F365E70C304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */,
+				F365E70D304F6513009FF69C /* AnnotationRepository.swift in Sources */,
+				F365E70E304F6513009FF69C /* AnnotationStore.swift in Sources */,
 				F3F3FEA83035E85B00507E9A /* RTLScrollView.swift in Sources */,
-				F37F1C48300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
-				F37F1C49300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
-				F37F1C4A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */,
-				F37F1C4B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
-				F37F1C4C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
-				F37F1C4D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
 				F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
-				F3E900062FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				F3AE62D3304C58B0002569BB /* LibraryUpdate.swift in Sources */,
 				F3AE631D304CFBC4002569BB /* History+Database.swift in Sources */,
 				F3AE631E304CFBC4002569BB /* History+Migration.swift in Sources */,
@@ -3149,18 +3119,13 @@
 				4B7C90AA2F83494200454BE1 /* LibraryVC.swift in Sources */,
 				4B7C90AC2F83494200454BE1 /* SavedResults.swift in Sources */,
 				4B7C90AD2F83494200454BE1 /* ResultsViewManager.swift in Sources */,
-				F37F1C36300268E3002B5618 /* AnnotationManager.swift in Sources */,
-				F37F1C37300268E3002B5618 /* AnnMgr+Cache.swift in Sources */,
-				F37F1C38300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
-				F37F1C39300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
-				F37F1C3A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */,
+				F365E709304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */,
+				F365E70A304F6513009FF69C /* AnnotationRepository.swift in Sources */,
+				F365E70B304F6513009FF69C /* AnnotationStore.swift in Sources */,
 				F34D9FCB303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */,
-				F37F1C3B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
 				F32D4419303CFB8300429664 /* SearchWorker.swift in Sources */,
-				F37F1C3C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
-				F37F1C3D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
+				F365E715304F65CD009FF69C /* AnnotationEvent.swift in Sources */,
 				F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
-				F3E900072FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				4B7C90AE2F83494200454BE1 /* InitProgress.swift in Sources */,
 				4B7C90AF2F83494200454BE1 /* SettingsActions.swift in Sources */,
 				4B7C90B02F83494200454BE1 /* QuranTafseerVC.swift in Sources */,
@@ -3492,18 +3457,13 @@
 				F3BEC5682FD97AD600FA0400 /* AnnotationContentView.swift in Sources */,
 				F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */,
 				F3D02D5E2FE05A650054807F /* LibraryViewModel.swift in Sources */,
-				F37F1C3E300268E3002B5618 /* AnnotationManager.swift in Sources */,
-				F37F1C3F300268E3002B5618 /* AnnMgr+Cache.swift in Sources */,
-				F37F1C40300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
-				F37F1C41300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
-				F37F1C42300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */,
-				F37F1C43300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
-				F37F1C44300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
-				F37F1C45300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
+				F365E714304F65CD009FF69C /* AnnotationEvent.swift in Sources */,
+				F365E70F304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */,
+				F365E710304F6513009FF69C /* AnnotationRepository.swift in Sources */,
+				F365E711304F6513009FF69C /* AnnotationStore.swift in Sources */,
 				F3E900042FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,
 				006F20CC814442B69245E15B /* AnnotationJsonDocument.swift in Sources */,
 				B1F1F3AA6DD84A0686C50AF3 /* Color+Hex.swift in Sources */,
-				F3E900082FC0000100000001 /* AnnMgr+ImportExport.swift in Sources */,
 				F31111962FC00F060024B638 /* iOSResultWriterView.swift in Sources */,
 				F31111972FC00F060024B638 /* iOSSavedResultsView.swift in Sources */,
 				F305770C2FA46222005732C6 /* CopyableResult.swift in Sources */,

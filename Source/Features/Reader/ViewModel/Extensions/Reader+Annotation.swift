@@ -10,7 +10,7 @@ extension ReaderViewModel {
 
     func loadAnnotations() {
         guard let book = currentBook else { return }
-        let anns = annotationManager.loadAnnotations(
+        let anns = annotationStore.loadAnnotations(
             bkId: book.id,
             contentId: currentContentId
         )
@@ -52,12 +52,12 @@ extension ReaderViewModel {
     }
 
     func deleteAnnotation(id: Int64) throws {
-        try annotationManager.deleteAnnotation(id: id)
+        try annotationStore.deleteAnnotation(id: id)
         loadAnnotations()
     }
 
     func updateAnnotation(_ annotation: Annotation) throws {
-        try annotationManager.updateAnnotation(annotation)
+        try annotationStore.updateAnnotation(annotation)
         loadAnnotations()
     }
 }

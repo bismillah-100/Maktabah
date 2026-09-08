@@ -157,7 +157,7 @@ extension AnnotationsVC {
                         let overwrite = (alertResponse == .alertFirstButtonReturn)
                         Task.detached(priority: .userInitiated) {
                             do {
-                                let count = try AnnotationManager.shared.importAnnotations(decoded, overwrite: overwrite)
+                                let count = try AnnotationStore.shared.importAnnotations(decoded, overwrite: overwrite)
                                 await MainActor.run {
                                     let successMsg = String(format: "%d annotations imported successfully".localized, count)
                                     ReusableFunc.showAlert(title: "Import Annotations".localized, message: successMsg)

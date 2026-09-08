@@ -1,5 +1,5 @@
 //
-//  AnnotationsEditorViewController.swift
+//  AnnotationEditorVC.swift
 //  annotations
 //
 //  Created by MacBook on 13/12/25.
@@ -8,7 +8,6 @@
 import Cocoa
 
 class AnnotationEditorVC: NSViewController {
-
     // MARK: - UI
 
     @IBOutlet weak var noteField: NSTextView!
@@ -25,12 +24,10 @@ class AnnotationEditorVC: NSViewController {
 
     // MARK: - Data
 
-    lazy var currentFont: NSFont = {
-        .init(
-            name: UserDefaults.standard.textViewFontName,
-            size: CGFloat(UserDefaults.standard.textViewFontSize - 4)
-        ) ?? .systemFont(ofSize: NSFont.systemFontSize)
-    }()
+    lazy var currentFont: NSFont = .init(
+        name: UserDefaults.standard.textViewFontName,
+        size: CGFloat(UserDefaults.standard.textViewFontSize - 4)
+    ) ?? .systemFont(ofSize: NSFont.systemFontSize)
 
     var annotation: Annotation!
 
@@ -44,12 +41,12 @@ class AnnotationEditorVC: NSViewController {
 
         underLine.state = annotation.type == .underline ? .on : .off
         colorWell.isHidden = underLine.state == .on
-        
+
         if #available(macOS 26, *) {
             saveButton.borderShape = .capsule
             deleteButton.borderShape = .capsule
         }
-        
+
         tagsField.completionDelay = 0.5
     }
 
@@ -74,6 +71,7 @@ class AnnotationEditorVC: NSViewController {
     }
 
     // MARK: - Actions
+
     @objc func saveTapped() {
         let newNote = noteField.string
         let newColorHex = colorWell.color.hexString()
@@ -86,14 +84,14 @@ class AnnotationEditorVC: NSViewController {
 
         do {
             if updated.id == nil {
-                try AnnotationManager.shared.addAnnotation(updated)
+                try AnnotationStore.shared.addAnnotation(updated)
             } else {
-                try AnnotationManager.shared.updateAnnotation(updated)
+                try AnnotationStore.shared.updateAnnotation(updated)
             }
         } catch {
             print("Gagal menyimpan/update anotasi:", error)
         }
-        
+
         cancelTapped()
     }
 
@@ -102,7 +100,7 @@ class AnnotationEditorVC: NSViewController {
 
         do {
             // Hapus di DB + cache
-            try AnnotationManager.shared.deleteAnnotation(id: id)
+            try AnnotationStore.shared.deleteAnnotation(id: id)
             cancelTapped()
         } catch {
             print("Gagal menghapus anotasi:", error)
@@ -122,11 +120,11 @@ class AnnotationEditorVC: NSViewController {
 
     /// Ambil semua tag yang sudah ada di DB, dikecualikan yang sudah dipilih.
     private func existingTagSuggestions(matching substring: String) -> [String] {
-        let allTags = AnnotationManager.shared.allTagNames()
+        let allTags = AnnotationStore.shared.allTagNames()
         let currentTokens = (tagsField.objectValue as? [String] ?? [])
         return allTags.filter { tag in
             !currentTokens.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) &&
-            tag.range(of: substring, options: [.caseInsensitive, .anchored]) != nil
+                tag.range(of: substring, options: [.caseInsensitive, .anchored]) != nil
         }
     }
 

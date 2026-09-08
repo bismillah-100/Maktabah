@@ -5,29 +5,7 @@
 
 import Foundation
 
-// MARK: - Notification Names
-
-extension Notification.Name {
-    static let annotationDidChange = Notification.Name("annotationDidChange")
-    static let annotationTreeDidUpdate = Notification.Name("annotationTreeDidUpdate")
-}
-
-// MARK: - Notification UserInfo Keys
-
-enum AnnotationChangeType: String {
-    case added
-    case updated
-    case deleted
-}
-
-enum AnnotationNotificationKeys {
-    static let changeType = "changeType"
-    static let annotation = "annotation"
-    static let annotationId = "annotationId"
-    static let tagDiff = "tagDiff"
-    static let oldParentIndex = "oldParentIndex"
-    static let newParentIndex = "newParentIndex"
-}
+// MARK: - Tree Update Models
 
 struct TagUpdateDiff {
     struct RemovedEntry {
@@ -46,4 +24,35 @@ struct TagUpdateDiff {
     let removed: [RemovedEntry]
     let added: [AddedEntry]
     let updated: [AnnotationNode] // annotation node yang hanya di-update teks/warna
+}
+
+struct AnnotationTreeDiff {
+    enum ChangeType {
+        case added
+        case updated
+        case deleted
+    }
+
+    let changeType: ChangeType
+    let annotation: Annotation?
+    let annotationId: Int64?
+    let oldParentIndex: Int?
+    let newParentIndex: Int?
+    let tagDiff: TagUpdateDiff?
+
+    init(
+        changeType: ChangeType,
+        annotation: Annotation? = nil,
+        annotationId: Int64? = nil,
+        oldParentIndex: Int? = nil,
+        newParentIndex: Int? = nil,
+        tagDiff: TagUpdateDiff? = nil
+    ) {
+        self.changeType = changeType
+        self.annotation = annotation
+        self.annotationId = annotationId
+        self.oldParentIndex = oldParentIndex
+        self.newParentIndex = newParentIndex
+        self.tagDiff = tagDiff
+    }
 }
