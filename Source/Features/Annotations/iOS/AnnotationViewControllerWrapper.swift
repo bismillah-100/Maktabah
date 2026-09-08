@@ -34,8 +34,8 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
         vc.onNeedFullReload = { [weak viewModel] in
             viewModel?.applyFilter()
         }
-        viewModel.onIncrementalUpdate = { [weak vc] changeType, userInfo in
-            vc?.handleIncrementalUpdate(changeType: changeType, userInfo: userInfo)
+        viewModel.onIncrementalUpdate = { [weak vc] diff in
+            vc?.handleIncrementalUpdate(diff: diff)
         }
         viewModel.onTreeUpdate = { [weak vc] nodes, mode in
             vc?.handleTreeUpdate(nodes: nodes.map { SwiftUIAnnotationNode(from: $0) }, groupingMode: mode)

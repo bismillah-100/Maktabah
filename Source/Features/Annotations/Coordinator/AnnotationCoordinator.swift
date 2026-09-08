@@ -15,13 +15,13 @@ struct SaveHighlightParams {
     let contentId: Int
     let page: Int
     let part: Int
-    var diacriticsText: String? = nil
+    var diacriticsText: String?
     var showHarakat: Bool = false
     var mode: AnnotationMode = .highlight
 }
 
 class AnnotationCoordinator {
-    private let manager = AnnotationManager.shared
+    private let store = AnnotationStore.shared
 
     /// Cari anotasi yang range-nya MATCH EXACTLY atau CONTAIN selection
     /// Prioritas: range yang paling kecil dulu (paling spesifik)
@@ -31,7 +31,7 @@ class AnnotationCoordinator {
         contentId: Int,
         showHarakat: Bool
     ) -> Annotation? {
-        let anns = manager.loadAnnotations(bkId: bkId, contentId: contentId)
+        let anns = store.loadAnnotations(bkId: bkId, contentId: contentId)
 
         for ann in anns.reversed() {
             let range = showHarakat ? ann.rangeDiacritics : ann.range
@@ -49,7 +49,7 @@ class AnnotationCoordinator {
         contentId: Int,
         showHarakat: Bool
     ) -> Annotation? {
-        let anns = manager.loadAnnotations(bkId: bkId, contentId: contentId)
+        let anns = store.loadAnnotations(bkId: bkId, contentId: contentId)
 
         // Cari yang fully contain selection (paling spesifik)
         var candidates: [Annotation] = []
@@ -86,7 +86,7 @@ class AnnotationCoordinator {
 
         let hex = params.color.hexString()
 
-        let ann = Annotation(
+        var ann = Annotation(
             id: nil,
             bkId: params.bkId,
             contentId: params.contentId,
@@ -103,7 +103,8 @@ class AnnotationCoordinator {
             partArb: String(params.part).convertToArabicDigits()
         )
 
-        try manager.addAnnotation(ann)
+        let id = try store.addAnnotation(ann)
+        ann.id = id
         return ann
     }
 
@@ -124,7 +125,8 @@ class AnnotationCoordinator {
             guard intersection.length > 0 else { continue }
 
             if intersection.length > bestOverlapLength ||
-               (intersection.length == bestOverlapLength && annRange.length < (bestAnnotation.flatMap { showHarakat ? $0.rangeDiacritics.length : $0.range.length } ?? Int.max)) {
+                (intersection.length == bestOverlapLength && annRange.length < (bestAnnotation.flatMap { showHarakat ? $0.rangeDiacritics.length : $0.range.length } ?? Int.max))
+            {
                 bestOverlapLength = intersection.length
                 bestAnnotation = ann
             }
@@ -134,7 +136,7 @@ class AnnotationCoordinator {
     }
 }
 
-// ArabicRangeCalculator.swift - NEW FILE
+/// ArabicRangeCalculator.swift - NEW FILE
 struct ArabicRangeCalculator {
     func calculateRanges(
         for selection: NSRange,
@@ -143,7 +145,6 @@ struct ArabicRangeCalculator {
         diacriticsText: String?,
         showHarakat: Bool
     ) -> (withDiacritics: NSRange, withoutDiacritics: NSRange) {
-
         if showHarakat {
             // Saat ini tampil dengan harakat
             let rangeWithDiacritics = selection
@@ -168,10 +169,10 @@ struct ArabicRangeCalculator {
     }
 }
 
-// Helper extension
+/// Helper extension
 extension NSRange {
     func contains(_ other: NSRange) -> Bool {
-        return self.location <= other.location &&
-               self.location + self.length >= other.location + other.length
+        location <= other.location &&
+            location + length >= other.location + other.length
     }
 }

@@ -40,7 +40,8 @@ final class CloudKitFetcher: @unchecked Sendable {
                     guard let recordRes = result[recordId],
                           case let .success(record) = recordRes,
                           let data = record["payload"] as? Data,
-                          var decoded = try? JSONDecoder().decode(T.self, from: data) else {
+                          var decoded = try? JSONDecoder().decode(T.self, from: data)
+                    else {
                         return nil
                     }
                     decoded.recordChangeTag = record.recordChangeTag
@@ -62,16 +63,4 @@ final class CloudKitFetcher: @unchecked Sendable {
             return firstResult
         }
     }
-}
-
-// MARK: - Snapshot Timeline Provider Protocol
-
-/// Minimum project version target is macOS Ventura and iOS 17.
-/// We don't have access to new async API on Ventura.
-protocol SnapshotTimelineProvider: TimelineProvider where Entry: TimelineEntry {
-    associatedtype Snapshot: WidgetSnapshotRecord
-    associatedtype Item
-
-    func mapItems(from snapshot: Snapshot) -> [Item]
-    func makeEntry(date: Date, items: [Item]) -> Entry
 }

@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import Combine
 
 class IbarotTextView: NSTextView {
     let state = TextViewState.shared
@@ -27,6 +28,7 @@ class IbarotTextView: NSTextView {
     private(set) var currentRenderResult: ArabicRenderResult?
     private(set) var footnoteRanges: [NSRange] = []
     private var annotationClickSetting: NSObjectProtocol?
+    private var annotationCancellable: AnyCancellable?
     private let taskQueue = SerialTaskQueue()
 
     override var string: String {
@@ -83,21 +85,11 @@ class IbarotTextView: NSTextView {
         super.awakeFromNib()
         setupTextView()
 
-        NotificationCenter.default.addObserver(
-            forName: .annotationDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleIncrementalAnnotationChange(notification)
-        }
-
-        NotificationCenter.default.addObserver(
-            forName: .annotationTreeDidUpdate,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.refreshAnnotations()
-        }
+        annotationCancellable = AnnotationStore.shared.events
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] event in
+                self?.handleAnnotationEvent(event)
+            }
 
         annotationClickSetting = NotificationCenter.default.addObserver(
             forName: .didChangeClickableAnnotation,
@@ -122,7 +114,7 @@ class IbarotTextView: NSTextView {
             // single click → tampilkan popover
             if let urlStr = link as? String,
                let id = Int64(urlStr),
-               let ann = AnnotationManager.shared.loadAnnotationById(id)
+               let ann = AnnotationStore.shared.loadAnnotationById(id)
             {
                 let charRange = NSRange(location: charIndex, length: 1)
                 presentAnnotationEditor(ann, displayedRange: charRange)
@@ -799,45 +791,45 @@ class IbarotTextView: NSTextView {
         currentRenderResult?.sourceText ?? string
     }
 
-    private func handleIncrementalAnnotationChange(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let changeTypeRaw = userInfo[AnnotationNotificationKeys.changeType] as? String,
-              let changeType = AnnotationChangeType(rawValue: changeTypeRaw),
-              let ts = textStorage
-        else { return }
+    private func handleAnnotationEvent(_ event: AnnotationEvent) {
+        guard let ts = textStorage else { return }
+        func isCurrentPage(for annotation: Annotation) -> Bool {
+            annotation.bkId == bkId && annotation.contentId == contentId
+        }
 
-        let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
-        let annotationId = userInfo[AnnotationNotificationKeys.annotationId] as? Int64
-
-        let isCurrentPageAnnotation = (annotation?.bkId == bkId && annotation?.contentId == contentId)
-
-        switch changeType {
-        case .added:
-            guard isCurrentPageAnnotation, let ann = annotation else { return }
+        switch event {
+        case let .added(annotation):
+            guard isCurrentPage(for: annotation) else { return }
             ts.beginEditing()
             renderer.applyAnnotations(
-                [ann],
+                [annotation],
                 to: ts,
                 showHarakat: state.showHarakat,
                 replacementEvents: currentRenderResult?.replacementEvents ?? []
             )
             ts.endEditing()
-        case .updated:
-            guard isCurrentPageAnnotation, let ann = annotation, let id = ann.id else { return }
+
+        case let .updated(annotation):
+            guard isCurrentPage(for: annotation), let id = annotation.id else { return }
             ts.beginEditing()
             performRemoveAttributes(forAnnotationId: id, in: ts)
             renderer.applyAnnotations(
-                [ann],
+                [annotation],
                 to: ts,
                 showHarakat: state.showHarakat,
                 replacementEvents: currentRenderResult?.replacementEvents ?? []
             )
             ts.endEditing()
-        case .deleted:
-            guard let id = annotationId else { return }
+
+        case let .deleted(id, _):
+            // id is unique from database
             ts.beginEditing()
             performRemoveAttributes(forAnnotationId: id, in: ts)
             ts.endEditing()
+
+        case .batchUpdated, .treeInvalidated:
+            refreshAnnotations()
+            return
         }
 
         needsDisplay = true
@@ -889,7 +881,9 @@ extension IbarotTextView: TextViewRenderable {
                 isImported: options.isImported ?? false
             )
 
-            if Task.isCancelled { return }
+            if Task.isCancelled {
+                return
+            }
 
             await MainActor.run { [weak self] in
                 defer { ReusableFunc.closeProgressWindow(scrollView.contentView) }

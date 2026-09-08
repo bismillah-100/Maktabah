@@ -24,7 +24,7 @@ struct iOSBookAnnotationsView: View {
             let query = searchText.normalizeArabic(false)
             return bookAnnotations.filter { ann in
                 ann.context.normalizeArabic(false).localizedStandardContains(query) ||
-                (ann.note?.normalizeArabic(false).localizedStandardContains(query) == true)
+                    (ann.note?.normalizeArabic(false).localizedStandardContains(query) == true)
             }
         }
     }
@@ -50,7 +50,7 @@ struct iOSBookAnnotationsView: View {
                                 .truncationMode(.middle)
                         }
 
-                        HStack() {
+                        HStack {
                             Circle()
                                 .fill(Color(hex: ann.colorHex) ?? .yellow)
                                 .frame(width: 12, height: 12)
@@ -101,15 +101,15 @@ struct iOSBookAnnotationsView: View {
     }
 
     private func loadBookAnnotations() {
-        if let bookNode = AnnotationManager.shared.rootNode?.children.first(
+        if let bookNode = AnnotationTreeBuilder.shared.currentRootNode()?.children.first(
             where: {
                 $0.kind == .book
                     && $0.children.first?.annotation?.bkId == bookId
-            })
-        {
+            }
+        ) {
             bookAnnotations = bookNode.children.compactMap(\.annotation)
         } else {
-            let allAnns = AnnotationManager.shared.loadAnnotations(bkId: bookId)
+            let allAnns = AnnotationStore.shared.loadAnnotations(bkId: bookId)
             bookAnnotations = allAnns
         }
     }

@@ -84,7 +84,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         if let cached = cachedFilteredNodes {
             return cached
         }
-        return AnnotationManager.shared.rootNode?.children ?? []
+        return AnnotationTreeBuilder.shared.currentRootNode()?.children ?? []
     }
 
     /// SwiftUI tree
@@ -119,7 +119,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             guard oldValue != groupingMode else { return }
             state = .loading
             UserDefaults.standard.selectedAnnGroupingMode = groupingMode
-            AnnotationManager.shared.updateGroupingMode(groupingMode)
+            AnnotationTreeBuilder.shared.updateGroupingMode(groupingMode)
         }
     }
 
@@ -128,7 +128,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             guard oldValue != sortField else { return }
             state = .loading
             UserDefaults.standard.selectedAnnSortField = sortField
-            AnnotationManager.shared.updateSorting(field: sortField, isAscending: sortAscending)
+            AnnotationTreeBuilder.shared.updateSorting(field: sortField, isAscending: sortAscending)
         }
     }
 
@@ -137,7 +137,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             guard oldValue != sortAscending else { return }
             state = .loading
             UserDefaults.standard.selectedAnnAscending = sortAscending
-            AnnotationManager.shared.updateSorting(field: sortField, isAscending: sortAscending)
+            AnnotationTreeBuilder.shared.updateSorting(field: sortField, isAscending: sortAscending)
         }
     }
 
@@ -159,9 +159,9 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         }
     }
 
-    /// All unique tag names from annotation manager
+    /// All unique tag names from annotation store
     var allTags: [String] {
-        AnnotationManager.shared.allTagNames()
+        AnnotationStore.shared.allTagNames()
     }
 
     /// Tags that are relevant based on current filter mode and selections.
@@ -172,7 +172,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     func availableTags(for tags: Set<String>) -> [String] {
         guard tagFilterMode == .and, !tags.isEmpty,
-              let root = AnnotationManager.shared.rootNode
+              let root = AnnotationTreeBuilder.shared.currentRootNode()
         else {
             return allTags
         }
@@ -188,51 +188,43 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
     // MARK: - Update Callbacks
 
     /// Controller implements these to apply changes
-    var onIncrementalUpdate: ((AnnotationChangeType, [AnyHashable: Any]) -> Void)? {
+    var onIncrementalUpdate: ((AnnotationTreeDiff) -> Void)? {
         didSet {
-            flushBufferedNotifications()
+            flushBufferedDiffs()
         }
     }
 
     var onTreeUpdate: (([AnnotationNode], AnnotationGroupingMode) -> Void)?
 
-    private var bufferedNotifications: [(
-        changeType: AnnotationChangeType,
-        userInfo: [AnyHashable: Any]
-    )] = []
+    private var bufferedDiffs: [AnnotationTreeDiff] = []
 
     override init() {
         super.init()
 
-        addObserver(
-            forName: .annotationTreeDidUpdate,
-            object: nil,
-            queue: .current
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                reloadFromManager()
-                onTreeUpdate?(filteredNodes, groupingMode)
-                state = .loaded
+        AnnotationTreeBuilder.shared.diffPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] diff in
+                MainActor.assumeIsolated {
+                    self?.handleTreeDiff(diff)
+                }
             }
-        }
+            .store(in: &cancellables)
 
-        addObserver(
-            forName: .annotationDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            Task { @MainActor in
-                self?.handleAnnotationChange(notification)
+        if AnnotationTreeBuilder.shared.currentRootNode() != nil {
+            DispatchQueue.main.async { [weak self] in
+                self?.reloadFromTree()
+                self?.state = .loaded
             }
         }
     }
 
-    private func handleAnnotationChange(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let rawType = userInfo[AnnotationNotificationKeys.changeType] as? String,
-              let changeType = AnnotationChangeType(rawValue: rawType)
-        else { return }
+    private func handleTreeDiff(_ diff: AnnotationTreeDiff?) {
+        guard let diff else {
+            reloadFromTree()
+            onTreeUpdate?(filteredNodes, groupingMode)
+            state = .loaded
+            return
+        }
 
         onTagsChanged?(availableTags)
 
@@ -241,47 +233,42 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             return
         }
 
-        // Cek apakah anotasi yang diupdate merujuk ke buku yang tidak ada
-        // Jika tidak ada, cukup abaikan agar UI tetap sesuai filter.
-        if UserDefaults.standard.hideMissingBookAnnotations,
-           let annotationId = userInfo[AnnotationNotificationKeys.annotationId] as? Int64,
-           let annotation = AnnotationManager.shared.loadAnnotationById(annotationId),
-           LibraryDataManager.shared.getBook([annotation.bkId]).isEmpty
-        {
-            return
+        // Check if annotation belongs to a missing book
+        if UserDefaults.standard.hideMissingBookAnnotations {
+            let targetAnn = diff.annotation ?? diff.annotationId.flatMap { AnnotationStore.shared.loadAnnotationById($0) }
+            if let bkId = targetAnn?.bkId, LibraryDataManager.shared.getBook([bkId]).isEmpty {
+                return
+            }
         }
 
         if let callback = onIncrementalUpdate {
-            callback(changeType, userInfo)
+            callback(diff)
         } else {
-            bufferedNotifications.append((changeType, userInfo))
+            bufferedDiffs.append(diff)
         }
     }
 
-    private func flushBufferedNotifications() {
+    private func flushBufferedDiffs() {
         guard let callback = onIncrementalUpdate else { return }
-        for (changeType, userInfo) in bufferedNotifications {
-            callback(changeType, userInfo)
+        for diff in bufferedDiffs {
+            callback(diff)
         }
-        bufferedNotifications.removeAll()
+        bufferedDiffs.removeAll()
     }
 
     func loadAnnotations() async {
-        Task.detached { [weak self] in
-            guard let self else { return }
-            await AnnotationManager.shared.updateGroupingMode(groupingMode)
-            await AnnotationManager.shared.updateSorting(field: sortField, isAscending: sortAscending)
-            await reloadFromManager()
-        }
+        AnnotationTreeBuilder.shared.updateGroupingMode(groupingMode)
+        AnnotationTreeBuilder.shared.updateSorting(field: sortField, isAscending: sortAscending)
+        reloadFromTree()
     }
 
     func applyFilter() {
-        reloadFromManager()
+        reloadFromTree()
         onTreeUpdate?(filteredNodes, groupingMode)
     }
 
     func renameTag(from oldName: String, to newName: String) throws {
-        try AnnotationManager.shared.renameTag(from: oldName, to: newName)
+        try AnnotationStore.shared.renameTag(from: oldName, to: newName)
         if let match = selectedTags.first(where: { $0.caseInsensitiveCompare(oldName) == .orderedSame }) {
             var updated = selectedTags
             updated.remove(match)
@@ -291,14 +278,14 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
     }
 
     func deleteTag(named tagName: String) throws {
-        try AnnotationManager.shared.deleteTag(named: tagName)
+        try AnnotationStore.shared.deleteTag(named: tagName)
         if let match = selectedTags.first(where: { $0.caseInsensitiveCompare(tagName) == .orderedSame }) {
             selectedTags.remove(match)
         }
     }
 
-    private func reloadFromManager() {
-        guard let coreNodes = AnnotationManager.shared.rootNode?.children else { return }
+    private func reloadFromTree() {
+        guard let coreNodes = AnnotationTreeBuilder.shared.currentRootNode()?.children else { return }
 
         let currentAllTags = Set(allTags)
         let validSelected = selectedTags.filter { currentAllTags.contains($0) }
@@ -330,42 +317,6 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         onTagsChanged?(currentTags)
     }
 
-    private func filterOutMissingBooks(from nodes: [AnnotationNode]) -> [AnnotationNode] {
-        var uniqueBkIds: Set<Int> = []
-        gatherBkIds(from: nodes, into: &uniqueBkIds)
-        let existingBkIds = uniqueBkIds.filter { !LibraryDataManager.shared.getBook([$0]).isEmpty }
-        return applyBookFilter(from: nodes, existingBkIds: existingBkIds)
-    }
-
-    private func gatherBkIds(from nodes: [AnnotationNode], into set: inout Set<Int>) {
-        for node in nodes {
-            if node.kind == .annotation, let ann = node.annotation {
-                set.insert(ann.bkId)
-            } else {
-                gatherBkIds(from: node.children, into: &set)
-            }
-        }
-    }
-
-    private func applyBookFilter(from nodes: [AnnotationNode], existingBkIds: Set<Int>) -> [AnnotationNode] {
-        var result: [AnnotationNode] = []
-        for node in nodes {
-            if node.kind == .annotation, let ann = node.annotation {
-                if existingBkIds.contains(ann.bkId) {
-                    result.append(node)
-                }
-            } else {
-                let filteredChildren = applyBookFilter(from: node.children, existingBkIds: existingBkIds)
-                if !filteredChildren.isEmpty {
-                    let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: nil)
-                    copy.children = filteredChildren
-                    result.append(copy)
-                }
-            }
-        }
-        return result
-    }
-
     private func filterNodesByTags(_ nodes: [AnnotationNode], tags: Set<String>? = nil) -> [AnnotationNode] {
         let activeTags = tags ?? selectedTags
         guard !activeTags.isEmpty else { return nodes }
@@ -376,7 +327,9 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
                 let matches = tagFilterMode == .and
                     ? activeTags.allSatisfy { annTags.contains($0) }
                     : !activeTags.isDisjoint(with: annTags)
-                if matches { result.append(node) }
+                if matches {
+                    result.append(node)
+                }
             } else {
                 let filteredChildren = filterNodesByTags(node.children, tags: tags)
                 if !filteredChildren.isEmpty {
@@ -412,7 +365,9 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     private func nodeMatchesQuery(_ node: AnnotationNode, query: String) -> Bool {
         if searchScope == .all || searchScope == .book {
-            if node.title.normalizeArabic(false).localizedStandardContains(query) { return true }
+            if node.title.normalizeArabic(false).localizedStandardContains(query) {
+                return true
+            }
         }
 
         guard let ann = node.annotation else { return false }
@@ -431,7 +386,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
     func deleteAnnotation(id: Int64) {
         do {
-            try AnnotationManager.shared.deleteAnnotation(id: id)
+            try AnnotationStore.shared.deleteAnnotation(id: id)
         } catch {
             print("Failed to delete annotation: \(error.localizedDescription)")
         }
@@ -454,7 +409,9 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
             if let ann = node.annotation {
                 for tag in ann.tags {
                     let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !trimmed.isEmpty { set.insert(trimmed) }
+                    if !trimmed.isEmpty {
+                        set.insert(trimmed)
+                    }
                 }
             }
             if !node.children.isEmpty {

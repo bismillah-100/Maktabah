@@ -17,6 +17,8 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         }
     }
 
+    let treeBuilder: AnnotationTreeBuilder = .shared
+
     var onAddTagsRequested: (([Int64], NSRect) -> Void)?
     var onRemoveTagsRequested: (([Int64], NSRect) -> Void)?
 
@@ -83,8 +85,8 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             }
         }
 
-        viewModel.onIncrementalUpdate = { [weak self] changeType, userInfo in
-            self?.handleIncrementalChange(changeType: changeType, userInfo: userInfo)
+        viewModel.onIncrementalUpdate = { [weak self] diff in
+            self?.handleIncrementalChange(diff: diff)
         }
     }
 
@@ -96,36 +98,30 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     // MARK: - Incremental Updates
 
-    private func handleIncrementalChange(changeType: AnnotationChangeType, userInfo: [AnyHashable: Any]) {
-        let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
-        let annotationId = (userInfo[AnnotationNotificationKeys.annotationId] as? Int64) ?? annotation?.id
-        let oldParentIndex = userInfo[AnnotationNotificationKeys.oldParentIndex] as? Int
-        let newParentIndex = userInfo[AnnotationNotificationKeys.newParentIndex] as? Int
+    private func handleIncrementalChange(diff: AnnotationTreeDiff) {
+        if groupingMode == .tag {
+            handleTagModeUpdate(diff: diff.tagDiff)
+            return
+        }
 
-        guard let annotationId else {
+        guard let annotationId = diff.annotationId else {
             outlineView?.reloadData()
             return
         }
 
-        if groupingMode == .tag {
-            let diff = userInfo[AnnotationNotificationKeys.tagDiff] as? TagUpdateDiff
-            handleTagModeUpdate(annotationId: annotationId, diff: diff)
-            return
-        }
-
-        switch changeType {
+        switch diff.changeType {
         case .added:
-            handleAddedAnnotation(annotationId: annotationId, oldParentIndex: oldParentIndex, newParentIndex: newParentIndex)
+            handleAddedAnnotation(annotationId: annotationId, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
         case .updated:
             handleUpdatedAnnotation(annotationId: annotationId)
         case .deleted:
-            handleDeletedAnnotation(annotationId: annotationId, oldParentIndex: oldParentIndex, newParentIndex: newParentIndex)
+            handleDeletedAnnotation(annotationId: annotationId, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
         }
     }
 
     private func handleAddedAnnotation(annotationId: Int64, oldParentIndex: Int?, newParentIndex: Int?) {
         guard let outlineView else { return }
-        guard let location = findAnnotationLocation(in: AnnotationManager.shared.rootNode, annotationId: annotationId) else {
+        guard let location = findAnnotationLocation(in: treeBuilder.currentRootNode(), annotationId: annotationId) else {
             outlineView.reloadData()
             return
         }
@@ -158,7 +154,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         outlineView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: columns)
     }
 
-    private func handleTagModeUpdate(annotationId _: Int64, diff: TagUpdateDiff?) {
+    private func handleTagModeUpdate(diff: TagUpdateDiff?) {
         guard let outlineView else { return }
         guard let diff else {
             outlineView.reloadData()
@@ -202,7 +198,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     }
 
     private func applyTagModeAdditions(entries: [TagUpdateDiff.AddedEntry], in outlineView: NSOutlineView) {
-        let root = AnnotationManager.shared.rootNode
+        let root = treeBuilder.currentRootNode()
         for entry in entries {
             if entry.tagNodeIsNew {
                 if let rootIdx = root?.children.firstIndex(where: { $0 === entry.tagNode }) {
@@ -245,7 +241,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     private func cleanupEmptyParentNode(_ parent: Any?, in outlineView: NSOutlineView) {
         guard let parentNode = parent as? AnnotationNode,
               parentNode.children.isEmpty,
-              !(AnnotationManager.shared.rootNode?.children.contains { $0 === parentNode } ?? false)
+              !(treeBuilder.currentRootNode()?.children.contains { $0 === parentNode } ?? false)
         else { return }
 
         let parentIndex = outlineView.childIndex(forItem: parentNode)
@@ -281,16 +277,18 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     // MARK: - Public Methods
 
     func reload() {
-        AnnotationManager.shared.buildAnnotationTree()
+        treeBuilder.buildAnnotationTree()
     }
 
     func updateSorting(field: AnnotationSortField, isAscending: Bool) {
-        AnnotationManager.shared.updateSorting(field: field, isAscending: isAscending)
+        viewModel.sortField = field
+        viewModel.sortAscending = isAscending
+        treeBuilder.updateSorting(field: field, isAscending: isAscending)
     }
 
     func updateGrouping(mode: AnnotationGroupingMode) {
         viewModel.groupingMode = mode
-        AnnotationManager.shared.updateGroupingMode(mode)
+        treeBuilder.updateGroupingMode(mode)
     }
 
     // MARK: - NSOutlineViewDataSource

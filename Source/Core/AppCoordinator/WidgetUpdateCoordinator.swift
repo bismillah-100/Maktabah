@@ -6,6 +6,7 @@
 //
 
 import CloudKit
+import Combine
 import Foundation
 import WidgetKit
 #if canImport(UIKit)
@@ -20,6 +21,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     private var isHistoryDirty = false
     private var isAnnotationDirty = false
     private let lock = NSLock()
+    private var cancellables = Set<AnyCancellable>()
 
     private let ckDatabase = CKContainer(
         identifier: "iCloud.Maktabah"
@@ -42,21 +44,12 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     }
 
     private func setupObservers() {
-        NotificationCenter.default.addObserver(
-            forName: .annotationDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.markAnnotationDirty()
-        }
-
-        NotificationCenter.default.addObserver(
-            forName: .annotationTreeDidUpdate,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.markAnnotationDirty()
-        }
+        AnnotationStore.shared.events
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.markAnnotationDirty()
+            }
+            .store(in: &cancellables)
 
         NotificationCenter.default.addObserver(
             forName: .historyDidChange,
@@ -107,7 +100,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         }
     }
 
-    private func flushHistory(bypassThrottle: Bool) async{
+    private func flushHistory(bypassThrottle: Bool) async {
         var snapshot = compileHistorySnapshot()
         let currentLocal = await HistorySnapshot.loadLocal()
         if let currentLocal {
@@ -204,7 +197,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     }
 
     private func compileAnnotationSnapshot() -> AnnotationSnapshot {
-        let allAnnotations = Array(AnnotationManager.shared.loadAnnotations().sorted {
+        let allAnnotations = Array(AnnotationStore.shared.loadAnnotations().sorted {
             $0.createdAt > $1.createdAt
         }.prefix(6))
 
@@ -281,7 +274,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
             if let serverRecord = error.serverRecord {
                 serverRecord["payload"] = payloadData as NSData
                 // Retry recursively
-                await self.saveRecordToCloudKit(
+                await saveRecordToCloudKit(
                     record: serverRecord,
                     payloadData: payloadData,
                     taskName: taskName
@@ -332,7 +325,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
                         for: [historyId, annotationId],
                         desiredKeys: ["payload"]
                     )
-                    
+
                     var didUpdateAny = false
 
                     if let historyRes = result[historyId],

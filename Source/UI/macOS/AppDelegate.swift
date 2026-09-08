@@ -63,7 +63,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         mainWindowController = wc
         guard let window = wc.window else { return }
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]
-            == "1" { return }
+            == "1"
+        {
+            return
+        }
 
         window.makeKeyAndOrderFront(nil)
     }
@@ -97,7 +100,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             defaults: [UserDefaults.autoCheckAppUpdatesKey: true]
         )
         Task.detached(priority: .low) { [weak self] in
-            if !UserDefaults.standard.autoCheckAppUpdates { return }
+            if !UserDefaults.standard.autoCheckAppUpdates {
+                return
+            }
             await Task.yield()
             await self?.checkAppUpdates(true)
         }
@@ -363,7 +368,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func showOfflineImportWindow() {
         let contentView = OfflineImportFormView(onImport: { [weak self]
             (url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async in
-            guard let self else { return }
+                guard let self else { return }
                 await performCustomImport(
                     url: url,
                     metadata: metadata,
@@ -474,7 +479,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func createToolMenuItems() -> [NSMenuItem] {
-        let bookInfoImage = if #available(macOS 15.4, *) { "info.circle.text.page.rtl" } else { "info.circle" }
+        let bookInfoImage = if #available(macOS 15.4, *) {
+            "info.circle.text.page.rtl"
+        } else {
+            "info.circle"
+        }
 
         let resetCurrentView = buildMenu(NSLocalizedString("ResetCurrentView", comment: ""), image: "arrow.counterclockwise", keyEquivalent: "r")
         let quranWindow = buildMenu(NSLocalizedString("QuranMenuBar", comment: ""), image: "character.book.closed.ar", keyEquivalent: "u")
@@ -657,7 +666,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         switch deepLink {
         case let .annotation(annId):
-            guard let annotation = AnnotationManager.shared.loadAnnotationById(annId) else { return }
+            guard let annotation = AnnotationStore.shared.loadAnnotationById(annId) else { return }
 
             Task { @MainActor in
                 targetWindow.switchToMode(.viewer)

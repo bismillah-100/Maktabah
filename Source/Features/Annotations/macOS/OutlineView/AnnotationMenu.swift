@@ -138,7 +138,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
             return
         }
 
-        let existingTags = AnnotationManager.shared.allTagNames()
+        let existingTags = AnnotationStore.shared.allTagNames()
         let wouldMerge = existingTags.contains {
             $0.caseInsensitiveCompare(newName) == .orderedSame && $0.caseInsensitiveCompare(currentName) != .orderedSame
         }
@@ -237,7 +237,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         for node in nodes {
             guard let annotation = node.annotation, let id = annotation.id else { continue }
             do {
-                try AnnotationManager.shared.deleteAnnotation(id: id)
+                try AnnotationStore.shared.deleteAnnotation(id: id)
             } catch {
                 #if DEBUG
                 print("Error deleting annotation \(id): \(error)")

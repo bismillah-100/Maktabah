@@ -7,7 +7,9 @@ import Cocoa
 
 extension AnnotationsVC {
     func createRootTitlebarStack() {
-        if !titlebarRootStack.arrangedSubviews.isEmpty { return }
+        if !titlebarRootStack.arrangedSubviews.isEmpty {
+            return
+        }
 
         titlebarRootStack.addArrangedSubview(headerStackView)
 
@@ -39,7 +41,7 @@ extension AnnotationsVC {
         tagVC.mode = mode
         tagVC.annotationIDs = annotationIDs
         tagVC.availableTags = switch mode {
-        case .add: AnnotationManager.shared.allTagNames()
+        case .add: AnnotationStore.shared.allTagNames()
         case .remove: commonTags(for: annotationIDs)
         }
         tagVC.onSubmit = { [weak self] mode, tags, annotationIDs in
@@ -62,11 +64,11 @@ extension AnnotationsVC {
             switch mode {
             case .add:
                 for tag in tags {
-                    try AnnotationManager.shared.addTag(tag, toAnnotationIDs: annotationIDs)
+                    try AnnotationStore.shared.addTag(tag, toAnnotationIDs: annotationIDs)
                 }
             case .remove:
                 for tag in tags {
-                    try AnnotationManager.shared.removeTag(tag, fromAnnotationIDs: annotationIDs)
+                    try AnnotationStore.shared.removeTag(tag, fromAnnotationIDs: annotationIDs)
                 }
             }
             tagPopover?.performClose(nil)
@@ -77,7 +79,7 @@ extension AnnotationsVC {
     }
 
     func commonTags(for annotationIDs: [Int64]) -> [String] {
-        let annotations = annotationIDs.compactMap { AnnotationManager.shared.loadAnnotationById($0) }
+        let annotations = annotationIDs.compactMap { AnnotationStore.shared.loadAnnotationById($0) }
         guard let firstAnnotation = annotations.first else { return [] }
 
         let commonNormalized = annotations.dropFirst().reduce(

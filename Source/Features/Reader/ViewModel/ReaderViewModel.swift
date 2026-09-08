@@ -5,6 +5,7 @@
 //  Created by Ghoys Mawahib on 18/06/26.
 //
 
+import Combine
 import Foundation
 import Observation
 import SwiftUI
@@ -115,8 +116,9 @@ class ReaderViewModel: ViewModelBase {
 
     var bookConnection: BookConnection = .init()
     let historyVM: HistoryViewModel = .shared
-    let annotationManager: AnnotationManager = .shared
+    let annotationStore: AnnotationStore = .shared
     let annotationCoordinator: AnnotationCoordinator = .init()
+    @ObservationIgnored var annotationCancellable: AnyCancellable?
 
     // MARK: - Private Properties
 
@@ -131,7 +133,9 @@ class ReaderViewModel: ViewModelBase {
 
     init(book: BooksData? = nil) {
         super.init()
-        if let book { currentBook = book }
+        if let book {
+            currentBook = book
+        }
         setupNotificationObservers()
     }
 

@@ -12,7 +12,7 @@ import AppKit
 import UIKit
 #endif
 
-struct AppConfig {
+enum AppConfig {
     static let storageKey = "selected_shamela_bookmark" // Ubah key agar fresh
     static let annotationsAndResultsFolder = "annotations_FolderPath"
     static let bundleModeKey = "use_bundle_database_mode"
@@ -23,6 +23,7 @@ struct AppConfig {
     static let appcastURLKey = "appcast_url"
 
     // MARK: - Archive Cache Path (untuk Bundle Mode)
+
     /// Path untuk archive files saat menggunakan Bundle Mode
     /// Located at: ~/Library/Application Support/Maktabah/Caches/
     static var archiveCachePath: String? {
@@ -42,6 +43,7 @@ struct AppConfig {
     }
 
     // MARK: - Custom Database Path
+
     /// Path ke custom folder yang dipilih user
     /// Ketika user memilih folder, SEMUA files (main, special, archives) di sini
     static var customDatabasePath: String? {
@@ -50,6 +52,7 @@ struct AppConfig {
     }
 
     // MARK: - Bundle Mode Flag
+
     /// True jika aplikasi sedang menggunakan Bundle Mode (database dari bundle)
     static var isUsingBundleMode: Bool {
         get {
@@ -61,6 +64,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Get appropriate path untuk database files (main.sqlite, special.sqlite)
+
     /// Return path untuk main.sqlite dan special.sqlite
     /// - Bundle Mode: ~/Library/Application Support/Maktabah/Caches/
     ///   (diunduh saat first launch, bukan di-bundle ke .app)
@@ -89,7 +93,8 @@ struct AppConfig {
     /// Default: "v0-core". Override via UserDefaults key: core_release_tag
     static var coreReleaseTag: String? {
         if let raw = UserDefaults.standard.string(forKey: coreReleaseTagKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty {
+            .trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty
+        {
             return raw
         }
         return "v1.0-core"
@@ -101,7 +106,8 @@ struct AppConfig {
     static var coreReleaseBaseURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: coreReleaseBaseURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty, let url = URL(string: raw) {
+            !raw.isEmpty, let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://github.com/bismillah-100/Kitab/releases/download")
@@ -118,6 +124,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Database File Paths
+
     static var mainDatabasePath: String? {
         guard let base = databaseFilesPath else { return nil }
         return "\(base)/main.sqlite"
@@ -129,6 +136,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Get appropriate path untuk archive files (1-20.sqlite)
+
     /// Return path untuk archive files
     /// - Bundle Mode: ~/Library/Application Support/Maktabah/Caches/
     /// - Custom Mode: {custom_folder}/
@@ -158,6 +166,7 @@ struct AppConfig {
     }
 
     // MARK: - Helper: Get appropriate path untuk buku hasil split (per-kitab)
+
     /// Return path untuk file kitab tunggal (bkid.sqlite)
     /// - Bundle Mode: ~/Library/Application Support/Maktabah/Caches/Books/
     /// - Custom Mode: {custom_folder}/Books/
@@ -176,14 +185,16 @@ struct AppConfig {
     }
 
     // MARK: - Download Base URL (per-kitab)
+
     /// Legacy fallback base URL (direct file hosting).
     /// Jika tidak diset, fallback ini tidak digunakan.
     /// Override via UserDefaults key: book_download_base_url
     static var bookDownloadBaseURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: bookDownloadBaseURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return nil
@@ -191,21 +202,24 @@ struct AppConfig {
 
     static var hasCustomBookDownloadBaseURL: Bool {
         if let raw = UserDefaults.standard.string(forKey: bookDownloadBaseURLKey)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) {
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        {
             return !raw.isEmpty
         }
         return false
     }
 
     // MARK: - GitHub Releases (per-kitab)
+
     /// Base URL untuk download asset GitHub Releases.
     /// Default: https://github.com/bismillah-100/Kitab/releases/download
     /// Override via UserDefaults key: book_release_base_url
     static var bookReleaseBaseURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: bookReleaseBaseURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://github.com/bismillah-100/Kitab/releases/download")
@@ -217,8 +231,9 @@ struct AppConfig {
     static var bookIndexURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: bookIndexURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://raw.githubusercontent.com/bismillah-100/Kitab/main/index.json")
@@ -235,8 +250,9 @@ struct AppConfig {
     static var coreVersionURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: coreVersionURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
         return URL(string: "https://raw.githubusercontent.com/bismillah-100/Kitab/main/version.txt")
@@ -293,11 +309,13 @@ struct AppConfig {
     }
 
     // MARK: - App Updates
+
     static var appcastURL: URL? {
         if let raw = UserDefaults.standard.string(forKey: appcastURLKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines),
-           !raw.isEmpty,
-           let url = URL(string: raw) {
+            !raw.isEmpty,
+            let url = URL(string: raw)
+        {
             return url
         }
 
@@ -379,6 +397,7 @@ struct AppConfig {
     static let useCrossPlatformSyncKey = "use_cross_platform_sync"
 
     // MARK: - iCloud Support
+
     static var useICloud: Bool {
         get { UserDefaults.standard.bool(forKey: useICloudKey) }
         set { UserDefaults.standard.set(newValue, forKey: useICloudKey) }
@@ -396,7 +415,8 @@ struct AppConfig {
 
     static var iCloudFolderURL: URL? {
         guard let url = FileManager.default.url(forUbiquityContainerIdentifier: nil)?
-            .appendingPathComponent("Documents", isDirectory: true) else {
+            .appendingPathComponent("Documents", isDirectory: true)
+        else {
             return nil
         }
 
@@ -469,15 +489,15 @@ struct AppConfig {
                     withIntermediateDirectories: true
                 )
                 #if DEBUG
-                    print("Created archive cache directory")
+                print("Created archive cache directory")
                 #endif
             }
 
             // Set Bundle Mode flag
             isUsingBundleMode = true
             #if DEBUG
-                print("Bundle Mode setup selesai")
-                print("Archive cache: \(cachePath)")
+            print("Bundle Mode setup selesai")
+            print("Archive cache: \(cachePath)")
             #endif
             return true
         } catch {
@@ -522,17 +542,17 @@ struct AppConfig {
             if let bundlePath = archiveCachePath {
                 let mainSqFile = "main.sqlite"
                 let specialSqFile = "special.sqlite"
-                 let specialFtsSqFile = "special_fts.sqlite"
+                let specialFtsSqFile = "special_fts.sqlite"
 
                 for fileName in [mainSqFile, specialSqFile, specialFtsSqFile] {
                     let sourcePath = "\(bundlePath)/\(fileName)"
                     let destPath = filesDir.appendingPathComponent(fileName).path
 
                     // Copy hanya jika destination belum ada (respect existing user files)
-                    if !fm.fileExists(atPath: destPath) && fm.fileExists(atPath: sourcePath) {
+                    if !fm.fileExists(atPath: destPath), fm.fileExists(atPath: sourcePath) {
                         try fm.copyItem(atPath: sourcePath, toPath: destPath)
                         #if DEBUG
-                            print("Copied \(fileName) ke custom folder")
+                        print("Copied \(fileName) ke custom folder")
                         #endif
                     }
                 }
@@ -541,12 +561,12 @@ struct AppConfig {
             // 4. Disable Bundle Mode
             isUsingBundleMode = false
             #if DEBUG
-                print("Migrated to Custom Mode: \(folderUrl.path)")
+            print("Migrated to Custom Mode: \(folderUrl.path)")
             #endif
             return true
         } catch {
             #if DEBUG
-                print("Error migrating to Custom Mode:", error)
+            print("Error migrating to Custom Mode:", error)
             #endif
             return false
         }
@@ -554,7 +574,7 @@ struct AppConfig {
 
     /// Check jika user sudah setup custom database folder
     static func hasCustomDatabaseFolder() -> Bool {
-        return UserDefaults.standard.data(forKey: customDatabaseFolderKey) != nil
+        UserDefaults.standard.data(forKey: customDatabaseFolderKey) != nil
     }
 
     static func setupAnnotationsAndResults() {
@@ -562,15 +582,16 @@ struct AppConfig {
 
         // Migrasi dari iCloud Drive ke folder aktif jika aktif
         if useICloud, let iCloud = iCloudFolderURL, let dest = activeFolder,
-           iCloud.standardized != dest.standardized {
-            AnnotationManager.shared.disconnect()
+           iCloud.standardized != dest.standardized
+        {
+            AnnotationStore.shared.disconnect()
             ResultsHandler.shared.disconnect()
             migrateFiles(from: iCloud, to: dest)
         }
 
         do {
             if let annotationsFolder = activeFolder {
-                try AnnotationManager.shared.setupAnnotations(at: annotationsFolder)
+                try AnnotationStore.shared.setup(at: annotationsFolder)
             }
         } catch {
             ReusableFunc.showAlert(

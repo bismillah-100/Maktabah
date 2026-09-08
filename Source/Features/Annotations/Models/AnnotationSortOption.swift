@@ -22,7 +22,7 @@ enum TagFilterMode {
     case and
 }
 
-struct AnnotationSortOption {
+struct AnnotationSortOption: Equatable {
     let field: AnnotationSortField
     let isAscending: Bool
 }

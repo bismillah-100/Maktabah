@@ -28,21 +28,11 @@ extension ReaderViewModel {
         enableBookIdMigrationObserver()
 
         #if os(iOS)
-        addObserver(
-            forName: .annotationDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.loadAnnotations()
-        }
-
-        addObserver(
-            forName: .annotationTreeDidUpdate,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.loadAnnotations()
-        }
+        annotationCancellable = annotationStore.events
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadAnnotations()
+            }
         #endif
     }
 }

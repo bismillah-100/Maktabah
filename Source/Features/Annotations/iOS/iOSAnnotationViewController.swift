@@ -53,25 +53,19 @@ class iOSAnnotationViewController: UIViewController {
 
     // MARK: - Incremental Update Entry Point
 
-    func handleIncrementalUpdate(changeType: AnnotationChangeType, userInfo: [AnyHashable: Any]) {
+    func handleIncrementalUpdate(diff: AnnotationTreeDiff) {
         guard isViewLoaded, dataSource != nil else {
             onNeedFullReload?()
             return
         }
 
-        let annotation = userInfo[AnnotationNotificationKeys.annotation] as? Annotation
-        let annotationId = (userInfo[AnnotationNotificationKeys.annotationId] as? Int64) ?? annotation?.id
-        let diff = userInfo[AnnotationNotificationKeys.tagDiff] as? TagUpdateDiff
-        let oldParentIndex = userInfo[AnnotationNotificationKeys.oldParentIndex] as? Int
-        let newParentIndex = userInfo[AnnotationNotificationKeys.newParentIndex] as? Int
-
-        switch changeType {
+        switch diff.changeType {
         case .added:
-            handleAddedAnnotation(annotationId: annotationId, diff: diff, oldParentIndex: oldParentIndex, newParentIndex: newParentIndex)
+            handleAddedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
         case .updated:
-            handleUpdatedAnnotation(annotationId: annotationId, diff: diff)
+            handleUpdatedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff)
         case .deleted:
-            handleDeletedAnnotation(annotationId: annotationId, oldParentIndex: oldParentIndex, newParentIndex: newParentIndex)
+            handleDeletedAnnotation(annotationId: diff.annotationId, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
         }
     }
 
@@ -95,7 +89,7 @@ class iOSAnnotationViewController: UIViewController {
 
         // Book mode fallback
         if let annotationId {
-            guard let updatedAnnotation = AnnotationManager.shared.loadAnnotationById(annotationId) else {
+            guard let updatedAnnotation = AnnotationStore.shared.loadAnnotationById(annotationId) else {
                 onNeedFullReload?()
                 return
             }

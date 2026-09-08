@@ -163,7 +163,7 @@ struct AnnotationListView: View {
 
     private func exportAnnotations() {
         Task.detached(priority: .userInitiated) {
-            let allAnnotations = AnnotationManager.shared.loadAnnotations()
+            let allAnnotations = AnnotationStore.shared.loadAnnotations()
             if let jsonString = AnnotationJsonSerializer.encode(annotations: allAnnotations) {
                 await MainActor.run {
                     exportDocument = AnnotationJsonDocument(jsonString: jsonString)
@@ -216,7 +216,7 @@ struct AnnotationListView: View {
         pendingImportAnnotations = []
         Task.detached(priority: .userInitiated) {
             do {
-                let count = try AnnotationManager.shared.importAnnotations(annotations, overwrite: overwrite)
+                let count = try AnnotationStore.shared.importAnnotations(annotations, overwrite: overwrite)
                 await MainActor.run {
                     importAlertTitle = "Import Annotations".localized
                     importAlertMessage = String(format: "%d annotations imported successfully".localized, count)
