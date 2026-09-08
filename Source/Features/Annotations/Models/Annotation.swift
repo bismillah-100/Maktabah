@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Annotation {
+struct Annotation: Sendable {
     var id: Int64? // nil sebelum disimpan
     let bkId: Int // book id
     let contentId: Int // BookContent.id
@@ -27,12 +27,12 @@ struct Annotation {
     var lastModified: Int64?
 }
 
-enum AnnotationMode: Int {
+enum AnnotationMode: Int, Sendable {
     case highlight
     case underline
 
     static func from(int: Int) -> AnnotationMode {
-        return switch int {
+        switch int {
         case 0: highlight
         case 1: underline
         default: highlight
@@ -40,7 +40,7 @@ enum AnnotationMode: Int {
     }
 }
 
-struct ContentKey: Hashable {
+struct ContentKey: Hashable, Sendable {
     let bkId: Int
     let contentId: Int
 }
