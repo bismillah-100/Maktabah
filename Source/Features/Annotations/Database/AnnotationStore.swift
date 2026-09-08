@@ -5,34 +5,60 @@
 
 import Combine
 import Foundation
+import Synchronization
 
-final class AnnotationStore: @unchecked Sendable {
+final class AnnotationStore: Sendable {
     static let shared = AnnotationStore()
 
     // MARK: - Event Publisher
 
-    let events = PassthroughSubject<AnnotationEvent, Never>()
-    private let eventLock = NSLock()
+    nonisolated(unsafe) let events = PassthroughSubject<AnnotationEvent, Never>()
 
     private func emit(_ event: AnnotationEvent) {
-        eventLock.lock()
         events.send(event)
-        eventLock.unlock()
     }
 
     // MARK: - Dependencies
 
     let repository: AnnotationRepository
 
-    // MARK: - Queues & Caches
+    // MARK: - State & Cache
 
-    private let cacheQueue = DispatchQueue(label: "com.maktab.annotationStore.cacheQueue", qos: .userInitiated)
+    private struct CacheState: Sendable {
+        var cacheById: [Int64: Annotation] = [:]
+        var cacheByContent: [ContentKey: [Annotation]] = [:]
+        var cacheByBook: [Int: [Annotation]] = [:]
+        var cacheTagsByAnnotationId: [Int64: [String]] = [:]
+        var cachedAllTagNames: [String]?
 
-    private var cacheById: [Int64: Annotation] = [:]
-    private var cacheByContent: [ContentKey: [Annotation]] = [:]
-    private var cacheByBook: [Int: [Annotation]] = [:]
-    private var cacheTagsByAnnotationId: [Int64: [String]] = [:]
-    private var cachedAllTagNames: [String]?
+        mutating func updateSingleAnnotationCache(_ annotation: Annotation) {
+            guard let id = annotation.id else { return }
+            cacheById[id] = annotation
+            cacheTagsByAnnotationId[id] = annotation.tags
+
+            let key = ContentKey(bkId: annotation.bkId, contentId: annotation.contentId)
+            if var arr = cacheByContent[key] {
+                if let idx = arr.firstIndex(where: { $0.id == id }) {
+                    arr[idx] = annotation
+                } else {
+                    let idx = arr.insertionIndex(for: annotation) { $0.range.location < $1.range.location }
+                    arr.insert(annotation, at: idx)
+                }
+                cacheByContent[key] = arr
+            }
+
+            if var bookArr = cacheByBook[annotation.bkId] {
+                if let idx = bookArr.firstIndex(where: { $0.id == id }) {
+                    bookArr[idx] = annotation
+                } else {
+                    bookArr.append(annotation)
+                }
+                cacheByBook[annotation.bkId] = bookArr
+            }
+        }
+    }
+
+    private let cache = Mutex(CacheState())
 
     private init(repository: AnnotationRepository = .shared) {
         self.repository = repository
@@ -65,12 +91,8 @@ final class AnnotationStore: @unchecked Sendable {
     }
 
     func clearAllCaches() {
-        cacheQueue.sync {
-            cacheById.removeAll()
-            cacheByContent.removeAll()
-            cacheByBook.removeAll()
-            cacheTagsByAnnotationId.removeAll()
-            cachedAllTagNames = nil
+        cache.withLock { state in
+            state = CacheState()
         }
     }
 
@@ -79,21 +101,19 @@ final class AnnotationStore: @unchecked Sendable {
     func loadAnnotations(bkId: Int, contentId: Int) -> [Annotation] {
         let key = ContentKey(bkId: bkId, contentId: contentId)
 
-        let cached = cacheQueue.sync {
-            cacheByContent[key]
-        }
+        let cached = cache.withLock { $0.cacheByContent[key] }
         if let cached {
             return cached
         }
 
         let loaded = (try? repository.loadAnnotations(bkId: bkId, contentId: contentId)) ?? []
 
-        cacheQueue.sync {
-            cacheByContent[key] = loaded
+        cache.withLock { state in
+            state.cacheByContent[key] = loaded
             for ann in loaded {
                 if let id = ann.id {
-                    cacheById[id] = ann
-                    cacheTagsByAnnotationId[id] = ann.tags
+                    state.cacheById[id] = ann
+                    state.cacheTagsByAnnotationId[id] = ann.tags
                 }
             }
         }
@@ -102,21 +122,19 @@ final class AnnotationStore: @unchecked Sendable {
     }
 
     func loadAnnotations(bkId: Int) -> [Annotation] {
-        let cached = cacheQueue.sync {
-            cacheByBook[bkId]
-        }
+        let cached = cache.withLock { $0.cacheByBook[bkId] }
         if let cached {
             return cached
         }
 
         let loaded = (try? repository.loadAnnotations(bkId: bkId)) ?? []
 
-        cacheQueue.sync {
-            cacheByBook[bkId] = loaded
+        cache.withLock { state in
+            state.cacheByBook[bkId] = loaded
             for ann in loaded {
                 if let id = ann.id {
-                    cacheById[id] = ann
-                    cacheTagsByAnnotationId[id] = ann.tags
+                    state.cacheById[id] = ann
+                    state.cacheTagsByAnnotationId[id] = ann.tags
                 }
             }
         }
@@ -127,20 +145,17 @@ final class AnnotationStore: @unchecked Sendable {
     func loadAnnotations() -> [Annotation] {
         let loaded = (try? repository.loadAllAnnotations()) ?? []
 
-        cacheQueue.sync {
-            cacheById.removeAll()
-            cacheByContent.removeAll()
-            cacheByBook.removeAll()
-            cacheTagsByAnnotationId.removeAll()
+        cache.withLock { state in
+            state = CacheState()
 
             for ann in loaded {
                 if let id = ann.id {
-                    cacheById[id] = ann
-                    cacheTagsByAnnotationId[id] = ann.tags
+                    state.cacheById[id] = ann
+                    state.cacheTagsByAnnotationId[id] = ann.tags
                 }
                 let contentKey = ContentKey(bkId: ann.bkId, contentId: ann.contentId)
-                cacheByContent[contentKey, default: []].append(ann)
-                cacheByBook[ann.bkId, default: []].append(ann)
+                state.cacheByContent[contentKey, default: []].append(ann)
+                state.cacheByBook[ann.bkId, default: []].append(ann)
             }
         }
 
@@ -148,9 +163,7 @@ final class AnnotationStore: @unchecked Sendable {
     }
 
     func loadAnnotationById(_ id: Int64) -> Annotation? {
-        let cached = cacheQueue.sync {
-            cacheById[id]
-        }
+        let cached = cache.withLock { $0.cacheById[id] }
         if let cached {
             return cached
         }
@@ -159,9 +172,9 @@ final class AnnotationStore: @unchecked Sendable {
             return nil
         }
 
-        cacheQueue.sync {
-            cacheById[id] = loaded
-            cacheTagsByAnnotationId[id] = loaded.tags
+        cache.withLock { state in
+            state.cacheById[id] = loaded
+            state.cacheTagsByAnnotationId[id] = loaded.tags
         }
 
         return loaded
@@ -221,17 +234,15 @@ final class AnnotationStore: @unchecked Sendable {
     // MARK: - Tags
 
     func allTagNames() -> [String] {
-        let cached = cacheQueue.sync {
-            cachedAllTagNames
-        }
+        let cached = cache.withLock { $0.cachedAllTagNames }
         if let cached {
             return cached
         }
 
         let loaded = (try? repository.fetchAllTagNames()) ?? []
 
-        cacheQueue.sync {
-            cachedAllTagNames = loaded
+        cache.withLock { state in
+            state.cachedAllTagNames = loaded
         }
 
         return loaded
@@ -260,10 +271,10 @@ final class AnnotationStore: @unchecked Sendable {
     private func applyBatchTagUpdates(_ annotations: [Annotation]) {
         guard !annotations.isEmpty else { return }
 
-        cacheQueue.sync {
-            cachedAllTagNames = nil
+        cache.withLock { state in
+            state.cachedAllTagNames = nil
             for annotation in annotations {
-                updateSingleAnnotationCache(annotation)
+                state.updateSingleAnnotationCache(annotation)
             }
         }
 
@@ -358,60 +369,34 @@ final class AnnotationStore: @unchecked Sendable {
     // MARK: - Cache Helpers
 
     private func updateCacheAfterAdd(_ annotation: Annotation) {
-        cacheQueue.sync {
-            cachedAllTagNames = nil
-            updateSingleAnnotationCache(annotation)
+        cache.withLock { state in
+            state.cachedAllTagNames = nil
+            state.updateSingleAnnotationCache(annotation)
         }
     }
 
     private func updateCacheAfterUpdate(_ annotation: Annotation) {
-        cacheQueue.sync {
-            cachedAllTagNames = nil
-            updateSingleAnnotationCache(annotation)
+        cache.withLock { state in
+            state.cachedAllTagNames = nil
+            state.updateSingleAnnotationCache(annotation)
         }
     }
 
     private func updateCacheAfterDelete(id: Int64, annotation: Annotation?) {
-        cacheQueue.sync {
-            cachedAllTagNames = nil
-            cacheById.removeValue(forKey: id)
-            cacheTagsByAnnotationId.removeValue(forKey: id)
+        cache.withLock { state in
+            state.cachedAllTagNames = nil
+            state.cacheById.removeValue(forKey: id)
+            state.cacheTagsByAnnotationId.removeValue(forKey: id)
             if let bkId = annotation?.bkId {
-                cacheByBook[bkId] = cacheByBook[bkId]?.filter { $0.id != id }
+                state.cacheByBook[bkId] = state.cacheByBook[bkId]?.filter { $0.id != id }
             }
-            for (key, anns) in cacheByContent {
+            for (key, anns) in state.cacheByContent {
                 if let idx = anns.firstIndex(where: { $0.id == id }) {
                     var copy = anns
                     copy.remove(at: idx)
-                    cacheByContent[key] = copy
+                    state.cacheByContent[key] = copy
                 }
             }
-        }
-    }
-
-    private func updateSingleAnnotationCache(_ annotation: Annotation) {
-        guard let id = annotation.id else { return }
-        cacheById[id] = annotation
-        cacheTagsByAnnotationId[id] = annotation.tags
-
-        let key = ContentKey(bkId: annotation.bkId, contentId: annotation.contentId)
-        if var arr = cacheByContent[key] {
-            if let idx = arr.firstIndex(where: { $0.id == id }) {
-                arr[idx] = annotation
-            } else {
-                let idx = arr.insertionIndex(for: annotation) { $0.range.location < $1.range.location }
-                arr.insert(annotation, at: idx)
-            }
-            cacheByContent[key] = arr
-        }
-
-        if var bookArr = cacheByBook[annotation.bkId] {
-            if let idx = bookArr.firstIndex(where: { $0.id == id }) {
-                bookArr[idx] = annotation
-            } else {
-                bookArr.append(annotation)
-            }
-            cacheByBook[annotation.bkId] = bookArr
         }
     }
 
@@ -424,26 +409,26 @@ final class AnnotationStore: @unchecked Sendable {
         let affectedContentKeys = Set(allChanged.map { ContentKey(bkId: $0.bkId, contentId: $0.contentId) })
         let affectedBookIds = Set(allChanged.map(\.bkId))
 
-        cacheQueue.sync {
-            cachedAllTagNames = nil
+        cache.withLock { state in
+            state.cachedAllTagNames = nil
 
             for ann in deleted {
                 guard let id = ann.id else { continue }
-                cacheById.removeValue(forKey: id)
-                cacheTagsByAnnotationId.removeValue(forKey: id)
+                state.cacheById.removeValue(forKey: id)
+                state.cacheTagsByAnnotationId.removeValue(forKey: id)
             }
 
             for ann in added + updated {
                 guard let id = ann.id else { continue }
-                cacheById[id] = ann
-                cacheTagsByAnnotationId[id] = ann.tags
+                state.cacheById[id] = ann
+                state.cacheTagsByAnnotationId[id] = ann.tags
             }
 
             for key in affectedContentKeys {
-                cacheByContent.removeValue(forKey: key)
+                state.cacheByContent.removeValue(forKey: key)
             }
             for bkId in affectedBookIds {
-                cacheByBook.removeValue(forKey: bkId)
+                state.cacheByBook.removeValue(forKey: bkId)
             }
         }
     }

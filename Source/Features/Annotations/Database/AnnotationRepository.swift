@@ -6,7 +6,7 @@
 import Foundation
 import SQLite3
 
-final class AnnotationRepository: SyncPendingManaging {
+final class AnnotationRepository: SyncPendingManaging, @unchecked Sendable {
     // MARK: - Table & Column Names
 
     let annotationsTable = "annotations"
