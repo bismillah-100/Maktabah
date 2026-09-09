@@ -14,7 +14,7 @@ extension Notification.Name {
 
 // MARK: - Sync Models
 
-struct SyncFolder {
+struct SyncFolder: Sendable {
     var id: Int64?
     var name: String
     var parent: Int64?
@@ -23,7 +23,7 @@ struct SyncFolder {
     var parentCkRecordId: String?
 }
 
-struct SyncResult {
+struct SyncResult: Sendable {
     var id: Int64?
     var folderId: Int64?
     var name: String
@@ -38,25 +38,25 @@ struct SyncResult {
     var folderCkRecordId: String?
 }
 
-struct ExistingFolderInfo {
+struct ExistingFolderInfo: Sendable {
     let id: Int64
     let lastModified: Int64
     let parentId: Int64?
 }
 
-struct ExistingResultInfo {
+struct ExistingResultInfo: Sendable {
     let id: Int64
     let lastModified: Int64
     let folderId: Int64?
 }
 
-struct ResultsSyncContext {
+struct ResultsSyncContext: Sendable {
     let folderMap: [String: Int64]
     let resMap: [String: ExistingResultInfo]
     let conflictMap: [String: (Int64, Int64)]
 }
 
-struct ConflictResultRow {
+struct ConflictResultRow: Sendable {
     let id: Int64
     let lastModified: Int64
     let folderId: Int64?
@@ -64,7 +64,7 @@ struct ConflictResultRow {
     let bkId: Int
 }
 
-struct ResultSaveOptions {
+struct ResultSaveOptions: Sendable {
     var folderId: Int64?
     var query: String
     var name: String

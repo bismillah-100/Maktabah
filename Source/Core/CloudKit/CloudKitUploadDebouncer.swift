@@ -5,23 +5,23 @@
 
 import Foundation
 
-final class CloudKitUploadDebouncer<Item> {
+/// Actor-isolated debouncer to manage upload batching, buffer state, and pending callbacks.
+actor CloudKitUploadDebouncer<Item: Sendable> {
     private var buffer: [String: Item] = [:]
-    private var debounceTask: DispatchWorkItem?
-    private var pendingCompletions: [(Result<Void, Error>) -> Void] = []
-    private let debounceInterval: TimeInterval
-    private let queue: DispatchQueue
+    private var debounceTask: Task<Void, Never>?
+    private var pendingCompletions: [@Sendable (Result<Void, Error>) -> Void] = []
+    private let debounceInterval: Duration
 
-    init(queue: DispatchQueue, debounceInterval: TimeInterval = 2.0) {
-        self.queue = queue
+    init(debounceInterval: Duration = .seconds(2)) {
         self.debounceInterval = debounceInterval
     }
 
+    /// Buffers items and executes flush when the debounce delay expires, or immediately if debounce is false.
     func add(
         items: [(id: String, item: Item)],
-        completion: ((Result<Void, Error>) -> Void)?,
+        completion: (@Sendable (Result<Void, Error>) -> Void)?,
         debounce: Bool,
-        onFlush: @escaping ([Item], [(Result<Void, Error>) -> Void]) -> Void
+        onFlush: @Sendable @escaping ([Item], [@Sendable (Result<Void, Error>) -> Void]) -> Void
     ) {
         for (id, item) in items {
             buffer[id] = item
@@ -29,20 +29,29 @@ final class CloudKitUploadDebouncer<Item> {
         if let completion {
             pendingCompletions.append(completion)
         }
+
         debounceTask?.cancel()
 
         if debounce {
-            let workItem = DispatchWorkItem(flags: .barrier) { [weak self] in
-                self?.flush(onFlush: onFlush)
+            let delay = debounceInterval
+            debounceTask = Task { [weak self] in
+                do {
+                    try await Task.sleep(for: delay)
+                } catch {
+                    return
+                }
+                guard !Task.isCancelled else { return }
+                await self?.flush(onFlush: onFlush)
             }
-            debounceTask = workItem
-            queue.asyncAfter(deadline: .now() + debounceInterval, execute: workItem)
         } else {
             flush(onFlush: onFlush)
         }
     }
 
-    private func flush(onFlush: ([Item], [(Result<Void, Error>) -> Void]) -> Void) {
+    /// Drains current buffer and forwards items along with accumulated completions to the caller.
+    private func flush(
+        onFlush: @Sendable ([Item], [@Sendable (Result<Void, Error>) -> Void]) -> Void
+    ) {
         let itemsToUpload = Array(buffer.values)
         buffer.removeAll()
         let completions = pendingCompletions
