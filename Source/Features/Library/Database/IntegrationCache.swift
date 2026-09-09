@@ -18,18 +18,20 @@
 
 import Foundation
 import SQLite3
+import Synchronization
 
 // MARK: - IntegrationCache
 
-final class IntegrationCache {
-    nonisolated(unsafe) static let shared = IntegrationCache()
+final class IntegrationCache: Sendable {
+    static let shared = IntegrationCache()
 
-    // bookId per archive yang sudah terintegrasi
-    private var integrated: [Int: Set<Int>] = [:] // [archiveId: Set<bookId>]
-    private var loadedArchives: Set<Int> = [] // archive yang sudah di-load ke RAM
+    private struct IntegrationState: Sendable {
+        var integrated: [Int: Set<Int>] = [:] // [archiveId: Set<bookId>]
+        var loadedArchives: Set<Int> = [] // archive yang sudah di-load ke RAM
+    }
 
-    private let fm = FileManager.default
-    private let queue = DispatchQueue(label: "com.maktabah.IntegrationCache", attributes: .concurrent)
+    private let state = Mutex(IntegrationState())
+    nonisolated(unsafe) private let fm = FileManager.default
 
     private init() {}
 
@@ -50,8 +52,8 @@ final class IntegrationCache {
     func isIntegrated(bookId: Int, archiveId: Int) -> Bool {
         // Pastikan cache archive ini sudah di-load
         ensureLoaded(archiveId: archiveId)
-        return queue.sync {
-            integrated[archiveId]?.contains(bookId) ?? false
+        return state.withLock {
+            $0.integrated[archiveId]?.contains(bookId) ?? false
         }
     }
 
@@ -59,16 +61,16 @@ final class IntegrationCache {
     func markIntegrated(bookId: Int, archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
 
-        // Pastikan cache archive ini sudah di-load di luar barrier agar tidak deadlock
+        // Pastikan cache archive ini sudah di-load di luar lock agar tidak deadlock
         ensureLoaded(archiveId: archiveId)
 
-        queue.async(flags: .barrier) { [self] in
-            if integrated[archiveId] == nil {
-                integrated[archiveId] = []
+        state.withLock { state in
+            if state.integrated[archiveId] == nil {
+                state.integrated[archiveId] = []
             }
-            integrated[archiveId]?.insert(bookId)
-            persistCache(for: archiveId)
+            state.integrated[archiveId]?.insert(bookId)
         }
+        persistCache(for: archiveId)
     }
 
     /// Hapus tanda kitab sebagai terintegrasi dan persist ke JSON.
@@ -77,10 +79,13 @@ final class IntegrationCache {
 
         ensureLoaded(archiveId: archiveId)
 
-        queue.async(flags: .barrier) { [self] in
-            integrated[archiveId]?.remove(bookId)
-            persistCache(for: archiveId)
+        state.withLock { state in
+            if var books = state.integrated[archiveId] {
+                books.remove(bookId)
+                state.integrated[archiveId] = books
+            }
         }
+        persistCache(for: archiveId)
     }
 
     /// Bangun cache untuk archive tertentu dengan scan SQLite sekali.
@@ -98,10 +103,13 @@ final class IntegrationCache {
               fm.fileExists(atPath: ftsPath)
         else {
             // Archive belum ada → cache kosong, simpan supaya kita tahu sudah di-scan
-            queue.async(flags: .barrier) { [self] in
-                if loadedArchives.contains(archiveId) { return }
-                integrated[archiveId] = []
-                loadedArchives.insert(archiveId)
+            let shouldSave = state.withLock { state -> Bool in
+                if state.loadedArchives.contains(archiveId) { return false }
+                state.integrated[archiveId] = []
+                state.loadedArchives.insert(archiveId)
+                return true
+            }
+            if shouldSave {
                 saveJSON(bookIds: [], for: archiveId)
             }
             return
@@ -109,10 +117,13 @@ final class IntegrationCache {
 
         let bookIds = scanIntegratedBookIds(archivePath: archivePath, ftsPath: ftsPath)
 
-        queue.async(flags: .barrier) { [self] in
-            if loadedArchives.contains(archiveId) { return }
-            integrated[archiveId] = Set(bookIds)
-            loadedArchives.insert(archiveId)
+        let shouldSave = state.withLock { state -> Bool in
+            if state.loadedArchives.contains(archiveId) { return false }
+            state.integrated[archiveId] = Set(bookIds)
+            state.loadedArchives.insert(archiveId)
+            return true
+        }
+        if shouldSave {
             saveJSON(bookIds: bookIds, for: archiveId)
         }
     }
@@ -145,12 +156,12 @@ final class IntegrationCache {
     // periphery:ignore
     /// Invalidasi cache untuk archive tertentu (misal setelah rollback / manual fix).
     func invalidate(archiveId: Int) {
-        queue.async(flags: .barrier) { [self] in
-            integrated.removeValue(forKey: archiveId)
-            loadedArchives.remove(archiveId)
-            if let file = cacheFile(for: archiveId) {
-                try? fm.removeItem(at: file)
-            }
+        state.withLock { state in
+            state.integrated.removeValue(forKey: archiveId)
+            state.loadedArchives.remove(archiveId)
+        }
+        if let file = cacheFile(for: archiveId) {
+            try? fm.removeItem(at: file)
         }
     }
 
@@ -158,7 +169,7 @@ final class IntegrationCache {
 
     private func ensureLoaded(archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
-        let alreadyLoaded = queue.sync { loadedArchives.contains(archiveId) }
+        let alreadyLoaded = state.withLock { $0.loadedArchives.contains(archiveId) }
         if alreadyLoaded { return }
 
         guard let file = cacheFile(for: archiveId),
@@ -177,10 +188,10 @@ final class IntegrationCache {
             return
         }
 
-        queue.async(flags: .barrier) { [self] in
-            if loadedArchives.contains(archiveId) { return }
-            integrated[archiveId] = Set(json.bookIds)
-            loadedArchives.insert(archiveId)
+        state.withLock { state in
+            if state.loadedArchives.contains(archiveId) { return }
+            state.integrated[archiveId] = Set(json.bookIds)
+            state.loadedArchives.insert(archiveId)
         }
     }
 
@@ -188,8 +199,7 @@ final class IntegrationCache {
 
     private func persistCache(for archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
-        // Dipanggil dari barrier async — bisa baca integrated[archiveId] langsung
-        let ids = Array(integrated[archiveId] ?? [])
+        let ids = state.withLock { Array($0.integrated[archiveId] ?? []) }
         saveJSON(bookIds: ids, for: archiveId)
     }
 
