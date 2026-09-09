@@ -46,7 +46,7 @@ class LibraryVC: NSViewController {
         observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
-            queue: .current
+            queue: .main
         ) { _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }

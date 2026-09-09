@@ -9,7 +9,7 @@ import SwiftUI
 
 #if os(iOS)
 private struct DonationSheetHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
+    static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = max(value, nextValue())
     }
@@ -183,11 +183,11 @@ struct DonationSheetView: View {
         .padding(14)
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-            #if os(macOS)
+                #if os(macOS)
                 .fill(Color(nsColor: .controlBackgroundColor))
-            #else
+                #else
                 .fill(Color.appCellBackground)
-            #endif
+                #endif
         }
     }
 

@@ -8,11 +8,11 @@ import UniformTypeIdentifiers
 
 struct OfflineImportFormView: View {
     @State private var viewModel: BookImportViewModel
-    let onImport: (URL, BookMetadata, [String: Any]?) async -> Void
+    let onImport: (URL, BookMetadata, [String: any Sendable]?) async -> Void
     @Environment(\.dismiss) var dismiss
     @Environment(\.openURL) var openURL
 
-    init(onImport: @escaping (URL, BookMetadata, [String: Any]?) async -> Void) {
+    init(onImport: @escaping (URL, BookMetadata, [String: any Sendable]?) async -> Void) {
         self.onImport = onImport
         _viewModel = .init(wrappedValue: BookImportViewModel.init())
     }

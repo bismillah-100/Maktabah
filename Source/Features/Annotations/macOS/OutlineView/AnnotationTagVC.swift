@@ -7,6 +7,7 @@
 
 import AppKit
 
+@MainActor
 class AnnotationTagVC: NSViewController {
     enum Mode {
         case add
@@ -44,8 +45,8 @@ class AnnotationTagVC: NSViewController {
         }
     }
 
-    var onSubmit: ((Mode, [String], [Int64]) -> Void)?
-    var onCancel: (() -> Void)?
+    var onSubmit: (@MainActor @Sendable (Mode, [String], [Int64]) -> Void)?
+    var onCancel: (@MainActor @Sendable () -> Void)?
 
     private var filteredTags: [String] = []
     private var lastTokenSnapshot: [String] = []
@@ -216,11 +217,11 @@ class AnnotationTagVC: NSViewController {
     override func viewDidDisappear() {
         super.viewDidDisappear()
         onCancel?()
+        onSubmit = nil
+        onCancel = nil
     }
 
     deinit {
-        onSubmit = nil
-        onCancel = nil
         #if DEBUG
             print("deinit AnnotationTagVC")
         #endif

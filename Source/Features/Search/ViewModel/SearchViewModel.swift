@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Observation
+import Synchronization
 
 // MARK: - SearchViewModel
 
@@ -97,7 +98,7 @@ final class SearchViewModel: ViewModelBase {
 
     let searchEngine = SearchEngine()
     let ldm = LibraryDataManager.shared
-    var searchWork: Task<Void, Never>?
+    let searchWork = Mutex<Task<Void, Never>?>(nil)
 
     // MARK: - Init
 
@@ -142,9 +143,14 @@ final class SearchViewModel: ViewModelBase {
         #endif
     }
 
+    nonisolated func clearSearchWork() {
+        searchWork.withLock { w in
+            w?.cancel()
+            w = nil
+        }
+    }
+
     deinit {
-        searchWork?.cancel()
-        searchWork = nil
-        removeNotificationObservers()
+        clearSearchWork()
     }
 }

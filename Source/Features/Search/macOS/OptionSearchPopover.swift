@@ -1,5 +1,6 @@
 import Cocoa
 
+@MainActor
 enum OptionSearchPopover {
 
     @discardableResult
@@ -30,7 +31,7 @@ enum OptionSearchPopover {
         bookID: Any?,
         from sender: NSButton,
         delegate: OptionSearchDelegate?,
-        onCleanUp: (() -> Void)? = nil
+        onCleanUp: (@MainActor () -> Void)? = nil
     ) {
         guard let rawId = bookID, let id = Int("\(rawId)") else {
             ReusableFunc.showAlert(
@@ -49,7 +50,7 @@ enum OptionSearchPopover {
         vc.compactButton()
 
         vc.onSelectedItem = { [weak delegate] id, query, mode, nearDistance in
-            Task.detached {
+            Task {
                 await delegate?.didSelectResult(
                     for: id,
                     highlightText: query,

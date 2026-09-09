@@ -7,9 +7,9 @@ import UIKit
 #endif
 import UniformTypeIdentifiers
 
-@Observable
-class UserFontManager {
-    nonisolated(unsafe) static let shared = UserFontManager()
+@Observable @MainActor
+final class UserFontManager {
+    static let shared = UserFontManager()
     
     var userFontNames: [String] = []
     private var fontURLs: [String: URL] = [:]
@@ -38,10 +38,7 @@ class UserFontManager {
             }
         }
         
-        
-        DispatchQueue.main.async {
-            self.userFontNames = loadedNames.sorted()
-        }
+        userFontNames = loadedNames.sorted()
     }
     
     func deleteFont(named fontName: String) {

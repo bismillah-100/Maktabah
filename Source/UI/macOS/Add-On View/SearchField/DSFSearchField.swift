@@ -101,8 +101,10 @@ import AppKit
     }
 
     deinit {
-        self.delegate = nil
-        self.unbind(.value)
+        MainActor.assumeIsolated {
+            self.delegate = nil
+            self.unbind(.value)
+        }
     }
 }
 

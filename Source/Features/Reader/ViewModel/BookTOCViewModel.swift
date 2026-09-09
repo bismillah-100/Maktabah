@@ -15,7 +15,7 @@ struct TOCRange {
     let node: TOCNode
 }
 
-@Observable
+@Observable @MainActor
 class BookTOCViewModel {
     private let tocLoader: TOCLoaderRefCount
 
@@ -30,7 +30,7 @@ class BookTOCViewModel {
 
     private var loadingTask: Task<Void, Never>?
 
-    init(connFactory: @escaping () -> BookConnection) {
+    init(connFactory: @escaping @Sendable () -> BookConnection) {
         tocLoader = TOCLoaderRefCount(connFactory: connFactory)
     }
 
@@ -38,12 +38,9 @@ class BookTOCViewModel {
         loadingTask?.cancel()
         loadingTask = Task { [weak self] in
             guard let self else { return }
+            self.onTOCLoadingStateChanged?(true)
 
-            await MainActor.run {
-                self.onTOCLoadingStateChanged?(true)
-            }
-
-            let taskHandle = await tocLoader.acquire(book: book)
+            let taskHandle = await self.tocLoader.acquire(book: book)
             defer {
                 Task { [weak self] in
                     await self?.tocLoader.release(bookId: book.id)
@@ -52,45 +49,42 @@ class BookTOCViewModel {
 
             do {
                 let tree = try await taskHandle.value
-                if Task.isCancelled {
-                    await MainActor.run {
-                        self.onTOCLoadingStateChanged?(false)
-                    }
-                    return
-                }
-
-                let allNodes = flattenNodes(tree)
-                if Task.isCancelled {
-                    await MainActor.run {
-                        self.onTOCLoadingStateChanged?(false)
-                    }
-                    return
-                }
-
-                computeEndIDs(for: allNodes)
-                let ranges = buildRanges(from: allNodes)
-
-                tocNodes = tree
-                tocRanges = ranges
-                nodeIdCache.removeAll()
-                for r in ranges {
-                    nodeIdCache[r.node.id] = r.node
-                }
-
-                await MainActor.run {
-                    self.onTOCLoaded?(tree)
+                guard !Task.isCancelled else {
                     self.onTOCLoadingStateChanged?(false)
+                    return
                 }
+
+                // Kalkulasi berat diproses di BACKGROUND thread pool
+                let (ranges, cache) = await Task.detached {
+                    let allNodes = Self.flattenNodes(tree)
+                    Self.computeEndIDs(for: allNodes)
+                    let ranges = Self.buildRanges(from: allNodes)
+                    var cache: [Int: TOCNode] = [:]
+                    for r in ranges {
+                        cache[r.node.id] = r.node
+                    }
+                    return (ranges, cache)
+                }.value
+
+                guard !Task.isCancelled else {
+                    self.onTOCLoadingStateChanged?(false)
+                    return
+                }
+
+                // Update UI kembali di MainActor tanpa lag
+                self.tocNodes = tree
+                self.tocRanges = ranges
+                self.nodeIdCache = cache
+                self.onTOCLoaded?(tree)
+                self.onTOCLoadingStateChanged?(false)
             } catch {
-                await MainActor.run {
-                    self.onTOCLoadingStateChanged?(false)
-                }
+                self.onTOCLoadingStateChanged?(false)
                 print("Failed to load TOC: \(error)")
             }
         }
     }
 
-    private func flattenNodes(_ roots: [TOCNode]) -> [TOCNode] {
+    nonisolated private static func flattenNodes(_ roots: [TOCNode]) -> [TOCNode] {
         var result: [TOCNode] = []
         func traverse(_ node: TOCNode) {
             result.append(node)
@@ -109,7 +103,7 @@ class BookTOCViewModel {
         }
     }
 
-    private func computeEndIDs(for allNodes: [TOCNode]) {
+    nonisolated private static func computeEndIDs(for allNodes: [TOCNode]) {
         for (i, node) in allNodes.enumerated() {
             if let nextDiffNode = allNodes[(i + 1)...].first(where: { $0.id > node.id }) {
                 node.endID = nextDiffNode.id - 1
@@ -119,7 +113,7 @@ class BookTOCViewModel {
         }
     }
 
-    private func buildRanges(from nodes: [TOCNode]) -> [TOCRange] {
+    nonisolated private static func buildRanges(from nodes: [TOCNode]) -> [TOCRange] {
         nodes.map { node in
             TOCRange(start: node.id, end: node.endID, node: node)
         }
@@ -175,9 +169,5 @@ class BookTOCViewModel {
         tocNodes.removeAll()
         tocRanges.removeAll()
         nodeIdCache.removeAll()
-    }
-
-    deinit {
-        cleanUp()
     }
 }

@@ -8,6 +8,7 @@
 import Cocoa
 import Observation
 
+@MainActor
 class IbarotTextVC: NSViewController {
     // MARK: - IBOutlets
 
@@ -50,6 +51,14 @@ class IbarotTextVC: NSViewController {
         setupBindings()
         setupNotificationObservers()
         textDelegate = textView
+    }
+
+    override func viewWillDisappear() {
+        super.viewWillDisappear()
+        for token in observerTokens {
+            NotificationCenter.default.removeObserver(token)
+        }
+        observerTokens.removeAll()
     }
 
     // MARK: - Setup
@@ -142,32 +151,31 @@ class IbarotTextVC: NSViewController {
 
     private var observerTokens: [NSObjectProtocol] = []
 
-    deinit {
-        for token in observerTokens {
-            NotificationCenter.default.removeObserver(token)
-        }
-    }
-
     private func setupNotificationObservers() {
         observerTokens.append(NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
-            queue: .current
-        ) { [weak self] _ in
-            guard let self else { return }
-            viewModel.cleanUpState()
-            viewModel.tocViewModel.cleanUp()
+            queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { [weak self] in
+                guard let self else { return }
+                viewModel.cleanUpState()
+                viewModel.tocViewModel.cleanUp()
+            }
         })
 
         observerTokens.append(NotificationCenter.default.addObserver(
             forName: .bookIntegrated,
             object: nil,
             queue: .main
-        ) { [weak self] notification in
-            guard let self, let bookId = notification.object as? Int else { return }
-            if viewModel.currentBook?.id == bookId {
-                if !BookArchiveIntegrator.shared.isBookIntegrated(viewModel.currentBook!) {
-                    clearUI()
+        ) { notification in
+            guard let bookId = notification.object as? Int else { return }
+            MainActor.assumeIsolated { [weak self] in
+                guard let self else { return }
+                if viewModel.currentBook?.id == bookId {
+                    if !BookArchiveIntegrator.shared.isBookIntegrated(viewModel.currentBook!) {
+                        clearUI()
+                    }
                 }
             }
         })
@@ -176,18 +184,22 @@ class IbarotTextVC: NSViewController {
             forName: .bookIdMigrated,
             object: nil,
             queue: .main
-        ) { [weak self] notification in
-            guard let self,
-                  let userInfo = notification.userInfo,
+        ) { notification in
+            guard let userInfo = notification.userInfo,
                   let oldId = userInfo["oldId"] as? Int,
-                  let newId = userInfo["newId"] as? Int else { return }
+                  let newId = userInfo["newId"] as? Int
+            else { return }
 
-            if viewModel.currentBook?.id == oldId {
-                // ReaderViewModel handleBookIdMigrated will update its currentBook.
-                // We just need to make sure IbarotTextVC doesn't crash or holds onto stale state.
-                // Re-rendering or updating title can be triggered here if necessary.
-                if let newBookData = LibraryDataManager.shared.booksById[newId] {
-                    viewModel.currentBook = newBookData
+            MainActor.assumeIsolated { [weak self] in
+                guard let self else { return}
+
+                if viewModel.currentBook?.id == oldId {
+                    // ReaderViewModel handleBookIdMigrated will update its currentBook.
+                    // We just need to make sure IbarotTextVC doesn't crash or holds onto stale state.
+                    // Re-rendering or updating title can be triggered here if necessary.
+                    if let newBookData = LibraryDataManager.shared.booksById[newId] {
+                        viewModel.currentBook = newBookData
+                    }
                 }
             }
         })
@@ -375,9 +387,9 @@ class IbarotTextVC: NSViewController {
         }
 
         sidebarVC.enableDelegate = false
-        Task {
-            if let node = viewModel.tocViewModel.findNode(forContentId: contentId) {
-                let path = viewModel.tocViewModel.pathToNode(node)
+        Task.detached { [weak self] in
+            if let self, let node = await viewModel.tocViewModel.findNode(forContentId: contentId) {
+                let path = await viewModel.tocViewModel.pathToNode(node)
                 await sidebarVC.selectNode(node, path: path)
             }
             await MainActor.run {

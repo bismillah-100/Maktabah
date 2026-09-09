@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import Synchronization
 
 #if os(iOS)
 import UIKit
@@ -62,7 +63,7 @@ final class NarratorViewModel: ViewModelBase {
         didSet {
             guard oldValue != searchText else { return }
             searchDebounceTask?.cancel()
-            searchDebounceTask = Task { @MainActor [weak self] in
+            searchDebounceTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(0.3))
                 guard !Task.isCancelled else { return }
                 guard let self else { return }
@@ -83,7 +84,7 @@ final class NarratorViewModel: ViewModelBase {
     /// Parameter: (startIndex, count) untuk insertRows animasi.
     var onSearchBatchAppended: ((_ startIndex: Int, _ count: Int) -> Void)?
     /// Dipanggil saat search selesai / dihentikan.
-    var onSearchComplete: (() -> Void)?
+    var onSearchComplete: (@MainActor () -> Void)?
     /// Dipanggil saat sidebar tarjamah selesai di-load (setelah pilih rowi).
     var onSidebarTarjamahLoaded: (([TarjamahResult]) -> Void)?
     /// Dipanggil saat currentRowi berubah.
@@ -107,7 +108,7 @@ final class NarratorViewModel: ViewModelBase {
     private let tarjamahManager: TarjamahGlobalManager = .shared
     private let pauseController: PauseController = .init()
     private var searchTask: Task<Void, Never>?
-    private var isStopped: Bool = false
+    private let isStopped = Mutex<Bool>(false)
 
     // MARK: - Init
 
@@ -130,7 +131,6 @@ final class NarratorViewModel: ViewModelBase {
 
     // MARK: - Data
 
-    @MainActor
     func loadData() async {
         defer { state = .loaded }
         guard tabaqaGroups.isEmpty else { return }
@@ -145,7 +145,7 @@ final class NarratorViewModel: ViewModelBase {
         tabaqaGroups = dataManager.tabaqaGroups
     }
 
-    func loadMore(group: TabaqaGroup, completion: @escaping (Int?) -> Void) {
+    func loadMore(group: TabaqaGroup, completion: @escaping @Sendable (Int?) -> Void) {
         dataManager.loadMore(group, completion: completion)
     }
 
@@ -199,15 +199,13 @@ final class NarratorViewModel: ViewModelBase {
     // MARK: - Sidebar Tarjamah
 
     private func loadSidebarTarjamah(for rowi: Rowi) {
-        Task.detached { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
             let list = await TarjamahGlobalManager.shared.loadAllTarjamahContent(forRowa: rowi.id)
-            await MainActor.run {
-                self.sidebarTarjamahList = list
-                #if os(macOS)
-                self.onSidebarTarjamahLoaded?(list)
-                #endif
-            }
+            self.sidebarTarjamahList = list
+            #if os(macOS)
+            self.onSidebarTarjamahLoaded?(list)
+            #endif
         }
     }
 
@@ -217,7 +215,7 @@ final class NarratorViewModel: ViewModelBase {
         guard !query.isEmpty else { return }
         isSearching = true
         isPaused = false
-        isStopped = false
+        isStopped.withLock { $0 = false }
         searchTarjamahList.removeAll()
 
         searchTask?.cancel()
@@ -227,7 +225,7 @@ final class NarratorViewModel: ViewModelBase {
                 query: query,
                 limit: 100,
                 pauseController: pauseController,
-                stopFlag: { [weak self] in self?.isStopped ?? true },
+                stopFlag: { [weak self] in self?.isStopped.withLock { $0 } ?? true },
                 onBatchResult: { [weak self] newBatch in
                     guard let self else { return }
 
@@ -236,7 +234,7 @@ final class NarratorViewModel: ViewModelBase {
                         query: query,
                         pauseController: pauseController
                     ) { [weak self] in
-                        self?.isStopped ?? true
+                        self?.isStopped.withLock { $0 } ?? true
                     } onProgress: { _, _ in }
 
                     await MainActor.run { [weak self, resultsBatch] in
@@ -249,12 +247,12 @@ final class NarratorViewModel: ViewModelBase {
                         #endif
                     }
                 },
-                onComplete: { [weak self] in
+                onComplete: {
                     guard !Task.isCancelled else { return }
-                    Task { @MainActor in
-                        self?.stopSearch()
+                    Task { [weak self] in
+                        await self?.stopSearch()
                         #if os(macOS)
-                        self?.onSearchComplete?()
+                        await self?.onSearchComplete?()
                         #endif
                     }
                 }
@@ -273,7 +271,7 @@ final class NarratorViewModel: ViewModelBase {
     }
 
     func stopSearch() {
-        isStopped = true
+        isStopped.withLock { $0 = true }
         isSearching = false
         isPaused = false
         searchTask?.cancel()

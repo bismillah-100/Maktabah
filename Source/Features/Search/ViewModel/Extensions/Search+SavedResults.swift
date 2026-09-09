@@ -39,7 +39,7 @@ extension SearchViewModel {
             var buffer = ResultBuffer()
 
             for (archiveId, items) in grouped {
-                guard searchWork?.isCancelled == false,
+                guard !Task.isCancelled,
                       let arc = Int(archiveId)
                 else { return }
 
@@ -58,7 +58,7 @@ extension SearchViewModel {
             await onFinish?()
         }
 
-        searchWork = task
+        searchWork.withLock { $0 = task }
         return task
     }
 
@@ -68,10 +68,10 @@ extension SearchViewModel {
         onInsert: (@MainActor (Int, Int) -> Void)?
     ) async {
         for item in items {
-            guard searchWork?.isCancelled == false else { return }
+            guard !Task.isCancelled else { return }
 
             while isPaused {
-                guard searchWork?.isCancelled == false else { return }
+                guard !Task.isCancelled else { return }
                 try? await Task.sleep(nanoseconds: 100_000_000)
             }
 
@@ -142,9 +142,7 @@ extension SearchViewModel {
     ) async {
         let items = buffer.flush()
         await MainActor.run { [weak self] in
-            guard let self,
-                  searchWork?.isCancelled == false
-            else { return }
+            guard let self, !Task.isCancelled else { return }
             let prev = results.count
             results.append(contentsOf: items)
             completedTables = prev + items.count
@@ -154,7 +152,7 @@ extension SearchViewModel {
 
     func commitBuffer(
         _ buffer: inout ResultBuffer,
-        onItemAppended: @escaping (SearchResultItem, IndexSet) -> Void
+        onItemAppended: @escaping @Sendable (SearchResultItem, IndexSet) -> Void
     ) async {
         let items = buffer.flush()
 

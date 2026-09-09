@@ -8,8 +8,10 @@ import Cocoa
 final class BundledArabicButton: NSButton {
     override func awakeFromNib() {
         super.awakeFromNib()
-        font = ReusableFunc.bundledArabicFont(
-            ofSize: font?.pointSize ?? NSFont.systemFontSize
-        )
+        MainActor.assumeIsolated {
+            font = ReusableFunc.bundledArabicFont(
+                ofSize: font?.pointSize ?? NSFont.systemFontSize
+            )
+        }
     }
 }

@@ -10,7 +10,7 @@ import Foundation
 import SQLite3
 
 /// ----------------------------------------
-protocol DBConnectionType {
+protocol DBConnectionType: Sendable {
     func queryRows(sql: String, params: [SQLValue]) throws -> [[String: Any?]]
     func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T]
     func queryInts(sql: String, params: [SQLValue]) throws -> [Int]

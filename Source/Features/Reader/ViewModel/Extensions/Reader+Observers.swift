@@ -12,15 +12,16 @@ extension ReaderViewModel {
         #if os(macOS)
         addObserver(
             forName: .libraryFolderChanged,
-            object: nil, queue: .current
+            object: nil, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.handleLibraryFolderChanged() }
+            Task { @MainActor [weak self] in self?.handleLibraryFolderChanged() }
         }
         addObserver(
             forName: .bookIntegrated,
-            object: nil, queue: .current
+            object: nil, queue: .main
         ) { [weak self] notification in
-            Task { @MainActor in self?.handleBookIntegrated(notification) }
+            let bookId = notification.object as? Int
+            Task { @MainActor [weak self] in self?.handleBookIntegrated(bookId: bookId) }
         }
 
         #endif
@@ -31,7 +32,9 @@ extension ReaderViewModel {
         annotationCancellable = annotationStore.events
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.loadAnnotations()
+                MainActor.assumeIsolated {
+                    self?.loadAnnotations()
+                }
             }
         #endif
     }

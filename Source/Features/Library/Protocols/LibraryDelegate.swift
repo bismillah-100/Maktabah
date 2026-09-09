@@ -9,6 +9,7 @@ import AppKit
 import UIKit
 #endif
 
+@MainActor
 protocol LibraryDelegate: AnyObject {
     func didSelectBook(for book: BooksData, loadContent: Bool) async
 }

@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Observation
+import Synchronization
 
 @Observable
 final class LibraryViewModel: ViewModelBase {
@@ -28,7 +29,7 @@ final class LibraryViewModel: ViewModelBase {
     var isBulkDownloading = false
     var isDownloadModal = false
     var singleBookToDelete: BooksData?
-    var reloadTask: Task<Void, Never>?
+    let reloadTask = Mutex<Task<Void, Never>?>(nil)
     var availableUpdateCount: Int = 0
     var historySelectionTask: Task<Void, Never>?
 
@@ -52,7 +53,7 @@ final class LibraryViewModel: ViewModelBase {
     var searchQuery: String = "" {
         didSet {
             searchTask?.cancel()
-            searchTask = Task { @MainActor [weak self] in
+            searchTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(0.3))
                 guard !Task.isCancelled else { return }
                 self?.performSearch(self?.searchQuery ?? "")
@@ -119,7 +120,9 @@ final class LibraryViewModel: ViewModelBase {
 
     override init() {
         super.init()
-        setupObservers()
+        MainActor.assumeIsolated {
+            setupObservers()
+        }
     }
 
     // MARK: - Shared Helpers
@@ -177,7 +180,7 @@ final class LibraryViewModel: ViewModelBase {
 
     func buildBookLookup() {
         lookupQueue.cancelAll()
-        lookupQueue.enqueue { [weak self] in
+        lookupQueue.enqueue { @MainActor [weak self] in
             guard let self else { return }
             var newLookup: [String: (category: CategoryData, book: BooksData)] = [:]
 
@@ -222,7 +225,7 @@ final class LibraryViewModel: ViewModelBase {
         applyFilter(filterMode)
     }
 
-    func importOfflineBook(from url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async {
+    func importOfflineBook(from url: URL, metadata: BookMetadata, authorRow: [String: any Sendable]?) async {
         let updateManager = BookUpdateManager.shared
         do {
             let result = try await updateManager.importOfflineUpdate(
@@ -231,7 +234,7 @@ final class LibraryViewModel: ViewModelBase {
                 authorRow: authorRow
             )
             try await dataManager.processBookUpdates([result])
-            await updateManager.integrateBooks(metadata: metadata)
+            updateManager.integrateBooks(metadata: metadata)
             await MainActor.run {
                 showImportSuccessAlert = true
                 showingImportSheet = false
@@ -259,7 +262,6 @@ final class LibraryViewModel: ViewModelBase {
 
     // MARK: - Periodic Book Update Check
 
-    @MainActor
     func checkBookUpdatesPeriodically(force: Bool = false) {
         dataManager.checkBookUpdatesPeriodically(
             force: force

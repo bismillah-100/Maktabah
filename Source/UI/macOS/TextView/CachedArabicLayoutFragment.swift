@@ -46,14 +46,14 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
 }
 
 #if os(macOS)
-extension IbarotTextView: NSTextLayoutManagerDelegate {
+extension IbarotTextView: @MainActor NSTextLayoutManagerDelegate {
     /// Fungsi ini akan dipanggil otomatis oleh TextKit 2 setiap kali ia butuh merender paragraf baru
     func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, textLayoutFragmentFor location: NSTextLocation, in textElement: NSTextElement) -> NSTextLayoutFragment {
         return CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
     }
 }
 #else
-extension iOSCustomIbarotTextView: NSTextLayoutManagerDelegate {
+extension iOSCustomIbarotTextView: @MainActor NSTextLayoutManagerDelegate {
     /// Fungsi ini akan dipanggil otomatis oleh TextKit 2 setiap kali ia butuh merender paragraf baru
     func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, textLayoutFragmentFor location: NSTextLocation, in textElement: NSTextElement) -> NSTextLayoutFragment {
         return CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)

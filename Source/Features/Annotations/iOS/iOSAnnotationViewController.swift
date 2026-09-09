@@ -345,9 +345,12 @@ class iOSAnnotationViewController: UIViewController {
             return UISwipeActionsConfiguration(actions: [delete])
         }
 
-        listConfig.setStandardItemSeparatorHandler(dataSource: { [weak self] in self?.dataSource }, trailingOffset: { [weak self] item in
-            self?.trailingOffset(for: item) ?? 16
-        })
+        listConfig.setStandardItemSeparatorHandler { [weak self] indexPath in
+            guard let self,
+                  let item = dataSource?.itemIdentifier(for: indexPath)
+            else { return 16 }
+            return trailingOffset(for: item)
+        }
 
         return listConfig
     }

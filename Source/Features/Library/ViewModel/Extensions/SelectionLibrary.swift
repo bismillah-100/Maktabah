@@ -103,16 +103,14 @@ extension LibraryViewModel {
         selectedBookName = book.book
 
         historySelectionTask?.cancel()
-        historySelectionTask = Task {
+        historySelectionTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled else { return }
-            await MainActor.run { [weak self] in
-                self?.historyManager.addBookToHistory(book.id)
-            }
+            self?.historyManager.addBookToHistory(book.id)
         }
     }
 
-    func startBulkDeletion(onFinished: @escaping () -> Void) {
+    func startBulkDeletion(onFinished: @escaping @Sendable () -> Void) {
         let books = selectedDeleteBooks
         guard !books.isEmpty else { return }
         Task { [weak self] in
@@ -124,7 +122,7 @@ extension LibraryViewModel {
         }
     }
 
-    func deleteSingleBook(_ book: BooksData) async {
+    nonisolated func deleteSingleBook(_ book: BooksData) async {
         try? await BookArchiveIntegrator.shared.removeBookFromArchive(book)
     }
 

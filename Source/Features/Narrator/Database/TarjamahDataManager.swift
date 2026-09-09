@@ -24,7 +24,7 @@ actor TarjamahDatabaseActor {
         try conn.queryRows(sql: sql, params: params)
     }
 
-    func queryMapped<T>(sql: String, params: [SQLValue], mapper: (OpaquePointer) -> T) throws -> [T] {
+    func queryMapped<T>(sql: String, params: [SQLValue], mapper: @Sendable (OpaquePointer) -> T) throws -> [T] {
         try conn.queryMapped(sql: sql, params: params, mapper: mapper)
     }
 
@@ -33,8 +33,8 @@ actor TarjamahDatabaseActor {
     }
 }
 
-class TarjamahGlobalManager {
-    nonisolated(unsafe) static let shared = TarjamahGlobalManager()
+class TarjamahGlobalManager: @unchecked Sendable {
+    static let shared = TarjamahGlobalManager()
 
     // MARK: - Caching
 
@@ -268,9 +268,9 @@ class TarjamahGlobalManager {
         query: String,
         limit: Int = 50,
         pauseController: PauseController?,
-        stopFlag: @escaping () -> Bool,
+        stopFlag: @escaping @Sendable () -> Bool,
         onBatchResult: @escaping @Sendable ([TarjamahMen]) async -> Void,
-        onComplete: @escaping () -> Void
+        onComplete: @escaping @Sendable () -> Void
     ) async {
         defer { onComplete() }
 
@@ -381,16 +381,12 @@ class TarjamahGlobalManager {
             pauseController: pauseController,
             stopFlag: stopFlag,
             onBatchResult: onBatchResult
-        ) { [weak self] conn in
-            try await conn.queryMapped(
+        ) { conn in
+            try await conn.queryTarjamah(
                 sql: sqlB,
-                params: [.text(ftsQuery), .int(limit)]
-            ) { stmt -> TarjamahMen in
-                let nameStr = self?.extractTarjamahName(from: stmt) ?? ""
-                let bk = Int(sqlite3_column_int64(stmt, 2))
-                let id = Int(sqlite3_column_int64(stmt, 3))
-                return TarjamahMen(name: nameStr, bk: bk, id: id)
-            }
+                params: [.text(ftsQuery), .int(limit)],
+                isIsoName: false
+            )
         }
     }
 
@@ -421,10 +417,6 @@ class TarjamahGlobalManager {
                 isIsoName: true
             )
         }
-    }
-
-    private func extractTarjamahName(from stmt: OpaquePointer) -> String {
-        stmt.columnTextOrDecompressedBlob(0)
     }
 
     private func streamProcessedResults(
@@ -517,7 +509,7 @@ class TarjamahGlobalManager {
         query: String? = nil,
         pauseController: PauseController?,
         stopFlag: @escaping () -> Bool,
-        onProgress: @escaping (Int, Int) -> Void
+        onProgress: @escaping @Sendable (Int, Int) -> Void
     ) async -> [TarjamahResult] {
         guard !tarjamahList.isEmpty else { return [] }
 
@@ -591,7 +583,7 @@ class TarjamahGlobalManager {
     /// Load semua konten tarjamah untuk rawi
     func loadAllTarjamahContent(
         forRowa rowaId: Int,
-        onProgress: @escaping (Int, Int) -> Void = { _, _ in }
+        onProgress: @escaping @Sendable (Int, Int) -> Void = { _, _ in }
     ) async -> [TarjamahResult] {
         let tarjamahList = await loadTarjamahList(forRowa: rowaId)
 

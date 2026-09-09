@@ -9,7 +9,7 @@
 import Foundation
 import SQLite3
 
-class SQLiteConnectionPool {
+actor SQLiteConnectionPool {
     private var connections: [DBConnectionType]
 
     init(conns: [DBConnectionType]) {
@@ -26,10 +26,8 @@ class SQLiteConnectionPool {
     }
 
     /// Menjalankan read-operation pada koneksi tertentu
-    func read<T>(at index: Int, _ body: @escaping (DBConnectionType) throws -> T) async throws -> T {
-        try await Task.detached(priority: .userInitiated) {
-            let conn = self.getConnection(at: index)
-            return try body(conn)
-        }.value
+    func read<T: Sendable>(at index: Int, _ body: @escaping @Sendable (DBConnectionType) throws -> T) async throws -> T {
+        let conn = getConnection(at: index)
+        return try await Task.detached(priority: .userInitiated) { try body(conn) }.value
     }
 }

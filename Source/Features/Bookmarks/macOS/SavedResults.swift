@@ -7,6 +7,7 @@
 
 import Cocoa
 
+@MainActor
 class SavedResults: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var searchField: NSSearchField!
@@ -34,13 +35,11 @@ class SavedResults: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         ReusableFunc.showProgressWindow(view)
-        Task.detached { [weak self] in
-            await self?.resultsVM.vm.getFolders()
-            await self?.dbLoadResults()
-            await MainActor.run { [weak self] in
-                guard let self else { return }
-                ReusableFunc.closeProgressWindow(self.view)
-            }
+        Task { [weak self] in
+            guard let self else { return }
+            await resultsVM.vm.getFolders()
+            await dbLoadResults()
+            ReusableFunc.closeProgressWindow(view)
         }
     }
 
@@ -135,8 +134,6 @@ class SavedResults: NSViewController {
         #if DEBUG
         print("deinit savedResults")
         #endif
-        delegate = nil
-        resultsVM = nil
     }
 }
 

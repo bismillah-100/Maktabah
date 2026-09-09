@@ -51,7 +51,7 @@ actor BookArchiveSingleFlight {
     func run(
         archiveId: Int,
         bookId: Int,
-        operation: @escaping () async throws -> Void
+        operation: @escaping @Sendable () async throws -> Void
     ) async throws {
         // Dedup: buku yang sama sudah berjalan → cukup tunggu hasilnya.
         if let existingTask = bookTasks[bookId] {
@@ -81,8 +81,8 @@ actor BookArchiveSingleFlight {
     }
 }
 
-final class BookArchiveIntegrator {
-    nonisolated(unsafe) static let shared = BookArchiveIntegrator()
+final class BookArchiveIntegrator: @unchecked Sendable {
+    static let shared = BookArchiveIntegrator()
 
     private let sqliteTransient = unsafeBitCast(
         OpaquePointer(bitPattern: -1),
@@ -176,7 +176,7 @@ final class BookArchiveIntegrator {
     }
 
     /// Menghapus kitab dari archive dan FTS.
-    func removeBookFromArchive(_ book: BooksData) async throws {
+    nonisolated func removeBookFromArchive(_ book: BooksData) async throws {
         guard AppConfig.isUsingBundleMode, book.archive > 0,
               let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: book.archive),
               let ftsDbPath = AppConfig.archiveFtsDatabasePath(archiveId: book.archive)

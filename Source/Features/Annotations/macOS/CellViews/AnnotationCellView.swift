@@ -17,7 +17,9 @@ class AnnotationCellView: NSTableCellView {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        applyLineLimits()
+        MainActor.assumeIsolated {
+            applyLineLimits()
+        }
     }
 
     func applyLineLimits() {

@@ -12,17 +12,23 @@ import UIKit
 #endif
 import Foundation
 import SQLite3
+import Synchronization
 
-class BookConnection {
-    private(set) var db: SQLiteDatabase?
-    static let tocTreeCache: NSCache<NSNumber, NSArray> = {
+class BookConnection: @unchecked Sendable {
+    private let _db = Mutex<SQLiteDatabase?>(nil)
+
+    var db: SQLiteDatabase? {
+        _db.withLock { $0 }
+    }
+
+    nonisolated(unsafe) static let tocTreeCache: NSCache<NSNumber, NSArray> = {
         let cache = NSCache<NSNumber, NSArray>()
         cache.countLimit = 50
         cache.name = "BookTOCTreeCache"
         return cache
     }()
 
-    static let totalPartsCache: NSCache<NSString, NSNumber> = {
+    nonisolated(unsafe) static let totalPartsCache: NSCache<NSString, NSNumber> = {
         let cache = NSCache<NSString, NSNumber>()
         cache.countLimit = 100 // max 100 books di cache
         cache.name = "BookTotalPartsCache"
@@ -32,7 +38,11 @@ class BookConnection {
     init() {}
 
     deinit {
-        db = nil
+        setDatabase(nil)
+    }
+
+    func setDatabase(_ newDB: SQLiteDatabase?) {
+        _db.withLock { $0 = newDB }
     }
 
     /// Connect ke archive database dengan availability check
@@ -49,12 +59,12 @@ class BookConnection {
         }
 
         // Tutup koneksi lama jika ada
-        db = nil
+        setDatabase(nil)
 
         let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
 
         do {
-            db = try SQLiteDatabase(path: archivePath, flags: flags)
+            setDatabase(try SQLiteDatabase(path: archivePath, flags: flags))
         } catch let SQLiteError.connectionFailed(msg) {
             throw NSError(domain: "BookConnection", code: 1, userInfo: [NSLocalizedDescriptionKey: msg])
         } catch {

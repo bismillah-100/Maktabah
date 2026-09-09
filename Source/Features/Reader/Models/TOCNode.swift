@@ -5,7 +5,7 @@
 
 import Foundation
 
-class TOCNode: Identifiable {
+final class TOCNode: Identifiable, @unchecked Sendable {
     let bab: String
     let level: Int
     let sub: Int

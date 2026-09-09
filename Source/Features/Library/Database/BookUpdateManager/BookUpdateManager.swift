@@ -7,6 +7,7 @@
 
 import Foundation
 import SQLite3
+import Synchronization
 
 private struct BookDownloadArtifacts: Sendable {
     let workingDirectory: URL
@@ -14,13 +15,13 @@ private struct BookDownloadArtifacts: Sendable {
     let ftsSourceURL: URL
 }
 
-final class BookUpdateManager {
-    nonisolated(unsafe) static let shared = BookUpdateManager()
+final class BookUpdateManager: Sendable {
+    static let shared = BookUpdateManager()
 
     let versionColumnCandidates = [
         "bver", "bVer",
     ]
-    var cachedVersionColumn: String?
+    let cachedVersionColumn = Mutex<String?>(nil)
     let sqliteTransient = unsafeBitCast(
         -1,
         to: sqlite3_destructor_type.self
@@ -28,7 +29,7 @@ final class BookUpdateManager {
 
     private init() {}
 
-    struct StagedBookUpdate {
+    struct StagedBookUpdate: Sendable {
         let entry: BookIndexEntry
         let metadata: BookMetadata
         let downloadedBookURL: URL
@@ -37,13 +38,13 @@ final class BookUpdateManager {
         let workingDirectory: URL
     }
 
-    struct AuthorContext {
+    struct AuthorContext: Sendable {
         let authId: Int
         let versionName: Int64
         let downloadURL: URL
     }
 
-    enum BookVersionState {
+    enum BookVersionState: Sendable {
         case notInLibrary
         case unknownVersion
         case version(Int64)

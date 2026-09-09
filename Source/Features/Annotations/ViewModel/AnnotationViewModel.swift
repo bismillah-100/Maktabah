@@ -72,8 +72,7 @@ struct SwiftUIAnnotationNode: Identifiable {
 }
 
 @Observable
-@MainActor
-class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
+class AnnotationViewModel: ViewModelBase {
     var state: ViewModelState = .loading
 
     /// Cache untuk pencarian dan filter buku
@@ -97,7 +96,7 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         didSet {
             guard oldValue != searchText else { return }
             searchTask?.cancel()
-            searchTask = Task { @MainActor [weak self] in
+            searchTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(0.3))
                 guard !Task.isCancelled else { return }
                 self?.applyFilter()
@@ -183,38 +182,43 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
         return coOccurringTags.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
-    var onTagsChanged: (([String]) -> Void)?
+    var onTagsChanged: (@MainActor ([String]) -> Void)?
 
     // MARK: - Update Callbacks
 
     /// Controller implements these to apply changes
-    var onIncrementalUpdate: ((AnnotationTreeDiff) -> Void)? {
+    var onIncrementalUpdate: (@MainActor (AnnotationTreeDiff) -> Void)? {
         didSet {
             flushBufferedDiffs()
         }
     }
 
-    var onTreeUpdate: (([AnnotationNode], AnnotationGroupingMode) -> Void)?
+    var onTreeUpdate: (@MainActor ([AnnotationNode], AnnotationGroupingMode) -> Void)?
 
     private var bufferedDiffs: [AnnotationTreeDiff] = []
+    private var diffObserverTask: Task<Void, Never>?
+
+    deinit {
+        MainActor.assumeIsolated {
+            diffObserverTask?.cancel()
+            diffObserverTask = nil
+        }
+    }
 
     override init() {
         super.init()
 
-        AnnotationTreeBuilder.shared.diffPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] diff in
-                MainActor.assumeIsolated {
-                    self?.handleTreeDiff(diff)
-                }
+        diffObserverTask = Task { @MainActor [weak self] in
+            for await diff in AnnotationTreeBuilder.shared.diffPublisher.values {
+                guard !Task.isCancelled else { break }
+                guard let self else { break }
+                handleTreeDiff(diff)
             }
-            .store(in: &cancellables)
+        }
 
         if AnnotationTreeBuilder.shared.currentRootNode() != nil {
-            DispatchQueue.main.async { [weak self] in
-                self?.reloadFromTree()
-                self?.state = .loaded
-            }
+            reloadFromTree()
+            state = .loaded
         }
     }
 
@@ -372,7 +376,9 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
 
         guard let ann = node.annotation else { return false }
 
-        if searchScope == .all || searchScope == .context, ann.context.normalizeArabic(false).localizedStandardContains(query) {
+        if searchScope == .all || searchScope == .context,
+           ann.context.normalizeArabic(false).localizedStandardContains(query)
+        {
             return true
         }
         if searchScope == .all || searchScope == .note, let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) {

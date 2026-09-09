@@ -9,9 +9,9 @@ import Observation
 import SQLite3
 import SwiftUI
 
-@Observable
+@Observable @MainActor
 final class SettingsViewModel {
-    nonisolated(unsafe) static let shared: SettingsViewModel = .init()
+    static let shared: SettingsViewModel = .init()
     var isBundleMode: Bool = AppConfig.isUsingBundleMode
     var databaseFilesPath: String = "N/A"
     var archiveFilesPath: String = "N/A"
@@ -218,17 +218,19 @@ final class SettingsViewModel {
         if enabled {
             isProcessingICloud = true
             AppConfig.setUseICloud(true, resolution: .ask) { [weak self] error in
-                guard let self else { return }
-                self.isProcessingICloud = false
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.isProcessingICloud = false
 
-                if let error {
-                    self.useICloud = false // rollback
-                    ReusableFunc.showAlert(
-                        title: String(localized: "errorICloud"),
-                        message: error.localizedDescription
-                    )
+                    if let error {
+                        self.useICloud = false // rollback
+                        ReusableFunc.showAlert(
+                            title: String(localized: "errorICloud"),
+                            message: error.localizedDescription
+                        )
+                    }
+                    self.refreshPaths()
                 }
-                self.refreshPaths()
             }
         } else {
             // Must choose folder before disabling
@@ -237,16 +239,18 @@ final class SettingsViewModel {
                 if success {
                     self.isProcessingICloud = true
                     AppConfig.setUseICloud(false, resolution: .ask) { [weak self] error in
-                        guard let self = self else { return }
-                        self.isProcessingICloud = false
-                        if let error {
-                            self.useICloud = true // rollback
-                            ReusableFunc.showAlert(
-                                title: String(localized: "errorICloud"),
-                                message: error.localizedDescription
-                            )
+                        MainActor.assumeIsolated {
+                            guard let self else { return }
+                            self.isProcessingICloud = false
+                            if let error {
+                                self.useICloud = true // rollback
+                                ReusableFunc.showAlert(
+                                    title: String(localized: "errorICloud"),
+                                    message: error.localizedDescription
+                                )
+                            }
+                            self.refreshPaths()
                         }
-                        self.refreshPaths()
                     }
                 } else {
                     // Revert toggle if folder selection was cancelled

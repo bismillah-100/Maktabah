@@ -22,7 +22,7 @@ class RowiSidebarVC: NSViewController {
         CellIViewIdentifier.resultAndOutlineChild.rawValue
     )
 
-    private let loadMoreIdentifier     = NSUserInterfaceItemIdentifier("LoadMoreCell")
+    private let loadMoreIdentifier = NSUserInterfaceItemIdentifier("LoadMoreCell")
 
     // MARK: - ViewModel
 
@@ -136,10 +136,12 @@ class RowiSidebarVC: NSViewController {
         let startingIndex = group.displayedRowis.count
 
         // Panggil loadMore untuk memperbarui data model.
-        viewModel?.loadMore(group: group) { [weak self] itemsLoadedCount in // itemsLoadedCount adalah data baru yang di-pass dari loadMore
+        viewModel?.loadMore(group: group) { [weak self] itemsLoadedCount in
             guard let self, let itemsLoaded = itemsLoadedCount else { return }
 
-            outlineView.beginUpdates()
+            MainActor.assumeIsolated {
+                outlineView.beginUpdates()
+            }
 
             // 1. Buat IndexSet yang benar
             var indicesToInsert = IndexSet()
@@ -155,12 +157,14 @@ class RowiSidebarVC: NSViewController {
             let needsDeleteLoadMoreRow = !group.hasMore
 
             // 3. Sisipkan item baru di bawah item yang sudah ada.
-            self.outlineView.insertItems(at: indicesToInsert, inParent: group, withAnimation: .slideDown)
+            MainActor.assumeIsolated {
+                self.outlineView.insertItems(at: indicesToInsert, inParent: group, withAnimation: .slideDown)
 
-            if needsDeleteLoadMoreRow {
-                self.outlineView.removeItems(at: IndexSet(integer: endIndex), inParent: group)
+                if needsDeleteLoadMoreRow {
+                    self.outlineView.removeItems(at: IndexSet(integer: endIndex), inParent: group)
+                }
+                outlineView.endUpdates()
             }
-            outlineView.endUpdates()
         }
     }
 

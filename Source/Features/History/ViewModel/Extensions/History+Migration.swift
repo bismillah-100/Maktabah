@@ -24,10 +24,10 @@ extension HistoryViewModel {
 
         let toUpdateDb = backfilled
         if didChange {
-            DispatchQueue.global(qos: .background).async {
+            Task.detached {
                 do {
                     try HistoryDatabaseManager.shared.saveUpsertedEntries(toUpdateDb)
-                    DispatchQueue.main.async {
+                    await MainActor.run {
                         self.loadBooksData()
                     }
                 } catch {
@@ -64,7 +64,7 @@ extension HistoryViewModel {
             let finalOrder = historyOrder
             let migratedEntries = Array(entriesByBookId.values).filter { $0.ckRecordId != nil }
 
-            DispatchQueue.global(qos: .background).async {
+            Task.detached {
                 do {
                     try HistoryDatabaseManager.shared.saveMigrationChanges(newEntries: newEntries, finalOrder: finalOrder)
                     if !migratedEntries.isEmpty {

@@ -12,7 +12,6 @@ extension SearchViewModel {
         selectedBookIds = bookIds
     }
 
-    @MainActor
     func startSearch() async {
         if query.isEmpty {
             return
@@ -46,31 +45,32 @@ extension SearchViewModel {
             stopSearch(); return
         }
 
-        searchWork = Task.detached(priority: .userInitiated) { [weak self, tablesToScan] in
+        let task = Task.detached(priority: .userInitiated) { [weak self, tablesToScan] in
             guard let self else { return }
 
-            let searchParams = LibrarySearchParams(
+            let searchParams = await LibrarySearchParams(
                 tableToScan: tablesToScan,
                 searchEngine: searchEngine,
                 query: query.replacing("،", with: ","),
                 mode: searchMode,
                 nearDistance: nearDistance
             )
-            let searchCallbacks = makeLibrarySearchCallbacks()
+            let searchCallbacks = await makeLibrarySearchCallbacks()
 
             await ldm.performSearch(
                 params: searchParams,
                 callbacks: searchCallbacks
             )
         }
+
+        searchWork.withLock { $0 = task }
     }
 
     func stopSearch() {
         Task { [searchEngine] in
             await searchEngine.stop()
         }
-        searchWork?.cancel()
-        searchWork = nil
+        clearSearchWork()
         isSearching = false
         isPaused = false
         emitComplete()

@@ -642,7 +642,11 @@ enum AppConfig {
     ///   - use: true = aktifkan iCloud, false = nonaktifkan
     ///   - resolution: resolusi konflik file jika ada di tujuan
     ///   - completion: dipanggil di main thread setelah selesai, berisi error jika gagal
-    static func setUseICloud(_ use: Bool, resolution: MigrationResolution = .ask, completion: @escaping (Error?) -> Void) {
+    static func setUseICloud(
+        _ use: Bool,
+        resolution: MigrationResolution = .ask,
+        completion: @escaping @Sendable (Error?) -> Void
+    ) {
         let oldFolder = AppConfig.folder(for: annotationsAndResultsFolder)
         useICloud = use
 
@@ -664,7 +668,7 @@ enum AppConfig {
             // sehingga data yang dibuat saat CloudKit off tidak terlewat
             UserDefaults.standard.removeObject(forKey: "CloudKitSyncManager_InitialUploadDone")
         }
-        DispatchQueue.main.async { completion(nil) }
+        Task { @MainActor in completion(nil) }
     }
 }
 

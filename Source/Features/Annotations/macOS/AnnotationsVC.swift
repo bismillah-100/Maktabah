@@ -9,6 +9,7 @@
 import Cocoa
 import SwiftUI
 
+@MainActor
 class AnnotationsVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var shareBtn: NSPopUpButton!

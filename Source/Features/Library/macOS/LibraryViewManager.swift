@@ -27,6 +27,7 @@ class LibraryViewManager: NSObject {
     var cancellables = Set<AnyCancellable>()
     let dataManager = LibraryDataManager.shared
     let historyManager = HistoryViewModel.shared
+    private let selectionSubject = PassthroughSubject<Int, Never>()
 
     init(
         outlineView: NSOutlineView,
@@ -60,6 +61,15 @@ class LibraryViewManager: NSObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] update in
                 self?.handleViewModelUpdate(update)
+            }
+            .store(in: &cancellables)
+
+        selectionSubject
+            .debounce(for: .milliseconds(50), scheduler: RunLoop.main)
+            .sink { [weak self] selectedRow in
+                Task { [weak self] in
+                    await self?.delegate?.didSelectItem(selectedRow)
+                }
             }
             .store(in: &cancellables)
     }
@@ -118,7 +128,9 @@ class LibraryViewManager: NSObject {
     // MARK: - Passthrough to ViewModel
 
     func prepareData(completion: (@MainActor () -> Void)? = nil) async {
-        if isSetupComplete { return }
+        if isSetupComplete {
+            return
+        }
         await viewModel.loadLibrary()
         completion?()
         await MainActor.run { [weak self] in
@@ -242,6 +254,14 @@ class LibraryViewManager: NSObject {
             }
         }
     }
+
+    deinit {
+        MainActor.assumeIsolated {
+            cancellables.removeAll()
+            checkBoxToggle = nil
+            delegate = nil
+        }
+    }
 }
 
 // MARK: - NSOutlineViewDataSource
@@ -254,7 +274,9 @@ extension LibraryViewManager: NSOutlineViewDataSource {
             }
             return viewModel.displayedCategories.count
         }
-        if let category = item as? CategoryData { return category.children.count }
+        if let category = item as? CategoryData {
+            return category.children.count
+        }
         return 0
     }
 
@@ -265,12 +287,16 @@ extension LibraryViewManager: NSOutlineViewDataSource {
             }
             return viewModel.displayedCategories[index]
         }
-        if let category = item as? CategoryData { return category.children[index] }
+        if let category = item as? CategoryData {
+            return category.children[index]
+        }
         return ""
     }
 
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
-        if let category = item as? CategoryData { return !category.children.isEmpty }
+        if let category = item as? CategoryData {
+            return !category.children.isEmpty
+        }
         return false
     }
 }
@@ -308,10 +334,12 @@ extension LibraryViewManager: NSOutlineViewDelegate {
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
         guard let outlineView = notification.object as? NSOutlineView else { return }
-        if outlineView.selectedRowIndexes.count > 1 { return }
+        if outlineView.selectedRowIndexes.count > 1 {
+            return
+        }
 
         let selectedRow = outlineView.selectedRow
-        Task { await delegate?.didSelectItem(selectedRow) }
+        selectionSubject.send(selectedRow)
 
         if let item = outlineView.item(atRow: selectedRow) as? BooksData {
             ReusableFunc.updateBuiltInRecents(with: item.book, in: searchField)
@@ -386,7 +414,9 @@ extension LibraryViewManager: NSMenuDelegate {
 
     private func addFavoriteContextMenu(menu: NSMenu, clickedRow: Int) {
         if clickedRow >= 0, let book = outlineView.item(atRow: clickedRow) as? BooksData {
-            if !menu.items.isEmpty { menu.addItem(NSMenuItem.separator()) }
+            if !menu.items.isEmpty {
+                menu.addItem(NSMenuItem.separator())
+            }
             let isFav = HistoryViewModel.shared.isFavorite(book.id)
             let title = isFav ? String(localized: "Remove Favorite") : String(localized: "Add Favorite")
             let favItem = NSMenuItem(title: title, action: #selector(toggleFavoriteAction(_:)), keyEquivalent: "")

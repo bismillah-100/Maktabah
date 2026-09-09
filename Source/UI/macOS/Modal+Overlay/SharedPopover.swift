@@ -7,6 +7,7 @@
 
 import Cocoa
 
+@MainActor
 final class SharedPopover {
     static weak var annotationsVC: AnnotationsVC?
     static let annotationsPopover: NSPopover = {

@@ -9,6 +9,7 @@ extension ReaderViewModel {
     // MARK: - Shared: Annotations
 
     func loadAnnotations() {
+        #if os(iOS)
         guard let book = currentBook else { return }
         let anns = annotationStore.loadAnnotations(
             bkId: book.id,
@@ -16,6 +17,7 @@ extension ReaderViewModel {
         )
 
         currentAnnotations = anns
+        #endif
     }
 
     func findBestAnnotation(for range: NSRange) -> Annotation? {

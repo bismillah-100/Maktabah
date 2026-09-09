@@ -60,7 +60,7 @@ struct SQLiteRow {
     }
 }
 
-class SQLiteDatabase {
+class SQLiteDatabase: @unchecked Sendable {
     let dbPointer: OpaquePointer
     private let lock = NSRecursiveLock()
     private var savepointCounter: Int = 0

@@ -10,17 +10,21 @@ import Combine
 import Foundation
 
 /// Base class for ViewModels.
+@MainActor
 open class ViewModelBase {
     /// Set of Combine cancellables for managing subscriptions
     public var cancellables = Set<AnyCancellable>()
 
     /// Token storage for notification observers
-    private nonisolated(unsafe) var observerTokens: [NSObjectProtocol] = []
+    private var observerTokens: [NotificationToken] = []
 
     public init() {}
 
     deinit {
-        removeNotificationObservers()
+        MainActor.assumeIsolated {
+            cancellables.removeAll()
+            removeNotificationObservers()
+        }
     }
 
     // MARK: - Notification Observer Helpers
@@ -39,13 +43,12 @@ open class ViewModelBase {
             queue: queue,
             using: handler
         )
-        observerTokens.append(token)
+        observerTokens.append(NotificationToken(token: token))
         return token
     }
 
     /// Removes all tracked notification observers
-    public nonisolated func removeNotificationObservers() {
-        observerTokens.forEach { NotificationCenter.default.removeObserver($0) }
+    public func removeNotificationObservers() {
         observerTokens.removeAll()
     }
 
@@ -65,10 +68,10 @@ open class ViewModelBase {
     open func migrateBookId(from oldId: Int, to newId: Int) {}
 
     public func enableBookIdMigrationObserver() {
-        addObserver(forName: .bookIdMigrated, object: nil, queue: .main) { notification in
-            Task { @MainActor [weak self] in
-                guard let self, let migration = notification.bookIdMigration else { return }
-                migrateBookId(from: migration.oldId, to: migration.newId)
+        addObserver(forName: .bookIdMigrated, object: nil, queue: .main) { [weak self] notification in
+            guard let migration = notification.bookIdMigration else { return }
+            MainActor.assumeIsolated { [weak self] in
+                self?.migrateBookId(from: migration.oldId, to: migration.newId)
             }
         }
     }

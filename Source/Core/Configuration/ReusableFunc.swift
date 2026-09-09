@@ -11,6 +11,7 @@ import AppKit
 import UIKit
 #endif
 
+@MainActor
 class ReusableFunc {
     static func bundledArabicFont(ofSize size: CGFloat) -> PlatformFont {
         PlatformFont(name: "KFGQPCUthmanTahaNaskh", size: size)
@@ -110,7 +111,9 @@ class ReusableFunc {
             progressView.animator().alphaValue = 0
         }) {
             // Setelah animasi selesai, hapus dari superview
-            progressView.removeFromSuperview()
+            MainActor.assumeIsolated {
+                progressView.removeFromSuperview()
+            }
             #if DEBUG
             print("Progress view removed from parent view")
             #endif
@@ -214,7 +217,7 @@ class ReusableFunc {
 
     // Menampilkan jendela peringatan standar kepada pengguna.
     #if os(macOS)
-    static func showAlert(title: String, message: String, style: NSAlert.Style = .warning) {
+    nonisolated static func showAlert(title: String, message: String, style: NSAlert.Style = .warning) {
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.alertStyle = style
@@ -224,7 +227,7 @@ class ReusableFunc {
         }
     }
     #else
-    static func showAlert(title: String, message: String) {
+    nonisolated static func showAlert(title: String, message: String) {
         DispatchQueue.main.async {
             guard let topVC = getTopViewController() else { return }
             let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)

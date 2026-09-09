@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 protocol AnnotationDelegate: AnyObject {
     func didSelect(annotation: Annotation)
 }
@@ -16,33 +17,29 @@ extension IbarotTextVC: AnnotationDelegate {
         let bkId = annotation.bkId
         let contentId = annotation.contentId
         guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
-            DispatchQueue.main.async {
-                ReusableFunc.showAlert(
-                    title: String(localized: .bookNotFound(bookID: bkId)),
-                    message: String(localized: .bookMissingOnAnnotationClick)
-                )
-            }
+            ReusableFunc.showAlert(
+                title: String(localized: .bookNotFound(bookID: bkId)),
+                message: String(localized: .bookMissingOnAnnotationClick)
+            )
             return
         }
 
-        Task.detached { [weak self, contentId] in
+        Task { [weak self] in
             guard let self else { return }
 
             do {
-                if await currentBook?.id != bkId {
+                if currentBook?.id != bkId {
                     try await displayBook(book, loadContent: false)
                 }
             } catch {
-                await MainActor.run {
-                    ReusableFunc.showAlert(
-                        title: DatabaseError.bookNotFound(bkId).localizedDescription,
-                        message: DatabaseError.noConnection.localizedDescription
-                    )
-                }
+                ReusableFunc.showAlert(
+                    title: DatabaseError.bookNotFound(bkId).localizedDescription,
+                    message: DatabaseError.noConnection.localizedDescription
+                )
                 return
             }
-            if await contentId != viewModel.currentContentId {
-                await handleDelegate(contentId)
+            if contentId != viewModel.currentContentId {
+                handleDelegate(contentId)
             }
 
             await textDelegate?.highlightAndScrollToAnns(annotation)

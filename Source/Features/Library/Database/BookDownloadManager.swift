@@ -41,15 +41,15 @@ enum BookDownloadError: LocalizedError {
     }
 }
 
-final class BookDownloadManager {
-    nonisolated(unsafe) static let shared = BookDownloadManager()
+final class BookDownloadManager: @unchecked Sendable {
+    static let shared = BookDownloadManager()
 
     private let fileManager = FileManager.default
     private let networkMonitor = NetworkMonitor.shared
     private let indexCache = BookDownloadIndexCache.shared
     private let singleFlight = SingleFlight<Int, URL>()
 
-    private lazy var urlSession: URLSession = {
+    private let urlSession: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 120
         config.timeoutIntervalForResource = 3600
@@ -60,8 +60,8 @@ final class BookDownloadManager {
     private init() {
         Task {
             await networkMonitor.registerConnectivityCallbacks(
-                onLost: { [weak self] in
-                    Task {
+                onLost: {
+                    Task { [weak self] in
                         await self?.cancelAllDownloads()
                     }
                 }
@@ -89,7 +89,7 @@ final class BookDownloadManager {
         }
     }
 
-    func downloadBookResult(bookId: Int) async -> (bookId: Int, result: Result<URL, Error>) {
+    nonisolated func downloadBookResult(bookId: Int) async -> (bookId: Int, result: Result<URL, Error>) {
         do {
             let url = try await ensureBookDownloaded(bookId: bookId)
             return (bookId, .success(url))
@@ -98,14 +98,14 @@ final class BookDownloadManager {
         }
     }
 
-    private func performDownload(bookId: Int) async throws -> URL {
+    nonisolated private func performDownload(bookId: Int) async throws -> URL {
         if let local = localBookURL(bookId: bookId) {
             return local
         }
         return try await downloadBook(bookId: bookId)
     }
 
-    private func downloadBook(bookId: Int) async throws -> URL {
+    nonisolated private func downloadBook(bookId: Int) async throws -> URL {
         guard await networkMonitor.isConnected else {
             throw BookDownloadError.networkUnavailable
         }
@@ -139,7 +139,7 @@ final class BookDownloadManager {
         throw lastError ?? BookDownloadError.downloadFailed(bookId: bookId)
     }
 
-    private func downloadAndProcessCandidate(
+    nonisolated private func downloadAndProcessCandidate(
         candidate: URL,
         destinationURL: URL,
         bookId: Int
@@ -191,7 +191,7 @@ final class BookDownloadManager {
         await singleFlight.cancelAll()
     }
 
-    private func candidateURLs(for bookId: Int) async -> [URL] {
+    nonisolated private func candidateURLs(for bookId: Int) async -> [URL] {
         var urls: [URL] = []
 
         if let indexURL = AppConfig.bookIndexURL,

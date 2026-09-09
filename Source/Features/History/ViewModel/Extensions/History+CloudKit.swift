@@ -14,26 +14,17 @@ extension HistoryViewModel {
 
     @discardableResult
     func applyCloudKitChanges(entriesToSave: [ReadingEntry], recordIdsToDelete: [String]) -> Bool {
-        let block = { [weak self] in
-            guard let self else { return }
-            var didChange = false
-            var deletedIds = [Int]()
-            var upsertedEntries = [ReadingEntry]()
+        var didChange = false
+        var deletedIds = [Int]()
+        var upsertedEntries = [ReadingEntry]()
 
-            didChange = applyDeletions(recordIdsToDelete: recordIdsToDelete, deletedIds: &deletedIds) || didChange
-            didChange = applyUpserts(entriesToSave: entriesToSave, upsertedEntries: &upsertedEntries) || didChange
+        didChange = applyDeletions(recordIdsToDelete: recordIdsToDelete, deletedIds: &deletedIds) || didChange
+        didChange = applyUpserts(entriesToSave: entriesToSave, upsertedEntries: &upsertedEntries) || didChange
 
-            if didChange {
-                synchronizeHistoryOrder(deletedIds: &deletedIds, upsertedEntries: upsertedEntries)
-            }
+        if didChange {
+            synchronizeHistoryOrder(deletedIds: &deletedIds, upsertedEntries: upsertedEntries)
         }
-
-        if Thread.isMainThread {
-            block()
-        } else {
-            DispatchQueue.main.async { block() }
-        }
-        return true
+        return didChange
     }
 
     func applyDeletions(recordIdsToDelete: [String], deletedIds: inout [Int]) -> Bool {

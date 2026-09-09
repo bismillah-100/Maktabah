@@ -12,6 +12,7 @@ import UIKit
 import UniformTypeIdentifiers
 #endif
 
+@MainActor
 enum SettingsActions {
     private static let fullLibraryDownloadURL =
         "https://drive.google.com/file/d/1lAinUQ9Eh_W4_4r3MNfX84Ee3AOCVt_B/view?usp=share_link"

@@ -14,7 +14,7 @@ extension SearchViewModel {
         guard state == .loading, let libraryViewManager else {
             Task { [weak self] in
                 self?.loadLibraryData()
-                await onComplete()
+                onComplete()
             }
             return
         }

@@ -7,13 +7,14 @@
 
 import Cocoa
 
+@MainActor
 class QuranNashVC: NSViewController {
     @IBOutlet weak var stackView: NSStackView!
     @IBOutlet weak var ayahTextField: NSTextField!
     @IBOutlet weak var textView: IbarotTextView!
     @IBOutlet weak var hLine: NSBox!
 
-    var didNavigateContent: ((BookContent) -> Void)?
+    var didNavigateContent: (@MainActor (BookContent) -> Void)?
 
     let manager = QuranDataManager.shared
 

@@ -6,7 +6,7 @@
 import Foundation
 
 /// Entry tarjamah dari tabel men_b
-struct TarjamahMen: Codable {
+struct TarjamahMen: Codable, Sendable {
     let name: String // Nama dalam tarjamah
     let bk: Int // Book ID (dari tabel 0bok)
     let id: Int // ID di tabel buku (row id)

@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-final class SQLiteConnection: DBConnectionType {
+final class SQLiteConnection: DBConnectionType, @unchecked Sendable {
     private let db: OpaquePointer?
     private var statementCache: [String: OpaquePointer] = [:]
     private var cacheKeys: [String] = []

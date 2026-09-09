@@ -147,11 +147,11 @@ extension BookUpdateManager {
     }
 
     func resolveVersionColumn(in db: OpaquePointer) -> String? {
-        if let cachedVersionColumn {
+        if let cached = cachedVersionColumn.withLock({ $0 }) {
             #if DEBUG
-            print("📦 [Version] Using cached version column: \(cachedVersionColumn)")
+            print("📦 [Version] Using cached version column: \(cached)")
             #endif
-            return cachedVersionColumn
+            return cached
         }
 
         let columns = fetchPragmaColumns(in: db, table: "0bok")
@@ -162,7 +162,7 @@ extension BookUpdateManager {
         let lowered = columns.map { $0.lowercased() }
         if let index = lowered.firstIndex(where: { versionColumnCandidates.contains($0) }) {
             let matched = columns[index]
-            cachedVersionColumn = matched
+            cachedVersionColumn.withLock { $0 = matched }
             #if DEBUG
             print("✅ [Version] Resolved version column: \(matched)")
             #endif
