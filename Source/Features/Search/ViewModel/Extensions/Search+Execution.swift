@@ -20,14 +20,14 @@ extension SearchViewModel {
 
         let enginePaused = await searchEngine.currentlyPaused()
         if enginePaused || isPaused {
-            searchEngine.resume()
+            await searchEngine.resume()
             isPaused = false
             return
         }
 
         let engineRunning = await searchEngine.isRunning()
         if engineRunning || isSearching {
-            searchEngine.pause()
+            await searchEngine.pause()
             isPaused = true
             return
         }
@@ -66,7 +66,9 @@ extension SearchViewModel {
     }
 
     func stopSearch() {
-        searchEngine.stop()
+        Task { [searchEngine] in
+            await searchEngine.stop()
+        }
         searchWork?.cancel()
         searchWork = nil
         isSearching = false

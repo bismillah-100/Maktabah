@@ -7,8 +7,9 @@
 
 import Foundation
 import SQLite3
+import Synchronization
 
-struct SearchQueryOptions {
+struct SearchQueryOptions: Sendable {
     var query: String = ""
     var keywords: [String] = []
     var allowedTables: Set<String>? = nil
@@ -16,30 +17,26 @@ struct SearchQueryOptions {
     var nearDistance: Int = 10
 }
 
-struct SearchEngineCallbacks {
-    var onInitialize: (Int) -> Void
-    var onTableComplete: (String, Int) -> Void
-    var onRowProgress: (String, String, Int, Int) -> Void
-    var onResult: (String, String, BookContent) -> Void
-    var onComplete: () -> Void
+struct SearchEngineCallbacks: Sendable {
+    var onInitialize: @Sendable (Int) -> Void
+    var onTableComplete: @Sendable (String, Int) -> Void
+    var onRowProgress: @Sendable (String, String, Int, Int) -> Void
+    var onResult: @Sendable (String, String, BookContent) -> Void
+    var onComplete: @Sendable () -> Void
 }
 
-final class SearchEngine {
+actor SearchEngine {
     private(set) var workers: [SearchWorker] = []
     private let pauseController = PauseController()
     private var searchTask: Task<Void, Never>?
     private var isStopped = false
-    private let stopLock = NSLock()
-    private let workersLock = NSLock()
 
     init() {}
 
     func registerDB(archiveId: String, tables: [String], connections: [DBConnectionType], batchSize: Int = 200) {
         let pool = SQLiteConnectionPool(conns: connections)
         let worker = SearchWorker(archiveId: archiveId, tables: tables, pool: pool, batchSize: batchSize)
-        workersLock.lock()
         workers.append(worker)
-        workersLock.unlock()
     }
 
     func startSearch(
@@ -50,9 +47,7 @@ final class SearchEngine {
         searchTask = nil
         isStopped = false
 
-        workersLock.lock()
         let currentWorkers = workers
-        workersLock.unlock()
 
         // Kirim total workers ke UI
         Task { @MainActor in
@@ -67,12 +62,10 @@ final class SearchEngine {
             return
         }
 
-        searchTask = Task.detached(priority: .userInitiated) { [weak self, ftsQuery, currentWorkers] in
-            guard let self else { return }
+        searchTask = Task.detached(priority: .userInitiated) { [ftsQuery, currentWorkers, pauseController] in
             for worker in currentWorkers {
-                if isStopped { break }
-
-                var completedTables = 0
+                if Task.isCancelled { break }
+                let counter = SafeCounter()
 
                 let workerCallbacks = SearchWorkerCallbacks(
                     start: { _ in },
@@ -84,17 +77,15 @@ final class SearchEngine {
                         callbacks.onResult(tableName, worker.archiveId, content)
                     },
                     onTableComplete: {
-                        completedTables += 1
-                        callbacks.onTableComplete(worker.archiveId, completedTables)
+                        let currentCount = counter.increment()
+                        callbacks.onTableComplete(worker.archiveId, currentCount)
                     },
                     onComplete: {}
                 )
 
                 let control = SearchControl(
                     pauseController: pauseController,
-                    stopFlag: { [weak self] in
-                        return self?.isStopped ?? false
-                    }
+                    stopFlag: { Task.isCancelled }
                 )
 
                 await worker.search(
@@ -108,42 +99,30 @@ final class SearchEngine {
         }
     }
 
-    func checkAndResumeIfNeeded(completion: @escaping (Bool) -> Void) {
-        Task {
-            let isPaused = await currentlyPaused()
+    func checkAndResumeIfNeeded() async -> Bool {
+        let isPaused = await currentlyPaused()
 
-            if isPaused {
-                print("Pencarian saat ini dijeda. Melanjutkan (Resuming)...")
-                self.resume()
-                // Kasus Resume: Kita sudah melanjutkan yang lama. Jangan panggil startSearch.
-                completion(true) // <-- Mengembalikan TRUE
-            } else {
-                print("Pencarian saat ini tidak dijeda. Memerlukan Start Baru.")
-                // Kasus Start Baru: Tidak ada yang dijeda, jadi kita perlu mulai baru.
-                completion(false) // <-- Mengembalikan FALSE
-            }
+        if isPaused {
+            print("Pencarian saat ini dijeda. Melanjutkan (Resuming)...")
+            await resume()
+            return true
+        } else {
+            print("Pencarian saat ini tidak dijeda. Memerlukan Start Baru.")
+            return false
         }
     }
 
-    func pause() {
-        Task {
-            await pauseController.pause()
-        }
+    func pause() async {
+        await pauseController.pause()
     }
 
-    func resume() {
-        Task {
-            await pauseController.resume()
-        }
+    func resume() async {
+        await pauseController.resume()
     }
 
-    func stop() {
-        stopLock.lock()
+    func stop() async {
         isStopped = true
-        stopLock.unlock()
-        Task {
-            await pauseController.stopAndResumeAll()
-        }
+        await pauseController.stopAndResumeAll()
         searchTask?.cancel()
         searchTask = nil
         cleanup()
@@ -159,9 +138,7 @@ final class SearchEngine {
     }
 
     func cleanup() {
-        workersLock.lock()
         workers.removeAll()
-        workersLock.unlock()
     }
 }
 
