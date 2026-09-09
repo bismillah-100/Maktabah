@@ -5,7 +5,7 @@
 
 import Foundation
 
-class BookContent {
+struct BookContent: Sendable {
     let id: Int
     let nash: String
     let page: Int

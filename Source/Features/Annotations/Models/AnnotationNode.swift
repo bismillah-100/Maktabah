@@ -114,7 +114,8 @@ enum DateBucket: Hashable, Comparable {
     }
 }
 
-final class AnnotationNode: Equatable, Hashable {
+/// THREAD SAFETY: Node pohon ini dimutasi secara eksklusif saat fase pembentukan di background. Setelah dipublikasikan ke antarmuka, pohon ini berstatus read-only (frozen).
+final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
     var title: String
     var children: [AnnotationNode] = []
     var annotation: Annotation? // optional, kalau node ini representasi annotation

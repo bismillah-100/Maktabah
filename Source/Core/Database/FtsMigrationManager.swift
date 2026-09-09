@@ -12,7 +12,7 @@ import UIKit
 
 @Observable
 final class FtsMigrationManager {
-    static let shared = FtsMigrationManager()
+    nonisolated(unsafe) static let shared = FtsMigrationManager()
 
     var isMigrating = false
     var isCancelled = false

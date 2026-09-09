@@ -6,7 +6,7 @@
 import CloudKit
 import Foundation
 
-final class ResultSyncHandler {
+final class ResultSyncHandler: Sendable {
     static let shared = ResultSyncHandler()
     static let folderRecordType = "SearchFolder"
     static let resultRecordType = "SearchResult"

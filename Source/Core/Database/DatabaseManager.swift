@@ -23,7 +23,7 @@ struct ShortsMapping {
 
 /// DatabaseManager.swift
 class DatabaseManager {
-    static var shared: DatabaseManager = .init()
+    nonisolated(unsafe) static let shared: DatabaseManager = .init()
 
     private(set) var db: SQLiteDatabase?
     private(set) var dbSpecial: SQLiteDatabase?

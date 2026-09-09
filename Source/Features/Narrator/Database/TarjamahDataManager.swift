@@ -34,7 +34,7 @@ actor TarjamahDatabaseActor {
 }
 
 class TarjamahGlobalManager {
-    static let shared = TarjamahGlobalManager()
+    nonisolated(unsafe) static let shared = TarjamahGlobalManager()
 
     // MARK: - Caching
 

@@ -6,7 +6,7 @@
 import CloudKit
 import Foundation
 
-final class AnnotationSyncHandler: CloudKitRecordParser {
+final class AnnotationSyncHandler: CloudKitRecordParser, Sendable {
     typealias Model = Annotation
 
     static let shared = AnnotationSyncHandler()

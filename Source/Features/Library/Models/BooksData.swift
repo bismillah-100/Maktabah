@@ -5,7 +5,7 @@
 
 import Foundation
 
-class BooksData: Codable, Identifiable {
+final class BooksData: Codable, Identifiable, @unchecked Sendable {
     let id: Int
     let book: String
     let normalizedBook: String

@@ -9,7 +9,7 @@ import Foundation
 
 /// Actor untuk menangani sinkronisasi file I/O secara aman tanpa memblokir thread
 public actor FileCoordinator {
-    public static let shared = FileCoordinator()
+    public nonisolated static let shared = FileCoordinator()
 
     public func read(url: URL) -> Data? {
         var error: NSError?

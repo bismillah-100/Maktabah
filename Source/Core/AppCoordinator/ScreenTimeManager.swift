@@ -13,7 +13,7 @@ class ScreenTimeManager {
     private var screenTimer: Timer?
     private var isActive = false
 
-    static var shared: ScreenTimeManager = .init()
+    nonisolated(unsafe) static let shared: ScreenTimeManager = .init()
 
     private init() {
         if UserDefaults.standard.extendScreenTime {

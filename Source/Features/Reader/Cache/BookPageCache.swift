@@ -8,7 +8,7 @@
 import Foundation
 
 final class BookPageCache {
-    static let shared = BookPageCache()
+    nonisolated(unsafe) static let shared = BookPageCache()
 
     // Key: bookId (NSNumber) -> Value: Map of pages (NSMutableDictionary)
     private let cache = NSCache<NSNumber, NSMutableDictionary>()

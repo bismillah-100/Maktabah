@@ -17,7 +17,7 @@ import AppKit
 ///     BulkDownloadModalCenter.shared.presentModal()
 /// }
 /// ```
-
+@MainActor
 final class BulkDownloadModalCenter {
     static let shared = BulkDownloadModalCenter()
 
@@ -25,6 +25,7 @@ final class BulkDownloadModalCenter {
     private var vc: BulkDownloadVC?
     private var downloadTask: Task<Void, Never>?
     private var shouldStopDownloads = false
+    private var isDismissing = false
 
     private init() {}
 
@@ -60,27 +61,32 @@ final class BulkDownloadModalCenter {
     }
 
     func dismissModal() {
+        guard !isDismissing else { return }
+        isDismissing = true
+        defer { isDismissing = false }
+
         if NSApp.modalWindow != nil {
             NSApp.stopModal()
         }
-        window?.orderOut(nil)
-        window?.close()
-        vc = nil
+        let w = window
         window = nil
+        vc = nil
+        w?.delegate = nil
+        w?.orderOut(nil)
+        w?.close()
     }
 
     // MARK: - Download orchestration
-    @MainActor
+
     func startDownload(books: [BooksData], vc: BulkDownloadVC) {
         shouldStopDownloads = false
 
-        downloadTask = Task { [weak self] in
+        downloadTask = Task.detached { [weak self] in
             guard let self else { return }
             await runBulkDownload(books: books, vc: vc)
         }
     }
 
-    @MainActor
     func stop() {
         shouldStopDownloads = true
         Task {
@@ -97,7 +103,6 @@ final class BulkDownloadModalCenter {
 
     // MARK: - Core logic
 
-    @MainActor
     private func runBulkDownload(books: [BooksData], vc: BulkDownloadVC) async {
         let total = books.count
         vc.updateDownloadProgress(completed: 0, total: total)
@@ -106,7 +111,9 @@ final class BulkDownloadModalCenter {
         let downloadResults = await executeConcurrentDownloads(books: books, vc: vc, total: total)
 
         let successfulDownloads = books.filter {
-            if case .success = downloadResults[$0.id] { return true }
+            if case .success = downloadResults[$0.id] {
+                return true
+            }
             return false
         }
         let integrateTotal = successfulDownloads.count
@@ -118,7 +125,6 @@ final class BulkDownloadModalCenter {
         finalizeProcess(books: books, vc: vc, completedIntegrations: completedIntegrations, integrateTotal: integrateTotal)
     }
 
-    @MainActor
     private func executeConcurrentDownloads(books: [BooksData], vc: BulkDownloadVC, total: Int) async -> [Int: Result<URL, Error>] {
         var downloadResults: [Int: Result<URL, Error>] = [:]
         var downloadedCount = 0
@@ -148,13 +154,14 @@ final class BulkDownloadModalCenter {
                 switch result {
                 case .success:
                     vc.updateStatus(bookId: bookId, status: .downloaded)
-                case .failure(let error):
+                case let .failure(error):
                     vc.updateStatus(
                         bookId: bookId,
                         status: .failed(error.localizedDescription)
                     )
                     if error is CancellationError ||
-                        vc.dataVM?.viewModel.isNetworkFailure(error) == true {
+                        vc.dataVM?.viewModel.isNetworkFailure(error) == true
+                    {
                         shouldStopDownloads = true
                         group.cancelAll()
                     }
@@ -164,7 +171,6 @@ final class BulkDownloadModalCenter {
         return downloadResults
     }
 
-    @MainActor
     private func executeSerialIntegrations(successfulDownloads: [BooksData], vc: BulkDownloadVC, integrateTotal: Int) async -> Int {
         var completedIntegrations = 0
         vc.updateIntegrateProgress(completed: 0, total: integrateTotal)
@@ -221,13 +227,14 @@ final class BulkDownloadModalCenter {
         return completedIntegrations
     }
 
-    @MainActor
     private func finalizeProcess(books: [BooksData], vc: BulkDownloadVC, completedIntegrations: Int, integrateTotal: Int) {
         downloadTask = nil
         vc.setDownloading(false)
 
         let failedCount = books.filter {
-            if case .failed = vc.bookStatuses[$0.id] { return true }
+            if case .failed = vc.bookStatuses[$0.id] {
+                return true
+            }
             return false
         }.count
 
@@ -245,9 +252,9 @@ final class BulkDownloadModalCenter {
     }
 }
 
-
 // MARK: - WindowCloseDelegate
 
+@MainActor
 private final class WindowCloseDelegate: NSObject, NSWindowDelegate {
     static let shared = WindowCloseDelegate()
 
@@ -256,8 +263,6 @@ private final class WindowCloseDelegate: NSObject, NSWindowDelegate {
         if NSApp.modalWindow != nil {
             NSApp.stopModal()
         }
-        DispatchQueue.main.async {
-            BulkDownloadModalCenter.shared.dismissModal()
-        }
+        BulkDownloadModalCenter.shared.dismissModal()
     }
 }

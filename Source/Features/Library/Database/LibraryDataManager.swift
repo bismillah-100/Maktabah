@@ -74,7 +74,7 @@ final class LibraryDataManager: Sendable {
         }
     }
 
-    private struct DatabaseCatalogData {
+    private struct DatabaseCatalogData: Sendable {
         let rootCategories: [CategoryData]
         let categoryMap: [Int: CategoryData]
         let booksById: [Int: BooksData]
@@ -409,7 +409,7 @@ struct LibrarySearchCallbacks {
     var onComplete: @MainActor () -> Void
 }
 
-private struct SearchResultItemParams {
+private struct SearchResultItemParams: Sendable {
     let tableName: String
     let archive: String
     let searchKeywords: [String]
@@ -439,36 +439,35 @@ extension LibraryDataManager {
 
         let allowed = params.tableToScan
         let allowedByArchive = filterAllowedByArchive(allowed: allowed)
-        let totalTables = registerArchivesForSearch(allowedByArchive: allowedByArchive, searchEngine: params.searchEngine)
+        let totalTables = await registerArchivesForSearch(allowedByArchive: allowedByArchive, searchEngine: params.searchEngine)
 
         if totalTables == 0 || Task.isCancelled {
             await callbacks.onComplete()
             return
         }
 
-        params.searchEngine.checkAndResumeIfNeeded { [weak self] resumed in
-            guard let self, !resumed, !Task.isCancelled else { return }
+        let resumed = await params.searchEngine.checkAndResumeIfNeeded()
+        guard !resumed, !Task.isCancelled else { return }
 
-            let options = SearchQueryOptions(
-                query: params.query,
-                keywords: searchKeywords,
-                allowedTables: allowed.isEmpty ? nil : allowed,
-                mode: params.mode,
-                nearDistance: params.nearDistance
-            )
+        let options = SearchQueryOptions(
+            query: params.query,
+            keywords: searchKeywords,
+            allowedTables: allowed.isEmpty ? nil : allowed,
+            mode: params.mode,
+            nearDistance: params.nearDistance
+        )
 
-            let engineCallbacks = makeSearchEngineCallbacks(
-                params: params,
-                callbacks: callbacks,
-                searchKeywords: searchKeywords,
-                totalTables: totalTables
-            )
+        let engineCallbacks = makeSearchEngineCallbacks(
+            params: params,
+            callbacks: callbacks,
+            searchKeywords: searchKeywords,
+            totalTables: totalTables
+        )
 
-            params.searchEngine.startSearch(
-                options: options,
-                callbacks: engineCallbacks
-            )
-        }
+        await params.searchEngine.startSearch(
+            options: options,
+            callbacks: engineCallbacks
+        )
     }
 
     private func filterAllowedByArchive(allowed: Set<String>) -> [Int: Set<String>] {
@@ -490,7 +489,7 @@ extension LibraryDataManager {
         searchKeywords: [String],
         totalTables: Int
     ) -> SearchEngineCallbacks {
-        var completedTablesGlobal = 0
+        let completedTablesCounter = SafeCounter()
 
         return SearchEngineCallbacks(
             onInitialize: { _ in
@@ -499,9 +498,9 @@ extension LibraryDataManager {
                 }
             },
             onTableComplete: { _, _ in
-                completedTablesGlobal += 1
-                Task { @MainActor [completedTablesGlobal] in
-                    callbacks.onTableProgress(completedTablesGlobal)
+                let completed = completedTablesCounter.increment()
+                Task { @MainActor in
+                    callbacks.onTableProgress(completed)
                 }
             },
             onRowProgress: { archiveId, tableName, current, total in
@@ -537,7 +536,7 @@ extension LibraryDataManager {
     private func registerArchivesForSearch(
         allowedByArchive: [Int: Set<String>],
         searchEngine: SearchEngine
-    ) -> Int {
+    ) async -> Int {
         var totalTables = 0
 
         for archiveId in allowedByArchive.keys.sorted() {
@@ -565,7 +564,7 @@ extension LibraryDataManager {
 
             totalTables += relevantTablesForArchive.count
 
-            searchEngine.registerDB(
+            await searchEngine.registerDB(
                 archiveId: String(archiveId),
                 tables: archiveInfo.tables,
                 connections: connections,
@@ -925,7 +924,7 @@ extension LibraryDataManager {
         var count = 0
 
         if !force, Date().timeIntervalSince1970 - lastCheck < oneDayInSeconds {
-            Task { @MainActor in
+            Task { @MainActor [count] in
                 completion(count)
             }
             return

@@ -9,7 +9,7 @@ import Foundation
 import SQLite3
 
 class RowiDataManager {
-    static let shared = RowiDataManager()
+    nonisolated(unsafe) static let shared = RowiDataManager()
 
     private let tableName = "rowa"
     private let colId = "id"

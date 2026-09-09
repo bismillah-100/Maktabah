@@ -75,7 +75,7 @@ struct ResultSaveOptions {
 class ResultsHandler: SyncPendingManaging {
     private(set) var db: SQLiteDatabase?
     var syncPendingStore: SyncPendingStore?
-    static var shared: ResultsHandler = .init()
+    nonisolated(unsafe) static let shared: ResultsHandler = .init()
 
     let foldersTable = "folders"
     let colId = "id"

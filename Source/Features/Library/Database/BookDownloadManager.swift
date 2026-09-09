@@ -42,7 +42,7 @@ enum BookDownloadError: LocalizedError {
 }
 
 final class BookDownloadManager {
-    static let shared = BookDownloadManager()
+    nonisolated(unsafe) static let shared = BookDownloadManager()
 
     private let fileManager = FileManager.default
     private let networkMonitor = NetworkMonitor.shared

@@ -10,8 +10,8 @@ import Foundation
 import WidgetKit
 
 struct HistoryConfigurationIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "History Widget"
-    static var description = IntentDescription("Displays your recently read books.")
+    static let title: LocalizedStringResource = "History Widget"
+    static let description = IntentDescription("Displays your recently read books.")
 }
 
 struct HistoryProvider: AppIntentTimelineProvider {

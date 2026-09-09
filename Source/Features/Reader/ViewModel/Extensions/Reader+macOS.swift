@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct ContentRenderPayload: Equatable {
+struct ContentRenderPayload: Equatable, Sendable {
     let text: String
     let content: BookContent?
     let keepScrollPosition: Bool
@@ -17,7 +17,7 @@ struct ContentRenderPayload: Equatable {
     }
 
     static func == (lhs: ContentRenderPayload, rhs: ContentRenderPayload) -> Bool {
-        lhs.text == rhs.text && lhs.content === rhs.content && lhs.keepScrollPosition == rhs.keepScrollPosition
+        lhs.text == rhs.text && lhs.keepScrollPosition == rhs.keepScrollPosition
     }
 }
 
