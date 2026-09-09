@@ -8,8 +8,7 @@
 import Foundation
 import Observation
 
-@Observable
-@MainActor
+@Observable @MainActor
 class ResultsViewModel {
     static let shared: ResultsViewModel = .init()
 

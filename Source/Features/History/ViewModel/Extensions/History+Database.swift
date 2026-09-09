@@ -74,7 +74,9 @@ extension HistoryViewModel {
         }
 
         if deleteFromDB, !removedIds.isEmpty {
-            DispatchQueue.global(qos: .background).async {
+            let removedIds = removedIds
+            let ckIdsToDelete = ckIdsToDelete
+            Task.detached { [weak self] in
                 do {
                     try HistoryDatabaseManager.shared.transaction {
                         try HistoryDatabaseManager.shared.deleteEntries(bookIds: removedIds)
@@ -83,8 +85,8 @@ extension HistoryViewModel {
                         }
                     }
                     if !ckIdsToDelete.isEmpty {
-                        DispatchQueue.main.async {
-                            self.triggerDeleteDebounce()
+                        await MainActor.run { [weak self] in
+                            self?.triggerDeleteDebounce()
                         }
                     }
                 } catch {

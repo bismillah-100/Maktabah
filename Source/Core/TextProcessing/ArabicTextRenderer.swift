@@ -98,7 +98,7 @@ enum HonorificBoundaryAffinity {
 }
 
 /// ArabicTextRenderer.swift - NEW FILE
-class ArabicTextRenderer {
+class ArabicTextRenderer: @unchecked Sendable {
     private let state = TextViewState.shared
 
     func render(

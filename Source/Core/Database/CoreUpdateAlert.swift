@@ -298,13 +298,17 @@ extension AppDelegate {
         downloader.updateToVersion(
             newVersion,
             onProgress: { [weak self] progress, detail in
-                guard let self, let state = coreDownloadProgressState else { return }
-                state.phase = .downloading
-                state.progress = progress
-                state.detail = detail
+                Task { @MainActor in
+                    guard let state = self?.coreDownloadProgressState else { return }
+                    state.phase = .downloading
+                    state.progress = progress
+                    state.detail = detail
+                }
             },
             onCompletion: { [weak self] error in
-                self?.handleUpdateCompletion(error: error, newVersion: newVersion)
+                Task { @MainActor in
+                    self?.handleUpdateCompletion(error: error, newVersion: newVersion)
+                }
             }
         )
     }

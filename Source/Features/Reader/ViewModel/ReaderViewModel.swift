@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import Observation
 import SwiftUI
+import Synchronization
 
 @Observable
 class ReaderViewModel: ViewModelBase {
@@ -25,8 +26,19 @@ class ReaderViewModel: ViewModelBase {
     var contentPayload: ContentRenderPayload = .init(
         text: "", keepScrollPosition: false
     )
-    #endif
+
+    /// macOS Annotations Support.
+    /// Dibuat sebagai computed property yang didelegasikan langsung ke `AnnotationManager.shared`
+    /// sebagai single source of truth. Performa tetap optimal karena `loadAnnotations` sudah di-cache in-memory.
+    var currentAnnotations: [Annotation] {
+        guard let bkId = currentBook?.id else { return .init() }
+        return annotationStore.loadAnnotations(
+            bkId: bkId, contentId: currentContentId
+        )
+    }
+    #else
     var currentAnnotations: [Annotation] = []
+    #endif
 
     var state: ViewModelState = .idle
     var totalParts: Int = 0
@@ -80,8 +92,14 @@ class ReaderViewModel: ViewModelBase {
 
     @ObservationIgnored
     lazy var tocViewModel: BookTOCViewModel = .init(connFactory: { [weak self] in
-        self?.bookConnection ?? BookConnection()
+        guard let self else { return BookConnection() }
+        return bookConnectionMutex.withLock { $0 }
     })
+
+    @ObservationIgnored
+    var bookConnection: BookConnection {
+        bookConnectionMutex.withLock { $0 }
+    }
 
     /// Tasykil/Harokat
     var showHarakat: Bool {
@@ -114,7 +132,7 @@ class ReaderViewModel: ViewModelBase {
 
     // MARK: - Dependencies
 
-    var bookConnection: BookConnection = .init()
+    let bookConnectionMutex = Mutex(BookConnection())
     let historyVM: HistoryViewModel = .shared
     let annotationStore: AnnotationStore = .shared
     let annotationCoordinator: AnnotationCoordinator = .init()

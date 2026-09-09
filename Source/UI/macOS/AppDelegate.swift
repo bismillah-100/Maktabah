@@ -6,14 +6,14 @@
 //  Restorable state saat membuka jendela baru
 //
 
-import CloudKit
+@preconcurrency import CloudKit
 import SwiftUI
 import UniformTypeIdentifiers
 #if DIRECT_DISTRIBUTION
 import Sparkle
 #endif
 
-@main
+@main @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet var menu: NSMenu!
     @IBOutlet weak var viewMenu: NSMenu!
@@ -33,8 +33,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     fileprivate var keyWindow: MainWindow? {
         NSApp.keyWindow as? MainWindow
     }
-
-    fileprivate var windowObserver: NSObjectProtocol?
 
     #if DIRECT_DISTRIBUTION
     lazy var updaterController = SPUStandardUpdaterController(
@@ -129,7 +127,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.checkBookUpdatesPeriodically(force: true)
+            MainActor.assumeIsolated {
+                self?.checkBookUpdatesPeriodically(force: true)
+            }
         }
     }
 
@@ -222,36 +222,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Window Management
 
     func setupWindowObserver() {
-        windowObserver = NotificationCenter.default.addObserver(
-            forName: NSWindow.didBecomeKeyNotification,
-            object: nil,
-            queue: .current,
-            using: { [weak self] notif in
-                guard let self, let window = notif.object as? MainWindow,
-                      let windowController = window.windowController as? WindowController
-                else {
-                    return
-                }
-
-                if mainWindowController != windowController {
-                    mainWindowController = windowController
-                }
-            }
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowObserverDidChangeKey(_:)),
+            name: NSWindow.didBecomeKeyNotification, object: nil
         )
 
         NotificationCenter.default.addObserver(
-            forName: NSWindow.willCloseNotification,
-            object: nil,
-            queue: .current
-        ) { [weak self] notif in
-            guard let self, let window = notif.object as? MainWindow else {
-                return
-            }
+            self, selector: #selector(windowObserverWillCloseNotification(_:)),
+            name: NSWindow.willCloseNotification, object: nil
+        )
+    }
 
-            window.splitVC.persistCurrentStateToDisk()
-            if mainWindowController?.window === window {
-                mainWindowController = nil
-            }
+    @objc func windowObserverDidChangeKey(_ notification: Notification) {
+        guard let window = notification.object as? MainWindow,
+              let windowController = window.windowController as? WindowController
+        else {
+            return
+        }
+
+        if mainWindowController != windowController {
+            mainWindowController = windowController
+        }
+    }
+
+    @objc func windowObserverWillCloseNotification(_ notification: Notification) {
+        guard let window = notification.object as? MainWindow else { return }
+
+        window.splitVC.persistCurrentStateToDisk()
+        if mainWindowController?.window === window {
+            mainWindowController = nil
         }
     }
 
@@ -367,8 +366,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showOfflineImportWindow() {
         let contentView = OfflineImportFormView(onImport: { [weak self]
-            (url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async in
-                guard let self else { return }
+            (url: URL, metadata: BookMetadata, authorRow: [String: any Sendable]?) async in
+            guard let self else { return }
                 await performCustomImport(
                     url: url,
                     metadata: metadata,
@@ -390,7 +389,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @MainActor
-    private func performCustomImport(url: URL, metadata: BookMetadata, authorRow: [String: Any]?) async {
+    private func performCustomImport(
+        url: URL, metadata: BookMetadata, authorRow: [String: any Sendable]?
+    ) async {
         do {
             let result = try await BookUpdateManager
                 .shared.importOfflineUpdate(
@@ -706,9 +707,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     deinit {
-        if let windowObserver {
-            NotificationCenter.default.removeObserver(windowObserver)
-        }
+        NotificationCenter.default.removeObserver(self)
     }
 }
 

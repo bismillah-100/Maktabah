@@ -11,12 +11,6 @@ extension AnnotationsVC {
         dataSource.viewModel.tagFilterMode == .and
     }
 
-    private var scrollRightEdge: DispatchWorkItem {
-        DispatchWorkItem { [weak self] in
-            self?.scrollToRightEdge()
-        }
-    }
-
     func createTagFilterBar() -> NSStackView {
         let heightConstant: CGFloat = 20
         let leftInset: CGFloat = 8
@@ -155,11 +149,13 @@ extension AnnotationsVC {
             chipsStack.invalidateIntrinsicContentSize()
             chipsStack.layoutSubtreeIfNeeded()
             (chipsScrollView?.contentView as? RightAlignedClipView)?.updateDocumentFrame()
-        } completionHandler: { [weak self] in
-            guard let self else { return }
-            if isFirstLoad {
-                hasPerformedInitialChipScroll = true
-                DispatchQueue.main.async(execute: scrollRightEdge)
+        } completionHandler: {
+            MainActor.assumeIsolated { [weak self] in
+                guard let self else { return }
+                if isFirstLoad {
+                    hasPerformedInitialChipScroll = true
+                    scrollToRightEdge()
+                }
             }
         }
     }
@@ -180,7 +176,7 @@ extension AnnotationsVC {
     @objc func chipToggled(_ sender: NSButton) {
         dataSource.viewModel.toggleTagSelection(sender.title)
         if isAnd {
-            DispatchQueue.main.async(execute: scrollRightEdge)
+            scrollToRightEdge()
         }
     }
 
@@ -194,7 +190,7 @@ extension AnnotationsVC {
             accessibilityDescription: "Filter Mode"
         )?.withSymbolConfiguration(config)
 
-        DispatchQueue.main.async(execute: scrollRightEdge)
+        scrollToRightEdge()
     }
 
     @objc func showTagSelectionPopover(_ sender: NSButton) {

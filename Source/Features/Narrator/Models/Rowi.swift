@@ -5,7 +5,7 @@
 
 import Foundation
 
-class Rowi: Codable {
+class Rowi: Codable, @unchecked Sendable {
     let id: Int
     var name: String?
     let tabaqa: String?

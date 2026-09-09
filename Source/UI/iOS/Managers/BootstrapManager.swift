@@ -49,15 +49,15 @@ final class iOSBootstrapManager {
             return
         }
 
-        downloader.fetchTotalDownloadSize { [weak self] size in
-            Task { @MainActor in
-                if size > 0 {
-                    let mb = Double(size) / 1_048_576
-                    self?.coreDownloadState.totalSizeString = String(format: "%.1f MB", mb)
-                }
-                self?.isChecking = false
-                self?.coreDownloadState.phase = .confirmation
+        Task { [weak self] in
+            guard let self else { return }
+            let size = await downloader.fetchTotalDownloadSize()
+            if size > 0 {
+                let mb = Double(size) / 1_048_576
+                coreDownloadState.totalSizeString = String(format: "%.1f MB", mb)
             }
+            isChecking = false
+            coreDownloadState.phase = .confirmation
         }
     }
 
@@ -68,12 +68,14 @@ final class iOSBootstrapManager {
         downloader.startDownload(
             onProgress: makeProgressHandler(),
             onCompletion: { [weak self] error in
-                guard let self else { return }
-                if let error {
-                    handleDownloadError(error)
-                    return
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    if let error {
+                        handleDownloadError(error)
+                        return
+                    }
+                    finishSetup()
                 }
-                finishSetup()
             }
         )
     }
@@ -112,20 +114,22 @@ final class iOSBootstrapManager {
             version,
             onProgress: makeProgressHandler(),
             onCompletion: { [weak self] error in
-                guard let self else { return }
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
 
-                if let error {
-                    handleDownloadError(error)
+                    if let error {
+                        handleDownloadError(error)
+                        showCoreUpdateAlert = false
+                        isUpdating = false
+                        return
+                    }
+
+                    // Berhasil - reload database
+                    DatabaseManager.shared.reloadConnectionAndLibrary()
                     showCoreUpdateAlert = false
+                    availableCoreVersion = nil
                     isUpdating = false
-                    return
                 }
-
-                // Berhasil - reload database
-                DatabaseManager.shared.reloadConnectionAndLibrary()
-                showCoreUpdateAlert = false
-                availableCoreVersion = nil
-                isUpdating = false
             }
         )
     }
@@ -136,9 +140,11 @@ final class iOSBootstrapManager {
         coreDownloadState.detail = ""
     }
 
-    private func makeProgressHandler() -> (Double, String) -> Void {
+    private func makeProgressHandler() -> @Sendable (Double, String) -> Void {
         { [weak self] progress, detail in
-            self?.handleDownloadProgress(progress: progress, detail: detail)
+            Task { @MainActor [weak self] in
+                self?.handleDownloadProgress(progress: progress, detail: detail)
+            }
         }
     }
 

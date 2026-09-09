@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 // MARK: - CSV Entry dengan informasi lengkap
-struct BookIndexEntry: Codable {
+struct BookIndexEntry: Codable, Sendable {
     let bkid: Int
     let bk: String
     let category: Int
@@ -27,7 +27,7 @@ struct BookIndexEntry: Codable {
     }
 }
 
-struct AuthIndexEntry: Codable {
+struct AuthIndexEntry: Codable, Sendable {
     let authId: Int
     let versionName: Int64
     let downloadURL: String
@@ -39,7 +39,7 @@ struct AuthIndexEntry: Codable {
     }
 }
 
-struct BookMetadata {
+struct BookMetadata: Sendable {
     let bkid: Int
     let cat: Int?
     let bk: String
@@ -54,7 +54,7 @@ struct BookMetadata {
 }
 
 // MARK: - Update Status untuk UI
-enum UpdateStatus: Equatable {
+enum UpdateStatus: Equatable, Sendable {
     case pending  // Belum diproses
     case checking  // Sedang mengecek versi
     case new // buku baru
@@ -86,7 +86,7 @@ enum UpdateStatus: Equatable {
 
 // MARK: - Book Update Item untuk ditampilkan di List
 @Observable
-class BookUpdateItem: Identifiable {
+final class BookUpdateItem: Identifiable, @unchecked Sendable {
     let id: Int
     let bookName: String
     let category: Int
@@ -143,19 +143,19 @@ class BookUpdateItem: Identifiable {
 }
 
 // MARK: - Result untuk tracking
-struct BookUpdateResult {
+struct BookUpdateResult: Sendable {
     let bookId: Int
     let catId: Int
     let action: UpdateAction
 }
 
-enum UpdateAction {
+enum UpdateAction: Sendable {
     case inserted
     case updated
     case skipped
 }
 
-struct BooksChangedNotification {
+struct BooksChangedNotification: Sendable {
     let insertedBooks: [(categoryId: Int, book: BooksData)]
     let updatedBookIds: Set<Int>
 }

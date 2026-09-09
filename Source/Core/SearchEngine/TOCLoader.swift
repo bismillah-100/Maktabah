@@ -14,10 +14,10 @@ actor TOCLoaderRefCount {
     }
 
     private var inFlight: [Int: Entry] = [:]
-    private let connFactory: () -> BookConnection
+    private let connFactory: @Sendable () -> BookConnection
     private let treeCache = BookConnection.tocTreeCache
 
-    init(connFactory: @escaping () -> BookConnection) {
+    init(connFactory: @escaping @Sendable () -> BookConnection) {
         self.connFactory = connFactory
     }
 

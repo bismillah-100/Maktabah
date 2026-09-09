@@ -7,15 +7,25 @@
 
 import Foundation
 import IOKit.pwr_mgt
+import Synchronization
 
-class ScreenTimeManager {
-    private var assertionID: IOPMAssertionID = 0
-    private var screenTimer: Timer?
-    private var isActive = false
+final class ScreenTimeManager: Sendable {
+    private struct State {
+        var assertionID: IOPMAssertionID = 0
+        var timerTask: Task<Void, Never>?
+        var isActive = false
+    }
 
-    nonisolated(unsafe) static let shared: ScreenTimeManager = .init()
+    private let state: Mutex<State>
+
+    static let shared = ScreenTimeManager()
+
+    var isActive: Bool {
+        state.withLock(\.isActive)
+    }
 
     private init() {
+        state = Mutex(State())
         if UserDefaults.standard.extendScreenTime {
             extend()
         }
@@ -23,40 +33,62 @@ class ScreenTimeManager {
 
     // Extend screen time
     func extend(minutes: Int = 10) {
-        // Cancel yang lama kalau masih aktif
         cancel()
 
         let reasonForActivity = "Extend screen time \(minutes) menit" as CFString
+        var newAssertionID: IOPMAssertionID = 0
 
         let result = IOPMAssertionCreateWithName(
             kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
             IOPMAssertionLevel(kIOPMAssertionLevelOn),
             reasonForActivity,
-            &assertionID
+            &newAssertionID
         )
 
-        if result == kIOReturnSuccess {
-            isActive = true
-            #if DEBUG
-            print("Screen time extended untuk \(minutes) menit")
-            #endif
+        guard result == kIOReturnSuccess else { return }
 
-            // Auto-release setelah durasi
-            screenTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(minutes * 60), repeats: false) { [weak self] _ in
-                self?.cancel()
-            }
+        #if DEBUG
+        print("Screen time extended untuk \(minutes) menit")
+        #endif
+
+        let task = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(minutes * 60))
+            self?.cancel()
+        }
+
+        let oldAssertion = state.withLock { s -> IOPMAssertionID in
+            let old = s.assertionID
+            s.assertionID = newAssertionID
+            s.isActive = true
+            s.timerTask = task
+            return old
+        }
+
+        // Lepas assertion lama jika terjadi race condition saat pemanggilan
+        if oldAssertion != 0 {
+            IOPMAssertionRelease(oldAssertion)
         }
     }
 
     // Cancel dari pengaturan
     func cancel() {
-        screenTimer?.invalidate()
-        screenTimer = nil
+        // Ambil data yang perlu dibersihkan lalu ubah state secara atomik
+        let (assertionToRelease, taskToCancel) = state.withLock { s -> (IOPMAssertionID, Task<Void, Never>?) in
+            let assertion = s.assertionID
+            let task = s.timerTask
 
-        if assertionID != 0 {
-            IOPMAssertionRelease(assertionID)
-            assertionID = 0
-            isActive = false
+            s.assertionID = 0
+            s.isActive = false
+            s.timerTask = nil
+
+            return (assertion, task)
+        }
+
+        // Eksekusi pelepasan di luar lock untuk mencegah lock contention
+        taskToCancel?.cancel()
+
+        if assertionToRelease != 0 {
+            IOPMAssertionRelease(assertionToRelease)
             #if DEBUG
             print("Screen time extension dibatalkan")
             #endif
@@ -65,6 +97,10 @@ class ScreenTimeManager {
 
     // Cek status
     func isExtended() -> Bool {
-        return isActive
+        state.withLock { $0.isActive }
+    }
+
+    deinit {
+        cancel()
     }
 }

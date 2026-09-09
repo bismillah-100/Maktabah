@@ -277,17 +277,4 @@ final class CloudKitCoreManager: Sendable {
         }
         #endif
     }
-
-    /// Alternatif non-blocking modern untuk dipanggil langsung dari konteks `actor` atau async Task.
-    func syncWorkerAsync() async throws {
-        let hasPendingTask = state.withLock { s -> Bool in
-            guard s.notifyTask != nil else { return false }
-            s.notifyTask?.cancel()
-            s.notifyTask = nil
-            return true
-        }
-
-        guard hasPendingTask, let request = makeWorker() else { return }
-        _ = try await URLSession.shared.data(for: request)
-    }
 }

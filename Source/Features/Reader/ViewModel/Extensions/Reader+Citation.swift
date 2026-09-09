@@ -5,6 +5,7 @@
 
 import Foundation
 
+@MainActor
 extension ReaderViewModel {
     // MARK: - Shared: Copy References
 

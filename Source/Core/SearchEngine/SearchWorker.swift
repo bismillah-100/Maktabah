@@ -150,7 +150,7 @@ final class SearchWorker: @unchecked Sendable {
         callbacks: SearchCallbacks,
         control: SearchControl
     ) async -> Int {
-        let connectionCount = pool.connectionCount
+        let connectionCount = await pool.connectionCount
         let chunkSize = (totalCount + connectionCount - 1) / connectionCount
         let plan = ChunkParallelPlan(
             matchedIDs: matchedIDs,

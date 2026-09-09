@@ -8,8 +8,8 @@
 import Foundation
 import SQLite3
 
-class RowiDataManager {
-    nonisolated(unsafe) static let shared = RowiDataManager()
+class RowiDataManager: @unchecked Sendable {
+    static let shared = RowiDataManager()
 
     private let tableName = "rowa"
     private let colId = "id"
@@ -30,7 +30,7 @@ class RowiDataManager {
 
     private init() {}
 
-    func loadData() async {
+    nonisolated func loadData() async {
         guard let db = DatabaseManager.shared.dbSpecial else {
             print("Database connection tidak tersedia")
             return
@@ -139,12 +139,13 @@ class RowiDataManager {
     }
 
     /// Ubah completion handler agar mengembalikan jumlah item yang dimuat
-    func loadMore(_ parent: TabaqaGroup, completion: @escaping (Int?) -> Void) {
+    func loadMore(_ parent: TabaqaGroup, completion: @escaping @Sendable (Int?) -> Void) {
         // Cek jumlah item sebelum dimuat
         let previousCount = parent.displayedRowis.count
 
         // Lakukan pembaruan pada Main Thread jika Data Manager diakses dari background
-        DispatchQueue.global().async {
+        Task.detached { [weak self] in
+            guard let self else { return }
             if let index = self.tabaqaGroups.firstIndex(where: { $0.code == parent.code }) {
                 self.tabaqaGroups[index].loadMore() // Memperbarui data model
 
@@ -153,12 +154,12 @@ class RowiDataManager {
                 let itemsLoaded = newCount - previousCount
 
                 // Panggil completion handler di Main Thread dengan jumlah item yang dimuat
-                DispatchQueue.main.async {
+                await MainActor.run {
                     completion(itemsLoaded)
                 }
             } else {
                 // Item induk tidak ditemukan
-                DispatchQueue.main.async {
+                await MainActor.run {
                     completion(nil)
                 }
             }

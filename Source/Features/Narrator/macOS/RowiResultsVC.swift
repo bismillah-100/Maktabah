@@ -338,7 +338,7 @@ extension RowiResultsVC: NSTableViewDelegate {
             }
         }()
 
-        Task.detached { [weak self] in
+        Task { [weak self] in
             await self?.delegate?.didSelect(tarjamahB: data.tarjamah, query: queryToHighlight)
         }
     }

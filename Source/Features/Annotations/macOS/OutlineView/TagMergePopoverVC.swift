@@ -1,10 +1,11 @@
 import AppKit
 
+@MainActor
 class TagMergePopoverVC: NSViewController {
     let oldName: String
     let newName: String
-    var onConfirm: (() -> Void)?
-    var onCancel: (() -> Void)?
+    var onConfirm: (@MainActor () -> Void)?
+    var onCancel: (@MainActor () -> Void)?
 
     weak var mergeView: TagMergeConfirmationView?
 
@@ -33,18 +34,25 @@ class TagMergePopoverVC: NSViewController {
         self.view = mergeView
     }
 
-    deinit {
-        print("TagMergePopoverVC deinitialized")
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
         mergeView = nil
         onConfirm = nil
         onCancel = nil
     }
+
+    deinit {
+        #if DEBUG
+        print("TagMergePopoverVC deinitialized")
+        #endif
+    }
 }
 
+@MainActor
 class TagMergeConfirmationView: NSView {
 
-    var onConfirm: (() -> Void)?
-    var onCancel: (() -> Void)?
+    var onConfirm: (@MainActor () -> Void)?
+    var onCancel: (@MainActor () -> Void)?
 
     private let messageLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
@@ -132,8 +140,8 @@ class TagMergeConfirmationView: NSView {
     }
 
     deinit {
+        #if DEBUG
         print("TagMergeConfirmationView deinitialized")
-        onConfirm = nil
-        onCancel = nil
+        #endif
     }
 }

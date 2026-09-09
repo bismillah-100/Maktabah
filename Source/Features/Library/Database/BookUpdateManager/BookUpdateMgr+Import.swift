@@ -12,7 +12,7 @@ extension BookUpdateManager {
     func importOfflineUpdate(
         from url: URL,
         providedMetadata: BookMetadata? = nil,
-        authorRow: [String: Any]? = nil
+        authorRow: [String: any Sendable]? = nil
     ) async throws -> BookUpdateResult {
         guard let metadata = try providedMetadata ?? readBookMetadata(from: url, fallbackBookId: 0) else {
             throw NSError(

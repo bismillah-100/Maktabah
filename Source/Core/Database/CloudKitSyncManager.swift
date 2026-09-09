@@ -240,6 +240,13 @@ final class CloudKitSyncManager: Sendable {
     }
 
     private func performInitialUploadCheck() {
+        Task.detached { [weak self] in
+            guard let self else { return }
+            await performInitialUploadCheckAsync()
+        }
+    }
+
+    private func performInitialUploadCheckAsync() async {
         let isInitialUpload = !UserDefaults.standard.bool(forKey: "CloudKitSyncManager_InitialUploadDone")
 
         if let _ = AnnotationRepository.shared.db {
@@ -254,7 +261,7 @@ final class CloudKitSyncManager: Sendable {
             try? ResultsHandler.shared.backfillResultsCloudKitFieldsIfNeeded(uploadIfNeeded: !isInitialUpload)
         }
 
-        HistoryViewModel.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
+        await HistoryViewModel.shared.backfillCloudKitFieldsIfNeeded { [weak self] backfilled in
             if !isInitialUpload, !backfilled.isEmpty {
                 self?.uploadHistory(entries: backfilled, debounce: false)
             }
@@ -322,7 +329,7 @@ final class CloudKitSyncManager: Sendable {
             }
         }
 
-        let allHistory = HistoryViewModel.shared.getAllEntries()
+        let allHistory = await HistoryViewModel.shared.getAllEntries()
         for batch in allHistory.chunked(into: batchSize) {
             let res: Result<Void, any Error> = await withCheckedContinuation { continuation in
                 self.uploadHistory(entries: batch, debounce: false) { result in
@@ -635,47 +642,56 @@ final class CloudKitSyncManager: Sendable {
     }
 
     func fetchChanges(retryCount: Int = 0) {
+        Task.detached { [weak self] in
+            await self?.fetchChangesAsync(retryCount: retryCount)
+        }
+    }
+
+    func fetchChangesAsync(retryCount: Int = 0) async {
         guard AppConfig.useICloud else { return }
         guard beginSyncing() else { return }
+        defer { core.setSyncing(false) }
 
-        let previousToken = core.loadToken()
+        var currentToken = core.loadToken()
+        var hasMore = true
 
-        // Menggunakan Mutex lokal langsung untuk mengumpulkan perubahan secara thread-safe di Swift 6
-        let collector = Mutex<(records: [CKRecord], deletedIDs: [CKRecord.ID])>((records: [], deletedIDs: []))
+        while hasMore {
+            let collector = Mutex<(records: [CKRecord], deletedIDs: [CKRecord.ID])>((records: [], deletedIDs: []))
 
-        core.fetchChanges(
-            previousToken: previousToken,
-            recordChanged: { record in
-                collector.withLock { $0.records.append(record) }
-            },
-            recordDeleted: { recordId in
-                collector.withLock { $0.deletedIDs.append(recordId) }
-            },
-            completion: { [weak self] result in
-                guard let self else { return }
-                switch result {
-                case let .success((finalToken, moreComing)):
-                    let (records, deletes) = collector.withLock { ($0.records, $0.deletedIDs) }
-                    var applySuccess = true
-                    if !records.isEmpty || !deletes.isEmpty {
-                        applySuccess = self.applyChangesLocally(recordsToSave: records, recordIDsToDelete: deletes)
-                    }
-
-                    if let token = finalToken, applySuccess {
-                        core.saveToken(token)
-                    }
-
-                    core.setSyncing(false) { [weak self] in
-                        if moreComing {
-                            self?.fetchChanges(retryCount: 0)
+            do {
+                let (finalToken, moreComing) = try await withCheckedThrowingContinuation { continuation in
+                    core.fetchChanges(
+                        previousToken: currentToken,
+                        recordChanged: { record in
+                            collector.withLock { $0.records.append(record) }
+                        },
+                        recordDeleted: { recordId in
+                            collector.withLock { $0.deletedIDs.append(recordId) }
+                        },
+                        completion: { result in
+                            continuation.resume(with: result)
                         }
-                    }
-                case let .failure(error):
-                    handleCloudKitError(error, operationType: .fetchChanges, retryCount: retryCount)
-                    core.setSyncing(false)
+                    )
                 }
+
+                let (records, deletes) = collector.withLock { ($0.records, $0.deletedIDs) }
+                var applySuccess = true
+
+                if !records.isEmpty || !deletes.isEmpty {
+                    applySuccess = await applyChangesLocally(recordsToSave: records, recordIDsToDelete: deletes)
+                }
+
+                if let token = finalToken, applySuccess {
+                    core.saveToken(token)
+                    currentToken = token
+                }
+
+                hasMore = moreComing
+            } catch {
+                handleCloudKitError(error, operationType: .fetchChanges, retryCount: retryCount)
+                break
             }
-        )
+        }
     }
 
     private struct ParsedChanges {
@@ -712,7 +728,7 @@ final class CloudKitSyncManager: Sendable {
     @discardableResult private func applyChangesLocally(
         recordsToSave: [CKRecord],
         recordIDsToDelete: [CKRecord.ID]
-    ) -> Bool {
+    ) async -> Bool {
         let parsed = parseRecordsToSave(recordsToSave)
         let idsToDelete = recordIDsToDelete.map(\.recordName)
         var success = true
@@ -742,7 +758,7 @@ final class CloudKitSyncManager: Sendable {
         }
 
         if !parsed.historyEntries.isEmpty || !idsToDelete.isEmpty {
-            let histSuccess = HistoryViewModel.shared.applyCloudKitChanges(
+            let histSuccess = await HistoryViewModel.shared.applyCloudKitChanges(
                 entriesToSave: parsed.historyEntries,
                 recordIdsToDelete: idsToDelete
             )
@@ -789,12 +805,12 @@ final class CloudKitSyncManager: Sendable {
                 completion?(result)
             }
         } else {
-            if applyChangesLocally(recordsToSave: [serverRecord], recordIDsToDelete: []) {
-                Task.detached { [weak self] in
+            Task.detached { [weak self] in
+                defer { completion?(.success(())) }
+                if await self?.applyChangesLocally(recordsToSave: [serverRecord], recordIDsToDelete: []) == true {
                     await self?.pendingCoordinator.removePendingSync([recordId], target: target)
                 }
             }
-            completion?(.success(()))
         }
     }
 

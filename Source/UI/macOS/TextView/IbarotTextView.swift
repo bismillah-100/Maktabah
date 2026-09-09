@@ -5,12 +5,13 @@
 //  Created by MacBook on 06/12/25.
 //
 
-import Cocoa
+@preconcurrency import Cocoa
 import Combine
+import Synchronization
 
 class IbarotTextView: NSTextView {
     let state = TextViewState.shared
-    let renderer = ArabicTextRenderer() // ← NEW
+    let renderer = ArabicTextRenderer()
     var viewModel: ReaderViewModel?
 
     var onAddAnnotation: ((NSRange, NSColor, AnnotationMode, String) -> Void)?
@@ -83,27 +84,9 @@ class IbarotTextView: NSTextView {
 
     override func awakeFromNib() {
         super.awakeFromNib()
-        setupTextView()
-
-        annotationCancellable = AnnotationStore.shared.events
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] event in
-                self?.handleAnnotationEvent(event)
-            }
-
-        annotationClickSetting = NotificationCenter.default.addObserver(
-            forName: .didChangeClickableAnnotation,
-            object: nil,
-            queue: .current,
-            using: { [weak self] notification in
-                guard let userInfo = notification.userInfo,
-                      let enable = userInfo["enable"] as? Bool
-                else {
-                    return
-                }
-                self?.editAnnotationOnClick(enable)
-            }
-        )
+        MainActor.assumeIsolated {
+            initialize()
+        }
     }
 
     override func clicked(onLink link: Any, at charIndex: Int) {
@@ -171,6 +154,34 @@ class IbarotTextView: NSTextView {
             NotificationCenter.default.removeObserver(annotationClickSetting)
         }
         annotationClickSetting = nil
+    }
+
+    private func initialize() {
+        setupTextView()
+
+        annotationCancellable = AnnotationStore.shared.events
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] event in
+                MainActor.assumeIsolated {
+                    self?.handleAnnotationEvent(event)
+                }
+            }
+
+        annotationClickSetting = NotificationCenter.default.addObserver(
+            forName: .didChangeClickableAnnotation,
+            object: nil,
+            queue: .main,
+            using: { [weak self] notification in
+                guard let userInfo = notification.userInfo,
+                      let enable = userInfo["enable"] as? Bool
+                else {
+                    return
+                }
+                MainActor.assumeIsolated {
+                    self?.editAnnotationOnClick(enable)
+                }
+            }
+        )
     }
 
     private func setupTextView() {
@@ -871,7 +882,7 @@ extension IbarotTextView: TextViewRenderable {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
 
-            let renderResult = await renderer.render(
+            let renderResult = renderer.render(
                 bookId: targetBkId,
                 contentId: targetContentId,
                 text: text,

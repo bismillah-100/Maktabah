@@ -12,7 +12,9 @@ import UIKit
 extension UICollectionViewListCell {
     /// Menerapkan warna background tema secara dinamis, dan mereset saat sel difokuskan (isFocused).
     func applyThemeConfigurationUpdateHandler() {
-        if SettingsViewModel.shared.useDefaultTheme { return }
+        if SettingsViewModel.shared.useDefaultTheme {
+            return
+        }
         configurationUpdateHandler = { cell, state in
             if state.isFocused {
                 cell.backgroundConfiguration = UIBackgroundConfiguration.listCell()
@@ -40,17 +42,16 @@ extension UIView {
 }
 
 extension UICollectionLayoutListConfiguration {
-    mutating func setStandardItemSeparatorHandler<Item>(
-        dataSource: @escaping () -> UICollectionViewDiffableDataSource<some Any, Item>?,
-        trailingOffset: @escaping (Item) -> CGFloat
+    mutating func setStandardItemSeparatorHandler(
+        trailingOffset: @escaping @MainActor (IndexPath) -> CGFloat
     ) {
         itemSeparatorHandler = { indexPath, sectionSeparatorConfiguration in
             var separatorConfig = sectionSeparatorConfiguration
-            guard let ds = dataSource(),
-                  let item = ds.itemIdentifier(for: indexPath)
-            else { return separatorConfig }
-
-            let trailing = trailingOffset(item)
+            let trailing = if Thread.isMainThread {
+                MainActor.assumeIsolated { trailingOffset(indexPath) }
+            } else {
+                DispatchQueue.main.sync { trailingOffset(indexPath) }
+            }
             separatorConfig.bottomSeparatorInsets = NSDirectionalEdgeInsets(
                 top: 0,
                 leading: ListLayoutMetrics.defaultPadding,
@@ -105,9 +106,12 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
         var config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
         config.showsSeparators = true
         config.backgroundColor = .appBackground
-        config.setStandardItemSeparatorHandler(dataSource: { [weak self] in self?.dataSource }, trailingOffset: { [weak self] item in
-            self?.trailingOffset(for: item) ?? 16
-        })
+        config.setStandardItemSeparatorHandler { [weak self] indexPath in
+            guard let self,
+                  let item = dataSource?.itemIdentifier(for: indexPath)
+            else { return 16 }
+            return trailingOffset(for: item)
+        }
         return config
     }
 

@@ -10,7 +10,7 @@ import Observation
 import SwiftUI
 
 @Observable
-class BookUpdateViewModel {
+final class BookUpdateViewModel: @unchecked Sendable {
     var availableUpdates: [BookUpdateItem] = []
     var isLoadingList = false
     var isUpdating = false

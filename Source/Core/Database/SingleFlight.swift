@@ -4,13 +4,14 @@
 //
 
 import Foundation
+import Synchronization
 
-actor SingleFlight<Key: Hashable, Value> {
+actor SingleFlight<Key: Hashable, Value: Sendable> {
     private var runningTasks: [Key: Task<Value, Error>] = [:]
 
     func run(
         key: Key,
-        operation: @escaping () async throws -> Value
+        operation: @escaping @Sendable () async throws -> Value
     ) async throws -> Value {
         if let existingTask = runningTasks[key] {
             return try await existingTask.value

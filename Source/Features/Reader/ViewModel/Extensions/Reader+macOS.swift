@@ -53,7 +53,7 @@ extension ReaderViewModel {
                 currentBook = book
             }
 
-            tocViewModel.loadTOC(book: book)
+            loadTOC(book: book)
 
             if let id = state.currentID,
                let content = bookConnection.getContent(bkid: String(book.id), contentId: id)
@@ -81,7 +81,9 @@ extension ReaderViewModel {
         currentBook = nil
         windowTitle = ""
         windowSubtitle = ""
-        bookConnection = .init()
+        bookConnectionMutex.withLock { c in
+            c = .init()
+        }
     }
 
     func refreshCurrentPage(keepScrollPosition: Bool = true) {
@@ -141,8 +143,8 @@ extension ReaderViewModel {
         cleanUpState()
     }
 
-    func handleBookIntegrated(_ notification: Notification) {
-        guard let bookId = notification.object as? Int,
+    func handleBookIntegrated(bookId: Int?) {
+        guard let bookId,
               let currentBook,
               currentBook.id == bookId,
               !BookArchiveIntegrator.shared.isBookIntegrated(currentBook)

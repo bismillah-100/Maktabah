@@ -15,8 +15,8 @@ import UIKit
 
 // TextViewState.swift
 @Observable
-class TextViewState {
-    nonisolated(unsafe) static let shared = TextViewState()
+class TextViewState: @unchecked Sendable {
+    static let shared = TextViewState()
 
     private let defaults = UserDefaults.standard
 

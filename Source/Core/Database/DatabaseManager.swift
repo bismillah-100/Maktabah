@@ -172,7 +172,9 @@ class DatabaseManager {
                 comment: ""
             )
         )
-        NSApp.terminate(nil)
+        Task { @MainActor in
+            NSApp.terminate(nil)
+        }
         #else
         return
         #endif

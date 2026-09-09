@@ -65,11 +65,11 @@ extension ReaderViewModel {
 
         Task.detached { [weak self] in
             guard let self else { return }
-            let total = bookConnection.getTotalParts(bkid: bkid)
+            let total = await bookConnection.getTotalParts(bkid: bkid)
 
             let juz = part < 1 ? 1 : part
-            let minPg = bookConnection.getMinPagesInPart(bkid: bkid, part: juz)
-            let maxPg = bookConnection.getPagesInPart(bkid: bkid, part: juz)
+            let minPg = await bookConnection.getMinPagesInPart(bkid: bkid, part: juz)
+            let maxPg = await bookConnection.getPagesInPart(bkid: bkid, part: juz)
 
             await MainActor.run {
                 self.totalParts = total
@@ -87,8 +87,8 @@ extension ReaderViewModel {
         let bkid = String(book.id)
         Task.detached { [weak self] in
             guard let self else { return }
-            let minPage = bookConnection.getMinPagesInPart(bkid: bkid, part: part)
-            guard let result = bookConnection.getContent(
+            let minPage = await bookConnection.getMinPagesInPart(bkid: bkid, part: part)
+            guard let result = await bookConnection.getContent(
                 bkid: bkid, part: part, page: minPage
             )
             else { return }

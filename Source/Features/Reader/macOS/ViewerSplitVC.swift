@@ -5,8 +5,9 @@
 //  Created by MacBook on 29/11/25.
 //
 
-import Cocoa
+@preconcurrency import Cocoa
 
+@MainActor
 class ViewerSplitVC: ReaderSplitVC {
     weak var ibarotTextItem: NSSplitViewItem?
     /// Sidebar item yang berisi sidebar view controller.
@@ -92,8 +93,10 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingLineHeight() {
         lineHeightObservation = NotificationCenter.default.addObserver(
             forName: .didChangeLineHeight, object: nil,
-            queue: .main, using: { [weak self] _ in
-                self?.ibarotVC.textView.updateLineHeight()
+            queue: .main, using: { _ in
+                MainActor.assumeIsolated { [weak self] in
+                    self?.ibarotVC.textView.updateLineHeight()
+                }
             }
         )
     }
@@ -106,18 +109,22 @@ class ViewerSplitVC: ReaderSplitVC {
         appearanceObservation = splitView.observe(
             \.effectiveAppearance,
             options: [.new]
-        ) { [weak self] _, _ in
-            self?.applyThemeBasedOnSystem()
+        ) { _, _ in
+            MainActor.assumeIsolated { [weak self] in
+                self?.applyThemeBasedOnSystem()
+            }
         }
     }
 
     private func startObservingBgColor() {
         bgObserver = NotificationCenter.default.addObserver(
             forName: .didChangeBackground, object: nil,
-            queue: .main, using: { [weak self] _ in
-                guard let self else { return }
-                let bg = getBgColor()
-                applyBackgroundColorToUI(bg)
+            queue: .main, using: { _ in
+                MainActor.assumeIsolated { [weak self] in
+                    guard let self else { return }
+                    let bg = getBgColor()
+                    applyBackgroundColorToUI(bg)
+                }
             }
         )
     }
@@ -125,11 +132,13 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingTasykil() {
         tasykilObserver = NotificationCenter.default.addObserver(
             forName: .didChangeHarakat, object: nil,
-            queue: .main, using: { [weak self] notif in
+            queue: .main, using: { notif in
                 guard let userInfo = notif.userInfo,
                       let on = userInfo["on"] as? Bool
                 else { return }
-                self?.ibarotVC.toggleHarakat(on)
+                MainActor.assumeIsolated { [weak self] in
+                    self?.ibarotVC.toggleHarakat(on)
+                }
             }
         )
     }
@@ -137,11 +146,13 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingFont() {
         fontObserver = NotificationCenter.default.addObserver(
             forName: .didChangeFont, object: nil,
-            queue: .main, using: { [weak self] notif in
+            queue: .main, using: { notif in
                 guard let userInfo = notif.userInfo,
                       let redraw = userInfo["redraw"] as? Bool
                 else { return }
-                self?.ibarotVC.applyFont(redraw)
+                MainActor.assumeIsolated { [weak self] in
+                    self?.ibarotVC.applyFont(redraw)
+                }
             }
         )
     }

@@ -4,7 +4,7 @@ import SwiftUI
 
 @Observable
 class HistoryViewModel: ViewModelBase {
-    nonisolated(unsafe) static let shared = HistoryViewModel()
+    static let shared = HistoryViewModel()
 
     var entriesByBookId: [Int: ReadingEntry] = [:]
     var historyOrder: [Int] = []
@@ -38,14 +38,40 @@ class HistoryViewModel: ViewModelBase {
     var pendingCloudKitDeletes: Set<String> = []
     var deleteDebounceTask: Task<Void, Never>?
 
+    private var saveDebounceTask: Task<Void, Never>?
+    private var reloadDebounceTask: Task<Void, Never>?
+
     var historyBookIds: [Int] {
         get { historyOrder }
         set {
             historyOrder = Array(newValue.prefix(maxHistoryCount))
             pruneOrphanedEntries()
-            HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
+            scheduleSave()
             loadBooksData()
             notifyHistoryChanged()
+        }
+    }
+
+    private func scheduleSave() {
+        saveDebounceTask?.cancel()
+        let order = historyOrder
+        saveDebounceTask = Task.detached {
+            try? await Task.sleep(for: .milliseconds(500))
+            guard !Task.isCancelled else { return }
+            HistoryDatabaseManager.shared.saveHistoryOrder(order)
+            await MainActor.run { [weak self] in
+                self?.saveDebounceTask = nil
+            }
+        }
+    }
+
+    private func scheduleReloadBooksData() {
+        reloadDebounceTask?.cancel()
+        reloadDebounceTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            self?.loadBooksData()
+            self?.reloadDebounceTask = nil
         }
     }
 
@@ -77,7 +103,9 @@ class HistoryViewModel: ViewModelBase {
 
         for name in [Notification.Name.bookIntegrated, .booksChanged] {
             addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                self?.loadBooksData()
+                Task { @MainActor [weak self] in
+                    self?.scheduleReloadBooksData()
+                }
             }
         }
 

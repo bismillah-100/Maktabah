@@ -14,6 +14,7 @@ import Foundation
 // MARK: - Reader State Component
 
 /// Protokol untuk komponen UI yang bisa menyimpan dan memulihkan state ke ReaderState
+@MainActor
 protocol ReaderStateComponent: AnyObject {
     /// Memperbarui nilai pada `ReaderState` berdasarkan kondisi UI komponen ini.
     /// - Parameter state: Referensi inout ke objek `ReaderState` yang akan diperbarui.

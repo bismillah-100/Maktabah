@@ -52,7 +52,7 @@ final class LibraryDataManager: Sendable {
 
     private init() {}
 
-    func loadData() async {
+    nonisolated func loadData() async {
         let taskToAwait: Task<Void, Never>? = state.withLock { state in
             if state.isDataLoaded {
                 return nil
@@ -80,7 +80,7 @@ final class LibraryDataManager: Sendable {
         let booksById: [Int: BooksData]
     }
 
-    private func performDataLoad() async {
+    nonisolated private func performDataLoad() async {
         do {
             let results = try await fetchDatabaseCategoriesAndBooks()
             state.withLock { state in
@@ -105,7 +105,7 @@ final class LibraryDataManager: Sendable {
         }
     }
 
-    private func fetchDatabaseCategoriesAndBooks() async throws -> DatabaseCatalogData {
+    nonisolated private func fetchDatabaseCategoriesAndBooks() async throws -> DatabaseCatalogData {
         try await Task.detached(priority: .userInitiated) { [self] in
             let allCategories = try db.fetchAllCategories()
             let (localRootCats, localCategoryMap) = buildCategoryHierarchy(from: allCategories)
@@ -118,7 +118,7 @@ final class LibraryDataManager: Sendable {
         }.value
     }
 
-    func reloadAllData() async {
+    nonisolated func reloadAllData() async {
         state.withLock { state in
             state.isDataLoaded = false
             state.archivesBuiltFromFullData = false
@@ -289,7 +289,7 @@ final class LibraryDataManager: Sendable {
         return state.withLock { $0.categoryMap[catId]?.level }
     }
 
-    func buildArchive() async {
+    nonisolated func buildArchive() async {
         let (built, isLoaded, rootCats) = state.withLock {
             ($0.archivesBuiltFromFullData, $0.isDataLoaded, $0.allRootCategories)
         }
@@ -422,7 +422,7 @@ extension LibraryDataManager {
         params: LibrarySearchParams,
         callbacks: LibrarySearchCallbacks
     ) async {
-        if FtsMigrationManager.shared.isMigrating {
+        if await FtsMigrationManager.shared.isMigrating {
             await MainActor.run {
                 ReusableFunc.showAlert(
                     title: String(localized: .ftsIsMigratingAlert), message: ""

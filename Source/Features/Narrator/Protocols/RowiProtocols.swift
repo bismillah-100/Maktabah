@@ -5,11 +5,13 @@
 
 import Foundation
 
-protocol RowiSidebarDelegate: AnyObject {
+@MainActor
+protocol RowiSidebarDelegate: AnyObject, Sendable {
     func didSelect(rowi: Rowi)
 }
 
-protocol TarjamahBDelegate: AnyObject {
+@MainActor
+protocol TarjamahBDelegate: AnyObject, Sendable {
     func didSelectRowi(rowi: Rowi)
     func didSelect(tarjamahB: TarjamahMen, query: String?) async
 }

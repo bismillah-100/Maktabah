@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 @Observable
-final class BookImportViewModel {
+final class BookImportViewModel: @unchecked Sendable {
     // MARK: - State Properties
 
     var sqliteURL: URL?
@@ -196,13 +196,12 @@ final class BookImportViewModel {
             return
         }
 
-        Task {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             let count = await Task.detached(priority: .utility) {
                 AnnotationStore.shared.loadAnnotations(bkId: id).count
             }.value
-            await MainActor.run { [weak self] in
-                self?.newIdAnnotationCount = count
-            }
+            newIdAnnotationCount = count
         }
     }
 
@@ -346,18 +345,16 @@ final class BookImportViewModel {
     private func uploadToCloudKit(
         annotationsToSync: [Annotation], resultsToSync: [SyncResult]
     ) {
-        if !annotationsToSync.isEmpty || !resultsToSync.isEmpty {
-            DispatchQueue.global(qos: .background).async {
-                if !annotationsToSync.isEmpty {
-                    CloudKitSyncManager.shared.upload(
-                        annotations: annotationsToSync
-                    )
-                }
-                if !resultsToSync.isEmpty {
-                    CloudKitSyncManager.shared.uploadResultsData(
-                        folders: [], results: resultsToSync
-                    )
-                }
+        Task.detached(priority: .background) {
+            if !annotationsToSync.isEmpty {
+                CloudKitSyncManager.shared.upload(
+                    annotations: annotationsToSync
+                )
+            }
+            if !resultsToSync.isEmpty {
+                CloudKitSyncManager.shared.uploadResultsData(
+                    folders: [], results: resultsToSync
+                )
             }
         }
     }

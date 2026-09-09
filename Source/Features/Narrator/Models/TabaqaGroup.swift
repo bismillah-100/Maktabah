@@ -5,7 +5,7 @@
 
 import Foundation
 
-class TabaqaGroup {
+class TabaqaGroup: @unchecked Sendable {
     let code: String
     let name: String
     var rowis: [Rowi]

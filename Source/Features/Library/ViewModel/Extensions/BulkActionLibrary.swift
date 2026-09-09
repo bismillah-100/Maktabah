@@ -15,7 +15,6 @@ extension LibraryViewModel {
         Task { await BookDownloadManager.shared.cancelAllDownloads() }
     }
 
-    @MainActor
     func startBulkDownload(
         progressState: BundleArchiveDownloadProgressState,
         onFinished: @escaping (String?) -> Void
@@ -35,7 +34,6 @@ extension LibraryViewModel {
         }
     }
 
-    @MainActor
     private func runBulkDownload(
         books: [BooksData],
         progressState: BundleArchiveDownloadProgressState,
@@ -79,7 +77,6 @@ extension LibraryViewModel {
         onFinished(message)
     }
 
-    @MainActor
     private func performBulkDownloadPhase(
         books: [BooksData],
         progressState: BundleArchiveDownloadProgressState
@@ -118,7 +115,6 @@ extension LibraryViewModel {
         return (downloadResults, stoppedByNetwork)
     }
 
-    @MainActor
     private func performBulkIntegrationPhase(
         successfulDownloads: [BooksData],
         downloadResults: inout [Int: Result<URL, Error>],

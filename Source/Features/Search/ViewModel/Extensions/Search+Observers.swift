@@ -18,7 +18,7 @@ extension SearchViewModel {
     }
 
     func notifySearchReload() {
-        Task { @MainActor [weak self] in
+        Task { [weak self] in
             #if os(macOS)
             self?.searchNeedsReload.send(())
             #else
@@ -30,13 +30,15 @@ extension SearchViewModel {
     func observeBooksReloadNotifications() {
         for name in [Notification.Name.bookIntegrated, .booksChanged] {
             addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                self?.notifySearchReload()
+                MainActor.assumeIsolated {
+                    self?.notifySearchReload()
+                }
             }
         }
     }
 
     func observeLibraryFolderChanged() {
-        addObserver(forName: .libraryFolderChanged, object: nil, queue: .current) { [weak self] _ in
+        addObserver(forName: .libraryFolderChanged, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 stopSearch()

@@ -9,6 +9,7 @@ import AppKit
 import UIKit
 #endif
 
+@MainActor
 protocol LibraryViewDelegate: AnyObject {
     func didSelectItem(_ row: Int) async
 }

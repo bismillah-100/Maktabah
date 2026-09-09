@@ -1,6 +1,6 @@
 import UIKit
 
-enum RowiItem: Hashable {
+enum RowiItem: Hashable, Sendable {
     case tabaqa(TabaqaGroup)
     case rowi(Rowi)
     case loadMore(TabaqaGroup)

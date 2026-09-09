@@ -5,10 +5,10 @@
 //  Created by MacBook on 29/11/25.
 //
 
-import Cocoa
+@preconcurrency import Cocoa
 
+@MainActor
 class SidebarVC: NSViewController {
-
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var scrollView: NSScrollView!
     @IBOutlet weak var searchField: DSFSearchField!
@@ -66,10 +66,12 @@ class SidebarVC: NSViewController {
         startWindowObservation()
     }
 
-    deinit {
+    override func viewWillDisappear() {
+        super.viewWillDisappear()
         windowsObservation = nil
         if let obs = tabBarObservation {
             NotificationCenter.default.removeObserver(obs)
+            tabBarObservation = nil
         }
     }
 
@@ -81,8 +83,8 @@ class SidebarVC: NSViewController {
 
         windowsObservation = tabGroup.observe(
             \.windows,
-             options: []
-        ) { _,_ in
+            options: []
+        ) { _, _ in
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 updateScrollViewInsets(searchContainer.isHidden)
@@ -92,9 +94,11 @@ class SidebarVC: NSViewController {
         tabBarObservation = NotificationCenter.default.addObserver(
             forName: .windowTabBarDidChange,
             object: nil, queue: .main,
-            using: { [weak self] _ in
-                guard let self else { return }
-                updateScrollViewInsets(searchContainer.isHidden)
+            using: { _ in
+                MainActor.assumeIsolated { [weak self] in
+                    guard let self else { return }
+                    updateScrollViewInsets(searchContainer.isHidden)
+                }
             }
         )
     }
@@ -134,7 +138,7 @@ class SidebarVC: NSViewController {
         if !searchFieldHidden {
             scrollView.automaticallyAdjustsContentInsets = false
             scrollView.contentInsets.top = view.safeAreaInsets.top +
-                                           searchContainer.frame.height
+                searchContainer.frame.height
             searchField.becomeFirstResponder()
         } else {
             scrollView.automaticallyAdjustsContentInsets = true
@@ -142,18 +146,22 @@ class SidebarVC: NSViewController {
     }
 
     func updateTOC(_ nodes: [TOCNode]) {
-        self.tocTree = nodes
+        tocTree = nodes
 
         var flat: [TOCNode] = []
         func traverse(_ node: TOCNode) {
             flat.append(node)
-            for child in node.children { traverse(child) }
+            for child in node.children {
+                traverse(child)
+            }
         }
-        for node in nodes { traverse(node) }
-        self.flatNodes = flat
+        for node in nodes {
+            traverse(node)
+        }
+        flatNodes = flat
 
-        self.outlineView.reloadData()
-        Task { await self.rebuildLookupCache() }
+        outlineView.reloadData()
+        rebuildLookupCache()
     }
 
     @IBAction func searchContents(_ sender: NSSearchField) {
@@ -170,14 +178,15 @@ class SidebarVC: NSViewController {
         }
         outlineView.reloadData()
         outlineView.expandItem(nil, expandChildren: true) // supaya semua hasil terlihat
+        rebuildLookupCache()
     }
 
     @MainActor
-    func rebuildLookupCache() async {
-        guard let outlineView = outlineView else { return }
-        idToRow.removeAll()
+    func rebuildLookupCache() {
+        guard let outlineView else { return }
+        idToRow.removeAll(keepingCapacity: true)
 
-        for row in 0..<outlineView.numberOfRows {
+        for row in 0 ..< outlineView.numberOfRows {
             if let node = outlineView.item(atRow: row) as? TOCNode {
                 idToRow[node.id] = row
             }
@@ -196,7 +205,8 @@ class SidebarVC: NSViewController {
 
 extension SidebarVC: NSOutlineViewDataSource {
     func outlineView(_ outlineView: NSOutlineView,
-                     numberOfChildrenOfItem item: Any?) -> Int {
+                     numberOfChildrenOfItem item: Any?) -> Int
+    {
         let source = isFiltering ? filteredTree : tocTree
         if item == nil {
             return source.count
@@ -206,7 +216,8 @@ extension SidebarVC: NSOutlineViewDataSource {
 
     func outlineView(_ outlineView: NSOutlineView,
                      child index: Int,
-                     ofItem item: Any?) -> Any {
+                     ofItem item: Any?) -> Any
+    {
         let source = isFiltering ? filteredTree : tocTree
 
         guard let item = item as? TOCNode else {
@@ -217,7 +228,8 @@ extension SidebarVC: NSOutlineViewDataSource {
     }
 
     func outlineView(_ outlineView: NSOutlineView,
-                     isItemExpandable item: Any) -> Bool {
+                     isItemExpandable item: Any) -> Bool
+    {
         guard let node = item as? TOCNode else { return false }
         return !node.children.isEmpty
     }
@@ -277,7 +289,8 @@ extension SidebarVC: NSOutlineViewDelegate {
     func updateTextColor(selectedRow: Int) {
         if let previousSelectedRow,
            let (_, cellView) = isHeaderCell(previousSelectedRow),
-           let cellView {
+           let cellView
+        {
             cellView.textField?.textColor = NSColor(named: "HeaderColor") ?? .controlTextColor
         }
 
@@ -301,7 +314,8 @@ extension SidebarVC: NSOutlineViewDelegate {
 }
 
 extension SidebarVC {
-    func selectNode(_ node: TOCNode, path: [TOCNode]?) async {
+    @MainActor
+    func selectNode(_ node: TOCNode, path: [TOCNode]?) {
         guard let outlineView else { return }
 
         enableDelegate = false
@@ -313,11 +327,11 @@ extension SidebarVC {
                 outlineView.expandItem(parent)
             }
             // 2) rebuild cache karena jumlah rows berubah akibat expand
-            await rebuildLookupCache()
+            rebuildLookupCache()
         }
 
         // 3) ambil row dan select
-        if let row = self.idToRow[node.id] {
+        if let row = idToRow[node.id] {
             // hindari re-select jika sudah selected
             if outlineView.selectedRow != row {
                 outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)

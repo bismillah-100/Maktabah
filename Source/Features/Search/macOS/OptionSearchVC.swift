@@ -6,9 +6,10 @@
 //
 
 import Cocoa
-import Combine
+@preconcurrency import Combine
 import SwiftUI
 
+@MainActor
 class OptionSearchVC: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var stackView: NSStackView!
@@ -56,8 +57,8 @@ class OptionSearchVC: NSViewController {
         didSet { viewModel.targetBookId = bkId }
     }
 
-    var onSelectedItem: ((Int, String, SearchMode, String) -> Void)?
-    var onCleanUp: (() -> Void)?
+    var onSelectedItem: (@MainActor (Int, String, SearchMode, String) -> Void)?
+    var onCleanUp: (@MainActor () -> Void)?
 
     var compactConfigured: Bool = false
 
@@ -500,9 +501,11 @@ class OptionSearchVC: NSViewController {
             ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
             nearDistanceWidthConstraint?.animator().constant = isNear ? 45 : 0
             stackView.animator().layoutSubtreeIfNeeded()
-        } completionHandler: { [weak self] in
-            guard let self, let nearDistanceField else { return }
-            if isNear { nearDistanceField.stringValue = .init(viewModel.nearDistance) }
+        } completionHandler: {
+            MainActor.assumeIsolated { [weak self] in
+                guard let self, let nearDistanceField else { return }
+                if isNear { nearDistanceField.stringValue = .init(viewModel.nearDistance) }
+            }
         }
     }
 
@@ -522,13 +525,18 @@ class OptionSearchVC: NSViewController {
         ReusableFunc.copyResults(results, tableView: tableView)
     }
 
+    override func viewWillDisappear() {
+        super.viewWillDisappear()
+        cancellables.removeAll()
+        resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
+    }
+
     deinit {
         #if DEBUG
         print("deinit OptionSearchVC")
         #endif
-        cancellables.removeAll()
         resultsLoadingTask?.cancel()
-        resultsLoadingTask = nil
     }
 }
 

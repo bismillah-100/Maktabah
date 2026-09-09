@@ -7,8 +7,8 @@
 
 import Foundation
 
-class HistoryDatabaseManager: SyncPendingManaging {
-    nonisolated(unsafe) static let shared = HistoryDatabaseManager()
+class HistoryDatabaseManager: SyncPendingManaging, @unchecked Sendable {
+    static let shared = HistoryDatabaseManager()
 
     private var _db: SQLiteDatabase?
 
