@@ -8,24 +8,24 @@
 import Foundation
 import SQLite3
 
-struct SearchControl {
+struct SearchControl: Sendable {
     let pauseController: PauseController
     let stopFlag: @Sendable () -> Bool
 }
 
-struct SearchCallbacks {
-    let onResult: (String, BookContent) -> Void
-    let progress: (Int) -> Void
-    let onRowProgress: (Int, Int) -> Void
+struct SearchCallbacks: Sendable {
+    let onResult: @Sendable (String, BookContent) -> Void
+    let progress: @Sendable (Int) -> Void
+    let onRowProgress: @Sendable (Int, Int) -> Void
 }
 
-struct SearchWorkerCallbacks {
-    let start: (Int) -> Void
-    let progress: (Int) -> Void
-    let onRowProgress: (String, Int, Int) -> Void
-    let onResult: (String, BookContent) -> Void
-    let onTableComplete: () -> Void
-    let onComplete: () -> Void
+struct SearchWorkerCallbacks: Sendable {
+    let start: @Sendable (Int) -> Void
+    let progress: @Sendable (Int) -> Void
+    let onRowProgress: @Sendable (String, Int, Int) -> Void
+    let onResult: @Sendable (String, BookContent) -> Void
+    let onTableComplete: @Sendable () -> Void
+    let onComplete: @Sendable () -> Void
 }
 
 private struct ChunkParallelPlan {
@@ -40,7 +40,7 @@ private struct ChunkResultContext {
     let totalCount: Int
 }
 
-class SearchWorker {
+final class SearchWorker: @unchecked Sendable {
     let archiveId: String
     let tables: [String]
     let pool: SQLiteConnectionPool

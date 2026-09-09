@@ -560,6 +560,9 @@
 		F3A20B142FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A20B132FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift */; };
 		F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44342A3B384B7605A1AF676A /* NetworkMonitor.swift */; };
 		F3A77FC12FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44342A3B384B7605A1AF676A /* NetworkMonitor.swift */; };
+		F3A8CE403051B4010027B362 /* SafeCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A8CE3F3051B4010027B362 /* SafeCounter.swift */; };
+		F3A8CE413051B4010027B362 /* SafeCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A8CE3F3051B4010027B362 /* SafeCounter.swift */; };
+		F3A8CE423051B4010027B362 /* SafeCounter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A8CE3F3051B4010027B362 /* SafeCounter.swift */; };
 		F3ABDF752FBF429700A8965E /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */; };
 		F3ABDF762FBF429700A8965E /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */; };
 		F3ABDF772FBF429700A8965E /* WelcomeScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */; };
@@ -1173,6 +1176,7 @@
 		F3A002002FBB000100000001 /* CloudKitUploadDebouncer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitUploadDebouncer.swift; sourceTree = "<group>"; };
 		F3A20B132FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSCoreUpdateProgressOverlayView.swift; sourceTree = "<group>"; };
 		F3A775572FB2288E00C82F7B /* iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS-Info.plist"; sourceTree = "<group>"; };
+		F3A8CE3F3051B4010027B362 /* SafeCounter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeCounter.swift; sourceTree = "<group>"; };
 		F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeScreenView.swift; sourceTree = "<group>"; };
 		F3AE62B1304C5760002569BB /* BulkActionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkActionLibrary.swift; sourceTree = "<group>"; };
 		F3AE62B3304C5760002569BB /* iOSLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSLibrary.swift; sourceTree = "<group>"; };
@@ -1515,6 +1519,7 @@
 		4B65CCBE2EE0A1050085CEB4 /* SearchEngine */ = {
 			isa = PBXGroup;
 			children = (
+				F3A8CE3F3051B4010027B362 /* SafeCounter.swift */,
 				F32D4422303CFC0800429664 /* ArchiveInfo.swift */,
 				E87C90E12F83494200454BE1 /* FtsQueryParser.swift */,
 				F32D440E303CFB6200429664 /* PauseController.swift */,
@@ -3002,6 +3007,7 @@
 				4B3202722EDB5E3D003B95D1 /* Navigation.swift in Sources */,
 				4B58EDCE2EE3DDEE00073495 /* ResultsViewModel.swift in Sources */,
 				4B3202462EDB1099003B95D1 /* ViewerSplitVC.swift in Sources */,
+				F3A8CE403051B4010027B362 /* SafeCounter.swift in Sources */,
 				4B32024E2EDB13C0003B95D1 /* DatabaseManager.swift in Sources */,
 				F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */,
 				4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */,
@@ -3276,6 +3282,7 @@
 				F3AE6303304C5E7C002569BB /* Search+SavedResults.swift in Sources */,
 				F3AE6304304C5E7C002569BB /* Search+Execution.swift in Sources */,
 				F3AE6305304C5E7C002569BB /* Search+Restoration.swift in Sources */,
+				F3A8CE413051B4010027B362 /* SafeCounter.swift in Sources */,
 				4B7C90ED2F83494200454BE1 /* ResultsViewModel.swift in Sources */,
 				4B7C90EE2F83494200454BE1 /* ViewerSplitVC.swift in Sources */,
 				F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */,
@@ -3441,6 +3448,7 @@
 				F3BEC5652FD958D100FA0400 /* iOSAnnotationViewController.swift in Sources */,
 				F3BEC56D2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift in Sources */,
 				F3BEC56B2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift in Sources */,
+				F3A8CE423051B4010027B362 /* SafeCounter.swift in Sources */,
 				F30576F72FA46222005732C6 /* ReusableFunc.swift in Sources */,
 				F3ABDF772FBF429700A8965E /* WelcomeScreenView.swift in Sources */,
 				F3AE62D7304C59AE002569BB /* FilterLibrary.swift in Sources */,
