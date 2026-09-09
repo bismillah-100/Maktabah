@@ -5,7 +5,7 @@
 
 import Foundation
 
-class CategoryData {
+class CategoryData: @unchecked Sendable {
     let id: Int
     let name: String
     let normalizedName: String

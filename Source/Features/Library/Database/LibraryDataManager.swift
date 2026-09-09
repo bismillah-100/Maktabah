@@ -6,63 +6,66 @@
 //
 
 import Foundation
+import Synchronization
 
-class LibraryDataManager {
+final class LibraryDataManager: Sendable {
     static let shared = LibraryDataManager()
-    var db: DatabaseManager = .shared
+    nonisolated(unsafe) let db: DatabaseManager = .shared
 
-    private let lock = NSRecursiveLock()
+    private struct LibraryState: Sendable {
+        var allRootCategories: [CategoryData] = []
+        var categoryMap: [Int: CategoryData] = [:]
+        var booksById: [Int: BooksData] = [:]
+        var archives: [Int: ArchiveInfo] = [:]
+        var archivesBuiltFromFullData: Bool = false
+        var authorsCache: [Int: Muallif] = [:]
+        var isDataLoaded = false
+        var isAuthorsLoaded = false
+        var loadingTask: Task<Void, Never>?
+    }
 
-    private var _allRootCategories: [CategoryData] = []
-    private var _categoryMap: [Int: CategoryData] = [:]
-    private var _booksById: [Int: BooksData] = [:]
-    private var _archives: [Int: ArchiveInfo] = [:]
-    private var _archivesBuiltFromFullData: Bool = false
-    private var _authorsCache: [Int: Muallif] = [:]
-    private var _isDataLoaded = false
-    private var _isAuthorsLoaded = false
-    private var _loadingTask: Task<Void, Never>?
+    private let state = Mutex(LibraryState())
 
     var allRootCategories: [CategoryData] {
-        lock.withLock { _allRootCategories }
+        state.withLock { $0.allRootCategories }
     }
 
     var categoryMap: [Int: CategoryData] {
-        lock.withLock { _categoryMap }
+        state.withLock { $0.categoryMap }
     }
 
     var booksById: [Int: BooksData] {
-        lock.withLock { _booksById }
+        state.withLock { $0.booksById }
     }
 
     var archives: [Int: ArchiveInfo] {
-        lock.withLock { _archives }
+        state.withLock { $0.archives }
     }
 
     var authorsCache: [Int: Muallif] {
-        lock.withLock { _authorsCache }
+        state.withLock { $0.authorsCache }
     }
 
     var isDataLoaded: Bool {
-        lock.withLock { _isDataLoaded }
+        state.withLock { $0.isDataLoaded }
     }
 
     private init() {}
 
     func loadData() async {
-        let taskToAwait: Task<Void, Never>? = lock.withLock {
-            if _isDataLoaded {
+        let taskToAwait: Task<Void, Never>? = state.withLock { state in
+            if state.isDataLoaded {
                 return nil
             }
-            if let existing = _loadingTask {
+            if let existing = state.loadingTask {
                 return existing
             }
 
             let newTask = Task { [self] in
                 await performDataLoad()
-                lock.withLock { _loadingTask = nil }
+                self.state.withLock { $0.loadingTask = nil }
             }
-            _loadingTask = newTask
+            state.loadingTask = newTask
             return newTask
         }
 
@@ -80,16 +83,16 @@ class LibraryDataManager {
     private func performDataLoad() async {
         do {
             let results = try await fetchDatabaseCategoriesAndBooks()
-            lock.withLock {
-                _allRootCategories = results.rootCategories
-                _categoryMap = results.categoryMap
-                _booksById = results.booksById
+            state.withLock { state in
+                state.allRootCategories = results.rootCategories
+                state.categoryMap = results.categoryMap
+                state.booksById = results.booksById
             }
 
             await applyBundleDownloadMetadataIfNeeded()
 
-            lock.withLock {
-                _isDataLoaded = true
+            state.withLock { state in
+                state.isDataLoaded = true
             }
 
             Task.detached(priority: .background) {
@@ -116,9 +119,9 @@ class LibraryDataManager {
     }
 
     func reloadAllData() async {
-        lock.withLock {
-            _isDataLoaded = false
-            _archivesBuiltFromFullData = false
+        state.withLock { state in
+            state.isDataLoaded = false
+            state.archivesBuiltFromFullData = false
         }
         await loadData()
     }
@@ -177,9 +180,9 @@ class LibraryDataManager {
                 urlSession: URLSession.shared
             )
 
-            lock.withLock {
+            state.withLock { state in
                 for (bookId, entry) in entries {
-                    guard let book = _booksById[bookId] else { continue }
+                    guard let book = state.booksById[bookId] else { continue }
                     book.downloadFilename = entry.filename
                     book.compressedDownloadSize = entry.sizeZst
                 }
@@ -192,9 +195,9 @@ class LibraryDataManager {
     }
 
     func getAllAuthors() -> [(id: Int, muallif: Muallif)] {
-        let (isLoaded, cachedRes) = lock.withLock {
-            if _isAuthorsLoaded {
-                return (true, _authorsCache.map { (id: $0.key, muallif: $0.value) })
+        let (isLoaded, cachedRes) = state.withLock { state in
+            if state.isAuthorsLoaded {
+                return (true, state.authorsCache.map { (id: $0.key, muallif: $0.value) })
             }
             return (false, [])
         }
@@ -205,45 +208,47 @@ class LibraryDataManager {
 
         let fetched = DatabaseManager.shared.fetchAllAuthors()
 
-        lock.withLock {
+        state.withLock { state in
             for author in fetched {
-                _authorsCache[author.id] = author.muallif
+                state.authorsCache[author.id] = author.muallif
             }
-            _isAuthorsLoaded = true
+            state.isAuthorsLoaded = true
         }
         return fetched
     }
 
     func resetState() {
-        lock.withLock {
-            _loadingTask?.cancel()
-            _loadingTask = nil
-            _isDataLoaded = false
-            _isAuthorsLoaded = false
-            _allRootCategories.removeAll()
-            _categoryMap.removeAll()
-            _authorsCache.removeAll()
-            _booksById.removeAll()
-            _archives.removeAll()
-            _archivesBuiltFromFullData = false
+        let taskToCancel = state.withLock { state -> Task<Void, Never>? in
+            let task = state.loadingTask
+            state.loadingTask = nil
+            state.isDataLoaded = false
+            state.isAuthorsLoaded = false
+            state.allRootCategories.removeAll()
+            state.categoryMap.removeAll()
+            state.authorsCache.removeAll()
+            state.booksById.removeAll()
+            state.archives.removeAll()
+            state.archivesBuiltFromFullData = false
+            return task
         }
+        taskToCancel?.cancel()
     }
 
     func updateAuthorInCache(id: Int, muallif: Muallif) {
-        lock.withLock {
-            _authorsCache[id] = muallif
+        state.withLock {
+            $0.authorsCache[id] = muallif
         }
     }
 
     func removeAuthorFromCache(id: Int) {
-        lock.lock()
-        _authorsCache.removeValue(forKey: id)
-        lock.unlock()
+        state.withLock {
+            $0.authorsCache[id] = nil
+        }
     }
 
     func getAuthorFromCache(id: Int) -> Muallif? {
-        lock.withLock {
-            _authorsCache[id]
+        state.withLock {
+            $0.authorsCache[id]
         }
     }
 
@@ -251,9 +256,9 @@ class LibraryDataManager {
         var books = [BooksData]()
         var idsToFetch = [Int]()
 
-        lock.withLock {
+        state.withLock { state in
             for id in ids {
-                if let book = _booksById[id] {
+                if let book = state.booksById[id] {
                     books.append(book)
                 } else {
                     idsToFetch.append(id)
@@ -264,10 +269,10 @@ class LibraryDataManager {
         for id in idsToFetch {
             do {
                 if let book = try db.fetchBook(byId: id) {
-                    lock.withLock {
-                        _booksById[id] = book
-                        books.append(book)
+                    state.withLock { state in
+                        state.booksById[id] = book
                     }
+                    books.append(book)
                 }
             } catch {
                 #if DEBUG
@@ -281,12 +286,12 @@ class LibraryDataManager {
 
     func categoryLevel(for book: BooksData) -> Int? {
         guard let catId = book.catId else { return nil }
-        return lock.withLock { _categoryMap[catId]?.level }
+        return state.withLock { $0.categoryMap[catId]?.level }
     }
 
     func buildArchive() async {
-        let (built, isLoaded, rootCats) = lock.withLock {
-            (_archivesBuiltFromFullData, _isDataLoaded, _allRootCategories)
+        let (built, isLoaded, rootCats) = state.withLock {
+            ($0.archivesBuiltFromFullData, $0.isDataLoaded, $0.allRootCategories)
         }
         if built || !isLoaded {
             return
@@ -335,9 +340,9 @@ class LibraryDataManager {
             }
         }
 
-        lock.withLock {
-            self._archives = archives
-            _archivesBuiltFromFullData = true
+        state.withLock { state in
+            state.archives = archives
+            state.archivesBuiltFromFullData = true
         }
     }
 
@@ -467,11 +472,11 @@ extension LibraryDataManager {
     }
 
     private func filterAllowedByArchive(allowed: Set<String>) -> [Int: Set<String>] {
-        lock.withLock {
+        state.withLock { state in
             var allowedByArchive: [Int: Set<String>] = [:]
             for tableName in allowed {
                 let bookId = Int(tableName.dropFirst()) ?? 0
-                if let book = _booksById[bookId] {
+                if let book = state.booksById[bookId] {
                     allowedByArchive[book.archive, default: []].insert(tableName)
                 }
             }
@@ -585,8 +590,8 @@ extension LibraryDataManager {
         let mode = params.mode
         let nearDistance = params.nearDistance
         let bookId = Int(tableName.dropFirst()) ?? 0
-        let (bookTitle, isMultilingual, isImported) = lock.withLock {
-            let book = _booksById[bookId]
+        let (bookTitle, isMultilingual, isImported) = state.withLock { state in
+            let book = state.booksById[bookId]
             return (book?.book ?? "", book?.isMultiLanguage ?? false, book?.isImported ?? false)
         }
 
@@ -633,7 +638,7 @@ extension LibraryDataManager {
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
         let normalizedSearchText = trimmed.normalizeArabic()
 
-        let base = baseCategories ?? lock.withLock { _allRootCategories }
+        let base = baseCategories ?? state.withLock { $0.allRootCategories }
 
         if trimmed.isEmpty {
             // Tampilkan semua (sesuai base)
@@ -758,7 +763,7 @@ extension LibraryDataManager {
 
     /// Kembalikan salinan hierarchy yang hanya berisi kitab yang belum terintegrasi.
     func filterNotIntegrated() -> [CategoryData] {
-        let rootCats = lock.withLock { _allRootCategories }
+        let rootCats = state.withLock { $0.allRootCategories }
         return rootCats.compactMap { root in
             applyHierarchyFilter(to: root) {
                 !BookArchiveIntegrator.shared.isBookIntegrated($0)
@@ -776,8 +781,8 @@ extension LibraryDataManager {
             authorMap[author.id] = author.muallif
         }
 
-        let allBooks: [BooksData] = lock.withLock {
-            Array(_booksById.values)
+        let allBooks: [BooksData] = state.withLock {
+            Array($0.booksById.values)
         }
 
         let (booksByAuthor, booksWithNoAuthor) = groupBooksByAuthor(allBooks: allBooks)
@@ -841,7 +846,7 @@ extension LibraryDataManager {
     }
 
     func filterByAuthor(_ authorId: Int) -> [CategoryData] {
-        let rootCats = lock.withLock { _allRootCategories }
+        let rootCats = state.withLock { $0.allRootCategories }
         return rootCats.compactMap { root in
             applyHierarchyFilter(to: root) {
                 $0.muallif == authorId
@@ -850,7 +855,7 @@ extension LibraryDataManager {
     }
 
     func filterIntegrated(base: [CategoryData]? = nil) -> [CategoryData] {
-        let rootCats = base ?? lock.withLock { _allRootCategories }
+        let rootCats = base ?? state.withLock { $0.allRootCategories }
         return rootCats.compactMap { root in
             applyHierarchyFilter(to: root) {
                 BookArchiveIntegrator.shared.isBookIntegrated($0)
@@ -879,17 +884,17 @@ extension LibraryDataManager {
     }
 
     func removeBookFromMemory(id: Int, muallifId: Int) {
-        lock.withLock {
+        state.withLock { state in
             if Self.shouldRemoveBook(id: id) {
-                _booksById.removeValue(forKey: id)
-                for root in _allRootCategories {
+                state.booksById.removeValue(forKey: id)
+                for root in state.allRootCategories {
                     removeBookFromHierarchy(root, bookId: id)
                 }
             }
 
             if Self.shouldRemoveAuthor(muallifId: muallifId) {
                 if !db.isAuthorUsed(authorId: muallifId) {
-                    _authorsCache.removeValue(forKey: muallifId)
+                    state.authorsCache.removeValue(forKey: muallifId)
                 }
             }
         }
@@ -985,10 +990,10 @@ extension LibraryDataManager {
         guard let book = try db.fetchBook(byId: result.bookId) else { return nil }
         var inserted: (categoryId: Int, book: BooksData)?
 
-        lock.withLock {
-            _booksById[result.bookId] = book
+        state.withLock { state in
+            state.booksById[result.bookId] = book
             let categoryId = result.catId
-            if let category = _categoryMap[categoryId] {
+            if let category = state.categoryMap[categoryId] {
                 category.children.append(book)
                 inserted = (categoryId, book)
             }
@@ -1001,9 +1006,9 @@ extension LibraryDataManager {
     private func applyUpdatedBook(_ bookId: Int) throws -> Int? {
         guard let book = try db.fetchBook(byId: bookId) else { return nil }
 
-        lock.withLock {
-            _booksById[bookId] = book
-            updateBookInHierarchy(book)
+        state.withLock { state in
+            state.booksById[bookId] = book
+            updateBookInHierarchy(book, in: state.allRootCategories)
         }
 
         BookPageCache.shared.remove(bookId: bookId)
@@ -1012,9 +1017,9 @@ extension LibraryDataManager {
     }
 
     /// Update single book di hierarchy tree
-    private func updateBookInHierarchy(_ updatedBook: BooksData) {
+    private func updateBookInHierarchy(_ updatedBook: BooksData, in rootCategories: [CategoryData]) {
         // Cari book di tree dan replace
-        for category in _allRootCategories where replaceBookInCategory(category, with: updatedBook) {
+        for category in rootCategories where replaceBookInCategory(category, with: updatedBook) {
             break
         }
     }
@@ -1036,28 +1041,28 @@ extension LibraryDataManager {
 
     /// Update archive untuk beberapa buku
     private func updateArchiveForBooks(_ books: [BooksData]) {
-        lock.withLock {
+        state.withLock { state in
             for book in books {
                 let archiveId = book.archive
                 guard archiveId != 0 else { continue }
 
                 let tableName = "b\(book.id)"
 
-                if _archives[archiveId] == nil {
-                    _archives[archiveId] = ArchiveInfo(tables: [], books: [])
+                if state.archives[archiveId] == nil {
+                    state.archives[archiveId] = ArchiveInfo(tables: [], books: [])
                 }
 
                 // Remove old entry if exists
-                if let index = _archives[archiveId]?.tables.firstIndex(of: tableName) {
-                    _archives[archiveId]?.tables.remove(at: index)
-                    if let booksCount = _archives[archiveId]?.books.count, index < booksCount {
-                        _archives[archiveId]?.books.remove(at: index)
+                if let index = state.archives[archiveId]?.tables.firstIndex(of: tableName) {
+                    state.archives[archiveId]?.tables.remove(at: index)
+                    if let booksCount = state.archives[archiveId]?.books.count, index < booksCount {
+                        state.archives[archiveId]?.books.remove(at: index)
                     }
                 }
 
                 // Add new entry
-                _archives[archiveId]?.tables.append(tableName)
-                _archives[archiveId]?.books.append(book)
+                state.archives[archiveId]?.tables.append(tableName)
+                state.archives[archiveId]?.books.append(book)
             }
         }
     }
