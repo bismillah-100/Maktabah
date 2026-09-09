@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct ArchiveInfo {
+struct ArchiveInfo: Sendable {
     var tables: [String]
     var books: [BooksData]
 }

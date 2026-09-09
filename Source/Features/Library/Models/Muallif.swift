@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Muallif: Decodable {
+struct Muallif: Decodable, Sendable {
     /// Nama pengarang (auth)
     let nama: String
 
