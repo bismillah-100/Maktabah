@@ -10,8 +10,8 @@ import Foundation
 import WidgetKit
 
 struct AnnotationConfigurationIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "Annotation Widget"
-    static var description = IntentDescription("Displays your recent annotations.")
+    static let title: LocalizedStringResource = "Annotation Widget"
+    static let description = IntentDescription("Displays your recent annotations.")
 }
 
 struct AnnotationProvider: AppIntentTimelineProvider {

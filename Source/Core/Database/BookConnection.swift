@@ -179,7 +179,7 @@ extension BookConnection {
         let shortsMap = DatabaseManager.shared.loadShortsForBook(bkid)
         let finalNass = shortsMap.isEmpty ? decompressedNass : applyShortsMapping(to: decompressedNass, with: shortsMap)
 
-        let newContent = BookContent(
+        var newContent = BookContent(
             id: Int(id),
             nash: finalNass,
             page: Int(page),

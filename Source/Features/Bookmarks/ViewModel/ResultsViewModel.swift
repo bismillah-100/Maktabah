@@ -11,7 +11,7 @@ import Observation
 @Observable
 @MainActor
 class ResultsViewModel {
-    static var shared: ResultsViewModel = .init()
+    static let shared: ResultsViewModel = .init()
 
     let db: ResultsHandler = .shared
 

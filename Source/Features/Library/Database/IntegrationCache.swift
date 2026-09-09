@@ -22,7 +22,7 @@ import SQLite3
 // MARK: - IntegrationCache
 
 final class IntegrationCache {
-    static let shared = IntegrationCache()
+    nonisolated(unsafe) static let shared = IntegrationCache()
 
     // bookId per archive yang sudah terintegrasi
     private var integrated: [Int: Set<Int>] = [:] // [archiveId: Set<bookId>]

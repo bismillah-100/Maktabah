@@ -8,7 +8,7 @@ import Foundation
 import Network
 
 final class CloudKitSyncManager {
-    static let shared = CloudKitSyncManager()
+    nonisolated(unsafe) static let shared = CloudKitSyncManager()
 
     enum SyncTarget {
         case annotation

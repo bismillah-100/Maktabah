@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 
 @Observable
 class UserFontManager {
-    static let shared = UserFontManager()
+    nonisolated(unsafe) static let shared = UserFontManager()
     
     var userFontNames: [String] = []
     private var fontURLs: [String: URL] = [:]

@@ -11,7 +11,7 @@ import SwiftUI
 
 @Observable
 final class SettingsViewModel {
-    static var shared: SettingsViewModel = .init()
+    nonisolated(unsafe) static let shared: SettingsViewModel = .init()
     var isBundleMode: Bool = AppConfig.isUsingBundleMode
     var databaseFilesPath: String = "N/A"
     var archiveFilesPath: String = "N/A"

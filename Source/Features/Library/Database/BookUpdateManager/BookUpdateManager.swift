@@ -15,7 +15,7 @@ private struct BookDownloadArtifacts: Sendable {
 }
 
 final class BookUpdateManager {
-    static let shared = BookUpdateManager()
+    nonisolated(unsafe) static let shared = BookUpdateManager()
 
     let versionColumnCandidates = [
         "bver", "bVer",

@@ -7,7 +7,7 @@ import CloudKit
 import Foundation
 
 final class CloudKitCoreManager {
-    static let shared = CloudKitCoreManager()
+    nonisolated(unsafe) static let shared = CloudKitCoreManager()
 
     let container: CKContainer
     let privateDatabase: CKDatabase

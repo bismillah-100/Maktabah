@@ -4,7 +4,7 @@ import SwiftUI
 
 @Observable
 class HistoryViewModel: ViewModelBase {
-    static let shared = HistoryViewModel()
+    nonisolated(unsafe) static let shared = HistoryViewModel()
 
     var entriesByBookId: [Int: ReadingEntry] = [:]
     var historyOrder: [Int] = []

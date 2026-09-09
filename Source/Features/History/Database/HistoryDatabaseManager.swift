@@ -8,7 +8,7 @@
 import Foundation
 
 class HistoryDatabaseManager: SyncPendingManaging {
-    static let shared = HistoryDatabaseManager()
+    nonisolated(unsafe) static let shared = HistoryDatabaseManager()
 
     private var _db: SQLiteDatabase?
 

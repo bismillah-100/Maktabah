@@ -82,7 +82,7 @@ actor BookArchiveSingleFlight {
 }
 
 final class BookArchiveIntegrator {
-    static let shared = BookArchiveIntegrator()
+    nonisolated(unsafe) static let shared = BookArchiveIntegrator()
 
     private let sqliteTransient = unsafeBitCast(
         OpaquePointer(bitPattern: -1),

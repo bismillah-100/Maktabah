@@ -6,8 +6,9 @@
 import Foundation
 import Observation
 
+/// THREAD SAFETY: Node pohon ini dimutasi secara eksklusif saat fase pembentukan di background. Setelah dipublikasikan ke antarmuka, pohon ini berstatus read-only (frozen).
 @Observable
-class FolderNode: Identifiable, Hashable {
+final class FolderNode: Identifiable, Hashable, @unchecked Sendable {
     let id: Int64
     var name: String
     var lastModified: Int64?

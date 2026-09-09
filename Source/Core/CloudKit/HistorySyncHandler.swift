@@ -6,7 +6,7 @@
 import CloudKit
 import Foundation
 
-final class HistorySyncHandler: CloudKitRecordParser {
+final class HistorySyncHandler: CloudKitRecordParser, Sendable {
     typealias Model = ReadingEntry
 
     static let shared = HistorySyncHandler()

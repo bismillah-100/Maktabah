@@ -322,7 +322,7 @@ final class BulkDownloadVC: NSViewController {
         scrollView.contentInsets.bottom = footerView.frame.height + 50
     }
 
-    private func loadBooksData() async {
+    nonisolated private func loadBooksData() async {
         let filtered = data.filterNotIntegrated()
 
         await MainActor.run { [weak self, filtered] in

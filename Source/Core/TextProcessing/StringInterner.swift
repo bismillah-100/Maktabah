@@ -17,7 +17,7 @@ public final class StringInterner {
     private let lock: NSLock = .init()
 
     /// Shared singleton instance.
-    public static let shared: StringInterner = .init()
+    public nonisolated(unsafe) static let shared: StringInterner = .init()
 
     /// Private init untuk mencegah instance di luar.
     private init() {}

@@ -5,14 +5,14 @@
 
 import Foundation
 
-struct SearchResultItem: Codable, CopyableResult, Hashable {
+struct SearchResultItem: Codable, CopyableResult, Hashable, Sendable {
     let archive: String
     let tableName: String
     let bookId: Int
     let bookTitle: String
     let page: Int
     let part: Int
-    let attributedText: NSAttributedString
+    nonisolated(unsafe) let attributedText: NSAttributedString
 
     enum CodingKeys: String, CodingKey {
         case archive
