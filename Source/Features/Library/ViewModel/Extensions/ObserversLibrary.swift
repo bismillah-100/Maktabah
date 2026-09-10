@@ -35,20 +35,20 @@ extension LibraryViewModel {
     }
 
     private func observeBookIntegrated() {
+        #if os(iOS)
         addObserver(forName: .bookIntegrated, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { [weak self] in
-                #if os(iOS)
-                self?.refreshSubject.send(())
-                #endif
+                self?.updateDisplayedCategories()
             }
         }
+        #endif
     }
 
     private func observeBooksChanged() {
         addObserver(forName: .booksChanged, object: nil, queue: .main) { [weak self] notification in
             MainActor.assumeIsolated { [weak self] in
                 #if os(iOS)
-                self?.refreshSubject.send(())
+                self?.updateDisplayedCategories()
                 #endif
                 self?.checkBookUpdatesPeriodically(force: true)
             }
@@ -58,6 +58,9 @@ extension LibraryViewModel {
     private func observeLibraryFolderChanged() {
         addObserver(forName: .libraryFolderChanged, object: nil, queue: .main) { [weak self] _ in
             guard let self else { return }
+            MainActor.assumeIsolated {
+                selectedBookName = nil
+            }
             reloadTask.withLock { currentTask in
                 if currentTask == nil {
                     currentTask = Task { [weak self] in
