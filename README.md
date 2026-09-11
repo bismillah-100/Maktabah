@@ -1,7 +1,7 @@
 <h1 align="center">Maktabah Syamilah for macOS</h1>
 <p align="center">
   <a href="https://apps.apple.com/app/maktabah/id6761461336">
-    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-mac-app-store/black/en-us" alt="Download on the Mac App Store" height="40">
+    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us" alt="Download on the Mac App Store" height="40">
   </a>
 </p>
 <p align="center">
@@ -15,7 +15,7 @@
     <img src="https://img.shields.io/badge/%E2%9C%94%20NOTARIZED_-v2+-orange" alt="NOTARIZED">
   </a>
   <a>
-    <img src="https://img.shields.io/badge/required-macOS_13%2B-darkgreen" alt="Requirement">
+    <img src="https://img.shields.io/badge/required-macOS_15%2B-darkgreen" alt="Requirement">
   </a>
 </p>
 <p align="center">
