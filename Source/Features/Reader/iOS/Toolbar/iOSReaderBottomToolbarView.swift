@@ -9,7 +9,7 @@ import SwiftUI
 
 struct iOSReaderBottomToolbarView: View {
     @Bindable var viewModel: ReaderViewModel
-    @State private var textViewState = TextViewState.shared
+    var textViewState = TextViewState.shared
     @State private var showingNavigation = false
     @State private var showingOptions = false
     @State private var showingTOC = false

@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct UpdateView: View {
-    @State var viewModel = BookUpdateViewModel()
+    @State private var viewModel = BookUpdateViewModel()
     @State private var searchText = ""
     @Environment(\.dismiss) private var dismiss
 

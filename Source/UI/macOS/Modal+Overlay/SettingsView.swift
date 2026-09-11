@@ -8,8 +8,8 @@ import SwiftUI
 // MARK: - Settings View
 
 struct SettingsView: View {
-    @State private var viewModel = SettingsViewModel.shared
-    @State private var ftsManager = FtsMigrationManager.shared
+    @Bindable var viewModel = SettingsViewModel.shared
+    var ftsManager = FtsMigrationManager.shared
     #if os(iOS)
     @State private var showFtsMigrationOverlay = false
     #endif
