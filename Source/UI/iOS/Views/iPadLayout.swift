@@ -121,46 +121,16 @@ struct iPadLayout: View {
 
     @ViewBuilder
     private func destinationView(for tab: iOSTab) -> some View {
-        @Bindable var libraryVM = bManager.libraryViewModel
-        @Bindable var searchVM = bManager.searchViewModel
-        @Bindable var authorVM = bManager.authorViewModel
-        @Bindable var annotationVM = bManager.annotationViewModel
-
         Group {
             switch tab {
             case .viewer:
-                iOSLibraryView()
-                    .searchable(
-                        text: $libraryVM.searchQuery,
-                        placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: searchPrompt(for: tab).localized
-                    )
+                libraryDestination
             case .search:
-                SearchModeView()
-                    .searchable(
-                        text: $searchVM.filterText,
-                        placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: searchPrompt(for: tab).localized
-                    )
+                searchDestination
             case .author:
-                AuthorModeView()
-                    .searchable(
-                        text: $authorVM.searchText,
-                        placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: searchPrompt(for: tab).localized
-                    )
+                authorDestination
             case .annotations:
-                AnnotationListView()
-                    .searchable(
-                        text: $annotationVM.searchText,
-                        placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: searchPrompt(for: tab).localized
-                    )
-                    .searchScopes($annotationVM.searchScope) {
-                        ForEach(AnnotationSearchScope.allCases) { scope in
-                            Text(scope.title).tag(scope)
-                        }
-                    }
+                annotationsDestination
             case .history:
                 EmptyView()
             }
@@ -173,5 +143,54 @@ struct iPadLayout: View {
                 bManager.switchToMode(tab.appMode)
             }
         }
+    }
+
+    @ViewBuilder
+    private var libraryDestination: some View {
+        @Bindable var libraryVM = bManager.libraryViewModel
+        iOSLibraryView()
+            .searchable(
+                text: $libraryVM.searchQuery,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: searchPrompt(for: .viewer).localized
+            )
+    }
+
+    @ViewBuilder
+    private var searchDestination: some View {
+        @Bindable var searchVM = bManager.searchViewModel
+        SearchModeView()
+            .searchable(
+                text: $searchVM.filterText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: searchPrompt(for: .search).localized
+            )
+    }
+
+    @ViewBuilder
+    private var authorDestination: some View {
+        @Bindable var authorVM = bManager.authorViewModel
+        AuthorModeView()
+            .searchable(
+                text: $authorVM.searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: searchPrompt(for: .author).localized
+            )
+    }
+
+    @ViewBuilder
+    private var annotationsDestination: some View {
+        @Bindable var annotationVM = bManager.annotationViewModel
+        AnnotationListView()
+            .searchable(
+                text: $annotationVM.searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: searchPrompt(for: .annotations).localized
+            )
+            .searchScopes($annotationVM.searchScope) {
+                ForEach(AnnotationSearchScope.allCases) { scope in
+                    Text(scope.title).tag(scope)
+                }
+            }
     }
 }

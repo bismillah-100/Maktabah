@@ -23,7 +23,19 @@ extension AnnotationsVC {
         bar.translatesAutoresizingMaskIntoConstraints = false
         bar.heightAnchor.constraint(equalToConstant: heightConstant).isActive = true
 
-        // Filter button
+        let filterBtn = createFilterButton()
+        let modeBtn = createModeButton()
+        let chipScroll = createChipsScrollView(height: heightConstant, inset: leftInset)
+
+        bar.addArrangedSubview(chipScroll)
+        bar.addArrangedSubview(modeBtn)
+        bar.addArrangedSubview(filterBtn)
+
+        tagFilterBar = bar
+        return bar
+    }
+
+    private func createFilterButton() -> NSButton {
         let filterBtn = NSButton()
         filterBtn.bezelStyle = .toolbar
         filterBtn.image = .init(systemSymbolName: "tag", accessibilityDescription: "Filter Tags")
@@ -35,8 +47,10 @@ extension AnnotationsVC {
         filterBtn.translatesAutoresizingMaskIntoConstraints = false
         filterBtn.widthAnchor.constraint(equalToConstant: 23).isActive = true
         filterButton = filterBtn
+        return filterBtn
+    }
 
-        // Mode button (AND/OR toggle)
+    private func createModeButton() -> NSButton {
         let modeBtn = NSButton()
         modeBtn.bezelStyle = .accessoryBar
         modeBtn.setButtonType(.pushOnPushOff)
@@ -49,11 +63,11 @@ extension AnnotationsVC {
         modeBtn.translatesAutoresizingMaskIntoConstraints = false
         modeBtn.widthAnchor.constraint(equalToConstant: 23).isActive = true
         modeButton = modeBtn
+        return modeBtn
+    }
 
-        // Chips scroll view
-        let chipsStack = NSStackView(
-            frame: NSRect(x: 0, y: 0, width: 100, height: heightConstant)
-        )
+    private func createChipsScrollView(height: CGFloat, inset: CGFloat) -> NSScrollView {
+        let chipsStack = NSStackView(frame: NSRect(x: 0, y: 0, width: 100, height: height))
         chipsStack.userInterfaceLayoutDirection = .rightToLeft
         chipsStack.orientation = .horizontal
         chipsStack.alignment = .centerY
@@ -69,24 +83,18 @@ extension AnnotationsVC {
         chipScroll.horizontalScrollElasticity = .allowed
         chipScroll.verticalScrollElasticity = .none
         chipScroll.drawsBackground = false
-        chipScroll.heightAnchor.constraint(equalToConstant: heightConstant).isActive = true
+        chipScroll.heightAnchor.constraint(equalToConstant: height).isActive = true
 
         let clipView = RightAlignedClipView()
         clipView.userInterfaceLayoutDirection = .rightToLeft
         clipView.drawsBackground = false
         clipView.automaticallyAdjustsContentInsets = false
-        clipView.contentInsets.left = leftInset
-        clipView.contentInsets.right = leftInset
+        clipView.contentInsets.left = inset
+        clipView.contentInsets.right = inset
         chipScroll.contentView = clipView
         chipScroll.documentView = chipsStack
         chipsScrollView = chipScroll
-
-        bar.addArrangedSubview(chipScroll)
-        bar.addArrangedSubview(modeBtn)
-        bar.addArrangedSubview(filterBtn)
-
-        tagFilterBar = bar
-        return bar
+        return chipScroll
     }
 
     func makeChipButton(for tag: String) -> NSButton {

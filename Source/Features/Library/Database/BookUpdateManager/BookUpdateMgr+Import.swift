@@ -113,19 +113,12 @@ extension BookUpdateManager {
 
         let exists = try knownExists ?? bookExists(id: stagedUpdate.metadata.bkid)
 
-        if !isOfflineImport {
-            let needsUpdate = try bookNeedsUpdate(
-                id: stagedUpdate.metadata.bkid,
-                newVersion: stagedUpdate.entry.versionName
+        if !isOfflineImport, try shouldSkipOnlineUpdate(stagedUpdate: stagedUpdate, exists: exists) {
+            return BookUpdateResult(
+                bookId: stagedUpdate.metadata.bkid,
+                catId: stagedUpdate.entry.category,
+                action: .skipped
             )
-
-            guard !exists || needsUpdate else {
-                return BookUpdateResult(
-                    bookId: stagedUpdate.metadata.bkid,
-                    catId: stagedUpdate.entry.category,
-                    action: .skipped
-                )
-            }
         }
 
         if let authorContext = stagedUpdate.authorContext {
@@ -151,13 +144,7 @@ extension BookUpdateManager {
             )
         }
 
-        if !exists {
-            try insertBookMetadata(stagedUpdate.metadata)
-        } else if isOfflineImport {
-            try updateBookMetadata(stagedUpdate.metadata)
-        } else {
-            try updateBookVersion(stagedUpdate.metadata)
-        }
+        try saveBookMetadata(stagedUpdate.metadata, exists: exists, isOfflineImport: isOfflineImport)
 
         // Hapus cache per-kitab di folder Books jika ada, agar pembaca beralih ke arsip yang diperbarui
         BookDownloadManager.shared.removeCachedBook(bookId: stagedUpdate.metadata.bkid)
@@ -167,6 +154,24 @@ extension BookUpdateManager {
             catId: stagedUpdate.entry.category,
             action: exists ? .updated : .inserted
         )
+    }
+
+    private func shouldSkipOnlineUpdate(stagedUpdate: StagedBookUpdate, exists: Bool) throws -> Bool {
+        let needsUpdate = try bookNeedsUpdate(
+            id: stagedUpdate.metadata.bkid,
+            newVersion: stagedUpdate.entry.versionName
+        )
+        return exists && !needsUpdate
+    }
+
+    private func saveBookMetadata(_ metadata: BookMetadata, exists: Bool, isOfflineImport: Bool) throws {
+        if !exists {
+            try insertBookMetadata(metadata)
+        } else if isOfflineImport {
+            try updateBookMetadata(metadata)
+        } else {
+            try updateBookVersion(metadata)
+        }
     }
 
     func changeBookId(oldId: Int, newId: Int) throws {

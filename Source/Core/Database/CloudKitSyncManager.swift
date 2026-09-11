@@ -557,45 +557,66 @@ final class CloudKitSyncManager: Sendable {
                 await self.pendingCoordinator.addPendingDeletes(ckRecordIds, target: target)
             }
 
-            var lastError: (any Error)?
+            let finalError = await self.performBatchDeletions(
+                recordIds: recordIds,
+                batchSize: batchSize,
+                target: target,
+                retryCount: retryCount
+            )
 
-            await withTaskGroup(of: Result<Void, any Error>.self) { group in
-                for batch in recordIds.chunked(into: batchSize) {
-                    let batchStrIds = batch.map(\.recordName)
-                    group.addTask { [weak self] in
-                        guard let self else { return .success(()) }
-                        return await withCheckedContinuation { continuation in
-                            self.core.delete(recordIds: batch) { [weak self] result in
-                                switch result {
-                                case .success:
-                                    if let target {
-                                        Task.detached { [weak self] in
-                                            await self?.pendingCoordinator.removePendingSync(batchStrIds, target: target)
-                                        }
-                                    }
-                                    continuation.resume(returning: .success(()))
-                                case let .failure(error):
-                                    self?.handleDeleteFailure(error, batchStrIds: batchStrIds, target: target, retryCount: retryCount)
-                                    continuation.resume(returning: .failure(error))
-                                }
-                            }
-                        }
-                    }
-                }
-
-                for await res in group {
-                    if case let .failure(err) = res {
-                        lastError = err
-                    }
-                }
-            }
-
-            let finalError = lastError
             await MainActor.run {
                 if let error = finalError {
                     completion?(.failure(error))
                 } else {
                     completion?(.success(()))
+                }
+            }
+        }
+    }
+
+    private func performBatchDeletions(
+        recordIds: [CKRecord.ID],
+        batchSize: Int,
+        target: SyncTarget?,
+        retryCount: Int
+    ) async -> (any Error)? {
+        var lastError: (any Error)?
+        await withTaskGroup(of: Result<Void, any Error>.self) { group in
+            for batch in recordIds.chunked(into: batchSize) {
+                group.addTask { [weak self] in
+                    guard let self else { return .success(()) }
+                    return await self.executeDeleteBatch(batch, target: target, retryCount: retryCount)
+                }
+            }
+
+            for await res in group {
+                if case let .failure(err) = res {
+                    lastError = err
+                }
+            }
+        }
+        return lastError
+    }
+
+    private func executeDeleteBatch(
+        _ batch: [CKRecord.ID],
+        target: SyncTarget?,
+        retryCount: Int
+    ) async -> Result<Void, any Error> {
+        let batchStrIds = batch.map(\.recordName)
+        return await withCheckedContinuation { continuation in
+            core.delete(recordIds: batch) { [weak self] result in
+                switch result {
+                case .success:
+                    if let target {
+                        Task.detached { [weak self] in
+                            await self?.pendingCoordinator.removePendingSync(batchStrIds, target: target)
+                        }
+                    }
+                    continuation.resume(returning: .success(()))
+                case let .failure(error):
+                    self?.handleDeleteFailure(error, batchStrIds: batchStrIds, target: target, retryCount: retryCount)
+                    continuation.resume(returning: .failure(error))
                 }
             }
         }

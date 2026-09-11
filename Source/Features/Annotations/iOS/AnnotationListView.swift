@@ -17,7 +17,7 @@ struct AnnotationListView: View {
 
     var body: some View {
         let viewModel = navigationManager.annotationViewModel
-        annotationsVC(viewModel)
+        annotationContent(viewModel)
             .overlay {
                 if viewModel.state == .loading {
                     ProgressView()
@@ -34,7 +34,7 @@ struct AnnotationListView: View {
     }
 
     @ViewBuilder
-    private func annotationsVC(_ viewModel: AnnotationViewModel) -> some View {
+    private func annotationContent(_ viewModel: AnnotationViewModel) -> some View {
         @Bindable var viewModel = viewModel
         AnnotationViewControllerWrapper(
             navigationManager: navigationManager,
@@ -62,54 +62,27 @@ struct AnnotationListView: View {
                 annotationToolbarMenu(viewModel: viewModel)
             }
         }
-        .fileExporter(
-            isPresented: $isExporting,
-            document: exportDocument,
-            contentType: .json,
-            defaultFilename: "maktabah_annotations.json"
-        ) { result in
-            if case let .failure(error) = result {
+        .fileExportImportModifiers(
+            isExporting: $isExporting,
+            exportDocument: exportDocument,
+            isImporting: $isImporting,
+            handleImportResult: handleImportResult,
+            onExportFailed: { error in
                 showImportAlert(title: "Export Failed".localized, message: error.localizedDescription)
             }
-        }
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.json],
-            allowsMultipleSelection: false,
-            onCompletion: handleImportResult
         )
-        .confirmationDialog(
-            "Import Annotations".localized,
-            isPresented: $showOverwriteDialog,
-            titleVisibility: .visible
-        ) {
-            Button("Overwrite Existing".localized) {
-                performImport(overwrite: true, viewModel: viewModel)
+        .importOverwriteConfirmation(
+            showDialog: $showOverwriteDialog,
+            pendingAnnotations: $pendingImportAnnotations,
+            onPerformImport: { overwrite in
+                performImport(overwrite: overwrite, viewModel: viewModel)
             }
-            Button("Skip Duplicates".localized) {
-                performImport(overwrite: false, viewModel: viewModel)
-            }
-            Button("Cancel".localized, role: .cancel) {
-                pendingImportAnnotations = []
-            }
-        } message: {
-            Text("Some annotations may already exist. How would you like to handle duplicates?".localized)
-        }
-        .onChange(of: showOverwriteDialog) { _, isPresented in
-            if !isPresented {
-                pendingImportAnnotations = []
-            }
-        }
-        .alert(
-            importAlertTitle,
+        )
+        .importResultAlert(
+            title: importAlertTitle,
+            message: importAlertMessage,
             isPresented: $showImportAlert
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            if let msg = importAlertMessage {
-                Text(msg)
-            }
-        }
+        )
     }
 
     @ViewBuilder
@@ -234,3 +207,77 @@ struct AnnotationListView: View {
         }
     }
 }
+
+private extension View {
+    func fileExportImportModifiers(
+        isExporting: Binding<Bool>,
+        exportDocument: AnnotationJsonDocument?,
+        isImporting: Binding<Bool>,
+        handleImportResult: @escaping (Result<[URL], Error>) -> Void,
+        onExportFailed: @escaping (Error) -> Void
+    ) -> some View {
+        self
+            .fileExporter(
+                isPresented: isExporting,
+                document: exportDocument,
+                contentType: .json,
+                defaultFilename: "maktabah_annotations.json"
+            ) { result in
+                if case let .failure(error) = result {
+                    onExportFailed(error)
+                }
+            }
+            .fileImporter(
+                isPresented: isImporting,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false,
+                onCompletion: handleImportResult
+            )
+    }
+
+    func importOverwriteConfirmation(
+        showDialog: Binding<Bool>,
+        pendingAnnotations: Binding<[Annotation]>,
+        onPerformImport: @escaping (Bool) -> Void
+    ) -> some View {
+        self
+            .confirmationDialog(
+                "Import Annotations".localized,
+                isPresented: showDialog,
+                titleVisibility: .visible
+            ) {
+                Button("Overwrite Existing".localized) {
+                    onPerformImport(true)
+                }
+                Button("Skip Duplicates".localized) {
+                    onPerformImport(false)
+                }
+                Button("Cancel".localized, role: .cancel) {
+                    pendingAnnotations.wrappedValue = []
+                }
+            } message: {
+                Text("Some annotations may already exist. How would you like to handle duplicates?".localized)
+            }
+            .onChange(of: showDialog.wrappedValue) { _, isPresented in
+                if !isPresented {
+                    pendingAnnotations.wrappedValue = []
+                }
+            }
+    }
+
+    func importResultAlert(
+        title: String,
+        message: String?,
+        isPresented: Binding<Bool>
+    ) -> some View {
+        self
+            .alert(title, isPresented: isPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                if let msg = message {
+                    Text(msg)
+                }
+            }
+    }
+}
+

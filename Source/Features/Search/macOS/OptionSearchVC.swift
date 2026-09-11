@@ -258,6 +258,11 @@ class OptionSearchVC: NSViewController {
     }
 
     private func bindViewModelPublishers() {
+        bindSearchLifecyclePublishers()
+        bindSearchProgressPublishers()
+    }
+
+    private func bindSearchLifecyclePublishers() {
         viewModel.searchDidInitialize
             .receive(on: DispatchQueue.main)
             .sink { [weak self] total in
@@ -277,6 +282,26 @@ class OptionSearchVC: NSViewController {
             }
             .store(in: &cancellables)
 
+        viewModel.searchDidComplete
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                guard let self else { return }
+                progressTable.doubleValue = progressTable.maxValue
+                progressRows.doubleValue = progressRows.maxValue
+                updateStartButton(state: .off)
+                resetProgressBar()
+            }
+            .store(in: &cancellables)
+
+        viewModel.searchNeedsReload
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.tableView.reloadData()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindSearchProgressPublishers() {
         viewModel.searchDidReceiveResult
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
@@ -305,24 +330,6 @@ class OptionSearchVC: NSViewController {
                 guard let self else { return }
                 progressRows.maxValue = Double(progress.total)
                 progressRows.doubleValue = Double(progress.completed)
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchDidComplete
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                progressTable.doubleValue = progressTable.maxValue
-                progressRows.doubleValue = progressRows.maxValue
-                updateStartButton(state: .off)
-                resetProgressBar()
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchNeedsReload
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                self?.tableView.reloadData()
             }
             .store(in: &cancellables)
     }
