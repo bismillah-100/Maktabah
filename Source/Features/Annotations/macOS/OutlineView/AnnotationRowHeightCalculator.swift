@@ -5,7 +5,6 @@
 //  Created by Ghoys Mawahib on 25/08/26.
 //
 
-
 import Cocoa
 
 @MainActor
@@ -44,7 +43,7 @@ enum AnnotationRowHeightCalculator {
         let pagePartText: String = switch groupingMode {
         case .book:
             page + tags
-        case .tag:
+        case .tag, .timeline:
             if let book = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book {
                 page + tags + "\n" + book
             } else {

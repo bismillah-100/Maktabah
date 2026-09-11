@@ -37,12 +37,13 @@ extension AnnotationsVC {
 
         menu.addItem(.separator())
 
-        let groupingItems: [(String, Int)] = [
-            ("Group by Book".localized, SortMenuTag.groupingBook),
-            ("Group by Tag".localized, SortMenuTag.groupingTag),
+        let groupingItems: [(LocalizedStringResource, Int)] = [
+            (.Annotation.groupByBook, SortMenuTag.groupingBook),
+            (.Annotation.groupByTag, SortMenuTag.groupingTag),
+            (.Annotation.groupByTimeline, SortMenuTag.groupingTimeline),
         ]
         for (title, tag) in groupingItems {
-            let item = NSMenuItem(title: title, action: #selector(selectGroupingMode(_:)), keyEquivalent: "")
+            let item = NSMenuItem(title: .init(localized: title), action: #selector(selectGroupingMode(_:)), keyEquivalent: "")
             item.target = self
             item.tag = tag
             menu.addItem(item)
@@ -73,6 +74,7 @@ extension AnnotationsVC {
         switch sender.tag {
         case SortMenuTag.groupingBook: selectedGroupingMode = .book
         case SortMenuTag.groupingTag: selectedGroupingMode = .tag
+        case SortMenuTag.groupingTimeline: selectedGroupingMode = .timeline
         default: return
         }
         dataSource.updateGrouping(mode: selectedGroupingMode)
@@ -94,7 +96,12 @@ extension AnnotationsVC {
         guard let menu = sortingButton.menu else { return }
         menu.items.forEach { $0.state = .off }
         menu.item(withTag: selectedSortAscending ? SortMenuTag.ascending : SortMenuTag.descending)?.state = .on
-        menu.item(withTag: selectedGroupingMode == .book ? SortMenuTag.groupingBook : SortMenuTag.groupingTag)?.state = .on
+        let groupTag: Int = switch selectedGroupingMode {
+        case .book: SortMenuTag.groupingBook
+        case .tag: SortMenuTag.groupingTag
+        case .timeline: SortMenuTag.groupingTimeline
+        }
+        menu.item(withTag: groupTag)?.state = .on
         let fieldTag: Int = switch selectedSortField {
         case .createdAt: SortMenuTag.fieldCreatedAt
         case .context: SortMenuTag.fieldContext

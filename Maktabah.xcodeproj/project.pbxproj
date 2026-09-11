@@ -500,11 +500,6 @@
 		F364898930131EAE00B9285B /* NotificationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364898830131EAE00B9285B /* NotificationToken.swift */; };
 		F364898A30131EAE00B9285B /* NotificationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364898830131EAE00B9285B /* NotificationToken.swift */; };
 		F364898B30131EAE00B9285B /* NotificationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364898830131EAE00B9285B /* NotificationToken.swift */; };
-		F36D684C2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
-		F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
-		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
-		F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374C00B2FDD69A2009D6807 /* SearchComponents.swift */; };
-		F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F365E709304F6513009FF69C /* AnnotationTreeBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */; };
 		F365E70A304F6513009FF69C /* AnnotationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E706304F6513009FF69C /* AnnotationRepository.swift */; };
 		F365E70B304F6513009FF69C /* AnnotationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E707304F6513009FF69C /* AnnotationStore.swift */; };
@@ -517,6 +512,14 @@
 		F365E713304F65CD009FF69C /* AnnotationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E712304F65CD009FF69C /* AnnotationEvent.swift */; };
 		F365E714304F65CD009FF69C /* AnnotationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E712304F65CD009FF69C /* AnnotationEvent.swift */; };
 		F365E715304F65CD009FF69C /* AnnotationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F365E712304F65CD009FF69C /* AnnotationEvent.swift */; };
+		F36D684C2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
+		F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
+		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
+		F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374C00B2FDD69A2009D6807 /* SearchComponents.swift */; };
+		F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
+		F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
+		F37C05A73050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
+		F37C05A83050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
 		F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
@@ -1142,12 +1145,13 @@
 		F36382652FA761070006636C /* iOSSearchFilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSSearchFilterViewController.swift; sourceTree = "<group>"; };
 		F36382682FA7BFB40006636C /* iOSAnnotationEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAnnotationEditorSheet.swift; sourceTree = "<group>"; };
 		F364898830131EAE00B9285B /* NotificationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationToken.swift; sourceTree = "<group>"; };
-		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
-		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
 		F365E706304F6513009FF69C /* AnnotationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRepository.swift; sourceTree = "<group>"; };
 		F365E707304F6513009FF69C /* AnnotationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationStore.swift; sourceTree = "<group>"; };
 		F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationTreeBuilder.swift; sourceTree = "<group>"; };
 		F365E712304F65CD009FF69C /* AnnotationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEvent.swift; sourceTree = "<group>"; };
+		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
+		F37C05A53050066A009DFDF7 /* Annotation.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Annotation.xcstrings; sourceTree = "<group>"; };
 		F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationChangeTypes.swift; sourceTree = "<group>"; };
 		F38A74ED2FF43E9300198CDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookInfoView.swift; sourceTree = "<group>"; };
@@ -1932,6 +1936,7 @@
 				F365E712304F65CD009FF69C /* AnnotationEvent.swift */,
 				F6A9B3C1A41B45B78A2BF9C3 /* AnnotationJsonDocument.swift */,
 				F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */,
+				F37C05A53050066A009DFDF7 /* Annotation.xcstrings */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -2684,6 +2689,7 @@
 			files = (
 				F3C507863044B64D00BBEC32 /* Fonts in Resources */,
 				4B0139E82EEB3CB000424CFA /* InitProgress.xib in Resources */,
+				F37C05A83050066A009DFDF7 /* Annotation.xcstrings in Resources */,
 				4BA7269A2EFC760C003CA0ED /* SidebarVC.xib in Resources */,
 				4BA726922EFC714F003CA0ED /* BookInfo.xib in Resources */,
 				4BF392BF2EFC9AB800460756 /* SearchSidebarVC.xib in Resources */,
@@ -2722,6 +2728,7 @@
 			files = (
 				4B7C910B2F83494200454BE1 /* InitProgress.xib in Resources */,
 				4B7C910C2F83494200454BE1 /* SidebarVC.xib in Resources */,
+				F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */,
 				4B7C910D2F83494200454BE1 /* BookInfo.xib in Resources */,
 				4B7C910E2F83494200454BE1 /* SearchSidebarVC.xib in Resources */,
 				4B7C910F2F83494200454BE1 /* Assets.xcassets in Resources */,
@@ -2760,6 +2767,7 @@
 			files = (
 				F32A8B5A304572D000C28F42 /* Fonts in Resources */,
 				F305774F2FA46222005732C6 /* Assets.xcassets in Resources */,
+				F37C05A73050066A009DFDF7 /* Annotation.xcstrings in Resources */,
 				F3D0965C3037CB8800E4A7D7 /* Donation.xcstrings in Resources */,
 				F30577512FA46222005732C6 /* PrivacyInfo.xcprivacy in Resources */,
 				F30577992FA4BE8D005732C6 /* LaunchScreen.storyboard in Resources */,

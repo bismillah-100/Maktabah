@@ -144,7 +144,20 @@ class iOSAnnotationViewController: UIViewController {
 
             var rootSnap = dataSource.snapshot()
             if !rootSnap.sectionIdentifiers.contains(sectionID) {
-                rootSnap.appendSections([sectionID])
+                if let rootNodes = AnnotationTreeBuilder.shared.currentRootNode()?.children,
+                   let newIndex = rootNodes.firstIndex(where: { $0 === entry.tagNode }),
+                   newIndex + 1 < rootNodes.count
+                {
+                    let nextNode = rootNodes[newIndex + 1]
+                    let nextSectionID = SwiftUIAnnotationNode.id(from: nextNode)
+                    if rootSnap.sectionIdentifiers.contains(nextSectionID) {
+                        rootSnap.insertSections([sectionID], beforeSection: nextSectionID)
+                    } else {
+                        rootSnap.appendSections([sectionID])
+                    }
+                } else {
+                    rootSnap.appendSections([sectionID])
+                }
                 dataSource.apply(rootSnap, animatingDifferences: true)
             }
 
@@ -502,6 +515,7 @@ class iOSAnnotationViewController: UIViewController {
         case .book: "book.pages.fill"
         case .tag: "tag.fill"
         case .untagged: "tag.slash.fill"
+        case .dateBucket: "calendar"
         default: "folder.fill"
         }
     }

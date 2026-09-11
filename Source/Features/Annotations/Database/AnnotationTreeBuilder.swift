@@ -122,7 +122,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
         guard let annotationId = annotation.id else { return }
 
-        if groupingMode == .book {
+        switch groupingMode {
+        case .book:
             let bookNode = findOrCreateBookNode(for: annotation.bkId, in: root)
             let annotationNode = AnnotationNode(
                 title: displayTitle(for: annotation),
@@ -154,8 +155,17 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 newParentIndex: newParentIdx
             )
             diffPublisher.send(diff)
-        } else {
+        case .tag:
             let tagDiff = addAnnotationToTagTree(annotation, root: root)
+            let diff = AnnotationTreeDiff(
+                changeType: .added,
+                annotation: annotation,
+                annotationId: annotationId,
+                tagDiff: tagDiff
+            )
+            diffPublisher.send(diff)
+        case .timeline:
+            let tagDiff = addAnnotationToTimelineTree(annotation, root: root)
             let diff = AnnotationTreeDiff(
                 changeType: .added,
                 annotation: annotation,
@@ -179,7 +189,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             return
         }
 
-        if groupingMode == .book {
+        switch groupingMode {
+        case .book, .timeline:
             guard let node = findAnnotationNode(by: annotationId) else {
                 handleAdd(annotation)
                 return
@@ -192,7 +203,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 annotationId: annotationId
             )
             diffPublisher.send(diff)
-        } else {
+        case .tag:
             let tagDiff = updateAnnotationInTagTree(annotation, root: root)
             let diff = AnnotationTreeDiff(
                 changeType: .updated,
@@ -218,10 +229,11 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             return
         }
 
-        if groupingMode == .book {
+        switch groupingMode {
+        case .book:
             let diff = deleteAnnotationFromBookTree(id: id, annotation: annotation, root: root)
             diffPublisher.send(diff)
-        } else {
+        case .tag, .timeline:
             let tagDiff = removeAnnotationFromTagTree(id: id, root: root)
             let diff = AnnotationTreeDiff(
                 changeType: .deleted,
@@ -285,7 +297,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         }
         guard !effectiveAnnotations.isEmpty else { return }
 
-        if groupingMode == .book {
+        switch groupingMode {
+        case .book, .timeline:
             for annotation in effectiveAnnotations {
                 guard let id = annotation.id, let node = findAnnotationNode(by: id) else { continue }
                 node.update(with: annotation)
@@ -297,7 +310,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 annotationId: repId
             )
             diffPublisher.send(diff)
-        } else {
+        case .tag:
             let tagDiff = performBatchTagTreeUpdate(effectiveAnnotations, root: root)
             let repId: Int64? = effectiveAnnotations.count == 1 ? effectiveAnnotations.first?.id : nil
             let diff = AnnotationTreeDiff(
@@ -327,6 +340,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             populateBookTree(root: root, annotations: anns)
         case .tag:
             populateTagTree(root: root, annotations: anns)
+        case .timeline:
+            populateTimelineTree(root: root, annotations: anns)
         }
 
         sortNodeChildren(root)
@@ -440,6 +455,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         }
 
         if lhs.annotation == nil, rhs.annotation == nil {
+            if lhs.kind == .dateBucket, rhs.kind == .dateBucket {
+                let leftTime = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                let rightTime = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                if leftTime != rightTime {
+                    let orderedAscending = leftTime < rightTime
+                    return sortOption.isAscending ? orderedAscending : !orderedAscending
+                }
+            }
             if sortOption.field == .createdAt {
                 let leftLatest = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
                 let rightLatest = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
@@ -770,6 +793,62 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             }
         }
         return addedEntries
+    }
+
+    // MARK: - Timeline Mode Operations
+
+    private func populateTimelineTree(root: AnnotationNode, annotations: [Annotation]) {
+        let now = Date()
+        let calendar = Calendar.current
+
+        var grouped: [DateBucket: [Annotation]] = [:]
+        for annotation in annotations {
+            let bucket = DateBucket.bucket(for: annotation.createdAt, relativeTo: now, calendar: calendar)
+            grouped[bucket, default: []].append(annotation)
+        }
+
+        let sortedBuckets = grouped.keys.sorted { lhs, rhs in
+            sortOption.isAscending ? (lhs < rhs) : (lhs > rhs)
+        }
+
+        for bucket in sortedBuckets {
+            let bucketNode = AnnotationNode(title: bucket.localizedTitle, kind: .dateBucket)
+            for annotation in grouped[bucket] ?? [] {
+                bucketNode.children.append(
+                    AnnotationNode(
+                        title: displayTitle(for: annotation),
+                        kind: .annotation,
+                        annotation: annotation
+                    )
+                )
+            }
+            root.children.append(bucketNode)
+        }
+    }
+
+    private func addAnnotationToTimelineTree(_ annotation: Annotation, root: AnnotationNode) -> TagUpdateDiff {
+        let bucket = DateBucket.bucket(for: annotation.createdAt)
+        let title = displayTitle(for: annotation)
+
+        if let existingBucketNode = root.children.first(where: { $0.kind == .dateBucket && $0.title == bucket.localizedTitle }) {
+            let entry = insertAnnotationIntoContainer(annotation, title: title, container: existingBucketNode, isContainerNew: false)
+            return TagUpdateDiff(removed: [], added: [entry], updated: [])
+        } else {
+            let newBucketNode = AnnotationNode(title: bucket.localizedTitle, kind: .dateBucket)
+            let newNode = AnnotationNode(title: title, kind: .annotation, annotation: annotation)
+            newBucketNode.children.append(newNode)
+
+            let insertIdx = root.children.insertionIndex(for: newBucketNode) { left, right in
+                let leftTime = left.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                let rightTime = right.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                let orderedAscending = leftTime < rightTime
+                return self.sortOption.isAscending ? orderedAscending : !orderedAscending
+            }
+            root.children.insert(newBucketNode, at: insertIdx)
+
+            let entry = TagUpdateDiff.AddedEntry(annotationNode: newNode, tagNode: newBucketNode, tagNodeIsNew: true)
+            return TagUpdateDiff(removed: [], added: [entry], updated: [])
+        }
     }
 
     private func displayTitle(for annotation: Annotation) -> String {

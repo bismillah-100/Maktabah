@@ -99,7 +99,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     // MARK: - Incremental Updates
 
     private func handleIncrementalChange(diff: AnnotationTreeDiff) {
-        if groupingMode == .tag {
+        if groupingMode == .tag || (groupingMode == .timeline && diff.tagDiff != nil) {
             handleTagModeUpdate(diff: diff.tagDiff)
             return
         }
