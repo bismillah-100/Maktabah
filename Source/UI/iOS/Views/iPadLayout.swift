@@ -15,8 +15,8 @@ struct iPadLayout: View {
     @State private var showingAddFavorites = false
     @State private var path: [iOSTab] = []
 
-    @State private var historyViewModel = HistoryViewModel.shared
-    @State private var donationManager = DonationManager.shared
+    var historyViewModel = HistoryViewModel.shared
+    var donationManager = DonationManager.shared
 
     /// Sidebar search tetap lokal — dipakai hanya untuk filter sidebar (Favorites & History)
     @State private var sidebarSearchText: String = ""

@@ -13,7 +13,7 @@ struct iOSBookSearchView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Bindable var viewModel: SearchViewModel
-    @State private var ftsManager = FtsMigrationManager.shared
+    var ftsManager = FtsMigrationManager.shared
     @State private var showFtsMigrationOverlay = false
 
     var body: some View {

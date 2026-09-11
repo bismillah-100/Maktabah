@@ -9,7 +9,7 @@ struct SearchModeView: View {
     @State private var kitabFilter: String = ""
     @State private var sortKey: SearchSortKey = .bookTitle
     @State private var sortAscending: Bool = true
-    @State private var ftsManager = FtsMigrationManager.shared
+    var ftsManager = FtsMigrationManager.shared
     @State private var showFtsMigrationOverlay = false
     @AppStorage("hideFtsMigrationBanner") private var hideFtsMigrationBanner = false
 

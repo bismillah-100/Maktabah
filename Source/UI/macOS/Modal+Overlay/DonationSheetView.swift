@@ -17,7 +17,6 @@ private struct DonationSheetHeightKey: PreferenceKey {
 #endif
 
 struct DonationSheetView: View {
-    var url: URL = .init(string: "https://sociabuzz.com/ghoysmawahib/support")!
     var onDismiss: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
@@ -30,7 +29,16 @@ struct DonationSheetView: View {
     @State private var contentHeight: CGFloat = 0
     #endif
 
-    @State private var donationManager = DonationManager.shared
+    var donationManager = DonationManager.shared
+    var url: URL {
+        donationManager.donationURL
+    }
+
+    init(
+        onDismiss: (() -> Void)? = nil
+    ) {
+        self.onDismiss = onDismiss
+    }
 
     var body: some View {
         NavigationStack {

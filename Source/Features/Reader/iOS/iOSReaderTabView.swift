@@ -4,7 +4,7 @@ import Combine
 struct iOSReaderTabView: View {
     @Environment(iOSNavigationManager.self) var bManager
     @State private var showingBookInfo = false
-    @State private var textViewState = TextViewState.shared
+    var textViewState = TextViewState.shared
 
     var backgroundColor: Color {
         let colors: [Color] = [

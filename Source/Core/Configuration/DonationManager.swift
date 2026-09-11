@@ -129,7 +129,7 @@ final class DonationManager {
             return
         }
 
-        let contentView = DonationSheetView(url: donationURL) { [weak self] in
+        let contentView = DonationSheetView() { [weak self] in
             self?.closeDonationSheet()
         }
 

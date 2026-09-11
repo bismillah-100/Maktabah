@@ -8,7 +8,7 @@ struct iOSReaderView: View {
     }
 
     var viewModel: ReaderViewModel
-    @State private var textViewState = TextViewState.shared
+    var textViewState = TextViewState.shared
     @Environment(iOSNavigationManager.self) var bManager
 
     @State private var showingTOC = false

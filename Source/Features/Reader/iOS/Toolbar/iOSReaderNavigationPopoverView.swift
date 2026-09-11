@@ -10,7 +10,7 @@ import SwiftUI
 
 struct iOSReaderNavigationPopoverView: View {
     @Bindable var viewModel: ReaderViewModel
-    @State private var textViewState = TextViewState.shared
+    var textViewState = TextViewState.shared
 
     // Feedback and local slider states
     @State private var localPart: Double = 1

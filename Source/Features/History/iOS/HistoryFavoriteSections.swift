@@ -77,7 +77,7 @@ struct HistoryEmptyState: View {
 struct DonationHistoryButton: View {
     let cardHeight: CGFloat
     let action: () -> Void
-    @State private var donationManager = DonationManager.shared
+    var donationManager = DonationManager.shared
 
     init(
         cardHeight: CGFloat = 50,
