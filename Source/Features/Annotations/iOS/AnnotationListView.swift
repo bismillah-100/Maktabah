@@ -119,7 +119,7 @@ struct AnnotationListView: View {
             Picker("Group By", selection: $viewModel.groupingMode) {
                 Text("Book").tag(AnnotationGroupingMode.book)
                 Text("Tag").tag(AnnotationGroupingMode.tag)
-                Text("Timeline").tag(AnnotationGroupingMode.timeline)
+                Text(.Annotation.timeline).tag(AnnotationGroupingMode.timeline)
             }
 
             Divider()
