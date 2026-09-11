@@ -1,0 +1,7 @@
+--swiftversion 6.2.4
+
+--ifdef no-indent
+
+--disable strongOutlets, unusedArguments, propertyTypes
+
+--enable redundantSelf, redundantReturn, redundantPublic, redundantOptionalBinding, preferCountWhere, preferKeyPath, redundantClosure, trailingClosures

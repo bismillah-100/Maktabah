@@ -1,0 +1,70 @@
+# SwiftLint Configuration mapped from Codacy Rules
+# Repository: Maktabah
+
+included:
+  - Source
+
+excluded:
+  - Packages
+  - .build
+  - DerivedData
+  - Pods
+
+# Rules configured from Codacy (30 rules)
+only_rules:
+  # Best Practices / Medium
+  - optional_data_string_conversion             # Prefer Failable String Initialization for Data to String Conversion
+  - invalid_swiftlint_command                  # Avoid Invalid SwiftLint Commands
+  - blanket_disable_command                    # Avoid Blanket Disable Command
+  - self_in_property_initialization            # Avoid Using self in Property Initialization
+  - legacy_random                              # Prefer type.random(in:) over legacy random functions
+  - unused_setter_value                        # Avoid Unused Setter Value
+  - reduce_boolean                             # Prefer .allSatisfy() or .contains() over reduce(true/false)
+  - deployment_target                          # Avoid Using Availability Checks Older Than Deployment Target
+  - legacy_hashing                             # Prefer Using hash(into:) Instead of Overriding hashValue
+  - for_where                                  # Prefer For-Where Clause
+  - compiler_protocol_init                     # Avoid Direct Calls to Compiler Protocol Initializers
+  - discouraged_direct_init                    # Avoid Discouraged Direct Initialization
+  - notification_center_detachment             # Enforce Notification Center Detachment in deinit
+  - class_delegate_protocol                    # Enforce Class-Only Delegate Protocols
+  - todo                                       # Resolve TODO and FIXME Comments
+  - valid_ibinspectable                        # Enforce Valid IBInspectable Usage
+  - large_tuple                                # Avoid Large Tuples
+
+  # Error Prone / High & Critical
+  - duplicate_conditions                       # Avoid Duplicate Conditions in Branch Instructions (High)
+  - ns_number_init_as_function_reference       # Avoid Passing NSNumber or NSDecimalNumber Init as Function Reference (High)
+  - duplicated_key_in_dictionary_literal       # Avoid Duplicated Keys in Dictionary Literals (High)
+  - unowned_variable_capture                   # Avoid Unowned Variable Capture (High)
+  - private_unit_test                          # Avoid Private Unit Test (High)
+  - duplicate_enum_cases                       # Avoid Duplicate Enum Cases (Critical)
+  - dynamic_inline                             # Avoid Using 'dynamic' and '@inline(__always)' Together (Critical)
+  - force_cast                                 # Avoid Force Cast (Critical)
+  - force_try                                  # Avoid Force Try (Critical)
+
+  # Complexity & Metrics / Medium
+  - nesting                                    # Enforce Maximum Nesting Levels
+  - function_body_length                       # Enforce Function Body Length Limit
+  - function_parameter_count                   # Limit Function Parameter Count
+  - cyclomatic_complexity                      # Limit Cyclomatic Complexity
+
+# Custom Severities and Rule Configurations
+force_cast: error
+force_try: error
+duplicate_enum_cases: error
+dynamic_inline: error
+
+duplicate_conditions:
+  severity: error
+
+duplicated_key_in_dictionary_literal:
+  severity: error
+
+unowned_variable_capture:
+  severity: error
+
+private_unit_test:
+  severity: error
+
+ns_number_init_as_function_reference:
+  severity: error
