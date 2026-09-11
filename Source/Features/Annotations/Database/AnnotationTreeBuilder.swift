@@ -124,56 +124,68 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
         switch groupingMode {
         case .book:
-            let bookNode = findOrCreateBookNode(for: annotation.bkId, in: root)
-            let annotationNode = AnnotationNode(
-                title: displayTitle(for: annotation),
-                kind: .annotation,
-                annotation: annotation
-            )
-
-            let index = bookNode.children.insertionIndex(for: annotationNode, using: compareNodes)
-            bookNode.children.insert(annotationNode, at: index)
-
-            var oldParentIdx: Int?
-            var newParentIdx: Int?
-
-            if sortOption.field == .createdAt {
-                if let oldIndex = root.children.firstIndex(where: { $0 === bookNode }) {
-                    oldParentIdx = oldIndex
-                    root.children.remove(at: oldIndex)
-                }
-                let newIndex = root.children.insertionIndex(for: bookNode, using: compareNodes)
-                root.children.insert(bookNode, at: newIndex)
-                newParentIdx = newIndex
-            }
-
-            let diff = AnnotationTreeDiff(
-                changeType: .added,
-                annotation: annotation,
-                annotationId: annotationId,
-                oldParentIndex: oldParentIdx,
-                newParentIndex: newParentIdx
-            )
-            diffPublisher.send(diff)
+            handleAddBookGrouping(annotation, root: root, annotationId: annotationId)
         case .tag:
-            let tagDiff = addAnnotationToTagTree(annotation, root: root)
-            let diff = AnnotationTreeDiff(
-                changeType: .added,
-                annotation: annotation,
-                annotationId: annotationId,
-                tagDiff: tagDiff
-            )
-            diffPublisher.send(diff)
+            handleAddTagGrouping(annotation, root: root, annotationId: annotationId)
         case .timeline:
-            let tagDiff = addAnnotationToTimelineTree(annotation, root: root)
-            let diff = AnnotationTreeDiff(
-                changeType: .added,
-                annotation: annotation,
-                annotationId: annotationId,
-                tagDiff: tagDiff
-            )
-            diffPublisher.send(diff)
+            handleAddTimelineGrouping(annotation, root: root, annotationId: annotationId)
         }
+    }
+
+    private func handleAddBookGrouping(_ annotation: Annotation, root: AnnotationNode, annotationId: Int64) {
+        let bookNode = findOrCreateBookNode(for: annotation.bkId, in: root)
+        let annotationNode = AnnotationNode(
+            title: displayTitle(for: annotation),
+            kind: .annotation,
+            annotation: annotation
+        )
+
+        let index = bookNode.children.insertionIndex(for: annotationNode, using: compareNodes)
+        bookNode.children.insert(annotationNode, at: index)
+
+        var oldParentIdx: Int?
+        var newParentIdx: Int?
+
+        if sortOption.field == .createdAt {
+            if let oldIndex = root.children.firstIndex(where: { $0 === bookNode }) {
+                oldParentIdx = oldIndex
+                root.children.remove(at: oldIndex)
+            }
+            let newIndex = root.children.insertionIndex(for: bookNode, using: compareNodes)
+            root.children.insert(bookNode, at: newIndex)
+            newParentIdx = newIndex
+        }
+
+        let diff = AnnotationTreeDiff(
+            changeType: .added,
+            annotation: annotation,
+            annotationId: annotationId,
+            oldParentIndex: oldParentIdx,
+            newParentIndex: newParentIdx
+        )
+        diffPublisher.send(diff)
+    }
+
+    private func handleAddTagGrouping(_ annotation: Annotation, root: AnnotationNode, annotationId: Int64) {
+        let tagDiff = addAnnotationToTagTree(annotation, root: root)
+        let diff = AnnotationTreeDiff(
+            changeType: .added,
+            annotation: annotation,
+            annotationId: annotationId,
+            tagDiff: tagDiff
+        )
+        diffPublisher.send(diff)
+    }
+
+    private func handleAddTimelineGrouping(_ annotation: Annotation, root: AnnotationNode, annotationId: Int64) {
+        let tagDiff = addAnnotationToTimelineTree(annotation, root: root)
+        let diff = AnnotationTreeDiff(
+            changeType: .added,
+            annotation: annotation,
+            annotationId: annotationId,
+            tagDiff: tagDiff
+        )
+        diffPublisher.send(diff)
     }
 
     private func handleUpdate(_ annotation: Annotation) {
@@ -427,53 +439,61 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
     private func compareNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode) -> Bool {
         if let left = lhs.annotation, let right = rhs.annotation {
-            let orderedAscending: Bool
-            switch sortOption.field {
-            case .createdAt:
-                orderedAscending = left.createdAt == right.createdAt
-                    ? left.context.localizedCaseInsensitiveCompare(right.context) == .orderedAscending
-                    : left.createdAt < right.createdAt
-            case .context:
-                let contextOrder = left.context.localizedCaseInsensitiveCompare(right.context)
-                orderedAscending = contextOrder == .orderedSame
-                    ? left.createdAt < right.createdAt
-                    : contextOrder == .orderedAscending
-            case .page:
-                orderedAscending = left.page == right.page
-                    ? left.createdAt < right.createdAt
-                    : left.page < right.page
-            case .part:
-                if left.part == right.part {
-                    orderedAscending = left.page == right.page
-                        ? left.createdAt < right.createdAt
-                        : left.page < right.page
-                } else {
-                    orderedAscending = left.part < right.part
-                }
-            }
-            return sortOption.isAscending ? orderedAscending : !orderedAscending
+            return compareAnnotationProperties(left, right)
         }
 
         if lhs.annotation == nil, rhs.annotation == nil {
-            if lhs.kind == .dateBucket, rhs.kind == .dateBucket {
-                let leftTime = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-                let rightTime = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-                if leftTime != rightTime {
-                    let orderedAscending = leftTime < rightTime
-                    return sortOption.isAscending ? orderedAscending : !orderedAscending
-                }
-            }
-            if sortOption.field == .createdAt {
-                let leftLatest = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-                let rightLatest = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-                if leftLatest != rightLatest {
-                    let orderedAscending = leftLatest < rightLatest
-                    return sortOption.isAscending ? orderedAscending : !orderedAscending
-                }
-            }
-            return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+            return compareGroupNodes(lhs, rhs)
         }
 
+        return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+    }
+
+    private func compareAnnotationProperties(_ left: Annotation, _ right: Annotation) -> Bool {
+        let orderedAscending: Bool
+        switch sortOption.field {
+        case .createdAt:
+            orderedAscending = left.createdAt == right.createdAt
+                ? left.context.localizedCaseInsensitiveCompare(right.context) == .orderedAscending
+                : left.createdAt < right.createdAt
+        case .context:
+            let contextOrder = left.context.localizedCaseInsensitiveCompare(right.context)
+            orderedAscending = contextOrder == .orderedSame
+                ? left.createdAt < right.createdAt
+                : contextOrder == .orderedAscending
+        case .page:
+            orderedAscending = left.page == right.page
+                ? left.createdAt < right.createdAt
+                : left.page < right.page
+        case .part:
+            if left.part == right.part {
+                orderedAscending = left.page == right.page
+                    ? left.createdAt < right.createdAt
+                    : left.page < right.page
+            } else {
+                orderedAscending = left.part < right.part
+            }
+        }
+        return sortOption.isAscending ? orderedAscending : !orderedAscending
+    }
+
+    private func compareGroupNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode) -> Bool {
+        if lhs.kind == .dateBucket, rhs.kind == .dateBucket {
+            let leftTime = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+            let rightTime = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+            if leftTime != rightTime {
+                let orderedAscending = leftTime < rightTime
+                return sortOption.isAscending ? orderedAscending : !orderedAscending
+            }
+        }
+        if sortOption.field == .createdAt {
+            let leftLatest = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+            let rightLatest = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+            if leftLatest != rightLatest {
+                let orderedAscending = leftLatest < rightLatest
+                return sortOption.isAscending ? orderedAscending : !orderedAscending
+            }
+        }
         return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
     }
 

@@ -271,53 +271,24 @@ final class BookUpdateViewModel: @unchecked Sendable {
 
         var completedDownloads = 0
 
-        for chunkStart in stride(
-            from: 0,
-            to: taskInputs.count,
-            by: maxConcurrentDownloads
-        ) {
+        for chunkStart in stride(from: 0, to: taskInputs.count, by: maxConcurrentDownloads) {
             let chunkEnd = min(chunkStart + maxConcurrentDownloads, taskInputs.count)
             let chunk = Array(taskInputs[chunkStart ..< chunkEnd])
 
             await withTaskGroup(of: DownloadTaskOutput.self) { group in
                 for taskInput in chunk {
                     group.addTask {
-                        do {
-                            let stagedUpdate = try await BookUpdateManager.shared
-                                .stageBookDownload(
-                                    taskInput.entry,
-                                    authIndex: authIndexMap
-                                )
-                            return DownloadTaskOutput(
-                                index: taskInput.index,
-                                stagedUpdate: stagedUpdate,
-                                error: nil
-                            )
-                        } catch {
-                            return DownloadTaskOutput(
-                                index: taskInput.index,
-                                stagedUpdate: nil,
-                                error: error
-                            )
-                        }
+                        await self.stageSingleBookDownload(input: taskInput, authIndexMap: authIndexMap)
                     }
                 }
 
                 for await output in group {
                     completedDownloads += 1
-                    let item = selectedContexts[output.index].item
-                    if let stagedUpdate = output.stagedUpdate {
-                        stagedUpdates[output.index] = stagedUpdate
-                        item.status = .downloaded
-                    } else if let error = output.error {
-                        item.status = .failed(error.localizedDescription)
-                        #if DEBUG
-                        print(
-                            "[Download] Failed to download book \(item.id): \(error)"
-                        )
-                        #endif
-                    }
-
+                    self.processDownloadOutput(
+                        output,
+                        selectedContexts: selectedContexts,
+                        stagedUpdates: &stagedUpdates
+                    )
                     progressMessage = String(localized:
                         "Downloading books... (\(completedDownloads)/\(selectedContexts.count))")
                 }
@@ -325,6 +296,39 @@ final class BookUpdateViewModel: @unchecked Sendable {
         }
 
         return stagedUpdates
+    }
+
+    private func stageSingleBookDownload(
+        input: DownloadTaskInput,
+        authIndexMap: [Int: AuthIndexEntry]
+    ) async -> DownloadTaskOutput {
+        do {
+            let stagedUpdate = try await BookUpdateManager.shared.stageBookDownload(
+                input.entry,
+                authIndex: authIndexMap
+            )
+            return DownloadTaskOutput(index: input.index, stagedUpdate: stagedUpdate, error: nil)
+        } catch {
+            return DownloadTaskOutput(index: input.index, stagedUpdate: nil, error: error)
+        }
+    }
+
+    @MainActor
+    private func processDownloadOutput(
+        _ output: DownloadTaskOutput,
+        selectedContexts: [SelectedBookContext],
+        stagedUpdates: inout [Int: BookUpdateManager.StagedBookUpdate]
+    ) {
+        let item = selectedContexts[output.index].item
+        if let stagedUpdate = output.stagedUpdate {
+            stagedUpdates[output.index] = stagedUpdate
+            item.status = .downloaded
+        } else if let error = output.error {
+            item.status = .failed(error.localizedDescription)
+            #if DEBUG
+            print("[Download] Failed to download book \(item.id): \(error)")
+            #endif
+        }
     }
 
     private func refreshAvailableUpdatesState() {

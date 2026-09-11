@@ -186,62 +186,73 @@ class iOSNavigationManager {
 
         switch pendingData {
         case .bulk:
-            state.mode = .downloading
-            libraryViewModel.startBulkDownload(progressState: state) { [weak self] message in
-                self?.activeIntegrationStates.removeAll { $0.id == state.id }
-                self?.libraryViewModel.exitSelectionMode()
-
-                if let message {
-                    self?.alertMessage = AlertMessage(
-                        title: NSLocalizedString(
-                            "Download Book",
-                            comment: "Bulk download window title"
-                        ),
-                        message: message
-                    )
-                }
-            }
-
+            handleBulkIntegration(state: state)
         case let .single(book, initialContentId):
-            state.mode = .downloading
-            state.message = NSLocalizedString(
-                "Downloading book file from server...",
-                comment: "Book integrate downloading message"
-            )
-            state.detail = ""
-            state.progress = 0
+            handleSingleIntegration(state: state, book: book, initialContentId: initialContentId)
+        }
+    }
 
-            Task {
-                do {
-                    try await BookArchiveIntegrator.shared.ensureBookIntegrated(
-                        book,
-                        onIntegrating: { [weak self] in
-                            await MainActor.run { [weak self] in
-                                self?.showIntegratingState(for: state)
-                            }
+    private func handleBulkIntegration(state: BundleArchiveDownloadProgressState) {
+        state.mode = .downloading
+        libraryViewModel.startBulkDownload(progressState: state) { [weak self] message in
+            self?.activeIntegrationStates.removeAll { $0.id == state.id }
+            self?.libraryViewModel.exitSelectionMode()
+
+            if let message {
+                self?.alertMessage = AlertMessage(
+                    title: NSLocalizedString(
+                        "Download Book",
+                        comment: "Bulk download window title"
+                    ),
+                    message: message
+                )
+            }
+        }
+    }
+
+    private func handleSingleIntegration(
+        state: BundleArchiveDownloadProgressState,
+        book: BooksData,
+        initialContentId: Int?
+    ) {
+        state.mode = .downloading
+        state.message = NSLocalizedString(
+            "Downloading book file from server...",
+            comment: "Book integrate downloading message"
+        )
+        state.detail = ""
+        state.progress = 0
+
+        Task {
+            do {
+                try await BookArchiveIntegrator.shared.ensureBookIntegrated(
+                    book,
+                    onIntegrating: { [weak self] in
+                        await MainActor.run { [weak self] in
+                            self?.showIntegratingState(for: state)
                         }
+                    }
+                )
+
+                await MainActor.run {
+                    if !MaktabahApp.isIpad, self.selectedBook != nil {
+                        // Do not automatically push a new book if there is already an active reader on iPhone
+                    } else {
+                        self.presentReader(book, initialContentId: initialContentId)
+                    }
+                    self.activeIntegrationStates.removeAll { $0.id == state.id }
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    self.activeIntegrationStates.removeAll { $0.id == state.id }
+                }
+            } catch {
+                await MainActor.run {
+                    self.activeIntegrationStates.removeAll { $0.id == state.id }
+                    self.alertMessage = AlertMessage(
+                        title: NSLocalizedString("Download Failed", comment: "Download failed alert title"),
+                        message: error.localizedDescription
                     )
-
-                    await MainActor.run {
-                        if !MaktabahApp.isIpad, self.selectedBook != nil {
-                            // Do not automatically push a new book if there is already an active reader on iPhone
-                        } else {
-                            self.presentReader(book, initialContentId: initialContentId)
-                        }
-                        self.activeIntegrationStates.removeAll { $0.id == state.id }
-                    }
-                } catch is CancellationError {
-                    await MainActor.run {
-                        self.activeIntegrationStates.removeAll { $0.id == state.id }
-                    }
-                } catch {
-                    await MainActor.run {
-                        self.activeIntegrationStates.removeAll { $0.id == state.id }
-                        self.alertMessage = AlertMessage(
-                            title: NSLocalizedString("Download Failed", comment: "Download failed alert title"),
-                            message: error.localizedDescription
-                        )
-                    }
                 }
             }
         }
