@@ -235,10 +235,13 @@ class OptionSearchVC: NSViewController {
 
     private func setupUI() {
         setupIndeterminateProgress()
-        viewModel.loadLibraryDataForDisplay(libraryViewManager: libraryViewManager) { [weak self] in
-            self?.resetIndeterminateProgress(true)
+        Task.detached { [weak self] in
+            guard let self else { return }
+            await viewModel.loadLibraryDataForDisplay(libraryViewManager: libraryViewManager) { [weak self] in
+                self?.resetIndeterminateProgress(true)
+                self?.setupMigrationButtonIfNeeded()
+            }
         }
-        setupMigrationButtonIfNeeded()
     }
 
     func compactButton() {

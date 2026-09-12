@@ -127,12 +127,13 @@ class LibraryViewManager: NSObject {
 
     // MARK: - Passthrough to ViewModel
 
-    func prepareData(completion: (@MainActor () -> Void)? = nil) async {
-        if isSetupComplete {
+    nonisolated func prepareData(completion: (@MainActor () -> Void)? = nil) async {
+        if await isSetupComplete {
             return
         }
+
         await viewModel.loadLibrary()
-        completion?()
+        await completion?()
         await MainActor.run { [weak self] in
             guard let self else { return }
             reloadOutlineData()
