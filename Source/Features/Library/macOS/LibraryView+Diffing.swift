@@ -10,7 +10,7 @@ import Cocoa
 extension LibraryViewManager {
     func setupNotificationObservers() {
         NotificationCenter.default.publisher(for: .historyDidChange)
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
                 updateFlatList(
@@ -29,7 +29,7 @@ extension LibraryViewManager {
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .bookIntegrated)
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 if let bookId = notification.object as? Int {
                     self?.reloadParentCategory(ofBookId: bookId)
@@ -38,7 +38,7 @@ extension LibraryViewManager {
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .booksChanged)
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 self?.handleBooksChanged(notification)
             }

@@ -52,7 +52,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
 
         switch annotation.type {
         case .highlight:
-            attributedString.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.3), range: fullRg)
+            attributedString.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.5), range: fullRg)
         case .underline:
             attributedString.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: fullRg)
         }

@@ -29,7 +29,7 @@ protocol ReaderStateComponent: AnyObject {
 // MARK: - ViewModel State
 
 /// State for tracking ViewModel loading status
-public enum ViewModelState: Equatable {
+public enum ViewModelState: Equatable, Sendable {
     case idle
     case loading
     case loaded

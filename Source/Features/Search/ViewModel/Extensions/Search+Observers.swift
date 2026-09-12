@@ -38,7 +38,7 @@ extension SearchViewModel {
     }
 
     func observeLibraryFolderChanged() {
-        addObserver(forName: .libraryFolderChanged, object: nil, queue: .main) { [weak self] _ in
+        addObserver(forName: .libraryFolderChanged, object: nil, queue: nil) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 stopSearch()

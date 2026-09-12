@@ -334,7 +334,7 @@ class ArabicTextRenderer: @unchecked Sendable {
         if ann.type == .highlight {
             let color = PlatformColor(hex: ann.colorHex) ?? .yellow
             textStorage.removeAttribute(.backgroundColor, range: range)
-            textStorage.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.6), range: range)
+            textStorage.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.5), range: range)
             textStorage.removeAttribute(.underlineStyle, range: range)
         } else if ann.type == .underline {
             textStorage.removeAttribute(.underlineStyle, range: range)

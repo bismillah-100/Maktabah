@@ -235,10 +235,13 @@ class OptionSearchVC: NSViewController {
 
     private func setupUI() {
         setupIndeterminateProgress()
-        viewModel.loadLibraryDataForDisplay(libraryViewManager: libraryViewManager) { [weak self] in
-            self?.resetIndeterminateProgress(true)
+        Task { [weak self] in
+            guard let self else { return }
+            await viewModel.loadLibraryDataForDisplay(libraryViewManager: libraryViewManager) { [weak self] in
+                self?.resetIndeterminateProgress(true)
+                self?.setupMigrationButtonIfNeeded()
+            }
         }
-        setupMigrationButtonIfNeeded()
     }
 
     func compactButton() {
@@ -421,8 +424,8 @@ class OptionSearchVC: NSViewController {
 
     func resetIndeterminateProgress(_ hide: Bool) {
         progressTable.stopAnimation(nil)
-        progressTable.isIndeterminate = false
         progressTable.isHidden = hide
+        progressTable.isIndeterminate = false
     }
 
     @IBAction func startSearch(_ sender: Any) {

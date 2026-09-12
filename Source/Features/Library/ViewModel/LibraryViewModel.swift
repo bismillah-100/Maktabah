@@ -152,6 +152,7 @@ final class LibraryViewModel: ViewModelBase {
         dataManager.resetState()
         await dataManager.reloadAllData()
         await load()
+        applyFilter(filterMode)
     }
 
     private func load() async {
