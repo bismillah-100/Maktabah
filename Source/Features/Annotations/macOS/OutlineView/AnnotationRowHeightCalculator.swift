@@ -38,19 +38,7 @@ enum AnnotationRowHeightCalculator {
             0
         }
 
-        let page = "الجزء: \(annotation.partArb ?? "-") • الصفحة: \(annotation.pageArb ?? "-")"
-        let tags = annotation.tags.map { " -- \($0)" }.joined(separator: " ")
-        let pagePartText: String = switch groupingMode {
-        case .book:
-            page + tags
-        case .tag, .timeline:
-            if let book = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book {
-                page + tags + "\n" + book
-            } else {
-                page + tags + "\n" + String(localized: .bookNotFound(bookID: annotation.bkId))
-            }
-        }
-
+        let pagePartText = pageAndTagsText(for: annotation, groupingMode: groupingMode)
         let pagePartHeight = measuredHeight(
             for: pagePartText,
             width: contentWidth * 0.72,
@@ -91,5 +79,17 @@ enum AnnotationRowHeightCalculator {
         let maxHeight = lineHeight * CGFloat(max(lineLimit, 1))
 
         return max(lineHeight, min(ceil(measuredRect.height), maxHeight))
+    }
+
+    static func pageAndTagsText(for annotation: Annotation, groupingMode: AnnotationGroupingMode) -> String {
+        let page = "الجزء: \(annotation.partArb ?? "-") • الصفحة: \(annotation.pageArb ?? "-")"
+        let tags = annotation.tags.map { " -- \($0)" }.joined(separator: " ")
+        switch groupingMode {
+        case .book:
+            return page + tags
+        case .tag, .timeline:
+            let bookTitle = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book ?? String(localized: .bookNotFound(bookID: annotation.bkId))
+            return page + tags + "\n" + bookTitle
+        }
     }
 }

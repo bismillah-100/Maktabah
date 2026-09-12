@@ -484,6 +484,8 @@
 		F34D9FC8303D64D10000FB79 /* AnnotationMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */; };
 		F34D9FCA303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */; };
 		F34D9FCB303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */; };
+		F34D9FD2303D70000000FB79 /* TimelineOutlineViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FD1303D70000000FB79 /* TimelineOutlineViews.swift */; };
+		F34D9FD3303D70000000FB79 /* TimelineOutlineViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34D9FD1303D70000000FB79 /* TimelineOutlineViews.swift */; };
 		F34E11522FDAE32900E5A703 /* BaseHierarchicalListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */; };
 		F34E11542FDAE84600E5A703 /* ListLayoutMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */; };
 		F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */; };
@@ -1140,6 +1142,7 @@
 		F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationRowHeightCalculator.swift; sourceTree = "<group>"; };
 		F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationMenu.swift; sourceTree = "<group>"; };
 		F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationsOutlineDelegate.swift; sourceTree = "<group>"; };
+		F34D9FD1303D70000000FB79 /* TimelineOutlineViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineOutlineViews.swift; sourceTree = "<group>"; };
 		F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseHierarchicalListViewController.swift; sourceTree = "<group>"; };
 		F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListLayoutMetrics.swift; sourceTree = "<group>"; };
 		F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTOCViewModel.swift; sourceTree = "<group>"; };
@@ -2018,6 +2021,7 @@
 				4B5695592EEFDAAE00ABEB48 /* AnnotationEditorVC.swift */,
 				4B5695632EF06E8B00ABEB48 /* AnnotationsOutlineDataSource.swift */,
 				F34D9FC9303D664A0000FB79 /* AnnotationsOutlineDelegate.swift */,
+				F34D9FD1303D70000000FB79 /* TimelineOutlineViews.swift */,
 				F34D9FC6303D64D10000FB79 /* AnnotationMenu.swift */,
 				F34D9FC1303D64710000FB79 /* AnnotationRowHeightCalculator.swift */,
 				F34D9FC0303D64370000FB79 /* AnnotationRTFExporter.swift */,
@@ -2902,6 +2906,7 @@
 				4B47F3992EE9A36D009A399F /* RowiProtocols.swift in Sources */,
 				F3919DFC304A44F200FC3760 /* BookImportViewModel.swift in Sources */,
 				F34D9FCA303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */,
+				F34D9FD2303D70000000FB79 /* TimelineOutlineViews.swift in Sources */,
 				F32D441D303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				4B6100F22EFA8C7F00CCBED6 /* QuranNashVC.swift in Sources */,
 				4B3252CF2F7E0A8300521AF9 /* BundledArabicTextField.swift in Sources */,
@@ -3144,6 +3149,7 @@
 				F365E70A304F6513009FF69C /* AnnotationRepository.swift in Sources */,
 				F365E70B304F6513009FF69C /* AnnotationStore.swift in Sources */,
 				F34D9FCB303D664A0000FB79 /* AnnotationsOutlineDelegate.swift in Sources */,
+				F34D9FD3303D70000000FB79 /* TimelineOutlineViews.swift in Sources */,
 				F32D4419303CFB8300429664 /* SearchWorker.swift in Sources */,
 				F365E715304F65CD009FF69C /* AnnotationEvent.swift in Sources */,
 				F3E900032FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */,

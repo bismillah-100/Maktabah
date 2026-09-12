@@ -208,6 +208,9 @@ class AnnotationsVC: NSViewController {
             ? dataSource.reload()
             : dataSource.updateGrouping(mode: selectedGroupingMode)
         dataSource.updateSorting(field: selectedSortField, isAscending: selectedSortAscending)
+        if selectedGroupingMode == .timeline {
+            outlineView.expandItem(nil, expandChildren: true)
+        }
     }
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {

@@ -8,20 +8,59 @@
 import Cocoa
 
 extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegate {
+    private enum CellIdentifier {
+        static let timelineGroup = NSUserInterfaceItemIdentifier("TimelineGroupCell")
+        static let books = NSUserInterfaceItemIdentifier("BooksCell")
+        static let annotation = NSUserInterfaceItemIdentifier("AnnotationCell")
+    }
+
+    private func isTimelineDateBucket(_ item: Any) -> Bool {
+        groupingMode == .timeline && (item as? AnnotationNode)?.kind == .dateBucket
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, isGroupItem item: Any) -> Bool {
+        isTimelineDateBucket(item)
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, shouldShowOutlineCellForItem item: Any) -> Bool {
+        !isTimelineDateBucket(item)
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, shouldCollapseItem item: Any) -> Bool {
+        !isTimelineDateBucket(item)
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, shouldSelectItem item: Any) -> Bool {
+        (item as? AnnotationNode)?.annotation != nil
+    }
+
     func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
         guard let node = item as? AnnotationNode else { return nil }
 
         if node.annotation == nil {
-            let cell = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("BooksCell"), owner: self) as? NSTableCellView
+            if groupingMode == .timeline, node.kind == .dateBucket {
+                var cell = outlineView.makeView(withIdentifier: CellIdentifier.timelineGroup, owner: self) as? TimelineGroupCellView
+                if cell == nil {
+                    cell = TimelineGroupCellView()
+                    cell?.identifier = CellIdentifier.timelineGroup
+                }
+                cell?.configure(title: node.title)
+                return cell
+            }
+
+            let cell = outlineView.makeView(withIdentifier: CellIdentifier.books, owner: self) as? NSTableCellView
             cell?.textField?.stringValue = node.title
             return cell
         }
 
-        guard let annotation = node.annotation,
-              let cell = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier("AnnotationCell"), owner: self) as? AnnotationCellView
-        else {
-            return nil
-        }
+        guard let annotation = node.annotation else { return nil }
+
+        let cell = (outlineView.makeView(withIdentifier: CellIdentifier.annotation, owner: self) as? AnnotationCellView) ?? {
+            let columnWidth = outlineView.outlineTableColumn?.width ?? outlineView.bounds.width
+            let newCell = AnnotationCellView(frame: NSRect(x: 0, y: 0, width: max(columnWidth, 300), height: 124))
+            newCell.identifier = CellIdentifier.annotation
+            return newCell
+        }()
 
         configureAnnotationCell(cell, for: annotation)
         return cell
@@ -41,6 +80,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         }
 
         cell.date.stringValue = formatAnnotationDate(annotation.createdAt)
+        cell.setTimelineInset(groupingMode == .timeline)
     }
 
     private func makeContextAttributedString(for annotation: Annotation, color: NSColor) -> NSAttributedString {
@@ -60,16 +100,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
     }
 
     private func buildPageAndTagsString(for annotation: Annotation) -> String {
-        let page = "الجزء: \(annotation.partArb ?? "-") • الصفحة: \(annotation.pageArb ?? "-")"
-        let tags = annotation.tags.map { " -- \($0)" }.joined(separator: " ")
-
-        switch groupingMode {
-        case .book:
-            return page + tags
-        case .tag, .timeline:
-            let bookTitle = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book ?? String(localized: .bookNotFound(bookID: annotation.bkId))
-            return page + tags + "\n" + bookTitle
-        }
+        AnnotationRowHeightCalculator.pageAndTagsText(for: annotation, groupingMode: groupingMode)
     }
 
     private func formatAnnotationDate(_ timestampInt64: Int64) -> String {
