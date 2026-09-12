@@ -2,6 +2,6 @@
 
 --ifdef no-indent
 
---disable strongOutlets, unusedArguments, propertyTypes
+--disable strongOutlets, unusedArguments, propertyTypes, trailingCommas, wrapPropertyBodies
 
 --enable redundantSelf, redundantReturn, redundantPublic, redundantOptionalBinding, preferCountWhere, preferKeyPath, redundantClosure, trailingClosures
