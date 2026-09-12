@@ -39,6 +39,7 @@ class LibraryViewManager: NSObject {
         viewModel = .init()
         if searchView {
             viewModel.showOnlyDownloaded = true
+            viewModel.filterMode = .downloaded
         }
         self.searchView = searchView || downloadView
         self.downloadView = downloadView
