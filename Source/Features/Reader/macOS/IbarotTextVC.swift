@@ -159,6 +159,7 @@ class IbarotTextVC: NSViewController {
         ) { _ in
             MainActor.assumeIsolated { [weak self] in
                 guard let self else { return }
+                cleanUpState()
                 viewModel.cleanUpState()
                 viewModel.tocViewModel.cleanUp()
             }
