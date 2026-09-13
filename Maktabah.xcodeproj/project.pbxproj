@@ -439,6 +439,7 @@
 		F321E02C2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		F321E02D2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		F323BCA22F2EE70200EFD4F4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
+		F3D33FF93041BC970036D4DE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
 		F32A8B5A304572D000C28F42 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = F3C507843044B61C00BBEC32 /* Fonts */; };
 		F32BA47B300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
@@ -526,6 +527,9 @@
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */; };
+		F382F29730570F5100CA9D29 /* AnnotationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350941E56AD05E25872EFB23 /* AnnotationSnapshot.swift */; };
+		F382F29830570F6800CA9D29 /* HistorySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8FF608A87E78D4CD9F1AAFF /* HistorySnapshot.swift */; };
+		F382F29930570F7000CA9D29 /* WidgetSnapshotRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E410D2542342B9DC54D00940 /* WidgetSnapshotRecord.swift */; };
 		F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */; };
 		F38FF42E2FA817D9003E7B71 /* iOSBookInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */; };
 		F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */; };
@@ -2694,6 +2698,7 @@
 			files = (
 				F3304ED63043912600B9023C /* Localizable.xcstrings in Resources */,
 				F3C507893044B72F00BBEC32 /* NotoNaskhArabic-Medium.ttf in Resources */,
+				F3D33FF93041BC970036D4DE /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2928,6 +2933,7 @@
 				F32D440D303CFB3500429664 /* DBConnectionType.swift in Sources */,
 				4B96D3532F3675290018D902 /* BookUpdateModels.swift in Sources */,
 				4BDAB9882F69E4CC007D0945 /* BulkDownloadVC.swift in Sources */,
+				F382F29830570F6800CA9D29 /* HistorySnapshot.swift in Sources */,
 				4B9A0AE72EEC53320049202E /* CellIViewIdentifier.swift in Sources */,
 				F300A2EC2F2DCE860095015E /* StorageError.swift in Sources */,
 				F3D02D632FE0616B0054807F /* NarratorViewModel.swift in Sources */,
@@ -2959,6 +2965,7 @@
 				F30C5099303FA12200627AF8 /* ResultsViewTextField.swift in Sources */,
 				4B8C9DD22F6984120049E4EF /* BookArchiveIntegrator.swift in Sources */,
 				4B8C9DD32F6984120049E4EF /* BookDownloadManager.swift in Sources */,
+				F382F29930570F7000CA9D29 /* WidgetSnapshotRecord.swift in Sources */,
 				4B8C9DD72F69848F0049E4EF /* IntegrationCache.swift in Sources */,
 				F3C449572F2B12E200DA7032 /* SearchCellView.swift in Sources */,
 				4B2FAD9A2EED472E008E933E /* TOCLoader.swift in Sources */,
@@ -3026,6 +3033,7 @@
 				F3AE62C6304C5760002569BB /* BulkActionLibrary.swift in Sources */,
 				F34D9FC2303D64710000FB79 /* AnnotationRowHeightCalculator.swift in Sources */,
 				F3D02D5D2FE05A650054807F /* LibraryViewModel.swift in Sources */,
+				F382F29730570F5100CA9D29 /* AnnotationSnapshot.swift in Sources */,
 				4B5E70692EF4FEFC00E7D351 /* SharedPopover.swift in Sources */,
 				4B56955B2EEFDAAE00ABEB48 /* Annotation.swift in Sources */,
 				4B6100E92EFA740B00CCBED6 /* QuranSidebarVC.swift in Sources */,
@@ -4107,6 +4115,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Source/Features/Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.MaktabahWidget;
@@ -4146,6 +4155,7 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Source/Features/Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.MaktabahWidget;
