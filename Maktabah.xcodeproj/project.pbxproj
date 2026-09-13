@@ -536,6 +536,7 @@
 		F382F29430570D3D00CA9D29 /* WidgetSnapshotRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E410D2542342B9DC54D00940 /* WidgetSnapshotRecord.swift */; };
 		F382F29530570D6B00CA9D29 /* HistorySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8FF608A87E78D4CD9F1AAFF /* HistorySnapshot.swift */; };
 		F382F29630570D6F00CA9D29 /* AnnotationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350941E56AD05E25872EFB23 /* AnnotationSnapshot.swift */; };
+		F382F29A305712DB00CA9D29 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
 		F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */; };
 		F38FF42E2FA817D9003E7B71 /* iOSBookInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */; };
 		F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */; };
@@ -2496,6 +2497,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F382F29A305712DB00CA9D29 /* InfoPlist.strings in Resources */,
 				F3304ED63043912600B9023C /* Localizable.xcstrings in Resources */,
 				F3C507893044B72F00BBEC32 /* NotoNaskhArabic-Medium.ttf in Resources */,
 			);
@@ -3827,6 +3829,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Source/Features/Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.MaktabahWidget;
@@ -3867,6 +3870,7 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Source/Features/Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				MACOSX_DEPLOYMENT_TARGET = 13.7.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.MaktabahWidget;
