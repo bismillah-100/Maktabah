@@ -114,26 +114,79 @@ extension String {
         let nsNoHarakat = noHarakatText as NSString
         let totalLen = nsNoHarakat.length
         let cleanLen = (cleanSelected as NSString).length
-        let radius = 300
-        let searchStart = max(0, approximateRange.location - radius)
-        let searchEnd = min(totalLen, approximateRange.location + approximateRange.length + radius + cleanLen)
-        let searchLength = searchEnd - searchStart
+        guard totalLen > 0, cleanLen > 0 else { return approximateRange }
 
-        var found = NSRange(location: NSNotFound, length: 0)
-        if searchLength > 0 {
-            found = nsNoHarakat.range(
-                of: cleanSelected,
-                options: .diacriticInsensitive,
-                range: NSRange(location: searchStart, length: searchLength)
-            )
-        }
-        if found.location == NSNotFound {
-            found = nsNoHarakat.range(of: cleanSelected, options: .diacriticInsensitive)
-        }
-        guard found.location != NSNotFound else { return approximateRange }
+        var bestRange = NSRange(location: NSNotFound, length: 0)
 
-        let mapStart = min(found.location, offsetMap.count - 1)
-        let mapEnd = min(found.location + found.length, offsetMap.count - 1)
+        // 1. Direct match check at approximateRange
+        if approximateRange.location >= 0, approximateRange.location + cleanLen <= totalLen {
+            let directRange = NSRange(location: approximateRange.location, length: cleanLen)
+            let candidate = nsNoHarakat.substring(with: directRange)
+            if candidate.compare(cleanSelected, options: .diacriticInsensitive) == .orderedSame {
+                bestRange = directRange
+            }
+        }
+
+        // 2. Search around approximateRange with radius, finding the closest match
+        if bestRange.location == NSNotFound {
+            let radius = 300
+            let searchStart = max(0, approximateRange.location - radius)
+            let searchEnd = min(totalLen, approximateRange.location + approximateRange.length + radius + cleanLen)
+            let searchRange = NSRange(location: searchStart, length: searchEnd - searchStart)
+
+            var minDistance = Int.max
+
+            if searchRange.length > 0 {
+                var curRange = searchRange
+                while curRange.length > 0 {
+                    let match = nsNoHarakat.range(of: cleanSelected, options: .diacriticInsensitive, range: curRange)
+                    guard match.location != NSNotFound else { break }
+
+                    let dist = abs(match.location - approximateRange.location)
+                    if dist < minDistance {
+                        minDistance = dist
+                        bestRange = match
+                        if dist == 0 { break }
+                    }
+
+                    let nextLoc = match.location + 1
+                    let rangeEnd = searchRange.location + searchRange.length
+                    if nextLoc < rangeEnd {
+                        curRange = NSRange(location: nextLoc, length: rangeEnd - nextLoc)
+                    } else {
+                        break
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: search entire string for closest match
+        if bestRange.location == NSNotFound {
+            var curRange = NSRange(location: 0, length: totalLen)
+            var minDistance = Int.max
+            while curRange.length > 0 {
+                let match = nsNoHarakat.range(of: cleanSelected, options: .diacriticInsensitive, range: curRange)
+                guard match.location != NSNotFound else { break }
+
+                let dist = abs(match.location - approximateRange.location)
+                if dist < minDistance {
+                    minDistance = dist
+                    bestRange = match
+                }
+
+                let nextLoc = match.location + 1
+                if nextLoc < totalLen {
+                    curRange = NSRange(location: nextLoc, length: totalLen - nextLoc)
+                } else {
+                    break
+                }
+            }
+        }
+
+        guard bestRange.location != NSNotFound else { return approximateRange }
+
+        let mapStart = min(bestRange.location, offsetMap.count - 1)
+        let mapEnd = min(bestRange.location + bestRange.length, offsetMap.count - 1)
         let harakatStart = offsetMap[mapStart]
         let harakatEnd = offsetMap[mapEnd]
         return NSRange(location: harakatStart, length: max(0, harakatEnd - harakatStart))
