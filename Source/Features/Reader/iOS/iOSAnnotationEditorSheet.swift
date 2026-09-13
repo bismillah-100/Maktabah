@@ -32,25 +32,23 @@ struct iOSAnnotationEditorSheet: View {
                 ThemeSection("Style") {
                     Toggle("Underline", isOn: $isUnderline)
 
-                    if !isUnderline {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(defaultColors, id: \.self) { color in
-                                    let hex = color.hexString()
-                                    Circle()
-                                        .fill(Color(color))
-                                        .frame(width: 30, height: 30)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(Color.primary, lineWidth: selectedColorHex == hex ? 2 : 0)
-                                        )
-                                        .onTapGesture {
-                                            selectedColorHex = hex
-                                        }
-                                }
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(defaultColors, id: \.self) { color in
+                                let hex = color.hexString()
+                                Circle()
+                                    .fill(Color(color))
+                                    .frame(width: 30, height: 30)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.primary, lineWidth: selectedColorHex == hex ? 2 : 0)
+                                    )
+                                    .onTapGesture {
+                                        selectedColorHex = hex
+                                    }
                             }
-                            .padding(.vertical, 4)
                         }
+                        .padding(.vertical, 4)
                     }
                 }
 
@@ -102,7 +100,7 @@ struct iOSAnnotationEditorSheet: View {
     private func saveAnnotation() {
         var updated = annotation
         updated.note = noteText.isEmpty ? nil : noteText
-        updated.colorHex = isUnderline ? UIColor.black.hexString() : selectedColorHex
+        updated.colorHex = selectedColorHex
         updated.type = isUnderline ? .underline : .highlight
 
         updated.tags = tagsText

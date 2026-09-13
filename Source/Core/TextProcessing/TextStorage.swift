@@ -89,10 +89,10 @@ extension NSTextStorage {
     private static let annotationAttributeKeys: [NSAttributedString.Key] = [
         .backgroundColor,
         .underlineStyle,
+        .underlineColor,
         .link,
         NSAttributedString.Key("annotationID"),
         NSAttributedString.Key("annotationNote"),
-        NSAttributedString.Key("underlineColor"),
     ]
 
     func removeAnnotationAttributes(in ranges: [NSRange]) {

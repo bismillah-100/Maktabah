@@ -671,7 +671,8 @@ class IbarotTextView: NSTextView {
         let sel = selectedRange()
 
         do {
-            try applyAnnotations(in: sel, with: .black, mode: .underline)
+            let color = UserDefaults.standard.recentHighlightColors.first ?? .labelColor
+            try applyAnnotations(in: sel, with: color, mode: .underline)
         } catch {
             #if DEBUG
             print("Failed to save highlight: \(error)")
@@ -759,7 +760,7 @@ class IbarotTextView: NSTextView {
         pop.contentViewController = editor
         pop.behavior = .transient
 
-        editor.onSave = { [weak self, weak pop] updated in
+        editor.onSave = { [weak pop] updated in
             do {
                 if updated.id == nil {
                     try AnnotationStore.shared.addAnnotation(updated)
@@ -772,7 +773,7 @@ class IbarotTextView: NSTextView {
             pop?.performClose(nil)
         }
 
-        editor.onDelete = { [weak self, weak pop] id in
+        editor.onDelete = { [weak pop] id in
             do {
                 try AnnotationStore.shared.deleteAnnotation(id: id)
             } catch {

@@ -58,5 +58,28 @@ extension PlatformColor {
         let bi = Int(round(b * 255))
         return String(format: "#%02X%02X%02X", ri, gi, bi)
     }
+
+    static func effectiveAnnotationColor(
+        hex: String,
+        isUnderline: Bool = false,
+        defaultHighlight: PlatformColor = .yellow
+    ) -> PlatformColor {
+        #if os(macOS)
+        let defaultUnderline = PlatformColor.labelColor
+        #else
+        let defaultUnderline = PlatformColor.label
+        #endif
+        let cleanHex = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        if isUnderline && (cleanHex == "#000000" || cleanHex == "000000" || cleanHex.isEmpty) {
+            return defaultUnderline
+        }
+        guard let color = PlatformColor(hex: hex) else {
+            return isUnderline ? defaultUnderline : defaultHighlight
+        }
+        if isUnderline && color == .black {
+            return defaultUnderline
+        }
+        return color
+    }
 }
 #endif
