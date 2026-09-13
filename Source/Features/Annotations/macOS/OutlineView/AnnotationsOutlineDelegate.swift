@@ -90,7 +90,9 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         case .highlight:
             attributedString.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.5), range: fullRg)
         case .underline:
+            let effectiveColor = NSColor.effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: true)
             attributedString.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: fullRg)
+            attributedString.addAttribute(.underlineColor, value: effectiveColor, range: fullRg)
         }
         return attributedString
     }

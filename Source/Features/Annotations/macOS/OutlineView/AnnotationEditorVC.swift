@@ -47,7 +47,6 @@ class AnnotationEditorVC: NSViewController {
         saveButton.keyEquivalentModifierMask = .command
 
         underLine.state = annotation.type == .underline ? .on : .off
-        colorWell.isHidden = underLine.state == .on
 
         if #available(macOS 26, *) {
             saveButton.borderShape = .capsule
@@ -157,7 +156,6 @@ class AnnotationEditorVC: NSViewController {
 
     @IBAction func underLineTapped(_ sender: NSButton) {
         annotation.type = underLine.state == .on ? .underline : .highlight
-        colorWell.isHidden = underLine.state == .on
     }
 
     // MARK: - Tag Suggestions

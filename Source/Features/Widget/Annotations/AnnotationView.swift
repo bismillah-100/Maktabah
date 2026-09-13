@@ -51,7 +51,7 @@ struct AnnotationView: View {
     private func annotationColor(
         for annotation: AnnotationWidgetItem
     ) -> Color {
-        annotation.type == 1 ? .gray : .init(hex: annotation.colorHex) ?? .orange
+        .effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: annotation.type == 1)
     }
 
     private func annotationLink(

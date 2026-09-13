@@ -336,9 +336,13 @@ class ArabicTextRenderer: @unchecked Sendable {
             textStorage.removeAttribute(.backgroundColor, range: range)
             textStorage.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.5), range: range)
             textStorage.removeAttribute(.underlineStyle, range: range)
+            textStorage.removeAttribute(.underlineColor, range: range)
         } else if ann.type == .underline {
+            let color = PlatformColor.effectiveAnnotationColor(hex: ann.colorHex, isUnderline: true)
             textStorage.removeAttribute(.underlineStyle, range: range)
+            textStorage.removeAttribute(.underlineColor, range: range)
             textStorage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            textStorage.addAttribute(.underlineColor, value: color, range: range)
             textStorage.removeAttribute(.backgroundColor, range: range)
         }
 

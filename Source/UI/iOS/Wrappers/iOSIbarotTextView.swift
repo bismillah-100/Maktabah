@@ -307,7 +307,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
             onAddAnnotation?(sourceRange, .highlight, sourceText, color)
         }
         textView.onUnderline = { sourceRange, sourceText in
-            onAddAnnotation?(sourceRange, .underline, sourceText, .black)
+            let color = UserDefaults.standard.recentHighlightColors.first ?? .label
+            onAddAnnotation?(sourceRange, .underline, sourceText, color)
         }
 
         container.addSubview(textView)
@@ -727,7 +728,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
                 title: String(localized: "Underline"),
                 image: UIImage(systemName: "underline")
             ) { [weak self] _ in
-                self?.parent.onAddAnnotation?(sourceRange, .underline, sourceText, .black)
+                let color = UserDefaults.standard.recentHighlightColors.first ?? .label
+                self?.parent.onAddAnnotation?(sourceRange, .underline, sourceText, color)
             }
 
             return [highlightMenu, underlineAction]
