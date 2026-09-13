@@ -533,6 +533,9 @@
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D122752FF5C85600F44E89 /* SerialTaskQueue.swift */; };
+		F382F29430570D3D00CA9D29 /* WidgetSnapshotRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = E410D2542342B9DC54D00940 /* WidgetSnapshotRecord.swift */; };
+		F382F29530570D6B00CA9D29 /* HistorySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8FF608A87E78D4CD9F1AAFF /* HistorySnapshot.swift */; };
+		F382F29630570D6F00CA9D29 /* AnnotationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350941E56AD05E25872EFB23 /* AnnotationSnapshot.swift */; };
 		F38A74EC2FF4108700198CDD /* CoreDownloadProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */; };
 		F38FF42E2FA817D9003E7B71 /* iOSBookInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */; };
 		F38FF4302FA82034003E7B71 /* iOSRowiSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FF42F2FA82034003E7B71 /* iOSRowiSidebarView.swift */; };
@@ -2768,6 +2771,7 @@
 				F37F1C48300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
 				F37F1C49300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
 				F37F1C4A300268E3002B5618 /* AnnMgr+CRUD.swift in Sources */,
+				F382F29630570D6F00CA9D29 /* AnnotationSnapshot.swift in Sources */,
 				F37F1C4B300268E3002B5618 /* AnnMgr+Tags.swift in Sources */,
 				F37F1C4C300268E3002B5618 /* AnnMgr+Tree.swift in Sources */,
 				F37F1C4D300268E3002B5618 /* AnnMgr+CloudKit.swift in Sources */,
@@ -2786,6 +2790,7 @@
 				F3D33FEB3041BC970036D4DE /* WidgetDeepLink.swift in Sources */,
 				4B3202722EDB5E3D003B95D1 /* Navigation.swift in Sources */,
 				4B58EDCE2EE3DDEE00073495 /* ResultsViewModel.swift in Sources */,
+				F382F29530570D6B00CA9D29 /* HistorySnapshot.swift in Sources */,
 				4B3202462EDB1099003B95D1 /* ViewerSplitVC.swift in Sources */,
 				4B32024E2EDB13C0003B95D1 /* DatabaseManager.swift in Sources */,
 				F3CFA001301A3FDF006AEE15 /* FtsMigrationProgressView.swift in Sources */,
@@ -2822,6 +2827,7 @@
 				4B0139E42EEB2FDF00424CFA /* StringInterner.swift in Sources */,
 				F3ABDF762FBF429700A8965E /* WelcomeScreenView.swift in Sources */,
 				4BDAB9842F69B946007D0945 /* CoreDatabaseDownloader.swift in Sources */,
+				F382F29430570D3D00CA9D29 /* WidgetSnapshotRecord.swift in Sources */,
 				4B5DF9382EDC3DBF0082DE7F /* ViewOptions.swift in Sources */,
 				F3F3FEAD30360EC700507E9A /* DonationManager.swift in Sources */,
 				4BA393642EF0D30200736DFF /* ArabicFont.swift in Sources */,
