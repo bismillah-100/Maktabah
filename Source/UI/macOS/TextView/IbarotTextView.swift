@@ -759,6 +759,32 @@ class IbarotTextView: NSTextView {
         pop.contentViewController = editor
         pop.behavior = .transient
 
+        editor.onSave = { [weak self, weak pop] updated in
+            do {
+                if updated.id == nil {
+                    try AnnotationStore.shared.addAnnotation(updated)
+                } else {
+                    try AnnotationStore.shared.updateAnnotation(updated)
+                }
+            } catch {
+                print("Gagal menyimpan/update anotasi:", error)
+            }
+            pop?.performClose(nil)
+        }
+
+        editor.onDelete = { [weak self, weak pop] id in
+            do {
+                try AnnotationStore.shared.deleteAnnotation(id: id)
+            } catch {
+                print("Gagal menghapus anotasi:", error)
+            }
+            pop?.performClose(nil)
+        }
+
+        editor.onCancel = { [weak pop] in
+            pop?.performClose(nil)
+        }
+
         // firstRect(forCharacterRange:) returns a rect in screen coordinates —
         // the same API used by the system for autocomplete/tooltip, guaranteed precision.
         var actualRange = displayedRange

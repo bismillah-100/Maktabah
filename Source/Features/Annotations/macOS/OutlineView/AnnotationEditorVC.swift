@@ -31,6 +31,10 @@ class AnnotationEditorVC: NSViewController {
 
     var annotation: Annotation!
 
+    var onSave: ((Annotation) -> Void)?
+    var onDelete: ((Int64) -> Void)?
+    var onCancel: (() -> Void)?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         noteField.delegate = self
@@ -38,6 +42,9 @@ class AnnotationEditorVC: NSViewController {
         populateFields()
         saveButton.action = #selector(saveTapped)
         deleteButton.action = #selector(deleteTapped)
+
+        saveButton.keyEquivalent = "\r"
+        saveButton.keyEquivalentModifierMask = .command
 
         underLine.state = annotation.type == .underline ? .on : .off
         colorWell.isHidden = underLine.state == .on
@@ -71,6 +78,23 @@ class AnnotationEditorVC: NSViewController {
         noteField.selectedRanges = selectedRanges
     }
 
+    // MARK: - Key Handling
+
+    override func cancelOperation(_ sender: Any?) {
+        cancelTapped()
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags == .command {
+            if event.charactersIgnoringModifiers == "s" {
+                saveTapped()
+                return true
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
     // MARK: - Actions
 
     @objc func saveTapped() {
@@ -83,33 +107,52 @@ class AnnotationEditorVC: NSViewController {
         updated.note = newNote.isEmpty ? nil : newNote
         updated.tags = normalizedTags()
 
-        do {
-            if updated.id == nil {
-                try AnnotationStore.shared.addAnnotation(updated)
-            } else {
-                try AnnotationStore.shared.updateAnnotation(updated)
+        if let onSave {
+            onSave(updated)
+        } else {
+            do {
+                if updated.id == nil {
+                    try AnnotationStore.shared.addAnnotation(updated)
+                } else {
+                    try AnnotationStore.shared.updateAnnotation(updated)
+                }
+            } catch {
+                print("Gagal menyimpan/update anotasi:", error)
             }
-        } catch {
-            print("Gagal menyimpan/update anotasi:", error)
         }
 
-        cancelTapped()
+        dismissEditor()
     }
 
     @objc func deleteTapped() {
         guard let id = annotation.id else { return }
 
-        do {
-            // Hapus di DB + cache
-            try AnnotationStore.shared.deleteAnnotation(id: id)
-            cancelTapped()
-        } catch {
-            print("Gagal menghapus anotasi:", error)
+        if let onDelete {
+            onDelete(id)
+        } else {
+            do {
+                try AnnotationStore.shared.deleteAnnotation(id: id)
+            } catch {
+                print("Gagal menghapus anotasi:", error)
+            }
         }
+
+        dismissEditor()
     }
 
     @objc func cancelTapped() {
-        view.window?.performClose(nil)
+        onCancel?()
+        dismissEditor()
+    }
+
+    private func dismissEditor() {
+        if let presentingViewController {
+            presentingViewController.dismiss(self)
+        } else if let sheetParent = view.window?.sheetParent {
+            sheetParent.endSheet(view.window!)
+        } else {
+            view.window?.performClose(nil)
+        }
     }
 
     @IBAction func underLineTapped(_ sender: NSButton) {
