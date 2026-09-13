@@ -26,7 +26,7 @@ class AnnotationEditorVC: NSViewController {
 
     lazy var currentFont: NSFont = .init(
         name: UserDefaults.standard.textViewFontName,
-        size: CGFloat(UserDefaults.standard.textViewFontSize - 4)
+        size: CGFloat(UserDefaults.standard.textViewFontSize - 4),
     ) ?? .systemFont(ofSize: NSFont.systemFontSize)
 
     var annotation: Annotation!
@@ -47,6 +47,7 @@ class AnnotationEditorVC: NSViewController {
             deleteButton.borderShape = .capsule
         }
 
+        tagsField.delegate = self
         tagsField.completionDelay = 0.5
     }
 
@@ -122,9 +123,16 @@ class AnnotationEditorVC: NSViewController {
     private func existingTagSuggestions(matching substring: String) -> [String] {
         let allTags = AnnotationStore.shared.allTagNames()
         let currentTokens = (tagsField.objectValue as? [String] ?? [])
+        let cleanSub = substring.trimmingCharacters(in: .whitespacesAndNewlines)
+
         return allTags.filter { tag in
-            !currentTokens.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) &&
-                tag.range(of: substring, options: [.caseInsensitive, .anchored]) != nil
+            let notAlreadyAdded = !currentTokens.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame })
+            guard notAlreadyAdded else { return false }
+
+            if cleanSub.isEmpty {
+                return true
+            }
+            return tag.localizedCaseInsensitiveContains(cleanSub)
         }
     }
 
@@ -134,9 +142,37 @@ class AnnotationEditorVC: NSViewController {
         }
 
         return tagsField.stringValue
+            .replacingOccurrences(of: "،", with: ",")
             .split(separator: ",")
             .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+}
+
+// MARK: - NSTokenFieldDelegate
+
+extension AnnotationEditorVC: NSTokenFieldDelegate {
+    func tokenField(
+        _ tokenField: NSTokenField,
+        completionsForSubstring substring: String,
+        indexOfToken tokenIndex: Int,
+        indexOfSelectedItem selectedIndex: UnsafeMutablePointer<Int>?,
+    ) -> [Any]? {
+        existingTagSuggestions(matching: substring)
+    }
+
+    func tokenField(
+        _ tokenField: NSTokenField,
+        displayStringForRepresentedObject representedObject: Any,
+    ) -> String? {
+        representedObject as? String
+    }
+
+    func tokenField(
+        _ tokenField: NSTokenField,
+        representedObjectForEditing editingString: String,
+    ) -> Any? {
+        editingString
     }
 }
 
