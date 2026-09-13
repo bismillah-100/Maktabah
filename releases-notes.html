@@ -36,6 +36,32 @@
 </head>
 <body>
 
+<h2>Version 3.5</h2>
+<p class="version">September 13, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Add Annotation and History widgets with timeline providers for iOS and macOS</li>
+  <li>Add deep link routing (maktabah://) to navigate directly to books, pages, and annotations</li>
+  <li>Implement shared App Group container (group.com.Drn.maktabah) with automatic first-launch migration</li>
+  <li>Add TightArabicText component for clean multiline Arabic text rendering in widgets</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Migrate feature modules to vertical slice architecture (Reader, Library, History, Search, Bookmarks, Quran, Narrator, Annotations)</li>
+  <li>Consolidate core infrastructure and database engines into Source/Core</li>
+  <li>Consolidate shared cross-platform presentation layers into Source/UI</li>
+  <li>Modularize BookUpdateManager, ResultsHandler, and outline view components</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Add CloudKitUploadDebouncer and SyncPendingStore for thread-safe sync queues</li>
+  <li>Add SQLiteConnectionPool with single-flight queries and dedicated search workers</li>
+  <li>Optimize string processing algorithms and character loop traversals</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.4.2</h2>
 <p class="version">September 03, 2026</p>
 <h3>Fixes</h3>
