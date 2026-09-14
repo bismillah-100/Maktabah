@@ -1,0 +1,3843 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Technical Documentation for Maktabah (macOS & iOS)">
+      
+      
+      
+      
+        <link rel="prev" href="../../annotations/ui-integration/">
+      
+      
+        <link rel="next" href="../database/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Data Models & State Types - Maktabah Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#data-models-state-types" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Maktabah Documentation" class="md-header__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Maktabah Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Data Models & State Types
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Maktabah Documentation" class="md-nav__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Maktabah Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/cloudkit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CloudKit SyncEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/search-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Search Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/text-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Text Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Feature Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Feature Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Annotations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppKit (macOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/range-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diacritics & Range Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwiftUI (iOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/tree-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tree Builder & Overlap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/ui-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI & Platform Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bookmarks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bookmarks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models & State Types
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models & State Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-simpul-pohon-direktori-tree-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Simpul Pohon Direktori (Tree Nodes)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Simpul Pohon Direktori (Tree Nodes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#foldernode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FolderNode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FolderNode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spesifikasi-properti-foldernode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spesifikasi Properti FolderNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultNode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ResultNode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spesifikasi-properti-resultnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spesifikasi Properti ResultNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-struktur-data-konten-payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Struktur Data Konten &amp; Payload
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Struktur Data Konten &amp; Payload">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#savedresultsitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SavedResultsItem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SavedResultsItem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spesifikasi-properti-savedresultsitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spesifikasi Properti SavedResultsItem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groupedresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GroupedResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searchresultwithpath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SearchResultWithPath
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-tipe-event-diffing-pohon-bookmarktreechange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tipe Event &amp; Diffing Pohon (BookmarkTreeChange)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Tipe Event &amp; Diffing Pohon (BookmarkTreeChange)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#matriks-penggunaan-bookmarktreechange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matriks Penggunaan BookmarkTreeChange
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & CloudKit Persistence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    iOS Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    macOS Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Delegation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ViewModel & Reactive Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Global Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    History
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppKit (macOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwiftUI (iOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library & Catalog
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Library & Catalog
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/download-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download & Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    iOS Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    macOS Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Delegation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ViewModel, State & Combine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Narrator (Rijal)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Narrator (Rijal)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppKit (macOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwiftUI (iOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quran & Tafsir
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Quran & Tafsir
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppKit (macOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwiftUI (iOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reader Engine
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reader Engine
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    iOS Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    macOS Implementation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ViewModel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Search
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Search
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppKit (macOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwiftUI (iOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Widgets
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Widgets
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/macos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AppKit (macOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Storage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/protocols/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Protocols & Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/viewmodel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/ios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SwiftUI (iOS)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Legacy Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Legacy Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Optimasi%20Disk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimasi Disk
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Struktur%20Kitab/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Struktur Kitab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-simpul-pohon-direktori-tree-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Simpul Pohon Direktori (Tree Nodes)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Simpul Pohon Direktori (Tree Nodes)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#foldernode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FolderNode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FolderNode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spesifikasi-properti-foldernode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spesifikasi Properti FolderNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResultNode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ResultNode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spesifikasi-properti-resultnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spesifikasi Properti ResultNode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-struktur-data-konten-payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Struktur Data Konten &amp; Payload
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Struktur Data Konten &amp; Payload">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#savedresultsitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SavedResultsItem
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SavedResultsItem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spesifikasi-properti-savedresultsitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spesifikasi Properti SavedResultsItem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groupedresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GroupedResult
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searchresultwithpath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SearchResultWithPath
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-tipe-event-diffing-pohon-bookmarktreechange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tipe Event &amp; Diffing Pohon (BookmarkTreeChange)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Tipe Event &amp; Diffing Pohon (BookmarkTreeChange)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#matriks-penggunaan-bookmarktreechange" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Matriks Penggunaan BookmarkTreeChange
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="data-models-state-types">Data Models &amp; State Types</h1>
+<p>Berkas ini mendokumentasikan seluruh struktur data, model simpul pohon, dan tipe mutasi antarmuka yang didefinisikan pada direktori <code>Source/Features/Bookmarks/Models/</code>.</p>
+<hr />
+<h2 id="1-simpul-pohon-direktori-tree-nodes">1. Simpul Pohon Direktori (Tree Nodes)</h2>
+<p>Maktabah merepresentasikan markah dalam bentuk pohon hirarkis bersarang (<em>n-ary tree</em>) yang memisahkan antara entitas folder (direktori penampung) dan entitas hasil kueri pencarian.</p>
+<h3 id="foldernode"><code>FolderNode</code></h3>
+<p>Kelas simpul yang merepresentasikan folder hierarki di dalam database lokal dan antarmuka.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">FolderNode</span><span class="p">:</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastModified</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">children</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">FolderNode</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="kd">init</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">lastModified</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">id</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">name</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">lastModified</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">lastModified</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="p">(</span><span class="n">lhs</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">        </span><span class="n">lhs</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">id</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">hash</span><span class="p">(</span><span class="n">into</span><span class="w"> </span><span class="n">hasher</span><span class="p">:</span><span class="w"> </span><span class="kr">inout</span><span class="w"> </span><span class="n">Hasher</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">        </span><span class="n">hasher</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">allDescendantIds</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">Int64</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">ids</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">Int64</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">        </span><span class="n">collectDescendantIds</span><span class="p">(</span><span class="n">into</span><span class="p">:</span><span class="w"> </span><span class="p">&amp;</span><span class="n">ids</span><span class="p">)</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">ids</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">collectDescendantIds</span><span class="p">(</span><span class="n">into</span><span class="w"> </span><span class="n">ids</span><span class="p">:</span><span class="w"> </span><span class="kr">inout</span><span class="w"> </span><span class="p">[</span><span class="nb">Int64</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">        </span><span class="n">ids</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">children</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">            </span><span class="n">child</span><span class="p">.</span><span class="n">collectDescendantIds</span><span class="p">(</span><span class="n">into</span><span class="p">:</span><span class="w"> </span><span class="p">&amp;</span><span class="n">ids</span><span class="p">)</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="p">}</span>
+</span></code></pre></div>
+<h4 id="spesifikasi-properti-foldernode">Spesifikasi Properti <code>FolderNode</code></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Properti</th>
+<th style="text-align: left;">Tipe</th>
+<th style="text-align: left;">Deskripsi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>id</code></td>
+<td style="text-align: left;"><code>Int64</code></td>
+<td style="text-align: left;">Kunci primer (<em>primary key</em>) unik yang dipetakan langsung dari kolom <code>id</code> pada tabel <code>folders</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;"><code>String</code></td>
+<td style="text-align: left;">Nama tampilan folder di UI. Bersifat unik untuk setiap tingkat induk yang sama (<em>sibling</em>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lastModified</code></td>
+<td style="text-align: left;"><code>Int64?</code></td>
+<td style="text-align: left;">Stempel waktu UNIX epoch (detik) untuk resolusi konflik sinkronisasi CloudKit.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>children</code></td>
+<td style="text-align: left;"><code>[FolderNode]</code></td>
+<td style="text-align: left;">Larik subfolder turunan langsung (<em>direct children</em>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>allDescendantIds</code></td>
+<td style="text-align: left;"><code>[Int64]</code></td>
+<td style="text-align: left;">Komputasi rekursif yang menghimpun seluruh ID diri sendiri dan semua subfoldernya ke dalam satu koleksi datar. Digunakan untuk validasi pencegahan siklus rekursif pada pemindahan (<em>drag-and-drop</em>).</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Thread Safety: Frozen Tree Pattern</p>
+<p><code>FolderNode</code> ditandai sebagai <code>@unchecked Sendable</code> dengan makro <code>@Observable</code>. Secara desain arsitektur, pohon ini dimutasi secara terisolasi saat fase pembentukan di <em>background thread</em> (<code>Task.detached</code>). Setelah dipublikasikan ke Main Actor, simpul-simpul ini dianggap <em>frozen</em> dan mutasi hanya dilakukan melalui metode terpusat di <code>ResultsViewModel</code>.</p>
+</div>
+<hr />
+<h3 id="resultnode"><code>ResultNode</code></h3>
+<p>Kelas simpul daun (<em>leaf node</em>) yang merepresentasikan sekumpulan hasil pencarian tersimpan di bawah naungan suatu folder.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">Observable</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">ResultNode</span><span class="p">:</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">parentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastModified</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">searchMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">items</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SavedResultsItem</span><span class="p">]</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="kd">init</span><span class="p">(</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">        </span><span class="n">parentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="n">name</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="n">lastModified</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="n">searchMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="n">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="n">items</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SavedResultsItem</span><span class="p">]</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">id</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">parentId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">parentId</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">name</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">lastModified</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">lastModified</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">searchMode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">searchMode</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">nearDistance</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">nearDistance</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">items</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">items</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="p">(</span><span class="n">lhs</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">        </span><span class="n">lhs</span><span class="p">.</span><span class="n">id</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">id</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">hash</span><span class="p">(</span><span class="n">into</span><span class="w"> </span><span class="n">hasher</span><span class="p">:</span><span class="w"> </span><span class="kr">inout</span><span class="w"> </span><span class="n">Hasher</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">        </span><span class="n">hasher</span><span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">id</span><span class="p">)</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="p">}</span>
+</span></code></pre></div>
+<h4 id="spesifikasi-properti-resultnode">Spesifikasi Properti <code>ResultNode</code></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Properti</th>
+<th style="text-align: left;">Tipe</th>
+<th style="text-align: left;">Deskripsi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>id</code></td>
+<td style="text-align: left;"><code>Int64</code></td>
+<td style="text-align: left;">Kunci primer dari baris data pertama dalam grup hasil pencarian di database.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>parentId</code></td>
+<td style="text-align: left;"><code>Int64?</code></td>
+<td style="text-align: left;">ID folder induk penampung (<code>nil</code> menandakan item berada di <em>root</em> level).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;"><code>String</code></td>
+<td style="text-align: left;">Nama kustom yang diberikan pengguna saat menyimpan hasil pencarian.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lastModified</code></td>
+<td style="text-align: left;"><code>Int64?</code></td>
+<td style="text-align: left;">Stempel waktu pembaruan terakhir untuk sinkronisasi.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>searchMode</code></td>
+<td style="text-align: left;"><code>Int</code></td>
+<td style="text-align: left;">Representasi integer mode pencarian (<code>0: phrase</code>, <code>1: allWords</code>, <code>2: anyWord</code>, dsb).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>nearDistance</code></td>
+<td style="text-align: left;"><code>Int</code></td>
+<td style="text-align: left;">Jarak batas kata untuk mode pencarian <em>Near Distance</em>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>items</code></td>
+<td style="text-align: left;"><code>[SavedResultsItem]</code></td>
+<td style="text-align: left;">Koleksi rincian hasil pencarian per kitab dan nomor halaman yang dikandungnya.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-struktur-data-konten-payload">2. Struktur Data Konten &amp; Payload</h2>
+<h3 id="savedresultsitem"><code>SavedResultsItem</code></h3>
+<p>Struktur data ringan yang mewakili satu kecocokan baris pada kitab tertentu.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SavedResultsItem</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archive</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">tableName</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">searchMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<h4 id="spesifikasi-properti-savedresultsitem">Spesifikasi Properti <code>SavedResultsItem</code></h4>
+<ul>
+<li><code>archive</code> (<code>String</code>): Nomor arsip database SQLite (misal <code>"1"</code> sampai <code>"20"</code>).</li>
+<li><code>tableName</code> (<code>String</code>): Nama tabel sumber di arsip (misal <code>"b123"</code> atau <code>"123"</code>).</li>
+<li><code>query</code> (<code>String</code>): Teks kueri pencarian asli yang menghasilkan kecocokan.</li>
+<li><code>bookId</code> (<code>Int</code>): ID unik kitab yang bersangkutan.</li>
+<li><code>bookTitle</code> (<code>String</code>): Judul lengkap kitab yang diambil dari <code>LibraryDataManager</code>.</li>
+<li><code>searchMode</code> (<code>Int</code>): Mode pencarian yang digunakan saat kueri dieksekusi.</li>
+<li><code>nearDistance</code> (<code>Int</code>): Jarak kedekatan kata yang digunakan.</li>
+</ul>
+<hr />
+<h3 id="groupedresult"><code>GroupedResult</code></h3>
+<p>Struktur pembantu (<em>intermediate grouping</em>) yang memadatkan data hasil pencarian sebelum disimpan ke tabel SQLite.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">GroupedResult</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archive</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="c1">// tableName setelah dropFirst('b')</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">contentIds</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Optimasi Penyimpanan Disk</p>
+<p>Jika suatu kueri menghasilkan 50 halaman yang cocok pada satu kitab yang sama, sistem tidak menyimpan 50 baris SQLite terpisah. Melalui <code>GroupedResult</code>, seluruh ID halaman (<code>contentId</code>) digabungkan menjadi string dipisahkan koma (misal: <code>"12,45,78,102"</code>), menghemat ruang penyimpanan dan mempercepat siklus I/O database.</p>
+</div>
+<hr />
+<h3 id="searchresultwithpath"><code>SearchResultWithPath</code></h3>
+<p>Struktur pembungkus yang digunakan pada fitur pencarian global di dalam antarmuka bookmark.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchResultWithPath</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">result</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">folderId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">folderPath</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><code>folderPath</code>: Representasi visual jalur hirarki folder (misal: <code>"Tafsir / Ibnu Katsir"</code>). Memudahkan pengguna mengenali letak konteks hasil saat daftar markah diratakan (<em>flattened list</em>) selama pencarian.</li>
+</ul>
+<hr />
+<h2 id="3-tipe-event-diffing-pohon-bookmarktreechange">3. Tipe Event &amp; Diffing Pohon (<code>BookmarkTreeChange</code>)</h2>
+<p>Enum komprehensif yang menjadi jembatan antara ViewModel dan <code>NSOutlineView</code> di macOS untuk mendukung animasi perubahan data yang halus tanpa memicu pemuatan ulang penuh (<em>full reload</em>) yang berkedip.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookmarkTreeChange</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">fullReload</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">insertFolder</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">,</span><span class="w"> </span><span class="n">parent</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">?,</span><span class="w"> </span><span class="n">index</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">removeFolder</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">,</span><span class="w"> </span><span class="n">parent</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">?,</span><span class="w"> </span><span class="n">index</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">updateFolder</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">moveFolder</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">,</span><span class="w"> </span><span class="n">oldParent</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">?,</span><span class="w"> </span><span class="n">oldIndex</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">newParent</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span><span class="p">?,</span><span class="w"> </span><span class="n">newIndex</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">insertResult</span><span class="p">(</span><span class="n">result</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">,</span><span class="w"> </span><span class="n">parentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?,</span><span class="w"> </span><span class="n">index</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">removeResult</span><span class="p">(</span><span class="n">result</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">,</span><span class="w"> </span><span class="n">parentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?,</span><span class="w"> </span><span class="n">index</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">updateResult</span><span class="p">(</span><span class="n">result</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">)</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">moveResult</span><span class="p">(</span><span class="n">result</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">,</span><span class="w"> </span><span class="n">oldParentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?,</span><span class="w"> </span><span class="n">oldIndex</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">newParentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?,</span><span class="w"> </span><span class="n">newIndex</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="matriks-penggunaan-bookmarktreechange">Matriks Penggunaan <code>BookmarkTreeChange</code></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Kasus Enum</th>
+<th style="text-align: left;">Payload Parameter</th>
+<th style="text-align: left;">Aksi UI yang Dipicu pada AppKit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>.fullReload</code></td>
+<td style="text-align: left;">Tidak ada</td>
+<td style="text-align: left;">Memanggil <code>outlineView.reloadData()</code> secara menyeluruh.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.insertFolder</code></td>
+<td style="text-align: left;"><code>(FolderNode, FolderNode?, Int)</code></td>
+<td style="text-align: left;"><code>outlineView.insertItems(at:inParent:withAnimation: .effectGap)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.removeFolder</code></td>
+<td style="text-align: left;"><code>(FolderNode, FolderNode?, Int)</code></td>
+<td style="text-align: left;"><code>outlineView.removeItems(at:inParent:withAnimation: .effectFade)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.updateFolder</code></td>
+<td style="text-align: left;"><code>(FolderNode)</code></td>
+<td style="text-align: left;"><code>outlineView.reloadItem(folder)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.moveFolder</code></td>
+<td style="text-align: left;"><code>(FolderNode, oldParent, oldIndex, newParent, newIndex)</code></td>
+<td style="text-align: left;"><code>outlineView.moveItem(...)</code> disertai pembaruan kedua induk.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.insertResult</code></td>
+<td style="text-align: left;"><code>(ResultNode, Int64?, Int)</code></td>
+<td style="text-align: left;"><code>outlineView.insertItems(...)</code> dengan kalkulasi pergeseran offset folder.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.removeResult</code></td>
+<td style="text-align: left;"><code>(ResultNode, Int64?, Int)</code></td>
+<td style="text-align: left;"><code>outlineView.removeItems(...)</code> dengan kalkulasi pergeseran offset folder.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.updateResult</code></td>
+<td style="text-align: left;"><code>(ResultNode)</code></td>
+<td style="text-align: left;"><code>outlineView.reloadItem(result)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>.moveResult</code></td>
+<td style="text-align: left;"><code>(ResultNode, oldParentId, oldIndex, newParentId, newIndex)</code></td>
+<td style="text-align: left;"><code>outlineView.moveItem(...)</code> antar-parent dengan kalkulasi ulang child count.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
