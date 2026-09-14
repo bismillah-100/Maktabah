@@ -11,24 +11,28 @@
       
       
       
+        <link rel="prev" href="../range-mapping/">
+      
+      
+        <link rel="next" href="../storage-sync/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Installation Guide — v1.4.2 and Earlier - Maktabah Documentation</title>
+        <title>Tree Builder & Overlap - Maktabah Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -47,7 +51,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -72,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#installation-guide-v142-and-earlier" class="md-skip">
+        <a href="#tree-builder-overlap-resolution" class="md-skip">
           Skip to content
         </a>
       
@@ -88,7 +92,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Maktabah Documentation" class="md-header__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
+    <a href="../../.." title="Maktabah Documentation" class="md-header__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -108,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Installation Guide — v1.4.2 and Earlier
+              Tree Builder & Overlap
             
           </span>
         </div>
@@ -212,7 +216,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Maktabah Documentation" class="md-nav__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
+    <a href="../../.." title="Maktabah Documentation" class="md-nav__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -230,7 +234,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -254,8 +258,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -266,13 +272,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
@@ -293,7 +297,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -308,6 +312,8 @@
                 
   
   
+    
+  
   
   
     
@@ -317,13 +323,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
@@ -344,7 +348,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -362,7 +366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../features/annotations/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -390,7 +394,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../features/annotations/models/" class="md-nav__link">
+      <a href="../models/" class="md-nav__link">
         
   
   
@@ -418,7 +422,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../features/annotations/range-mapping/" class="md-nav__link">
+      <a href="../range-mapping/" class="md-nav__link">
         
   
   
@@ -443,10 +447,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../features/annotations/tree-builder/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tree Builder & Overlap
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -462,6 +493,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#masalah-anotasi-bertumpuk-overlapping-ranges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Masalah Anotasi Bertumpuk (Overlapping Ranges)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mekanisme-segmentasi-rentang-range-fragmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mekanisme Segmentasi Rentang (Range Fragmentation)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#algoritma-interval-tree-hierarki" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Algoritma Interval Tree &amp; Hierarki
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -474,7 +558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../features/annotations/storage-sync/" class="md-nav__link">
+      <a href="../storage-sync/" class="md-nav__link">
         
   
   
@@ -502,7 +586,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../features/annotations/ui-integration/" class="md-nav__link">
+      <a href="../ui-integration/" class="md-nav__link">
         
   
   
@@ -599,7 +683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Struktur%20Kitab/" class="md-nav__link">
+      <a href="../../../Struktur%20Kitab/" class="md-nav__link">
         
   
   
@@ -627,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../Optimasi%20Disk/" class="md-nav__link">
+      <a href="../../../Optimasi%20Disk/" class="md-nav__link">
         
   
   
@@ -682,10 +766,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-download-the-database" class="md-nav__link">
+  <a href="#masalah-anotasi-bertumpuk-overlapping-ranges" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Download the Database
+        Masalah Anotasi Bertumpuk (Overlapping Ranges)
       
     </span>
   </a>
@@ -693,10 +777,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-install-the-application" class="md-nav__link">
+  <a href="#mekanisme-segmentasi-rentang-range-fragmentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Install the Application
+        Mekanisme Segmentasi Rentang (Range Fragmentation)
       
     </span>
   </a>
@@ -704,21 +788,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-launch-the-application" class="md-nav__link">
+  <a href="#algoritma-interval-tree-hierarki" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Launch the Application
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
+        Algoritma Interval Tree &amp; Hierarki
       
     </span>
   </a>
@@ -742,44 +815,36 @@
 
 
 
-<h1 id="installation-guide-v142-and-earlier">Installation Guide — v1.4.2 and Earlier</h1>
-<h2 id="1-download-the-database">1. Download the Database</h2>
-<p>The library database (approx. 11GB) must be downloaded separately.
-- Request download from <a href="https://drive.google.com/file/d/1lAinUQ9Eh_W4_4r3MNfX84Ee3AOCVt_B/view?usp=sharing">Google Drive</a>.
-- Extract the downloaded file to any folder of your choice.</p>
-<h2 id="2-install-the-application">2. Install the Application</h2>
-<ul>
-<li>Download the <a href="https://github.com/bismillah-100/Maktabah/releases/latest">Application</a>.</li>
-<li>Open the .zip file.</li>
-<li>Drag Maktabah.app into your Applications folder.</li>
-</ul>
-<h2 id="3-launch-the-application">3. Launch the Application</h2>
-<ul>
-<li>Open Maktabah.app from your Applications folder.</li>
-<li>First-time launch: Right-click the app → select "Open" (required due to ad-hoc signing).</li>
-<li>A dialog will appear asking you to locate the database.</li>
-<li>Select the database folder you extracted earlier.</li>
-<li>The app is now ready to use!</li>
-</ul>
+<h1 id="tree-builder-overlap-resolution">Tree Builder &amp; Overlap Resolution</h1>
+<p>Sumber kode: <code>Source/Features/Annotations/Database/AnnotationTreeBuilder.swift</code></p>
 <hr />
-<h2 id="troubleshooting">Troubleshooting</h2>
-<p><strong>"App cannot be opened because the developer cannot be identified"</strong></p>
-<p>Option 1 — Right-click:
-- Right-click on the app → select "Open".
-- Click "Open" again in the dialog box that appears.
-- This step is only required once.</p>
-<p>Option 2 — System Settings:
-- Open <strong>System Settings</strong> → <strong>Privacy &amp; Security</strong>.
-- Scroll down and click <strong>"Open Anyway"</strong> next to the Maktabah entry.
-- This step is only required once.</p>
-<p><strong>"Database not found"</strong>
-- Ensure you have downloaded the full 11GB database.
-- Extract all files completely to any folder.
-- When the app prompts for the database location, select the folder where the extracted files are stored.</p>
-<p><strong>App crashes or errors</strong>
-- Ensure your macOS version is Latest Ventura or later.
-- Restart the application.
-- If the error persists, please <a href="https://github.com/bismillah-100/Maktabah/issues/new">open an Issue</a>.</p>
+<h2 id="masalah-anotasi-bertumpuk-overlapping-ranges">Masalah Anotasi Bertumpuk (<em>Overlapping Ranges</em>)</h2>
+<p>Pengguna sering kali membuat anotasi bertingkat, contohnya:
+* Menyorot satu kalimat penuh dengan warna <strong>Kuning</strong>.
+* Menggarisbawahi satu kata penting di tengah kalimat tersebut dengan warna <strong>Merah</strong>.
+* Menyorot frasa yang melintasi sebagian akhir kalimat dengan warna <strong>Hijau</strong>.</p>
+<p><code>NSAttributedString</code> standar Apple tidak mendukung rentang parsial yang tumpang tindih tanpa memotong (<em>fragmenting</em>) atribut teks secara manual.</p>
+<hr />
+<h2 id="mekanisme-segmentasi-rentang-range-fragmentation">Mekanisme Segmentasi Rentang (<em>Range Fragmentation</em>)</h2>
+<p><code>AnnotationTreeBuilder</code> memecah kumpulan anotasi yang tumpang tindih menjadi segmen-segmen atomik tanpa persimpangan (<em>disjoint intervals</em>):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Anotasi 1 (Kuning): [==========]
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Anotasi 2 (Merah) :       [==========]
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Hasil Fragmentasi:
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Segmen A:           [=====]           (Warna Kuning)
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Segmen B:                 [====]      (Campuran / Prioritas Tertinggi)
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Segmen C:                      [=====] (Warna Merah)
+</span></code></pre></div>
+<hr />
+<h2 id="algoritma-interval-tree-hierarki">Algoritma Interval Tree &amp; Hierarki</h2>
+<ol>
+<li><strong>Titik Potong (<em>Boundary Points</em>)</strong>: Mengumpulkan semua titik awal (<code>location</code>) dan akhir (<code>location + length</code>) dari seluruh anotasi di halaman tersebut.</li>
+<li><strong>Pengurutan (<em>Sorting</em>)</strong>: Mengurutkan titik-titik tersebut secara linear.</li>
+<li><strong>Penyusunan Segmen</strong>: Untuk setiap celah antar dua titik batas berurutan, sistem memeriksa anotasi mana saja yang melingkupi segmen tersebut.</li>
+<li><strong>Resolusi Prioritas</strong>:</li>
+<li>Rentang yang <strong>lebih pendek/spesifik</strong> mendapatkan prioritas atribut di atas rentang yang lebih lebar.</li>
+<li>Mode <code>underline</code> dirender secara independen di atas mode <code>highlight</code> sehingga keduanya bisa tampil serentak pada kata yang sama.</li>
+</ol>
 
 
 
@@ -829,10 +894,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

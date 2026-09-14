@@ -12,7 +12,7 @@
       
       
       
-        <link rel="next" href="features/annotation/">
+        <link rel="next" href="features/annotations/">
       
       
         
@@ -292,10 +292,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gambaran-umum-arsitektur" class="md-nav__link">
+  <a href="#gambaran-arsitektur" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gambaran Umum Arsitektur
+        Gambaran Arsitektur
       
     </span>
   </a>
@@ -303,10 +303,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#modul-utama" class="md-nav__link">
+  <a href="#modul-feature-slice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Modul Utama
+        Modul Feature-Slice
       
     </span>
   </a>
@@ -381,15 +381,66 @@
   
   
   
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Annotations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="features/annotation/" class="md-nav__link">
+      <a href="features/annotations/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Annotation Engine
+    Overview
   
 
     
@@ -398,6 +449,154 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="features/annotations/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Model & Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="features/annotations/range-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diacritics & Range Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="features/annotations/tree-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tree Builder & Overlap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="features/annotations/storage-sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storage & CloudKit Sync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="features/annotations/ui-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI & Platform Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -554,10 +753,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gambaran-umum-arsitektur" class="md-nav__link">
+  <a href="#gambaran-arsitektur" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gambaran Umum Arsitektur
+        Gambaran Arsitektur
       
     </span>
   </a>
@@ -565,10 +764,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#modul-utama" class="md-nav__link">
+  <a href="#modul-feature-slice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Modul Utama
+        Modul Feature-Slice
       
     </span>
   </a>
@@ -593,10 +792,10 @@
 
 
 <h1 id="maktabah-technical-documentation">Maktabah Technical Documentation</h1>
-<p>Selamat datang di dokumentasi teknis internal <strong>Maktabah</strong> (Aplikasi pembaca perpustakaan Islam Shamela untuk macOS dan iOS).</p>
+<p>Dokumentasi arsitektur dan teknis internal aplikasi <strong>Maktabah</strong> (macOS &amp; iOS).</p>
 <hr />
-<h2 id="gambaran-umum-arsitektur">Gambaran Umum Arsitektur</h2>
-<p>Maktabah dibangun menggunakan arsitektur dual-platform berbasis Swift:</p>
+<h2 id="gambaran-arsitektur">Gambaran Arsitektur</h2>
+<p>Maktabah menggunakan arsitektur dual-platform modular berbasis Swift:</p>
 <ul>
 <li><strong>Platform UI</strong>: macOS (AppKit) &amp; iOS (SwiftUI + UIKit bridge)</li>
 <li><strong>Penyimpanan Lokal</strong>: SQLite (libsqlite3) terkompresi Zstandard (<code>zstd</code>)</li>
@@ -604,26 +803,55 @@
 <li><strong>Pencarian</strong>: SQLite FTS5 concurrent worker pool</li>
 </ul>
 <hr />
-<h2 id="modul-utama">Modul Utama</h2>
+<h2 id="modul-feature-slice">Modul Feature-Slice</h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Modul</th>
-<th style="text-align: left;">Deskripsi</th>
+<th style="text-align: left;">Fitur</th>
+<th style="text-align: left;">Cakupan Dokumentasi</th>
+<th style="text-align: left;">Status</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><a href="features/annotation/">Annotation Engine</a></td>
-<td style="text-align: left;">Penandaan teks Arab, dual-range mapping, dan sync CloudKit</td>
+<td style="text-align: left;"><a href="features/annotations/">Annotations</a></td>
+<td style="text-align: left;">Dual-range diacritics, tree overlap, CloudKit sync, UI &amp; widget</td>
+<td style="text-align: left;">Selesai</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="Struktur%20Kitab/">Struktur Kitab</a></td>
-<td style="text-align: left;">Skema tabel arsip kitab <code>b{id}</code> dan daftar isi <code>t{id}</code></td>
+<td style="text-align: left;">Bookmarks</td>
+<td style="text-align: left;">Hirarki folder hasil pencarian, sync CloudKit</td>
+<td style="text-align: left;">Antrean</td>
 </tr>
 <tr>
-<td style="text-align: left;"><a href="Optimasi%20Disk/">Optimasi Disk</a></td>
-<td style="text-align: left;">Mekanisme kompresi LZString &amp; Zstandard</td>
+<td style="text-align: left;">Reader Engine</td>
+<td style="text-align: left;">Tipografi Arab, pagination, continuous scroll, harakat toggle</td>
+<td style="text-align: left;">Antrean</td>
+</tr>
+<tr>
+<td style="text-align: left;">Library &amp; Catalog</td>
+<td style="text-align: left;">Download manager, index <code>t{id}</code>, content <code>b{id}</code>, zstd decompression</td>
+<td style="text-align: left;">Antrean</td>
+</tr>
+<tr>
+<td style="text-align: left;">Full-Text Search</td>
+<td style="text-align: left;">Multi-database SQLite FTS5 concurrent worker pool</td>
+<td style="text-align: left;">Antrean</td>
+</tr>
+<tr>
+<td style="text-align: left;">Narrator (Rijal)</td>
+<td style="text-align: left;">Database rawi, analisis sanad, visualisasi silsilah guru-murid</td>
+<td style="text-align: left;">Antrean</td>
+</tr>
+<tr>
+<td style="text-align: left;">Quran &amp; Tafsir</td>
+<td style="text-align: left;">Navigasi surah/ayat, integrasi data tafsir</td>
+<td style="text-align: left;">Antrean</td>
+</tr>
+<tr>
+<td style="text-align: left;">Widget Extension</td>
+<td style="text-align: left;">Lock Screen/Home Screen timeline provider, shared App Group</td>
+<td style="text-align: left;">Antrean</td>
 </tr>
 </tbody>
 </table>
