@@ -1,0 +1,1745 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Technical Documentation for Maktabah (macOS & iOS)">
+      
+      
+      
+      
+        <link rel="prev" href="../features/annotation/">
+      
+      
+        <link rel="next" href="../Optimasi%20Disk/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Struktur Kitab - Maktabah Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#book-structure" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Maktabah Documentation" class="md-header__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Maktabah Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Struktur Kitab
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Maktabah Documentation" class="md-nav__button md-logo" aria-label="Maktabah Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Maktabah Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/annotation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Struktur Kitab
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Struktur Kitab
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ruang-lingkup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruang Lingkup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#peta-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peta Database
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skema-utama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skema Utama
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Skema Utama">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mainsqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) main.sqlite
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) main.sqlite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabel-0bok" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel 0bok
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-0cat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel 0cat
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-specialsqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) special.sqlite
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) special.sqlite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabel-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel Auth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-shorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel shorts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-rowa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel rowa
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-tarjamah" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel tarjamah
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-quran" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel Quran
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-nsqlite-archive-kitab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) N.sqlite (archive kitab)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-n_ftssqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) N_fts.sqlite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-database-ke-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mapping Database ke Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mapping Database ke Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#library" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#konten-buku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Konten Buku
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Konten Buku">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#daftar-isi-kitab-bookconnectionbuildtoctree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daftar Isi Kitab (BookConnection.buildTOCTree)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rawitarjamah" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rawi/Tarjamah
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rawi/Tarjamah">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pengelompokan-rowi-sesuai-tabaqa-rowidatamanagerloaddatagroupbytabaqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pengelompokan Rowi sesuai Tabaqa (RowiDataManager.loadData().groupByTabaqa())
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alur-transformasi-teks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Transformasi Teks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alur Transformasi Teks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-decompress-nass-zstd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Decompress nass (ZSTD)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-shorts-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) shorts mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kurung-dan-rendering-teks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Kurung {} dan rendering teks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-mapping-tabaqa-simbol-rawi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Mapping tabaqa / simbol rawi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mekanisme-search-fts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mekanisme Search + FTS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mekanisme Search + FTS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#search-kitab-umum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search kitab umum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-tarjamah" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search tarjamah
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-buku-dan-rebuild-struktur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Buku dan Rebuild Struktur
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database-pengguna" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Pengguna
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database Pengguna">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#annotationssqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations.sqlite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searchresultssqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SearchResults.sqlite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#catatan-implementasi-penting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catatan Implementasi Penting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-referensi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Referensi
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Optimasi%20Disk/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimasi Disk
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ruang-lingkup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ruang Lingkup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#peta-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Peta Database
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skema-utama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skema Utama
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Skema Utama">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mainsqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) main.sqlite
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1) main.sqlite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabel-0bok" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel 0bok
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-0cat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel 0cat
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-specialsqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) special.sqlite
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) special.sqlite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tabel-auth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel Auth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-shorts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel shorts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-rowa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel rowa
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-tarjamah" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel tarjamah
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tabel-quran" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tabel Quran
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-nsqlite-archive-kitab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) N.sqlite (archive kitab)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-n_ftssqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) N_fts.sqlite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-database-ke-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mapping Database ke Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mapping Database ke Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#library" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#konten-buku" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Konten Buku
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Konten Buku">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#daftar-isi-kitab-bookconnectionbuildtoctree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daftar Isi Kitab (BookConnection.buildTOCTree)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rawitarjamah" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rawi/Tarjamah
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rawi/Tarjamah">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pengelompokan-rowi-sesuai-tabaqa-rowidatamanagerloaddatagroupbytabaqa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pengelompokan Rowi sesuai Tabaqa (RowiDataManager.loadData().groupByTabaqa())
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alur-transformasi-teks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Transformasi Teks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alur Transformasi Teks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-decompress-nass-zstd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Decompress nass (ZSTD)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-shorts-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) shorts mapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kurung-dan-rendering-teks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Kurung {} dan rendering teks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-mapping-tabaqa-simbol-rawi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Mapping tabaqa / simbol rawi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mekanisme-search-fts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mekanisme Search + FTS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mekanisme Search + FTS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#search-kitab-umum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search kitab umum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-tarjamah" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Search tarjamah
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update-buku-dan-rebuild-struktur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Buku dan Rebuild Struktur
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database-pengguna" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Pengguna
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database Pengguna">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#annotationssqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Annotations.sqlite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searchresultssqlite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SearchResults.sqlite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#catatan-implementasi-penting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catatan Implementasi Penting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-referensi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Referensi
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="book-structure">Book Structure</h1>
+<p>Dokumen ini adalah artikel arsitektur database dan mapping model untuk modul buku.</p>
+<p>Lihat: <code>Documentation/Optimasi-Penyimpanan.md</code> untuk detail kompresi ZSTD dan desain FTS hemat ruang.</p>
+<h2 id="ruang-lingkup">Ruang Lingkup</h2>
+<ul>
+<li>Database utama di <code>Managers/Database</code></li>
+<li>Mapping data di <code>Source/Models</code></li>
+<li>Transformasi teks: <code>shorts</code>, mapping <code>tabaqa</code>, kurung <code>{}</code>, dan ZSTD</li>
+<li>Alur update buku + rebuild FTS</li>
+</ul>
+<h2 id="peta-database">Peta Database</h2>
+<p><code>DatabaseManager</code> membuka dua database inti:</p>
+<ul>
+<li><code>Files/main.sqlite</code> (<code>DatabaseManager.db</code>)</li>
+<li><code>Files/special.sqlite</code> (<code>DatabaseManager.dbSpecial</code>)</li>
+</ul>
+<p>Selain itu aplikasi memakai database archive per nomor:</p>
+<ul>
+<li><code>N.sqlite</code> (contoh <code>1.sqlite</code>, <code>2.sqlite</code>) berisi konten kitab (<code>b{bkid}</code>) + TOC (<code>t{bkid}</code>)</li>
+<li><code>N_fts.sqlite</code> berisi indeks FTS5 per tabel kitab (<code>b{bkid}_fts</code>)</li>
+</ul>
+<p>Fitur Database Pengguna:</p>
+<ul>
+<li><code>SearchResults.sqlite</code> (hasil pencarian tersimpan)</li>
+<li><code>Annotations.sqlite</code> (highlight/underline + catatan)</li>
+</ul>
+<h2 id="skema-utama">Skema Utama</h2>
+<h3 id="1-mainsqlite">1) <code>main.sqlite</code></h3>
+<h4 id="tabel-0bok">Tabel <code>0bok</code></h4>
+<p>Kolom yang dipakai aplikasi (lihat <code>DatabaseManager</code>):</p>
+<ul>
+<li><code>bkid</code> -&gt; ID buku</li>
+<li><code>cat</code> -&gt; kategori</li>
+<li><code>bk</code> -&gt; judul buku</li>
+<li><code>Archive</code> -&gt; id file archive (<code>N.sqlite</code>)</li>
+<li><code>betaka</code> -&gt; metadata/bithoqoh</li>
+<li><code>authno</code> -&gt; relasi penulis ke <code>Auth</code></li>
+<li><code>inf</code> -&gt; info buku</li>
+<li><code>TafseerNam</code> -&gt; nama tafsir (opsional)</li>
+<li><code>bVer</code>/<code>bver</code> -&gt; versi buku (dipakai update manager)</li>
+</ul>
+<h4 id="tabel-0cat">Tabel <code>0cat</code></h4>
+<ul>
+<li><code>id</code> -&gt; ID kategori</li>
+<li><code>name</code> -&gt; nama kategori</li>
+<li><code>Lvl</code> -&gt; level kategori</li>
+<li><code>catord</code> -&gt; urutan tampilan</li>
+</ul>
+<h3 id="2-specialsqlite">2) <code>special.sqlite</code></h3>
+<h4 id="tabel-auth">Tabel <code>Auth</code></h4>
+<p>Dipakai untuk data penulis:</p>
+<ul>
+<li><code>authid</code>, <code>auth</code>, <code>inf</code>, <code>Lng</code>, <code>oVer</code> (dan kolom lain seperti <code>HigriD</code> saat update author)</li>
+</ul>
+<h4 id="tabel-shorts">Tabel <code>shorts</code></h4>
+<p>Dipakai untuk ekspansi singkatan teks kitab:</p>
+<ul>
+<li><code>Bk</code> -&gt; ID buku</li>
+<li><code>Ramz</code> -&gt; token singkatan</li>
+<li><code>Nass</code> -&gt; teks pengganti</li>
+</ul>
+<h4 id="tabel-rowa">Tabel <code>rowa</code></h4>
+<p>Dipakai modul perawi:</p>
+<ul>
+<li><code>id</code>, <code>name</code>, <code>AQUAL</code>, <code>ROTBA</code>, <code>R_ZAHBI</code>, <code>sheok</code>, <code>telmez</code>, <code>IsoName</code>, <code>TABAQA</code>, <code>WHO</code>, <code>birth</code>, <code>death</code></li>
+</ul>
+<h4 id="tabel-tarjamah">Tabel tarjamah</h4>
+<ul>
+<li><code>men_b</code> + <code>men_b_fts</code></li>
+<li><code>men_u</code> + <code>men_u_fts</code></li>
+</ul>
+<h4 id="tabel-quran">Tabel Quran</h4>
+<ul>
+<li><code>Qr</code> (ayat)</li>
+<li><code>Sora</code> (nama surat)</li>
+</ul>
+<h3 id="3-nsqlite-archive-kitab">3) <code>N.sqlite</code> (archive kitab)</h3>
+<p>Per buku:</p>
+<ul>
+<li><code>b{bkid}</code>: konten utama (<code>id</code>, <code>nass</code>, <code>page</code>, <code>part</code>, opsional <code>sora</code>, <code>aya</code>)</li>
+<li><code>t{bkid}</code>: daftar isi/TOC (<code>id</code>, <code>tit</code>, <code>lvl</code>, <code>sub</code>)</li>
+</ul>
+<p>Catatan:</p>
+<ul>
+<li>Pada state terbaru, <code>nass</code> disimpan sebagai <code>BLOB</code> terkompres ZSTD.</li>
+<li>Beberapa data lama bisa masih <code>TEXT</code>; pembacaan di beberapa path sudah menangani fallback.</li>
+</ul>
+<h3 id="4-n_ftssqlite">4) <code>N_fts.sqlite</code></h3>
+<p>Per buku ada virtual table:</p>
+<ul>
+<li><code>b{bkid}_fts</code> dengan kolom <code>nass_clean</code> (<code>fts5</code>, <code>tokenize='unicode61'</code>)</li>
+<li><code>rowid</code> diset ke <code>id</code> baris asli agar join ke <code>b{bkid}</code> stabil</li>
+</ul>
+<h2 id="mapping-database-ke-model">Mapping Database ke Model</h2>
+<h3 id="library">Library</h3>
+<ul>
+<li><code>0cat</code> -&gt; <code>CategoryData</code></li>
+<li><code>0bok</code> -&gt; <code>BooksData</code></li>
+<li><code>Auth</code> -&gt; <code>Muallif</code></li>
+</ul>
+<p><code>LibraryDataManager</code> membangun hierarki kategori (<code>CategoryData.children</code>) dan cache <code>booksById</code>.</p>
+<h3 id="konten-buku">Konten Buku</h3>
+<ul>
+<li><code>b{bkid}</code> -&gt; <code>BookContent</code></li>
+<li><code>t{bkid}</code> -&gt; <code>TOC</code> -&gt; <code>TOCNode</code></li>
+</ul>
+<p><code>BookConnection</code> membaca <code>nass</code>, melakukan decompress, lalu menghasilkan <code>BookContent</code>.</p>
+<h4 id="daftar-isi-kitab-bookconnectionbuildtoctree">Daftar Isi Kitab (<code>BookConnection.buildTOCTree</code>)</h4>
+<p>Masalah data asal Shamela:</p>
+<ul>
+<li>Struktur <code>t{bkid}</code> tidak selalu konsisten antar kitab.</li>
+<li>Nilai <code>lvl</code>/<code>sub</code> bisa tidak ideal.</li>
+<li>Hubungan parent-child tidak tersimpan sebagai foreign key eksplisit.</li>
+</ul>
+<p>Strategi yang dipakai saat ini adalah heuristik bertahap:</p>
+<ol>
+<li>Ambil flat TOC dari <code>t{bkid}</code> dengan query:</li>
+<li><code>SELECT id, tit, COALESCE(lvl, 0), COALESCE(sub, 0) ORDER BY id</code></li>
+<li>Buat semua <code>TOCNode</code> dulu (pass 1), lalu kelompokkan ke <code>levelStacks[level]</code>.</li>
+<li>Tentukan root awal dari level 1:</li>
+<li><code>level == 1 &amp;&amp; sub == 0</code></li>
+<li>Untuk setiap node level &gt; 1, cari parent kandidat dari level terdekat ke atas:</li>
+<li>cek level <code>currentLevel - 1</code> turun sampai <code>1</code></li>
+<li>pilih parent terakhir dengan <code>parent.id &lt;= node.id</code></li>
+<li>Jika parent tidak ketemu, node dipromosikan jadi root (fallback agar tidak hilang dari UI).</li>
+</ol>
+<p>Catatan penting:</p>
+<ul>
+<li>Mengandalkan asumsi urutan <code>id</code> kurang-lebih mengikuti alur dokumen.</li>
+<li>Karena sumber data tidak selalu rapi, fallback “promote to root” adalah kompromi supaya konten tetap tampil.</li>
+<li>Hasil tree di-cache per buku via <code>tocTreeCache</code> untuk mengurangi rebuild.</li>
+<li><code>Task.isCancelled</code> dicek berkala agar proses bisa dibatalkan.</li>
+</ul>
+<h3 id="rawitarjamah">Rawi/Tarjamah</h3>
+<ul>
+<li><code>rowa</code> -&gt; <code>Rowi</code></li>
+<li><code>men_b</code>/<code>men_u</code> -&gt; <code>TarjamahMen</code></li>
+<li>konten dari <code>b{bkid}</code> -&gt; <code>TarjamahResult</code></li>
+</ul>
+<p>Model <code>Rowi</code> memiliki normalisasi di <code>didSet</code> (mis. <code>aqual</code>, <code>rotba</code>, <code>sheok</code>, <code>telmez</code>, <code>who</code>).</p>
+<h4 id="pengelompokan-rowi-sesuai-tabaqa-rowidatamanagerloaddatagroupbytabaqa">Pengelompokan Rowi sesuai Tabaqa (<code>RowiDataManager.loadData().groupByTabaqa()</code>)</h4>
+<p>Masalah data asal Shamela:</p>
+<ul>
+<li>Tabel <code>rowa</code> tidak punya kolom hirarki seperti <code>lvl</code> (berbeda dengan <code>0cat</code>).</li>
+<li>Klasifikasi ada di kolom teks <code>TABAQA</code>, formatnya bisa campuran huruf/angka/teks.</li>
+</ul>
+<p>Karena itu, struktur Rowi yang dibangun bukan tree multi-level murni, melainkan:</p>
+<ul>
+<li>level 1: <code>TabaqaGroup</code> (kode F..P + fallback)</li>
+<li>level 2: daftar <code>Rowi</code> di dalam grup</li>
+</ul>
+<p>Alur saat ini:</p>
+<ol>
+<li><code>loadData()</code> memuat data ringan dulu (<code>id</code>, <code>TABAQA</code>, <code>IsoName</code>) untuk semua rowi.</li>
+<li>Tiap rowi dipetakan ke kode normal melalui <code>Rowi.getNormalizedTabaqaCode()</code>.</li>
+<li><code>groupByTabaqa()</code> membentuk dictionary <code>[kode: [Rowi]]</code>.</li>
+<li>Grup disusun pakai urutan domain tetap <code>orderedCodes = [F...P]</code>.</li>
+<li>Kode sisa masuk fallback group (<code>Unknown</code> atau kode mentah).</li>
+<li>Tiap grup memakai pagination (<code>initialLoad</code>/<code>loadMore</code>) agar UI tidak render semua item sekaligus.</li>
+</ol>
+<p>Konsekuensi desain:</p>
+<ul>
+<li>Tidak ada parent-child berbasis relasi DB, hanya grouping semantik berdasarkan normalisasi <code>TABAQA</code>.</li>
+<li>Akurasi grouping sangat bergantung pada aturan parser <code>getNormalizedTabaqaCode()</code> dan mapping <code>TabaqaGroup</code>.</li>
+<li>Pendekatan ini dipilih karena kompatibel dengan dataset lama yang tidak menyediakan struktur hierarki eksplisit.</li>
+</ul>
+<h2 id="alur-transformasi-teks">Alur Transformasi Teks</h2>
+<h3 id="1-decompress-nass-zstd">1) Decompress <code>nass</code> (ZSTD)</h3>
+<p>Path baca utama (<code>BookConnection.getContent</code>, <code>getFirstContent</code>, <code>getContentByPage</code>, dll):</p>
+<ol>
+<li>Query kolom <code>nass</code> sebagai <code>Blob</code></li>
+<li><code>Data(blob.bytes)</code> -&gt; <code>ReusableFunc.decompressData</code></li>
+<li>Hasil plain text dipakai sebagai <code>BookContent.nash</code></li>
+</ol>
+<p>Di path search/tarjamah, jika <code>nass</code> terbaca sebagai <code>String</code>, kode fallback langsung memakai teks tersebut.</p>
+<h3 id="2-shorts-mapping">2) <code>shorts</code> mapping</h3>
+<p><code>DatabaseManager.loadShortsForBook(_:)</code> memuat map <code>Ramz -&gt; Nass</code> dari <code>special.sqlite</code>.
+<code>BookConnection.applyShortsMapping</code> mengganti token dengan urutan key terpanjang dulu.</p>
+<p>Implikasi:</p>
+<ul>
+<li>Ekspansi singkatan dilakukan setiap fetch konten buku</li>
+<li>Ada cache <code>shortsCache</code> per buku untuk mengurangi query ulang</li>
+</ul>
+<h3 id="3-kurung-dan-rendering-teks">3) Kurung <code>{}</code> dan rendering teks</h3>
+<p><code>StringExt.cleanedText()</code>/<code>cleanedTextWithRanges()</code>:</p>
+<ul>
+<li>Mengganti literal <code>\\n</code> menjadi newline</li>
+<li>Menghapus karakter tertentu (<code>¬</code>, <code>§</code>)</li>
+<li>Mengubah <code>{</code> dan <code>}</code> menjadi bentuk kurung Arab (<code>﴿</code> / <code>﴾</code>) sesuai font aktif</li>
+<li>Pada varian <code>cleanedTextWithRanges()</code>, range isi di dalam kurung dicatat untuk pewarnaan UI</li>
+</ul>
+<h3 id="4-mapping-tabaqa-simbol-rawi">4) Mapping <code>tabaqa</code> / simbol rawi</h3>
+<p><code>RowiModel</code> + <code>StringExt</code> melakukan:</p>
+<ul>
+<li>Ekspansi kode kutub (<code>mappingRowiKutub</code>)</li>
+<li>Ekspansi singkatan tunggal (<code>C</code>, <code>E</code>, <code>W</code>, <code>#</code>, dll)</li>
+<li>Konversi kode tabaqa (<code>F</code>..<code>P</code>) ke label Arab</li>
+<li>Normalisasi grouping perawi via <code>getNormalizedTabaqaCode()</code></li>
+</ul>
+<h2 id="mekanisme-search-fts">Mekanisme Search + FTS</h2>
+<h3 id="search-kitab-umum">Search kitab umum</h3>
+<p><code>SearchEngine</code>:</p>
+<ol>
+<li>Menyusun FTS query (<code>phrase</code> atau <code>contains</code>)</li>
+<li>Menghitung <code>COUNT(*)</code> dari <code>b{bkid}_fts</code></li>
+<li>Mengambil data batch dengan join:</li>
+<li>FTS table (<code>b{bkid}_fts</code>)</li>
+<li>Tabel konten asli (<code>b{bkid}</code>)</li>
+<li><code>nass</code> hasil join didecompress jika berupa <code>BLOB</code></li>
+</ol>
+<h3 id="search-tarjamah">Search tarjamah</h3>
+<p><code>TarjamahGlobalManager</code>:</p>
+<ul>
+<li><code>men_b</code> via <code>men_b_fts</code></li>
+<li><code>men_u</code> via <code>men_u_fts</code></li>
+<li>Konten referensi diambil dari <code>b{bkid}</code> sesuai <code>id</code></li>
+</ul>
+<h2 id="update-buku-dan-rebuild-struktur">Update Buku dan Rebuild Struktur</h2>
+<p><code>BookUpdateManager</code> melakukan pipeline:</p>
+<ol>
+<li>Download metadata dan file buku baru</li>
+<li>Baca <code>main_update</code> untuk dapat metadata (<code>bkid</code>, <code>archive</code>, <code>bVer</code>, <code>link</code>, dst)</li>
+<li>Konversi tabel <code>b{bkid}</code>:</li>
+<li>Salin ke temp table</li>
+<li>Kolom <code>nass</code> dikompres ZSTD (<code>TEXT</code> -&gt; <code>BLOB</code>)</li>
+<li>Rename kembali ke <code>b{bkid}</code></li>
+<li>Replace tabel target archive:</li>
+<li><code>b{bkid}</code></li>
+<li><code>t{bkid}</code></li>
+<li>Rebuild FTS di <code>N_fts.sqlite</code>:</li>
+<li>Drop/create <code>b{bkid}_fts</code></li>
+<li>Insert <code>rowid=id</code>, <code>nass_clean=normalize_arabic(nass)</code></li>
+<li>Update/inject metadata <code>0bok</code> + update versi (<code>bVer</code>)</li>
+</ol>
+<h2 id="database-pengguna">Database Pengguna</h2>
+<h3 id="annotationssqlite"><code>Annotations.sqlite</code></h3>
+<p>Tabel <code>annotations</code>:</p>
+<ul>
+<li><code>id</code> id unik anotasi</li>
+<li><code>bkId</code> id buku dari main.sqlite</li>
+<li><code>contentId</code> id konen buku dari N.sqlite</li>
+<li><code>startIndex</code>, <code>length</code> startIndex dan panjang anotasi</li>
+<li><code>startIndexDiac</code>, <code>lengthDiac</code> startIndex dan panjang anotasi dengan harakat</li>
+<li><code>color</code> warna</li>
+<li><code>type</code> tipe: highligh/underline</li>
+<li><code>note</code> catatan</li>
+<li><code>createdAt</code> tanggal dibuat</li>
+<li><code>context</code> konteks (konten kitab yang diberi tanda)</li>
+<li><code>part</code> bagian</li>
+<li><code>page</code> halaman</li>
+</ul>
+<p>Dipetakan ke <code>Annotation</code>.</p>
+<h3 id="searchresultssqlite"><code>SearchResults.sqlite</code></h3>
+<ul>
+<li><code>folders</code> untuk struktur folder hasil tersimpan</li>
+<li><code>results</code> untuk item hasil (query, archive, bkId, daftar contentId)</li>
+</ul>
+<p>Dipetakan ke <code>SavedResultsItem</code> / node view model hasil.</p>
+<h2 id="catatan-implementasi-penting">Catatan Implementasi Penting</h2>
+<ul>
+<li>Pembacaan konten melakukan decompress per row fetch dan dicache di (<code>BookPageCache</code>)  untuk mengurangi dekompresi berulang.</li>
+<li>Ekspansi <code>shorts</code> dilakukan setelah decompress; jadi biaya string processing tetap ada di path baca.</li>
+<li>Tidak ada fitur bookmark karena sudah bisa tercakup dalam fitur anotasi untuk kestabilan dan kemudahan pengembangan.</li>
+</ul>
+<h2 id="file-referensi">File Referensi</h2>
+<ul>
+<li><code>Source/Managers/Database/DatabaseManager.swift</code></li>
+<li><code>Source/Managers/Database/BookConnection.swift</code></li>
+<li><code>Source/Managers/Database/BookUpdateManager.swift</code></li>
+<li><code>Source/Managers/Database/AnnotationManager.swift</code></li>
+<li><code>Source/Managers/Database/ResultsHandler.swift</code></li>
+<li><code>Source/Managers/Engine/SearchEngine.swift</code></li>
+<li><code>Source/Managers/String/StringExt.swift</code></li>
+<li><code>Source/Managers/Narrathor/RowiDataManager.swift</code></li>
+<li><code>Source/Managers/Narrathor/TarjamahDataManager.swift</code></li>
+<li><code>Source/Models/DataModel.swift</code></li>
+<li><code>Source/Models/RowiModel.swift</code></li>
+<li><code>Source/Models/Annotations.swift</code></li>
+<li><code>Source/Models/Narrathor.swift</code></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
