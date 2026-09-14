@@ -1,0 +1,142 @@
+site_name: Maktabah Documentation
+site_description: Technical Documentation for Maktabah (macOS & iOS)
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: orange
+      accent: orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: orange
+      accent: orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - content.code.annotate
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format ''
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+nav:
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Troubleshooting: troubleshooting/index.md
+  - Core Architecture:
+      - App Configuration: core/configuration.md
+      - CloudKit SyncEngine: core/cloudkit.md
+      - Database Management: core/database.md
+      - Search Engine: core/search-engine.md
+      - Text Processing: core/text-processing.md
+      - UI Core (iOS):
+          - iOSMainView & Layout: core/ios/mainview.md
+      - UI Core (macOS):
+          - SplitVC & Window: core/macos/splitvc.md
+  - Feature Modules:
+      - Global Architecture: features/index.md
+      - Annotations:
+          - Overview: features/annotations/index.md
+          - AppKit (macOS): features/annotations/macos.md
+          - Data Models: features/annotations/models.md
+          - Database & Storage: features/annotations/database.md
+          - Diacritics & Range Mapping: features/annotations/range-mapping.md
+          - Protocols & Contracts: features/annotations/protocols.md
+          - State Management (ViewModel): features/annotations/viewmodel.md
+          - SwiftUI (iOS): features/annotations/ios.md
+          - Tree Builder & Overlap: features/annotations/tree-builder.md
+          - UI & Platform Integration: features/annotations/ui-integration.md
+      - Bookmarks:
+          - Overview: features/bookmarks/index.md
+          - Data Models & State Types: features/bookmarks/models.md
+          - Database & CloudKit Persistence: features/bookmarks/database.md
+          - iOS Implementation: features/bookmarks/ios.md
+          - macOS Implementation: features/bookmarks/macos.md
+          - Protocols & Delegation: features/bookmarks/protocols.md
+          - ViewModel & Reactive Workflows: features/bookmarks/viewmodel.md
+      - History:
+          - Overview: features/history/index.md
+          - AppKit (macOS): features/history/macos.md
+          - Data Models: features/history/models.md
+          - Database & Storage: features/history/database.md
+          - Protocols & Contracts: features/history/protocols.md
+          - State Management (ViewModel): features/history/viewmodel.md
+          - SwiftUI (iOS): features/history/ios.md
+      - Library & Catalog:
+          - Book Import (Offline): features/library/updates/bookimport.md
+          - Book Updates: features/library/updates/bookupdates.md
+          - Data Models: features/library/models.md
+          - Database & Core Persistence: features/library/database.md
+          - Download & Integration: features/library/download-integration.md
+          - FTS Indexing & Stemming: features/library/stemming.md
+          - iOS Implementation: features/library/ios.md
+          - macOS Implementation: features/library/macos.md
+          - Overview: features/library/index.md
+          - Protocols & Delegation: features/library/protocols.md
+          - ViewModel, State & Combine: features/library/viewmodel.md
+      - Narrator (Rijal):
+          - Overview: features/narrator/index.md
+          - AppKit (macOS): features/narrator/macos.md
+          - Data Models: features/narrator/models.md
+          - Database & Storage: features/narrator/database.md
+          - Protocols & Contracts: features/narrator/protocols.md
+          - State Management (ViewModel): features/narrator/viewmodel.md
+          - SwiftUI (iOS): features/narrator/ios.md
+      - Quran & Tafsir:
+          - Overview: features/quran/index.md
+          - AppKit (macOS): features/quran/macos.md
+          - Data Models: features/quran/models.md
+          - Database & Storage: features/quran/database.md
+          - Protocols & Contracts: features/quran/protocols.md
+          - State Management (ViewModel): features/quran/viewmodel.md
+          - SwiftUI (iOS): features/quran/ios.md
+      - Reader Engine:
+          - Overview: features/reader/index.md
+          - Cache: features/reader/cache.md
+          - Data Models: features/reader/models.md
+          - iOS Implementation: features/reader/ios.md
+          - macOS Implementation: features/reader/macos.md
+          - Protocols: features/reader/protocols.md
+          - TextView (macOS & iOS): features/reader/textview.md
+          - ViewModel: features/reader/viewmodel.md
+      - Search:
+          - Overview: features/search/index.md
+          - AppKit (macOS): features/search/macos.md
+          - Data Models: features/search/models.md
+          - Database & Storage: features/search/database.md
+          - Protocols & Contracts: features/search/protocols.md
+          - State Management (ViewModel): features/search/viewmodel.md
+          - SwiftUI (iOS): features/search/ios.md
+      - Widgets:
+          - Overview: features/widget/index.md
+          - AppKit (macOS): features/widget/macos.md
+          - Data Models: features/widget/models.md
+          - Database & Storage: features/widget/database.md
+          - Protocols & Contracts: features/widget/protocols.md
+          - State Management (ViewModel): features/widget/viewmodel.md
+          - SwiftUI (iOS): features/widget/ios.md
+  - Legacy Architecture:
+      - Optimasi Disk: Optimasi Disk.md
+      - Struktur Kitab: Struktur Kitab.md
+extra_css:
+  - stylesheets/sepia.css
