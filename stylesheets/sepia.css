@@ -1,0 +1,222 @@
+/*
+  Tema Maktabah Documentation
+  Warna diselaraskan dengan Color Assets Xcode.
+*/
+
+/* ===== Light mode (High-Contrast Tuning) ===== */
+[data-md-color-scheme="default"] {
+  /* Top Bar / Header */
+  --md-primary-fg-color: #bd6d00;
+  --md-primary-fg-color--light: #ffa833;
+  --md-primary-fg-color--dark: #cc7600;
+  --md-primary-bg-color: #ffffff;
+  /* Ikon/teks header putih bersih agar sangat tajam */
+  --md-primary-bg-color--light: rgba(251, 221, 193, 1);
+
+  /* Accent & Focus */
+  --md-accent-fg-color: #fd8100;
+  --md-accent-fg-color--transparent: rgba(255, 220, 184, 1);
+  --md-accent-bg-color: #efe3cc;
+  --md-accent-bg-color--light: #efe3cc;
+
+  /* Background Utama (Xcode P3: 239, 227, 204) */
+  --md-default-bg-color: #efe3cc;
+
+  /* Tipografi — Dihitamkan agar kontras rasio mencapai >12:1 */
+  --md-default-fg-color: #1c140d;
+  /* Teks utama arang pekat */
+  --md-default-fg-color--light: #3d3023;
+  /* Sidebar navigasi & daftar isi (TOC) jadi tegas */
+  --md-default-fg-color--lighter: #685542;
+  /* Subteks, ikon redup, & meta */
+  --md-default-fg-color--lightest: #c2af93;
+  /* Divider garis horizontal */
+
+  --md-typeset-color: #1c140d;
+  --md-typeset-a-color: #c05c00;
+  /* Link terracotta gelap, kontras dan langsung beda dari teks */
+
+  /* Code Block (Warna dinaikkan kontrasnya) */
+  --md-code-bg-color: #e0d0b5;
+  --md-code-fg-color: #1f150c;
+}
+
+/* ===== Penegasan Batas Visual Kontainer (Biar gak becek) ===== */
+/* Border tegas untuk inline code & code block */
+[data-md-color-scheme="default"] .md-typeset code {
+  background-color: #e4d5bc;
+  border: 1px solid #cebea4;
+}
+
+[data-md-color-scheme="default"] .md-typeset pre>code {
+  border: 1px solid #c8b699;
+}
+
+/* Border & header tabel agar garis kolom terlihat jelas */
+[data-md-color-scheme="default"] .md-typeset table:not([class]) {
+  border: 1px solid #c8b699;
+}
+
+[data-md-color-scheme="default"] .md-typeset table:not([class]) th {
+  background-color: #e4d5bc;
+  border-bottom: 2px solid #b8a383;
+}
+
+[data-md-color-scheme="default"] .md-typeset table:not([class]) td {
+  border-bottom: 1px solid #d9cbaf;
+}
+
+/* Beri garis bawah halus pada tautan artikel agar langsung kelihatan bisa diklik */
+[data-md-color-scheme="default"] .md-typeset a {
+  text-decoration: underline;
+  text-decoration-color: rgba(138, 54, 0, 0.4);
+  text-underline-offset: 3px;
+}
+
+[data-md-color-scheme="default"] .md-typeset a:hover {
+  text-decoration-color: #8a3600;
+}
+
+/* ===== Dark mode ===== */
+[data-md-color-scheme="slate"] {
+  /* Top Bar / Primary */
+  --md-primary-fg-color: #b66800;
+  --md-primary-fg-color--light: #ffa833;
+  --md-primary-fg-color--dark: #cc7600;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+
+  /* Accent & Tautan */
+  --md-accent-fg-color: #ff9300;
+  --md-accent-fg-color--transparent: rgba(255, 147, 0, 0.15);
+  --md-accent-bg-color: #403b31;
+  --md-accent-bg-color--light: #403b31;
+
+  /* Background & Tipografi */
+  --md-default-bg-color: #403b31;
+  /* Background utama (warm, tidak pekat) */
+  --md-default-fg-color: #f3ebd9;
+  /* Teks krem terang */
+  --md-default-fg-color--light: #d7ccb8;
+  --md-default-fg-color--lighter: #a39682;
+  --md-default-fg-color--lightest: #585042;
+
+  --md-typeset-color: #f3ebd9;
+  --md-typeset-a-color: #ff9300;
+
+  /* Code Block (sedikit elevated dari kanvas #403b31) */
+  --md-code-bg-color: #4b453a;
+  --md-code-fg-color: #f7f1e4;
+  --md-code-hl-color: #5c5446;
+
+  /* Footer */
+  --md-footer-bg-color: #302b23;
+  --md-footer-bg-color--dark: #242019;
+  --md-footer-fg-color: #f3ebd9;
+}
+
+/* ===== Warna Scrollbar Sidebar ===== */
+
+/* 1. Light Mode */
+[data-md-color-scheme="default"] .md-sidebar__scrollwrap {
+  /* Standar CSS (Firefox / Browser modern): thumb track */
+  scrollbar-width: thin;
+  scrollbar-color: #cebea4 transparent;
+}
+
+[data-md-color-scheme="default"] .md-sidebar__scrollwrap::-webkit-scrollbar {
+  width: 5px;
+  /* Lebar bar ramping */
+}
+
+[data-md-color-scheme="default"] .md-sidebar__scrollwrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-md-color-scheme="default"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
+  background-color: #cebea4;
+  /* Cokelat pasir lembut, senada dengan background */
+  border-radius: 4px;
+}
+
+[data-md-color-scheme="default"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb:hover {
+  background-color: #b3a083;
+  /* Sedikit lebih gelap saat disentuh kursor */
+}
+
+
+/* 2. Dark Mode */
+[data-md-color-scheme="slate"] .md-sidebar__scrollwrap {
+  scrollbar-width: thin;
+  scrollbar-color: #5c5345 transparent;
+}
+
+[data-md-color-scheme="slate"] .md-sidebar__scrollwrap::-webkit-scrollbar {
+  width: 5px;
+}
+
+[data-md-color-scheme="slate"] .md-sidebar__scrollwrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-md-color-scheme="slate"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
+  background-color: #5c5345;
+  /* Abu-cokelat hangat */
+  border-radius: 4px;
+}
+
+[data-md-color-scheme="slate"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb:hover {
+  background-color: #786d5c;
+}
+
+/* ===== Tipografi & Lebar Paragraf ===== */
+.md-typeset>p,
+.md-typeset>ul,
+.md-typeset>ol {
+  max-width: 48rem;
+}
+
+/* ===== Diagram Mermaid & Grid ===== */
+.md-grid {
+  max-width: 1400px;
+}
+
+.mermaid {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  max-width: 100%;
+  margin-bottom: 1rem;
+}
+
+/* Memastikan teks di dalam diagram tidak mengecil di perangkat seluler */
+.mermaid svg {
+  min-width: 800px;
+  height: auto;
+}
+
+/* ===== 1. Padding & margin atas bawaan MkDocs ===== */
+.md-main__inner {
+  padding-top: 1;
+  margin-top: 0;
+}
+
+.md-content__inner {
+  padding-top: 1;
+}
+
+/* Margin atas pada heading / elemen pertama artikel */
+.md-typeset> :first-child,
+.md-typeset h1:first-child {
+  margin-top: 1;
+  padding-top: 1;
+}
+
+/* ===== 2. Kunci elemen ke bagian atas (Sticky) ===== */
+/* Ganti .elemen-target dengan class elemen yang ingin kamu buat menempel */
+.elemen-target {
+  position: sticky;
+  top: 1;
+  /* Gunakan var(--md-header-height, 48px) jika header MkDocs aktif */
+  z-index: 2;
+}

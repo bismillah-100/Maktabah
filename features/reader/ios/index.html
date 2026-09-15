@@ -51,6 +51,8 @@
       
     
     
+      <link rel="stylesheet" href="../../../stylesheets/sepia.css">
+    
     <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -67,7 +69,7 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="orange" data-md-color-accent="orange">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#gambaran-umum-overview" class="md-skip">
+        <a href="#ios-implementation-swiftui-uikit" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +127,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="orange" data-md-color-accent="orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
     
       <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -135,7 +137,7 @@
     
     
     
-    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="amber"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="orange" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
     
       <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
@@ -233,6 +235,87 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -249,10 +332,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -270,8 +353,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_1">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -280,6 +363,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -393,6 +504,180 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_6" id="__nav_4_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Core (iOS)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    UI Core (iOS)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/ios/mainview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    iOSMainView & Layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_7" id="__nav_4_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Core (macOS)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    UI Core (macOS)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../core/macos/splitvc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SplitVC & Window
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -422,10 +707,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -443,8 +728,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -453,6 +738,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Global Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -473,10 +786,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
         
           
-          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
             
   
   
@@ -494,8 +807,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -504,6 +817,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../annotations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -604,34 +945,6 @@
     
   
     Diacritics & Range Mapping
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../annotations/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
   
 
     
@@ -812,10 +1125,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
             
   
   
@@ -833,8 +1146,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -843,6 +1156,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bookmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -963,34 +1304,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../bookmarks/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../bookmarks/protocols/" class="md-nav__link">
         
   
@@ -1054,34 +1367,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Global Architecture
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
     
@@ -1095,10 +1380,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4" >
         
           
-          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
             
   
   
@@ -1116,8 +1401,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1126,6 +1411,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1198,34 +1511,6 @@
     
   
     Database & Storage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../history/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
   
 
     
@@ -1350,10 +1635,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5" >
         
           
-          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
             
   
   
@@ -1371,8 +1656,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1381,6 +1666,62 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/updates/bookimport/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Book Import (Offline)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/updates/bookupdates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Book Updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1417,6 +1758,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../library/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database & Core Persistence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../library/download-integration/" class="md-nav__link">
         
   
@@ -1425,6 +1794,34 @@
     
   
     Download & Integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../library/stemming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FTS Indexing & Stemming
   
 
     
@@ -1605,10 +2002,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_6" >
         
           
-          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
             
   
   
@@ -1626,8 +2023,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1636,6 +2033,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../narrator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1708,34 +2133,6 @@
     
   
     Database & Storage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../narrator/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
   
 
     
@@ -1860,10 +2257,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_7" >
         
           
-          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
             
   
   
@@ -1881,8 +2278,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_7">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1891,6 +2288,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quran/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1963,34 +2388,6 @@
     
   
     Database & Storage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../quran/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
   
 
     
@@ -2115,10 +2512,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_8" checked>
         
           
-          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_8" id="__nav_5_8_label" tabindex="0">
             
   
   
@@ -2136,8 +2533,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_8">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_8">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2146,6 +2543,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2216,6 +2641,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -2258,6 +2685,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -2266,10 +2695,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gambaran-umum-overview" class="md-nav__link">
+  <a href="#1-arsitektur-reaktif-langsung-observable" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gambaran Umum (Overview)
+        1. Arsitektur Reaktif Langsung (Observable)
       
     </span>
   </a>
@@ -2277,43 +2706,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#prasyarat-dependensi-prerequisites" class="md-nav__link">
+  <a href="#2-jembatan-iosibarottextview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Prasyarat &amp; Dependensi (Prerequisites)
+        2. Jembatan iOSIbarotTextView
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Jembatan iOSIbarotTextView">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pembuatan-dan-pembaruan-tampilan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pembuatan dan Pembaruan Tampilan
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#spesifikasi-teknis-parameter-technical-specifications" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#coordinator-sebagai-penengah-sistem" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spesifikasi Teknis &amp; Parameter (Technical Specifications)
+        Coordinator sebagai Penengah Sistem
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#alur-implementasi-contoh-kode-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Alur Implementasi &amp; Contoh Kode (Implementation)
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-eror-batasan-edge-cases-limitations" class="md-nav__link">
+  <a href="#3-penanganan-ekstensi-ui-gestur-edge-cases" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)
+        3. Penanganan Ekstensi UI &amp; Gestur (Edge Cases)
       
     </span>
   </a>
@@ -2364,14 +2799,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../protocols/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Overview
+    Protocols
   
 
     
@@ -2392,14 +2827,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../protocols/" class="md-nav__link">
+      <a href="../textview/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Protocols
+    TextView (macOS & iOS)
   
 
     
@@ -2468,10 +2903,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_9" >
         
           
-          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_9" id="__nav_5_9_label" tabindex="0">
             
   
   
@@ -2489,8 +2924,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_9">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2499,6 +2934,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2571,34 +3034,6 @@
     
   
     Database & Storage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../search/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
   
 
     
@@ -2723,10 +3158,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_10" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_10" >
         
           
-          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_10" id="__nav_5_10_label" tabindex="0">
             
   
   
@@ -2744,8 +3179,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_10">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2754,6 +3189,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../widget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2826,34 +3289,6 @@
     
   
     Database & Storage
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../widget/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
   
 
     
@@ -2972,33 +3407,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../../getting-started/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
     
     
     
@@ -3015,10 +3423,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -3036,8 +3444,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3110,60 +3518,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../troubleshooting/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -3181,6 +3535,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -3189,10 +3545,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#gambaran-umum-overview" class="md-nav__link">
+  <a href="#1-arsitektur-reaktif-langsung-observable" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gambaran Umum (Overview)
+        1. Arsitektur Reaktif Langsung (Observable)
       
     </span>
   </a>
@@ -3200,43 +3556,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#prasyarat-dependensi-prerequisites" class="md-nav__link">
+  <a href="#2-jembatan-iosibarottextview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Prasyarat &amp; Dependensi (Prerequisites)
+        2. Jembatan iOSIbarotTextView
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Jembatan iOSIbarotTextView">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pembuatan-dan-pembaruan-tampilan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pembuatan dan Pembaruan Tampilan
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#spesifikasi-teknis-parameter-technical-specifications" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#coordinator-sebagai-penengah-sistem" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spesifikasi Teknis &amp; Parameter (Technical Specifications)
+        Coordinator sebagai Penengah Sistem
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#alur-implementasi-contoh-kode-implementation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Alur Implementasi &amp; Contoh Kode (Implementation)
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-eror-batasan-edge-cases-limitations" class="md-nav__link">
+  <a href="#3-penanganan-ekstensi-ui-gestur-edge-cases" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)
+        3. Penanganan Ekstensi UI &amp; Gestur (Edge Cases)
       
     </span>
   </a>
@@ -3260,80 +3622,77 @@
 
 
 
-  <h1>iOS Implementation</h1>
-
-<h2 id="gambaran-umum-overview">Gambaran Umum (Overview)</h2>
-<p>Implementasi antarmuka layar pembacaan buku pada platform iOS menggunakan integrasi antara SwiftUI dan UIKit. Kontainer tingkat tertinggi adalah SwiftUI (<code>iOSReaderView</code>), sementara perenderan teks Arab ditugaskan ke komponen turunan UIKit (<code>iOSIbarotTextView</code> melalui wrapper <code>UIViewRepresentable</code>). Aplikasi Maktabah mengadopsi arsitektur ini untuk menangani kerumitan tata letak teks (seperti seleksi <em>harakat</em>, ukuran <em>font</em> dinamis, dan kalkulasi jarak baris) yang belum didukung secara native oleh komponen <code>Text</code> SwiftUI.</p>
-<h2 id="prasyarat-dependensi-prerequisites">Prasyarat &amp; Dependensi (Prerequisites)</h2>
-<ul>
-<li><strong>Framework</strong>: <code>SwiftUI</code>, <code>UIKit</code>.</li>
-<li><strong>Target OS Minimum</strong>: iOS 16.0.</li>
-<li><strong>Protocol Kunci</strong>: <code>UIViewRepresentable</code> sebagai jembatan <em>state</em> antara SwiftUI dan <code>UITextView</code>.</li>
-</ul>
-<h2 id="spesifikasi-teknis-parameter-technical-specifications">Spesifikasi Teknis &amp; Parameter (Technical Specifications)</h2>
+<h1 id="ios-implementation-swiftui-uikit">iOS Implementation (SwiftUI &amp; UIKit)</h1>
+<p>Implementasi antarmuka layar pembaca pada platform iOS menggunakan integrasi tingkat lanjut antara <strong>SwiftUI</strong> dan <strong>UIKit</strong>. Tidak seperti macOS yang murni menggunakan AppKit dengan metode penyampaian <em>Callbacks</em>, iOS bersandar pada kapabilitas reaktif bawaan dari <code>@Observable</code> (<em>Swift 5.9+ Macros</em>).</p>
+<hr />
+<h2 id="1-arsitektur-reaktif-langsung-observable">1. Arsitektur Reaktif Langsung (Observable)</h2>
+<p>Kontainer tertinggi dari <em>Reader</em> iOS adalah struktur deklaratif <code>iOSReaderView</code>. Karena SwiftUI secara inheren menangani perubahan data (melalui siklus <code>body</code>), pembaruan teks tidak memerlukan pendaftaran <em>callback</em> secara manual.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">iOSReaderView</span><span class="p">:</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">book</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="c1">// 1. Integrasi Langsung ke Observable State</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">viewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderViewModel</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p">@</span><span class="n">State</span><span class="w"> </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isReading</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">body</span><span class="p">:</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">        </span><span class="c1">// 2. SwiftUI akan mendeteksi mutasi $viewModel secara otomatis</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="n">iOSIbarotTextView</span><span class="p">(</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">            </span><span class="n">text</span><span class="p">:</span><span class="w"> </span><span class="err">$</span><span class="n">viewModel</span><span class="p">.</span><span class="n">contentText</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">            </span><span class="n">annotations</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">currentAnnotations</span><span class="p">,</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">            </span><span class="n">targetAnnotation</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">targetAnnotation</span><span class="p">,</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">            </span><span class="n">viewModel</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">        </span><span class="p">)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="c1">// ...</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Di iOS, perenderan teks kompleks masih ditangani oleh <code>UITextView</code> (UIKit) karena komponen murni <code>Text</code> milik SwiftUI belum cukup stabil dan kaya fitur (misal: kustomisasi menu <em>selection</em>, perhitungan spasi harakat dinamis).</p>
+<p>Jembatan antar- <em>framework</em> ini dikelola oleh <code>UIViewRepresentable</code>. <code>UIViewRepresentable</code> secara pintar menyinkronkan <em>state updates</em> dari lingkungan deklaratif SwiftUI (asynchronous RunLoop) dan mengeksekusinya ke siklus hidup <em>UIKit</em> (<code>updateUIView</code>) dengan presisi di <em>Main Thread</em> (sinkron secara internal).</p>
+<p>Oleh karenanya, fenomena inkonsistensi tata letak (<em>flickering</em> atau <em>layout jump</em>) yang menjadi masalah jika diterapkan ke <code>NSTextView</code> di macOS, berhasil diselesaikan secara mulus oleh orkestrasi internal <code>UIViewRepresentable</code> iOS tanpa memerlukan peretasan tambahan dengan <em>Callbacks</em>.</p>
+<hr />
+<h2 id="2-jembatan-iosibarottextview">2. Jembatan <code>iOSIbarotTextView</code></h2>
+<p><code>iOSIbarotTextView</code> adalah <em>UIViewRepresentable</em> kustom yang membungkus <code>UITextView</code> menjadi ekosistem SwiftUI.</p>
+<h3 id="pembuatan-dan-pembaruan-tampilan">Pembuatan dan Pembaruan Tampilan</h3>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Komponen / Parameter</th>
-<th style="text-align: left;">Tipe</th>
-<th style="text-align: left;">Deskripsi</th>
+<th style="text-align: left;">Siklus Hidup</th>
+<th style="text-align: left;">Tanggung Jawab (Separation of Concerns)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>iOSReaderView</code></td>
-<td style="text-align: left;"><code>View</code> (SwiftUI)</td>
-<td style="text-align: left;">Mengelola toolbar, <em>bottom bar</em>, dan lembar presentasi (TOC, info buku). Memiliki <em>state</em> <code>isReading</code> untuk me-nonaktifkan interaksi navigasi agar layar penuh (full screen).</td>
+<td style="text-align: left;"><code>makeUIView</code></td>
+<td style="text-align: left;">Menginisialisasi kelas pembaca turunan <code>UITextView</code>. Mengaktifkan dukungan <em>Paging</em> (halaman ke halaman) atau <em>Continuous Scrolling</em>. Menyiapkan <em>Coordinator</em> sebagai pelayan delegasi (<code>UITextViewDelegate</code>).</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>iOSIbarotTextView</code></td>
-<td style="text-align: left;"><code>UIViewRepresentable</code></td>
-<td style="text-align: left;">Struct <em>wrapper</em> yang menerima <em>bindings</em> (teks, pencarian, anotasi target) dari <code>ReaderViewModel</code>.</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>iOSAnnotationEditorSheet</code></td>
-<td style="text-align: left;"><code>View</code></td>
-<td style="text-align: left;">Modul lembar bawah (bottom sheet) untuk mengedit, memberi catatan, atau menghapus blok anotasi yang di-klik pengguna.</td>
+<td style="text-align: left;"><code>updateUIView</code></td>
+<td style="text-align: left;">Menerima injeksi <em>Attributed String</em> baru dari <em>ViewModel</em>. Di sinilah lapisan warna anotasi (seperti <code>.backgroundColor</code>) ditumpangkan secara dinamis berdasarkan kalkulasi matriks <em>Range Mapping</em>.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="alur-implementasi-contoh-kode-implementation">Alur Implementasi &amp; Contoh Kode (Implementation)</h2>
-<p>Data mengalir dari <code>ReaderViewModel</code> masuk ke <code>iOSReaderView</code> menggunakan pola <code>@Bindable</code> atau observasi standar. <code>iOSIbarotTextView</code> kemudian merender <em>Attributed String</em> dan mengirim event kembali ke <em>Coordinator</em>.</p>
-<p>Pola implementasi <em>view</em> utama:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">iOSReaderView</span><span class="p">:</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">book</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">viewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderViewModel</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="p">@</span><span class="n">State</span><span class="w"> </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isReading</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">body</span><span class="p">:</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="n">iOSIbarotTextView</span><span class="p">(</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">            </span><span class="n">text</span><span class="p">:</span><span class="w"> </span><span class="err">$</span><span class="n">viewModel</span><span class="p">.</span><span class="n">contentText</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">            </span><span class="n">annotations</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">currentAnnotations</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">            </span><span class="n">searchText</span><span class="p">:</span><span class="w"> </span><span class="err">$</span><span class="n">viewModel</span><span class="p">.</span><span class="n">searchText</span><span class="p">,</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">            </span><span class="n">searchMode</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">searchMode</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">            </span><span class="n">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">nearDistance</span><span class="p">,</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">            </span><span class="n">targetAnnotation</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">targetAnnotation</span><span class="p">,</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">            </span><span class="n">viewModel</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">,</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">            </span><span class="n">onAddAnnotation</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">range</span><span class="p">,</span><span class="w"> </span><span class="n">mode</span><span class="p">,</span><span class="w"> </span><span class="n">sourceText</span><span class="p">,</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="k">in</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">                </span><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">addAnnotation</span><span class="p">(</span><span class="k">in</span><span class="p">:</span><span class="w"> </span><span class="n">range</span><span class="p">,</span><span class="w"> </span><span class="n">mode</span><span class="p">:</span><span class="w"> </span><span class="n">mode</span><span class="p">,</span><span class="w"> </span><span class="n">sourceText</span><span class="p">:</span><span class="w"> </span><span class="n">sourceText</span><span class="p">,</span><span class="w"> </span><span class="n">color</span><span class="p">:</span><span class="w"> </span><span class="n">color</span><span class="p">)</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">            </span><span class="p">},</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">            </span><span class="n">onTapAnnotation</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">annId</span><span class="w"> </span><span class="k">in</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">                </span><span class="c1">// Memicu action sheet anotasi</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">            </span><span class="p">}</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">        </span><span class="p">)</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">        </span><span class="p">.</span><span class="n">ignoresSafeArea</span><span class="p">(</span><span class="n">edges</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">vertical</span><span class="p">)</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">        </span><span class="p">.</span><span class="n">onTapGesture</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">            </span><span class="n">withAnimation</span><span class="p">(.</span><span class="n">easeInOut</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">                </span><span class="n">isReading</span><span class="p">.</span><span class="n">toggle</span><span class="p">()</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">            </span><span class="p">}</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">        </span><span class="p">.</span><span class="n">toolbarVisibility</span><span class="p">(</span><span class="n">isReading</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="p">.</span><span class="n">hidden</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">visible</span><span class="p">,</span><span class="w"> </span><span class="k">for</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">navigationBar</span><span class="p">,</span><span class="w"> </span><span class="p">.</span><span class="n">bottomBar</span><span class="p">)</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="p">}</span>
+<h3 id="coordinator-sebagai-penengah-sistem"><em>Coordinator</em> sebagai Penengah Sistem</h3>
+<p>Di dalam <code>iOSIbarotTextView</code>, <em>Coordinator</em> bertindak ganda sebagai pendengar ketukan (<em>Tap Gesture Recognizer</em>) dan delegasi sistem:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">class</span><span class="w"> </span><span class="nc">Coordinator</span><span class="p">:</span><span class="w"> </span><span class="bp">NSObject</span><span class="p">,</span><span class="w"> </span><span class="bp">UITextViewDelegate</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">parent</span><span class="p">:</span><span class="w"> </span><span class="n">iOSIbarotTextView</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">init</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">parent</span><span class="p">:</span><span class="w"> </span><span class="n">iOSIbarotTextView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">parent</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">parent</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="c1">// Mendengarkan seleksi (blok) teks oleh jari pengguna</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">textViewDidChangeSelection</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">textView</span><span class="p">:</span><span class="w"> </span><span class="bp">UITextView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nv">range</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">textView</span><span class="p">.</span><span class="n">selectedRange</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="c1">// Tampilkan menu modifikasi kustom iOS (seperti UIMenu)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="c1">// untuk pembuatan highlight atau underline baru.</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="penanganan-eror-batasan-edge-cases-limitations">Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)</h2>
+<hr />
+<h2 id="3-penanganan-ekstensi-ui-gestur-edge-cases">3. Penanganan Ekstensi UI &amp; Gestur (Edge Cases)</h2>
 <ul>
-<li><strong>Toggling Fullscreen</strong>: Status <code>isReading</code> memengaruhi kalkulasi <em>safe area</em> dari UIKit <em>scroll view</em>. Hal ini mengharuskan adanya observer <code>needsScrollRestore</code> untuk mengembalikan posisi halaman (<em>scroll position</em>) saat pergantian rotasi atau saat toolbar tersembunyi.</li>
+<li><strong>Toggling Fullscreen Mode</strong>: Pengguna dapat mengetuk bagian tengah teks untuk beralih antara Mode Navigasi (Toolbar aktif) dan Mode Membaca (Toolbar hilang). Properti <code>@State isReading</code> memicu <code>.toolbarVisibility(.hidden, for: .navigationBar, .bottomBar)</code>.</li>
+<li><strong>Rotasi &amp; Safe Area</strong>: Status <em>fullscreen</em> sangat mengubah geometri layar karena masuk dan hilangnya takik (<em>Notch</em> / <em>Dynamic Island</em>). UIKit <em>ScrollView</em> di belakang layar harus selalu mengkalkulasi ulang <em>safe area insets</em> dan melakukan paksaan reposisi batas gulir (<em>scroll bound restore</em>) agar kata terakhir yang dibaca pengguna tidak melompat ketika perangkat dirotasi dari mode <em>Portrait</em> ke <em>Landscape</em>.</li>
 </ul>
 
 
