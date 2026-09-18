@@ -856,10 +856,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-alur-komunikasi-antar-komponen" class="md-nav__link">
+  <a href="#4-alur-komunikasi-antarkomponen" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Alur Komunikasi Antar-Komponen
+        4. Alur Komunikasi Antarkomponen
       
     </span>
   </a>
@@ -2838,6 +2838,34 @@
   
   
     <li class="md-nav__item">
+      <a href="reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="reader/textview/" class="md-nav__link">
         
   
@@ -3606,10 +3634,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-alur-komunikasi-antar-komponen" class="md-nav__link">
+  <a href="#4-alur-komunikasi-antarkomponen" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Alur Komunikasi Antar-Komponen
+        4. Alur Komunikasi Antarkomponen
       
     </span>
   </a>
@@ -3647,8 +3675,8 @@
 <h1 id="arsitektur-global-feature-slice-maktabah">Arsitektur Global Feature-Slice Maktabah</h1>
 <p>Dokumen ini menjelaskan struktur arsitektur <strong>Feature-Sliced Design</strong> yang diterapkan pada Maktabah (macOS &amp; iOS), hubungan antarlapisan (<em>layering</em>), serta bagaimana modul fitur berkomunikasi dengan lapisan inti (<em>Core</em>).</p>
 <hr />
-<h2 id="1-lapisan-arsitektur-layering-hierarchy">1. Lapisan Arsitektur (Layering Hierarchy)</h2>
-<p>Codebase Maktabah dibagi menjadi tiga lapisan utama yang memiliki aturan ketergantungan satu arah (<em>unidirectional dependency</em>):</p>
+<h2 id="1-lapisan-arsitektur-layering-hierarchy">1. Lapisan Arsitektur (<em>Layering Hierarchy</em>)</h2>
+<p>Kode sumber Maktabah dibagi menjadi tiga lapisan utama yang memiliki aturan ketergantungan satu arah (<em>unidirectional dependency</em>):</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────┐
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                    UI Shells                            │
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   • macOS: AppKit Windows, SplitVC, Toolbar, NSTextView │
@@ -3674,8 +3702,8 @@
 <h3 id="aturan-ketergantungan">Aturan Ketergantungan:</h3>
 <ol>
 <li><strong>Lapisan Core</strong> tidak boleh mengimpor atau bergantung pada modul di lapisan <em>Features</em> atau <em>UI</em>.</li>
-<li><strong>Antar-Fitur (Cross-Feature)</strong> tidak boleh saling mengimpor secara langsung. Komunikasi antar-fitur wajib melalui:<ul>
-<li><strong>Protokol / Delegate</strong> (contoh: <code>AnnotationDelegate</code> untuk melompat ke pembaca di <code>Reader</code>).</li>
+<li><strong>Antar-Fitur (<em>Cross-Feature</em>)</strong> tidak boleh saling mengimpor secara langsung. Komunikasi antar-fitur wajib melalui:<ul>
+<li><strong><em>Protocol</em> / Delegate</strong> (contoh: <code>AnnotationDelegate</code> untuk melompat ke pembaca di <code>Reader</code>).</li>
 <li><strong>Notification / Combine Stream</strong> (contoh: <code>AnnotationEvent</code>, <code>HistoryUpdateEvent</code>).</li>
 <li><strong>Koordinator Sentral</strong> (<code>AppCoordinator</code>, <code>LibraryDataManager</code>).</li>
 </ul>
@@ -3683,7 +3711,7 @@
 </ol>
 <hr />
 <h2 id="2-struktur-internal-feature-slice">2. Struktur Internal Feature Slice</h2>
-<p>Setiap folder di dalam <code>Source/Features/&lt;FeatureName&gt;/</code> merupakan slice modular mandiri yang memiliki struktur seragam:</p>
+<p>Setiap folder di dalam <code>Source/Features/&lt;FeatureName&gt;/</code> merupakan <em>slice</em> modular mandiri yang memiliki struktur seragam:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Source/Features/&lt;FeatureName&gt;/
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>├── Models/        # Struct data immutable (Sendable) &amp; Enum
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>├── Protocols/     # Interface kontrak &amp; delegation untuk loose-coupling
@@ -3693,7 +3721,49 @@
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>└── iOS/           # Implementasi view SwiftUI dan UIViewControllerRepresentable bridges
 </span></code></pre></div>
 <hr />
-<h2 id="3-peta-fitur-utama-feature-slices-overview">3. Peta Fitur Utama (Feature Slices Overview)</h2>
+<h2 id="3-peta-fitur-utama-feature-slices-overview">3. Peta Fitur Utama (<em>Feature Slices Overview</em>)</h2>
+<pre class="mermaid"><code>flowchart TD
+    APP["App Shell (macOS SplitVC / iOS iOSMainView)"]
+
+    APP --&gt; LIB["Library Feature"]
+    APP --&gt; RDR["Reader Feature"]
+    APP --&gt; SRC["Search Feature"]
+    APP --&gt; NAR["Narrator Feature"]
+
+    LIB ~~~ ANN
+    RDR ~~~ BKM
+    SRC ~~~ HIS
+
+    APP --&gt; ANN["Annotations Feature"]
+    APP --&gt; BKM["Bookmarks Feature"]
+    APP --&gt; HIS["History Feature"]
+    APP --&gt; QUR["Quran &amp; Widget"]
+
+    ANN ~~~ CORE_DB
+    BKM ~~~ CORE_DB
+    HIS ~~~ CORE_DB
+
+    CORE_DB[("Core SQLite (main / special / archives)")]
+    SYNC["CloudKitSyncManager"]
+
+    LIB --&gt; CORE_DB
+    RDR --&gt; CORE_DB
+    SRC --&gt; CORE_DB
+    NAR --&gt; CORE_DB
+    ANN --&gt; SYNC
+    BKM --&gt; SYNC
+    HIS --&gt; SYNC
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class APP ui;
+    class LIB,RDR,SRC,NAR,ANN,BKM,HIS,QUR vm;
+    class SYNC store;
+    class CORE_DB db;</code></pre>
 <table>
 <thead>
 <tr>
@@ -3705,7 +3775,7 @@
 <tbody>
 <tr>
 <td style="text-align: left;"><strong>Annotations</strong></td>
-<td style="text-align: left;">Sorotan (highlight), garis bawah berwarna (underline), catatan, dan tagging.</td>
+<td style="text-align: left;">Sorotan (<em>highlight</em>), garis bawah berwarna (<em>underline</em>), catatan, dan penandaan label (<em>tagging</em>).</td>
 <td style="text-align: left;"><code>ArabicRangeCalculator</code>, <code>CloudKitSyncManager</code>, <code>Mutex</code></td>
 </tr>
 <tr>
@@ -3715,12 +3785,12 @@
 </tr>
 <tr>
 <td style="text-align: left;"><strong>History</strong></td>
-<td style="text-align: left;">Pelacakan riwayat bacaan kitab, sesi waktu membaca, dan resume posisi.</td>
+<td style="text-align: left;">Pelacakan riwayat bacaan kitab, sesi waktu membaca, dan pembukaan kembali posisi terakhir.</td>
 <td style="text-align: left;"><code>HistoryDatabaseManager</code>, <code>ScreenTimeManager</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Library</strong></td>
-<td style="text-align: left;">Katalog buku, kategori, download manager, dekompresi arsip, update buku.</td>
+<td style="text-align: left;">Katalog buku, kategori, manajer pengunduhan, dekompresi arsip, pembaruan buku.</td>
 <td style="text-align: left;"><code>DatabaseManager</code>, <code>ZstdDecompressor</code>, <code>BookDownloadManager</code></td>
 </tr>
 <tr>
@@ -3735,7 +3805,7 @@
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Reader</strong></td>
-<td style="text-align: left;">Penampil teks kitab, pagination, continuous scroll, dan styling font Arab.</td>
+<td style="text-align: left;">Penampil teks kitab, penomoran halaman, pengguliran berkelanjutan, dan tipografi Arab.</td>
 <td style="text-align: left;"><code>TextProcessing</code>, <code>BookConnection</code>, <code>BookPageCache</code></td>
 </tr>
 <tr>
@@ -3745,17 +3815,17 @@
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Widget</strong></td>
-<td style="text-align: left;">Menampilkan kutipan, catatan harian, dan ringkasan bacaan di Lock/Home Screen.</td>
+<td style="text-align: left;">Menampilkan kutipan, catatan harian, dan ringkasan bacaan pada Lock Screen / Home Screen.</td>
 <td style="text-align: left;"><code>WidgetUpdateCoordinator</code>, Shared App Group Storage</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="4-alur-komunikasi-antar-komponen">4. Alur Komunikasi Antar-Komponen</h2>
-<p>Contoh alur terintegrasi saat user berinteraksi dari <strong>Sidebar Anotasi</strong> menuju ke <strong>Reader</strong>:</p>
+<h2 id="4-alur-komunikasi-antarkomponen">4. Alur Komunikasi Antarkomponen</h2>
+<p>Contoh alur terintegrasi saat pengguna berinteraksi dari <strong>Sidebar Anotasi</strong> menuju ke <strong>Reader</strong>:</p>
 <pre class="mermaid"><code>sequenceDiagram
     autonumber
-    actor User
+    actor User as Pengguna
     participant Sidebar as Annotations Outline (macOS/iOS)
     participant VM as AnnotationViewModel
     participant Del as AnnotationDelegate
@@ -3769,17 +3839,17 @@
     Del-&gt;&gt;Reader: handleDelegate(contentId)
     Reader-&gt;&gt;Cache: requestPage(bkId, page)
     alt Cache Miss
-        Cache-&gt;&gt;Core: getContent(page) [Decompress LZString]
+        Cache-&gt;&gt;Core: getContent(page) [Decompress ZSTD]
         Core--&gt;&gt;Cache: BookContent
     end
     Cache--&gt;&gt;Reader: Render Text &amp; Apply Highlights
-    Reader-&gt;&gt;Sidebar: Scroll &amp; Flash Animation pada Teks Target</code></pre>
+    Reader-&gt;&gt;Sidebar: Scroll &amp; Animasi Penyorotan pada Teks Target</code></pre>
 <hr />
 <h2 id="5-keuntungan-arsitektur-ini">5. Keuntungan Arsitektur Ini</h2>
 <ul>
-<li><strong>Multiplatform Bersih</strong>: Logika bisnis (Model, ViewModel, Database) 100% dibagikan antara macOS dan iOS tanpa duplikasi kode.</li>
-<li><strong>Isolasi Masalah</strong>: Bug atau perubahan skema pada modul <em>Narrator</em> tidak akan berdampak pada modul <em>Annotations</em> atau <em>Reader</em>.</li>
-<li><strong>Skalabilitas</strong>: Menambah fitur baru (misalnya modul <em>Kamus/Mu'jam</em>) cukup membuat satu folder slice baru di <code>Features/</code> tanpa merombak modul yang sudah stabil.</li>
+<li><strong>Lintas Platform Bersih</strong>: Logika bisnis (Model, ViewModel, Database) 100% dibagikan antara macOS dan iOS tanpa duplikasi kode.</li>
+<li><strong>Isolasi Masalah</strong>: Masalah atau perubahan skema pada modul <em>Narrator</em> tidak akan berdampak pada modul <em>Annotations</em> atau <em>Reader</em>.</li>
+<li><strong>Skalabilitas</strong>: Menambah fitur baru (misalnya modul <em>Kamus/Mu'jam</em>) cukup dengan membuat satu folder <em>slice</em> baru di <code>Source/Features/</code> tanpa merombak modul yang sudah stabil.</li>
 </ul>
 
 
@@ -3800,6 +3870,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3830,10 +3906,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/extra.js"></script>
       
     
   </body>

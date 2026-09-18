@@ -1093,6 +1093,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#routing-interaksi-gestur-aksi-baris" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing Interaksi Gestur &amp; Aksi Baris
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pembagian-tanggung-jawab-komponen" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1131,10 +1142,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#teknik-custom-stackview-force-ltr" class="md-nav__link">
+  <a href="#penanganan-arah-teks-force-ltr" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Teknik Custom StackView (Force LTR)
+        Penanganan Arah Teks (Force LTR)
       
     </span>
   </a>
@@ -1142,10 +1153,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#interaksi-seleksi-navigasi-reader-missing-book" class="md-nav__link">
+  <a href="#interaksi-seleksi-navigasi-reader-kitab-belum-terunduh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interaksi Seleksi, Navigasi Reader &amp; Missing Book
+        Interaksi Seleksi, Navigasi Reader &amp; Kitab Belum Terunduh
       
     </span>
   </a>
@@ -2882,6 +2893,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3612,6 +3651,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#routing-interaksi-gestur-aksi-baris" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing Interaksi Gestur &amp; Aksi Baris
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pembagian-tanggung-jawab-komponen" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3650,10 +3700,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#teknik-custom-stackview-force-ltr" class="md-nav__link">
+  <a href="#penanganan-arah-teks-force-ltr" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Teknik Custom StackView (Force LTR)
+        Penanganan Arah Teks (Force LTR)
       
     </span>
   </a>
@@ -3661,10 +3711,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#interaksi-seleksi-navigasi-reader-missing-book" class="md-nav__link">
+  <a href="#interaksi-seleksi-navigasi-reader-kitab-belum-terunduh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interaksi Seleksi, Navigasi Reader &amp; Missing Book
+        Interaksi Seleksi, Navigasi Reader &amp; Kitab Belum Terunduh
       
     </span>
   </a>
@@ -3736,138 +3786,161 @@
 <p>Implementasi antarmuka anotasi di iOS dan iPadOS mengadopsi arsitektur <em>hybrid</em> yang menggabungkan deklaratif SwiftUI untuk level kontainer dan UIKit modern (<code>UICollectionViewCompositionalLayout</code> &amp; <code>UICollectionViewDiffableDataSource</code>) untuk performa tinggi daftar hierarki teks Arab.</p>
 <h2 id="arsitektur-hybrid-diagram-aliran-data">Arsitektur Hybrid &amp; Diagram Aliran Data</h2>
 <p>Alur rendering dan pembagian tanggung jawab antarkomponen diatur sebagai berikut:</p>
-<pre class="mermaid"><code>graph TD
-    subgraph "SwiftUI Layer"
-        ALV["AnnotationListView&lt;br&gt;(Toolbar, Sort/Group Menus, Import/Export)"]
-        AVW["AnnotationViewControllerWrapper&lt;br&gt;(UIViewControllerRepresentable)"]
-    end
-
-    subgraph "UIKit Presentation Layer"
-        VC["iOSAnnotationViewController"]
-        DS["UICollectionViewDiffableDataSource"]
-        SS["NSDiffableDataSourceSectionSnapshot"]
-        CV["UICollectionView"]
-        CFG["AnnotationContentConfiguration"]
-        VIEW["AnnotationContentView"]
-    end
-
-    subgraph "Core &amp; Navigation"
-        VM["AnnotationViewModel"]
-        NM["iOSNavigationManager&lt;br&gt;(Open Reader)"]
-    end
+<pre class="mermaid"><code>flowchart TD
+    ALV["AnnotationListView (SwiftUI Root)"]
+    AVW["AnnotationViewControllerWrapper"]
 
     ALV --&gt; AVW
-    AVW --&gt;|Injeksi VC &amp; Callbacks| VC
-    VM --&gt;|Data Updates / Diffs| AVW
-    AVW --&gt;|handleTreeUpdate / Incremental| VC
-    VC --&gt;|Snapshot Manipulations| DS
+
+    AVW ~~~ VC
+
+    VC["iOSAnnotationViewController (UIKit)"]
+    DS["UICollectionViewDiffableDataSource"]
+    SS["NSDiffableDataSourceSectionSnapshot"]
+    CV["UICollectionView"]
+
+    AVW --&gt;|"Injeksi VC &amp; Callbacks"| VC
+    VC --&gt; DS
     DS --&gt; SS
-    DS --&gt;|Cell Provider| CV
-    CV --&gt; CFG
-    CFG --&gt; VIEW
-    VC --&gt;|onAnnotationSelected| AVW
-    AVW --&gt;|handleSelection| NM</code></pre>
+    DS --&gt; CV
+
+    CV ~~~ NM
+
+    NM["iOSNavigationManager"]
+    VM["AnnotationViewModel"]
+
+    VM --&gt;|"Data Updates"| AVW
+    VC --&gt;|"onAnnotationSelected"| AVW
+    AVW --&gt;|"handleSelection"| NM
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class ALV,AVW,VC,DS,SS,CV ui;
+    class VM vm;
+    class NM store;</code></pre>
+<h3 id="routing-interaksi-gestur-aksi-baris">Routing Interaksi Gestur &amp; Aksi Baris</h3>
+<pre class="mermaid"><code>flowchart TD
+    GESTURE(["Pengguna Berinteraksi pada Sel Anotasi"]) --&gt; CHECK{"Jenis Aksi?"}
+
+    CHECK --&gt;|"Ketuk Baris"| NAV["Buka Kitab pada Halaman Target"]
+    NAV --&gt; CALL_NAV["iOSNavigationManager.openBook()"]
+
+    CHECK --&gt;|"Trailing Swipe (Hapus)"| DEL["Hapus Anotasi dari Basis Data"]
+    DEL --&gt; DB_MUTATE[("Annotations.sqlite")]
+
+    CHECK --&gt;|"Trailing Swipe (Sunting Tag/Warna)"| EDIT["Buka Lembar Editor"]
+    EDIT --&gt; MODAL["Tampilkan iOSAnnotationEditorSheet"]
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class GESTURE event;
+    class CHECK,NAV,EDIT,MODAL ui;
+    class CALL_NAV,DEL store;
+    class DB_MUTATE db;</code></pre>
 <h3 id="pembagian-tanggung-jawab-komponen">Pembagian Tanggung Jawab Komponen</h3>
 <ol>
 <li><strong><code>AnnotationListView</code> (SwiftUI Root Container)</strong>:<ul>
-<li>Mengatur toolbar atas: Menu pengelompokan (<em>Group By: Book, Tag, Timeline</em>) dan pengurutan (<em>Sort By &amp; Order</em>).</li>
+<li>Mengatur <em>toolbar</em> atas: Menu pengelompokan (<em>Group By: Book, Tag, Timeline</em>) dan pengurutan (<em>Sort By &amp; Order</em>).</li>
 <li>Menangani ekspor dan impor JSON melalui modifier <code>.fileExporter</code> dan <code>.fileImporter</code> (<code>AnnotationJsonDocument</code>).</li>
-<li>Menampilkan dialog konfirmasi tumpang tindih impor (<em>overwrite duplicate confirmation dialog</em>).</li>
+<li>Menampilkan dialog konfirmasi penggantian saat impor (<em>overwrite duplicate confirmation dialog</em>).</li>
 <li>Menangkap notifikasi <code>.annotationMissingBook</code> untuk memunculkan modal peringatan jika buku belum terunduh di perangkat.</li>
 </ul>
 </li>
 <li><strong><code>AnnotationViewControllerWrapper</code> (Bridge Layer)</strong>:<ul>
-<li>Menghubungkan state dan callback <code>AnnotationViewModel</code> (<code>onIncrementalUpdate</code>, <code>onTreeUpdate</code>, <code>onTagsChanged</code>) ke metode-metode di <code>iOSAnnotationViewController</code>.</li>
+<li>Menghubungkan <em>state</em> dan <em>callback</em> <code>AnnotationViewModel</code> (<code>onIncrementalUpdate</code>, <code>onTreeUpdate</code>, <code>onTagsChanged</code>) ke metode di <code>iOSAnnotationViewController</code>.</li>
 <li>Memiliki <code>Coordinator</code> yang menangani delegasi seleksi anotasi dan memicu <code>iOSNavigationManager.openBook(..., targetAnnotation:)</code>.</li>
-<li>Mengatur jembatan <em>pull-to-refresh</em> menuju <code>CloudKitSyncManager.shared.fetchChanges()</code>.</li>
+<li>Mengatur integrasi <em>pull-to-refresh</em> menuju <code>CloudKitSyncManager.shared.fetchChanges()</code>.</li>
 </ul>
 </li>
 <li><strong><code>iOSAnnotationViewController</code> (UIKit Presentation Layer)</strong>:<ul>
-<li>Mengelola tampilan koleksi hierarki, expandable snapshot per grup, header tag chips, dan pembaruan visual inkremental.</li>
+<li>Mengelola tampilan koleksi hierarki, <em>expandable snapshot</em> per grup, <em>header tag chips</em>, dan pembaruan visual inkremental.</li>
 </ul>
 </li>
 </ol>
 <h2 id="diffing-snapshot-data">Diffing Snapshot Data</h2>
-<p>Untuk menyajikan daftar anotasi yang sangat dinamis, aplikasi memanfaatkan <code>UICollectionViewDiffableDataSource</code> yang dikombinasikan dengan <code>NSDiffableDataSourceSectionSnapshot</code>.</p>
+<p>Untuk menyajikan daftar anotasi yang dinamis, aplikasi memanfaatkan <code>UICollectionViewDiffableDataSource</code> yang dikombinasikan dengan <code>NSDiffableDataSourceSectionSnapshot</code>.</p>
 <ul>
 <li>
-<p><strong>Pembaruan Skala Penuh (Full Rebuild)</strong></p>
-<p>Saat pengguna mengganti mode pengelompokan (Grouping Mode) atau memuat data awal, kontroler akan membuat ulang seluruh snapshot. Daftar section diterapkan langsung ke tingkat akar, kemudian <code>NSDiffableDataSourceSectionSnapshot</code> dibuat untuk setiap grup, memasukkan node induk beserta anak-anak anotasinya.</p>
+<p><strong>Pembaruan Skala Penuh (<em>Full Rebuild</em>)</strong>:
+    Saat pengguna mengganti mode pengelompokan (<em>Grouping Mode</em>) atau memuat data awal, kontroler membuat ulang seluruh <em>snapshot</em>. Daftar <em>section</em> diterapkan langsung ke tingkat <em>root</em>, kemudian <code>NSDiffableDataSourceSectionSnapshot</code> dibuat untuk setiap grup, memasukkan <em>parent node</em> beserta <em>child nodes</em> anotasinya.</p>
 </li>
 <li>
-<p><strong>Pembaruan Tambahan (Incremental Update)</strong></p>
-<p>Untuk pembaruan skala kecil seperti penambahan, pengubahan, atau penghapusan tunggal, sistem tidak memuat ulang seluruh data:</p>
+<p><strong>Pembaruan Inkremental (<em>Incremental Update</em>)</strong>:
+    Untuk pembaruan seperti penambahan, pengubahan, atau penghapusan tunggal, sistem tidak memuat ulang seluruh data:</p>
 <ul>
-<li>Jika anotasi dihapus, elemen tersebut dicari di seluruh section snapshot, lalu dihilangkan melalui eksekusi fungsi yang spesifik.</li>
-<li>Jika pembaruan menyebabkan sebuah grup menjadi kosong, grup tersebut akan dihapus dari tingkat akar secara otomatis.</li>
+<li>Jika anotasi dihapus, elemen tersebut dicari di seluruh <em>section snapshot</em>, lalu dihapus secara terarah.</li>
+<li>Jika pembaruan menyebabkan sebuah grup menjadi kosong, grup tersebut akan dihapus dari tingkat <em>root</em> secara otomatis.</li>
 </ul>
 </li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Pendekatan ini memberikan animasi transisi yang mulus tanpa membebani kinerja rendering saat memanipulasi ratusan data sekaligus.</p>
-</div>
 <h2 id="mode-pengelompokan-filter-tag-chip">Mode Pengelompokan &amp; Filter Tag Chip</h2>
-<p>Antarmuka mendukung manajemen tata letak dinamis yang disesuaikan berdasarkan dua konsep utama:</p>
+<p>Antarmuka mendukung tata letak dinamis yang disesuaikan berdasarkan dua konsep:</p>
 <ul>
 <li>
-<p><strong>Mode Pengelompokan (Grouping Mode)</strong></p>
-<p>Pengguna dapat mengelompokkan anotasi berdasarkan Buku (Book), Penanda (Tag), atau Linimasa (Timeline). Komponen <code>AnnotationContentConfiguration</code> menerima status mode ini untuk menentukan teks sekunder:</p>
+<p><strong>Mode Pengelompokan (<em>Grouping Mode</em>)</strong>:
+    Pengguna dapat mengelompokkan anotasi berdasarkan Buku (<em>Book</em>), Label (<em>Tag</em>), atau Linimasa (<em>Timeline</em>). Komponen <code>AnnotationContentConfiguration</code> menerima status mode ini untuk menentukan teks sekunder:</p>
 <ul>
 <li>Bila diurutkan berdasarkan Tag atau Linimasa, tampilan daftar anotasi menonjolkan judul buku.</li>
-<li>Sebaliknya, saat dikelompokkan berdasarkan buku, tampilan menonjolkan daftar tag yang terkait.</li>
+<li>Saat dikelompokkan berdasarkan Buku, tampilan menonjolkan daftar tag yang terkait.</li>
 </ul>
 </li>
 <li>
-<p><strong>Filter Tag Chip (Tag Chip Filter)</strong></p>
-<p>Komponen <code>iOSTagFilterHeaderView</code> disematkan sebagai tajuk koleksi (Collection Header).</p>
+<p><strong>Filter Tag Chip</strong>:
+    Komponen <code>iOSTagFilterHeaderView</code> disematkan sebagai <em>header</em> koleksi (<em>Collection Header</em>).</p>
 <ul>
-<li>Menampilkan deretan keping (chips) yang dapat digulir secara horizontal.</li>
-<li>Memiliki mode peralihan logikal (misalnya operasi AND atau OR) yang ditandai dengan perubahan ikon.</li>
-<li>Diperbarui secara asinkron sehingga elemen baru hanya disisipkan di posisi indeks yang tepat, dan elemen lawas dihapus tanpa mengganggu status gulir elemen lainnya.</li>
+<li>Menampilkan deretan <em>chips</em> yang dapat digulir secara horizontal.</li>
+<li>Memiliki mode pergantian logika (AND/OR) yang ditandai dengan perubahan ikon.</li>
+<li>Diperbarui secara asinkron sehingga elemen baru disisipkan pada indeks yang tepat tanpa mengganggu status gulir elemen lainnya.</li>
 </ul>
 </li>
 </ul>
-<h2 id="teknik-custom-stackview-force-ltr">Teknik Custom StackView (Force LTR)</h2>
-<p>Aplikasi Maktabah dirancang untuk mengakomodasi teks Arab, sehingga komponen akar secara alami memakai orientasi Kanan-ke-Kiri (RTL). Namun, pada kasus tertentu seperti metadata atau susunan filter, elemen perlu direkayasa untuk dipaksa menjadi Kiri-ke-Kanan (Force LTR).</p>
-<p>Taktik ini diterapkan menggunakan atribut semantik dan matriks transformasi:</p>
+<h2 id="penanganan-arah-teks-force-ltr">Penanganan Arah Teks (Force LTR)</h2>
+<p>Aplikasi Maktabah dirancang untuk mengakomodasi teks Arab sehingga secara alami memakai orientasi Kanan-ke-Kiri (RTL). Namun, pada elemen metadata tertentu, tata letak diarahkan secara eksplisit ke Kiri-ke-Kanan (<em>Force LTR</em>).</p>
 <ul>
 <li>
-<p><strong>Manipulasi Semantik Kontainer</strong></p>
-<p>Pada <code>AnnotationContentView</code>, kontainer bawah yang memuat label nomor halaman diatur secara spesifik:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">bottomStack</span><span class="p">.</span><span class="n">semanticContentAttribute</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="n">forceLeftToRight</span>
+<p><strong>Manipulasi Semantik Kontainer</strong>:
+    Pada <code>AnnotationContentView</code>, kontainer bawah yang memuat label nomor halaman diatur secara spesifik:
+    <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">bottomStack</span><span class="p">.</span><span class="n">semanticContentAttribute</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="n">forceLeftToRight</span>
 </span></code></pre></div>
-<p>Konfigurasi ini memastikan posisi indikator halaman tetap konsisten di pojok kiri, tidak terpengaruh oleh lingkungan orientasi sistem RTL.</p>
+    Konfigurasi ini memastikan posisi indikator halaman tetap konsisten di pojok kiri.</p>
 </li>
 <li>
-<p><strong>Siasat Inversi Gulir Matriks</strong></p>
-<p>Pada tajuk filter tag, komponen diletakkan di dalam penampil gulir (<code>UIScrollView</code>). Agar interaksi sesuai ekspektasi tata letak di aplikasi RTL:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">chipsScrollView</span><span class="p">.</span><span class="n">transform</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">CGAffineTransform</span><span class="p">(</span><span class="n">scaleX</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<p><strong>Inversi Gulir Matriks</strong>:
+    Pada <em>header</em> filter tag di dalam <code>UIScrollView</code>:
+    <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">chipsScrollView</span><span class="p">.</span><span class="n">transform</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">CGAffineTransform</span><span class="p">(</span><span class="n">scaleX</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">chipsStackView</span><span class="p">.</span><span class="n">transform</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">CGAffineTransform</span><span class="p">(</span><span class="n">scaleX</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Siasat inversi ganda ini secara efektif menukar sumbu horizontal tanpa membalik teks, sehingga arah gulir dan penyusunan deretan secara visual bekerja harmonis dalam lingkungan dominan kanan-ke-kiri.</p>
+    Inversi ganda ini menukar sumbu horizontal tanpa membalik teks, sehingga arah gulir bekerja harmonis dalam antarmuka RTL.</p>
 </li>
 </ul>
-<h2 id="interaksi-seleksi-navigasi-reader-missing-book">Interaksi Seleksi, Navigasi Reader &amp; Missing Book</h2>
+<h2 id="interaksi-seleksi-navigasi-reader-kitab-belum-terunduh">Interaksi Seleksi, Navigasi Reader &amp; Kitab Belum Terunduh</h2>
 <p>Ketika pengguna mengetuk item di <code>UICollectionView</code>:</p>
 <ol>
-<li><strong>Pembedaan Grup vs. Daun Anotasi (<code>didSelectItemAt</code>)</strong>:<ul>
-<li><strong>Grup Baris</strong>: Memanggil <code>toggleGroup(_:)</code>. Indeks section snapshot dibuka (<em>expand</em>) atau ditutup (<em>collapse</em>), serta statusnya dicatat dalam <code>expandedGroups</code>.</li>
-<li><strong>Item Anotasi</strong>: Memancarkan callback <code>onAnnotationSelected(node)</code>.</li>
+<li><strong>Pembedaan Grup vs. Node Anotasi (<code>didSelectItemAt</code>)</strong>:<ul>
+<li><strong>Baris Grup</strong>: Memanggil <code>toggleGroup(_:)</code>. Indeks <em>section snapshot</em> dibuka (<em>expand</em>) atau ditutup (<em>collapse</em>), serta statusnya dicatat dalam <code>expandedGroups</code>.</li>
+<li><strong>Item Anotasi</strong>: Memancarkan <em>callback</em> <code>onAnnotationSelected(node)</code>.</li>
 </ul>
 </li>
 <li><strong>Navigasi Reader via Coordinator</strong>:
-    <code>AnnotationViewControllerWrapper.Coordinator</code> menerima simpul anotasi terpilih:<ul>
+    <code>AnnotationViewControllerWrapper.Coordinator</code> menerima anotasi terpilih:<ul>
 <li>Memeriksa apakah data kitab telah terpasang melalui <code>LibraryDataManager.shared.getBook([ann.bkId])</code>.</li>
-<li>Jika kitab ditemukan, memanggil <code>navigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)</code> untuk langsung melompat ke halaman dan menyorot teks pada <code>iOSReaderView</code>.</li>
+<li>Jika kitab ditemukan, memanggil <code>navigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)</code> untuk membuka halaman dan menyorot teks pada <code>iOSReaderView</code>.</li>
 <li>Jika kitab belum diunduh, memancarkan notifikasi <code>Notification.Name.annotationMissingBook</code>.</li>
 </ul>
 </li>
 <li><strong>Peringatan Kitab Belum Terunduh (<em>Missing Book Alert</em>)</strong>:
-    <code>AnnotationListView</code> di layer SwiftUI mengamati notifikasi tersebut melalui <code>.onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook))</code>. Ketika terpicu, alert sistem dimunculkan untuk mengabari pengguna bahwa kitab terkait perlu diunduh terlebih dahulu dari perpustakaan.</li>
+    <code>AnnotationListView</code> di lapisan SwiftUI mengamati notifikasi tersebut melalui <code>.onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook))</code> dan memunculkan dialog peringatan bahwa kitab terkait perlu diunduh terlebih dahulu.</li>
 </ol>
-<h2 id="aksi-geser-hapus-trailing-swipe-action">Aksi Geser Hapus (Trailing Swipe Action)</h2>
-<p>Meskipun daftar diimplementasikan menggunakan <code>UICollectionView</code>, iOS mengadopsi kemampuan aksi geser native melalui <code>UICollectionLayoutListConfiguration.trailingSwipeActionsConfigurationProvider</code>:</p>
+<h2 id="aksi-geser-hapus-trailing-swipe-action">Aksi Geser Hapus (<em>Trailing Swipe Action</em>)</h2>
+<p>Daftar mengadopsi kemampuan aksi geser bawaan melalui <code>UICollectionLayoutListConfiguration.trailingSwipeActionsConfigurationProvider</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">listConfig</span><span class="p">.</span><span class="n">trailingSwipeActionsConfigurationProvider</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="n">indexPath</span><span class="w"> </span><span class="k">in</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">self</span><span class="p">,</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">dataSource</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">          </span><span class="kd">let</span><span class="w"> </span><span class="nv">item</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">dataSource</span><span class="p">.</span><span class="n">itemIdentifier</span><span class="p">(</span><span class="k">for</span><span class="p">:</span><span class="w"> </span><span class="n">indexPath</span><span class="p">),</span>
@@ -3886,22 +3959,21 @@
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong>Filter Tipe Item</strong>: Aksi geser hanya disematkan pada baris daun anotasi (<code>case let .annotation(node)</code>), sedangkan baris header grup tidak dapat digeser.</li>
-<li><strong>Animasi Cepat &amp; Sinkronisasi</strong>: Item langsung dihapus dari snapshot lokal secara visual (<code>snap.deleteItems([item])</code>), kemudian pemicu <code>onAnnotationDeleted?(node)</code> diteruskan oleh <code>AnnotationViewControllerWrapper</code> ke <code>viewModel.deleteAnnotation(id:)</code>.</li>
+<li><strong>Filter Tipe Item</strong>: Aksi geser hanya disematkan pada baris <em>leaf node</em> anotasi (<code>case let .annotation(node)</code>), sedangkan baris <em>header</em> grup tidak dapat digeser.</li>
+<li><strong>Animasi Cepat &amp; Sinkronisasi</strong>: Item langsung dihapus dari <em>snapshot</em> lokal secara visual (<code>snap.deleteItems([item])</code>), kemudian pemicu <code>onAnnotationDeleted?(node)</code> diteruskan ke <code>viewModel.deleteAnnotation(id:)</code>.</li>
 </ul>
 <h2 id="mekanisme-pengeditan-anotasi-di-ios">Mekanisme Pengeditan Anotasi di iOS</h2>
-<p>Berbeda dengan macOS yang menyediakan menu konteks dan editor popover langsung di sidebar daftar:</p>
 <ul>
 <li><strong>Pemisahan Aksi Hapus vs. Pengeditan</strong>:
-    Pengguna dapat menghapus anotasi secara cepat dari daftar melalui aksi geser (<em>swipe action</em>), namun daftar ini tidak menyediakan form pengeditan isi secara <em>in-place</em>.</li>
+    Pengguna dapat menghapus anotasi secara cepat dari daftar melalui aksi geser (<em>swipe action</em>), namun form pengeditan isi tidak disematkan di dalam daftar.</li>
 <li><strong>Pengeditan Berpusat di Reader (<code>iOSAnnotationEditorSheet</code>)</strong>:
-    Pengubahan teks catatan (<em>note</em>), warna sorotan, tipe garis bawah (<em>underline</em>), maupun penambahan tag dilakukan langsung dari dalam antarmuka membaca (<code>iOSReaderView</code>) melalui modal sheet <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Reader/iOS/iOSAnnotationEditorSheet.swift"><code>iOSAnnotationEditorSheet</code></a> saat teks beranotasi diketuk.</li>
+    Pengubahan catatan (<em>note</em>), warna sorotan, tipe garis bawah (<em>underline</em>), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (<code>iOSReaderView</code>) melalui lembar modal <code>iOSAnnotationEditorSheet</code> saat teks beranotasi diketuk.</li>
 </ul>
 <h2 id="modal-sheet-filter-tag-tagfilterselectionview">Modal Sheet Filter Tag (<code>TagFilterSelectionView</code>)</h2>
 <p>Saat tombol filter pada <code>iOSTagFilterHeaderView</code> diketuk:</p>
 <ol>
-<li>Fungsi <code>presentTagFilterSheet()</code> menginisialisasi tampilan SwiftUI bersama <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/macOS/TagFilterSelectionView.swift"><code>TagFilterSelectionView</code></a>.</li>
-<li>Tampilan ini dibungkus ke dalam <code>UIHostingController</code> dan dikonfigurasi menggunakan kontroler lembar modern UIKit (<code>UISheetPresentationController</code>):
+<li>Fungsi <code>presentTagFilterSheet()</code> menginisialisasi tampilan SwiftUI <code>TagFilterSelectionView</code>.</li>
+<li>Tampilan dibungkus ke dalam <code>UIHostingController</code> dan dikonfigurasi menggunakan <code>UISheetPresentationController</code>:
     <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">sheet</span><span class="p">.</span><span class="n">detents</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[.</span><span class="n">medium</span><span class="p">(),</span><span class="w"> </span><span class="p">.</span><span class="n">large</span><span class="p">()]</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">sheet</span><span class="p">.</span><span class="n">prefersGrabberVisible</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
 </span></code></pre></div></li>
@@ -3909,8 +3981,8 @@
 </ol>
 <h2 id="sinkronisasi-cloudkit-pull-to-refresh">Sinkronisasi CloudKit &amp; Pull-to-Refresh</h2>
 <ul>
-<li><code>iOSAnnotationViewController</code> menyematkan komponen bawaan <code>UIRefreshControl</code> pada <code>collectionView</code>.</li>
-<li>Saat pengguna melakukan gesture tarik-untuk-memperbarui (<em>pull-to-refresh</em>), pemicu <code>onRefreshRequested</code> diteruskan ke bridge wrapper untuk memanggil <code>CloudKitSyncManager.shared.fetchChanges()</code>.</li>
+<li><code>iOSAnnotationViewController</code> menyematkan komponen <code>UIRefreshControl</code> pada <code>collectionView</code>.</li>
+<li>Saat pengguna melakukan gestur tarik-untuk-memperbarui (<em>pull-to-refresh</em>), pemicu <code>onRefreshRequested</code> memanggil <code>CloudKitSyncManager.shared.fetchChanges()</code>.</li>
 <li>Animasi penyegaran dihentikan secara otomatis setelah proses penarikan data selesai melalui <code>endRefreshing()</code>.</li>
 </ul>
 
@@ -3932,6 +4004,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3962,10 +4040,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -1880,10 +1880,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-resiliensi-jaringan-networkmonitor" class="md-nav__link">
+  <a href="#b-ketahanan-jaringan-networkmonitor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. Resiliensi Jaringan (NetworkMonitor)
+        B. Ketahanan Jaringan (NetworkMonitor)
       
     </span>
   </a>
@@ -1896,22 +1896,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-bookarchiveintegrator-peleburan-tabel-pembentukan-fts5" class="md-nav__link">
+  <a href="#3-bookarchiveintegrator-integrasi-tabel-pembentukan-fts5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. BookArchiveIntegrator: Peleburan Tabel &amp; Pembentukan FTS5
+        3. BookArchiveIntegrator: Integrasi Tabel &amp; Pembentukan FTS5
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. BookArchiveIntegrator: Peleburan Tabel &amp; Pembentukan FTS5">
+    <nav class="md-nav" aria-label="3. BookArchiveIntegrator: Integrasi Tabel &amp; Pembentukan FTS5">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#a-koordinasi-konkurensi-bookarchivesingleflight-actor" class="md-nav__link">
+  <a href="#a-bookarchivesingleflight-actor-koordinasi-konkurensi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A. Koordinasi Konkurensi (BookArchiveSingleFlight Actor)
+        A. BookArchiveSingleFlight (Actor) - Koordinasi Konkurensi
       
     </span>
   </a>
@@ -1919,10 +1919,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-dua-fase-integrasi-integratephase" class="md-nav__link">
+  <a href="#b-integratephase-enum-dua-fase-integrasi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. Dua Fase Integrasi (IntegratePhase)
+        B. IntegratePhase (Enum) - Dua Fase Integrasi
       
     </span>
   </a>
@@ -2905,6 +2905,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3657,10 +3685,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-resiliensi-jaringan-networkmonitor" class="md-nav__link">
+  <a href="#b-ketahanan-jaringan-networkmonitor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. Resiliensi Jaringan (NetworkMonitor)
+        B. Ketahanan Jaringan (NetworkMonitor)
       
     </span>
   </a>
@@ -3673,22 +3701,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-bookarchiveintegrator-peleburan-tabel-pembentukan-fts5" class="md-nav__link">
+  <a href="#3-bookarchiveintegrator-integrasi-tabel-pembentukan-fts5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. BookArchiveIntegrator: Peleburan Tabel &amp; Pembentukan FTS5
+        3. BookArchiveIntegrator: Integrasi Tabel &amp; Pembentukan FTS5
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. BookArchiveIntegrator: Peleburan Tabel &amp; Pembentukan FTS5">
+    <nav class="md-nav" aria-label="3. BookArchiveIntegrator: Integrasi Tabel &amp; Pembentukan FTS5">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#a-koordinasi-konkurensi-bookarchivesingleflight-actor" class="md-nav__link">
+  <a href="#a-bookarchivesingleflight-actor-koordinasi-konkurensi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A. Koordinasi Konkurensi (BookArchiveSingleFlight Actor)
+        A. BookArchiveSingleFlight (Actor) - Koordinasi Konkurensi
       
     </span>
   </a>
@@ -3696,10 +3724,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-dua-fase-integrasi-integratephase" class="md-nav__link">
+  <a href="#b-integratephase-enum-dua-fase-integrasi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. Dua Fase Integrasi (IntegratePhase)
+        B. IntegratePhase (Enum) - Dua Fase Integrasi
       
     </span>
   </a>
@@ -3794,17 +3822,17 @@
 </ul>
 <hr />
 <h2 id="1-masalah-rekayasa-solusi-arsitektur">1. Masalah Rekayasa &amp; Solusi Arsitektur</h2>
-<p>Maktabah memiliki katalog lebih dari <strong>8.000 kitab</strong>. Mengunduh arsip monolitik raksasa secara sekaligus tidak efisien untuk bandwidth pengguna, sedangkan menyimpan 8.000 berkas <code>.sqlite</code> terpisah akan menghancurkan performa I/O file system dan melumpuhkan fitur pencarian lintas kitab (<em>cross-book search</em>).</p>
-<p>Arsitektur Maktabah memecahkan dilema ini melalui <strong>Tiga Pilar Siklus Data</strong>:</p>
+<p>Maktabah memiliki katalog lebih dari <strong>8.000 kitab</strong>. Mengunduh arsip monolitik raksasa secara sekaligus tidak efisien untuk <em>bandwidth</em> pengguna, sedangkan menyimpan 8.000 berkas <code>.sqlite</code> terpisah akan menurunkan performa I/O sistem berkas (<em>file system</em>) dan menghambat fitur pencarian lintas kitab (<em>cross-book search</em>).</p>
+<p>Arsitektur Maktabah menyelesaikan tantangan ini melalui <strong>Tiga Pilar Siklus Data</strong>:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌────────────────────────────────────────────────────────────────────────┐
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│ 1. BookDownloadManager (Penyerap Jaringan)                              │
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│ 1. BookDownloadManager (Network Download &amp; Ingestion)                  │
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│    • Mengambil metadata &amp; chunk per-buku dari GitHub Releases          │
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│    • SingleFlight Deduplication: 1 HTTP Request per Book ID            │
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>└───────────────────────────────────┬────────────────────────────────────┘
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                                    │ Menghasilkan temporary .sqlite
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                                    ▼
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>┌────────────────────────────────────────────────────────────────────────┐
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│ 2. BookArchiveIntegrator (Pelebur Database &amp; FTS)                      │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│ 2. BookArchiveIntegrator (Integrator Database &amp; FTS)                   │
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│    • Menyuntikkan tabel b{id} dan t{id} ke arsip 1-20.sqlite           │
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│    • BookArchiveSingleFlight (Actor): Antrean serial per-arsip         │
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│    • Pembangunan indeks teks penuh (FTS5 tokenization)                 │
@@ -3814,15 +3842,15 @@
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>┌────────────────────────────────────────────────────────────────────────┐
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│ 3. BookUpdateManager (Staging &amp; Atomic Upgrade Engine)                 │
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│    • Komparasi versi bver di main.sqlite vs index.json                 │
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│    • Unduh author update, staging working directory terisolasi         │
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│    • Unduh pembaruan pengarang, staging working directory terisolasi   │
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│    • Transaksi atomik penggantian tabel tanpa merusak bookmark/anotasi  │
 </span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>└────────────────────────────────────────────────────────────────────────┘
 </span></code></pre></div>
 <hr />
 <h2 id="2-bookdownloadmanager-unduhan-asinkron-deduplikasi">2. BookDownloadManager: Unduhan Asinkron &amp; Deduplikasi</h2>
-<p><code>BookDownloadManager</code> bertindak sebagai pintu gerbang pengambilan berkas per-buku secara mandiri:</p>
+<p><code>BookDownloadManager</code> bertindak sebagai gerbang pengambilan berkas per-buku secara mandiri:</p>
 <h3 id="a-pola-singleflightkey-value">A. Pola <code>SingleFlight&lt;Key, Value&gt;</code></h3>
-<p>Untuk mencegah serangan <em>double-click</em> atau permintaan paralel dari beberapa sub-sistem secara bersamaan ke buku yang sama:</p>
+<p>Untuk mencegah duplikasi permintaan (<em>request coalescing</em>) atau pemanggilan paralel dari beberapa subsistem secara bersamaan ke buku yang sama:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BookDownloadManager</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">singleFlight</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SingleFlight</span><span class="p">&lt;</span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">URL</span><span class="p">&gt;()</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
@@ -3839,13 +3867,13 @@
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="b-resiliensi-jaringan-networkmonitor">B. Resiliensi Jaringan (<code>NetworkMonitor</code>)</h3>
-<p><code>BookDownloadManager</code> mengikat diri ke <code>NetworkMonitor.shared</code>. Jika sambungan internet terputus di tengah pengunduhan, seluruh koneksi aktif dibatalkan secara elegan (<code>cancelAllDownloads()</code>), dan status parsial dibersihkan agar tidak meninggalkan berkas korup di penyimpanan lokal.</p>
+<h3 id="b-ketahanan-jaringan-networkmonitor">B. Ketahanan Jaringan (<code>NetworkMonitor</code>)</h3>
+<p><code>BookDownloadManager</code> terhubung langsung ke <code>NetworkMonitor.shared</code>. Jika sambungan internet terputus saat proses pengunduhan, seluruh koneksi aktif dibatalkan secara tertib (<code>cancelAllDownloads()</code>), dan status parsial dibersihkan agar tidak meninggalkan berkas korup pada penyimpanan lokal.</p>
 <hr />
-<h2 id="3-bookarchiveintegrator-peleburan-tabel-pembentukan-fts5">3. BookArchiveIntegrator: Peleburan Tabel &amp; Pembentukan FTS5</h2>
-<p>Setelah berkas sementara <code>.sqlite</code> kitab selesai diunduh, ia <strong>tidak dibiarkan berdiri sendiri</strong>, melainkan dilebur ke dalam salah satu dari 20 berkas arsip induk (<code>1.sqlite</code> s/d <code>20.sqlite</code>).</p>
-<h3 id="a-koordinasi-konkurensi-bookarchivesingleflight-actor">A. Koordinasi Konkurensi (<code>BookArchiveSingleFlight</code> Actor)</h3>
-<p>Menulis ke satu database SQLite secara paralel dari banyak thread akan memicu eror fatal <code>SQLITE_BUSY</code> (<em>database is locked</em>). Modul ini menggunakan Actor dengan antrean <em>predecessor</em>:</p>
+<h2 id="3-bookarchiveintegrator-integrasi-tabel-pembentukan-fts5">3. BookArchiveIntegrator: Integrasi Tabel &amp; Pembentukan FTS5</h2>
+<p>Setelah berkas sementara <code>.sqlite</code> kitab selesai diunduh, berkas tersebut diintegrasikan ke dalam salah satu dari 20 berkas arsip induk (<code>1.sqlite</code> s.d. <code>20.sqlite</code>).</p>
+<h3 id="a-bookarchivesingleflight-actor-koordinasi-konkurensi">A. <code>BookArchiveSingleFlight</code> (Actor) - Koordinasi Konkurensi</h3>
+<p>Menulis ke satu basis data SQLite secara paralel dari banyak <em>thread</em> dapat memicu galat <code>SQLITE_BUSY</code> (<em>database is locked</em>). Modul ini menggunakan <em>Actor</em> dengan antrean <em>predecessor</em>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">BookArchiveSingleFlight</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">BookArchiveSingleFlight</span><span class="p">()</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
@@ -3872,25 +3900,25 @@
 </span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="b-dua-fase-integrasi-integratephase">B. Dua Fase Integrasi (<code>IntegratePhase</code>)</h3>
+<h3 id="b-integratephase-enum-dua-fase-integrasi">B. <code>IntegratePhase</code> (Enum) - Dua Fase Integrasi</h3>
 <p>Operasi integrasi dibagi menjadi dua fase independen:</p>
 <ol>
 <li><strong>Fase Data (<code>IntegratePhase.data</code>)</strong>:<ul>
-<li>Melakukan <code>ATTACH DATABASE</code> berkas buku sementara ke arsip <code>1-20.sqlite</code>.</li>
+<li>Menjalankan <code>ATTACH DATABASE</code> berkas buku sementara ke arsip <code>1-20.sqlite</code>.</li>
 <li>Menyalin tabel konten (<code>b{id}</code>) dan tabel daftar isi (<em>Table of Contents</em> <code>t{id}</code>).</li>
-<li>Menjalankan transaksi cepat agar lock database segera dilepas.</li>
+<li>Menjalankan transaksi cepat agar <em>lock</em> basis data segera dilepas.</li>
 </ul>
 </li>
 <li><strong>Fase Indeks (<code>IntegratePhase.fts</code>)</strong>:<ul>
 <li>Membaca teks Arab dari tabel <code>b{id}</code> yang baru disalin.</li>
-<li>Melakukan normalisasi teks (penghapusan harakat/tashkeel).</li>
-<li>Memasukkan token teks ke dalam virtual table <code>search_index</code> (SQLite FTS5) agar kitab tersebut dapat langsung ditemukan di fitur pencarian global.</li>
+<li>Melakukan normalisasi teks (penghapusan harakat/tasykil).</li>
+<li>Memasukkan token teks ke dalam <em>virtual table</em> <code>search_index</code> (SQLite FTS5) agar kitab tersebut langsung dapat dicari pada fitur pencarian global.</li>
 </ul>
 </li>
 </ol>
 <hr />
 <h2 id="4-bookupdatemanager-staging-pembaruan-atomik">4. BookUpdateManager: Staging &amp; Pembaruan Atomik</h2>
-<p>Ketika naskah kitab direvisi, dikoreksi salah ketiknya, atau bertambah jilidnya di server pusat, <code>BookUpdateManager</code> menangani proses pembaruan secara tanpa cela (<em>seamless</em>).</p>
+<p>Ketika naskah kitab direvisi, dikoreksi salah ketiknya, atau bertambah jilidnya di server, <code>BookUpdateManager</code> menangani proses pembaruan secara mulus (<em>seamless</em>).</p>
 <h3 id="a-deteksi-status-versi-bookversionstate">A. Deteksi Status Versi (<code>BookVersionState</code>)</h3>
 <p>Sistem memeriksa kolom versi (<code>bver</code> atau <code>bVer</code>) di <code>main.sqlite</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookVersionState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -3899,9 +3927,9 @@
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">version</span><span class="p">(</span><span class="nb">Int64</span><span class="p">)</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Jika versi server di <code>index.json</code> lebih tinggi daripada <code>currentVersion</code>, buku tersebut ditandai dengan lencana <em>Update Available</em>.</p>
+<p>Jika versi server di <code>index.json</code> lebih tinggi daripada <code>currentVersion</code>, buku tersebut ditandai dengan status <em>Update Available</em>.</p>
 <h3 id="b-isolasi-berkas-sementara-staging-workflow">B. Isolasi Berkas Sementara (<em>Staging Workflow</em>)</h3>
-<p>Pembaruan buku tidak langsung menimpa data yang sedang dibaca. Sistem menggunakan mekanisme <strong>Staging Directory</strong>:</p>
+<p>Pembaruan buku tidak langsung menimpa data yang sedang dibaca. Sistem menggunakan mekanisme <em>Staging Directory</em>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">StagedBookUpdate</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">entry</span><span class="p">:</span><span class="w"> </span><span class="n">BookIndexEntry</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">metadata</span><span class="p">:</span><span class="w"> </span><span class="n">BookMetadata</span>
@@ -3912,42 +3940,42 @@
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li><strong>Unduh ke Sandbox</strong>: Berkas buku baru dan data biografi pengarang diunduh ke folder kerja sementara (<code>workingDirectory</code>).</li>
-<li><strong>Validasi Skema</strong>: Struktur tabel diverifikasi kelengkapannya sebelum menyentuh database utama.</li>
-<li><strong>Pembaruan Author Context</strong>: Jika pengarang kitab tersebut memiliki revisi biografi, metadata di <code>special.sqlite</code> ikut diperbarui secara sinkron.</li>
-<li><strong>Eksekusi Atomik (Transaction Replace)</strong>:<ul>
-<li>Mengganti baris metadata di <code>main.sqlite</code>.</li>
+<li><strong>Unduh ke Direktori Kerja Terisolasi</strong>: Berkas buku baru dan data biografi pengarang diunduh ke direktori kerja sementara (<code>workingDirectory</code>).</li>
+<li><strong>Validasi Skema</strong>: Struktur tabel diverifikasi kelengkapannya sebelum menyentuh basis data utama.</li>
+<li><strong>Pembaruan Konteks Pengarang</strong>: Jika pengarang kitab tersebut memiliki revisi biografi, metadata di <code>special.sqlite</code> ikut diperbarui secara sinkron.</li>
+<li><strong>Eksekusi Atomik (<em>Transaction Replace</em>)</strong>:<ul>
+<li>Memperbarui baris metadata di <code>main.sqlite</code>.</li>
 <li>Menimpa tabel <code>b{id}</code> di arsip <code>1-20.sqlite</code>.</li>
 <li>Membangun ulang indeks FTS5 untuk ID kitab tersebut.</li>
 </ul>
 </li>
-<li><strong>Pembersihan (<em>Cleanup</em>)</strong>: Folder sementara dihapus setelah transaksi berhasil dikomit (<code>COMMIT</code>).</li>
+<li><strong>Pembersihan (<em>Cleanup</em>)</strong>: Direktori sementara dihapus setelah transaksi berhasil di-<em>commit</em>.</li>
 </ol>
 <hr />
 <h2 id="5-pertimbangan-integritas-data-transaksi">5. Pertimbangan Integritas Data &amp; Transaksi</h2>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Skenario Bahaya</th>
+<th style="text-align: left;">Skenario Risiko</th>
 <th style="text-align: left;">Mekanisme Pertahanan Maktabah</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><strong>Aplikasi dimatikan paksa saat download</strong></td>
-<td style="text-align: left;"><code>SingleFlight</code> membersihkan file sementara; tidak ada database utama yang tersentuh sebelum tahap commit.</td>
+<td style="text-align: left;"><strong>Aplikasi dimatikan paksa saat proses unduh</strong></td>
+<td style="text-align: left;"><code>SingleFlight</code> membersihkan berkas sementara; basis data utama tidak terpengaruh sebelum tahap <em>commit</em>.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Dua buku di arsip yang sama selesai download bersamaan</strong></td>
-<td style="text-align: left;"><code>BookArchiveSingleFlight</code> memastikan buku kedua mengantre hingga buku pertama selesai menulis ke file arsip.</td>
+<td style="text-align: left;"><strong>Dua buku dalam arsip yang sama selesai diunduh bersamaan</strong></td>
+<td style="text-align: left;"><code>BookArchiveSingleFlight</code> memastikan buku kedua mengantre hingga buku pertama selesai menulis ke berkas arsip.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Update buku saat user sedang membuka kitab terkait</strong></td>
-<td style="text-align: left;">Mode <code>WAL</code> (Write-Ahead Logging) di SQLite memungkinkan pembaca membaca snapshot lama hingga koneksi disegarkan oleh event <code>.booksChanged</code>.</td>
+<td style="text-align: left;"><strong>Pembaruan buku saat pengguna sedang membaca kitab terkait</strong></td>
+<td style="text-align: left;">Mode <code>WAL</code> (<em>Write-Ahead Logging</em>) di SQLite memungkinkan pembaca mengakses <em>snapshot</em> lama hingga koneksi disegarkan oleh <em>event</em> <code>.booksChanged</code>.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong>Fragmentasi ruang kosong akibat update berulang</strong></td>
-<td style="text-align: left;"><code>BookArchiveIntegrator</code> mencatat ID arsip ke <code>PendingVacuumArchiveIds</code> (<code>UserDefaults</code>) untuk menjadwalkan <code>VACUUM</code> di latar belakang.</td>
+<td style="text-align: left;"><strong>Fragmentasi ruang kosong akibat pembaruan berulang</strong></td>
+<td style="text-align: left;"><code>BookArchiveIntegrator</code> mencatat ID arsip ke <code>PendingVacuumArchiveIds</code> (<code>UserDefaults</code>) untuk menjadwalkan operasi <code>VACUUM</code> di latar belakang.</td>
 </tr>
 </tbody>
 </table>
@@ -3970,6 +3998,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4000,10 +4034,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

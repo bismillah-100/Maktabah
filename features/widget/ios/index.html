@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3317,10 +3345,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#komponen-swiftui-utama" class="md-nav__link">
+  <a href="#1-alur-penanganan-deep-link" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Komponen SwiftUI Utama
+        1. Alur Penanganan Deep Link
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pemrosesan-url-di-swiftui-iosmainview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pemrosesan URL di SwiftUI (iOSMainView)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-komponen-antarmuka-swiftui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Komponen Antarmuka SwiftUI
       
     </span>
   </a>
@@ -3495,10 +3545,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#komponen-swiftui-utama" class="md-nav__link">
+  <a href="#1-alur-penanganan-deep-link" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Komponen SwiftUI Utama
+        1. Alur Penanganan Deep Link
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pemrosesan-url-di-swiftui-iosmainview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pemrosesan URL di SwiftUI (iOSMainView)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-komponen-antarmuka-swiftui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Komponen Antarmuka SwiftUI
       
     </span>
   </a>
@@ -3523,22 +3595,73 @@
 
 
 <h1 id="ios-integration">iOS Integration</h1>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">iOS</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Modul antarmuka Widget sepenuhnya ditulis menggunakan <strong>SwiftUI</strong> dan disusun dalam file bersama (<em>shared files</em>) yang bisa berjalan mulus di atas iOS maupun sistem operasi Apple lainnya. </p>
-<h2 id="komponen-swiftui-utama">Komponen SwiftUI Utama</h2>
-<p>Karena Widget tidak mengizinkan tampilan dengan elemen interaktif yang kompleks (seperti <em>Scroll Views</em>), arsitekturnya difokuskan pada penyajian informasi yang padat melalui berbagai ukuran keluarga widget (<em>WidgetFamily</em>).</p>
+<p>Pada iOS (iOS 17.0+), modul Widget terintegrasi penuh ke dalam sistem operasi melalui widget di Home Screen, Lock Screen, maupun StandBy Mode. Antarmuka dan alur navigasi deep link dibangun sepenuhnya menggunakan SwiftUI modern.</p>
+<hr />
+<h2 id="1-alur-penanganan-deep-link">1. Alur Penanganan Deep Link</h2>
+<p>Ketika pengguna mengetuk widget di Home Screen atau Lock Screen iOS, aplikasi Maktabah diaktifkan dan menangkap tautan melalui modifier <code>.onOpenURL</code>. Alur diproses dalam diagram sekuens modular dengan 4 partisipan:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor User
+    participant View as iOSMainView
+    participant Nav as iOSNavigationManager
+    participant Reader as iOSReaderView
+
+    User-&gt;&gt;View: Ketuk Widget (maktabah://...)
+    Note over View: .onOpenURL()&lt;br/&gt;WidgetDeepLink.parse()
+
+    rect rgb(240, 248, 255)
+        Note over View,Reader: Kasus Anotasi / Riwayat
+        View-&gt;&gt;Nav: openBook(book, initialContentId:, targetAnnotation:)
+        Nav--&gt;&gt;View: Update State (selectedBook)
+        View-&gt;&gt;Reader: adaptiveReaderPush()
+        Note over Reader: Render teks &amp; scroll ke target
+    end</code></pre>
+<hr />
+<h2 id="2-pemrosesan-url-di-swiftui-iosmainview">2. Pemrosesan URL di SwiftUI (<code>iOSMainView</code>)</h2>
+<p>Penanganan skema URL diintegrasikan pada root view aplikasi:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">handleOpenURL</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">url</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span><span class="p">,</span><span class="w"> </span><span class="n">bManager</span><span class="p">:</span><span class="w"> </span><span class="n">iOSNavigationManager</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">deepLink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">WidgetDeepLink</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="n">from</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">)</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">Task</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="n">deepLink</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="p">.</span><span class="n">annotation</span><span class="p">(</span><span class="n">annId</span><span class="p">):</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">annotation</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">AnnotationStore</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">loadAnnotationById</span><span class="p">(</span><span class="n">annId</span><span class="p">),</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">               </span><span class="kd">let</span><span class="w"> </span><span class="nv">book</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">LibraryDataManager</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">getBook</span><span class="p">([</span><span class="n">annotation</span><span class="p">.</span><span class="n">bkId</span><span class="p">]).</span><span class="bp">first</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">            </span><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">                </span><span class="k">await</span><span class="w"> </span><span class="n">MainActor</span><span class="p">.</span><span class="n">run</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">                    </span><span class="n">bManager</span><span class="p">.</span><span class="n">openBook</span><span class="p">(</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">                        </span><span class="n">book</span><span class="p">,</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">                        </span><span class="n">initialContentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">(</span><span class="n">annotation</span><span class="p">.</span><span class="n">contentId</span><span class="p">),</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">                        </span><span class="n">targetAnnotation</span><span class="p">:</span><span class="w"> </span><span class="n">annotation</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">                    </span><span class="p">)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="p">.</span><span class="n">history</span><span class="p">(</span><span class="n">bkId</span><span class="p">,</span><span class="w"> </span><span class="n">contentId</span><span class="p">):</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">book</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">LibraryDataManager</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">getBook</span><span class="p">([</span><span class="n">bkId</span><span class="p">]).</span><span class="bp">first</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">                </span><span class="k">await</span><span class="w"> </span><span class="n">MainActor</span><span class="p">.</span><span class="n">run</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">                    </span><span class="n">bManager</span><span class="p">.</span><span class="n">openBook</span><span class="p">(</span><span class="n">book</span><span class="p">,</span><span class="w"> </span><span class="n">initialContentId</span><span class="p">:</span><span class="w"> </span><span class="n">contentId</span><span class="p">)</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="p">}</span>
+</span></code></pre></div>
+<ol>
+<li><strong>Resolusi Entitas</strong>: ID buku dan konten diambil secara efisien melalui <code>LibraryDataManager.shared.getBook([bkId])</code>.</li>
+<li><strong>MainActor Dispatch</strong>: Pembaruan state navigasi dipindahkan ke <code>@MainActor</code> agar perubahan binding UI berjalan mulus tanpa gangguan visual (<em>visual glitch</em>).</li>
+<li><strong>Adaptive Reader Push</strong>: <code>iOSNavigationManager</code> memicu navigasi tumpukan (<em>navigation stack push</em>) pada iPhone atau pembaruan split-detail reader pada iPad.</li>
+</ol>
+<hr />
+<h2 id="3-komponen-antarmuka-swiftui">3. Komponen Antarmuka SwiftUI</h2>
+<p>Antarmuka widget dioptimalkan untuk berbagai ukuran keluarga widget (<code>WidgetFamily</code>):</p>
 <ul>
-<li><strong><code>AnnotationView</code> &amp; <code>HistoryView</code></strong>: Kelas View level teratas yang merangkai hierarki UI berdasarkan <em>family</em> (<code>.systemSmall</code>, <code>.systemMedium</code>, <code>.systemLarge</code>). Tampilan ini juga mendeteksi keadaan kosong (menampilkan pesan seperti "Belum ada anotasi").</li>
-<li><strong><code>WidgetContainerView</code></strong>: Komponen dasar (<em>wrapper</em>) yang mengatur jarak pinggir (<em>padding</em>) yang pas untuk setiap bentuk widget dan mengaplikasikan latar belakang material tembus pandang (<code>.thickMaterial</code>).</li>
-<li><strong><code>WidgetHeaderView</code></strong>: Menampilkan judul widget beserta ikon dari <em>SF Symbols</em>.</li>
-<li><strong><code>WidgetCardView</code></strong>: Sel konten individual yang <em>reusable</em>. Menggunakan kontrol pintar seperti <code>ViewThatFits</code> untuk secara mulus beralih orientasi dari tata letak yang menampilkan teks pendek berikut <em>subtitle</em>, menuju tata letak dua baris padat ketika judul bahasa Arab terlampau panjang. Memanfaatkan <code>Link(destination:)</code> (<em>Widget Deep Link</em>) untuk membawa pengguna masuk kembali ke aplikasi Maktabah langsung pada teks yang relevan saat di-klik.</li>
-<li><strong><code>TightArabicText</code></strong>: Komponen tipografi khusus yang dimuat dalam <em>Config</em>. Komponen ini digunakan untuk membentangkan huruf beraksara Arab dengan konfigurasi spasial (<em>line spacing</em>) negatif secara kustom. Tujuannya adalah memaksimalkan kuantitas teks yang mampu diakomodasi di dalam <em>frame</em> mungil tanpa melakukan pembelahan (<em>clipping</em>).</li>
+<li><strong><code>AnnotationView</code> &amp; <code>HistoryView</code></strong>: Root view yang mengevaluasi ukuran widget (<code>.systemSmall</code>, <code>.systemMedium</code>, <code>.systemLarge</code>) dan merender state kosong jika data belum tersedia.</li>
+<li><strong><code>WidgetContainerView</code></strong>: Menyediakan padding konsisten serta latar belakang material tembus pandang (<code>.thickMaterial</code>) yang menyatu dengan wallpaper iOS.</li>
+<li><strong><code>WidgetHeaderView</code></strong>: Menampilkan ikon SF Symbols yang relevan (<code>highlighter</code>, <code>books.vertical.fill</code>) bersanding dengan judul widget.</li>
+<li><strong><code>WidgetCardView</code></strong>: Sel kartu modular yang dibungkus dengan <code>Link(destination: deepLink.url)</code>. Komponen ini memanfaatkan <code>ViewThatFits</code> untuk beralih secara responsif antara tata letak satu baris dan dua baris padat ketika judul kitab dalam aksara Arab terlalu panjang.</li>
+<li><strong><code>TightArabicText</code></strong>: Komponen teks tipografi Arab dengan penyesuaian <code>lineSpacing</code> negatif agar karakter Arab berharakat dapat ditampilkan secara proporsional tanpa terpotong di dalam kontainer kecil.</li>
 </ul>
-</div>
-</div>
-</div>
 
 
 
@@ -3558,6 +3681,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3588,10 +3717,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

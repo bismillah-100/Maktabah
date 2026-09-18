@@ -1020,10 +1020,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pengamanan-thread-safety-swift-mutex" class="md-nav__link">
+  <a href="#pengamanan-thread-safety-synchronizationmutex" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pengamanan Thread-Safety (Swift Mutex)
+        Pengamanan Thread-Safety (Synchronization.Mutex)
       
     </span>
   </a>
@@ -1070,10 +1070,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#penanganan-mode-offline-syncpendingstore" class="md-nav__link">
+  <a href="#penanganan-mode-luring-syncpendingstore" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Mode Offline (SyncPendingStore)
+        Penanganan Mode Luring (SyncPendingStore)
       
     </span>
   </a>
@@ -1081,10 +1081,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#nuke-database-import" class="md-nav__link">
+  <a href="#operasi-reset-database-impor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Nuke Database &amp; Import
+        Operasi Reset Database &amp; Impor
       
     </span>
   </a>
@@ -2894,6 +2894,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3663,10 +3691,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pengamanan-thread-safety-swift-mutex" class="md-nav__link">
+  <a href="#pengamanan-thread-safety-synchronizationmutex" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pengamanan Thread-Safety (Swift Mutex)
+        Pengamanan Thread-Safety (Synchronization.Mutex)
       
     </span>
   </a>
@@ -3713,10 +3741,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#penanganan-mode-offline-syncpendingstore" class="md-nav__link">
+  <a href="#penanganan-mode-luring-syncpendingstore" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Mode Offline (SyncPendingStore)
+        Penanganan Mode Luring (SyncPendingStore)
       
     </span>
   </a>
@@ -3724,10 +3752,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#nuke-database-import" class="md-nav__link">
+  <a href="#operasi-reset-database-impor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Nuke Database &amp; Import
+        Operasi Reset Database &amp; Impor
       
     </span>
   </a>
@@ -3759,8 +3787,8 @@
 <h1 id="persistence-cache-concurrency">Persistence, Cache &amp; Concurrency</h1>
 <p>Fitur Annotations menyimpan data ke penyimpanan lokal (SQLite) serta melakukan sinkronisasi awan (CloudKit) agar konsisten di berbagai perangkat pengguna.</p>
 <h2 id="skema-sqlite-annotationrepository">Skema SQLite (<code>AnnotationRepository</code>)</h2>
-<p><code>AnnotationRepository</code> bertindak sebagai <em>Direct Data Access</em> menggunakan pembungkus (wrapper) <code>SQLiteDatabase</code>. File database tersendiri disimpan pada path <em>Application Support</em> dengan nama <code>Annotations.sqlite</code>.</p>
-<p>Database memiliki 3 tabel utama:</p>
+<p><code>AnnotationRepository</code> bertindak sebagai lapisan akses data langsung (<em>Direct Data Access</em>) menggunakan pembungkus <code>SQLiteDatabase</code>. Berkas basis data disimpan pada direktori <em>Application Support</em> dengan nama <code>Annotations.sqlite</code>.</p>
+<p>Basis data memiliki 3 tabel utama:</p>
 <h3 id="1-tabel-annotations">1. Tabel <code>annotations</code></h3>
 <p>Menyimpan metadata detail setiap anotasi.</p>
 <pre class="mermaid"><code>erDiagram
@@ -3809,7 +3837,7 @@
 <tr>
 <td><code>id</code></td>
 <td>INTEGER PRIMARY KEY AUTOINCREMENT</td>
-<td>ID auto-increment dari SQLite.</td>
+<td>ID <em>auto-increment</em> dari SQLite.</td>
 </tr>
 <tr>
 <td><code>bkId</code></td>
@@ -3824,27 +3852,27 @@
 <tr>
 <td><code>startIndex</code></td>
 <td>INTEGER</td>
-<td>Titik awal range teks <em>tanpa</em> harakat.</td>
+<td>Titik awal rentang teks <em>tanpa</em> harakat.</td>
 </tr>
 <tr>
 <td><code>length</code></td>
 <td>INTEGER</td>
-<td>Panjang teks <em>tanpa</em> harakat.</td>
+<td>Panjang rentang teks <em>tanpa</em> harakat.</td>
 </tr>
 <tr>
 <td><code>startIndexDiac</code></td>
 <td>INTEGER</td>
-<td>Titik awal range teks <em>dengan</em> harakat.</td>
+<td>Titik awal rentang teks <em>dengan</em> harakat.</td>
 </tr>
 <tr>
 <td><code>lengthDiac</code></td>
 <td>INTEGER</td>
-<td>Panjang teks <em>dengan</em> harakat.</td>
+<td>Panjang rentang teks <em>dengan</em> harakat.</td>
 </tr>
 <tr>
 <td><code>color</code></td>
 <td>TEXT</td>
-<td>Hexadecimal warna (misal <code>#FFFF00</code>).</td>
+<td>Kode heksadesimal warna (misalnya <code>#FFFF00</code>).</td>
 </tr>
 <tr>
 <td><code>type</code></td>
@@ -3854,17 +3882,17 @@
 <tr>
 <td><code>note</code></td>
 <td>TEXT</td>
-<td>Catatan teks tambahan (Nullable).</td>
+<td>Catatan teks tambahan (<em>nullable</em>).</td>
 </tr>
 <tr>
 <td><code>createdAt</code></td>
 <td>INTEGER</td>
-<td>Timestamp UNIX detik pembuatan anotasi.</td>
+<td>UNIX <em>timestamp</em> detik pembuatan anotasi.</td>
 </tr>
 <tr>
 <td><code>context</code></td>
 <td>TEXT</td>
-<td>Salinan teks yang dianotasi (String Interning).</td>
+<td>Salinan teks yang dianotasi (denormalisasi untuk pencarian cepat).</td>
 </tr>
 <tr>
 <td><code>part</code></td>
@@ -3879,25 +3907,27 @@
 <tr>
 <td><code>ckRecordId</code></td>
 <td>TEXT</td>
-<td>UUID string khusus record CloudKit.</td>
+<td>UUID <em>string</em> khusus rekaman CloudKit.</td>
 </tr>
 <tr>
 <td><code>lastModified</code></td>
 <td>INTEGER</td>
-<td>Timestamp UNIX detik modifikasi terakhir (untuk <em>Conflict Resolution</em>).</td>
+<td>UNIX <em>timestamp</em> detik modifikasi terakhir (untuk <em>Conflict Resolution</em>).</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Indeks Pencarian:</strong>
-- <code>idx_ann_bk_content</code> pada <code>(bkId, contentId)</code>: Digunakan saat merender UI Reader yang perlu cepat mengambil anotasi pada halaman berjalan.
-- <code>idx_ann_ck_record_id</code> pada <code>(ckRecordId)</code>: Untuk efisiensi sinkronisasi CloudKit.</p>
-<h3 id="2-tabel-relasi-many-to-many-tags">2. Tabel Relasi <em>Many-to-Many</em> (Tags)</h3>
+<p><strong>Indeks Pencarian:</strong></p>
+<ul>
+<li><code>idx_ann_bk_content</code> pada <code>(bkId, contentId)</code>: Digunakan saat merender UI Reader yang perlu mengambil anotasi pada halaman aktif secara cepat.</li>
+<li><code>idx_ann_ck_record_id</code> pada <code>(ckRecordId)</code>: Untuk efisiensi sinkronisasi CloudKit.</li>
+</ul>
+<h3 id="2-tabel-relasi-many-to-many-tags">2. Tabel Relasi Many-to-Many (Tags)</h3>
 <ul>
 <li><strong><code>tags</code></strong>: Berisi <code>id</code> (INTEGER), <code>name</code> (TEXT), dan <code>normalizedName</code> (TEXT UNIQUE) untuk pencarian <em>case-insensitive</em>.</li>
-<li><strong><code>annotation_tags</code></strong>: Tabel <em>junction</em> berisi <code>annotationId</code> (INTEGER) dan <code>tagId</code> (INTEGER). Terdapat <em>Unique Index</em> <code>idx_ann_tag_ids</code> untuk mencegah duplikasi tag di satu anotasi.</li>
+<li><strong><code>annotation_tags</code></strong>: Tabel <em>junction</em> berisi <code>annotationId</code> (INTEGER) dan <code>tagId</code> (INTEGER). Dilengkapi <em>Unique Index</em> <code>idx_ann_tag_ids</code> untuk mencegah duplikasi tag pada satu anotasi.</li>
 </ul>
 <h2 id="lapisan-in-memory-cache-annotationstore">Lapisan In-Memory Cache (<code>AnnotationStore</code>)</h2>
-<p>Sebagai optimasi, aplikasi jarang melakukan baca/tulis langsung ke <code>AnnotationRepository</code> di UI Thread. Melainkan, ia berinteraksi melalui <strong><code>AnnotationStore</code></strong>, sebuah <em>Singleton</em> yang mengelola Cache memori.</p>
+<p>Aplikasi mengoptimalkan interaksi data dengan tidak melakukan pembacaan/penulisan langsung ke <code>AnnotationRepository</code> di UI Thread, melainkan melalui <strong><code>AnnotationStore</code></strong>, sebuah <em>singleton</em> yang mengelola <em>in-memory cache</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">CacheState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">cacheById</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">Int64</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">cacheByContent</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">ContentKey</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">Annotation</span><span class="p">]]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
@@ -3906,8 +3936,8 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">cachedAllTagNames</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]?</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="pengamanan-thread-safety-swift-mutex">Pengamanan Thread-Safety (Swift <code>Mutex</code>)</h3>
-<p>Mengikuti praktik terbaik konkurensi Swift modern (Swift 6), status <em>cache</em> dilindungi oleh sinkronisasi <code>Mutex</code> (dari framework <code>Synchronization</code>).</p>
+<h3 id="pengamanan-thread-safety-synchronizationmutex">Pengamanan Thread-Safety (<code>Synchronization.Mutex</code>)</h3>
+<p>Status <em>cache</em> dilindungi oleh <code>Mutex</code> bawaan framework <code>Synchronization</code> (Swift 6):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">import</span><span class="w"> </span><span class="nc">Synchronization</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">cache</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">(</span><span class="n">CacheState</span><span class="p">())</span>
@@ -3915,64 +3945,94 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kd">func</span><span class="w"> </span><span class="nf">loadAnnotations</span><span class="p">(</span><span class="n">bkId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">contentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">Annotation</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">ContentKey</span><span class="p">(</span><span class="n">bkId</span><span class="p">:</span><span class="w"> </span><span class="n">bkId</span><span class="p">,</span><span class="w"> </span><span class="n">contentId</span><span class="p">:</span><span class="w"> </span><span class="n">contentId</span><span class="p">)</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="c1">// 1. Coba ambil dari In-Memory (O(1) time)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="c1">// 1. Ambil dari Cache In-Memory (kompleksitas O(1))</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">cached</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">cache</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">$0</span><span class="p">.</span><span class="n">cacheByContent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">cached</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">cached</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="c1">// 2. Jika Miss, Fetch dari SQLite</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="c1">// 2. Jika Cache Miss, ambil dari SQLite</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">loaded</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">(</span><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="n">repository</span><span class="p">.</span><span class="n">loadAnnotations</span><span class="p">(</span><span class="n">bkId</span><span class="p">:</span><span class="w"> </span><span class="n">bkId</span><span class="p">,</span><span class="w"> </span><span class="n">contentId</span><span class="p">:</span><span class="w"> </span><span class="n">contentId</span><span class="p">))</span><span class="w"> </span><span class="p">??</span><span class="w"> </span><span class="p">[]</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="c1">// 3. Update Cache dengan Mutex Lock</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="c1">// 3. Perbarui Cache dengan Mutex Lock</span>
 </span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="n">cache</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="k">in</span>
 </span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="n">cacheByContent</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">loaded</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="c1">// ... iterasi simpan lookup by ID</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">        </span><span class="c1">// ... simpan pemetaan lookup berdasarkan ID</span>
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>
 </span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">loaded</span>
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Penggunaan <code>Mutex.withLock</code> sangat ringan (berbasis OS level atomic locks) dan memastikan tidak ada kondisi <em>Race-Condition</em> saat membaca ataupun memperbarui data anotasi meskipun dilakukan serentak (concurrently) oleh <em>search worker</em> dan <em>Main Thread</em>.</p>
+<p>Penggunaan <code>Mutex.withLock</code> berbasis kunci atomik tingkat OS memastikan tidak ada kondisi <em>race condition</em> saat membaca ataupun memperbarui data anotasi secara konkuren oleh <em>search worker</em> dan Main Thread.</p>
 <h2 id="alur-sinkronisasi-offline-cloudkit-annotationsynchandlerswift">Alur Sinkronisasi Offline &amp; CloudKit (<code>AnnotationSyncHandler.swift</code>)</h2>
-<p>Untuk mendukung transisi baca lintas perangkat (misal: baca di iPad, lanjut di Mac), modul Anotasi tersambung ke <code>CloudKitSyncManager</code>. Sinkronisasi ini memanfaatkan zona kustom (<em>Custom Zone</em>) di database pribadi (<em>Private Database</em>) CloudKit pengguna agar mendukung <em>CKFetchRecordZoneChangesOperation</em> (Push Notification / Delta Download).</p>
+<p>Untuk mendukung kesinambungan baca lintas perangkat, modul Anotasi terhubung ke <code>CloudKitSyncManager</code> melalui zona kustom (<em>Custom Zone</em>) di <em>Private Database</em> CloudKit pengguna.</p>
 <h3 id="alur-sinkronisasi-keluar-upload-delete">Alur Sinkronisasi Keluar (Upload &amp; Delete)</h3>
-<pre class="mermaid"><code>graph TD
-    UI[Aksi Pengguna: Buat / Ubah Warna / Catatan / Hapus] --&gt; Store[AnnotationStore]
-    Store --&gt; Repo[AnnotationRepository]
-    Repo --&gt;|Catat Antrean| Pending[SyncPendingStore&lt;br/&gt;operation: upload / delete]
-    Store --&gt; TreeBuilder[AnnotationTreeBuilder]
+<pre class="mermaid"><code>flowchart TD
+    ACT(["Aksi Pengguna: Buat / Ubah / Hapus"]) --&gt; Store["AnnotationStore (In-Memory Cache)"]
+    Store --&gt; Repo["AnnotationRepository"]
+    Store --&gt; TreeBuilder["AnnotationTreeBuilder"]
 
-    Repo --&gt;|Simpan Lokal| SQLite[(Annotations.sqlite&lt;br/&gt;WAL Mode)]
-    TreeBuilder --&gt;|Mutasi Hirarki &amp; Diffing| Diffing[Publish AnnotationEvent]
-    Store --&gt;|Push Perubahan| CK[CloudKitSyncManager.shared]
+    TreeBuilder -.-&gt; Diffing(["Publish AnnotationEvent"])
 
-    CK --&gt;|Kirim Batch CKRecord| CloudKit((CloudKit Private Zone))
-    CloudKit --&gt;|Sukses| ClearPending[Hapus ID dari SyncPendingStore]</code></pre>
+    Repo ~~~ STORES
+
+    subgraph STORES ["Persistensi Lokal"]
+        Pending[("SyncPendingStore (Queue)")]
+        SQLite[("Annotations.sqlite (WAL Mode)")]
+    end
+
+    Repo --&gt;|"Catat Antrean"| Pending
+    Repo --&gt;|"Simpan Lokal"| SQLite
+
+    Store --&gt;|"Push Perubahan"| CK["CloudKitSyncManager.shared"]
+    CloudKit[("CloudKit Private Zone")]
+
+    CK --&gt;|"Kirim Batch CKRecord"| CloudKit
+    CloudKit --&gt;|"Sukses"| ClearPending(["Hapus ID dari SyncPendingStore"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class ACT,Diffing,ClearPending event;
+    class Store,Repo,TreeBuilder,CK store;
+    class Pending,SQLite,CloudKit db;</code></pre>
 <h3 id="alur-sinkronisasi-masuk-resolusi-konflik-lww">Alur Sinkronisasi Masuk &amp; Resolusi Konflik (LWW)</h3>
-<p>Ketika data remote diterima dari CloudKit via <code>fetchChanges</code>:</p>
-<pre class="mermaid"><code>graph TD
-    Remote[Terima Rekaman dari CloudKit] --&gt; CheckExisting{Apakah Rekaman Ada di SQLite?}
+<p>Ketika data <em>remote</em> diterima dari CloudKit via <code>fetchChanges</code>:</p>
+<pre class="mermaid"><code>flowchart TD
+    Remote(["Terima Rekaman dari CloudKit"]) --&gt; CheckExisting{"Apakah Rekaman Ada di SQLite?"}
 
-    CheckExisting -- Ya --&gt; CompareTime{remoteLastModified &gt;= localLastModified?}
-    CompareTime -- Ya --&gt; UpdateLocal[Perbarui Data Lokal di Annotations.sqlite]
-    CompareTime -- Tidak --&gt; DropRemote[Abaikan Data Remote / Pertahankan Lokal]
+    CheckExisting --&gt;|"Ya"| CompareTime{"remoteLastModified &gt;= localLastModified?"}
+    CompareTime --&gt;|"Ya"| UpdateLocal["Perbarui Data Lokal di SQLite"]
+    CompareTime --&gt;|"Tidak"| DropRemote["Abaikan Data Remote / Pertahankan Lokal"]
 
-    CheckExisting -- Tidak --&gt; InsertNew[Sisipkan Baris Baru ke Annotations.sqlite]
+    CheckExisting --&gt;|"Tidak"| InsertNew["Sisipkan Baris Baru ke SQLite"]
 
-    UpdateLocal --&gt; UpdateCache[Perbarui In-Memory Cache via Mutex]
+    UpdateLocal --&gt; UpdateCache["Perbarui In-Memory Cache via Mutex"]
     InsertNew --&gt; UpdateCache
-    UpdateCache --&gt; ReloadUI[Picu Notifikasi / Render Ulang Reader UI]</code></pre>
-<p>Apabila sinkronisasi menarik versi Cloud yang lebih baru dari versi lokal, SQLite akan meng-<em>overwrite</em> versi lokal, cache memori diperbarui di bawah proteksi <code>Mutex</code>, dan antarmuka Reader akan dipicu ulang untuk merender anotasi terbaru. Jika data remote lebih usang, data remote diabaikan untuk menjaga integritas pekerjaan lokal pengguna.</p>
-<h3 id="penanganan-mode-offline-syncpendingstore">Penanganan Mode Offline (<code>SyncPendingStore</code>)</h3>
-<p>Mirip seperti arsitektur Bookmarks, setiap mutasi (Insert, Update, Delete) yang dilakukan di <code>AnnotationRepository</code> secara implisit akan diregistrasikan ke tabel sinkronisasi tunda (pending):</p>
+    UpdateCache --&gt; ReloadUI(["Picu Notifikasi &amp; Render Ulang Reader UI"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class Remote,ReloadUI event;
+    class CheckExisting,CompareTime ui;
+    class UpdateLocal,DropRemote,InsertNew,UpdateCache store;</code></pre>
+<p>Apabila sinkronisasi menarik versi Cloud yang lebih baru dari versi lokal, SQLite akan menimpa (<em>overwrite</em>) versi lokal, <em>cache</em> memori diperbarui di bawah proteksi <code>Mutex</code>, dan antarmuka Reader dipicu untuk merender anotasi terbaru. Jika data <em>remote</em> lebih usang, data tersebut diabaikan untuk menjaga integritas data lokal.</p>
+<h3 id="penanganan-mode-luring-syncpendingstore">Penanganan Mode Luring (<code>SyncPendingStore</code>)</h3>
+<p>Setiap mutasi (Insert, Update, Delete) yang dilakukan di <code>AnnotationRepository</code> dicatat ke dalam antrean sinkronisasi tunda (<em>pending sync</em>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">try</span><span class="w"> </span><span class="n">transaction</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="n">exec</span><span class="p">(</span><span class="n">insertAnnotationSQL</span><span class="p">,</span><span class="w"> </span><span class="n">parameters</span><span class="p">:</span><span class="w"> </span><span class="n">params</span><span class="p">)</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="c1">// ...</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="kc">self</span><span class="p">.</span><span class="n">addPendingSync</span><span class="p">(</span><span class="n">ckRecordId</span><span class="p">:</span><span class="w"> </span><span class="n">ckId</span><span class="p">,</span><span class="w"> </span><span class="n">operation</span><span class="p">:</span><span class="w"> </span><span class="s">"upload"</span><span class="p">)</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Jika modifikasi lokal gagal terunggah (misal karena pengguna sedang dalam mode pesawat atau <em>offline</em>), perubahan akan dicatat dengan aman pada <em>Pending Queue</em> <code>syncPendingStore</code>. Kemudian, <code>CloudKitSyncManager</code> akan menguras (<em>flush</em>) antrean tersebut secara asinkronus sesaat setelah konektivitas internet terhubung kembali.</p>
-<h3 id="nuke-database-import"><em>Nuke</em> Database &amp; Import</h3>
-<p>Sebagai fitur pencadangan ekstrem, <code>AnnotationStore</code> juga menyediakan fungsi utilitas <code>nukeDatabase()</code> (yang menghapus tabel secara bersih total) dan <code>importAnnotations()</code> yang mengeksekusi strategi penimpaan massal saat pengguna merestorasi berkas arsip anotasi lokal.</p>
+<p>Jika modifikasi lokal gagal terunggah (misalnya saat perangkat luring), perubahan tersimpan dengan aman pada <code>SyncPendingStore</code>. <code>CloudKitSyncManager</code> akan melakukan <em>flush</em> pada antrean tersebut secara asinkron setelah konektivitas internet kembali pulih.</p>
+<h3 id="operasi-reset-database-impor">Operasi Reset Database &amp; Impor</h3>
+<p>Sebagai fitur pemulihan, <code>AnnotationStore</code> menyediakan fungsi <code>nukeDatabase()</code> (yang mengosongkan tabel secara menyeluruh) dan <code>importAnnotations()</code> yang mengeksekusi strategi penggantian massal saat pengguna merestorasi berkas arsip anotasi lokal.</p>
 
 
 
@@ -3992,6 +4052,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4022,10 +4088,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

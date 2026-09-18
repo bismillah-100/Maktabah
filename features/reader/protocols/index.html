@@ -14,7 +14,7 @@
         <link rel="prev" href="../macos/">
       
       
-        <link rel="next" href="../textview/">
+        <link rel="next" href="../menu/">
       
       
         
@@ -2770,10 +2770,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#textviewrenderable" class="md-nav__link">
+  <a href="#textviewrenderable-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TextViewRenderable
+        TextViewRenderable (Protocol)
       
     </span>
   </a>
@@ -2797,10 +2797,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-eror-batasan-edge-cases-limitations" class="md-nav__link">
+  <a href="#penanganan-edge-cases-batasan-edge-cases-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)
+        Penanganan Edge Cases &amp; Batasan (Edge Cases &amp; Limitations)
       
     </span>
   </a>
@@ -2811,6 +2811,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -3562,10 +3590,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#textviewrenderable" class="md-nav__link">
+  <a href="#textviewrenderable-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TextViewRenderable
+        TextViewRenderable (Protocol)
       
     </span>
   </a>
@@ -3589,10 +3617,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-eror-batasan-edge-cases-limitations" class="md-nav__link">
+  <a href="#penanganan-edge-cases-batasan-edge-cases-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)
+        Penanganan Edge Cases &amp; Batasan (Edge Cases &amp; Limitations)
       
     </span>
   </a>
@@ -3619,11 +3647,11 @@
   <h1>Protocols</h1>
 
 <h2 id="gambaran-umum-overview">Gambaran Umum (Overview)</h2>
-<p>Sistem Reader memisahkan logika antarmuka dan presentasi menggunakan protokol komunikasi. Alih-alih antarmuka langsung memanggil fungsi ke dalam komponen <em>Text Engine</em> milik UIKit atau AppKit, UI dan ViewModel dijembatani oleh abstraksi formal. </p>
+<p>Sistem Reader memisahkan logika antarmuka dan presentasi menggunakan <em>protocol</em> komunikasi. Alih-alih antarmuka langsung memanggil fungsi ke dalam komponen <em>Text Engine</em> milik UIKit atau AppKit, UI dan ViewModel dijembatani oleh abstraksi formal. </p>
 <h2 id="spesifikasi-teknis-parameter-technical-specifications">Spesifikasi Teknis &amp; Parameter (Technical Specifications)</h2>
-<p>Protokol utama yang aktif digunakan dalam sistem pembacaan Maktabah adalah <code>TextViewRenderable</code>.</p>
-<h3 id="textviewrenderable"><code>TextViewRenderable</code></h3>
-<p>Protokol ini dipatuhi (conformed) oleh komponen Text View (seperti <code>IbarotTextView</code> di macOS atau representasi koordinasi pada iOS). Protokol beroperasi di bawah anomali <code>@MainActor</code> untuk menjamin bahwa seluruh mutasi visual dieksekusi secara aman di <em>Main Thread</em>.</p>
+<p><em>Protocol</em> utama yang aktif digunakan dalam sistem pembacaan Maktabah adalah <code>TextViewRenderable</code>.</p>
+<h3 id="textviewrenderable-protocol"><code>TextViewRenderable</code> (Protocol)</h3>
+<p><em>Protocol</em> ini diadopsi (<em>conformed</em>) oleh komponen Text View (seperti <code>IbarotTextView</code> di macOS atau representasi koordinasi pada iOS). <em>Protocol</em> beroperasi di bawah isolasi <code>@MainActor</code> untuk menjamin bahwa seluruh mutasi visual dieksekusi secara aman pada <em>Main Thread</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">#if</span><span class="w"> </span><span class="cp">canImport</span><span class="p">(</span><span class="cp">AppKit</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">import</span><span class="w"> </span><span class="nc">AppKit</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="cp">#elseif</span><span class="w"> </span><span class="cp">canImport</span><span class="p">(</span><span class="cp">UIKit</span><span class="p">)</span>
@@ -3650,7 +3678,7 @@
 </span></code></pre></div>
 <h2 id="alur-implementasi-contoh-kode-implementation">Alur Implementasi &amp; Contoh Kode (Implementation)</h2>
 <p>Penggunaan <code>TextViewRenderable</code> memungkinkan abstraksi bagi komponen pengarah navigasi dan pencarian (Search/TOC) untuk memerintah teks UI agar melompat ke blok yang tepat tanpa mengetahui apakah target platform adalah macOS (AppKit) atau iOS (UIKit).</p>
-<p>ViewModel menangkap <em>instance</em> objek tersebut lalu memanggil fungsi asinkron (misal: saat <em>deep linking</em> dari layar Bookmark):</p>
+<p>ViewModel menangkap <em>instance</em> objek tersebut lalu memanggil fungsi asinkron (misalnya: saat <em>deep linking</em> dari layar Bookmark):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Pemanggilan dari sisi ViewController atau Coordinator</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">ReaderCoordinator</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kr">weak</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">textRenderable</span><span class="p">:</span><span class="w"> </span><span class="n">TextViewRenderable</span><span class="p">?</span>
@@ -3663,9 +3691,9 @@
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="penanganan-eror-batasan-edge-cases-limitations">Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)</h2>
+<h2 id="penanganan-edge-cases-batasan-edge-cases-limitations">Penanganan Edge Cases &amp; Batasan (Edge Cases &amp; Limitations)</h2>
 <ul>
-<li><strong>MainActor Bounding</strong>: Oleh karena <code>TextViewRenderable</code> ditandai dengan <code>@MainActor</code>, seluruh panggilan fungsi asinkron (<code>async</code>) dari utas latar belakang (<em>background thread</em>) akan otomatis di-<em>dispatch</em> ke antrean utama. Mengirimkan operasi yang berat (contoh: kalkulasi rentang regex di dalam <code>highlightAndScrollToText</code>) dapat memblokir UI jika tidak secara khusus diisolasi (detached) pada lapisan implementasi View.</li>
+<li><strong>Isolasi MainActor</strong>: Karena <code>TextViewRenderable</code> ditandai dengan <code>@MainActor</code>, seluruh pemanggilan fungsi asinkron (<code>async</code>) dari <em>background thread</em> akan otomatis di-<em>dispatch</em> ke <em>Main Thread</em>. Menjalankan operasi komputasi berat (misalnya kalkulasi rentang regex di dalam <code>highlightAndScrollToText</code>) dapat memblokir UI jika tidak secara khusus diisolasi (<em>detached</em>) pada lapisan implementasi View.</li>
 </ul>
 
 
@@ -3686,6 +3714,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3716,10 +3750,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

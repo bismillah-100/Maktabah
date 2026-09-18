@@ -1370,10 +1370,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#animasi-pembaruan-simpul-hasil-applyresulttreechange" class="md-nav__link">
+  <a href="#animasi-pembaruan-node-hasil-applyresulttreechange" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Animasi Pembaruan Simpul Hasil (applyResultTreeChange)
+        Animasi Pembaruan Node Hasil (applyResultTreeChange)
       
     </span>
   </a>
@@ -2855,6 +2855,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3607,10 +3635,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#animasi-pembaruan-simpul-hasil-applyresulttreechange" class="md-nav__link">
+  <a href="#animasi-pembaruan-node-hasil-applyresulttreechange" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Animasi Pembaruan Simpul Hasil (applyResultTreeChange)
+        Animasi Pembaruan Node Hasil (applyResultTreeChange)
       
     </span>
   </a>
@@ -3679,7 +3707,7 @@
 
 
 <h1 id="macos-appkit-implementation">macOS AppKit Implementation</h1>
-<p>Dokumentasi ini menguraikan arsitektur antarmuka native macOS untuk modul markah, pengelolaan komponen <code>NSOutlineView</code>, orkestrasi pembaruan diferensial (<em>batch diffing</em>), interaksi seret-dan-lepas (<em>drag-and-drop</em>), serta optimasi rendering berbasis AppKit pada direktori <code>Source/Features/Bookmarks/macOS/</code>.</p>
+<p>Dokumentasi ini menguraikan arsitektur antarmuka <em>native</em> macOS untuk modul markah, pengelolaan komponen <code>NSOutlineView</code>, orkestrasi pembaruan diferensial (<em>tree diffing / batch updates</em>), interaksi seret-dan-lepas (<em>drag-and-drop</em>), serta optimasi rendering berbasis AppKit pada direktori <code>Source/Features/Bookmarks/macOS/</code>.</p>
 <hr />
 <h2 id="1-arsitektur-kontroler-ui">1. Arsitektur Kontroler UI</h2>
 <p>Antarmuka markah pada macOS dikendalikan oleh koordinasi antara dua komponen utama:</p>
@@ -3690,7 +3718,7 @@
 </li>
 <li><strong><code>ResultsViewManager: NSObject</code></strong>:<ul>
 <li>Pengontrol logika presentasi yang bertindak sebagai <code>NSOutlineViewDataSource</code> dan <code>NSOutlineViewDelegate</code>.</li>
-<li>Mengonsumsi mutasi dari <code>ResultsViewModel</code> dan menerjemahkannya ke dalam instruksi animasi batch AppKit.</li>
+<li>Mengonsumsi mutasi dari <code>ResultsViewModel</code> dan menerjemahkannya ke dalam instruksi animasi <em>batch</em> AppKit.</li>
 </ul>
 </li>
 </ol>
@@ -3725,11 +3753,11 @@
 </span></code></pre></div>
 <ul>
 <li><code>bookmarkParent</code>: Sel yang merepresentasikan <code>FolderNode</code>, menampilkan ikon folder sistem dan tombol ekspansi panah segitiga bawaan macOS.</li>
-<li><code>bookmarkChild</code>: Sel <code>ResultCellView</code> yang menampilkan ikon kaca pembesar / mode pencarian, judul kueri, dan jumlah item halaman yang cocok.</li>
+<li><code>bookmarkChild</code>: Sel <code>ResultCellView</code> yang menampilkan ikon mode pencarian, judul kueri, dan jumlah item halaman yang cocok.</li>
 </ul>
 <hr />
 <h2 id="3-mekanisme-batch-diffing-applytreechange">3. Mekanisme Batch Diffing (<code>applyTreeChange</code>)</h2>
-<p>Untuk menghindarkan pengguna dari kedipan visual (<em>flickering</em>) dan kehilangan status baris yang sedang dipilih atau diekspansi saat data berubah, sistem tidak menggunakan <code>outlineView.reloadData()</code> untuk mutasi normal, melainkan menerapkan pembaruan diferensial presisi tinggi:</p>
+<p>Untuk menghindarkan pengguna dari kedipan visual (<em>flickering</em>) dan kehilangan status baris yang sedang dipilih atau diekspansi saat data berubah, sistem tidak menggunakan <code>outlineView.reloadData()</code> untuk mutasi normal, melainkan menerapkan pembaruan diferensial (<em>tree diffing</em>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">applyTreeChange</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">change</span><span class="p">:</span><span class="w"> </span><span class="n">BookmarkTreeChange</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="k">guard</span><span class="w"> </span><span class="o">!</span><span class="n">isSearching</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="n">outlineView</span><span class="p">.</span><span class="n">reloadData</span><span class="p">()</span>
@@ -3746,8 +3774,8 @@
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="animasi-pembaruan-simpul-hasil-applyresulttreechange">Animasi Pembaruan Simpul Hasil (<code>applyResultTreeChange</code>)</h3>
-<p>Karena simpul hasil (<code>ResultNode</code>) dan subfolder (<code>FolderNode</code>) berada di bawah wadah <code>children</code> yang sama di mata <code>NSOutlineView</code>, indeks hasil pencarian wajib digeser sebesar jumlah subfolder yang ada:</p>
+<h3 id="animasi-pembaruan-node-hasil-applyresulttreechange">Animasi Pembaruan Node Hasil (<code>applyResultTreeChange</code>)</h3>
+<p>Karena node hasil (<code>ResultNode</code>) dan subfolder (<code>FolderNode</code>) berada di bawah kontainer <code>children</code> yang sama pada <code>NSOutlineView</code>, indeks hasil pencarian disesuaikan sebesar jumlah subfolder yang ada:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">case</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="p">.</span><span class="n">insertResult</span><span class="p">(</span><span class="kc">_</span><span class="p">,</span><span class="w"> </span><span class="n">parentId</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="p">):</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">parentFolder</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">parentId</span><span class="p">.</span><span class="n">flatMap</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">vm</span><span class="p">.</span><span class="n">findFolder</span><span class="p">(</span><span class="nv">$0</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">folderCount</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">parentFolder</span><span class="p">?.</span><span class="n">children</span><span class="p">.</span><span class="bp">count</span><span class="w"> </span><span class="p">??</span><span class="w"> </span><span class="n">vm</span><span class="p">.</span><span class="n">folderRoots</span><span class="p">.</span><span class="bp">count</span>
@@ -3760,9 +3788,9 @@
 </span></code></pre></div>
 <hr />
 <h2 id="4-penanganan-drag-drop-resultsviewdragswift">4. Penanganan Drag &amp; Drop (<code>ResultsViewDrag.swift</code>)</h2>
-<p>Sistem mendukung pemindahan folder dan hasil kueri antar-direktori menggunakan protokol seret-dan-lepas AppKit.</p>
-<h3 id="validasi-pencegahan-siklus-cycle-detection">Validasi Pencegahan Siklus (Cycle Detection)</h3>
-<p>Saat folder diseret, sistem memvalidasi calon folder tujuan untuk mencegah pengguna memasukkan folder ke dalam dirinya sendiri atau ke dalam rantai keturunannya:</p>
+<p>Sistem mendukung pemindahan folder dan hasil kueri antardirektori menggunakan <em>protocol</em> <em>drag-and-drop</em> AppKit.</p>
+<h3 id="validasi-pencegahan-siklus-cycle-detection">Validasi Pencegahan Siklus (<em>Cycle Detection</em>)</h3>
+<p>Saat folder diseret, sistem memvalidasi calon folder tujuan untuk mencegah pengguna memasukkan folder ke dalam dirinya sendiri atau ke dalam rantai keturunannya (<em>cycle prevention</em>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">outlineView</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kc">_</span><span class="w"> </span><span class="n">outlineView</span><span class="p">:</span><span class="w"> </span><span class="n">NSOutlineView</span><span class="p">,</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">validateDrop</span><span class="w"> </span><span class="n">info</span><span class="p">:</span><span class="w"> </span><span class="n">NSDraggingInfo</span><span class="p">,</span>
@@ -3776,8 +3804,8 @@
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="n">pb</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">pbItems</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">        </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">idStr</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">pb</span><span class="p">.</span><span class="n">string</span><span class="p">(</span><span class="n">forType</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">folderNode</span><span class="p">),</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">              </span><span class="kd">let</span><span class="w"> </span><span class="nv">draggedId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">Int64</span><span class="p">(</span><span class="n">idStr</span><span class="p">),</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">              </span><span class="kd">let</span><span class="w"> </span><span class="nv">draggedNode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">vm</span><span class="p">.</span><span class="n">findFolder</span><span class="p">(</span><span class="n">draggedId</span><span class="p">)</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">          </span><span class="kd">let</span><span class="w"> </span><span class="nv">draggedId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">Int64</span><span class="p">(</span><span class="n">idStr</span><span class="p">),</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">          </span><span class="kd">let</span><span class="w"> </span><span class="nv">draggedNode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">vm</span><span class="p">.</span><span class="n">findFolder</span><span class="p">(</span><span class="n">draggedId</span><span class="p">)</span>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">continue</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
 </span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">isDescendant</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span><span class="w"> </span><span class="n">targetFolder</span><span class="p">,</span><span class="w"> </span><span class="n">of</span><span class="p">:</span><span class="w"> </span><span class="n">draggedNode</span><span class="p">.</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -3820,7 +3848,7 @@
 </span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Pembersihan Status Pencarian</p>
-<p>Saat kolom pencarian dikosongkan, <code>isSearching</code> disetel kembali ke <code>false</code>, dan <code>NSOutlineView</code> memuat ulang pohon hierarki utuh dengan status ekspansi folder sebelumnya tetap terjaga berkat properti <code>autosaveExpandedItems = true</code>.</p>
+<p>Saat kolom pencarian dikosongkan, <code>isSearching</code> disetel kembali ke <code>false</code>, dan <code>NSOutlineView</code> memuat ulang seluruh struktur hierarki dengan status ekspansi folder sebelumnya tetap terjaga berkat properti <code>autosaveExpandedItems = true</code>.</p>
 </div>
 
 
@@ -3841,6 +3869,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3871,10 +3905,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

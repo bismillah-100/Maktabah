@@ -350,10 +350,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-cloudkit-sync-tidak-bekerja" class="md-nav__link">
+  <a href="#1-sinkronisasi-cloudkit-tidak-berfungsi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. CloudKit Sync Tidak Bekerja
+        1. Sinkronisasi CloudKit Tidak Berfungsi
       
     </span>
   </a>
@@ -372,10 +372,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-anotasihighlight-bergeser-misaligned" class="md-nav__link">
+  <a href="#3-sorotan-teks-highlight-bergeser-misaligned" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Anotasi/Highlight Bergeser (Misaligned)
+        3. Sorotan Teks (Highlight) Bergeser / Misaligned
       
     </span>
   </a>
@@ -383,10 +383,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-fts-query-sangat-lambat" class="md-nav__link">
+  <a href="#4-kueri-fts-sangat-lambat" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. FTS Query Sangat Lambat
+        4. Kueri FTS Sangat Lambat
       
     </span>
   </a>
@@ -2810,6 +2810,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../features/reader/textview/" class="md-nav__link">
         
   
@@ -3528,10 +3556,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-cloudkit-sync-tidak-bekerja" class="md-nav__link">
+  <a href="#1-sinkronisasi-cloudkit-tidak-berfungsi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. CloudKit Sync Tidak Bekerja
+        1. Sinkronisasi CloudKit Tidak Berfungsi
       
     </span>
   </a>
@@ -3550,10 +3578,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-anotasihighlight-bergeser-misaligned" class="md-nav__link">
+  <a href="#3-sorotan-teks-highlight-bergeser-misaligned" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Anotasi/Highlight Bergeser (Misaligned)
+        3. Sorotan Teks (Highlight) Bergeser / Misaligned
       
     </span>
   </a>
@@ -3561,10 +3589,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-fts-query-sangat-lambat" class="md-nav__link">
+  <a href="#4-kueri-fts-sangat-lambat" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. FTS Query Sangat Lambat
+        4. Kueri FTS Sangat Lambat
       
     </span>
   </a>
@@ -3589,37 +3617,37 @@
 
 
 <h1 id="debugging-troubleshooting-guide">Debugging &amp; Troubleshooting Guide</h1>
-<p>Panduan bagi pengembang (developer) ketika menemui kendala dalam <em>development</em> maupun laporan <em>bug</em>.</p>
-<h2 id="1-cloudkit-sync-tidak-bekerja">1. CloudKit Sync Tidak Bekerja</h2>
-<p><strong>Gejala</strong>: Data anotasi atau bookmark tidak muncul di perangkat lain.</p>
+<p>Panduan bagi pengembang (<em>developer</em>) ketika menemui kendala dalam pengembangan maupun investigasi <em>bug</em>.</p>
+<h2 id="1-sinkronisasi-cloudkit-tidak-berfungsi">1. Sinkronisasi CloudKit Tidak Berfungsi</h2>
+<p><strong>Gejala</strong>: Data anotasi atau <em>bookmark</em> tidak muncul di perangkat lain.</p>
 <ul>
-<li>Buka Xcode dan jalankan aplikasi. Periksa log konsol untuk <em>keyword</em>: <code>CloudKitSyncManager</code> atau <code>CKError</code>.</li>
-<li>Pastikan <em>developer account</em> telah <em>login</em> ke iCloud Simulator.</li>
-<li>Periksa <em>dashboard</em> CloudKit untuk memastikan skema <em>Custom Zone</em> sudah <em>deploy</em> ke <em>Production/Development</em>.</li>
+<li>Buka Xcode dan jalankan aplikasi. Periksa log konsol untuk kata kunci: <code>CloudKitSyncManager</code> atau <code>CKError</code>.</li>
+<li>Pastikan akun pengembang (<em>developer account</em>) telah masuk (<em>login</em>) ke akun iCloud pada Simulator atau perangkat pengujian.</li>
+<li>Periksa dasbor CloudKit untuk memastikan skema <em>Custom Zone</em> telah di-<em>deploy</em> ke lingkungan <em>Production/Development</em>.</li>
 </ul>
 <h2 id="2-inspeksi-sqlite-lokal">2. Inspeksi SQLite Lokal</h2>
-<p><strong>Gejala</strong>: Ingin memeriksa struktur tabel/data secara manual.</p>
+<p><strong>Gejala</strong>: Ingin memeriksa struktur tabel atau data secara manual.</p>
 <ul>
 <li>
-<p>Semua database <em>user</em> ada di:
+<p>Seluruh basis data pengguna tersimpan di direktori:
   <code>~/Library/Application Support/Maktabah/</code></p>
 </li>
 <li>
-<p>Gunakan aplikasi pihak ketiga (seperti <a href="https://sqlitebrowser.org/">DB Browser for SQLite</a>) untuk membuka file <code>.sqlite</code>.</p>
+<p>Gunakan aplikasi pihak ketiga (seperti <a href="https://sqlitebrowser.org/">DB Browser for SQLite</a>) untuk membuka berkas <code>.sqlite</code>.</p>
 </li>
-<li>Jika tabel <code>b{id}</code> terlihat kosong/karakter tidak masuk akal, ingat bahwa blob terkompresi dengan LZString.</li>
+<li>Jika isi tabel <code>b{id}</code> tampak seperti karakter acak, teks tersebut dikompresi menggunakan format LZString atau Zstandard (zstd).</li>
 </ul>
-<h2 id="3-anotasihighlight-bergeser-misaligned">3. Anotasi/Highlight Bergeser (Misaligned)</h2>
-<p><strong>Gejala</strong>: Pengguna menyorot kalimat tertentu, namun UI menyorot kata di sebelahnya.</p>
+<h2 id="3-sorotan-teks-highlight-bergeser-misaligned">3. Sorotan Teks (Highlight) Bergeser / Misaligned</h2>
+<p><strong>Gejala</strong>: Pengguna menyorot kalimat tertentu, namun antarmuka menyorot rentang kata di sebelahnya.</p>
 <ul>
-<li>Bug ini umumnya berasal dari kegagalan kalkulasi di <code>ArabicRangeCalculator</code>.</li>
-<li>Pastikan logika <code>Source ↔ Display Range</code> memperhitungkan <em>edge case</em> karakter harakat berurutan (misal: Shaddah + Fathah/Kasrah).</li>
+<li>Masalah ini umumnya terjadi akibat ketidaksesuaian kalkulasi di <code>ArabicRangeCalculator</code>.</li>
+<li>Pastikan logika pemetaan <code>Source ↔ Display Range</code> memperhitungkan <em>edge case</em> karakter harakat dan tasykil berurutan (misalnya: <em>Syaddah</em> + <em>Fathah/Kasrah</em>).</li>
 </ul>
-<h2 id="4-fts-query-sangat-lambat">4. FTS Query Sangat Lambat</h2>
-<p><strong>Gejala</strong>: Pencarian memakan waktu lebih dari 5 detik.</p>
+<h2 id="4-kueri-fts-sangat-lambat">4. Kueri FTS Sangat Lambat</h2>
+<p><strong>Gejala</strong>: Pencarian global memakan waktu lebih dari 5 detik.</p>
 <ul>
-<li>Periksa apakah <code>SQLiteConnectionPool</code> berhasil mendistribusikan koneksi.</li>
-<li>Pastikan tidak ada <em>database</em> yang terkunci (<code>Database is locked</code> error). Jika ada, periksa penggunaan <code>NSRecursiveLock</code> di modul akses data.</li>
+<li>Periksa apakah <code>SQLiteConnectionPool</code> berhasil mendistribusikan koneksi pembacaan secara merata.</li>
+<li>Pastikan tidak ada basis data yang terkunci (<em>database lock contention</em>). Periksa penggunaan <code>Mutex</code> atau <code>NSLock</code> pada modul akses data.</li>
 </ul>
 
 
@@ -3640,6 +3668,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3670,10 +3704,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/extra.js"></script>
       
     
   </body>

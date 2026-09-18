@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#macos-appkit" class="md-skip">
+        <a href="#macos-implementation-appkit" class="md-skip">
           Skip to content
         </a>
       
@@ -2427,17 +2427,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#quranwindow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        QuranWindow
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2801,6 +2790,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3582,17 +3599,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#quranwindow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        QuranWindow
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -3610,36 +3616,31 @@
 
 
 
-<h1 id="macos-appkit">macOS (AppKit)</h1>
-<p>Fitur Quran menggunakan AppKit dengan struktur <code>NSSplitView</code> yang terdiri dari beberapa <em>pane</em>.</p>
+<h1 id="macos-implementation-appkit">macOS Implementation (AppKit)</h1>
+<p>Fitur Quran pada macOS menggunakan arsitektur AppKit dengan struktur <code>NSSplitViewController</code> yang terdiri dari tiga panel (<em>three-pane layout</em>).</p>
 <h2 id="quransplitvc"><code>QuranSplitVC</code></h2>
-<p>Bertindak sebagai <em>container</em> utama yang menyatukan tiga komponen <em>sidebar</em> dan <em>content</em> menggunakan custom <code>NSSplitView</code>. </p>
-<p>Alur kerja:</p>
+<p>Bertindak sebagai kontainer utama yang menyatukan panel <em>sidebar</em>, panel teks Al-Qur'an, dan panel kitab tafsir:</p>
 <ul>
-<li>Menangani aksi pemilihan buku dari <code>QuranTafseerVC</code> dan menginisiasi pengunduhan/penyiapan arsip via <code>BookIntegrateModalCenter</code>.</li>
+<li>Menangani aksi pemilihan buku dari <code>QuranTafseerVC</code> dan menginisiasi penyiapan arsip basis data.</li>
 <li>Menghubungkan navigasi dari <code>QuranNashVC</code> kembali ke <em>sidebar</em> (sinkronisasi UI saat halaman berpindah).</li>
 </ul>
 <h2 id="quransidebarvc"><code>QuranSidebarVC</code></h2>
 <p>Menampilkan hierarki Surah dan Ayat menggunakan <code>NSOutlineView</code>.</p>
 <ul>
-<li><strong>Fitur</strong>: Pencarian nama surah, dan pemetaan posisi ayat (<em>lookup</em> dengan kerumitan O(1)) untuk <em>scrolling</em> instan.</li>
+<li><strong>Fitur</strong>: Pencarian nama surah dan pemetaan posisi ayat dengan kompleksitas $O(1)$ untuk pengguliran instan.</li>
 <li><strong>Delegasi</strong>: Menggunakan <code>QuranDelegate</code> untuk mengirim data ayat yang dipilih ke <code>QuranNashVC</code>.</li>
 </ul>
 <h2 id="qurantafseervc"><code>QuranTafseerVC</code></h2>
-<p>Menampilkan daftar buku tafsir dalam <code>NSTableView</code>.</p>
+<p>Menampilkan daftar kitab tafsir yang tersedia dalam <code>NSTableView</code>.</p>
 <ul>
-<li>Mengambil daftar buku dari <code>QuranDataManager.tafseerBooks</code> yang telah difilter.</li>
-<li>Memiliki fitur pencarian nama kitab tafsir secara <em>real-time</em>.</li>
+<li>Mengambil daftar kitab dari <code>QuranDataManager.tafseerBooks</code> yang telah difilter berdasarkan kategori tafsir.</li>
 </ul>
 <h2 id="qurannashvc"><code>QuranNashVC</code></h2>
-<p>Menampilkan teks ayat dan tafsir menggunakan custom <code>IbarotTextView</code>.</p>
+<p>Panel utama yang menyajikan teks ayat mushaf beserta penjelasan tafsirnya:</p>
 <ul>
-<li>Mendengar interaksi lewat implementasi <code>QuranDelegate</code>.</li>
-<li>Menangani fitur pencarian di dalam teks tafsir (<em>Search Current Book</em>) melalui <code>OptionSearchVC</code> yang muncul di <code>NSPopover</code>.</li>
-<li>Mengontrol navigasi halaman selanjutnya dan sebelumnya.</li>
+<li>Menampilkan teks Arab dengan format tipografi yang dapat disesuaikan.</li>
+<li>Mendukung tombol navigasi halaman berikutnya dan sebelumnya (<em>paging</em>).</li>
 </ul>
-<h2 id="quranwindow"><code>QuranWindow</code></h2>
-<p>Komponen jendela utama (Window Controller) khusus untuk fitur Quran.</p>
 
 
 
@@ -3659,6 +3660,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3689,10 +3696,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

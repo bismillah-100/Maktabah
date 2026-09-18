@@ -1358,10 +1358,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-gestur-aksi-usap-swipe-actions" class="md-nav__link">
+  <a href="#4-gestur-aksi-geser-swipe-actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Gestur &amp; Aksi Usap (Swipe Actions)
+        4. Gestur &amp; Aksi Geser (Swipe Actions)
       
     </span>
   </a>
@@ -2866,6 +2866,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3634,10 +3662,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-gestur-aksi-usap-swipe-actions" class="md-nav__link">
+  <a href="#4-gestur-aksi-geser-swipe-actions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Gestur &amp; Aksi Usap (Swipe Actions)
+        4. Gestur &amp; Aksi Geser (Swipe Actions)
       
     </span>
   </a>
@@ -3701,15 +3729,15 @@
 
 
 <h1 id="ios-swiftui-implementation">iOS SwiftUI Implementation</h1>
-<p>Dokumentasi ini menguraikan arsitektur antarmuka native iOS untuk fitur markah (<em>Saved Results</em>), manajemen hierarki navigasi deklaratif, interaksi gestur, serta pengelolaan lembar dialog modal (<em>sheets</em>) dan peringatan (<em>alerts</em>) pada direktori <code>Source/Features/Bookmarks/iOS/</code>.</p>
+<p>Dokumentasi ini menguraikan arsitektur antarmuka <em>native</em> iOS untuk fitur markah (<em>Saved Results</em>), manajemen hierarki navigasi deklaratif, interaksi gestur, serta pengelolaan lembar dialog modal (<em>sheets</em>) dan peringatan (<em>alerts</em>) pada direktori <code>Source/Features/Bookmarks/iOS/</code>.</p>
 <hr />
 <h2 id="1-arsitektur-antarmuka-pilihan-desain">1. Arsitektur Antarmuka &amp; Pilihan Desain</h2>
-<p>Berbeda dengan modul <em>Reader</em> atau <em>Library Catalog</em> yang memanfaatkan jembatan UIKit (<code>UIViewRepresentable</code>) karena kebutuhan perenderan tipografi Arab tingkat rendah atau layout sel kustom yang ekstrem, modul Bookmarks pada iOS diimplementasikan <strong>100% menggunakan SwiftUI modern</strong>.</p>
+<p>Berbeda dengan modul <em>Reader</em> atau <em>Library Catalog</em> yang memanfaatkan jembatan UIKit (<code>UIViewRepresentable</code>) karena kebutuhan perenderan tipografi Arab tingkat rendah, modul Bookmarks pada iOS diimplementasikan <strong>100% menggunakan SwiftUI modern</strong>.</p>
 <p>Pilihan arsitektur ini didasarkan pada:</p>
 <ul>
-<li><strong>Kepatuhan Human Interface Guidelines (HIG)</strong>: Struktur folder markah sangat selaras dengan paradigma deklaratif <code>NavigationStack</code> bawaan iOS.</li>
-<li><strong>Efisiensi Memori &amp; Rendering</strong>: Pohon folder markah umumnya berkisar antara puluhan hingga ratusan simpul, sehingga komponen native SwiftUI (<code>List</code>, <code>ForEach</code>, <code>swipeActions</code>) mampu bekerja dengan performa 60–120 FPS tanpa memerlukan daur ulang sel manual UIKit.</li>
-<li><strong>Kesiapan Reaktivitas</strong>: Penggunaan makro <code>@Observable</code> pada <code>ResultsViewModel</code> dan <code>FolderNode</code> membuat antarmuka SwiftUI bereaksi secara instan terhadap mutasi lokal maupun sinkronisasi latar belakang CloudKit tanpa <em>glue code</em> tambahan.</li>
+<li><strong>Kepatuhan Human Interface Guidelines (HIG)</strong>: Struktur folder markah selaras dengan paradigma deklaratif <code>NavigationStack</code> bawaan iOS.</li>
+<li><strong>Efisiensi Memori &amp; Rendering</strong>: Hierarki folder markah umumnya berkisar antara puluhan hingga ratusan node, sehingga komponen <em>native</em> SwiftUI (<code>List</code>, <code>ForEach</code>, <code>swipeActions</code>) mampu bekerja dengan performa tinggi tanpa memerlukan daur ulang sel manual UIKit.</li>
+<li><strong>Kesiapan Reaktivitas</strong>: Penggunaan makro <code>@Observable</code> pada <code>ResultsViewModel</code> dan <code>FolderNode</code> membuat antarmuka SwiftUI bereaksi secara instan terhadap mutasi lokal maupun sinkronisasi latar belakang CloudKit.</li>
 </ul>
 <hr />
 <h2 id="2-struktur-komponen-ui-sourcefeaturesbookmarksios">2. Struktur Komponen UI (<code>Source/Features/Bookmarks/iOS/</code>)</h2>
@@ -3749,7 +3777,7 @@
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">                        </span><span class="n">description</span><span class="p">:</span><span class="w"> </span><span class="n">Text</span><span class="p">(</span><span class="s">"Save search results to access them later."</span><span class="p">)</span>
 </span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">                    </span><span class="p">)</span>
 </span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">                </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="o">!</span><span class="n">searchText</span><span class="p">.</span><span class="bp">isEmpty</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">                    </span><span class="n">flattenedSearchList</span><span class="w"> </span><span class="c1">// Mode pencarian global datar</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">                    </span><span class="n">flattenedSearchList</span><span class="w"> </span><span class="c1">// Mode pencarian global mendatar</span>
 </span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">                </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">                    </span><span class="n">makeFolderContentList</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w"> </span><span class="c1">// Tampilan root folder</span>
 </span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">                </span><span class="p">}</span>
@@ -3766,9 +3794,9 @@
 </span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="p">}</span>
 </span></code></pre></div>
 <hr />
-<h2 id="4-gestur-aksi-usap-swipe-actions">4. Gestur &amp; Aksi Usap (Swipe Actions)</h2>
-<p>Pada tampilan daftar isi folder (<code>iOSFolderContentList</code>), setiap baris simpul dilengkapi dengan aksi gestur usap dua arah (<em>bidirectional swipe actions</em>):</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Aksi Usap Baris Folder</span>
+<h2 id="4-gestur-aksi-geser-swipe-actions">4. Gestur &amp; Aksi Geser (<em>Swipe Actions</em>)</h2>
+<p>Pada tampilan daftar isi folder (<code>iOSFolderContentList</code>), setiap baris node dilengkapi dengan aksi gestur geser dua arah (<em>bidirectional swipe actions</em>):</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Aksi Geser Baris Folder</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">.</span><span class="n">swipeActions</span><span class="p">(</span><span class="n">edge</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">trailing</span><span class="p">,</span><span class="w"> </span><span class="n">allowsFullSwipe</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">Button</span><span class="p">(</span><span class="n">role</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">destructive</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="n">onDeleteFolder</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
@@ -3795,41 +3823,59 @@
 <ul>
 <li><strong>Trailing Edge (Kanan)</strong>: Tombol destruktif berwarna merah untuk memicu peringatan konfirmasi penghapusan (<code>folderToDelete</code> / <code>onDeleteResult</code>).</li>
 <li><strong>Leading Edge (Kiri)</strong>:<ul>
-<li><em>Move (Biru)</em>: Menampilkan sheet <code>iOSMoveItemView</code>.</li>
-<li><em>Rename (Oranye)</em>: Membuka alert dengan <code>TextField</code> dinamis melalui pembungkus <code>RenameTarget</code>.</li>
+<li><em>Move (Biru)</em>: Menampilkan <em>sheet</em> <code>iOSMoveItemView</code>.</li>
+<li><em>Rename (Oranye)</em>: Membuka dialog dengan <code>TextField</code> dinamis melalui pembungkus <code>RenameTarget</code>.</li>
 </ul>
 </li>
 </ul>
 <hr />
 <h2 id="5-lembar-pemindahan-item-iosmoveitemview">5. Lembar Pemindahan Item (<code>iOSMoveItemView</code>)</h2>
-<p>Ketika pengguna memindahkan folder atau simpul hasil pencarian, sistem menampilkan sheet modal yang menyajikan representasi pohon folder yang telah diratakan (<em>flattened list</em>) dengan indentasi visual:</p>
+<p>Ketika pengguna memindahkan folder atau node hasil pencarian, sistem menampilkan <em>sheet</em> modal yang menyajikan representasi hierarki folder yang diratakan (<em>flattened list</em>) dengan indentasi visual:</p>
 <pre class="mermaid"><code>flowchart TD
-    OpenSheet[Pengguna Memilih 'Move'] --&gt; CheckTarget{Tipe Target}
-    CheckTarget -- Folder --&gt; ComputeDescendants[Hitung allDescendantIds]
-    ComputeDescendants --&gt; DisableNodes[Nonaktifkan Diri Sendiri &amp; Seluruh Subfolder]
-    CheckTarget -- Result --&gt; EnableAll[Seluruh Folder Aktif]
-    DisableNodes --&gt; RenderList[Render FlatFolderNode dengan Indentasi Level]
+    OpenSheet(["Pengguna Memilih Aksi 'Move'"]) --&gt; CheckTarget{"Tipe Target yang Dipindah?"}
+
+    CheckTarget --&gt;|"Folder"| ComputeDescendants["Hitung allDescendantIds"]
+    ComputeDescendants --&gt; DisableNodes["Nonaktifkan Diri Sendiri &amp; Subfolder"]
+
+    CheckTarget --&gt;|"Hasil Pencarian"| EnableAll["Seluruh Folder Tetap Aktif"]
+
+    DisableNodes ~~~ RenderList
+    EnableAll ~~~ RenderList
+
+    DisableNodes --&gt; RenderList["Render FlatFolderNode (Indentasi Level)"]
     EnableAll --&gt; RenderList
-    RenderList --&gt; ConfirmMove[Pengguna Menekan 'Move']
-    ConfirmMove --&gt; ExecMove[Panggil viewModel.moveNode / moveResult]</code></pre>
+
+    RenderList --&gt; ConfirmMove(["Pengguna Menekan Tombol 'Move'"])
+    ConfirmMove --&gt; ExecMove["Panggil viewModel.moveNode / moveResult"]
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class OpenSheet,ConfirmMove event;
+    class CheckTarget,RenderList ui;
+    class ComputeDescendants,DisableNodes,EnableAll store;
+    class ExecMove vm;</code></pre>
 <h3 id="visualisasi-indentasi-hierarki-iosfolderselectiongroup">Visualisasi Indentasi Hierarki (<code>iOSFolderSelectionGroup</code>)</h3>
-<p>Struktur pohon rekursif diubah menjadi koleksi linier <code>[FlatFolderNode]</code> untuk disajikan di dalam <code>ThemeList</code>:</p>
+<p>Struktur hierarki rekursif diubah menjadi koleksi linier <code>[FlatFolderNode]</code> untuk disajikan di dalam <code>ThemeList</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">FlatFolderNode</span><span class="p">:</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">folder</span><span class="p">:</span><span class="w"> </span><span class="n">FolderNode</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">level</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="c1">// Kedalaman hierarki (0, 1, 2, ...)</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Setiap baris folder menggeser konten visual ke kanan berdasarkan nilai <code>level * 16</code> poin, memberikan kejelasan visual hierarki yang intuitif pada layar sentuh perangkat bergerak.</p>
+<p>Setiap baris folder menggeser konten visual ke kanan berdasarkan nilai <code>level * 16</code> poin, memberikan kejelasan visual hierarki pada layar perangkat.</p>
 <hr />
-<h2 id="6-sinkronisasi-geser-untuk-menyegarkan-pull-to-refresh">6. Sinkronisasi Geser untuk Menyegarkan (Pull-to-Refresh)</h2>
+<h2 id="6-sinkronisasi-geser-untuk-menyegarkan-pull-to-refresh">6. Sinkronisasi Geser untuk Menyegarkan (<em>Pull-to-Refresh</em>)</h2>
 <p><code>iOSFolderContentList</code> mendukung gestur tarik untuk menyegarkan (<em>pull-to-refresh</em>) yang terhubung langsung ke mesin CloudKit:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">.</span><span class="n">refreshable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">CloudKitSyncManager</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">fetchChanges</span><span class="p">()</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">nanoseconds</span><span class="p">:</span><span class="w"> </span><span class="mi">1_000_000_000</span><span class="p">)</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Ini memberi pengguna kendali penuh untuk memaksa pengecekan perubahan markah terbaru dari perangkat lain sewaktu-waktu.</p>
+<p>Mekanisme ini memberi pengguna kendali untuk menyinkronkan perubahan markah terbaru dari perangkat lain sewaktu-waktu.</p>
 
 
 
@@ -3849,6 +3895,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3879,10 +3931,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

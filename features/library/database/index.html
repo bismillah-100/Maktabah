@@ -2816,6 +2816,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3601,33 +3629,43 @@
 
 
 <h1 id="database-persistensi-katalog">Database &amp; Persistensi Katalog</h1>
-<p>Modul Library mengandalkan <strong><code>LibraryDataManager</code></strong> sebagai lapisan akses data utama (Data Access Layer) untuk mengambil struktur katalog (kategori, pengarang, dan kitab). Namun, <code>LibraryDataManager</code> memiliki ketergantungan yang sangat erat dengan <strong><code>DatabaseManager</code></strong> di level Core.</p>
+<p>Modul Library mengandalkan <strong><code>LibraryDataManager</code></strong> sebagai lapisan akses data utama (<em>Data Access Layer</em>) untuk mengambil struktur katalog (kategori, pengarang, dan kitab). Namun, <code>LibraryDataManager</code> memiliki ketergantungan erat dengan <strong><code>DatabaseManager</code></strong> pada level <em>Core</em>.</p>
 <hr />
 <h2 id="ketergantungan-erat-librarydatamanager-dan-databasemanager">Ketergantungan Erat <code>LibraryDataManager</code> dan <code>DatabaseManager</code></h2>
-<p><code>LibraryDataManager</code> bertindak sebagai <em>repository</em> yang menyediakan fungsi pembacaan data (read-only) untuk UI dan ViewModel, namun eksekusi query-nya sendiri didelegasikan secara total ke koneksi yang dikelola oleh <code>DatabaseManager.shared</code>.</p>
+<p><code>LibraryDataManager</code> bertindak sebagai <em>repository</em> yang menyediakan fungsi pembacaan data (<em>read-only</em>) untuk UI dan ViewModel, sedangkan eksekusi kuerinya didelegasikan secara penuh ke koneksi yang dikelola oleh <code>DatabaseManager.shared</code>.</p>
 <h3 id="peran-databasemanager">Peran <code>DatabaseManager</code></h3>
-<p><code>DatabaseManager</code> merupakan komponen inti (Core) yang memegang dan mengelola siklus hidup koneksi SQLite terhadap basis data korpus utama:
-- <code>main.sqlite</code>: Menyimpan katalog buku, kategori, dan metadata inti.
-- <code>special.sqlite</code>: Menyimpan data sekunder seperti daftar pengarang (muallif) dan singkatan.</p>
-<p>Koneksi-koneksi ini dilindungi di dalam <code>DatabaseManager</code> untuk memastikan <em>thread-safety</em> dan mencegah akses bersamaan yang bisa memicu <em>database lock</em>.</p>
+<p><code>DatabaseManager</code> merupakan komponen inti (<em>Core</em>) yang mengelola siklus hidup koneksi SQLite terhadap basis data korpus utama:</p>
+<ul>
+<li><code>main.sqlite</code>: Menyimpan katalog buku, kategori, dan metadata inti.</li>
+<li><code>special.sqlite</code>: Menyimpan data sekunder seperti daftar pengarang (<em>muallif</em>) dan singkatan.</li>
+</ul>
+<p>Koneksi-koneksi ini dilindungi di dalam <code>DatabaseManager</code> untuk menjamin keamanan konkurensi (<em>thread-safe</em>) dan mencegah akses bersamaan yang berpotensi memicu <em>database lock</em>.</p>
 <h3 id="alur-eksekusi">Alur Eksekusi</h3>
-<p>Setiap kali <code>LibraryDataManager</code> perlu memuat atau me-refresh data katalog dari disk, ia meminjam instans <code>SQLiteDatabase</code> yang sedang aktif dari <code>DatabaseManager</code>:</p>
-<pre class="mermaid"><code>graph TD
+<p>Setiap kali <code>LibraryDataManager</code> perlu memuat atau menyegarkan (<em>refresh</em>) data katalog dari disk, komponen ini menggunakan instans <code>SQLiteDatabase</code> aktif dari <code>DatabaseManager</code>:</p>
+<pre class="mermaid"><code>flowchart TD
     VM["LibraryViewModel"] --&gt;|"Panggil loadData()"| LDM["LibraryDataManager"]
 
-    subgraph Core
+    subgraph Core ["Core Persistence"]
         DBM["DatabaseManager.shared"]
-        SQL_Main[("main.sqlite")]
-        SQL_Special[("special.sqlite")]
+        SQL_Main[("main.sqlite&lt;br/&gt;(Katalog &amp; Kategori)")]
+        SQL_Special[("special.sqlite&lt;br/&gt;(Pengarang &amp; Singkatan)")]
     end
 
     LDM -.-&gt;|"Minta Koneksi DB"| DBM
     DBM --&gt;|"Eksekusi Query"| SQL_Main
     DBM --&gt;|"Eksekusi Query"| SQL_Special
 
-    LDM --&gt;|"Return Models&lt;br/&gt;(BooksData, CategoryData)"| VM</code></pre>
+    LDM --&gt;|"Return Models (BooksData, CategoryData)"| VM
+
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+
+    class VM vm;
+    class LDM,DBM store;
+    class SQL_Main,SQL_Special db;</code></pre>
 <h3 id="mutex-thread-safety-di-librarydatamanager">Mutex &amp; Thread-Safety di <code>LibraryDataManager</code></h3>
-<p>Karena data katalog sangat sering diakses dari berbagai thread (misalnya dari UI saat <em>scrolling</em>, dari <em>Search Engine</em> untuk <em>lookup</em> judul buku, atau saat sinkronisasi), <code>LibraryDataManager</code> menyembunyikan <em>state</em> cache internalnya di balik proteksi <code>Mutex</code> untuk pencarian <code>O(1)</code> in-memory.</p>
+<p>Karena data katalog sering diakses dari berbagai <em>thread</em> (misalnya dari UI saat <em>scrolling</em>, dari <em>Search Engine</em> untuk pencarian judul buku, atau saat sinkronisasi data), <code>LibraryDataManager</code> menyembunyikan <em>state cache in-memory</em> internalnya di balik proteksi <code>Mutex</code> untuk pencarian $O(1)$ yang <em>thread-safe</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">LibraryDataState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">rawCategories</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">CategoryData</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">rawAuthors</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">Muallif</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
@@ -3638,10 +3676,12 @@
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">(</span><span class="n">LibraryDataState</span><span class="p">())</span>
 </span></code></pre></div>
-<p>Dengan pola pemisahan ini:
-1. <strong><code>DatabaseManager</code></strong> bertanggung jawab penuh atas manajemen I/O disk (pembacaan berkas SQLite yang <em>thread-safe</em>).
-2. <strong><code>LibraryDataManager</code></strong> bertanggung jawab atas struktur data dan I/O memori (<em>caching</em> model data di RAM yang <em>thread-safe</em> via Mutex).</p>
-<p>Integrasi dan ketergantungan erat keduanya memastikan Maktabah dapat merender ribuan buku, memfilter katalog, dan mencari metadata dalam sepersekian milidetik tanpa membebani memori maupun I/O disk secara berulang.</p>
+<p>Dengan pola pemisahan ini:</p>
+<ol>
+<li><strong><code>DatabaseManager</code></strong> bertanggung jawab penuh atas manajemen I/O disk (pembacaan berkas SQLite yang <em>thread-safe</em>).</li>
+<li><strong><code>LibraryDataManager</code></strong> bertanggung jawab atas struktur data dan I/O memori (<em>caching</em> model data di RAM yang <em>thread-safe</em> via Mutex).</li>
+</ol>
+<p>Integrasi dan pemisahan tugas ini memastikan Maktabah dapat me-<em>render</em> ribuan buku, memfilter katalog, dan mencari metadata secara cepat tanpa membebani memori maupun operasi I/O disk secara repetitif.</p>
 
 
 
@@ -3661,6 +3701,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3691,10 +3737,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

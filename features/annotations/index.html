@@ -2799,6 +2799,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reader/textview/" class="md-nav__link">
         
   
@@ -3567,39 +3595,39 @@
 
 
 <h1 id="annotations-overview-architecture-pipeline">Annotations - Overview &amp; Architecture Pipeline</h1>
-<p>Dokumentasi ini membedah feature-slice <strong>Annotations</strong> pada Maktabah. Fitur ini menangani pembuatan, penyimpanan, dan sinkronisasi anotasi (highlight, underline, dan notes) pada buku.</p>
-<h2 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (Separation of Concerns)</h2>
-<p>Fitur Annotations dirancang dengan pemisahan lapisan (layering) yang ketat untuk memastikan skalabilitas dan kemudahan pengujian:</p>
+<p>Dokumentasi ini membedah modul <strong>Annotations</strong> pada aplikasi Maktabah. Fitur ini menangani pembuatan, penyimpanan, dan sinkronisasi anotasi (<em>highlight</em>, <em>underline</em>, dan <em>notes</em>) pada teks kitab.</p>
+<h2 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (<em>Separation of Concerns</em>)</h2>
+<p>Modul Annotations dirancang dengan pemisahan lapisan yang ketat untuk memastikan skalabilitas dan kemudahan pemeliharaan:</p>
 <ol>
 <li>
 <p><strong>Model Layer (<code>Models/</code>)</strong>
-    Berisi representasi data murni (<code>Annotation</code>, <code>AnnotationNode</code>) yang <code>Sendable</code> dan terbebas dari dependensi UI atau Database. Model ini dirancang untuk concurrency.</p>
+    Berisi representasi data murni (<code>Annotation</code>, <code>AnnotationNode</code>) yang mengadopsi <code>Sendable</code> dan terbebas dari dependensi UI atau basis data.</p>
 </li>
 <li>
 <p><strong>Database &amp; Storage Layer (<code>Database/</code>)</strong>
-    Mengelola persistensi data menggunakan SQLite (<code>AnnotationRepository</code>) dengan caching in-memory (<code>AnnotationStore</code>) yang <em>thread-safe</em> menggunakan <code>Mutex</code>. Lapisan ini juga mengoordinasikan sinkronisasi luring dan CloudKit.</p>
+    Mengelola persistensi data menggunakan SQLite (<code>AnnotationRepository</code>) dengan <em>caching in-memory</em> (<code>AnnotationStore</code>) yang <em>thread-safe</em> menggunakan <code>Synchronization.Mutex</code>. Lapisan ini juga mengoordinasikan sinkronisasi luring dan CloudKit.</p>
 </li>
 <li>
 <p><strong>ViewModel Layer (<code>ViewModel/</code>)</strong>
-    Bertindak sebagai jembatan reaktif antara Storage dan UI. Menggunakan framework <code>Combine</code> dan <code>@Observable</code> (di <code>AnnotationViewModel</code>) untuk memberikan <em>state</em> yang siap dirender, serta menangani debounce dan operasi pencarian asinkron.</p>
+    Bertindak sebagai jembatan reaktif antara Storage dan UI. Menggunakan <em>framework</em> <code>Combine</code> dan <code>@Observable</code> (di <code>AnnotationViewModel</code>) untuk menyajikan <em>state</em> tampilan, serta menangani <em>debounce</em> dan operasi pencarian asinkron.</p>
 </li>
 <li>
 <p><strong>Coordinator Layer (<code>Coordinator/</code>)</strong>
-    <code>AnnotationCoordinator</code> merangkum logika kompleks seperti kalkulasi <em>range</em> teks Arab (dengan dan tanpa harakat) antara UI Text View dan Core Engine.</p>
+    <code>AnnotationCoordinator</code> merangkum logika kalkulasi rentang (<em>range</em>) teks Arab (dengan dan tanpa harakat) antara UI Text View dan Core Engine.</p>
 </li>
 <li>
 <p><strong>UI Layer (<code>macOS/</code> dan <code>iOS/</code>)</strong>
-    Menampilkan data dan menangani interaksi pengguna. Memanfaatkan AppKit (<code>NSViewController</code>, <code>NSOutlineView</code>) untuk macOS dan SwiftUI/UIKit untuk iOS.</p>
+    Menampilkan data dan menangani interaksi pengguna menggunakan AppKit (<code>NSViewController</code>, <code>NSOutlineView</code>) untuk macOS serta SwiftUI dan UIKit untuk iOS.</p>
 </li>
 </ol>
 <h2 id="diagram-interaksi-komponen">Diagram Interaksi Komponen</h2>
-<p>Berikut adalah <em>pipeline</em> arsitektur dari UI hingga ke Storage:</p>
-<pre class="mermaid"><code>graph TD
+<p>Berikut adalah alur arsitektur dari lapisan antarmuka hingga ke penyimpanan:</p>
+<pre class="mermaid"><code>flowchart TD
     UI_Mac[AppKit UI&lt;br&gt;AnnotationsVC, OutlineView] --&gt; VM[AnnotationViewModel]
     UI_iOS[SwiftUI &amp; UIKit UI&lt;br&gt;iOSAnnotationViewController] --&gt; VM
 
     VM --&gt; Tree[AnnotationTreeBuilder&lt;br&gt;Mutasi Hirarki &amp; Diffing]
-    Tree -.-&gt; Publish[Publish Annotation Event]
+    Tree -.-&gt; Publish([Publish Annotation Event])
     VM --&gt; Store[AnnotationStore&lt;br&gt;In-Memory Cache &amp; Mutex]
 
     UI_Mac -.-&gt; Coord[AnnotationCoordinator]
@@ -3617,11 +3645,13 @@
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
     classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
     classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class UI_Mac,UI_iOS ui;
     class VM vm;
     class Store,Tree,Coord store;
-    class Repo,SQLite db;</code></pre>
+    class Repo,SQLite db;
+    class Publish event;</code></pre>
 <h2 id="daftar-tautan">Daftar Tautan</h2>
 <ul>
 <li><a href="macos/">AppKit Implementation (macOS)</a></li>
@@ -3654,6 +3684,12 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -3683,10 +3719,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

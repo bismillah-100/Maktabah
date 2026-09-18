@@ -1076,10 +1076,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#penanganan-pencarian-debounce-concurrency" class="md-nav__link">
+  <a href="#penanganan-pencarian-debounce" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Pencarian &amp; Debounce (Concurrency)
+        Penanganan Pencarian &amp; Debounce
       
     </span>
   </a>
@@ -1087,10 +1087,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tag-filtering-logic" class="md-nav__link">
+  <a href="#logika-pemfilteran-tag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tag Filtering Logic
+        Logika Pemfilteran Tag
       
     </span>
   </a>
@@ -1115,10 +1115,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#serial-task-queues-synchronization" class="md-nav__link">
+  <a href="#antrean-serial-sinkronisasi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Serial Task Queues &amp; Synchronization
+        Antrean Serial &amp; Sinkronisasi
       
     </span>
   </a>
@@ -1126,10 +1126,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#alur-sinkronisasi-incremental-updates" class="md-nav__link">
+  <a href="#alur-sinkronisasi-pembaruan-inkremental" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alur Sinkronisasi &amp; Incremental Updates
+        Alur Sinkronisasi &amp; Pembaruan Inkremental
       
     </span>
   </a>
@@ -2855,6 +2855,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3596,10 +3624,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#penanganan-pencarian-debounce-concurrency" class="md-nav__link">
+  <a href="#penanganan-pencarian-debounce" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Pencarian &amp; Debounce (Concurrency)
+        Penanganan Pencarian &amp; Debounce
       
     </span>
   </a>
@@ -3607,10 +3635,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tag-filtering-logic" class="md-nav__link">
+  <a href="#logika-pemfilteran-tag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tag Filtering Logic
+        Logika Pemfilteran Tag
       
     </span>
   </a>
@@ -3635,10 +3663,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#serial-task-queues-synchronization" class="md-nav__link">
+  <a href="#antrean-serial-sinkronisasi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Serial Task Queues &amp; Synchronization
+        Antrean Serial &amp; Sinkronisasi
       
     </span>
   </a>
@@ -3646,10 +3674,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#alur-sinkronisasi-incremental-updates" class="md-nav__link">
+  <a href="#alur-sinkronisasi-pembaruan-inkremental" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alur Sinkronisasi &amp; Incremental Updates
+        Alur Sinkronisasi &amp; Pembaruan Inkremental
       
     </span>
   </a>
@@ -3679,17 +3707,17 @@
 
 
 <h1 id="state-management-combine-async-workflows">State Management, Combine &amp; Async Workflows</h1>
-<p>Bagian ini membahas manajemen <em>state</em>, penanganan konkurensi (async/await, Task, debounce), serta aliran reaktivitas antara Storage, Tree Builder, dan UI menggunakan <code>Combine</code> dan <code>@Observable</code>.</p>
-<h2 id="arsitektur-aliran-data-data-flow">Arsitektur Aliran Data (Data Flow)</h2>
-<p>Alur reaktivitas anotasi dirancang searah (unidirectional) untuk memastikan prediktabilitas:</p>
+<p>Bagian ini membahas manajemen <em>state</em>, penanganan konkurensi (async/await, Task, debounce), serta aliran reaktivitas antara Storage, Tree Builder, dan antarmuka pengguna menggunakan <code>Combine</code> dan <code>@Observable</code>.</p>
+<h2 id="arsitektur-aliran-data-data-flow">Arsitektur Aliran Data (<em>Data Flow</em>)</h2>
+<p>Alur reaktivitas anotasi dirancang satu arah (<em>unidirectional</em>) untuk memastikan prediktabilitas:</p>
 <ol>
-<li><strong>Mutasi Data</strong>: Terjadi di <code>AnnotationStore</code> secara sinkron (dengan proteksi Mutex) dan memancarkan <code>AnnotationEvent</code> via <code>PassthroughSubject</code>.</li>
-<li><strong>Tree Construction</strong>: <code>AnnotationTreeBuilder</code> menangkap event tersebut di <em>background queue</em>, lalu membangun ulang struktur <em>tree</em> hirarkis (Book/Tag/Timeline) dan mengkalkulasi <em>diff</em>.</li>
-<li><strong>ViewModel Transformation</strong>: <code>AnnotationViewModel</code> berlangganan (subscribe) pada hasil dari <code>AnnotationTreeBuilder</code>. Apabila pencarian atau filter aktif, ViewModel melakukan filter tambahan.</li>
-<li><strong>UI Binding</strong>: UI (SwiftUI atau AppKit) dirender ulang (re-rendered) secara otomatis berkat macro <code>@Observable</code> atau pembaruan via <code>onIncrementalUpdate</code>.</li>
+<li><strong>Mutasi Data</strong>: Terjadi di <code>AnnotationStore</code> secara sinkron (dengan proteksi <code>Mutex</code>) dan memancarkan <code>AnnotationEvent</code> via <code>PassthroughSubject</code>.</li>
+<li><strong>Konstruksi Hierarki</strong>: <code>AnnotationTreeBuilder</code> menangkap <em>event</em> tersebut di antrean latar belakang (<em>background queue</em>), lalu membangun ulang struktur hierarki (Book / Tag / Timeline) dan mengkalkulasi <em>tree diffing</em>.</li>
+<li><strong>Transformasi ViewModel</strong>: <code>AnnotationViewModel</code> berlangganan (<em>subscribe</em>) pada hasil dari <code>AnnotationTreeBuilder</code>. Apabila pencarian atau filter aktif, ViewModel melakukan pemfilteran tambahan.</li>
+<li><strong>Binding Antarmuka Pengguna</strong>: UI (SwiftUI atau AppKit) dirender ulang secara otomatis melalui makro <code>@Observable</code> atau pembaruan inkremental via <code>onIncrementalUpdate</code>.</li>
 </ol>
 <h2 id="annotationviewmodel">AnnotationViewModel</h2>
-<p>Berperan sebagai <em>source of truth</em> untuk tampilan UI daftar anotasi.</p>
+<p>Berperan sebagai sumber kebenaran (<em>source of truth</em>) untuk tampilan daftar anotasi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationViewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ViewModelBase</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">state</span><span class="p">:</span><span class="w"> </span><span class="n">ViewModelState</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="n">loading</span>
@@ -3697,7 +3725,7 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">/// Core AppKit/Foundation tree</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">filteredNodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="c1">/// SwiftUI identiable tree</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="c1">/// SwiftUI identifiable tree</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">swiftUINodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SwiftUIAnnotationNode</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="c1">// Search State</span>
@@ -3710,7 +3738,7 @@
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">availableTags</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="penanganan-pencarian-debounce-concurrency">Penanganan Pencarian &amp; Debounce (Concurrency)</h3>
+<h3 id="penanganan-pencarian-debounce">Penanganan Pencarian &amp; Debounce</h3>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">searchTask</span><span class="p">:</span><span class="w"> </span><span class="n">Task</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;?</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">var</span><span class="w"> </span><span class="nv">searchText</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">""</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kr">didSet</span><span class="w"> </span><span class="p">{</span>
@@ -3725,12 +3753,14 @@
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li><strong>Debouncing</strong>: Delay 0,3 detik ditambahkan sebelum eksekusi filter <code>applyFilter()</code> untuk mencegah CPU <em>thrashing</em> saat pengguna mengetik dengan cepat. Menggunakan Swift Concurrency (<code>Task</code> dan <code>Task.sleep</code>).</li>
+<li><strong>Debounce</strong>: Penundaan 0,3 detik diterapkan sebelum eksekusi <code>applyFilter()</code> untuk mencegah <em>thrashing</em> CPU saat pengguna mengetik dengan cepat. Mekanisme ini menggunakan fitur bawaan Swift Concurrency (<code>Task</code> dan <code>Task.sleep</code>).</li>
 </ol>
-<h3 id="tag-filtering-logic">Tag Filtering Logic</h3>
-<p>ViewModel mendukung dua mode filter tag (<code>OR</code> dan <code>AND</code>):
-- Mode <strong>OR</strong>: Menampilkan anotasi yang memiliki <em>minimal satu</em> dari tag yang dipilih.
-- Mode <strong>AND</strong>: Menampilkan anotasi yang memiliki <em>semua</em> tag yang dipilih.</p>
+<h3 id="logika-pemfilteran-tag">Logika Pemfilteran Tag</h3>
+<p>ViewModel mendukung dua mode filter tag (<code>OR</code> dan <code>AND</code>):</p>
+<ul>
+<li>Mode <strong>OR</strong>: Menampilkan anotasi yang memuat <em>minimal satu</em> dari tag yang dipilih.</li>
+<li>Mode <strong>AND</strong>: Menampilkan anotasi yang memuat <em>seluruh</em> tag yang dipilih.</li>
+</ul>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">filterNodesByTags</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">nodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">],</span><span class="w"> </span><span class="n">tags</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">activeTags</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tags</span><span class="w"> </span><span class="p">??</span><span class="w"> </span><span class="n">selectedTags</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="c1">// ... iterasi node</span>
@@ -3740,9 +3770,9 @@
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="c1">// ...</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Jika dalam mode <code>AND</code>, <code>availableTags</code> akan difilter sedemikian rupa sehingga hanya menampilkan tag yang <em>co-occurring</em> (muncul bersamaan) dalam sisa anotasi yang cocok.</p>
+<p>Jika dalam mode <code>AND</code>, properti <code>availableTags</code> difilter sedemikian rupa sehingga hanya menampilkan tag yang muncul bersamaan (<em>co-occurring</em>) dalam sisa anotasi yang cocok.</p>
 <h2 id="annotationtreebuilder">AnnotationTreeBuilder</h2>
-<p>Merupakan mesin (engine) <em>background</em> yang bertugas mengubah daftar rata (flat list) <code>[Annotation]</code> menjadi struktur pohon <code>AnnotationNode</code> untuk UI <code>NSOutlineView</code> atau <code>SwiftUI List</code>.</p>
+<p>Merupakan mesin latar belakang (<em>background engine</em>) yang bertugas mengubah daftar linier (<em>flat list</em>) <code>[Annotation]</code> menjadi struktur hierarki <code>AnnotationNode</code> untuk antarmuka <code>NSOutlineView</code> atau <code>SwiftUI List</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationTreeBuilder</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">AnnotationTreeBuilder</span><span class="p">()</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
@@ -3752,11 +3782,11 @@
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">rootNode</span><span class="p">:</span><span class="w"> </span><span class="n">AnnotationNode</span><span class="p">?</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="serial-task-queues-synchronization">Serial Task Queues &amp; Synchronization</h3>
-<p><code>AnnotationTreeBuilder</code> memproses seluruh mutasi menggunakan antrean serial <code>treeQueue</code> dengan QoS (Quality of Service) <code>.userInitiated</code>. Hal ini menjamin bahwa seluruh manipulasi pada <code>rootNode</code> bersifat <em>thread-safe</em> dan terhindar dari <em>data race</em>, mengeliminasi kebutuhan penggunaan lock internal secara eksplisit pada metode-metodenya.</p>
-<h3 id="alur-sinkronisasi-incremental-updates">Alur Sinkronisasi &amp; Incremental Updates</h3>
-<p>Alih-alih memaksa UI untuk memuat ulang seluruh daftar (<code>reloadData</code>), Builder ini memproduksi <code>AnnotationTreeDiff</code> (perbedaan pohon) pada setiap perubahan parsial (Add, Update, Delete).</p>
-<p>Di sisi <code>AnnotationViewModel</code>:
+<h3 id="antrean-serial-sinkronisasi">Antrean Serial &amp; Sinkronisasi</h3>
+<p><code>AnnotationTreeBuilder</code> memproses seluruh mutasi menggunakan antrean serial <code>treeQueue</code> dengan tingkat QoS <code>.userInitiated</code>. Hal ini menjamin bahwa seluruh manipulasi pada <code>rootNode</code> bersifat <em>thread-safe</em> dan terhindar dari <em>data race</em>, mengeliminasi kebutuhan penggunaan kunci sinkronisasi internal secara eksplisit.</p>
+<h3 id="alur-sinkronisasi-pembaruan-inkremental">Alur Sinkronisasi &amp; Pembaruan Inkremental</h3>
+<p>Alih-alih memicu pemuatan ulang seluruh daftar (<code>reloadData</code>), Builder menghasilkan objek <code>AnnotationTreeDiff</code> (<em>tree diffing</em>) pada setiap perubahan parsial (Add, Update, Delete).</p>
+<p>Pada <code>AnnotationViewModel</code>:
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">diffObserverTask</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">@</span><span class="n">MainActor</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="k">in</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="n">diff</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">AnnotationTreeBuilder</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">diffPublisher</span><span class="p">.</span><span class="n">values</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="k">guard</span><span class="w"> </span><span class="o">!</span><span class="n">Task</span><span class="p">.</span><span class="n">isCancelled</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">break</span><span class="w"> </span><span class="p">}</span>
@@ -3766,7 +3796,7 @@
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">}</span>
 </span></code></pre></div></p>
 <ol>
-<li>Jika ada pencarian/filter aktif, diferensiasi parsial (incremental diff) akan dibatalkan, lalu <em>full-reload</em> akan dilakukan pada sisi <em>filtered data</em>. Jika tidak, <em>diff</em> akan disalurkan ke fungsi <em>callback</em> <code>onIncrementalUpdate</code> pada layer UI agar <em>batch insertion/deletion</em> dapat dilakukan pada komponen seperti <code>NSOutlineView</code>.</li>
+<li>Jika ada pencarian atau filter yang aktif, pembaruan diferensial parsial dibatalkan, kemudian sistem melakukan pemuatan ulang penuh (<em>full reload</em>) pada data yang terfilter. Jika tidak ada filter, <em>diff</em> disalurkan ke fungsi <em>callback</em> <code>onIncrementalUpdate</code> pada lapisan UI agar penyisipan atau penghapusan parsial (<em>batch insertion/deletion</em>) dapat dilakukan pada komponen seperti <code>NSOutlineView</code>.</li>
 </ol>
 
 
@@ -3787,6 +3817,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3817,10 +3853,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#persistence-database" class="md-skip">
+        <a href="#persistensi-snapshot-app-group-container" class="md-skip">
           Skip to content
         </a>
       
@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3233,10 +3261,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sinkronisasi-cloudkit" class="md-nav__link">
+  <a href="#1-pipeline-persistensi-snapshot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sinkronisasi CloudKit
+        1. Pipeline Persistensi Snapshot
       
     </span>
   </a>
@@ -3244,10 +3272,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#app-group-container" class="md-nav__link">
+  <a href="#2-koordinasi-berkas-lintas-proses-filecoordinator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        App Group Container
+        2. Koordinasi Berkas Lintas Proses (FileCoordinator)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-resolusi-konflik-snapshot-generasi-resolve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Resolusi Konflik Snapshot &amp; Generasi (resolve)
       
     </span>
   </a>
@@ -3506,10 +3545,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sinkronisasi-cloudkit" class="md-nav__link">
+  <a href="#1-pipeline-persistensi-snapshot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sinkronisasi CloudKit
+        1. Pipeline Persistensi Snapshot
       
     </span>
   </a>
@@ -3517,10 +3556,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#app-group-container" class="md-nav__link">
+  <a href="#2-koordinasi-berkas-lintas-proses-filecoordinator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        App Group Container
+        2. Koordinasi Berkas Lintas Proses (FileCoordinator)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-resolusi-konflik-snapshot-generasi-resolve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Resolusi Konflik Snapshot &amp; Generasi (resolve)
       
     </span>
   </a>
@@ -3544,20 +3594,96 @@
 
 
 
-<h1 id="persistence-database">Persistence &amp; Database</h1>
-<p>Arsitektur penyimpanan untuk Widget <strong>tidak</strong> membaca langsung ke SQLite (Core Database) milik aplikasi utama. Hal ini dilakukan karena alasan keterbatasan memori pada widget (sistem membatasi memori Widget sangat ketat) serta untuk menjaga performa yang mulus.</p>
-<p>Sebagai gantinya, widget beroperasi menggunakan mekanisme <em>Snapshot JSON</em> yang ringan yang dikelola oleh <code>WidgetSnapshotRecord</code> dan disinkronisasikan menggunakan <em>actor</em> <code>FileCoordinator</code>.</p>
-<h2 id="sinkronisasi-cloudkit">Sinkronisasi CloudKit</h2>
-<p><code>CloudKitFetcher</code> bertugas menangani pembaharuan snapshot dari sinkronisasi awan. Fitur kunci dari kelas ini meliputi:
-- Membaca data secara generik (mengambil <em>payload</em>) dari <code>privateCloudDatabase</code> (<code>AnnotationsZone</code>).
-- <strong>Mekanisme Timeout</strong>: Melakukan <code>TaskGroup</code> asinkron dengan batasan waktu maksimum 6 detik. Jika respons CloudKit melampaui 6 detik, request tersebut dibatalkan (terjadi <em>implicit cancellation</em>) dan sistem melakukan <em>fallback</em> dengan menggunakan data lokal. Hal ini penting untuk memastikan widget tidak membeku (<em>freeze</em>).</p>
-<h2 id="app-group-container">App Group Container</h2>
-<p>File Snapshot JSON disimpan di dalam ruang bersama lintas aplikasi menggunakan App Group Container <code>group.com.Drn.maktabah</code>.
-- <strong>Lokasi Penyimpanan</strong>: Snapshot diisolasi di dalam direktori <code>Library/Application Support</code>.
-- File yang dikelola:
-    - <code>WidgetAnnotationSnapshot.json</code>
-    - <code>WidgetHistorySnapshot.json</code>
-- Akses baca dan tulis ditangani secara independen di atas <em>thread</em> yang aman menggunakan <code>NSFileCoordinator</code> dengan membungkusnya di dalam Swift <code>actor</code> agar mencegah konflik <em>race-condition</em>.</p>
+<h1 id="persistensi-snapshot-app-group-container">Persistensi Snapshot &amp; App Group Container</h1>
+<p>Arsitektur penyimpanan untuk Widget <strong>tidak</strong> membaca langsung ke SQLite (<em>Core Database</em>) milik aplikasi utama. Pendekatan ini sengaja dirancang untuk mengatasi dua kendala krusial:
+1. <strong>Batasan Memori Widget</strong>: Sistem operasi membatasi penggunaan RAM untuk ekstensi widget secara sangat ketat (maksimal ~30 MB). Memuat <em>engine</em> SQLite, koneksi multiproses, dan <em>cache</em> halaman di dalam widget berisiko tinggi memicu terminasi paksa (<em>JetSam / Out-Of-Memory</em>).
+2. <strong>Pencegahan Kunci Basis Data (<em>Database Lock</em>)</strong>: Akses bersamaan antara aplikasi utama yang sedang menulis dan widget yang sedang membaca berpotensi memicu kondisi <code>database is locked</code>.</p>
+<p>Sebagai gantinya, widget beroperasi menggunakan mekanisme <strong>Snapshot JSON</strong> terisolasi yang disimpan ke dalam <em>App Group Shared Container</em> dan dikoordinasikan secara asinkron menggunakan <em>actor</em> <code>FileCoordinator</code>.</p>
+<hr />
+<h2 id="1-pipeline-persistensi-snapshot">1. Pipeline Persistensi Snapshot</h2>
+<pre class="mermaid"><code>graph TD
+    subgraph Host_App ["Aplikasi Utama (macOS / iOS)"]
+        STORE["AnnotationStore / HistoryDatabaseManager"] --&gt;|"Mutasi Data"| COORD["WidgetUpdateCoordinator.shared"]
+        COORD --&gt;|"Bangun Snapshot"| SNAP["WidgetSnapshot&lt;Descriptor&gt;"]
+    end
+
+    Host_App ~~~ Shared_Storage
+
+    subgraph Shared_Storage ["App Group Container (group.com.Drn.maktabah)"]
+        SNAP --&gt;|"Koordinasi Tulis"| FC_WRITE["FileCoordinator.shared (Actor)"]
+        FC_WRITE --&gt;|"Atomic Write"| JSON_FILES[("WidgetAnnotationSnapshot.json&lt;br/&gt;WidgetHistorySnapshot.json")]
+    end
+
+    Shared_Storage ~~~ Widget_Extension
+
+    subgraph Widget_Extension ["Widget Extension (WidgetKit)"]
+        JSON_FILES --&gt;|"Koordinasi Baca"| FC_READ["FileCoordinator.shared (Actor)"]
+        FC_READ --&gt;|"JSONDecoder"| TIMELINE["AppIntentTimelineProvider"]
+        TIMELINE --&gt;|"Render Entry"| VIEW["WidgetKit View (Lock Screen / Desktop)"]
+    end
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class VIEW ui;
+    class TIMELINE vm;
+    class STORE,COORD,SNAP,FC_WRITE,FC_READ store;
+    class JSON_FILES db;</code></pre>
+<hr />
+<h2 id="2-koordinasi-berkas-lintas-proses-filecoordinator">2. Koordinasi Berkas Lintas Proses (<code>FileCoordinator</code>)</h2>
+<p>Karena aplikasi utama dan ekstensi widget berjalan pada proses (<em>process ID</em>) yang berbeda, operasi I/O berkas diamankan menggunakan <code>NSFileCoordinator</code> yang dibungkus di dalam Swift <code>actor</code>:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">actor</span><span class="w"> </span><span class="n">FileCoordinator</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">nonisolated</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">FileCoordinator</span><span class="p">()</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">url</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">Data</span><span class="p">?</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">error</span><span class="p">:</span><span class="w"> </span><span class="bp">NSError</span><span class="p">?</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">fileData</span><span class="p">:</span><span class="w"> </span><span class="n">Data</span><span class="p">?</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nv">coordinator</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSFileCoordinator</span><span class="p">(</span><span class="n">filePresenter</span><span class="p">:</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="n">coordinator</span><span class="p">.</span><span class="n">coordinate</span><span class="p">(</span><span class="n">readingItemAt</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">withoutChanges</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">:</span><span class="w"> </span><span class="p">&amp;</span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">newURL</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">            </span><span class="n">fileData</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="n">Data</span><span class="p">(</span><span class="n">contentsOf</span><span class="p">:</span><span class="w"> </span><span class="n">newURL</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">fileData</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="n">data</span><span class="p">:</span><span class="w"> </span><span class="n">Data</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">url</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nv">dirURL</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">url</span><span class="p">.</span><span class="n">deletingLastPathComponent</span><span class="p">()</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="n">FileManager</span><span class="p">.</span><span class="k">default</span><span class="p">.</span><span class="n">createDirectory</span><span class="p">(</span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">dirURL</span><span class="p">,</span><span class="w"> </span><span class="n">withIntermediateDirectories</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">error</span><span class="p">:</span><span class="w"> </span><span class="bp">NSError</span><span class="p">?</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nv">coordinator</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSFileCoordinator</span><span class="p">(</span><span class="n">filePresenter</span><span class="p">:</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">        </span><span class="n">coordinator</span><span class="p">.</span><span class="n">coordinate</span><span class="p">(</span><span class="n">writingItemAt</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">forReplacing</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">:</span><span class="w"> </span><span class="p">&amp;</span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">newURL</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">            </span><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">to</span><span class="p">:</span><span class="w"> </span><span class="n">newURL</span><span class="p">)</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Thread-Safety &amp; Multiprocess</strong>: Menghindari kondisi pacu (<em>race condition</em>) saat aplikasi utama menulis snapshot baru persis ketika widget sedang me-refresh timeline.</li>
+<li><strong>Direktori Isolasi</strong>: Snapshot diletakkan di dalam folder terproteksi <code>Library/Application Support/</code> di dalam App Group <code>group.com.Drn.maktabah</code>.</li>
+</ul>
+<hr />
+<h2 id="3-resolusi-konflik-snapshot-generasi-resolve">3. Resolusi Konflik Snapshot &amp; Generasi (<code>resolve</code>)</h2>
+<p>Setiap snapshot membawa metadata nomor generasi (<code>generation: Int64</code>) dan stempel waktu (<code>lastUpdated: Date</code>). Apabila terjadi pembaruan dari CloudKit secara bersamaan, algoritma deterministik <code>resolve</code> mengevaluasi versi mana yang berhak menimpa disk lokal:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">isRemoteNewer</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">remote</span><span class="p">.</span><span class="n">generation</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">currentLocal</span><span class="p">.</span><span class="n">generation</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">remote</span><span class="p">.</span><span class="n">generation</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">currentLocal</span><span class="p">.</span><span class="n">generation</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="n">remote</span><span class="p">.</span><span class="n">lastUpdated</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">currentLocal</span><span class="p">.</span><span class="n">lastUpdated</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">if</span><span class="w"> </span><span class="n">isRemoteNewer</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">itemsChanged</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">remote</span><span class="p">.</span><span class="n">items</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">currentLocal</span><span class="p">.</span><span class="n">items</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="k">await</span><span class="w"> </span><span class="n">remote</span><span class="p">.</span><span class="n">saveLocal</span><span class="p">()</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">remote</span><span class="p">,</span><span class="w"> </span><span class="n">itemsChanged</span><span class="p">)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">currentLocal</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Dengan pola ini:
+1. Snapshot lokal hanya ditulis ulang jika terjadi perbedaan isi (<code>items != currentLocal.items</code>), menghemat siklus disk I/O.
+2. Ekstensi widget dapat menampilkan kutipan anotasi dan riwayat terakhir secara instan (&lt; 10 ms) tanpa perlu menginisialisasi pustaka SQLite.</p>
 
 
 
@@ -3577,6 +3703,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3607,10 +3739,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -1025,15 +1025,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#annotationdelegate" class="md-nav__link">
+  <a href="#annotationdelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationDelegate
+        AnnotationDelegate (Protocol)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationDelegate">
+    <nav class="md-nav" aria-label="AnnotationDelegate (Protocol)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2822,6 +2822,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3540,15 +3568,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#annotationdelegate" class="md-nav__link">
+  <a href="#annotationdelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationDelegate
+        AnnotationDelegate (Protocol)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationDelegate">
+    <nav class="md-nav" aria-label="AnnotationDelegate (Protocol)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3613,9 +3641,9 @@
 
 
 <h1 id="contracts-loose-coupling">Contracts &amp; Loose Coupling</h1>
-<p>Folder <code>Protocols/</code> menyimpan seluruh definisi kontrak (protocol) yang bertugas sebagai <em>interface</em> abstraksi. Penggunaan protokol sangat krusial dalam arsitektur Maktabah untuk mencegah ketergantungan yang kuat (tight coupling) antar modul <em>feature-slice</em>, khususnya komunikasi lintas layar (seperti dari Sidebar Annotations ke modul Reader).</p>
-<h2 id="annotationdelegate">AnnotationDelegate</h2>
-<p>Protokol tunggal yang mendefinisikan aksi saat sebuah anotasi di-klik atau dipilih dari antarmuka pengguna (UI).</p>
+<p>Folder <code>Protocols/</code> menyimpan seluruh definisi kontrak (<em>protocol</em>) yang bertugas sebagai antarmuka abstraksi. Penggunaan <em>protocol</em> sangat krusial dalam arsitektur Maktabah untuk mencegah ketergantungan yang kuat (<em>tight coupling</em>) antar-modul, khususnya komunikasi lintas layar (seperti dari Sidebar Annotations ke modul Reader).</p>
+<h2 id="annotationdelegate-protocol">AnnotationDelegate (Protocol)</h2>
+<p><em>Protocol</em> yang mendefinisikan aksi saat sebuah anotasi dipilih dari antarmuka pengguna:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">AnnotationDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelect</span><span class="p">(</span><span class="n">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span><span class="p">)</span>
@@ -3623,9 +3651,9 @@
 </span></code></pre></div>
 <h3 id="penjelasan-parameter-anotasi">Penjelasan Parameter &amp; Anotasi</h3>
 <ul>
-<li><strong><code>@MainActor</code></strong>: Mengikat seluruh implementasi dari protokol ini agar dieksekusi di <em>Main Thread</em>. Hal ini wajib karena respons dari pemilihan anotasi selalu memicu navigasi UI dan manipulasi <em>view</em> secara langsung.</li>
-<li><strong><code>AnyObject</code></strong>: Membatasi bahwa implementor dari protokol ini hanyalah <em>class</em> (reference type). Hal ini memungkinkan penggunaan referensi <code>weak</code> pada penugasan <em>delegate</em> untuk mencegah <em>retain cycle</em> (kebocoran memori).</li>
-<li><strong><code>annotation: Annotation</code></strong>: Menyalurkan seluruh data (termasuk Book ID, Content ID, dan Range) sehingga delegasi dapat melakukan kalkulasi dan pergeseran fokus ke teks yang bersangkutan.</li>
+<li><strong><code>@MainActor</code></strong>: Mengikat implementasi dari <em>protocol</em> ini agar dieksekusi pada Main Thread karena respons pemilihan anotasi memicu navigasi UI dan manipulasi tampilan secara langsung.</li>
+<li><strong><code>AnyObject</code></strong>: Membatasi bahwa pengadopsi <em>protocol</em> ini hanyalah <em>class</em> (<em>reference type</em>). Hal ini memungkinkan penggunaan referensi <code>weak</code> pada penugasan delegasi untuk mencegah <em>retain cycle</em> (kebocoran memori).</li>
+<li><strong><code>annotation: Annotation</code></strong>: Menyalurkan seluruh data model anotasi (termasuk Book ID, Content ID, dan NSRange) sehingga delegasi dapat menghitung pergeseran fokus ke teks yang bersangkutan.</li>
 </ul>
 <h2 id="implementasi-navigasi-ibarottextvc">Implementasi Navigasi (IbarotTextVC)</h2>
 <p><code>IbarotTextVC</code> merupakan <em>View Controller</em> pembaca buku utama (berada di modul <code>Reader/</code>) yang mengimplementasikan <code>AnnotationDelegate</code>.</p>
@@ -3670,10 +3698,10 @@
 </span></code></pre></div>
 <h3 id="analisis-alur-pemanggilan">Analisis Alur Pemanggilan</h3>
 <ol>
-<li><strong>Pengecekan Buku</strong>: Sistem memastikan bahwa arsip buku untuk anotasi tersebut (melalui <code>bkId</code>) masih terpasang/diunduh. Apabila tidak, <em>alert</em> kesalahan akan ditampilkan.</li>
-<li><strong>Context Switching</strong>: Menggunakan <em>Swift Concurrency</em> (<code>Task</code>), sistem membandingkan buku yang sedang terbuka. Jika berbeda, fungsi akan memberitahu Reader untuk merender buku baru.</li>
-<li><strong>Pemuatan Konten (<code>contentId</code>)</strong>: Memaksa <em>pagination</em> / pemuatan <em>chapter</em> menuju <code>contentId</code> yang bersangkutan.</li>
-<li><strong>Scrolling &amp; Highlighting</strong>: Menginstruksikan <code>textDelegate</code> (seperti Text View AppKit / UIKit) untuk menyorot secara visual dan menggulir (scroll) area pandang menuju titik lokasi anotasi.</li>
+<li><strong>Pengecekan Buku</strong>: Sistem memastikan bahwa arsip buku untuk anotasi tersebut (melalui <code>bkId</code>) terpasang di perangkat. Apabila belum diunduh, pesan peringatan akan ditampilkan.</li>
+<li><strong>Perpindahan Konteks (<em>Context Switching</em>)</strong>: Menggunakan Swift Concurrency (<code>Task</code>), sistem membandingkan buku yang sedang terbuka. Jika berbeda, fungsi memuat buku yang sesuai.</li>
+<li><strong>Pemuatan Konten (<code>contentId</code>)</strong>: Memuat bagian / halaman menuju <code>contentId</code> yang bersangkutan.</li>
+<li><strong>Scrolling &amp; Highlighting</strong>: Menginstruksikan <code>textDelegate</code> (Text View AppKit / UIKit) untuk menyorot teks secara visual dan menggulir (<em>scroll</em>) area pandang menuju lokasi anotasi.</li>
 </ol>
 
 
@@ -3694,6 +3722,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3724,10 +3758,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -2788,6 +2788,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reader/textview/" class="md-nav__link">
         
   
@@ -3545,50 +3573,50 @@
 
 
 <h1 id="library-catalog-management-architecture">Library &amp; Catalog Management Architecture</h1>
-<p>Modul <strong>Library</strong> bertanggung jawab atas manajemen siklus hidup katalog kitab (kategori, pengarang, kitab), pengunduhan berkas <code>.sqlite</code> per-kitab, integrasi mandiri ke dalam arsip majemuk (<code>1-20.sqlite</code>), pembaruan versi kitab (<em>book updates</em>), serta koordinasi navigasi katalog lintas platform macOS dan iOS.</p>
+<p>Modul <strong>Library</strong> bertanggung jawab atas manajemen siklus hidup katalog kitab (kategori, pengarang, kitab), pengunduhan berkas <code>.sqlite</code> per-kitab, integrasi ke dalam arsip majemuk (<code>1-20.sqlite</code>), pembaruan versi kitab (<em>book updates</em>), serta koordinasi navigasi katalog lintas platform macOS dan iOS.</p>
 <hr />
 <h2 id="1-diagram-arsitektur-komponen">1. Diagram Arsitektur Komponen</h2>
-<pre class="mermaid"><code>graph TD
-    %% UI Layer
-    subgraph UI ["UI Layer (macOS &amp; iOS)"]
-        MAC["LibraryVC (macOS)"]
-        IOS["iOSLibraryView (iOS)"]
-    end
+<pre class="mermaid"><code>flowchart TD
+    MAC["LibraryVC (macOS)"] --&gt; LVM["LibraryViewModel (@Observable)"]
+    IOS["iOSLibraryView (iOS)"] --&gt; LVM
 
-    %% State Management
-    subgraph VM ["ViewModel Layer"]
-        LVM["LibraryViewModel&lt;br/&gt;(@Observable)"]
-    end
+    LVM ~~~ Core
 
-    %% Core Dependencies
     subgraph Core ["Core Engine &amp; Database"]
-        DM["LibraryDataManager&lt;br/&gt;(Mutex Protected)"]
-        BDM["BookDownloadManager&lt;br/&gt;(SingleFlight)"]
-        BAI["BookArchiveIntegrator&lt;br/&gt;(Actor)"]
+        DM["LibraryDataManager (Mutex Protected)"]
+        BDM["BookDownloadManager (SingleFlight)"]
+        BAI["BookArchiveIntegrator (Actor)"]
     end
 
-    %% Flow
-    MAC --&gt;|Observe &amp; Action| LVM
-    IOS --&gt;|Observe &amp; Action| LVM
+    LVM --&gt;|"Query / Cache"| DM
+    LVM --&gt;|"Download Book"| BDM
+    LVM --&gt;|"Integrate Archive"| BAI
 
-    LVM --&gt;|Query/Cache| DM
-    LVM --&gt;|Download Book| BDM
-    LVM --&gt;|Integrate Archive| BAI
+    DM --&gt; SQLite[("main.sqlite (Katalog)")]
+    BDM &lt;--&gt;|"Fetch zstd"| GitHub["GitHub Releases"]
 
-    DM --&gt;|Read/Write| SQLite[(main.sqlite)]
-    BDM &lt;--&gt;|Fetch| GitHub((GitHub Releases))</code></pre>
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class MAC,IOS ui;
+    class LVM vm;
+    class DM,BDM,BAI,GitHub store;
+    class SQLite db;</code></pre>
 <hr />
 <h2 id="2-struktur-sub-dokumentasi">2. Struktur Sub-Dokumentasi</h2>
 <p>Modul Library disusun secara modular ke dalam beberapa sub-dokumen teknis:</p>
 <ul>
-<li><strong><a href="models/">Data Models</a></strong>: Model katalog inti (<code>BooksData</code>, <code>CategoryData</code>, <code>Muallif</code>), entitas pembaruan (<code>BookUpdateModels</code>), dan enum filter UI.</li>
-<li><strong><a href="database/">Database &amp; Core Persistence</a></strong>: Ketergantungan erat <code>LibraryDataManager</code> dengan <code>DatabaseManager</code> dan arsitektur caching In-Memory berbasis <code>Mutex</code>.</li>
-<li><strong><a href="download-integration/">Download &amp; Archive Integration</a></strong>: Mekanisme <code>BookDownloadManager</code>, deduplikasi HTTP <code>SingleFlight</code>, dan integrasi arsip <code>BookArchiveIntegrator</code> berbasis Actor.</li>
-<li><strong><a href="stemming/">FTS Indexing &amp; Stemming</a></strong>: Proses pembuatan indeks FTS5, dekompresi Zstd, normalisasi teks Arab, dan migrasi FTS.</li>
-<li><strong><a href="ios/">iOS Implementation</a></strong>: Implementasi SwiftUI (<code>iOSLibraryView</code>), wrapper UIKit (<code>LibraryViewControllerWrapper</code>), toolbar mode, dan offline import.</li>
-<li><strong><a href="macos/">macOS Implementation</a></strong>: Implementasi AppKit (<code>LibraryVC</code>), manajemen outline multi-kolom (<code>LibraryViewManager</code>), dan batch diffing.</li>
+<li><strong><a href="models/">Data Models</a></strong>: Model katalog inti (<code>BooksData</code>, <code>CategoryData</code>, <code>Muallif</code>), entitas pembaruan (<code>BookUpdateModels</code>), dan enum filter antarmuka pengguna.</li>
+<li><strong><a href="database/">Database &amp; Core Persistence</a></strong>: Integrasi <code>LibraryDataManager</code> dengan <code>DatabaseManager</code> dan arsitektur <em>caching in-memory</em> berbasis <code>Mutex</code>.</li>
+<li><strong><a href="download-integration/">Download &amp; Archive Integration</a></strong>: Mekanisme <code>BookDownloadManager</code>, deduplikasi HTTP <code>SingleFlight</code>, dan integrasi arsip <code>BookArchiveIntegrator</code> berbasis <em>Actor</em>.</li>
+<li><strong><a href="stemming/">FTS Indexing &amp; Stemming</a></strong>: Proses pembuatan indeks FTS5, dekompresi Zstandard (zstd), normalisasi teks Arab, dan migrasi FTS.</li>
+<li><strong><a href="ios/">iOS Implementation</a></strong>: Implementasi SwiftUI (<code>iOSLibraryView</code>), jembatan UIKit (<code>LibraryViewControllerWrapper</code>), mode <em>toolbar</em>, dan impor luring (<em>offline import</em>).</li>
+<li><strong><a href="macos/">macOS Implementation</a></strong>: Implementasi AppKit (<code>LibraryVC</code>), manajemen struktur hierarki multi-kolom (<code>LibraryViewManager</code>), dan <em>batch diffing</em>.</li>
 <li><strong><a href="protocols/">Protocols &amp; Delegation</a></strong>: Kontrak <code>LibraryDelegate</code>, <code>LibraryViewDelegate</code>, dan <code>SearchableLibrarySidebar</code>.</li>
-<li><strong><a href="viewmodel/">ViewModel, State &amp; Combine</a></strong>: Arsitektur <code>@Observable LibraryViewModel</code>, pengelolaan state katalog, pagination, filter mode, dan observasi Combine/NotificationCenter.</li>
+<li><strong><a href="viewmodel/">ViewModel, State &amp; Combine</a></strong>: Arsitektur <code>@Observable LibraryViewModel</code>, pengelolaan <em>state</em> katalog, <em>pagination</em>, mode filter, dan observasi Combine/NotificationCenter.</li>
 </ul>
 
 
@@ -3609,6 +3637,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3639,10 +3673,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

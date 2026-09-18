@@ -1518,10 +1518,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#aksi-kontekstual-menu-contextual-menu" class="md-nav__link">
+  <a href="#aksi-menu-kontekstual-contextual-menu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Aksi Kontekstual Menu (Contextual Menu)
+        Aksi Menu Kontekstual (Contextual Menu)
       
     </span>
   </a>
@@ -2799,6 +2799,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3528,10 +3556,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#aksi-kontekstual-menu-contextual-menu" class="md-nav__link">
+  <a href="#aksi-menu-kontekstual-contextual-menu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Aksi Kontekstual Menu (Contextual Menu)
+        Aksi Menu Kontekstual (Contextual Menu)
       
     </span>
   </a>
@@ -3567,7 +3595,7 @@
 
 
 <h1 id="appkit-implementation-macos">AppKit Implementation (macOS)</h1>
-<p>Arsitektur aplikasi pada macOS untuk modul History dirancang secara minimalis. Tidak ada folder khusus <code>macOS/</code> di dalam struktur <code>Source/Features/History/</code>. Sebagai gantinya, History dan Favorites secara cerdas menumpang atau menggunakan ulang (Re-use) <em>View Hierarchy</em> milik <code>LibraryVC</code>.</p>
+<p>Arsitektur aplikasi pada macOS untuk modul History dirancang secara minimalis. Tidak ada folder khusus <code>macOS/</code> di dalam struktur <code>Source/Features/History/</code>. Sebagai gantinya, History dan Favorites secara cerdas memanfaatkan kembali (<em>re-use</em>) hierarki tampilan (<em>View Hierarchy</em>) milik <code>LibraryVC</code>.</p>
 <h2 id="integrasi-diffable-data-source-pada-libraryvc">Integrasi <em>Diffable Data Source</em> pada <code>LibraryVC</code></h2>
 <p>Komponen macOS <code>NSCollectionView</code> pada antarmuka korpus Maktabah (<code>LibraryVC</code>) memiliki opsi segmentasi kontrol di bagian <em>Toolbar</em> (melalui <code>NSSegmentedControl</code>) yang salah satunya memuat opsi <em>History</em>.</p>
 <p>Ketika pengguna beralih mode ke <em>History</em> atau <em>Favorites</em>, pengelola (<em>Manager</em>) pustaka (<code>LibraryViewManager</code>) secara langsung mendengarkan status koleksi array dari <code>HistoryViewModel</code>.</p>
@@ -3580,9 +3608,9 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="n">categoryName</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="n">localized</span><span class="p">:</span><span class="w"> </span><span class="s">"History"</span><span class="p">)</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>Metode injeksi status ini memastikan performa koleksi mulus. Mengandalkan <code>NSCollectionViewDiffableDataSource</code>, perbedaan array yang dihasilkan <code>historyManager.historyBooks</code> otomatis dianimasikan menjadi pergeseran atau pemunculan kartu sampul (<em>Cover Card</em>) tanpa perlu antarmuka visual baru (<code>XIB</code> atau <em>Storyboard</em>).</p>
-<h2 id="aksi-kontekstual-menu-contextual-menu">Aksi Kontekstual Menu (<em>Contextual Menu</em>)</h2>
-<p>Karena dirender di dalam <code>Library</code>, <em>delegate</em> dari NSCollectionView merespons aksi klik-kanan dengan menyelipkan opsi interaktif khusus untuk <em>Favorites</em> dan <em>History</em>.</p>
+<p>Metode injeksi status ini memastikan performa koleksi yang mulus. Mengandalkan <code>NSCollectionViewDiffableDataSource</code>, perbedaan array yang dihasilkan <code>historyManager.historyBooks</code> otomatis dianimasikan menjadi pergeseran atau pemunculan kartu sampul (<em>Cover Card</em>) tanpa perlu antarmuka visual baru (<code>XIB</code> atau <em>Storyboard</em>).</p>
+<h2 id="aksi-menu-kontekstual-contextual-menu">Aksi Menu Kontekstual (<em>Contextual Menu</em>)</h2>
+<p>Karena dirender di dalam <code>Library</code>, <em>delegate</em> dari <code>NSCollectionView</code> merespons aksi klik kanan dengan menyisipkan opsi interaktif khusus untuk <em>Favorites</em> dan <em>History</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Source/Features/Library/macOS/LibraryViewManager.swift</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">let</span><span class="w"> </span><span class="nv">isFav</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">HistoryViewModel</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">isFavorite</span><span class="p">(</span><span class="n">book</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">let</span><span class="w"> </span><span class="nv">isHistory</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">HistoryViewModel</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">historyBookIds</span><span class="p">.</span><span class="bp">contains</span><span class="p">(</span><span class="n">book</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
@@ -3601,8 +3629,8 @@
 <p>Aksi <code>removeHistoryAction</code> secara langsung melakukan relai pendelegasian balik ke:
 <code>HistoryViewModel.shared.removeHistory(for: book.id)</code></p>
 <h2 id="settings-overlay-app">Settings &amp; Overlay App</h2>
-<p>Selain dari <code>LibraryVC</code>, rujukan pada <code>HistoryViewModel</code> di level UI macOS dapat ditemukan di dalam jendela <code>SettingsView.swift</code> (ditampilkan secara <em>overlay</em>), di mana pengguna bisa mengatur preferensi sakelar (<em>Toggle</em>) <code>addBooksOpenedFromSearchResultsToReadingHistory</code>. Opsi ini menentukan secara longgar apakah membuka buku secara serampangan dari bilah pencarian wajib mendaftarkannya ke deretan rekam riwayat History atau tidak.</p>
-<p>Secara teknis, abstraksi arsitektur ini memangkas lebih dari sekian megabita redundansi <em>view code</em> karena modul History sekadar merubah bentuk sebagai filter semantik yang meminjam <em>pipeline renderer</em> modul Library.</p>
+<p>Selain dari <code>LibraryVC</code>, rujukan pada <code>HistoryViewModel</code> di level UI macOS dapat ditemukan di dalam jendela <code>SettingsView.swift</code> (ditampilkan secara <em>overlay</em>), tempat pengguna dapat mengatur preferensi sakelar (<em>Toggle</em>) <code>addBooksOpenedFromSearchResultsToReadingHistory</code>. Opsi ini menentukan apakah membuka buku dari bilah pencarian otomatis mendaftarkannya ke dalam riwayat bacaan atau tidak.</p>
+<p>Secara teknis, abstraksi arsitektur ini mengeliminasi redundansi <em>view code</em> karena modul History berfungsi sebagai filter semantik yang meminjam <em>pipeline renderer</em> modul Library.</p>
 
 
 
@@ -3622,6 +3650,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3652,10 +3686,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

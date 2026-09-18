@@ -630,6 +630,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Arsitektur &amp; Interaksi Komponen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-hierarki-penentuan-tata-letak-layout-router" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Hierarki Penentuan Tata Letak (Layout Router)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-taksonomi-tab-navigasi-iostab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Taksonomi Tab Navigasi (iOSTab)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-siklus-transisi-tata-letak-responsif" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Siklus Transisi Tata Letak Responsif
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -645,10 +684,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct-iosmainview" class="md-nav__link">
+  <a href="#iosmainview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct iOSMainView
+        iOSMainView (Struct)
       
     </span>
   </a>
@@ -656,10 +695,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#enum-iostab" class="md-nav__link">
+  <a href="#iostab-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Enum iOSTab
+        iOSTab (Enum)
       
     </span>
   </a>
@@ -2866,6 +2905,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../features/reader/textview/" class="md-nav__link">
         
   
@@ -3592,6 +3659,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Arsitektur &amp; Interaksi Komponen">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-hierarki-penentuan-tata-letak-layout-router" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Hierarki Penentuan Tata Letak (Layout Router)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-taksonomi-tab-navigasi-iostab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Taksonomi Tab Navigasi (iOSTab)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-siklus-transisi-tata-letak-responsif" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Siklus Transisi Tata Letak Responsif
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3607,10 +3713,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct-iosmainview" class="md-nav__link">
+  <a href="#iosmainview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct iOSMainView
+        iOSMainView (Struct)
       
     </span>
   </a>
@@ -3618,10 +3724,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#enum-iostab" class="md-nav__link">
+  <a href="#iostab-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Enum iOSTab
+        iOSTab (Enum)
       
     </span>
   </a>
@@ -3701,132 +3807,161 @@
 
 
 <h1 id="dokumentasi-ios-core-ui-iosmainview">Dokumentasi iOS Core UI (iOSMainView)</h1>
-<p>Dokumen ini membedah arsitektur dan implementasi antarmuka utama (Core UI) untuk platform iOS pada aplikasi Maktabah, yang berpusat pada <code>iOSMainView</code>.</p>
+<p>Dokumen ini membedah arsitektur dan implementasi antarmuka utama (<em>Core UI</em>) untuk platform iOS pada aplikasi Maktabah yang berpusat pada <code>iOSMainView</code>.</p>
 <h2 id="arsitektur-interaksi-komponen">Arsitektur &amp; Interaksi Komponen</h2>
-<p>Aliran data dan navigasi dimulai dari titik masuk aplikasi (<code>MaktabahApp</code>) menuju <code>iOSMainView</code>, yang kemudian membagi tata letak berdasarkan kelas ukuran layar (Size Class) antara iPhone dan iPad.</p>
-<pre class="mermaid"><code>graph TD
-    App[MaktabahApp] --&gt; Main[iOSMainView]
+<p>Aliran data dan navigasi dimulai dari titik masuk aplikasi (<code>MaktabahApp</code>) menuju <code>iOSMainView</code>, yang kemudian membagi tata letak berdasarkan kelas ukuran layar (<em>Size Class</em>) antara iPhone dan iPad.</p>
+<h3 id="a-hierarki-penentuan-tata-letak-layout-router">A. Hierarki Penentuan Tata Letak (<em>Layout Router</em>)</h3>
+<pre class="mermaid"><code>flowchart TD
+    App["MaktabahApp (@main)"] --&gt; Main["iOSMainView"]
 
-    subgraph iOSMainView State
-        NavMgr[iOSNavigationManager]
-        TabState[selectedTab: iOSTab]
-        CloudKit[CloudKitSyncManager]
-        URLHandler[handleOpenURL]
-    end
+    NavMgr["iOSNavigationManager"]
+    CloudKit["CloudKitSyncManager"]
+    Main &lt;--&gt;|"Environment"| NavMgr
+    Main --&gt;|"Background Sync"| CloudKit
 
-    Main -.-&gt; NavMgr
-    Main -.-&gt; URLHandler
-
-    %% Kunci: Memaksa SizeCheck turun ke bawah subgraph &amp; tetap di tengah
     NavMgr ~~~ SizeCheck
-    URLHandler ~~~ SizeCheck
 
-    Main --&gt; SizeCheck{horizontalSizeClass}
+    Main --&gt; SizeCheck{"horizontalSizeClass?"}
+    SizeCheck --&gt;|"compact (iPhone)"| iPhone["iPhoneLayout (TabView)"]
+    SizeCheck --&gt;|"regular (iPad)"| iPad["iPadLayout (NavigationSplitView)"]
 
-    SizeCheck --&gt;|regular| iPad[iPadLayout]
-    SizeCheck --&gt;|compact| iPhone[iPhoneLayout]
+    iPhone ~~~ Target
+    iPad ~~~ Target
 
-    iPhone --&gt; TabView[TabView]
-    iPad --&gt; SplitView[NavigationSplitView]
+    Target["Target: iOSReaderTabView / Sheet Destinations"]
+    iPhone --&gt; Target
+    iPad --&gt; Target
 
-    TabView --&gt; Viewer(Viewer/Library)
-    TabView --&gt; Search(Search)
-    TabView --&gt; Author(Author)
-    TabView --&gt; Annotations(Annotations)
-    TabView --&gt; History(History)
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
-    SplitView --&gt; Sidebar[Sidebar List]
-    SplitView --&gt; Detail[iOSReaderTabView]
+    class App,Main,iPhone,iPad,Target ui;
+    class NavMgr,CloudKit store;
+    class SizeCheck event;</code></pre>
+<h3 id="b-taksonomi-tab-navigasi-iostab">B. Taksonomi Tab Navigasi (<code>iOSTab</code>)</h3>
+<pre class="mermaid"><code>mindmap
+  root((iOSTab))
+    Viewer
+      icon["books.vertical.fill"]
+      desc["Katalog pustaka &amp; buku"]
+    Search
+      icon["magnifyingglass"]
+      desc["Pencarian teks FTS global"]
+    Author
+      icon["person.2.fill"]
+      desc["Daftar pengarang kitab"]
+    Annotations
+      icon["note.text"]
+      desc["Catatan, sorotan, &amp; penanda"]
+    History
+      icon["clock.fill"]
+      desc["Riwayat bacaan &amp; buku favorit"]</code></pre>
+<h3 id="c-siklus-transisi-tata-letak-responsif">C. Siklus Transisi Tata Letak Responsif</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; DetectSizeClass: Launch iOSMainView
+    DetectSizeClass --&gt; CompactMode: sizeClass == .compact (iPhone)
+    DetectSizeClass --&gt; RegularMode: sizeClass == .regular (iPad/Mac Catalyst)
 
-    Sidebar --&gt; LibraryDest(Library Destination)
-    Sidebar --&gt; SearchDest(Search Destination)
-    Sidebar --&gt; AnnotDest(Annotations Destination)
-    Sidebar --&gt; AuthorDest(Author Destination)</code></pre>
+    state CompactMode {
+        [*] --&gt; RenderTabView
+        RenderTabView --&gt; SwitchTabs
+        SwitchTabs --&gt; OpenReaderFullscreen
+    }
+
+    state RegularMode {
+        [*] --&gt; RenderNavigationSplitView
+        RenderNavigationSplitView --&gt; TwoColumnLayout
+        TwoColumnLayout --&gt; SidebarNavigation
+        TwoColumnLayout --&gt; EmbeddedReaderDetail
+    }</code></pre>
 <h2 id="komponen-inti-iosmainview">Komponen Inti: iOSMainView</h2>
-<p><code>iOSMainView</code> adalah kontainer utama yang merespons perubahan <em>environment</em> dan menentukan tata letak yang tepat.</p>
-<h3 id="struct-iosmainview">Struct <code>iOSMainView</code></h3>
-<p>Tanggung jawab utama dari <code>iOSMainView</code>:</p>
+<p><code>iOSMainView</code> adalah kontainer utama yang merespons perubahan <em>environment</em> dan menentukan tata letak yang sesuai.</p>
+<h3 id="iosmainview-struct"><code>iOSMainView</code> (Struct)</h3>
+<p>Tanggung jawab utama <code>iOSMainView</code>:</p>
 <ul>
-<li><strong>Routing Berbasis Lingkungan</strong>: Mengecek <code>horizontalSizeClass</code>. Jika <code>.regular</code> (iPad/Mac), menggunakan <code>iPadLayout</code>. Jika sebaliknya (iPhone), menggunakan <code>iPhoneLayout</code>.</li>
-<li><strong>Manajemen State Global</strong>: Memegang <code>@State</code> untuk navigasi (<code>iOSNavigationManager</code>), tab yang dipilih (<code>selectedTab</code>), visibilitas kolom iPad, dan status sheet (Pengaturan/Donasi).</li>
-<li><strong>Deep Linking</strong>: Menangani <code>.onOpenURL</code> untuk membuka anotasi spesifik atau riwayat bacaan berdasarkan URL WidgetKit.</li>
-<li><strong>Siklus Hidup (Lifecycle)</strong>: Mendengarkan perubahan <code>scenePhase</code>. Saat aktif, memicu sinkronisasi <code>CloudKitSyncManager</code> dan mencatat aktivasi aplikasi di <code>DonationManager</code>.</li>
+<li><strong>Routing Berbasis Lingkungan</strong>: Memeriksa <code>horizontalSizeClass</code>. Jika bernilai <code>.regular</code> (iPad / Mac Catalyst), sistem merender <code>iPadLayout</code>. Jika bernilai <code>.compact</code> (iPhone), sistem merender <code>iPhoneLayout</code>.</li>
+<li><strong>Manajemen State Global</strong>: Mengelola <code>@State</code> untuk navigasi (<code>iOSNavigationManager</code>), tab yang dipilih (<code>selectedTab</code>), visibilitas kolom iPad, serta status tampilan <em>sheet</em> (Pengaturan / Donasi).</li>
+<li><strong>Deep Linking</strong>: Menangani <code>.onOpenURL</code> untuk membuka anotasi tertentu atau riwayat bacaan berdasarkan URL WidgetKit.</li>
+<li><strong>Siklus Hidup (<em>Lifecycle</em>)</strong>: Memantau perubahan <code>scenePhase</code>. Saat bernilai <code>.active</code>, sistem memicu sinkronisasi <code>CloudKitSyncManager</code> dan mencatat aktivasi aplikasi pada <code>DonationManager</code>.</li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Lifecycle</p>
-<p><code>iOSMainView</code> bereaksi pada <code>.active</code> scene phase untuk mengambil perubahan sinkronisasi (CloudKit) dan mengelola status donasi secara otomatis.</p>
+<p><code>iOSMainView</code> bereaksi pada fase <em>scene</em> <code>.active</code> untuk menyerap perubahan sinkronisasi CloudKit dan memperbarui status donasi secara otomatis.</p>
 </div>
-<h3 id="enum-iostab">Enum <code>iOSTab</code></h3>
-<p>Enum <code>iOSTab</code> mendefinisikan menu navigasi utama. Tersedia 5 kasus:</p>
+<h3 id="iostab-enum"><code>iOSTab</code> (Enum)</h3>
+<p>Enum <code>iOSTab</code> mendefinisikan menu navigasi utama dengan 5 pilihan:</p>
 <ul>
 <li><code>viewer</code> (Perpustakaan)</li>
 <li><code>search</code> (Pencarian)</li>
-<li><code>author</code> (Perawi/Narrators)</li>
+<li><code>author</code> (Perawi / <em>Narrators</em>)</li>
 <li><code>annotations</code> (Anotasi)</li>
 <li><code>history</code> (Riwayat &amp; Favorit)</li>
 </ul>
-<p>Masing-masing memiliki properti dinamis:</p>
+<p>Setiap <em>case</em> memiliki properti pendukung:</p>
 <ul>
-<li><code>id</code>: Berbasis <code>rawValue</code> (Int) untuk identifikasi unik.</li>
-<li><code>title</code>: String terlokalisasi.</li>
-<li><code>icon</code>: Nama ikon <em>SFSymbol</em>.</li>
-<li><code>appMode</code>: Pemetaan ke <code>AppMode</code> (mode global aplikasi).</li>
+<li><code>id</code>: Nilai integer unik berbasis <code>rawValue</code>.</li>
+<li><code>title</code>: Teks judul terlokalisasi.</li>
+<li><code>icon</code>: Nama ikon <em>SF Symbols</em>.</li>
+<li><code>appMode</code>: Pemetaan ke tipe <code>AppMode</code> global.</li>
 </ul>
 <h2 id="navigasi-dan-tata-letak">Navigasi dan Tata Letak</h2>
-<p>Pendekatan UI Maktabah sangat adaptif, memisahkan implementasi navigasi secara drastis untuk iPhone dan iPad.</p>
+<p>Pendekatan antarmuka Maktabah bersifat adaptif dengan memisahkan alur navigasi antara iPhone dan iPad:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">iPhone (TabView)</label><label for="__tabbed_1_2">iPad (Sidebar)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <h3 id="iphonelayout"><code>iPhoneLayout</code></h3>
-<p>Di iPhone, aplikasi menggunakan standar <strong>TabView</strong> di bagian bawah layar. <code>iPhoneLayout</code> membungkus setiap menu utama (tab) dengan <code>NavigationStack</code> sendiri, sehingga pengguna bisa menavigasi sub-halaman di satu tab tanpa mempengaruhi tab lainnya.</p>
+<p>Pada iPhone, aplikasi menggunakan bilah tab (<strong>TabView</strong>) di bagian bawah layar. <code>iPhoneLayout</code> membungkus setiap menu tab dengan <code>NavigationStack</code> tersendiri sehingga navigasi subhalaman di satu tab tidak memengaruhi tab lainnya.</p>
 <p>Fitur utama:</p>
 <ul>
-<li><strong>Penyimpanan State Tab</strong>: Menggunakan <code>@AppStorage("lastSelectedTab")</code> agar aplikasi mengingat tab terakhir saat dibuka kembali.</li>
-<li><strong>Tab Selection</strong>: Saat pengguna berpindah tab, metode <code>.onChange</code> akan menginstruksikan <code>iOSNavigationManager</code> untuk mengganti mode via <code>switchToMode(newValue.appMode)</code>.</li>
-<li><strong>Pencarian Terintegrasi</strong>: Setiap <code>NavigationStack</code> dalam tab mengimplementasikan <code>.searchable(...)</code> dengan <code>Binding</code> ke teks pencarian pada ViewModel masing-masing.</li>
+<li><strong>Penyimpanan State Tab</strong>: Menggunakan <code>@AppStorage("lastSelectedTab")</code> agar aplikasi mempertahankan tab terakhir yang aktif saat dibuka kembali.</li>
+<li><strong>Pemilihan Tab (<em>Tab Selection</em>)</strong>: Saat pengguna berpindah tab, blok <code>.onChange</code> menginstruksikan <code>iOSNavigationManager</code> untuk mengganti mode via <code>switchToMode(newValue.appMode)</code>.</li>
+<li><strong>Pencarian Terintegrasi</strong>: Setiap <code>NavigationStack</code> mengimplementasikan modifier <code>.searchable(...)</code> yang terikat (<em>binding</em>) ke teks pencarian pada ViewModel masing-masing.</li>
 </ul>
 <p>Struktur Tab:</p>
 <ul>
 <li><strong>Library (Viewer)</strong>: Memanggil <code>iOSLibraryView()</code>.</li>
 <li><strong>Search</strong>: Memanggil <code>SearchModeView()</code>.</li>
 <li><strong>Author</strong>: Memanggil <code>AuthorModeView()</code>.</li>
-<li><strong>Annotations</strong>: Memanggil <code>AnnotationListView()</code> dengan <code>.searchScopes</code> tambahan.</li>
-<li><strong>History</strong>: Memanggil <code>iOSHistoryView()</code> dan menyertakan toolbar khusus <code>HomeToolbarItems</code> untuk menambah favorit.</li>
+<li><strong>Annotations</strong>: Memanggil <code>AnnotationListView()</code> dengan dukungan <code>.searchScopes</code>.</li>
+<li><strong>History</strong>: Memanggil <code>iOSHistoryView()</code> dan menyertakan tombol <code>HomeToolbarItems</code> untuk menambah favorit.</li>
 </ul>
 </div>
 <div class="tabbed-block">
 <h3 id="ipadlayout"><code>iPadLayout</code></h3>
-<p>Di iPad, aplikasi memanfaatkan <strong>NavigationSplitView</strong> (layout 2-3 kolom) untuk memaksimalkan ukuran layar lebar. <code>iPadLayout</code> sangat berbeda dari iPhone karena navigasi diletakkan di sidebar (kolom kiri) dan konten pembaca (Reader) di kolom detail (kanan).</p>
+<p>Pada iPad, aplikasi menggunakan <strong>NavigationSplitView</strong> (tata letak 2–3 kolom) untuk memaksimalkan area layar lebar. Navigasi ditempatkan pada <em>sidebar</em> (kolom kiri) dan pembaca buku (<em>Reader</em>) pada kolom detail (kanan).</p>
 <p>Fitur utama:</p>
 <ul>
-<li><strong>Sidebar (Master)</strong>: Menampilkan menu tab dalam format <code>List</code> dengan <code>ThemeList</code>.</li>
-<li><strong>Integrasi History &amp; Favorites</strong>: Berbeda dengan iPhone yang mendedikasikan satu tab penuh, di iPad, bagian History dan Favorites langsung dimuat di dalam Sidebar (menggunakan <code>HistorySection</code> dan <code>FavoritesSection</code>).</li>
-<li><strong>Filter Sidebar Lokal</strong>: Sidebar memiliki bar pencarian khusus (<code>sidebarSearchText</code>) yang berguna untuk memfilter daftar buku favorit dan riwayat secara instan (<code>filterSidebarBooks</code>).</li>
-<li><strong>Navigasi Destination</strong>: Klik pada item sidebar <code>.navigationDestination</code> akan mengubah area tengah/konten dengan view bersangkutan (<code>libraryDestination</code>, <code>searchDestination</code>, dll.).</li>
-<li><strong>Reader Konstan</strong>: Kolom detail/kanan secara persisten menggunakan <code>iOSReaderTabView()</code>, sehingga perpindahan mode (Pencarian ke Perpustakaan) tidak menutup buku yang sedang dibaca.</li>
+<li><strong>Sidebar (Master)</strong>: Menampilkan menu navigasi dalam format <code>List</code> dengan <code>ThemeList</code>.</li>
+<li><strong>Integrasi Riwayat &amp; Favorit</strong>: Pada iPad, bagian Riwayat dan Favorit langsung dimuat di dalam <em>sidebar</em> (menggunakan <code>HistorySection</code> dan <code>FavoritesSection</code>).</li>
+<li><strong>Filter Sidebar Lokal</strong>: <em>Sidebar</em> memiliki kolom pencarian khusus (<code>sidebarSearchText</code>) untuk menyaring daftar buku favorit dan riwayat secara langsung (<code>filterSidebarBooks</code>).</li>
+<li><strong>Tujuan Navigasi (<em>Destination</em>)</strong>: Memilih item <em>sidebar</em> akan memicu <code>.navigationDestination</code> untuk memperbarui area konten dengan tampilan yang sesuai (<code>libraryDestination</code>, <code>searchDestination</code>, dll.).</li>
+<li><strong>Reader Persisten</strong>: Kolom detail kanan menampilkan <code>iOSReaderTabView()</code> secara persisten sehingga perpindahan menu pada <em>sidebar</em> tidak menutup buku yang sedang dibaca.</li>
 </ul>
-<p>Saat sebuah buku dibuka dari History/Favorites, <code>iPadLayout</code> akan memanggil <code>bManager.openBook(...)</code> dengan konten ID terakhir.</p>
+<p>Saat buku dibuka dari Riwayat atau Favorit, <code>iPadLayout</code> memanggil <code>bManager.openBook(...)</code> dengan ID konten terakhir.</p>
 </div>
 </div>
 </div>
 <h2 id="komponen-ui-tambahan">Komponen UI Tambahan</h2>
-<p>Beberapa ekstensi dan struktur tambahan digunakan di seluruh Core UI untuk menyeragamkan presentasi:</p>
+<p>Beberapa ekstensi dan struktur pembantu digunakan untuk menyeragamkan presentasi antarmuka:</p>
 <ul>
 <li>
 <p><strong>Modifier <code>adaptiveReaderPush</code></strong>:
-    Fungsi khusus dalam <code>extension View</code> yang mendeklarasikan <code>.navigationDestination(item: ...)</code> untuk membuka layar pembaca (<code>iOSReaderView</code>). Modifier ini secara cerdas mencari tab yang sudah terbuka di <code>iOSNavigationManager</code> untuk mempertahankan riwayat bacaan/status viewModel.</p>
+    Ekstensi pada <code>View</code> yang mendeklarasikan <code>.navigationDestination(item: ...)</code> untuk membuka layar pembaca (<code>iOSReaderView</code>). Modifier ini secara cerdas mencari tab yang sudah terbuka di <code>iOSNavigationManager</code> guna mempertahankan status ViewModel dan riwayat bacaan.</p>
 </li>
 <li>
 <p><strong>Modifier <code>toolbarGeneral</code></strong>:
-    Menambahkan tombol ikon pengaturan (gear) pada sisi <em>leading</em> toolbar untuk semua halaman tab.</p>
+    Menambahkan tombol ikon pengaturan (<em>gear</em>) pada sisi <em>leading</em> <em>toolbar</em> di semua halaman tab.</p>
 </li>
 <li>
 <p><strong><code>CustomToolbarSpacer</code></strong>:
-    Objek pembantu <code>ToolbarContent</code> yang membungkus <code>ToolbarSpacer</code> asli. Digunakan untuk mengatasi keterbatasan versi API iOS dengan memberikan spasi toolbar pada <code>.topBarLeading</code>.</p>
+    Komponen pembantu <code>ToolbarContent</code> yang membungkus <code>ToolbarSpacer</code> bawaan untuk memberikan spasi <em>toolbar</em> pada <code>.topBarLeading</code>.</p>
 </li>
 <li>
 <p><strong><code>HomeToolbarItems</code></strong>:
-    Berada di <code>iPhoneLayout.swift</code>, ini adalah kumpulan kontrol toolbar ringkas yang berisi tombol Pengaturan (kiri) dan tombol Tambah Favorit (kanan).</p>
+    Kumpulan kontrol <em>toolbar</em> pada <code>iPhoneLayout.swift</code> yang memuat tombol Pengaturan (kiri) dan tombol Tambah Favorit (kanan).</p>
 </li>
 </ul>
 
@@ -3848,6 +3983,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3878,10 +4019,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -384,10 +384,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#struktur-proyek-layering" class="md-nav__link">
+  <a href="#struktur-proyek-lapisan-arsitektur" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struktur Proyek &amp; Layering
+        Struktur Proyek &amp; Lapisan Arsitektur
       
     </span>
   </a>
@@ -2849,6 +2849,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../features/reader/textview/" class="md-nav__link">
         
   
@@ -3628,10 +3656,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#struktur-proyek-layering" class="md-nav__link">
+  <a href="#struktur-proyek-lapisan-arsitektur" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struktur Proyek &amp; Layering
+        Struktur Proyek &amp; Lapisan Arsitektur
       
     </span>
   </a>
@@ -3667,15 +3695,15 @@
 
 
 <h1 id="getting-started">Getting Started</h1>
-<p>Panduan untuk menyiapkan lingkungan pengembangan (development environment) dan memahami struktur dasar proyek Maktabah.</p>
+<p>Panduan untuk menyiapkan lingkungan pengembangan (<em>development environment</em>) dan memahami struktur dasar proyek Maktabah.</p>
 <h2 id="prasyarat-lingkungan">Prasyarat Lingkungan</h2>
 <ul>
 <li><strong>OS</strong>: macOS 15+</li>
 <li><strong>IDE</strong>: Xcode 26+</li>
-<li><strong>Code Style</strong>: Gunakan <code>SwiftFormat</code> dengan konfigurasi <code>.swiftFormat</code> di Root Folder.</li>
+<li><strong>Code Style</strong>: Menggunakan <code>SwiftFormat</code> dengan konfigurasi <code>.swiftFormat</code> pada direktori <em>root</em>.</li>
 </ul>
 <h2 id="build-run">Build &amp; Run</h2>
-<p>Maktabah dikembangkan untuk berjalan di macOS dan iOS. Berikut perintah untuk melakukan build proyek melalui <code>xcodebuild</code>:</p>
+<p>Maktabah dikembangkan untuk berjalan di macOS dan iOS. Berikut adalah perintah untuk mengompilasi (<em>build</em>) proyek menggunakan <code>xcodebuild</code>:</p>
 <h3 id="macos-directdeveloper-id-version">macOS (Direct/Developer ID Version)</h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>xcodebuild<span class="w"> </span>build<span class="w"> </span>-project<span class="w"> </span>Maktabah.xcodeproj<span class="w"> </span>-scheme<span class="w"> </span>Maktabah-Direct<span class="w"> </span>-configuration<span class="w"> </span>Debug
 </span></code></pre></div>
@@ -3687,19 +3715,19 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>xcodebuild<span class="w"> </span>build<span class="w"> </span>-project<span class="w"> </span>Maktabah.xcodeproj<span class="w"> </span>-scheme<span class="w"> </span>Maktabah-iOS<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>-destination<span class="w"> </span><span class="s2">"platform=iOS Simulator,name=iPad Pro 11-inch (M3),OS=26.3.1"</span><span class="w"> </span>-configuration<span class="w"> </span>Debug
 </span></code></pre></div>
-<h2 id="struktur-proyek-layering">Struktur Proyek &amp; Layering</h2>
-<p>Proyek dibagi menjadi tiga lapisan utama dalam folder <code>Source/</code>:</p>
+<h2 id="struktur-proyek-lapisan-arsitektur">Struktur Proyek &amp; Lapisan Arsitektur</h2>
+<p>Proyek terbagi ke dalam empat lapisan utama pada direktori <code>Source/</code>:</p>
 <ol>
-<li><strong><code>Source/Core/</code></strong>: Logika bisnis platform-agnostik. Mencakup manajemen SQLite, CloudKit sync, concurrent FTS5 search engine, pemrosesan teks Arab, dan App Coordinator.</li>
-<li><strong><code>Source/Features/</code></strong>: Modul berbasis <em>Domain-Driven Design</em> menggunakan arsitektur MVVM (Model-View-ViewModel). Meliputi Reader, Library, Annotations, Bookmarks, History, Search, Narrator, Quran, dan Widget.</li>
-<li><strong><code>Source/UI/</code></strong>: Presentasi platform-spesifik. Terdiri dari AppKit untuk macOS (<code>SplitVC</code>, <code>IbarotTextView</code>) dan SwiftUI/UIKit bridge untuk iOS (<code>MaktabahApp</code>, <code>iOSIbarotTextView</code>).</li>
-<li><strong><code>Source/Extensions/</code></strong>: Ekstensi <em>cross-platform</em> Foundation, AppKit, dan UIKit.</li>
+<li><strong><code>Source/Core/</code></strong>: Logika bisnis yang bersifat lintas platform (<em>platform-agnostic</em>). Mencakup pengelolaan SQLite, sinkronisasi CloudKit, mesin pencari FTS5 konkuren, pemrosesan teks Arab, serta App Coordinator.</li>
+<li><strong><code>Source/Features/</code></strong>: Modul berbasis <em>Domain-Driven Design</em> menggunakan pola arsitektur MVVM (Model-View-ViewModel). Meliputi modul Reader, Library, Annotations, Bookmarks, History, Search, Narrator, Quran, dan Widget.</li>
+<li><strong><code>Source/UI/</code></strong>: Lapisan tampilan spesifik platform. Terdiri dari AppKit untuk macOS (<code>SplitVC</code>, <code>IbarotTextView</code>) serta jembatan antarmuka SwiftUI/UIKit untuk iOS (<code>MaktabahApp</code>, <code>iOSIbarotTextView</code>).</li>
+<li><strong><code>Source/Extensions/</code></strong>: Ekstensi lintas platform (<em>cross-platform</em>) untuk Foundation, AppKit, dan UIKit.</li>
 </ol>
 <h2 id="dependensi-eksternal">Dependensi Eksternal</h2>
-<p>Maktabah meminimalkan dependensi eksternal, tetapi menggunakan beberapa package lokal:</p>
+<p>Maktabah meminimalkan dependensi pihak ketiga dan mengutamakan paket lokal:</p>
 <ul>
-<li><code>Packages/zstd</code> - Dekompresi Zstandard untuk core DB.</li>
-<li><code>Packages/Sparkle</code> - Auto-update untuk macOS (hanya pada skema Maktabah-Direct).</li>
+<li><code>Packages/zstd</code> — Dekompresi Zstandard untuk berkas basis data inti.</li>
+<li><code>Packages/Sparkle</code> — Mekanisme pembaruan otomatis (<em>auto-update</em>) untuk macOS (khusus skema Maktabah-Direct).</li>
 </ul>
 
 
@@ -3720,6 +3748,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3750,10 +3784,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/extra.js"></script>
       
     
   </body>

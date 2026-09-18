@@ -88,7 +88,7 @@
 
   /* Accent & Tautan */
   --md-accent-fg-color: #ff9300;
-  --md-accent-fg-color--transparent: rgba(255, 147, 0, 0.15);
+  --md-accent-fg-color--transparent: rgba(100, 63, 10, 1);
   --md-accent-bg-color: #403b31;
   --md-accent-bg-color--light: #403b31;
 
@@ -169,6 +169,25 @@
   background-color: #786d5c;
 }
 
+/* ===== 1. Padding & margin atas bawaan MkDocs ===== */
+.md-main__inner {
+  padding-top: 1;
+  margin-top: 0;
+}
+
+.md-content__inner {
+  padding-top: 1;
+}
+
+/* ===== 2. Kunci elemen ke bagian atas (Sticky) ===== */
+/* Ganti .elemen-target dengan class elemen yang ingin kamu buat menempel */
+.elemen-target {
+  position: sticky;
+  top: 1;
+  /* Gunakan var(--md-header-height, 48px) jika header MkDocs aktif */
+  z-index: 2;
+}
+
 /* ===== Tipografi & Lebar Paragraf ===== */
 .md-typeset>p,
 .md-typeset>ul,
@@ -182,41 +201,26 @@
 }
 
 .mermaid {
-  display: flex;
-  justify-content: center;
   overflow-x: auto;
   max-width: 100%;
   margin-bottom: 1rem;
 }
 
-/* Memastikan teks di dalam diagram tidak mengecil di perangkat seluler */
+/* Jaga ukuran alami SVG agar tidak disusutkan, container yang scroll */
 .mermaid svg {
-  min-width: 800px;
+  max-width: unset !important;
   height: auto;
 }
 
-/* ===== 1. Padding & margin atas bawaan MkDocs ===== */
-.md-main__inner {
-  padding-top: 1;
-  margin-top: 0;
-}
-
-.md-content__inner {
-  padding-top: 1;
-}
-
-/* Margin atas pada heading / elemen pertama artikel */
-.md-typeset> :first-child,
-.md-typeset h1:first-child {
-  margin-top: 1;
-  padding-top: 1;
-}
-
-/* ===== 2. Kunci elemen ke bagian atas (Sticky) ===== */
-/* Ganti .elemen-target dengan class elemen yang ingin kamu buat menempel */
-.elemen-target {
-  position: sticky;
-  top: 1;
-  /* Gunakan var(--md-header-height, 48px) jika header MkDocs aktif */
-  z-index: 2;
+/* ===== Reading Progress Bar ===== */
+#reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--md-primary-fg-color), var(--md-accent-fg-color));
+  z-index: 100;
+  transition: width 0.1s ease-out;
+  pointer-events: none;
 }

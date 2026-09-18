@@ -2866,6 +2866,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3701,11 +3729,11 @@
 
 
 <h1 id="database-storage">Database &amp; Storage</h1>
-<p>Subsistem persistensi lokal untuk modul History dijalankan oleh kelas Singleton <code>HistoryDatabaseManager</code>. Kelas ini berfungsi sebagai abstraksi basis data dan pembungkus (<em>wrapper</em>) eksekusi CRUD ke <code>SQLiteDatabase</code>. File ini bermukim di <code>Source/Features/History/Database/HistoryDatabaseManager.swift</code>.</p>
+<p>Subsistem persistensi lokal untuk modul History dikelola oleh <em>class</em> Singleton <code>HistoryDatabaseManager</code>. <em>Class</em> ini berfungsi sebagai abstraksi basis data dan pembungkus (<em>wrapper</em>) eksekusi CRUD ke <code>SQLiteDatabase</code>. Berkas ini berlokasi di <code>Source/Features/History/Database/HistoryDatabaseManager.swift</code>.</p>
 <h2 id="konfigurasi-sqlite">Konfigurasi SQLite</h2>
-<p>Basis data untuk History ditempatkan dalam arsip terpisah dari korpus buku (<code>main.sqlite</code>). Arsipnya dinamai <code>History.sqlite</code> dan berada berdampingan dengan direktori <code>Annotations</code> milik pengguna di <code>~/Library/Application Support/Maktabah/...</code></p>
+<p>Basis data untuk History ditempatkan dalam arsip terpisah dari korpus buku (<code>main.sqlite</code>). Berkasnya dinamai <code>History.sqlite</code> dan berada berdampingan dengan direktori <code>Annotations</code> milik pengguna di <code>~/Library/Application Support/Maktabah/...</code></p>
 <h3 id="skema-tabel">Skema Tabel</h3>
-<p>Kelas ini mendirikan 2 tabel inti jika belum terinisialisasi.</p>
+<p><em>Class</em> ini menginisialisasi 2 tabel inti:</p>
 <div class="language-sql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">-- Tabel entri metadata pembacaan</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">reading_entries</span><span class="w"> </span><span class="p">(</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">book_id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
@@ -3724,27 +3752,27 @@
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="n">book_id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">);</span>
 </span></code></pre></div>
-<p>Tabel <code>history_order</code> berfungsi secara khusus untuk melestarikan urutan linear sejarah pengguna secara persis (LIFO), di mana <em>record</em> terbaru akan memiliki <em>position</em> 0. Hal ini jauh lebih stabil ketimbang sekadar bergantung pada rentang stempel waktu (<code>updated_at</code>) yang mungkin bisa bertabrakan antar-perangkat.</p>
+<p>Tabel <code>history_order</code> berfungsi secara khusus untuk mempertahankan urutan linear riwayat pengguna secara presisi (LIFO), di mana rekaman terbaru menempati <code>position</code> 0. Pendekatan ini lebih deterministik dibandingkan hanya bergantung pada stempel waktu (<code>updated_at</code>) yang berpotensi memiliki resolusi identik antarperangkat.</p>
 <h3 id="mode-operasional-wal-write-ahead-logging">Mode Operasional WAL (Write-Ahead Logging)</h3>
-<p>Sejalan dengan komponen Maktabah lainnya, koneksi pada basis data dipaksa menggunakan mode WAL.</p>
+<p>Sejalan dengan komponen Maktabah lainnya, koneksi basis data dikonfigurasi menggunakan mode WAL.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="n">SQLiteDatabase</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">.</span><span class="n">path</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">db</span><span class="p">.</span><span class="n">enableWALMode</span><span class="p">()</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">db</span><span class="p">.</span><span class="n">checkpoint</span><span class="p">()</span><span class="w"> </span><span class="c1">// Flush jaminan WAL sebelum transaksi dimulai</span>
 </span></code></pre></div>
-<p>Mode WAL memungkinkan modul History secara bersamaan mencatatkan pembaruan parameter (<em>seperti <code>updateLastContentId</code> terus menerus saat <em>scrolling</em></em>), sembari sinkronisasi CloudKit tetap bisa menarik dan mengiterasi data yang sudah ada di utas (<em>thread</em>) yang berlainan tanpa mengunci seluruh basis data (<em>database lock</em>). </p>
-<p>Untuk mengatasi parameter dalam <em>bulk</em>, <code>HistoryDatabaseManager</code> mengeksekusi operasi <code>INSERT OR REPLACE</code> melalui antrean dengan ukuran <em>batch</em> 50 demi mencegah batas atas (<em>SQLite parameter limits</em>) jebol (SQLite hanya mengizinkan batas statis maksimal 999 parameter di tiap satu transaksi sisipan/ <em>insert command</em>).</p>
+<p>Mode WAL memungkinkan modul History mencatatkan pembaruan parameter secara bersamaan (seperti <code>updateLastContentId</code> saat <em>scrolling</em>), sementara sinkronisasi CloudKit tetap dapat membaca dan mengiterasi data yang ada di <em>thread</em> berbeda tanpa mengunci seluruh basis data (<em>database lock contention</em>). </p>
+<p>Untuk menangani parameter dalam jumlah besar, <code>HistoryDatabaseManager</code> mengeksekusi operasi <code>INSERT OR REPLACE</code> melalui antrean dengan ukuran <em>batch</em> 50 demi mencegah pelampauan batas parameter SQLite (batas standar SQLite maksimal 999 parameter per transaksi <em>insert</em>).</p>
 <h2 id="thread-safety-concurrency">Thread-Safety &amp; Concurrency</h2>
-<p>Meskipun menggunakan kelas biasa (bukan Actor model via tipe <code>actor</code> Swift) dan dianotasi dengan <code>@unchecked Sendable</code>, <code>HistoryDatabaseManager</code> memastikan <em>thread safety</em> berlindung di balik <em>lock</em> reklusif (<code>NSRecursiveLock</code> atau flag <code>SQLITE_OPEN_FULLMUTEX</code>) yang diproses di internal kelas modul kustom <code>SQLiteDatabase</code>.</p>
+<p>Meskipun bertipe <em>class</em> biasa (bukan model <code>actor</code>) dan dianotasi dengan <code>@unchecked Sendable</code>, <code>HistoryDatabaseManager</code> menjamin <em>thread-safety</em> melalui <em>lock</em> reklusif (<code>NSRecursiveLock</code> atau flag <code>SQLITE_OPEN_FULLMUTEX</code>) yang diproses di internal modul <code>SQLiteDatabase</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">transaction</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">block</span><span class="p">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="kr">throws</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Void</span><span class="p">)</span><span class="w"> </span><span class="kr">throws</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">_db</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="n">_db</span><span class="p">.</span><span class="n">transaction</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Metode <code>transaction</code> bertindak sebagai fasilitator aman bagi iterasi sisipan skala besar (<code>upsertEntries</code>).</p>
+<p>Metode <code>transaction</code> bertindak sebagai fasilitator aman bagi iterasi penyisipan skala besar (<code>upsertEntries</code>).</p>
 <h2 id="alur-sinkronisasi-cloudkit">Alur Sinkronisasi CloudKit</h2>
-<p>Modul History terhubung dengan CloudKit melalui kolaborasi <code>HistoryDatabaseManager</code>, <code>HistoryViewModel</code>, <code>HistorySyncHandler</code>, dan <code>CloudKitSyncManager</code>. Sinkronisasi berjalan dua arah menggunakan zona privat kustom (<em>Private Database Custom Zone</em>) agar mendukung notifikasi perubahan berbasis delta (<em>CKFetchRecordZoneChangesOperation</em>).</p>
+<p>Modul History terhubung dengan CloudKit melalui kolaborasi antara <code>HistoryDatabaseManager</code>, <code>HistoryViewModel</code>, <code>HistorySyncHandler</code>, dan <code>CloudKitSyncManager</code>. Sinkronisasi berjalan dua arah menggunakan zona privat kustom (<em>Private Database Custom Zone</em>) guna mendukung notifikasi perubahan berbasis delta (<code>CKFetchRecordZoneChangesOperation</code>).</p>
 <h3 id="1-representasi-ckrecord-pemetaan-field">1. Representasi CKRecord &amp; Pemetaan Field</h3>
-<p>Model <code>ReadingEntry</code> mengimplementasikan protokol <code>CloudKitSyncable</code> dan dipetakan ke record CloudKit bertipe <code>ReadingEntry</code> via <code>HistorySyncHandler</code>:</p>
+<p>Model <code>ReadingEntry</code> mengadopsi <em>protocol</em> <code>CloudKitSyncable</code> dan dipetakan ke rekaman CloudKit bertipe <code>ReadingEntry</code> via <code>HistorySyncHandler</code>:</p>
 <table>
 <thead>
 <tr>
@@ -3789,7 +3817,7 @@
 <td><code>positionUpdatedAt</code></td>
 <td><code>positionUpdatedAt</code></td>
 <td><code>Date?</code></td>
-<td>Waktu posisi scroll diperbarui</td>
+<td>Waktu posisi <em>scroll</em> diperbarui</td>
 </tr>
 <tr>
 <td><code>isFavorite</code></td>
@@ -3806,41 +3834,76 @@
 </tbody>
 </table>
 <h3 id="2-alur-sinkronisasi-keluar-upload-delete">2. Alur Sinkronisasi Keluar (Upload &amp; Delete)</h3>
-<pre class="mermaid"><code>graph TD
-    UI[Aksi Pengguna: Baca / Favorit / Hapus] --&gt; VM[HistoryViewModel]
-    VM --&gt;|Upsert Entry &amp; Update Order| DB[HistoryDatabaseManager]
-    DB --&gt;|Catat Antrean| Pending[SyncPendingStore&lt;br/&gt;operation: upload / delete]
+<pre class="mermaid"><code>flowchart TD
+    ACT(["Aksi Pengguna: Baca / Favorit / Hapus"]) --&gt; VM["HistoryViewModel"]
+    VM --&gt;|"Upsert Entry &amp; Update Order"| DB["HistoryDatabaseManager"]
 
-    VM --&gt;|Upload Langsung| CK[CloudKitSyncManager.shared.uploadHistory]
-    VM --&gt;|Batch Delete Debounce 3s| CKDel[CloudKitSyncManager.shared.delete]
+    DB ~~~ STORES
 
-    CK --&gt;|Kirim Batch CKRecord| CloudKit((CloudKit Private Zone))
-    CKDel --&gt;|Hapus Remote Record| CloudKit
+    subgraph STORES ["Persistensi Lokal"]
+        Pending[("SyncPendingStore (Queue)")]
+        SQLite[("History.sqlite (WAL Mode)")]
+    end
 
-    CloudKit --&gt;|Sukses| ClearPending[Hapus ID dari SyncPendingStore]</code></pre>
+    DB --&gt;|"Catat Antrean"| Pending
+    DB --&gt;|"Simpan Lokal"| SQLite
+
+    VM --&gt;|"Upload Langsung"| CK["CloudKitSyncManager (Upload)"]
+    VM --&gt;|"Batch Delete Debounce 3s"| CKDel["CloudKitSyncManager (Delete)"]
+
+    CloudKit[("CloudKit Private Zone")]
+    CK --&gt;|"Kirim Batch CKRecord"| CloudKit
+    CKDel --&gt;|"Hapus Remote Record"| CloudKit
+
+    CloudKit --&gt;|"Sukses"| ClearPending(["Hapus ID dari SyncPendingStore"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class ACT,ClearPending event;
+    class VM vm;
+    class DB,CK,CKDel store;
+    class Pending,SQLite,CloudKit db;</code></pre>
 <ul>
-<li><strong>Unggahan Langsung</strong>: Ketika pengguna membuka atau memfavoritkan buku, entri di-upsert ke database lokal dan diantrekan ke <code>SyncPendingStore</code>. <code>HistoryViewModel</code> segera memicu unggahan ke CloudKit.</li>
-<li><strong>Debounced Batch Delete</strong>: Operasi penghapusan buku dari riwayat dikumpulkan ke dalam antrean <code>pendingCloudKitDeletes</code> dengan penundaan (<em>debounce</em>) selama 3 detik sebelum dikirim serentak ke CloudKit, meminimalkan overhead jaringan.</li>
-<li><strong>Penanganan Mode Offline (<code>SyncPendingStore</code>)</strong>: Jika perangkat sedang offline saat mutasi terjadi, ID record tetap tersimpan di tabel antrean. Begitu koneksi internet pulih, <code>CloudKitSyncManager</code> secara otomatis menguras antrean pending tersebut.</li>
+<li><strong>Unggahan Langsung</strong>: Ketika pengguna membuka atau memfavoritkan buku, entri di-<em>upsert</em> ke basis data lokal dan dimasukkan ke antrean <code>SyncPendingStore</code>. <code>HistoryViewModel</code> segera memicu unggahan ke CloudKit.</li>
+<li><strong>Debounced Batch Delete</strong>: Operasi penghapusan buku dari riwayat dikumpulkan ke dalam antrean <code>pendingCloudKitDeletes</code> dengan penundaan (<em>debounce</em>) selama 3 detik sebelum dikirim serentak ke CloudKit, meminimalkan <em>overhead</em> jaringan.</li>
+<li><strong>Penanganan Mode Offline (<code>SyncPendingStore</code>)</strong>: Jika perangkat sedang <em>offline</em> saat mutasi terjadi, ID rekaman tetap tersimpan di tabel antrean. Begitu konektivitas internet pulih, <code>CloudKitSyncManager</code> secara otomatis men-<em>flush</em> antrean <em>pending</em> tersebut.</li>
 </ul>
 <h3 id="3-alur-sinkronisasi-masuk-resolusi-konflik-lww-field-merging">3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (LWW + Field Merging)</h3>
-<p>Saat <code>CloudKitSyncManager</code> menerima perubahan remote via <code>fetchChanges</code>, rekaman diteruskan ke <code>HistoryViewModel.shared.applyCloudKitChanges(entriesToSave:recordIdsToDelete:)</code>:</p>
-<pre class="mermaid"><code>graph TD
-    Remote[Terima Rekaman dari CloudKit] --&gt; Match{Apakah Book ID Ada di Lokal?}
-    Match -- Tidak Ada --&gt; InsertLocal[Simpan sebagai Entri Baru]
-    Match -- Ada --&gt; CheckLWW{remoteModified &gt;= localModified?}
-    CheckLWW -- Ya --&gt; FieldMerge[Merge Parsial Field Null:&lt;br/&gt;lastOpenedAt, lastContentId,&lt;br/&gt;favoritedAt, positionUpdatedAt]
-    CheckLWW -- Tidak --&gt; DropRemote[Pertahankan Data Lokal]
+<p>Saat <code>CloudKitSyncManager</code> menerima perubahan <em>remote</em> via <code>fetchChanges</code>, rekaman diteruskan ke <code>HistoryViewModel.shared.applyCloudKitChanges(entriesToSave:recordIdsToDelete:)</code>:</p>
+<pre class="mermaid"><code>flowchart TD
+    Remote(["Terima Rekaman dari CloudKit"]) --&gt; Match{"Apakah Book ID Ada di Lokal?"}
 
-    InsertLocal --&gt; Reorder[Urutkan Ulang historyOrder LIFO]
+    Match --&gt;|"Tidak Ada"| InsertLocal["Simpan sebagai Entri Baru"]
+    Match --&gt;|"Ada"| CheckLWW{"remoteModified &gt;= localModified?"}
+
+    CheckLWW --&gt;|"Ya"| FieldMerge["Merge Parsial Field Non-Destruktif"]
+    CheckLWW --&gt;|"Tidak"| DropRemote["Pertahankan Data Lokal"]
+
+    InsertLocal --&gt; Reorder["Urutkan Ulang historyOrder LIFO"]
     FieldMerge --&gt; Reorder
-    Reorder --&gt; Persist[saveCloudKitChanges di Background Thread]
-    Persist --&gt; Notify[Post .historyDidChange &amp; Reload UI]</code></pre>
+
+    Reorder --&gt; Persist[("HistoryDatabaseManager.saveCloudKitChanges")]
+    Persist --&gt; Notify(["Post .historyDidChange &amp; Reload UI"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class Remote,Notify event;
+    class InsertLocal,FieldMerge,DropRemote,Reorder store;
+    class Match,CheckLWW ui;
+    class Persist db;</code></pre>
 <ol>
 <li><strong>Last-Write-Wins (LWW)</strong>: Membandingkan <code>updatedAt</code> lokal dengan <code>lastModified</code> remote. Jika remote lebih baru (<code>remoteModified &gt;= localModified</code>), perubahan diterima.</li>
-<li><strong>Field Merging Non-Destruktif</strong>: Jika field remote bernilai <code>nil</code> (misalnya karena perubahan parsial), nilai lokal yang sudah ada tetap dipertahankan (<code>lastOpenedAt</code>, <code>lastContentId</code>, <code>favoritedAt</code>, <code>positionUpdatedAt</code>) untuk mencegah hilangnya progres membaca.</li>
-<li><strong>Rekonsiliasi Urutan (<code>historyOrder</code>)</strong>: Setelah entri remote digabung, <code>HistoryViewModel</code> menyortir ulang buku riwayat berdasarkan <code>lastOpenedAt</code> terbaru (dibatasi <code>maxHistoryCount = 50</code>), menghapus entri yatim (<em>prune</em>), dan menyimpannya kembali ke SQLite secara atomik via <code>HistoryDatabaseManager.saveCloudKitChanges</code> di background thread.</li>
-<li><strong>Pembaruan UI</strong>: Notifikasi <code>.historyDidChange</code> disiarkan untuk merefresh daftar riwayat dan favorit di antarmuka macOS dan iOS secara reaktif.</li>
+<li><strong>Field Merging Non-Destruktif</strong>: Jika <em>field</em> remote bernilai <code>nil</code> (misalnya karena perubahan parsial), nilai lokal yang sudah ada tetap dipertahankan (<code>lastOpenedAt</code>, <code>lastContentId</code>, <code>favoritedAt</code>, <code>positionUpdatedAt</code>) untuk mencegah hilangnya progres membaca.</li>
+<li><strong>Rekonsiliasi Urutan (<code>historyOrder</code>)</strong>: Setelah entri <em>remote</em> digabungkan, <code>HistoryViewModel</code> menyortir ulang buku riwayat berdasarkan <code>lastOpenedAt</code> terbaru (dibatasi <code>maxHistoryCount = 50</code>), menghapus <em>orphan records</em>, dan menyimpannya kembali ke SQLite secara atomik via <code>HistoryDatabaseManager.saveCloudKitChanges</code> di <em>background thread</em>.</li>
+<li><strong>Pembaruan UI</strong>: Notifikasi <code>.historyDidChange</code> disiarkan untuk menyegarkan daftar riwayat dan favorit di antarmuka macOS dan iOS secara reaktif.</li>
 </ol>
 
 
@@ -3861,6 +3924,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3891,10 +3960,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

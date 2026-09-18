@@ -1145,6 +1145,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Arsitektur Integrasi Lintas Platform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-hierarki-integrasi-arsitektur-lintas-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Hierarki Integrasi Arsitektur Lintas Platform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-taksonomi-komponen-bersama-shared-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Taksonomi Komponen Bersama (Shared Assets)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1160,10 +1188,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#macos-appkit-delegation" class="md-nav__link">
+  <a href="#macos-delegasi-appkit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        macOS: AppKit Delegation
+        macOS: Delegasi AppKit
       
     </span>
   </a>
@@ -2877,6 +2905,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3603,6 +3659,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Arsitektur Integrasi Lintas Platform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-hierarki-integrasi-arsitektur-lintas-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Hierarki Integrasi Arsitektur Lintas Platform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-taksonomi-komponen-bersama-shared-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Taksonomi Komponen Bersama (Shared Assets)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3618,10 +3702,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#macos-appkit-delegation" class="md-nav__link">
+  <a href="#macos-delegasi-appkit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        macOS: AppKit Delegation
+        macOS: Delegasi AppKit
       
     </span>
   </a>
@@ -3723,7 +3807,7 @@
 
 
 <h1 id="ui-platform-integration">UI &amp; Platform Integration</h1>
-<p>Dokumentasi ini merangkum jembatan arsitektur dan pola integrasi antarmuka fitur Annotations pada macOS dan iOS, menghubungkan logika data bersama (<em>Core Engine</em>) dengan presentasi native di masing-masing platform.</p>
+<p>Dokumentasi ini merangkum jembatan arsitektur dan pola integrasi antarmuka fitur Annotations pada macOS dan iOS, menghubungkan logika data bersama (<em>Core Engine</em>) dengan presentasi bawaan (<em>native</em>) di masing-masing platform.</p>
 <p>Sumber kode:</p>
 <ul>
 <li>macOS: <code>Source/Features/Annotations/macOS/</code></li>
@@ -3733,87 +3817,85 @@
 <hr />
 <h2 id="arsitektur-integrasi-lintas-platform">Arsitektur Integrasi Lintas Platform</h2>
 <p>Fitur Annotations berbagi logika bisnis, persistensi, dan pemodelan data yang sama (<code>AnnotationViewModel</code>, <code>AnnotationStore</code>, <code>AnnotationCoordinator</code>), namun menggunakan paradigma UI yang dioptimalkan untuk karakteristik masing-masing OS:</p>
-<pre class="mermaid"><code>graph TD
-    subgraph "Shared Core Layer"
-        VM["AnnotationViewModel"]
-        Store["AnnotationStore"]
-        Coord["AnnotationCoordinator"]
-    end
+<h3 id="a-hierarki-integrasi-arsitektur-lintas-platform">A. Hierarki Integrasi Arsitektur Lintas Platform</h3>
+<pre class="mermaid"><code>flowchart TD
+    CORE["Shared Core (AnnotationViewModel &amp; Store)"]
+    STORE[("Annotations.sqlite")]
+    CORE --&gt; STORE
 
-    subgraph "macOS Presentation (AppKit)"
-        MVC["AnnotationsVC (Popover / NSPanel)"]
-        MDS["AnnotationOutlineDataSource"]
-        MOV["NSOutlineView"]
-        MRDR["IbarotTextVC (Reader)"]
-    end
+    CORE ~~~ MAC
 
-    subgraph "iOS Presentation (SwiftUI + UIKit)"
-        ISUI["AnnotationListView (SwiftUI Container)"]
-        IWRP["AnnotationViewControllerWrapper (Bridge)"]
-        IVC["iOSAnnotationViewController (UIKit)"]
-        IRDR["iOSReaderView (Reader)"]
-    end
+    MAC["macOS UI (AnnotationsVC &amp; NSOutlineView)"]
+    CORE --&gt;|"Combine &amp; Data Source"| MAC
+    MAC --&gt;|"AnnotationDelegate"| MRDR["macOS Reader (IbarotTextVC)"]
 
-    subgraph "Shared UI &amp; Exporter"
-        TFV["TagFilterSelectionView (SwiftUI Multiplatform)"]
-        JSON["AnnotationJsonSerializer (JSON Document)"]
-    end
+    MAC ~~~ IOS
 
-    VM --&gt; MDS
-    VM --&gt; IWRP
-    Store --&gt; VM
+    IOS["iOS UI (AnnotationListView &amp; iOSAnnotationVC)"]
+    CORE --&gt;|"Bindings &amp; Snapshots"| IOS
+    IOS --&gt;|"iOSNavigationManager"| IRDR["iOS Reader (iOSReaderView)"]
 
-    MDS --&gt; MOV
-    MVC --&gt; MDS
-    MDS -- "AnnotationDelegate" --&gt; MRDR
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
-    ISUI --&gt; IWRP
-    IWRP --&gt; IVC
-    IWRP -- "iOSNavigationManager" --&gt; IRDR
-
-    MVC -.-&gt; TFV
-    IVC -.-&gt; TFV
-    ISUI -.-&gt; JSON
-    MVC -.-&gt; JSON</code></pre>
+    class MAC,MRDR,IOS,IRDR ui;
+    class CORE store;
+    class STORE db;</code></pre>
+<h3 id="b-taksonomi-komponen-bersama-shared-assets">B. Taksonomi Komponen Bersama (<em>Shared Assets</em>)</h3>
+<pre class="mermaid"><code>mindmap
+  root((Shared Annotations))
+    Logika Inti
+      AnnotationStore["In-memory cache &amp; synchronizer"]
+      AnnotationViewModel["Publisher data reaktif Combine"]
+      ArabicRangeCalculator["Kalkulasi offset teks berharakat"]
+    Komponen UI Bersama
+      TagFilterSelectionView["Chips filter tag multiplatform (SwiftUI)"]
+      AnnotationJsonSerializer["Serialisasi ekspor/impor dokumen JSON"]
+    Sinkronisasi CloudKit
+      PrivateZone["Custom zone sync pada iCloud"]
+      ConflictResolution["Penyelesaian konflik timestamp mutasi"]</code></pre>
 <hr />
-<h2 id="jembatan-integrasi-pembaca-reader-navigation-bridge">Jembatan Integrasi Pembaca (Reader Navigation Bridge)</h2>
-<p>Saat pengguna memilih baris catatan, sistem harus menavigasi pembaca ke kitab dan halaman target secara mulus:</p>
-<h3 id="macos-appkit-delegation">macOS: AppKit Delegation</h3>
+<h2 id="jembatan-integrasi-pembaca-reader-navigation-bridge">Jembatan Integrasi Pembaca (<em>Reader Navigation Bridge</em>)</h2>
+<p>Saat pengguna memilih baris catatan, sistem menavigasi pembaca ke kitab dan halaman target:</p>
+<h3 id="macos-delegasi-appkit">macOS: Delegasi AppKit</h3>
 <ul>
-<li><strong>Protokol</strong>: <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/Protocols/AnnotationDelegate.swift"><code>AnnotationDelegate</code></a>.</li>
+<li><strong>Protocol</strong>: <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/Protocols/AnnotationDelegate.swift"><code>AnnotationDelegate</code></a>.</li>
 <li><strong>Alur</strong>: <code>NSOutlineView</code> mendeteksi pergantian baris $\rightarrow$ <code>AnnotationsOutlineDelegate.outlineViewSelectionDidChange</code> $\rightarrow$ memanggil <code>dataSource.delegate?.didSelect(annotation:)</code> $\rightarrow$ ditangkap oleh <code>IbarotTextVC</code> yang dihubungkan melalui <code>SplitVC</code>.</li>
-<li><strong>Aksi</strong>: Reader memuat kitab target jika belum terbuka, membuka halaman via <code>contentId</code>, dan menggeser viewport teks ke <code>highlightRange</code>.</li>
+<li><strong>Aksi</strong>: Reader memuat kitab target jika belum terbuka, membuka halaman via <code>contentId</code>, dan menggeser <em>viewport</em> teks ke <code>highlightRange</code>.</li>
 </ul>
 <h3 id="ios-swiftui-coordinator-navigation-manager">iOS: SwiftUI Coordinator &amp; Navigation Manager</h3>
 <ul>
-<li><strong>Alur</strong>: Pengguna mengetuk sel $\rightarrow$ <code>iOSAnnotationViewController.didSelectItemAt</code> $\rightarrow$ memicu closure <code>onAnnotationSelected</code> $\rightarrow$ diterima oleh <code>AnnotationViewControllerWrapper.Coordinator.handleSelection(_:)</code>.</li>
-<li><strong>Pemeriksaan Kitab</strong>: Coordinator memeriksa ketersediaan kitab via <code>LibraryDataManager.shared.getBook([ann.bkId])</code>:<ul>
-<li>Jika ada: Menjalankan <code>iOSNavigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)</code>.</li>
-<li>Jika tidak ada: Mengirimkan <code>Notification.Name.annotationMissingBook</code> untuk memunculkan modal alert di level SwiftUI <code>AnnotationListView</code>.</li>
+<li><strong>Alur</strong>: Pengguna mengetuk sel $\rightarrow$ <code>iOSAnnotationViewController.didSelectItemAt</code> $\rightarrow$ memicu <em>closure</em> <code>onAnnotationSelected</code> $\rightarrow$ diterima oleh <code>AnnotationViewControllerWrapper.Coordinator.handleSelection(_:)</code>.</li>
+<li><strong>Pemeriksaan Kitab</strong>: <em>Coordinator</em> memeriksa ketersediaan kitab via <code>LibraryDataManager.shared.getBook([ann.bkId])</code>:<ul>
+<li>Jika tersedia: Menjalankan <code>iOSNavigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)</code>.</li>
+<li>Jika belum diunduh: Mengirimkan <code>Notification.Name.annotationMissingBook</code> untuk memunculkan modal peringatan di level SwiftUI <code>AnnotationListView</code>.</li>
 </ul>
 </li>
 </ul>
 <hr />
-<h2 id="komponen-bersama-multiplatform-component">Komponen Bersama (Multiplatform Component)</h2>
+<h2 id="komponen-bersama-multiplatform-component">Komponen Bersama (<em>Multiplatform Component</em>)</h2>
 <h3 id="tagfilterselectionview"><code>TagFilterSelectionView</code></h3>
-<p>Meskipun tersimpan di direktori <code>Source/Features/Annotations/macOS/</code>, komponen ini dirancang multiplatform dengan kompilasi kondisional (<code>#if os(macOS)</code> dan <code>#if os(iOS)</code>):</p>
+<p>Meskipun tersimpan di direktori <code>Source/Features/Annotations/macOS/</code>, komponen ini dirancang <em>multiplatform</em> dengan kompilasi kondisional (<code>#if os(macOS)</code> dan <code>#if os(iOS)</code>):</p>
 <ul>
-<li><strong>macOS</strong>: Ditampilkan di dalam popover pemilihan tag dengan batasan lebar <code>220–300 pt</code>.</li>
-<li><strong>iOS</strong>: Dipresentasikan sebagai lembar modal adaptif (<code>UISheetPresentationController</code>) dengan detents <code>.medium()</code> dan <code>.large()</code>.</li>
-<li><strong>Fitur</strong>: Pencarian nama tag secara instan, pemisahan mode logika AND/OR, penyediaan tag yang tersedia (<em>available tags provider</em>), serta tombol aksi <em>Select All</em> / <em>Deselect All</em>.</li>
+<li><strong>macOS</strong>: Ditampilkan di dalam <em>popover</em> pemilihan tag dengan batasan lebar 220–300 pt.</li>
+<li><strong>iOS</strong>: Dipresentasikan sebagai lembar modal adaptif (<code>UISheetPresentationController</code>) dengan <em>detents</em> <code>.medium()</code> dan <code>.large()</code>.</li>
+<li><strong>Fitur</strong>: Pencarian nama tag secara instan, pemilihan mode logika AND/OR, penyediaan tag yang tersedia (<em>available tags provider</em>), serta tombol aksi <em>Select All</em> / <em>Deselect All</em>.</li>
 </ul>
 <hr />
 <h2 id="ekspor-impor-pertukaran-data">Ekspor, Impor &amp; Pertukaran Data</h2>
 <ol>
 <li><strong>Pertukaran Data JSON (macOS &amp; iOS)</strong>:<ul>
-<li>Menggunakan <code>AnnotationJsonSerializer</code> untuk serialisasi format JSON dokumen mandiri (<code>AnnotationJsonDocument</code>).</li>
-<li>Di iOS, antarmuka ekspor/impor terintegrasi pada menu toolbar <code>AnnotationListView</code> via SwiftUI <code>.fileExporter</code> dan <code>.fileImporter</code> lengkap dengan dialog konfirmasi penanganan duplikat (<em>overwrite</em> atau <em>skip</em>).</li>
-<li>Di macOS, proses ekspor dan impor diakses melalui menu berbagi (<em>share &amp; import menu</em>) di toolbar <code>AnnotationsVC</code>.</li>
+<li>Menggunakan <code>AnnotationJsonSerializer</code> untuk serialisasi format dokumen JSON mandiri (<code>AnnotationJsonDocument</code>).</li>
+<li>Di iOS, antarmuka ekspor/impor terintegrasi pada <em>toolbar</em> <code>AnnotationListView</code> via SwiftUI <code>.fileExporter</code> dan <code>.fileImporter</code> lengkap dengan dialog konfirmasi penanganan duplikat (<em>overwrite</em> atau <em>skip</em>).</li>
+<li>Di macOS, proses ekspor dan impor diakses melalui menu berbagi pada <em>toolbar</em> <code>AnnotationsVC</code>.</li>
 </ul>
 </li>
 <li><strong>Ekspor RTF (Khusus macOS)</strong>:<ul>
 <li>Komponen <code>AnnotationRTFExporter</code> menyusun anotasi terpilih ke dalam format RTF (<em>Rich Text Format</em>).</li>
-<li>Menjaga atribut tipografi teks Arab, nomor jilid/halaman, catatan kaki, serta warna highlight untuk siap disalin ke clipboard atau dicetak ke dokumen lain.</li>
+<li>Menjaga atribut tipografi teks Arab, nomor jilid/halaman, catatan kaki, serta warna sorotan teks untuk siap disalin ke <em>clipboard</em> atau dicetak.</li>
 </ul>
 </li>
 </ol>
@@ -3821,8 +3903,8 @@
 <h2 id="integrasi-ekstensi-widget">Integrasi Ekstensi Widget</h2>
 <p>Modul anotasi menyediakan data untuk target Widget Extension:</p>
 <ul>
-<li><strong>Timeline Provider</strong>: Mengakses kutipan dan catatan harian langsung dari SQLite database terbagi via Shared App Group (<code>group.com.maktabah</code>).</li>
-<li><strong>PlatformColor</strong>: Parsing warna hex platform-agnostik menjamin representasi visual sorotan dan garis bawah (<em>underline</em>) seragam di widget Home Screen maupun Lock Screen.</li>
+<li><strong>Timeline Provider</strong>: Mengakses kutipan dan catatan harian langsung dari basis data SQLite terbagi via Shared App Group (<code>group.com.maktabah</code>).</li>
+<li><strong>PlatformColor</strong>: Konversi warna heksadesimal yang <em>platform-agnostic</em> menjamin representasi visual sorotan dan garis bawah seragam di widget Home Screen maupun Lock Screen.</li>
 </ul>
 <hr />
 <h2 id="tabel-perbandingan-ux-lintas-platform">Tabel Perbandingan UX Lintas Platform</h2>
@@ -3887,6 +3969,12 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -3916,10 +4004,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

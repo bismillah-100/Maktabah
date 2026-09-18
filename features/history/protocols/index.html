@@ -1591,21 +1591,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#mengapa-tidak-ada-protokol-baru" class="md-nav__link">
+  <a href="#keputusan-arsitektur" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mengapa Tidak Ada Protokol Baru?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integrasi-single-direction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Integrasi Single-Direction
+        Keputusan Arsitektur
       
     </span>
   </a>
@@ -2788,6 +2777,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3506,21 +3523,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#mengapa-tidak-ada-protokol-baru" class="md-nav__link">
+  <a href="#keputusan-arsitektur" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mengapa Tidak Ada Protokol Baru?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integrasi-single-direction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Integrasi Single-Direction
+        Keputusan Arsitektur
       
     </span>
   </a>
@@ -3545,31 +3551,26 @@
 
 
 <h1 id="protocols-contracts">Protocols &amp; Contracts</h1>
-<p>Fitur History tidak secara gamblang mendefinisikan <em>interface/protocol</em> independen dalam <em>folder</em>-nya. Tidak ada direktori <code>Protocols/</code> di dalam <code>/Source/Features/History/</code>. Ini merupakan keputusan arsitektur yang disengaja.</p>
-<h2 id="mengapa-tidak-ada-protokol-baru">Mengapa Tidak Ada Protokol Baru?</h2>
+<p>Modul History mengintegrasikan fungsionalitasnya dengan memanfaatkan <em>protocol</em> dari modul <em>Core</em> serta makro reaktif Swift.</p>
+<h2 id="keputusan-arsitektur">Keputusan Arsitektur</h2>
 <ol>
 <li>
-<p><strong>Observabilitas Langsung via Makro <code>@Observable</code></strong>
-   Maktabah sangat bergantung pada reaktivitas <em>built-in</em> dari rilis modern Swift 5.9+. Dengan mengusung makro <code>@Observable</code> pada <code>HistoryViewModel</code>, Swift secara implisit (di tingkat kompilator) menangani <em>binding state</em> menuju lapisan UI (<em>View</em>). Tidak diperlukan antarmuka delegasi (Delegation Protocol) konvensional untuk mengabarkan perubahan.</p>
+<p><strong>Observabilitas via Makro <code>@Observable</code></strong>
+   Dengan makro <code>@Observable</code> pada <code>HistoryViewModel</code>, Swift menangani <em>state binding</em> menuju lapisan UI (<em>View</em>) secara otomatis di tingkat kompilator, tanpa memerlukan <em>protocol</em> delegasi konvensional.</p>
 </li>
 <li>
 <p><strong>Ketergantungan terhadap Kontrak Eksternal (<em>External Contracts</em>)</strong>
-   Modul ini pada dasarnya mengonsumsi protokol yang berada di <em>folder Core</em>. Protokol sentral yang diwarisi adalah:</p>
+   Modul ini mengadopsi <em>protocol</em> inti dari lapisan <em>Core</em>:</p>
 </li>
 </ol>
-<p>### <code>SyncPendingManaging</code>
-   Terletak di <code>Source/Core/CloudKit/PendingSyncCoordinator.swift</code> (atau semacamnya). <code>HistoryDatabaseManager</code> mengimplementasikan protokol generik ini:</p>
+<p>### <code>SyncPendingManaging</code> (Protocol)
+   <code>HistoryDatabaseManager</code> mengimplementasikan <em>protocol</em> ini untuk standardisasi antrean sinkronisasi luring:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">class</span><span class="w"> </span><span class="nc">HistoryDatabaseManager</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingManaging</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">syncPendingStore</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingStore</span><span class="p">?</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="c1">// ...</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Protokol <code>SyncPendingManaging</code> merupakan kontrak krusial agar sinkronisasi latar (<em>background sync</em>) CloudKit bisa menyeragamkan alur perlakuan antara modul <em>History</em>, <em>Annotations</em>, dan <em>Results/Bookmarks</em>. Protokol ini menetapkan keharusan suatu pengelola database memiliki instrumen tabel <em>pending_queue</em> jika koneksi internet terputus.</p>
-<h2 id="integrasi-single-direction">Integrasi <em>Single-Direction</em></h2>
-<p><em>Dependency Injection</em> yang longgar (<em>loose coupling</em>) dicapai via <em>NotificationCenter</em> dan pengamat (<em>observers</em>) langsung, ketimbang melalui delegasi ketat berbasis protokol. Saat suatu modul di luar lingkup (misalnya <code>Reader</code>) mengganti ID paragraf terakhir, fungsi dipanggil secara langsung (<em>direct dispatch</em>) menuju ViewModel <em>Singleton</em>.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">HistoryViewModel</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">updateLastContentId</span><span class="p">(</span><span class="n">contentId</span><span class="p">,</span><span class="w"> </span><span class="k">for</span><span class="p">:</span><span class="w"> </span><span class="n">bookId</span><span class="p">)</span>
-</span></code></pre></div>
-<p>Fungsi ini dikontrol menggunakan mekanisme enkapsulasi. Modul eksternal (Reader) tak perlu mengetahui bagaimana proses internal <code>ReadingEntry</code> disimpan atau disinkronisasi, sehingga abstraksi modul yang longgar tetap terjaga walaupun tanpa spesifikasi protokol eksplisit.</p>
+<p><em>Protocol</em> <code>SyncPendingManaging</code> memastikan antrean operasi luring (<em>offline queue</em>) dicatat secara seragam pada tabel <code>sync_pending</code> ketika sambungan CloudKit terputus.</p>
 
 
 
@@ -3589,6 +3590,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3619,10 +3626,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

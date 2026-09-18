@@ -2799,6 +2799,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reader/textview/" class="md-nav__link">
         
   
@@ -3567,45 +3595,45 @@
 
 
 <h1 id="overview-architecture-pipeline">Overview &amp; Architecture Pipeline</h1>
-<p>Dokumentasi ini membedah arsitektur fitur <strong>History &amp; Favorites</strong> pada Maktabah. Fitur ini bertanggung jawab untuk melacak buku yang terakhir dibuka (history bacaan) beserta posisinya (<code>lastContentId</code>), serta daftar buku yang ditandai sebagai favorit oleh pengguna. Data ini disinkronkan secara mulus antar perangkat melalui CloudKit dan disimpan ke disk menggunakan SQLite.</p>
+<p>Dokumentasi ini membedah arsitektur fitur <strong>History &amp; Favorites</strong> pada Maktabah. Fitur ini bertanggung jawab untuk melacak buku yang terakhir dibuka (riwayat bacaan) beserta posisinya (<code>lastContentId</code>), serta daftar buku yang ditandai sebagai favorit oleh pengguna. Data ini disinkronkan secara mulus antarperangkat melalui CloudKit dan disimpan ke disk menggunakan SQLite.</p>
 <h2 id="diagram-arsitektur">Diagram Arsitektur</h2>
 <p>Fitur History mengadopsi pola reaktif menggunakan <code>@Observable</code> dan memisahkan tanggung jawab antara <em>State Management</em>, <em>Persistensi Database</em>, dan <em>Sinkronisasi Cloud</em>.</p>
-<pre class="mermaid"><code>graph TD
-    %% UI Layer
-    subgraph UI ["UI Layer (macOS &amp; iOS)"]
-        MAC["LibraryVC (macOS)"]
-        IOS["iOSHistoryView (iOS)"]
-    end
+<pre class="mermaid"><code>flowchart TD
+    MAC["LibraryVC (macOS)"] --&gt; HVM["HistoryViewModel (@Observable)"]
+    IOS["iOSHistoryView (iOS)"] --&gt; HVM
 
-    %% State Management
-    subgraph VM ["ViewModel Layer"]
-        HVM["HistoryViewModel&lt;br/&gt;(@Observable)"]
-    end
+    HVM ~~~ Core
 
-    %% Core Dependencies
     subgraph Core ["Core Engine &amp; Database"]
-        DB["HistoryDatabaseManager&lt;br/&gt;(SQLite Database)"]
-        SYNC["CloudKitSyncManager&lt;br/&gt;(HistorySyncHandler)"]
-        MD["DatabaseManager&lt;br/&gt;(BooksData Metadata)"]
+        DB["HistoryDatabaseManager"]
+        SYNC["CloudKitSyncManager (HistorySyncHandler)"]
+        MD["DatabaseManager (BooksData Metadata)"]
     end
 
-    %% Flow
-    MAC --&gt;|Observe &amp; Action| HVM
-    IOS --&gt;|Observe &amp; Action| HVM
+    HVM --&gt;|"Upsert / Load"| DB
+    HVM --&gt;|"Sync CloudKit"| SYNC
+    HVM --&gt;|"Join Book Metadata"| MD
 
-    HVM --&gt;|Upsert / Load| DB
-    HVM --&gt;|Sync CloudKit| SYNC
-    HVM --&gt;|Join Book Metadata| MD
+    DB --&gt; SQLite[("History.sqlite (WAL Mode)")]
+    SYNC &lt;--&gt;|"Fetch / Upload"| CloudKit[("CloudKit Private Zone")]
 
-    DB --&gt;|Read/Write| SQLite[(History.sqlite)]
-    SYNC &lt;--&gt;|Fetch/Upload| CloudKit((CloudKit Zone))</code></pre>
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class MAC,IOS ui;
+    class HVM vm;
+    class DB,SYNC,MD store;
+    class SQLite,CloudKit db;</code></pre>
 <h2 id="prinsip-pemisahan-tanggung-jawab">Prinsip Pemisahan Tanggung Jawab</h2>
-<p>Modul ini dipecah ke dalam beberapa layer untuk memastikan <em>Separation of Concerns</em> (SoC):</p>
+<p>Modul ini dipecah ke dalam beberapa <em>layer</em> untuk memastikan <em>Separation of Concerns</em> (SoC):</p>
 <ol>
 <li><strong>State Management (<code>HistoryViewModel</code>)</strong>: Bertindak sebagai <em>single source of truth</em> di level memori/UI. Memegang status <code>entriesByBookId</code> dan menangani <em>debouncing</em> untuk mencegah <em>over-fetching</em> saat CloudKit melakukan perubahan beruntun.</li>
 <li><strong>Storage Layer (<code>HistoryDatabaseManager</code>)</strong>: Berkomunikasi langsung dengan SQLite (menggunakan <code>SQLiteDatabase</code>). Bertanggung jawab untuk eksekusi CRUD, manajemen koneksi WAL (<em>Write-Ahead Logging</em>), dan menampung <em>queue</em> sinkronisasi yang tertunda.</li>
-<li><strong>Data Model (<code>ReadingEntry</code>)</strong>: Membungkus seluruh properti metadata aktivitas bacaan. Dioptimalkan dengan <em>Codable</em> dan <em>Hashable</em>.</li>
-<li><strong>CloudKit Sync (<code>SyncPendingManaging</code>)</strong>: Database ini terintegrasi dengan <code>SyncPendingStore</code> bawaan Core untuk memastikan <em>offline-first sync</em>, di mana perubahan saat luring akan diantrekan dan dikirim saat daring.</li>
+<li><strong>Data Model (<code>ReadingEntry</code>)</strong>: Membungkus seluruh properti metadata aktivitas bacaan. Dioptimalkan dengan <code>Codable</code> dan <code>Hashable</code>.</li>
+<li><strong>CloudKit Sync (<code>SyncPendingManaging</code>)</strong>: Database ini terintegrasi dengan <code>SyncPendingStore</code> bawaan Core untuk memastikan <em>offline-first sync</em>, di mana perubahan saat luring (<em>offline</em>) akan diantrekan dan dikirim saat daring (<em>online</em>).</li>
 </ol>
 <h2 id="daftar-dokumen-teknis">Daftar Dokumen Teknis</h2>
 <p>Berikut adalah pembedahan mendalam untuk setiap komponen di dalam <em>feature-slice</em> History:</p>
@@ -3637,6 +3665,12 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -3666,10 +3700,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

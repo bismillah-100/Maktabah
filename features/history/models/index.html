@@ -1535,15 +1535,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#readingentry" class="md-nav__link">
+  <a href="#readingentry-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ReadingEntry
+        ReadingEntry (Struct)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="ReadingEntry">
+    <nav class="md-nav" aria-label="ReadingEntry (Struct)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2816,6 +2816,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3534,15 +3562,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#readingentry" class="md-nav__link">
+  <a href="#readingentry-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ReadingEntry
+        ReadingEntry (Struct)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="ReadingEntry">
+    <nav class="md-nav" aria-label="ReadingEntry (Struct)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3601,9 +3629,9 @@
 
 
 <h1 id="data-models-state-types">Data Models &amp; State Types</h1>
-<p>Bagian ini membedah <em>data structure</em> utama yang menyokong modul History &amp; Favorites. Keseluruhan modul ini menggunakan <code>ReadingEntry</code> sebagai model tunggal (SSOT) yang merepresentasikan metadata interaksi pengguna dengan satu buku.</p>
-<h2 id="readingentry"><code>ReadingEntry</code></h2>
-<p><code>ReadingEntry</code> adalah struct (tipe <em>value type</em>) utama yang menyimpan informasi terkait riwayat dan status favorit dari suatu buku. Berkas ini berlokasi di <code>Source/Features/History/Models/ReadingEntry.swift</code>.</p>
+<p>Bagian ini membedah struktur data utama yang menyokong modul History &amp; Favorites. Keseluruhan modul ini menggunakan <code>ReadingEntry</code> sebagai model tunggal (<em>Single Source of Truth</em>) yang merepresentasikan metadata interaksi pengguna dengan satu buku.</p>
+<h2 id="readingentry-struct"><code>ReadingEntry</code> (Struct)</h2>
+<p><code>ReadingEntry</code> adalah <em>struct</em> (<em>value type</em>) utama yang menyimpan informasi terkait riwayat dan status favorit dari suatu buku. Berkas ini berlokasi di <code>Source/Features/History/Models/ReadingEntry.swift</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ReadingEntry</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">lastContentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">?</span>
@@ -3635,12 +3663,12 @@
 <tr>
 <td><code>bookId</code></td>
 <td><code>Int</code></td>
-<td>ID buku yang mengacu ke <em>archive</em> katalog Maktabah (diambil dari tabel katalog <code>main.sqlite</code>). Nilai ini menjadi <em>Primary Key</em> di database <code>History.sqlite</code>.</td>
+<td>ID buku yang mengacu ke arsip katalog Maktabah (diambil dari tabel katalog <code>main.sqlite</code>). Nilai ini menjadi <em>Primary Key</em> di database <code>History.sqlite</code>.</td>
 </tr>
 <tr>
 <td><code>lastContentId</code></td>
 <td><code>Int?</code></td>
-<td>ID paragraf/konten (dari tabel <code>b{id}</code>) terakhir yang dibaca pengguna. Nilai ini di-<em>update</em> secara <em>real-time</em> (di-throttle) saat <em>scrolling</em> di Reader.</td>
+<td>ID paragraf/konten (dari tabel <code>b{id}</code>) terakhir yang dibaca pengguna. Nilai ini diperbarui secara <em>real-time</em> (melalui <em>throttling</em>) saat <em>scrolling</em> di Reader.</td>
 </tr>
 <tr>
 <td><code>lastOpenedAt</code></td>
@@ -3655,12 +3683,12 @@
 <tr>
 <td><code>positionUpdatedAt</code></td>
 <td><code>Date?</code></td>
-<td>Waktu terkahir posisi baca (<code>lastContentId</code>) disimpan. Mencegah konflik <em>merge</em> jika pengguna membaca buku di perangkat yang berbeda pada waktu bersamaan.</td>
+<td>Waktu terakhir posisi baca (<code>lastContentId</code>) disimpan. Mencegah konflik saat penggabungan (<em>merge</em>) jika pengguna membaca buku di perangkat yang berbeda pada waktu bersamaan.</td>
 </tr>
 <tr>
 <td><code>updatedAt</code></td>
 <td><code>Date</code></td>
-<td>Stempel waktu umum kapan <em>record</em> ini termutakhirkan. Penting untuk resolusi konflik CloudKit.</td>
+<td>Stempel waktu umum kapan <em>record</em> ini diperbarui. Penting untuk resolusi konflik CloudKit.</td>
 </tr>
 <tr>
 <td><code>isFavorite</code></td>
@@ -3670,26 +3698,26 @@
 <tr>
 <td><code>ckRecordId</code></td>
 <td><code>String?</code></td>
-<td>ID <em>record</em> khusus untuk CloudKit. Sejak pembaruan terbaru (migrasi), ID ini dipaksa sama persis dengan <code>String(bookId)</code> untuk menghindari duplikasi rekaman di peladen.</td>
+<td>ID <em>record</em> khusus untuk CloudKit. Sejak pembaruan terbaru (migrasi), ID ini dipaksa sama persis dengan <code>String(bookId)</code> untuk menghindari duplikasi rekaman di server.</td>
 </tr>
 <tr>
 <td><code>id</code></td>
 <td><code>Int</code></td>
-<td>Implementasi dari protokol <code>Identifiable</code>. Nilainya sama persis dengan <code>bookId</code> dan mempermudah diferensiasi tampilan UI via SwiftUI (<code>ForEach</code>).</td>
+<td>Implementasi dari <em>protocol</em> <code>Identifiable</code>. Nilainya sama persis dengan <code>bookId</code> dan mempermudah diferensiasi tampilan UI via SwiftUI (<code>ForEach</code>).</td>
 </tr>
 </tbody>
 </table>
 <h3 id="optimasi-khusus">Optimasi Khusus</h3>
 <ol>
-<li><strong>Codable &amp; Hashable</strong>: Struct ini mengimplementasikan <code>Codable</code> agar kompatibel dengan legacy UserDefaults (jika masih digunakan pada versi lampau) serta konversi mudah ke JSON. <code>Hashable</code> membantu SwiftUI menghitung perbedaan (<em>diffing</em>) saat menyusun transisi UI (<em>Grid/List animation</em>).</li>
-<li><strong>Kompak &amp; Ringkas</strong>: Model ini <em>tidak</em> memuat string atau nama penulis sama sekali. Ini menghemat memori dan I/O disk. Untuk mendapatkan string metadata buku, antarmuka View akan meminta ViewModel (<code>HistoryViewModel</code>) melakukan <em>Join</em> dengan <em>cache</em> dari <code>DatabaseManager.shared</code>.</li>
+<li><strong>Codable &amp; Hashable</strong>: <em>Struct</em> ini mengimplementasikan <code>Codable</code> agar kompatibel dengan legacy UserDefaults (jika masih digunakan pada versi lampau) serta konversi mudah ke JSON. <code>Hashable</code> membantu SwiftUI menghitung perbedaan (<em>diffing</em>) saat menyusun transisi UI (<em>Grid/List animation</em>).</li>
+<li><strong>Kompak &amp; Ringkas</strong>: Model ini tidak memuat <em>string</em> judul atau nama penulis sama sekali. Ini menghemat memori dan I/O <em>disk</em>. Untuk mendapatkan <em>string</em> metadata buku, lapisan antarmuka akan meminta ViewModel (<code>HistoryViewModel</code>) melakukan operasi <em>join</em> dengan <em>cache</em> dari <code>DatabaseManager.shared</code>.</li>
 </ol>
 <h2 id="konvensi-status-event-types">Konvensi Status (Event Types)</h2>
-<p>Tidak ada enum spesifik yang diregistrasikan di folder <code>Models/</code>. Notifikasi ke seluruh aplikasi didistribusikan menggunakan ekstensi bawaan <code>Notification.Name</code>. Notifikasi yang sering didengar oleh <code>HistoryViewModel</code> meliputi:</p>
+<p>Tidak ada <em>enum</em> spesifik yang didaftarkan di folder <code>Models/</code>. Notifikasi ke seluruh aplikasi didistribusikan menggunakan ekstensi bawaan <code>Notification.Name</code>. Notifikasi yang sering diamati oleh <code>HistoryViewModel</code> meliputi:</p>
 <ul>
-<li><code>.bookIntegrated</code> - Ditembak ketika sebuah buku selesai diunduh dan didekompres.</li>
-<li><code>.booksChanged</code> - Ditembak saat katalog utama direstrukturisasi.</li>
-<li><code>.historyDidChange</code> - Ditembak untuk memberi sinyal pada AppKit/SwiftUI bahwa perlu sinkronisasi silang-layar.</li>
+<li><code>.bookIntegrated</code> - Dipancarkan ketika sebuah buku selesai diunduh dan didekompresi.</li>
+<li><code>.booksChanged</code> - Dipancarkan saat katalog utama direstrukturisasi.</li>
+<li><code>.historyDidChange</code> - Dipancarkan untuk memberi sinyal pada AppKit/SwiftUI bahwa perlu sinkronisasi antarlayar.</li>
 </ul>
 
 
@@ -3710,6 +3738,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3740,10 +3774,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

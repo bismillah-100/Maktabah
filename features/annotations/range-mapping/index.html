@@ -2833,6 +2833,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3638,11 +3666,11 @@
 <p>Sumber kode: <code>Source/Core/TextProcessing/ArabicRangeCalculator.swift</code></p>
 <hr />
 <h2 id="masalah-disparitas-panjang-string">Masalah Disparitas Panjang String</h2>
-<p>Teks Arab memiliki karakter vokal pendek (<em>harakat/tashkeel</em>) yang menempati slot indeks tersendiri dalam pengkodean string UTF-16 di platform Apple (<code>NSString</code> / <code>NSRange</code>). </p>
-<p>Saat pengguna menyalakan atau mematikan harakat di reader:</p>
+<p>Teks Arab memiliki karakter vokal pendek (harakat / <em>tashkeel</em>) yang menempati slot indeks tersendiri dalam pengodean <em>string</em> UTF-16 di platform Apple (<code>NSString</code> / <code>NSRange</code>). </p>
+<p>Saat pengguna mengaktifkan atau menonaktifkan tampilan harakat di <em>reader</em>:</p>
 <ol>
-<li>Posisi indeks awal (<em>location</em>) dan panjang (<em>length</em>) dari seleksi teks akan berubah drastis.</li>
-<li>Jika hanya satu <code>NSRange</code> yang disimpan, anotasi akan meleset posisinya ketika mode tampilan harakat ditoggle.</li>
+<li>Posisi indeks awal (<em>location</em>) dan panjang (<em>length</em>) dari rentang seleksi teks akan berubah drastis.</li>
+<li>Jika hanya satu <code>NSRange</code> yang disimpan, posisi sorotan anotasi akan bergeser (<em>misaligned</em>) ketika mode tampilan harakat dialihkan (<em>toggled</em>).</li>
 </ol>
 <h3 id="ilustrasi-perbandingan-indeks">Ilustrasi Perbandingan Indeks</h3>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Teks Berharakat (rangeDiacritics)</label><label for="__tabbed_1_2">Teks Normalisasi (range)</label></div>
@@ -3661,7 +3689,7 @@
 </div>
 <hr />
 <h2 id="mekanisme-arabicrangecalculator">Mekanisme <code>ArabicRangeCalculator</code></h2>
-<p>Saat pengguna membuat highlight baru, sistem menjalankan fungsi <code>calculateRanges</code>:</p>
+<p>Saat pengguna membuat sorotan (<em>highlight</em>) baru, sistem menjalankan fungsi <code>calculateRanges</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">calculateRanges</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="n">selection</span><span class="p">:</span><span class="w"> </span><span class="n">NSRange</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="k">in</span><span class="w"> </span><span class="n">text</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
@@ -3673,25 +3701,25 @@
 <h3 id="logika-konversi">Logika Konversi</h3>
 <ol>
 <li>
-<p><strong>Jika saat ini mode <code>showHarakat == true</code>:</strong></p>
+<p><strong>Jika mode aktif saat ini <code>showHarakat == true</code>:</strong></p>
 <ul>
-<li><code>withDiacritics</code> diambil langsung dari <code>selection</code>.</li>
+<li>Rentang <code>withDiacritics</code> diambil langsung dari nilai <code>selection</code>.</li>
 <li>Teks dinormalisasi dengan menghapus karakter harakat.</li>
-<li>Fungsi <code>calculateRangeWithoutHarakat</code> menelusuri pemetaan karakter satu per satu untuk mendapatkan rentang <code>withoutDiacritics</code>.</li>
+<li>Fungsi <code>calculateRangeWithoutHarakat</code> menelusuri pemetaan karakter satu per satu untuk menghitung rentang <code>withoutDiacritics</code>.</li>
 </ul>
 </li>
 <li>
-<p><strong>Jika saat ini mode <code>showHarakat == false</code>:</strong></p>
+<p><strong>Jika mode aktif saat ini <code>showHarakat == false</code>:</strong></p>
 <ul>
-<li><code>withoutDiacritics</code> diambil langsung dari <code>selection</code>.</li>
-<li>Sistem mencari letak teks terpilih pada <code>diacriticsText</code> asli menggunakan metode pencocokan berbasis offset perkiraan (<em>approximate range matching</em>).</li>
+<li>Rentang <code>withoutDiacritics</code> diambil langsung dari nilai <code>selection</code>.</li>
+<li>Sistem mencari letak teks terpilih pada <code>diacriticsText</code> asli menggunakan metode pencocokan rentang perkiraan (<em>approximate range matching</em>).</li>
 </ul>
 </li>
 </ol>
 <hr />
 <h2 id="resolusi-kata-berulang-duplicate-words">Resolusi Kata Berulang (<em>Duplicate Words</em>)</h2>
-<p>Salah satu tantangan kritis adalah ketika kata yang dianotasi muncul beberapa kali dalam satu halaman (misalnya kata <em>قال</em> atau <em>عن</em>). </p>
-<p>Jika hanya mencocokkan string tanpa memperhitungkan offset perkiraan, sistem dapat salah memetakan rentang ke kata yang sama di paragraf lain. <code>findRangeInOriginal</code> menggunakan pembobotan jarak terkecil dari <code>selection.location</code> untuk menjamin kata yang tepat yang dipetakan.</p>
+<p>Salah satu tantangan penting muncul ketika kata yang dianotasi muncul beberapa kali dalam satu halaman (misalnya kata <em>قال</em> atau <em>عن</em>). </p>
+<p>Jika hanya mencocokkan <em>string</em> tanpa memperhitungkan <em>offset</em> perkiraan, sistem dapat salah memetakan rentang ke kata yang sama di paragraf lain. Fungsi <code>findRangeInOriginal</code> menggunakan pembobotan jarak terdekat dari <code>selection.location</code> untuk memastikan pemetaan dilakukan pada kata yang tepat.</p>
 
 
 
@@ -3711,6 +3739,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3741,10 +3775,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#macos-implementation-appkit" class="md-skip">
+        <a href="#reader-macos-implementation-appkit" class="md-skip">
           Skip to content
         </a>
       
@@ -2723,50 +2723,66 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-orkestrasi-sinkron-dengan-ibarottextvc" class="md-nav__link">
+  <a href="#1-arsitektur-komponen-visual-ui-hierarchy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Orkestrasi Sinkron dengan IbarotTextVC
+        1. Arsitektur Komponen Visual (UI Hierarchy)
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="1. Orkestrasi Sinkron dengan IbarotTextVC">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#menginjeksi-callbacks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Menginjeksi Callbacks
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-kelas-inti-ibarottextview-subkelas-nstextview" class="md-nav__link">
+  <a href="#2-peta-kontrol-menu-popover-interaktif" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Kelas Inti: IbarotTextView (Subkelas NSTextView)
+        2. Peta Kontrol, Menu &amp; Popover Interaktif
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. Kelas Inti: IbarotTextView (Subkelas NSTextView)">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pipeline-pemuatan-halaman-dari-aksi-navigasi-ke-textview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pipeline Pemuatan Halaman: Dari Aksi Navigasi ke TextView
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-siklus-hidup-sinkron-restorasi-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Siklus Hidup Sinkron &amp; Restorasi Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-bedah-komponen-logika-antarmuka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Bedah Komponen &amp; Logika Antarmuka
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Bedah Komponen &amp; Logika Antarmuka">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#spesifikasi-khusus-appkit" class="md-nav__link">
+  <a href="#a-orkestrasi-sinkron-dengan-ibarottextvc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spesifikasi Khusus AppKit
+        A. Orkestrasi Sinkron dengan IbarotTextVC
       
     </span>
   </a>
@@ -2774,10 +2790,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pencegatan-event-klik-anotasi" class="md-nav__link">
+  <a href="#b-ibarottextview-class-subkelas-nstextview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pencegatan Event Klik &amp; Anotasi
+        B. IbarotTextView (Class) - Subkelas NSTextView
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pencegatan-event-klik-anotasi-mousedown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Pencegatan Event Klik &amp; Anotasi (mouseDown)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-menu-kontekstual-lengkap-menufor-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Menu Kontekstual Lengkap (menu(for event:))
       
     </span>
   </a>
@@ -2813,6 +2851,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3551,50 +3617,66 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-orkestrasi-sinkron-dengan-ibarottextvc" class="md-nav__link">
+  <a href="#1-arsitektur-komponen-visual-ui-hierarchy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Orkestrasi Sinkron dengan IbarotTextVC
+        1. Arsitektur Komponen Visual (UI Hierarchy)
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="1. Orkestrasi Sinkron dengan IbarotTextVC">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#menginjeksi-callbacks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Menginjeksi Callbacks
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-kelas-inti-ibarottextview-subkelas-nstextview" class="md-nav__link">
+  <a href="#2-peta-kontrol-menu-popover-interaktif" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Kelas Inti: IbarotTextView (Subkelas NSTextView)
+        2. Peta Kontrol, Menu &amp; Popover Interaktif
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. Kelas Inti: IbarotTextView (Subkelas NSTextView)">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pipeline-pemuatan-halaman-dari-aksi-navigasi-ke-textview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pipeline Pemuatan Halaman: Dari Aksi Navigasi ke TextView
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-siklus-hidup-sinkron-restorasi-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Siklus Hidup Sinkron &amp; Restorasi Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-bedah-komponen-logika-antarmuka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Bedah Komponen &amp; Logika Antarmuka
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Bedah Komponen &amp; Logika Antarmuka">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#spesifikasi-khusus-appkit" class="md-nav__link">
+  <a href="#a-orkestrasi-sinkron-dengan-ibarottextvc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Spesifikasi Khusus AppKit
+        A. Orkestrasi Sinkron dengan IbarotTextVC
       
     </span>
   </a>
@@ -3602,10 +3684,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pencegatan-event-klik-anotasi" class="md-nav__link">
+  <a href="#b-ibarottextview-class-subkelas-nstextview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pencegatan Event Klik &amp; Anotasi
+        B. IbarotTextView (Class) - Subkelas NSTextView
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pencegatan-event-klik-anotasi-mousedown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Pencegatan Event Klik &amp; Anotasi (mouseDown)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-menu-kontekstual-lengkap-menufor-event" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Menu Kontekstual Lengkap (menu(for event:))
       
     </span>
   </a>
@@ -3634,77 +3738,151 @@
 
 
 
-<h1 id="macos-implementation-appkit">macOS Implementation (AppKit)</h1>
-<p>Implementasi layar pembaca Maktabah pada macOS dibangun secara native menggunakan hierarki murni AppKit tanpa campur tangan SwiftUI. Hal ini demi mengejar performa puncak saat me-<em>render</em> puluhan ribu baris teks Arab berharakat dalam satu waktu.</p>
+<h1 id="reader-macos-implementation-appkit">Reader macOS Implementation (AppKit)</h1>
+<p>Implementasi layar pembaca Maktabah pada macOS dibangun secara <em>native</em> menggunakan hierarki murni AppKit tanpa lapisan SwiftUI. Hal ini bertujuan untuk mencapai performa optimal saat me-<em>render</em> puluhan ribu baris teks Arab berharakat secara instan tanpa hambatan visual.</p>
+<p>Sumber kode:</p>
+<ul>
+<li>Controller: <code>Source/Features/Reader/macOS/IbarotTextVC.swift</code></li>
+<li>Custom TextView: <code>Source/UI/macOS/TextView/IbarotTextView.swift</code></li>
+</ul>
 <hr />
-<h2 id="1-orkestrasi-sinkron-dengan-ibarottextvc">1. Orkestrasi Sinkron dengan <code>IbarotTextVC</code></h2>
-<p><code>IbarotTextVC</code> adalah <em>ViewController</em> utama yang mengatur jendela pembaca. Sesuai dengan arsitektur yang telah dijelaskan di bagian <em>ViewModel</em>, <em>controller</em> ini menolak menggunakan <em>bindings</em> reaktif murni (seperti Sink Combine atau observasi <code>@Observable</code> SwiftUI) untuk mutasi teks.</p>
-<h3 id="menginjeksi-callbacks">Menginjeksi <em>Callbacks</em></h3>
-<p>Ketika diinisialisasi, <code>IbarotTextVC</code> mendaftarkan serangkaian penutupan (<em>closures/callbacks</em>) secara eksplisit ke <em>ViewModel</em>.</p>
+<h2 id="1-arsitektur-komponen-visual-ui-hierarchy">1. Arsitektur Komponen Visual (UI Hierarchy)</h2>
+<p>Hierarki tampilan pembaca AppKit dirancang terpisah antara pembungkus kontainer gulir (<code>NSScrollView</code>), kanvas perenderan teks kustom (<code>IbarotTextView</code>), serta subsistem tipografi teks bawaan macOS:</p>
+<pre class="mermaid"><code>flowchart TD
+    V_SPLIT["ViewerSplitVC (Main Container)"] --&gt; ITVC["IbarotTextVC (View Controller)"]
+    V_SPLIT --&gt; TOC["SidebarVC (Table of Contents)"]
+
+    ITVC --&gt; SV["NSScrollView (Scrolling &amp; Insets)"]
+    SV --&gt; ITV["IbarotTextView (Custom NSTextView)"]
+
+    ITV --&gt; TS["NSTextStorage (Attributed String Buffer)"]
+    ITV --&gt; LM["NSLayoutManager (Non-Contiguous Layout)"]
+    ITV --&gt; TC["NSTextContainer (Page Geometry)"]</code></pre>
+<hr />
+<h2 id="2-peta-kontrol-menu-popover-interaktif">2. Peta Kontrol, Menu &amp; Popover Interaktif</h2>
+<p>Seluruh fitur interaktif yang terhubung pada <code>IbarotTextView</code> dikelompokkan ke dalam beberapa kategori kontrol:</p>
+<pre class="mermaid"><code>mindmap
+  root((IbarotTextView))
+    Menu Kontekstual Klik-Kanan
+      Palet Warna Cepat (AnnotationColorMenuView)
+      Ubah Tipe (Highlight vs Underline)
+      Salin Teks (Dengan / Tanpa Tashkil)
+      Pencarian Kontekstual (In-Book / Global)
+      Menu Berbagi (Share Sheet)
+    Navigasi &amp; Paging
+      Bilah Geser (Slider Halaman)
+      Tombol Prev dan Next
+      Lompat Bab (Daftar Isi / TOC)
+    Panel Popover Mandiri
+      AnnotationEditorVC (Catatan &amp; Tag)
+      BookInfoPopoverVC (Metadata &amp; Tafsir)
+    Pengaturan Tampilan
+      Keluarga Font Arab
+      Ukuran Font Dinamis
+      Tema Latar Belakang</code></pre>
+<hr />
+<h2 id="3-pipeline-pemuatan-halaman-dari-aksi-navigasi-ke-textview">3. Pipeline Pemuatan Halaman: Dari Aksi Navigasi ke TextView</h2>
+<p>Alur linier pemrosesan data ketika pengguna berpindah halaman hingga teks tampil di layar:</p>
+<pre class="mermaid"><code>flowchart TD
+    NAV_EVENT["Aksi Navigasi (Next / Prev / Slider / TOC)"] --&gt; RVM_CALL["ReaderViewModel.loadPage(contentId)"]
+    RVM_CALL --&gt; CACHE_CHECK{"Cek BookPageCache?"}
+
+    CACHE_CHECK --&gt;|Hit| GET_CACHE["Ambil BookContent dari LRU Cache"]
+    CACHE_CHECK --&gt;|Miss| SQL_GET["BookConnection.getContent()"]
+    SQL_GET --&gt; DECOMP["LZString Decompression"]
+    DECOMP --&gt; SAVE_CACHE["Simpan ke BookPageCache"]
+
+    GET_CACHE --&gt; RENDER["ArabicTextRenderer.render(content, font, harakatMode)"]
+    SAVE_CACHE --&gt; RENDER
+
+    RENDER --&gt; ON_READY["IbarotTextVC.onContentReady(attributedText)"]
+    ON_READY --&gt; TEXT_STORAGE["IbarotTextView.textStorage.setAttributedString()"]</code></pre>
+<hr />
+<h2 id="4-siklus-hidup-sinkron-restorasi-layout">4. Siklus Hidup Sinkron &amp; Restorasi Layout</h2>
+<p>Diagram status (<em>State Diagram</em>) berikut memperlihatkan perlunya eksekusi sinkron pada <em>Main Thread</em> untuk mencegah pergeseran posisi gulir (<em>content jumping</em>):</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle : Halaman Ditampilkan
+    Idle --&gt; LoadingContent : Navigasi Dipicu
+    LoadingContent --&gt; Rendering : Teks Decompress &amp; Format
+
+    state SynchronousMainThreadExecution {
+        [*] --&gt; MutasiTextStorage : setAttributedString()
+        MutasiTextStorage --&gt; ForceLayout : layoutManager.ensureLayout()
+        ForceLayout --&gt; RestoreScroll : restoreScrollPosition()
+        RestoreScroll --&gt; [*]
+    }
+
+    Rendering --&gt; SynchronousMainThreadExecution : onContentReady Dipanggil
+    SynchronousMainThreadExecution --&gt; Idle : Tampilan Stabil (Tanpa Content Jump)</code></pre>
+<hr />
+<h2 id="5-bedah-komponen-logika-antarmuka">5. Bedah Komponen &amp; Logika Antarmuka</h2>
+<h3 id="a-orkestrasi-sinkron-dengan-ibarottextvc">A. Orkestrasi Sinkron dengan <code>IbarotTextVC</code></h3>
+<p><code>IbarotTextVC</code> mengontrol alur presentasi tanpa bergantung pada observer asinkron:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">bindViewModel</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="c1">// 1. Eksekusi Main Thread yang bersifat blocking dan segera (Synchronous)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="n">onContentReady</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="n">attributedText</span><span class="w"> </span><span class="k">in</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">        </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">self</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">self</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="c1">// Memodifikasi textStorage tanpa penundaan RunLoop</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textStorage</span><span class="p">?.</span><span class="n">setAttributedString</span><span class="p">(</span><span class="n">attributedText</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">        </span><span class="c1">// Memaksa OS untuk menghitung ulang tata letak seketika</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">layoutManager</span><span class="p">?.</span><span class="n">ensureLayout</span><span class="p">(</span><span class="k">for</span><span class="p">:</span><span class="w"> </span><span class="kc">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textContainer</span><span class="p">!)</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">        </span><span class="c1">// Restorasi posisi gulir</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">restoreScrollPosition</span><span class="p">()</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">}</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="n">onContentReady</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="n">attributedText</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">        </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">self</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">self</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textStorage</span><span class="p">?.</span><span class="n">setAttributedString</span><span class="p">(</span><span class="n">attributedText</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">layoutManager</span><span class="p">?.</span><span class="n">ensureLayout</span><span class="p">(</span><span class="k">for</span><span class="p">:</span><span class="w"> </span><span class="kc">self</span><span class="p">.</span><span class="n">textView</span><span class="p">.</span><span class="n">textContainer</span><span class="p">!)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">restoreScrollPosition</span><span class="p">()</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">}</span>
 </span></code></pre></div>
-<p><strong>Mengapa ini kritis?</strong>
-Bila menggunakan observasi reaktif yang sifatnya asinkronus, saat <em>ViewModel</em> memberi tahu bahwa teks baru sudah siap, status rotasi <em>scroll</em> (NSScrollView) milik AppKit mungkin sudah bergerak ke antrean <em>RunLoop</em> berikutnya. Akibatnya, <code>textStorage</code> terganti sementara <code>scrollView</code> mencoba mempertahankan posisi lama, menyebabkan visual yang inkonsisten (<em>content jumping</em>).</p>
-<hr />
-<h2 id="2-kelas-inti-ibarottextview-subkelas-nstextview">2. Kelas Inti: <code>IbarotTextView</code> (Subkelas <code>NSTextView</code>)</h2>
-<p><code>IbarotTextView</code> menimpa (override) perilaku standar teks editor Mac untuk menyesuaikannya dengan kebutuhan aplikasi baca kitab (Read-Only namun Selectable).</p>
-<h3 id="spesifikasi-khusus-appkit">Spesifikasi Khusus AppKit</h3>
+<ul>
+<li><strong>Mencegah Content Jumping</strong>: Karena <code>textStorage</code> diperbarui secara sinkron pada siklus <em>RunLoop</em> yang sama, posisi gulir <code>NSScrollView</code> tidak terdistorsi saat berganti halaman.</li>
+</ul>
+<h3 id="b-ibarottextview-class-subkelas-nstextview">B. <code>IbarotTextView</code> (Class) - Subkelas <code>NSTextView</code></h3>
+<p>Mengoptimalkan <em>rendering</em> teks Arab berukuran besar:</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Modifikasi</th>
-<th style="text-align: left;">Tujuan / Fungsi</th>
+<th style="text-align: left;">Fitur / Modifikasi</th>
+<th style="text-align: left;">Tujuan Teknis</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>layoutManager?.allowsNonContiguousLayout = true</code></td>
-<td style="text-align: left;"><strong>Optimasi Skala Besar</strong>: Memungkinkan AppKit menggambar hanya teks yang terlihat di layar, menghemat RAM dan CPU secara eksponensial.</td>
+<td style="text-align: left;"><code>allowsNonContiguousLayout = true</code></td>
+<td style="text-align: left;"><strong>Optimasi Memori</strong>: Hanya menghitung glif dan baris yang berada dalam area <em>viewport</em> aktif.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>baseWritingDirection = .rightToLeft</code></td>
-<td style="text-align: left;">Menjamin kursor seleksi macOS bergerak berlawanan arah dari kanan ke kiri (<em>Native RTL</em>).</td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>menu(for event: NSEvent)</code></td>
-<td style="text-align: left;"><strong>Contextual Menu</strong>: Membajak klik-kanan bawaan Apple (Copy, Lookup) dan menyuntikkan menu tambahan seperti <em>Add Highlight</em> (Warna Palet) atau <em>Share</em>.</td>
+<td style="text-align: left;">Memastikan pergerakan kursor dan seleksi teks berjalan alami dari kanan ke kiri (RTL).</td>
 </tr>
 </tbody>
 </table>
-<h3 id="pencegatan-event-klik-anotasi">Pencegatan <em>Event</em> Klik &amp; Anotasi</h3>
-<p>Natifnya, <code>NSTextView</code> menggunakan klik untuk blokir teks (<em>selection</em>). Namun di Maktabah, pengguna juga dapat meng-klik anotasi (sorotan warna) untuk memunculkan panel <em>Popover</em> penyuntingan.</p>
-<p>Pencegatan dilakukan dengan menunggangi delegasi dan kalkulator rentang:
+<h3 id="c-pencegatan-event-klik-anotasi-mousedown">C. Pencegatan Event Klik &amp; Anotasi (<code>mouseDown</code>)</h3>
+<p><code>IbarotTextView</code> menangkap <em>event</em> klik untuk memeriksa apakah pengguna mengetuk anotasi yang sudah ada (apabila pengaturan <code>UserDefaults.enableAnnotationClick</code> aktif):</p>
+<pre class="mermaid"><code>flowchart TD
+    CLICK["User Klik pada IbarotTextView (mouseDown)"] --&gt; COORD["Konversi Titik: characterIndexForInsertion(at: point)"]
+    COORD --&gt; CHECK{"Apakah Berada di Rentang Anotasi?"}
+
+    CHECK --&gt;|"Ya (Ada Annotation ID)"| SHOW_POP["Tampilkan Popover AnnotationEditorVC"]
+    SHOW_POP --&gt; SYNC_POP["Sajikan Editor Catatan &amp; Warna Anotasi"]
+
+    CHECK --&gt;|Tidak| SUPER_EVENT["super.mouseDown(with: event)"]
+    SUPER_EVENT --&gt; SELECT_MODE["Mode Seleksi Teks Normal"]</code></pre>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kr">override</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">mouseDown</span><span class="p">(</span><span class="n">with</span><span class="w"> </span><span class="n">event</span><span class="p">:</span><span class="w"> </span><span class="bp">NSEvent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">self</span><span class="p">.</span><span class="n">convert</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">locationInWindow</span><span class="p">,</span><span class="w"> </span><span class="n">from</span><span class="p">:</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">charIndex</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">self</span><span class="p">.</span><span class="n">characterIndexForInsertion</span><span class="p">(</span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">point</span><span class="p">)</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="c1">// (1)! Cek apakah klik berada di dalam rentang anotasi yang telah dirender</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">annotationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">findAnnotation</span><span class="p">(</span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">charIndex</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="c1">// Tampilkan NSPopover Editor Anotasi secara sinkron</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="n">showAnnotationEditor</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="n">annotationId</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">point</span><span class="p">)</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="kc">super</span><span class="p">.</span><span class="n">mouseDown</span><span class="p">(</span><span class="n">with</span><span class="p">:</span><span class="w"> </span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="c1">// Kembalikan ke sistem seleksi normal</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">}</span>
-</span></code></pre></div></p>
-<div class="admonition note">
-<p class="admonition-title">Layout Management</p>
-<p><em>Non-Contiguous Layout</em> pada teks RTL berukuran raksasa sering membuat tinggi <em>scrollbar</em> melenceng. <code>IbarotTextVC</code> akan secara berkala menghitung ulang ukuran <em>bounding box</em> sesungguhnya (<em>force layout calculation</em>) ketika pengguna mencapai 80% dari batas dokumen untuk menghindari jeda macet.</p>
-</div>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">annotationId</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">findAnnotation</span><span class="p">(</span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">charIndex</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="n">showAnnotationEditor</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="n">annotationId</span><span class="p">,</span><span class="w"> </span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">point</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="kc">super</span><span class="p">.</span><span class="n">mouseDown</span><span class="p">(</span><span class="n">with</span><span class="p">:</span><span class="w"> </span><span class="n">event</span><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="d-menu-kontekstual-lengkap-menufor-event">D. Menu Kontekstual Lengkap (<code>menu(for event:)</code>)</h3>
+<p>Ketika pengguna mengklik kanan pada teks atau melakukan seleksi:</p>
+<ul>
+<li><strong>Palet Warna Cepat (<code>AnnotationColorMenuView</code>)</strong>: Menyajikan bulatan warna sorotan langsung di menu klik kanan tanpa harus membuka modal editor.</li>
+<li><strong>Toggle Underline &amp; Highlight</strong>: Mengubah gaya penandaan antara garis bawah atau latar warna.</li>
+<li><strong>Opsi Salin Teks</strong>:</li>
+<li><em>Copy with Tashkil</em>: Menyalin teks lengkap beserta harakat.</li>
+<li><em>Copy without Tashkil</em>: Menghapus tanda harakat secara instan melalui <code>ArabicTextRenderer.stripHarakat()</code> sebelum dimasukkan ke <em>clipboard</em>.</li>
+<li><strong>Pencarian Kontekstual</strong>: Opsi mencari frasa yang diseleksi di dalam kitab aktif (<em>In-Book Search</em>) atau di seluruh katalog perpustakaan (<em>Global FTS</em>).</li>
+<li><strong>Menu Penampilan Teks</strong>: Menyesuaikan ukuran font, famili font Arab (<em>Traditional Arabic</em>, <em>Scheherazade</em>, <em>Amiri</em>), dan tema latar belakang (<em>Sepia</em>, <em>Dark Sepia</em>, <em>White</em>, <em>Black</em>).</li>
+</ul>
 
 
 
@@ -3724,6 +3902,12 @@ Bila menggunakan observasi reaktif yang sifatnya asinkronus, saat <em>ViewModel<
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3754,10 +3938,12 @@ Bila menggunakan observasi reaktif yang sifatnya asinkronus, saat <em>ViewModel<
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

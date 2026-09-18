@@ -2795,6 +2795,34 @@
   
   
     <li class="md-nav__item">
+      <a href="menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="textview/" class="md-nav__link">
         
   
@@ -3563,33 +3591,50 @@
   <h1>Overview</h1>
 
 <h2 id="gambaran-umum-overview">Gambaran Umum (Overview)</h2>
-<p>Fitur Reader Engine merupakan inti (core) dari aplikasi Maktabah yang bertugas menangani rendering teks Arab dalam skala besar, proses pagination, dan continuous scroll secara efisien. Komponen ini disusun dalam arsitektur MVVM (Model-View-ViewModel) yang modular untuk mendukung implementasi lintas platform (macOS dan iOS).</p>
-<pre class="mermaid"><code>graph TD
-    UI_iOS[iOS: iOSReaderView &amp; iOSIbarotTextView] --&gt; VM(ReaderViewModel)
-    UI_macOS[macOS: IbarotTextVC &amp; IbarotTextView] --&gt; VM
-    VM --&gt; Cache(BookPageCache)
-    Cache -- Cache Miss --&gt; DB(BookConnection)
-    DB --&gt; LZString(Decompressor)
-    LZString --&gt; Renderer(ArabicTextRenderer)
-    Renderer --&gt; VM</code></pre>
+<p>Fitur <em>Reader Engine</em> merupakan modul inti (<em>core</em>) aplikasi Maktabah yang bertugas menangani <em>rendering</em> teks Arab berskala besar, proses <em>pagination</em>, dan <em>continuous scroll</em> secara efisien. Komponen ini disusun dalam arsitektur MVVM (<em>Model-View-ViewModel</em>) yang modular untuk mendukung implementasi lintas platform (macOS dan iOS).</p>
+<pre class="mermaid"><code>flowchart TD
+    UI_iOS["iOS: iOSReaderView &amp; iOSIbarotTextView"] --&gt; VM["ReaderViewModel (@Observable)"]
+    UI_macOS["macOS: IbarotTextVC &amp; IbarotTextView"] --&gt; VM
+
+    VM ~~~ Cache
+
+    Cache["BookPageCache (LRU In-Memory)"]
+    VM --&gt; Cache
+
+    Cache --&gt;|"Cache Miss"| DB[("BookConnection (SQLite b{id})")]
+    DB --&gt; LZString["LZString (Decompressor)"]
+    LZString --&gt; Renderer["ArabicTextRenderer (Typography)"]
+    Renderer --&gt; VM
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class UI_iOS,UI_macOS ui;
+    class VM vm;
+    class Cache,LZString,Renderer store;
+    class DB db;</code></pre>
 <h2 id="struktur-modul">Struktur Modul</h2>
-<p>Modul ini dipecah ke dalam beberapa komponen utama yang didokumentasikan secara terpisah:</p>
+<p>Modul ini dibagi menjadi beberapa subkomponen utama yang didokumentasikan secara terpisah:</p>
 <ul>
-<li><a href="cache/">Cache</a>: Mekanisme caching berbasis LRU.</li>
-<li><a href="models/">Data Models</a>: Model konten kitab, tipografi terproses, TOC, dan state reader.</li>
-<li><a href="ios/">iOS Implementation</a>: Implementasi UI spesifik iOS.</li>
-<li><a href="macos/">macOS Implementation</a>: Implementasi UI spesifik macOS.</li>
-<li><a href="protocols/">Protocols</a>: Abstraksi antarmuka (interfaces).</li>
-<li><a href="textview/">TextView (macOS &amp; iOS)</a>: Implementasi text view rendering kustom.</li>
-<li><a href="viewmodel/">ViewModel</a>: Pengontrol logika bisnis utama.</li>
+<li><a href="cache/">Cache</a>: Mekanisme <em>caching in-memory</em> berbasis <em>LRU cache</em>.</li>
+<li><a href="models/">Data Models</a>: Model konten kitab, tipografi hasil pemrosesan, daftar isi (TOC), dan <em>state reader</em>.</li>
+<li><a href="ios/">iOS Implementation</a>: Implementasi antarmuka pengguna khusus iOS.</li>
+<li><a href="macos/">macOS Implementation</a>: Implementasi antarmuka pengguna khusus macOS.</li>
+<li><a href="protocols/">Protocols</a>: Abstraksi antarmuka (<em>protocols/interfaces</em>).</li>
+<li><a href="menu/">Selection &amp; Context Menu</a>: Pencegatan pembuatan anotasi duplikat dan aksi menu seleksi teks.</li>
+<li><a href="textview/">TextView (macOS &amp; iOS)</a>: Implementasi kustom <em>text view rendering engine</em>.</li>
+<li><a href="viewmodel/">ViewModel</a>: Pengontrol logika bisnis dan alur reaktivitas utama.</li>
 </ul>
 <h2 id="prasyarat-dependensi-prerequisites">Prasyarat &amp; Dependensi (Prerequisites)</h2>
 <blockquote>
-<p>Komponen ini bergantung pada <code>SQLiteDatabase</code> untuk akses data dan utilitas kompresi <code>LZString</code>.</p>
+<p>Modul ini bergantung pada <code>SQLiteDatabase</code> untuk akses data dan utilitas kompresi <code>LZString</code>.</p>
 </blockquote>
 <ul>
 <li><strong>Platform</strong>: macOS 15+ (AppKit), iOS 16+ (SwiftUI + UIKit).</li>
-<li><strong>Dependensi Internal</strong>: <code>TextViewState</code> (manajemen preferensi visual font/harakat), <code>ArabicRangeCalculator</code> (sinkronisasi rentang teks asli dan tampilan).</li>
+<li><strong>Dependensi Internal</strong>: <code>TextViewState</code> (pengelolaan preferensi visual font dan harakat), <code>ArabicRangeCalculator</code> (sinkronisasi pemetaan rentang teks sumber dan teks tampilan).</li>
 </ul>
 
 
@@ -3610,6 +3655,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3640,10 +3691,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

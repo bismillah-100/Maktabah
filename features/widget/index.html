@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reader/textview/" class="md-nav__link">
         
   
@@ -3170,6 +3198,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sub-komponen-dokumentasi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Komponen Dokumentasi
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3527,6 +3566,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sub-komponen-dokumentasi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Komponen Dokumentasi
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3546,38 +3596,61 @@
 
 <h1 id="widget">Widget</h1>
 <h2 id="ringkasan">Ringkasan</h2>
-<p>Fitur Widget pada Maktabah menyediakan akses cepat ke konten spesifik langsung dari Home Screen atau Notification Center perangkat pengguna. Terdapat dua widget utama:
-1. <strong>Annotation Widget</strong>: Menampilkan anotasi (sorotan/catatan) terbaru.
-2. <strong>History Widget</strong>: Menampilkan buku-buku yang terakhir dibaca.</p>
-<p>Widget dibangun menggunakan SwiftUI dan WidgetKit, serta mengandalkan sinkronisasi data independen berbasis Snapshot (bukan mengakses database utama secara langsung).</p>
+<p>Fitur Widget pada Maktabah menyediakan akses cepat ke konten spesifik langsung dari <em>Home Screen</em>, <em>Lock Screen</em>, atau <em>Notification Center</em> perangkat pengguna. Terdapat dua widget utama:</p>
+<ol>
+<li><strong>Annotation Widget</strong>: Menampilkan anotasi (sorotan teks dan catatan) terbaru.</li>
+<li><strong>History Widget</strong>: Menampilkan buku-buku yang terakhir kali dibaca.</li>
+</ol>
+<p>Widget dibangun menggunakan SwiftUI dan WidgetKit, serta mengandalkan sinkronisasi data independen berbasis <em>Snapshot</em> (tanpa mengakses basis data utama secara langsung).</p>
 <h2 id="arsitektur-pipeline">Arsitektur Pipeline</h2>
-<p>Alur kerja widget melibatkan penyediaan snapshot mandiri yang disinkronisasi melalui App Group secara lokal dan ditarik dari CloudKit jika memungkinkan.</p>
-<pre class="mermaid"><code>graph TD
-    subgraph UI
-        V(Widget View)
-        C(Widget Components)
+<p>Alur kerja widget melibatkan penyediaan <em>snapshot</em> mandiri yang disinkronkan melalui App Group secara lokal dan ditarik dari CloudKit bila tersedia.</p>
+<pre class="mermaid"><code>flowchart TD
+    V["Widget View (SwiftUI / WidgetKit)"]
+
+    AP["AnnotationProvider (TimelineProvider)"]
+    HP["HistoryProvider (TimelineProvider)"]
+
+    V --&gt;|"Render Timeline"| AP
+    V --&gt;|"Render Timeline"| HP
+
+    AP ~~~ CF
+    HP ~~~ CF
+
+    CF["CloudKitFetcher"]
+    WSR["WidgetSnapshotRecord (Snapshot Resolver)"]
+
+    AP --&gt;|"Fetch Snapshot"| CF
+    HP --&gt;|"Fetch Snapshot"| CF
+    CF --&gt;|"Read / Resolve"| WSR
+
+    WSR ~~~ STORES
+
+    subgraph STORES ["Data Source &amp; Storage"]
+        CK[("CloudKit Database (Remote 6s Timeout)")]
+        AG[("App Group JSON (Local Snapshot Cache)")]
     end
 
-    subgraph Provider
-        AP(AnnotationProvider)
-        HP(HistoryProvider)
-    end
+    WSR -.-&gt;|"Remote Fetch"| CK
+    WSR -.-&gt;|"Fallback / Cache"| AG
 
-    subgraph Core
-        CF(CloudKitFetcher)
-        WSR(WidgetSnapshotRecord)
-        CK(CloudKit Database)
-        AG(App Group JSON)
-    end
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
-    %% Flow
-    V --&gt;|Render| AP
-    V --&gt;|Render| HP
-    AP --&gt;|Fetch Snapshot| CF
-    HP --&gt;|Fetch Snapshot| CF
-    CF --&gt;|Read/Resolve| WSR
-    WSR -.-&gt;|Fetch Remote 6s Timeout| CK
-    WSR -.-&gt;|Fallback / Cache| AG</code></pre>
+    class V ui;
+    class AP,HP,CF,WSR store;
+    class CK,AG db;</code></pre>
+<h2 id="sub-komponen-dokumentasi">Sub-Komponen Dokumentasi</h2>
+<ul>
+<li><strong><a href="models/">Data Models &amp; Snapshots</a></strong>: Model <em>snapshot</em> terisolasi (<code>AnnotationSnapshot</code>, <code>HistorySnapshot</code>).</li>
+<li><strong><a href="viewmodel/">State Management &amp; Coordination</a></strong>: Mekanisme <code>WidgetUpdateCoordinator</code> dan siklus hidup <code>TimelineProvider</code>.</li>
+<li><strong><a href="database/">Database &amp; App Group Persistence</a></strong>: Penyimpanan berkas JSON App Group dengan <code>NSFileCoordinator</code>.</li>
+<li><strong><a href="ios/">iOS Integration</a></strong>: Penanganan <em>deep link</em> dan penempatan widget di iOS.</li>
+<li><strong><a href="macos/">macOS Integration</a></strong>: Adaptasi widget desktop macOS dan delegasi URL <em>event</em>.</li>
+<li><strong><a href="protocols/">Protocols &amp; Contracts</a></strong>: Kontrak <code>WidgetSnapshotRecord</code> dan <code>AppIntentTimelineProvider</code>.</li>
+</ul>
 
 
 
@@ -3597,6 +3670,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3627,10 +3706,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

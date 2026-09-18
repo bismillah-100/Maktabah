@@ -1965,10 +1965,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct" class="md-nav__link">
+  <a href="#tablecolumninfo-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct
+        TableColumnInfo (Struct)
       
     </span>
   </a>
@@ -2004,10 +2004,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct_1" class="md-nav__link">
+  <a href="#migrationpaths-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct
+        MigrationPaths (Struct)
       
     </span>
   </a>
@@ -2043,10 +2043,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct_2" class="md-nav__link">
+  <a href="#bundlebookindexentry-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct
+        BundleBookIndexEntry (Struct)
       
     </span>
   </a>
@@ -2064,10 +2064,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#platform-specific-handling" class="md-nav__link">
+  <a href="#penanganan-khusus-platform-platform-specific-handling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Platform Specific Handling
+        Penanganan Khusus Platform (Platform Specific Handling)
       
     </span>
   </a>
@@ -2967,6 +2967,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3776,10 +3804,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct" class="md-nav__link">
+  <a href="#tablecolumninfo-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct
+        TableColumnInfo (Struct)
       
     </span>
   </a>
@@ -3815,10 +3843,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct_1" class="md-nav__link">
+  <a href="#migrationpaths-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct
+        MigrationPaths (Struct)
       
     </span>
   </a>
@@ -3854,10 +3882,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#struct_2" class="md-nav__link">
+  <a href="#bundlebookindexentry-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Struct
+        BundleBookIndexEntry (Struct)
       
     </span>
   </a>
@@ -3875,10 +3903,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#platform-specific-handling" class="md-nav__link">
+  <a href="#penanganan-khusus-platform-platform-specific-handling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Platform Specific Handling
+        Penanganan Khusus Platform (Platform Specific Handling)
       
     </span>
   </a>
@@ -3903,33 +3931,48 @@
 
 
 <h1 id="dokumentasi-deep-dive-indexing-fts-dan-stemming">Dokumentasi Deep-Dive: Indexing FTS dan Stemming</h1>
-<p>Dokumentasi ini membedah proses teknis pembuatan indeks Full-Text Search (FTS) secara menyeluruh saat sebuah kitab selesai diunduh, maupun saat proses migrasi terjadi.</p>
+<p>Dokumentasi ini membedah proses teknis pembuatan indeks <em>Full-Text Search</em> (FTS) secara menyeluruh saat sebuah kitab selesai diunduh maupun saat proses migrasi berlangsung.</p>
 <h2 id="architecture-pipeline">Architecture Pipeline</h2>
-<p>Berikut adalah diagram interaksi komponen yang merepresentasikan jalur integrasi dan indexing FTS:</p>
-<pre class="mermaid"><code>graph TD
-    A[BookDownloadManager] --&gt;|Download Finished| B(BookArchiveIntegrator)
-    B --&gt;|ensureBookIntegrated| C{IntegratePhase}
-    C --&gt;|.fts| D[ArchiveDatabaseTools]
-    C --&gt;|.data| E[Database Table Copy]
-    D --&gt;|buildFTS| F[(fts_db)]
-    E --&gt;|copyTable| G[(archive_db)]
+<p>Berikut adalah diagram interaksi komponen yang merepresentasikan jalur integrasi dan <em>indexing</em> FTS:</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Ingestion ["Ingestion &amp; Trigger"]
+        DLM["BookDownloadManager"] --&gt;|"Download Selesai"| BAI["BookArchiveIntegrator"]
+        MIG["FtsMigrationManager"] --&gt;|"Migrasi Versi &lt; 2"| ADT["ArchiveDatabaseTools"]
+    end
 
-    H[FtsMigrationManager] --&gt;|migrateArchive| D
+    BAI --&gt;|"ensureBookIntegrated"| Phase{"IntegratePhase"}
 
-    D -.-&gt;|1. Fetch Raw Text| I[SQLite source_db]
-    D -.-&gt;|2. Preprocess| J[stripSpanTags &amp; newline replace]
-    D -.-&gt;|3. Stemming| K[stemArabicLight10]
-    D -.-&gt;|4. Insert| F</code></pre>
+    Phase --&gt;|".data"| Copy["Database Table Copy"]
+    Phase --&gt;|".fts"| ADT
+
+    Copy --&gt;|"copyTable"| DB_Archive[("archive_db&lt;br/&gt;(Tabel Kitab &amp; TOC)")]
+
+    subgraph Pipeline ["Pipeline Indexing FTS"]
+        ADT -.-&gt;|"1. Fetch Raw Text"| DB_Source[("source_db&lt;br/&gt;(Raw SQLite)")]
+        ADT -.-&gt;|"2. Preprocess"| Prep["stripSpanTags &amp; newline replace"]
+        Prep -.-&gt;|"3. Normalisasi"| Stem["stemArabicLight10&lt;br/&gt;(Buang Harakat &amp; Tasydid)"]
+        Stem -.-&gt;|"4. Insert Transaction"| DB_Fts[("fts_db&lt;br/&gt;(Tabel Virtual FTS5)")]
+    end
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class DLM,BAI,MIG,ADT,Copy,Prep,Stem store;
+    class DB_Archive,DB_Source,DB_Fts db;
+    class Phase vm;</code></pre>
 <h3 id="separation-of-concerns-prinsip-pemisahan-tanggung-jawab">Separation of Concerns (Prinsip Pemisahan Tanggung Jawab)</h3>
-<p>Desain arsitektur FTS Maktabah menerapkan pemisahan yang jelas antara lapisan:</p>
+<p>Desain arsitektur FTS Maktabah menerapkan pemisahan yang jelas antar-lapisan:</p>
 <ul>
-<li><strong>Network &amp; Cache Layer (<code>BookDownloadManager</code>)</strong>: Bertanggung jawab murni pada pengambilan data Zstd/SQLite dari jaringan dan dekompresi file.</li>
-<li><strong>Coordination Layer (<code>BookArchiveIntegrator</code>, <code>FtsMigrationManager</code>)</strong>: Mengatur kapan integrasi dan indexing dilakukan, sinkronisasi antar Task/Thread, dan memberikan laporan progres.</li>
-<li><strong>Database &amp; Core Engine (<code>ArchiveDatabaseTools</code>)</strong>: Menyediakan primitif operasi SQLite mentah, kompresi blob, stemming teks Arab, dan pembuatan struktur tabel virtual FTS5.</li>
+<li><strong>Network &amp; Cache Layer (<code>BookDownloadManager</code>)</strong>: Bertanggung jawab secara spesifik pada pengambilan data Zstd/SQLite dari jaringan dan dekompresi berkas.</li>
+<li><strong>Coordination Layer (<code>BookArchiveIntegrator</code>, <code>FtsMigrationManager</code>)</strong>: Mengatur waktu eksekusi integrasi dan <em>indexing</em>, sinkronisasi antar-<em>Task/Thread</em>, serta pelaporan progres.</li>
+<li><strong>Database &amp; Core Engine (<code>ArchiveDatabaseTools</code>)</strong>: Menyediakan operasi primitif SQLite, kompresi blob, <em>stemming</em> teks Arab, dan pembuatan struktur tabel virtual FTS5.</li>
 </ul>
 <h2 id="bedah-komponen-teknis">Bedah Komponen Teknis</h2>
 <h3 id="1-bookarchiveintegrator">1. <code>BookArchiveIntegrator</code></h3>
-<p>Komponen ini mengatur integrasi kitab individu yang baru selesai diunduh.</p>
+<p>Komponen ini mengatur integrasi kitab individual yang baru selesai diunduh.</p>
 <h4 id="struct-class">Struct &amp; Class</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">BookArchiveSingleFlight</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">BookArchiveSingleFlight</span><span class="p">()</span>
@@ -3945,8 +3988,8 @@
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li><code>BookArchiveSingleFlight</code> memastikan deduplikasi (satu kitab tidak diindeks dua kali bersamaan) dan serialisasi per-archive.</li>
-<li>Menggunakan atribut <code>@unchecked Sendable</code> karena state mutablenya dijaga oleh struktur internal atau dijalankan pada antrian khusus.</li>
+<li><code>BookArchiveSingleFlight</code> memastikan deduplikasi (satu kitab tidak diindeks dua kali secara bersamaan) dan serialisasi per-arsip.</li>
+<li>Menggunakan atribut <code>@unchecked Sendable</code> karena <em>mutable state</em>-nya dilindungi oleh struktur internal atau dijalankan pada antrean khusus.</li>
 </ol>
 <h4 id="enum-status">Enum &amp; Status</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">IntegratePhase</span><span class="w"> </span><span class="p">{</span>
@@ -3955,7 +3998,7 @@
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><code>fts</code>: Menandakan mesin sedang mem-parsing dan membuat indeks FTS.</li>
+<li><code>fts</code>: Menandakan mesin sedang mem-<em>parsing</em> dan membuat indeks FTS.</li>
 <li><code>data</code>: Menandakan mesin sedang menyalin tabel data utama.</li>
 </ul>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookArchiveIntegrateError</span><span class="p">:</span><span class="w"> </span><span class="n">LocalizedError</span><span class="w"> </span><span class="p">{</span>
@@ -3965,11 +4008,11 @@
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li>Menyimpan representasi <em>error</em> terstruktur dengan <code>LocalizedError</code> saat validasi sumber gagal atau pergantian <em>database file</em> rusak.</li>
+<li>Menyimpan representasi <em>error</em> terstruktur dengan <code>LocalizedError</code> saat validasi sumber gagal atau pergantian berkas basis data bermasalah.</li>
 </ul>
 <h3 id="2-archivedatabasetools">2. <code>ArchiveDatabaseTools</code></h3>
-<p>Menangani operasi primitif SQLite, termasuk fase membaca baris teks, melakukan <em>stemming</em>, dan menulisnya ke FTS5.</p>
-<h4 id="struct">Struct</h4>
+<p>Menangani operasi primitif SQLite, termasuk fase membaca baris teks, menjalankan <em>stemming</em>, dan menulisnya ke FTS5.</p>
+<h4 id="tablecolumninfo-struct"><code>TableColumnInfo</code> (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">TableColumnInfo</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">name</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">type</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -3977,7 +4020,7 @@
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li>Digunakan untuk introspeksi kolom dinamis, memastikan skema tabel <code>main</code> bisa di-<em>copy</em> dengan sempurna sebelum indexing.</li>
+<li>Digunakan untuk introspeksi kolom dinamis, memastikan skema tabel <code>main</code> dapat disalin secara akurat sebelum <em>indexing</em>.</li>
 </ul>
 <h4 id="optimasi-khusus">Optimasi Khusus</h4>
 <ul>
@@ -3988,24 +4031,24 @@
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">to</span><span class="p">:</span><span class="w"> </span><span class="n">sqlite3_destructor_type</span><span class="p">.</span><span class="kc">self</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">)</span>
 </span></code></pre></div>
-<p>Konstanta ini digunakan saat melakukan <code>sqlite3_bind_text</code>. Daripada SQLite membuat salinan string (yang memakan banyak RAM), ia menggunakan <code>SQLITE_TRANSIENT</code> pointer agar lebih efisien memori.</p>
+<p>Konstanta ini digunakan saat melakukan <code>sqlite3_bind_text</code>. Dibandingkan membuat salinan <em>string</em> baru yang memakan memori RAM, sistem menggunakan pointer <code>SQLITE_TRANSIENT</code> agar lebih efisien.</p>
 </li>
 <li>
 <p><strong>Transaction Wrapper (<code>withTransaction</code>)</strong>:
-    Seluruh iterasi row insertion dibungkus dalam <code>BEGIN TRANSACTION</code> dan <code>COMMIT</code>. Tanpa transaksi eksplisit, SQLite akan membuat <em>journal</em> per instruksi insert, yang membuat disk I/O sangat lambat.</p>
+    Seluruh iterasi penyisipan baris dibungkus dalam <code>BEGIN TRANSACTION</code> dan <code>COMMIT</code>. Tanpa transaksi eksplisit, SQLite akan membuat <em>journal file</em> terpisah untuk setiap instruksi <em>insert</em>, yang menyebabkan disk I/O lambat.</p>
 </li>
 <li>
 <p><strong>Memory Management (<code>autoreleasepool</code>)</strong>:
-    Pada metode <code>processFtsRows</code>, setiap row diproses di dalam <em>block</em> <code>autoreleasepool</code>. Ini mencegah <em>memory spike</em> saat membaca ratusan ribu baris yang menghasilkan string sementara (hasil stemming).</p>
+    Pada metode <code>processFtsRows</code>, setiap baris diproses di dalam blok <code>autoreleasepool</code>. Ini mencegah lonjakan alokasi memori (<em>memory spike</em>) saat membaca ratusan ribu baris yang menghasilkan <em>string</em> sementara.</p>
 </li>
 <li>
 <p><strong>Normalisasi Teks Arab</strong>:
-    Teks dibersihkan menggunakan metode berantai <code>replacing("\n", with: " ").stripSpanTags()</code>, lalu diproses puncaknya pada algoritma <code>stemArabicLight10()</code>. Ini membuang harakat, tasydid, dan mengubah angka Arab agar indeks konsisten.</p>
+    Teks dibersihkan menggunakan metode berantai <code>replacing("\n", with: " ").stripSpanTags()</code>, lalu diproses oleh algoritma <code>stemArabicLight10()</code>. Algoritma ini menghapus harakat, tasydid, dan menormalisasi glif Arab agar indeks pencarian konsisten.</p>
 </li>
 </ul>
 <h3 id="3-ftsmigrationmanager">3. <code>FtsMigrationManager</code></h3>
-<p>Berperan ketika pengguna memutakhirkan aplikasi dan format FTS lama terdeteksi (versi &lt; 2).</p>
-<h4 id="struct_1">Struct</h4>
+<p>Berperan ketika pengguna memutakhirkan aplikasi dan terdeteksi format FTS versi terdahulu (versi &lt; 2).</p>
+<h4 id="migrationpaths-struct"><code>MigrationPaths</code> (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">MigrationPaths</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archiveOrig</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">ftsOrig</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -4014,17 +4057,17 @@
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li>Menyimpan jalur awal dan sementar (temporary) untuk menulis <em>database</em>. <code>Sendable</code> memastikan data ini aman dikirim ke task konkurensi di <em>TaskGroup</em>.</li>
+<li>Menyimpan jalur awal dan sementara untuk penulisan basis data. Tipe <code>Sendable</code> memastikan data ini aman dikirim ke konkurensi di <code>TaskGroup</code>.</li>
 </ul>
 <h4 id="optimasi-khusus_1">Optimasi Khusus</h4>
 <ul>
 <li>
 <p><strong>Concurrency Limits</strong>:
-    Migrasi massal dibatasi lewat perhitungan optimal <code>maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))</code> agar tidak menyebabkan <em>Memory Warning</em>.</p>
+    Migrasi massal dibatasi lewat kalkulasi adaptif <code>maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))</code> agar tidak memicu peringatan keterbatasan memori (<em>Memory Warning</em>).</p>
 </li>
 <li>
 <p><strong>Pragma Tuning</strong>:
-    Memberikan instruksi sementara ke SQLite untuk mematikan sinkronisasi I/O:</p>
+    Memberikan instruksi sementara ke SQLite untuk menonaktifkan sinkronisasi disk I/O yang berat selama migrasi:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">synchronous</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">OFF</span><span class="p">;</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">journal_mode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MEMORY</span><span class="p">;</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">temp_store</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MEMORY</span><span class="p">;</span>
@@ -4033,7 +4076,7 @@
 </ul>
 <h3 id="4-bookdownloadmanager">4. <code>BookDownloadManager</code></h3>
 <p>Mengelola perolehan data awal.</p>
-<h4 id="struct_2">Struct</h4>
+<h4 id="bundlebookindexentry-struct"><code>BundleBookIndexEntry</code> (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">BundleBookIndexEntry</span><span class="p">:</span><span class="w"> </span><span class="n">Decodable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkid</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">filename</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -4049,27 +4092,27 @@
 </span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><code>CodingKeys</code> digunakan untuk memetakan nama key JSON eksternal (<code>size_zst</code>) ke <em>camelCase</em> milik Swift (<code>sizeZst</code>).</li>
+<li><code>CodingKeys</code> memetakan nama <em>key</em> JSON eksternal (<code>size_zst</code>) ke format <em>camelCase</em> Swift (<code>sizeZst</code>).</li>
 </ul>
-<h2 id="platform-specific-handling">Platform Specific Handling</h2>
-<p>Dalam hal manajemen background, setiap OS ditangani sesuai kemampuannya:</p>
+<h2 id="penanganan-khusus-platform-platform-specific-handling">Penanganan Khusus Platform (Platform Specific Handling)</h2>
+<p>Dalam hal manajemen latar belakang (<em>background task</em>), setiap sistem operasi ditangani secara spesifik:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">iOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>Operasi background tidak membutuhkan interupsi spesifik <code>beginBackgroundTask</code> karena macOS secara <em>inherent</em> membiarkan proses <em>Task</em> berjalan hingga tuntas atau aplikasi ditutup secara manual.</p>
+<p>Operasi latar belakang tidak membutuhkan pendaftaran eksplisit <code>beginBackgroundTask</code> karena macOS secara bawaan membiarkan proses <code>Task</code> berjalan hingga selesai atau aplikasi ditutup oleh pengguna.</p>
 </div>
 <div class="tabbed-block">
-<p>Membutuhkan implementasi khusus <code>UIApplication.shared.beginBackgroundTask</code>. Terdapat risiko jika migrasi sangat lambat, iOS akan menghentikan proses sebelum selesai. Manager juga memastikan <code>isIdleTimerDisabled = true</code> agar layar perangkat tidak tertidur selama proses berjalan.</p>
+<p>Membutuhkan implementasi <code>UIApplication.shared.beginBackgroundTask</code>. Terdapat batasan waktu eksekusi latar belakang oleh iOS. Manajer juga mengatur <code>isIdleTimerDisabled = true</code> agar layar perangkat tidak masuk ke mode tidur (<em>sleep</em>) selama proses migrasi aktif.</p>
 </div>
 </div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Status Integrasi</p>
-<p>Proses integrasi dan indexing akan dieksekusi secara otomatis usai integrasi arsip. Status dan cache lalu disinkronkan melalui notifikasi UI.</p>
+<p>Proses integrasi dan <em>indexing</em> dieksekusi secara otomatis usai integrasi arsip. Status dan <em>cache</em> kemudian disinkronkan melalui notifikasi UI.</p>
 </div>
 <div class="admonition warning">
-<p class="admonition-title">Potensi Memory Spike</p>
-<p>Hindari mencabut pengaman <code>autoreleasepool</code> pada iterasi FTS karena memori akan meningkat linear sesuai besaran kitab raksasa yang diurai teksnya.</p>
+<p class="admonition-title">Pencegahan Lonjakan Memori</p>
+<p>Pertahankan blok pelindung <code>autoreleasepool</code> pada iterasi FTS agar memori tidak meningkat secara linear saat mengurai teks kitab berukuran besar.</p>
 </div>
 
 
@@ -4090,6 +4133,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4120,10 +4169,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

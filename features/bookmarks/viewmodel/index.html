@@ -2905,6 +2905,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3782,7 +3810,7 @@
 <p>Dokumentasi ini membedah arsitektur logika bisnis, alur kerja reaktif, manajemen konkurensi, dan perluasan modular yang dikelola oleh <code>ResultsViewModel</code> pada direktori <code>Source/Features/Bookmarks/ViewModel/</code>.</p>
 <hr />
 <h2 id="1-arsitektur-inti-resultsviewmodel">1. Arsitektur Inti <code>ResultsViewModel</code></h2>
-<p><code>ResultsViewModel</code> dirancang sebagai kelas <em>singleton</em> yang mengadopsi makro Swift Observation <code>@Observable</code> dan diikat secara mutlak ke antrean utama (<code>@MainActor</code>). Pendekatan ini menjamin bahwa seluruh mutasi properti yang diamati oleh SwiftUI maupun AppKit selalu terjadi secara aman di <em>main thread</em>.</p>
+<p><code>ResultsViewModel</code> dirancang sebagai <code>class</code> <em>singleton</em> yang mengadopsi makro Swift Observation <code>@Observable</code> dan diikat secara mutlak ke antrean utama (<code>@MainActor</code>). Pendekatan ini menjamin bahwa seluruh mutasi properti yang diamati oleh SwiftUI maupun AppKit selalu terjadi secara aman di <em>main thread</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span><span class="w"> </span><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">ResultsViewModel</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="p">:</span><span class="w"> </span><span class="n">ResultsViewModel</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="kd">init</span><span class="p">()</span>
@@ -3805,17 +3833,17 @@
 </span></code></pre></div>
 <h3 id="properti-sumber-data-cache-struktural">Properti Sumber Data &amp; Cache Struktural</h3>
 <ul>
-<li><code>folderRoots</code>: Larik simpul tingkat atas (<em>root level folders</em>).</li>
-<li><code>folderResults</code>: Kamus (<em>dictionary</em>) yang memetakan ID folder induk (<code>Int64?</code>, di mana <code>nil</code> mewakili hasil di <em>root</em>) ke daftar simpul <code>[ResultNode]</code> yang terkandung di dalamnya.</li>
-<li><code>folderById</code>: Indeks <em>hash map</em> untuk menemukan instansi <code>FolderNode</code> dalam kompleksitas waktu $O(1)$ tanpa perlu menjelajahi seluruh pohon secara rekursif.</li>
-<li><code>parentById</code>: Indeks pemetaan hubungan hierarki anak-ke-induk. Nilai <code>parentById[childId] = parentId</code>.</li>
+<li><code>folderRoots</code>: Array node tingkat atas (<em>root level folders</em>).</li>
+<li><code>folderResults</code>: Kamus (<em>dictionary</em>) yang memetakan ID folder induk (<code>Int64?</code>, di mana <code>nil</code> mewakili hasil di <em>root</em>) ke daftar node <code>[ResultNode]</code> yang terkandung di dalamnya.</li>
+<li><code>folderById</code>: Indeks <em>hash map</em> untuk menemukan <em>instance</em> <code>FolderNode</code> dalam kompleksitas waktu $O(1)$ tanpa perlu menjelajahi seluruh hierarki secara rekursif.</li>
+<li><code>parentById</code>: Indeks pemetaan hubungan hierarki <em>child-to-parent</em>. Nilai <code>parentById[childId] = parentId</code>.</li>
 <li><code>resultById</code>: Indeks <em>hash map</em> untuk mengambil <code>ResultNode</code> berdasarkan kunci unik <code>id</code>.</li>
 </ul>
 <hr />
 <h2 id="2-manajemen-konkurensi-siklus-notifikasi">2. Manajemen Konkurensi &amp; Siklus Notifikasi</h2>
-<p>Untuk mencegah <em>freeze</em> antarmuka pengguna pada basis data yang memiliki ribuan markah tersimpan, proses pembacaan berat dan pengurutan alfabetis dialihkan ke utas latar belakang (<em>background thread</em>).</p>
+<p>Untuk mencegah <em>freeze</em> antarmuka pengguna pada basis data yang memiliki ribuan markah tersimpan, proses pembacaan berat dan pengurutan dialihkan ke <em>background thread</em>.</p>
 <h3 id="pola-eksekusi-taskdetached">Pola Eksekusi <code>Task.detached</code></h3>
-<p>Pada metode <code>getFolders()</code> dan <code>dbLoadAllResults()</code>, kalkulasi pohon dan sorting dieksekusi di luar <em>MainActor</em> menggunakan <code>Task.detached</code>:</p>
+<p>Pada metode <code>getFolders()</code> dan <code>dbLoadAllResults()</code>, kalkulasi hierarki dan <em>sorting</em> dieksekusi di luar <em>MainActor</em> menggunakan <code>Task.detached</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">getFolders</span><span class="p">()</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">roots</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">detached</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">roots</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">ResultsHandler</span><span class="p">.</span><span class="n">shared</span><span class="p">.</span><span class="n">fetchFolderTree</span><span class="p">()</span>
@@ -3837,7 +3865,32 @@
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="reaktivitas-via-notificationcenter">Reaktivitas via NotificationCenter</h3>
-<p>ViewModel mendaftarkan pengamat (<em>observer</em>) terhadap peristiwa global sistem pada saat inisialisasi:</p>
+<pre class="mermaid"><code>flowchart TD
+    CK["CloudKitSyncManager"] --&gt;|"post(.savedResultsTreeDidUpdate)"| NC["NotificationCenter"]
+    NC --&gt;|"handleSavedResultsTreeDidUpdate()"| VM["ResultsViewModel"]
+
+    VM ~~~ TASKS
+
+    subgraph TASKS ["Detached Tasks &amp; In-Memory Index"]
+        FETCH["fetchFolderTree() &amp; fetchResults()"]
+        REBUILD["rebuildFolderIndex() &amp; rebuildResultIndex()"]
+    end
+
+    VM --&gt; FETCH
+    FETCH --&gt; REBUILD
+    REBUILD --&gt; NOTIFY(["notifyChange(.fullReload)"])
+    NOTIFY --&gt; UI["UI Layer (NSOutlineView / NavigationStack)"]
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class UI ui;
+    class VM vm;
+    class CK,NC,FETCH,REBUILD store;
+    class NOTIFY event;</code></pre>
 <pre class="mermaid"><code>sequenceDiagram
     participant CloudKit as CloudKitSyncManager
     participant NC as NotificationCenter
@@ -3853,15 +3906,15 @@
     VM--&gt;&gt;UI: notifyChange(.fullReload)
     deactivate VM</code></pre>
 <ul>
-<li><code>.savedResultsTreeDidUpdate</code>: Dipicu saat sinkronisasi CloudKit selesai menyerap perubahan dari server. ViewModel memuat ulang seluruh pohon secara asinkron lalu membangun ulang indeks.</li>
-<li><code>.bookIdMigrated</code>: Dipicu saat modul katalog memperbarui skema ID buku internal, memastikan referensi markah diperbarui secara instan.</li>
+<li><code>.savedResultsTreeDidUpdate</code>: Dipicu saat sinkronisasi CloudKit selesai menyerap perubahan dari server. ViewModel memuat ulang seluruh hierarki secara asinkron lalu membangun ulang indeks.</li>
+<li><code>.bookIdMigrated</code>: Dipicu saat modul katalog memperbarui skema ID buku internal, memastikan referensi markah diperbarui seketika.</li>
 </ul>
 <hr />
 <h2 id="3-dekonstruksi-ekstensi-modular-viewmodelextensions">3. Dekonstruksi Ekstensi Modular (<code>ViewModel/Extensions/</code>)</h2>
 <p>Logika bisnis dibagi menjadi beberapa modul fungsional di bawah folder <code>ViewModel/Extensions/</code>:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ViewModel/Extensions/
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── Results+Load.swift        # Pemuatan data &amp; pembangunan indeks lookup
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── Results+Tree.swift        # Utilitas penjelajahan pohon &amp; penelusuran breadcrumb
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── Results+Tree.swift        # Utilitas penelusuran hierarki &amp; breadcrumb
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── Results+FolderOps.swift   # Operasi CRUD dan pemindahan folder
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>├── Results+ResultOps.swift   # Operasi CRUD dan pemindahan hasil pencarian
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>└── Results+Search.swift      # Mesin pencari markah dalam memori
@@ -3870,71 +3923,71 @@
 <h3 id="resultsloadswift"><code>Results+Load.swift</code></h3>
 <p>Menangani fase inisialisasi data dan pemulihan konsistensi indeks:</p>
 <ul>
-<li><code>getFolders()</code>: Mengambil pohon folder dari database, mengurutkan secara rekursif berbasis lokalitas teks, dan memperbarui <code>folderRoots</code>.</li>
-<li><code>dbLoadAllResults()</code>: Menjelajahi seluruh folder yang terdaftar dan memuat hasil pencarian yang terkait ke dalam dictionary <code>folderResults</code>.</li>
+<li><code>getFolders()</code>: Mengambil struktur hierarki folder dari basis data, mengurutkan secara rekursif berbasis lokalitas teks, dan memperbarui <code>folderRoots</code>.</li>
+<li><code>dbLoadAllResults()</code>: Menjelajahi seluruh folder yang terdaftar dan memuat hasil pencarian yang terkait ke dalam kamus <code>folderResults</code>.</li>
 <li><code>rebuildFolderIndex()</code>: Mengisi ulang kamus <code>folderById</code> dan <code>parentById</code> melalui penelusuran mendalam (<em>depth-first walk</em>).</li>
-<li><code>rebuildResultIndex()</code>: Mengisi ulang <code>resultById</code> dan memastikan integritas nilai <code>parentId</code> di setiap simpul anak.</li>
+<li><code>rebuildResultIndex()</code>: Mengisi ulang <code>resultById</code> dan memastikan integritas nilai <code>parentId</code> di setiap <em>child node</em>.</li>
 </ul>
 <hr />
 <h3 id="resultstreeswift"><code>Results+Tree.swift</code></h3>
-<p>Menyediakan fungsi-fungsi pembantu aljabar pohon:</p>
+<p>Menyediakan fungsi pembantu operasi hierarki (<em>tree operations</em>):</p>
 <ul>
 <li><code>isDescendant(_ node: FolderNode, of ancestor: FolderNode) -&gt; Bool</code>:<ul>
 <li>Mencegah bahaya <em>infinite circular loop</em> saat pengguna memindahkan folder ke dalam dirinya sendiri atau ke dalam subfoldernya.</li>
 </ul>
 </li>
 <li><code>folderPath(for folderId: Int64?) -&gt; String</code>:<ul>
-<li>Membangun jalur remah roti (<em>breadcrumb trail</em>), misalnya: <code>"Hadits / Shahih Bukhari / Kitab Iman"</code>. Menggunakan penelusuran balik ke atas (<em>bottom-up traversal</em>) via <code>parentById</code> dengan kompleksitas $O(d)$ di mana $d$ adalah kedalaman pohon.</li>
+<li>Membangun jalur navigasi (<em>breadcrumb trail</em>), misalnya: <code>"Hadits / Shahih Bukhari / Kitab Iman"</code>. Menggunakan penelusuran balik ke atas (<em>bottom-up traversal</em>) via <code>parentById</code> dengan kompleksitas $O(d)$ di mana $d$ adalah kedalaman hierarki.</li>
 </ul>
 </li>
 <li><code>removeNodeFromTree(_ node: FolderNode)</code>:<ul>
-<li>Menghapus referensi simpul secara tepat dari array induknya tanpa merusak struktur cabang lainnya.</li>
+<li>Menghapus referensi node secara tepat dari array induknya tanpa merusak struktur cabang lainnya.</li>
 </ul>
 </li>
 </ul>
 <hr />
 <h3 id="resultsfolderopsswift"><code>Results+FolderOps.swift</code></h3>
-<p>Mengelola alur kerja transaksi pembuatan, modifikasi, dan penghapusan folder:</p>
+<p>Mengelola alur kerja transaksi pembuatan, modifikasi, dan pemindahan folder:</p>
 <ul>
 <li><code>addRootFolder(name: String) throws</code>:<ul>
-<li>Menyimpan folder baru ke SQLite via <code>db.insertRootFolder</code>, memperbarui <code>folderRoots</code>, mendaftarkan ke indeks cache, dan memicu <code>.insertFolder</code> untuk animasi antarmuka.</li>
+<li>Menyimpan folder baru ke SQLite via <code>db.insertRootFolder</code>, memperbarui <code>folderRoots</code>, mendaftarkan ke indeks <em>cache</em>, dan memicu <code>.insertFolder</code> untuk animasi antarmuka pengguna.</li>
 </ul>
 </li>
 <li><code>addSubFolder(parentNode: FolderNode, name: String) throws</code>:<ul>
-<li>Membuat subfolder di bawah simpul yang ditentukan, menyortir saudara kandung (<em>siblings</em>), dan memancarkan notifikasi perubahan.</li>
+<li>Membuat subfolder di bawah node yang ditentukan, menyortir node sejajar (<em>siblings</em>), dan memancarkan notifikasi perubahan.</li>
 </ul>
 </li>
 <li><code>updateFolderName(id: Int64, newName: String) throws</code>:<ul>
-<li>Mengubah nama pada database lokal, menyortir ulang posisi folder di antara saudaranya, serta memicu notifikasi <code>.moveFolder</code> jika posisinya bergeser secara alfabetis.</li>
+<li>Mengubah nama pada basis data lokal, menyortir ulang posisi folder di antara <em>siblings</em>, serta memicu notifikasi <code>.moveFolder</code> jika posisinya bergeser secara alfabetis.</li>
 </ul>
 </li>
 <li><code>deleteFolder(node: FolderNode)</code>:<ul>
-<li>Menghapus folder beserta seluruh sub-pohon di bawahnya secara kaskade (<code>allDescendantIds</code>), membersihkan simpul hasil terkait dari memori dan indeks pencarian.</li>
+<li>Menghapus folder beserta seluruh sub-hierarki di bawahnya secara kaskade (<code>allDescendantIds</code>), membersihkan hasil terkait dari memori dan indeks pencarian.</li>
 </ul>
 </li>
 <li><code>moveNode(draggedNode: FolderNode, newParent: FolderNode?) throws</code>:<ul>
-<li>Memvalidasi batasan hierarki, memperbarui database, mereposisi simpul dalam pohon memori, dan mengabarkan perubahan indeks ke <code>NSOutlineView</code>.</li>
+<li>Memvalidasi batasan hierarki, memperbarui basis data, mereposisi node dalam hierarki memori, dan mengabarkan perubahan indeks ke <code>NSOutlineView</code>.</li>
 </ul>
 </li>
 </ul>
 <hr />
 <h3 id="resultsresultopsswift"><code>Results+ResultOps.swift</code></h3>
-<p>Mengatur siklus hidup simpul daun hasil pencarian:</p>
+<p>Mengatur siklus hidup <em>leaf node</em> hasil pencarian:</p>
 <ul>
 <li><code>saveSearchResults(results: [SearchResultItem], query: String, ...)</code>:<ul>
-<li>Mengelompokkan baris hasil pencarian berdasarkan kombinasi arsip dan kitab menggunakan <code>GroupedResult</code>, lalu menyimpannya ke database dalam satu transaksi terpadu.</li>
+<li>Mengelompokkan baris hasil pencarian berdasarkan kombinasi arsip dan kitab menggunakan <code>GroupedResult</code>, lalu menyimpannya ke basis data dalam satu transaksi terpadu.</li>
 </ul>
 </li>
 <li><code>updateResultQueryName(id: Int64, newName: String) throws</code>:<ul>
-<li>Mengubah nama simpul hasil pencarian dan mengurutkan ulang posisinya pada folder yang bersangkutan.</li>
+<li>Mengubah nama node hasil pencarian dan mengurutkan ulang posisinya pada folder yang bersangkutan.</li>
 </ul>
 </li>
 <li><code>deleteResult(_ parentFolderId: Int64?, name: String)</code>:<ul>
-<li>Menghapus hasil pencarian dari database dan memangkas entri dari memori dari urutan indeks belakang ke depan (<em>reverse iteration</em>) agar stabilitas indeks array tetap terjaga.</li>
+<li>Menghapus hasil pencarian dari basis data dan memangkas entri dari memori dari urutan indeks belakang ke depan (<em>reverse iteration</em>) agar stabilitas indeks <em>array</em> tetap terjaga.</li>
 </ul>
 </li>
 <li><code>moveResult(_ resultId: Int64, to newFolderId: Int64?) throws</code>:<ul>
-<li>Memindahkan satu simpul hasil ke folder penampung yang berbeda.</li>
+<li>Memindahkan satu <em>result node</em> ke folder penampung yang berbeda.</li>
 </ul>
 </li>
 </ul>
@@ -3947,7 +4000,7 @@
 </ul>
 </li>
 <li><code>searchResultsInMemory(_ query: String) -&gt; [ResultNode]</code>:<ul>
-<li>Menyaring seluruh simpul pada <code>resultById</code>.</li>
+<li>Menyaring seluruh node pada <code>resultById</code>.</li>
 </ul>
 </li>
 <li><code>searchResultsWithFolderPath(_ query: String) -&gt; [SearchResultWithPath]</code>:<ul>
@@ -3974,6 +4027,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4004,10 +4063,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

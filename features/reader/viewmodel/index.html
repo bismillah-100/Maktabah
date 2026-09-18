@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../textview/" class="md-nav__link">
         
   
@@ -2830,10 +2858,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ios-langsung-menggunakan-observable" class="md-nav__link">
+  <a href="#ios-menggunakan-observable" class="md-nav__link">
     <span class="md-ellipsis">
       
-        iOS Langsung Menggunakan @Observable
+        iOS Menggunakan @Observable
       
     </span>
   </a>
@@ -3568,10 +3596,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ios-langsung-menggunakan-observable" class="md-nav__link">
+  <a href="#ios-menggunakan-observable" class="md-nav__link">
     <span class="md-ellipsis">
       
-        iOS Langsung Menggunakan @Observable
+        iOS Menggunakan @Observable
       
     </span>
   </a>
@@ -3623,56 +3651,74 @@
 
 
 <h1 id="state-management-reactive-workflows">State Management &amp; Reactive Workflows</h1>
-<p><code>ReaderViewModel</code> adalah jantung atau konduktor utama yang menjembatani data inti (Database dan <em>Cache</em>) ke <em>View Layer</em> (AppKit di macOS dan SwiftUI di iOS). Komponen ini beroperasi sepenuhnya pada <code>@MainActor</code> untuk menjamin keamanan mutasi antarmuka.</p>
+<p><code>ReaderViewModel</code> adalah konduktor utama yang menjembatani data inti (<em>Database</em> dan <em>Cache</em>) ke <em>View Layer</em> (AppKit di macOS dan SwiftUI di iOS). Komponen ini beroperasi sepenuhnya di bawah isolasi <code>@MainActor</code> untuk menjamin keamanan mutasi antarmuka.</p>
 <hr />
 <h2 id="1-arsitektur-lintas-platform-callbacks-vs-observable">1. Arsitektur Lintas Platform (Callbacks vs <code>@Observable</code>)</h2>
 <p>Salah satu keputusan arsitektural terpenting dalam modul <em>Reader</em> adalah penanganan reaktivitas yang berbeda antara macOS dan iOS untuk mengompromikan kebutuhan <em>rendering</em> <code>NSTextView</code> dan <code>UITextView</code>.</p>
 <h3 id="mengapa-macos-memanfaatkan-callbacks-sinkron">Mengapa macOS Memanfaatkan <em>Callbacks</em> Sinkron?</h3>
-<p>Meskipun <code>ReaderViewModel</code> ditandai dengan <code>@Observable</code>, <strong>macOS (AppKit)</strong> sengaja mem- <em>bypass</em> observasi langsung untuk pembaruan teks dan lebih memilih <strong>Callbacks</strong>.</p>
-<p>AppKit dengan <strong>Tuntutan Sinkronisasi Thread</strong>:</p>
+<p>Meskipun <code>ReaderViewModel</code> ditandai dengan <code>@Observable</code>, <strong>macOS (AppKit)</strong> sengaja mem-<em>bypass</em> observasi langsung untuk pembaruan teks dan lebih memilih pendekatan <strong>Callbacks</strong>.</p>
+<p>Karakteristik AppKit dan <strong>Tuntutan Sinkronisasi Thread</strong>:</p>
 <ol>
-<li>AppKit (<code>NSTextView</code>) membutuhkan eksekusi sinkron langsung pada <em>Main Thread</em> (bukan <em>dispatched async</em>) ketika kita memodifikasi <code>NSTextStorage</code> atau merestorasi <em>scroll position</em>.</li>
-<li>Apabila kita menggunakan <em>binding</em> reaktif dari <code>@Observable</code>, notifikasi sistem sering kali di- <em>dispatch</em> secara asinkron (<em>RunLoop deferral</em>). Hal ini memicu masalah visual parah pada dokumen berskala besar, seperti <em>flickering</em> (layar berkedip), kursor yang melompat (<em>cursor jumping</em>), dan bentrokan <em>layout pass</em>.</li>
-<li>Oleh karena itu, macOS menyuntikkan fungsi <em>callback</em> (misal: <code>onContentReady()</code>, <code>onHighlightRequested()</code>) ke <em>ViewModel</em> agar begitu data terdekompresi, ia dapat mengeksekusi UI secara seketika (<em>blocking execution</em> pada <em>Main Thread</em>).</li>
+<li>AppKit (<code>NSTextView</code>) membutuhkan eksekusi sinkron langsung pada <em>Main Thread</em> (bukan <em>dispatched async</em>) saat memodifikasi <code>NSTextStorage</code> atau merestorasi <em>scroll position</em>.</li>
+<li>Apabila menggunakan <em>binding</em> reaktif dari <code>@Observable</code>, notifikasi sistem sering kali di-<em>dispatch</em> secara asinkron (<em>RunLoop deferral</em>). Hal ini memicu masalah visual pada dokumen berskala besar, seperti <em>flickering</em> (layar berkedip), kursor yang melompat (<em>cursor jumping</em>), dan bentrokan <em>layout pass</em>.</li>
+<li>Oleh karena itu, macOS menyuntikkan fungsi <em>callback</em> (misalnya: <code>onContentReady()</code>, <code>onHighlightRequested()</code>) ke <em>ViewModel</em> agar begitu data terdekompresi, antarmuka dapat dieksekusi secara seketika (<em>blocking execution</em> pada <em>Main Thread</em>).</li>
 </ol>
-<h3 id="ios-langsung-menggunakan-observable">iOS Langsung Menggunakan <code>@Observable</code></h3>
+<h3 id="ios-menggunakan-observable">iOS Menggunakan <code>@Observable</code></h3>
 <p><strong>iOS</strong> menggunakan reaktivitas murni dari <code>@Observable</code> melalui <em>bindings</em> SwiftUI.</p>
 <ol>
-<li>Layar iOS dibalut sepenuhnya oleh <em>View</em> deklaratif (<code>iOSReaderView</code>). SwiftUI telah dirancang untuk meredam dan menyinkronkan <em>state updates</em> secara aman di <em>MainActor</em> sebelum dikirim ke jembatan <code>UIViewRepresentable</code> (<code>iOSIbarotTextView</code>).</li>
-<li><code>UIViewRepresentable</code> memiliki metode sakti <code>updateUIView(_:context:)</code> yang menjamin bahwa mutasi teks dari <em>ViewModel</em> diinjeksi tepat pada siklus pembaruan tata letak (<em>layout cycle</em>) yang aman, sehingga terhindar dari <em>flickering</em>.</li>
+<li>Layar iOS dibalut sepenuhnya oleh <em>View</em> deklaratif (<code>iOSReaderView</code>). SwiftUI dirancang untuk meredam dan menyinkronkan pembaruan <em>state</em> secara aman di <code>@MainActor</code> sebelum dikirim ke jembatan <code>UIViewRepresentable</code> (<code>iOSIbarotTextView</code>).</li>
+<li><code>UIViewRepresentable</code> memanfaatkan metode siklus hidup <code>updateUIView(_:context:)</code> yang menjamin bahwa mutasi teks dari <em>ViewModel</em> diinjeksikan tepat pada siklus pembaruan tata letak (<em>layout cycle</em>) yang aman, sehingga terhindar dari <em>flickering</em>.</li>
 </ol>
-<pre class="mermaid"><code>graph TD
-    subgraph Data Layer
-        Cache[BookPageCache]
-        DB[BookConnection]
+<pre class="mermaid"><code>flowchart TD
+    subgraph Data_Layer ["Data Layer &amp; Compression"]
+        DB[("BookConnection&lt;br/&gt;(LZString/Zstd Archive)")] --&gt;|"Blob Decompression"| Cache[("BookPageCache&lt;br/&gt;(LRU Cache)")]
     end
 
-    subgraph State Management
-        VM[ReaderViewModel &lt;br&gt; @Observable @MainActor]
+    Data_Layer ~~~ State_Layer
+
+    subgraph State_Layer ["State Management"]
+        Cache --&gt;|"BookContent"| VM["ReaderViewModel&lt;br/&gt;(@Observable @MainActor)"]
     end
 
-    subgraph Presentation Layer
-        macOS[macOS: IbarotTextVC &lt;br&gt; AppKit]
-        iOS[iOS: iOSReaderView &lt;br&gt; SwiftUI]
-    end
+    State_Layer ~~~ Presentation_Layer
 
-    DB -- Blob Compression --&gt; Cache
-    Cache -- BookContent --&gt; VM
+    subgraph Presentation_Layer ["Presentation Layer"]
+        macOS["macOS: IbarotTextVC&lt;br/&gt;(AppKit NSTextView)"]
+        iOS["iOS: iOSReaderView&lt;br/&gt;(SwiftUI + UIViewRepresentable)"]
+    end
 
     %% Alur macOS
-    VM -- "1. Synchronous Callbacks&lt;br&gt;(Immediate Execution)" --&gt; macOS
-    macOS -- "2. Explicit Fetch" --&gt; VM
+    VM --&gt;|"1. Synchronous Callbacks (Immediate Execution)"| macOS
+    macOS --&gt;|"2. Explicit Fetch"| VM
 
     %% Alur iOS
-    VM -. "1. @Observable Binding&lt;br&gt;(RunLoop Deferred)" .-&gt; iOS
-    iOS -. "2. State Mutation" .-&gt; VM</code></pre>
+    VM -.-&gt;|"1. @Observable Binding (RunLoop Deferred)"| iOS
+    iOS -.-&gt;|"2. State Mutation"| VM
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class macOS,iOS ui;
+    class VM vm;
+    class DB,Cache db;</code></pre>
 <hr />
 <h2 id="2-manajemen-konkurensi-task-cancellation">2. Manajemen Konkurensi &amp; <em>Task Cancellation</em></h2>
-<p>Saat memuat halaman (terutama ketika pengguna melakukan <em>fast-scrolling</em> dengan cepat), Maktabah wajib mencegah <em>Memory Spike</em> atau tumpukan (<em>backlog</em>) operasi disk.</p>
+<p>Saat memuat halaman (terutama ketika pengguna melakukan <em>fast-scrolling</em> dengan cepat), Maktabah wajib mencegah lonjakan memori (<em>memory spike</em>) atau tumpukan (<em>backlog</em>) operasi disk.</p>
 <ul>
-<li><strong>Task Cancellation</strong>: <code>ReaderViewModel</code> menyimpan referensi tugas pemuatan dalam <code>currentLoadTask</code>. Jika pengguna pindah halaman sebelum halaman saat ini selesai dimuat, tugas sebelumnya langsung di-<em>cancel</em> (<code>currentLoadTask?.cancel()</code>).</li>
-<li><strong>Debouncing Pagination</strong>: Perpindahan halaman via <em>slider</em> di- <em>debounce</em> selama beberapa milidetik. Pemuatan database FTS atau dekompresi <em>Zstandard</em> (zstd) tidak akan terpicu hingga pengguna berhenti menggeser tuas <em>slider</em>.</li>
+<li><strong>Task Cancellation</strong>: <code>ReaderViewModel</code> menyimpan referensi tugas pemuatan dalam <code>currentLoadTask</code>. Jika pengguna berpindah halaman sebelum halaman saat ini selesai dimuat, tugas sebelumnya langsung dibatalkan (<code>currentLoadTask?.cancel()</code>).</li>
+<li><strong>Debouncing Pagination</strong>: Perpindahan halaman melalui <em>slider</em> di-<em>debounce</em> selama beberapa milidetik. Pemuatan basis data FTS atau dekompresi <em>Zstandard</em> (zstd) tidak akan terpicu hingga pengguna berhenti menggeser tuas <em>slider</em>.</li>
 </ul>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle: Reader Diam
+    Idle --&gt; Sliding: User Menggeser Slider
+    Sliding --&gt; Debouncing: Tunggu Debounce (ms)
+    Sliding --&gt; Sliding: Geser Lagi (Reset Timer)
+    Debouncing --&gt; CancelTask: currentLoadTask?.cancel()
+    CancelTask --&gt; Loading: Decompress &amp; Fetch Page
+    Loading --&gt; Idle: Render Teks Selesai</code></pre>
 <h2 id="3-komponen-status-utama-state-properties">3. Komponen Status Utama (State Properties)</h2>
 <table>
 <thead>
@@ -3686,22 +3732,22 @@
 <tr>
 <td style="text-align: left;"><code>currentPage</code></td>
 <td style="text-align: left;"><code>Int</code></td>
-<td style="text-align: left;">Mengemudikan logika navigasi pembaca (ditautkan langsung ke Slider di iOS).</td>
+<td style="text-align: left;">Mengatur logika navigasi pembaca (ditautkan langsung ke Slider di iOS).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>contentText</code></td>
 <td style="text-align: left;"><code>NSAttributedString</code></td>
-<td style="text-align: left;">Produk akhir teks dari database yang sudah dirender dan diformat (melalui <code>ArabicTextRenderer</code>).</td>
+<td style="text-align: left;">Produk akhir teks dari basis data yang sudah dirender dan diformat (melalui <code>ArabicTextRenderer</code>).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>currentAnnotations</code></td>
 <td style="text-align: left;"><code>[Annotation]</code></td>
-<td style="text-align: left;">Array <em>highlight</em> dan <em>underline</em> murni dari <code>AnnotationStore</code> yang harus disuntikkan ke teks.</td>
+<td style="text-align: left;">Array <em>highlight</em> dan <em>underline</em> murni dari <code>AnnotationStore</code> yang disuntikkan ke teks.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>targetAnnotation</code></td>
 <td style="text-align: left;"><code>Annotation?</code></td>
-<td style="text-align: left;">Jika tidak <code>nil</code>, sistem akan menggulir paksa otomatis (<em>scroll-to-target</em>) dan melakukan animasi <em>flash</em> pada rentang teks ini.</td>
+<td style="text-align: left;">Jika tidak <code>nil</code>, sistem akan melakukan <em>scroll-to-target</em> otomatis dan memicu animasi <em>flash</em> pada rentang teks ini.</td>
 </tr>
 </tbody>
 </table>
@@ -3724,6 +3770,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3754,10 +3806,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

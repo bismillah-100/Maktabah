@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3124,10 +3152,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-ekstensi-berdasarkan-platform" class="md-nav__link">
+  <a href="#6-ekstensi-spesifik-platform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Ekstensi Berdasarkan Platform
+        6. Ekstensi Spesifik Platform
       
     </span>
   </a>
@@ -3685,10 +3713,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-ekstensi-berdasarkan-platform" class="md-nav__link">
+  <a href="#6-ekstensi-spesifik-platform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. Ekstensi Berdasarkan Platform
+        6. Ekstensi Spesifik Platform
       
     </span>
   </a>
@@ -3723,36 +3751,36 @@
 
 
 <h1 id="state-management">State Management</h1>
-<p>Manajemen <em>state</em> di modul Search ditangani oleh <code>SearchViewModel</code>, yang diakselerasi dengan makro <code>@Observable</code> (Swift 5.9) untuk integrasi reaktif dengan antarmuka SwiftUI maupun <em>binding</em> data ke UIKit dan AppKit (melalui <code>Combine</code> atau <code>Observation</code>).</p>
+<p>Manajemen <em>state</em> di modul Search ditangani oleh <code>SearchViewModel</code>, yang dioptimalkan dengan makro <code>@Observable</code> (Swift 5.9+) untuk integrasi reaktif dengan antarmuka SwiftUI maupun <em>binding</em> data ke UIKit dan AppKit (melalui Combine atau Observation).</p>
 <h2 id="komponen-searchviewmodel">Komponen <code>SearchViewModel</code></h2>
-<p>ViewModel ini mengkoordinasikan antrean <em>multithread</em> dari <code>SearchEngine</code> dan mengemasnya untuk dikonsumsi lapis presentasi (UI).</p>
+<p>ViewModel ini mengoordinasikan antrean <em>multithread</em> dari <code>SearchEngine</code> dan menyiapkannya untuk dikonsumsi oleh lapisan presentasi (UI).</p>
 <h3 id="state-utama">State Utama</h3>
 <ul>
 <li><code>query</code>: Teks atau kata kunci yang dicari.</li>
 <li><code>searchMode</code>: Mode pencarian (Frasa, Mengandung, OR, Jarak/Near).</li>
 <li><code>nearDistance</code>: Jarak maksimal kata untuk mode <em>Near</em>.</li>
-<li><code>results</code>: Kumpulan data <code>SearchResultItem</code> yang disiarkan ke antarmuka.</li>
+<li><code>results</code>: Kumpulan data <code>SearchResultItem</code> yang dipancarkan ke antarmuka pengguna.</li>
 <li><code>isSearching</code> &amp; <code>isPaused</code>: Indikator status siklus hidup (<em>lifecycle</em>) pencarian yang sedang aktif.</li>
-<li><strong>Indikator Progress:</strong> Properti <code>totalTables</code>, <code>completedTables</code>, <code>totalRowsInTable</code>, dan <code>completedRowsInTable</code> digunakan khusus untuk memandu presentasi bilah kemajuan (<em>progress bar</em>).</li>
+<li><strong>Indikator Progress:</strong> Properti <code>totalTables</code>, <code>completedTables</code>, <code>totalRowsInTable</code>, dan <code>completedRowsInTable</code> digunakan khusus untuk memandu bilah kemajuan (<em>progress bar</em>).</li>
 </ul>
 <h3 id="sub-komponen-ekstensi">Sub-Komponen (Ekstensi)</h3>
-<p>Untuk memitigasi kompleksitas tipe (<em>Separation of Concerns</em>), fungsi di dalam <code>SearchViewModel</code> didistribusikan ke dalam beberapa berkas ekstensi.</p>
+<p>Fungsionalitas <code>SearchViewModel</code> didistribusikan ke dalam beberapa berkas ekstensi untuk memelihara prinsip <em>Separation of Concerns</em>:</p>
 <h4 id="1-execution-searchexecutionswift">1. Execution (<code>Search+Execution.swift</code>)</h4>
-<p>Menangani siklus pencarian seperti eksekusi awal (<code>startSearch</code>), eksekusi jeda/lanjut, dan penghentian paksa (<code>stopSearch</code>). Eksekusi dialihkan ke dalam <em>background thread</em> melalui <code>Task.detached</code> dengan <code>Mutex</code> <em>lock</em> pada referensi <code>Task</code> untuk memitigasi isu akses konkuren.
-Di AppKit (macOS), ekstensi ini memanfaatkan serangkaian pemancar nilai (<em>Combine Publishers</em>) seperti <code>searchDidInitialize</code> atau <code>searchProgressDidUpdate</code>.</p>
+<p>Menangani siklus pencarian seperti eksekusi awal (<code>startSearch</code>), jeda/lanjutkan (<em>pause/resume</em>), dan penghentian tugas (<code>stopSearch</code>). Eksekusi dialihkan ke <em>background thread</em> melalui <code>Task.detached</code> dengan penguncian <code>Mutex</code> pada referensi <code>Task</code> untuk mencegah akses konkuren ganda.
+Di AppKit (macOS), ekstensi ini memanfaatkan <em>Combine Publishers</em> seperti <code>searchDidInitialize</code> atau <code>searchProgressDidUpdate</code>.</p>
 <h4 id="2-library-searchlibraryswift">2. Library (<code>Search+Library.swift</code>)</h4>
-<p>Bertindak sebagai adapter dan delegator menuju <code>LibraryDataManager</code>. Modul ini membantu melacak tabel SQLite (<em>resolve</em>) terhadap pustaka kitab terkait.</p>
+<p>Bertindak sebagai adapter dan delegator menuju <code>LibraryDataManager</code> untuk melacak tabel SQLite (<em>resolve</em>) terhadap pustaka kitab terkait.</p>
 <h4 id="3-observers-searchobserversswift">3. Observers (<code>Search+Observers.swift</code>)</h4>
-<p>Berperan memantau siaran internal (<em>NotificationCenter</em>). Jika pengguna mengubah direktori penyimpanan library (basis data SQLite) melalui Pengaturan, modul ini mereset dan memuat ulang instrumen secara mandiri.</p>
+<p>Memantau siaran internal (<em>NotificationCenter</em>). Jika direktori penyimpanan basis data perpustakaan diubah, modul ini mereset dan memuat ulang instrumen pencarian secara mandiri.</p>
 <h4 id="4-restoration-searchrestorationswift">4. Restoration (<code>Search+Restoration.swift</code>)</h4>
-<p>Membaca dan menyimpan cadangan sesi pencarian (<code>ReaderState</code>). Mekanisme ini memulihkan hasil pencarian terakhir ketika pengguna membuka kembali kotak dialog tanpa harus menghabiskan komputasi ulang.</p>
+<p>Membaca dan menyimpan cadangan sesi pencarian (<code>ReaderState</code>). Mekanisme ini memulihkan hasil pencarian terakhir ketika pengguna membuka kembali kotak dialog tanpa harus melakukan komputasi ulang.</p>
 <h4 id="5-saved-results-searchsavedresultsswift">5. Saved Results (<code>Search+SavedResults.swift</code>)</h4>
-<p>Menyediakan utilitas penyelesaian teks sorotan (cuplikan rentang kata kunci <code>NSAttributedString</code>). Ketika riwayat "Saved Results/Bookmark" diakses, modul memanfaatkan <code>ResultBuffer</code> (<em>batching</em>) untuk memuat fragmen secara efisien.</p>
-<h4 id="6-ekstensi-berdasarkan-platform">6. Ekstensi Berdasarkan Platform</h4>
-<p>Memuat abstraksi terisolasi bagi masing-masing OS:</p>
+<p>Menyediakan utilitas pemrosesan teks sorotan (cuplikan rentang kata kunci <code>NSAttributedString</code>). Ketika riwayat hasil tersimpan (<em>Saved Results</em>) diakses, modul memanfaatkan <code>ResultBuffer</code> (<em>batching</em>) untuk memuat fragmen secara efisien.</p>
+<h4 id="6-ekstensi-spesifik-platform">6. Ekstensi Spesifik Platform</h4>
+<p>Memuat abstraksi terisolasi bagi masing-masing platform:</p>
 <ul>
-<li><strong>iOS (<code>Search+iOS.swift</code>)</strong>: Penerapan metode <em>debounce filter</em> (melalui <code>Combine</code>), pelacakan riwayat (<em>search history</em>), serta modifikasi tata hierarki data kategori perpusakaan UI.</li>
-<li><strong>macOS (<code>Search+macOS.swift</code>)</strong>: Persiapan sinkronisasi muat perpusakaan khusus ke dalam manajer <em>library</em> macOS.</li>
+<li><strong>iOS (<code>Search+iOS.swift</code>)</strong>: Penerapan <em>debounce filter</em> (melalui Combine), pencatatan histori pencarian (<em>search history</em>), serta penyesuaian hierarki kategori perpustakaan.</li>
+<li><strong>macOS (<code>Search+macOS.swift</code>)</strong>: Penyesuaian sinkronisasi pemuatan data ke dalam manajer pustaka macOS.</li>
 </ul>
 
 
@@ -3773,6 +3801,12 @@ Di AppKit (macOS), ekstensi ini memanfaatkan serangkaian pemancar nilai (<em>Com
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3803,10 +3837,12 @@ Di AppKit (macOS), ekstensi ini memanfaatkan serangkaian pemancar nilai (<em>Com
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

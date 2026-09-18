@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#splitvc-core-ui-macos" class="md-skip">
+        <a href="#splitvc-window-architecture-macos" class="md-skip">
           Skip to content
         </a>
       
@@ -709,33 +709,177 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-interaksi-komponen" class="md-nav__link">
+  <a href="#1-arsitektur-komponen-visual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur &amp; Interaksi Komponen
+        1. Arsitektur Komponen Visual
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Arsitektur Komponen Visual">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-hierarki-kontainer-split-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Hierarki Kontainer &amp; Split View
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#bedah-splitvc-state-manajemen" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#b-taksonomi-kontrol-toolbar-nstoolbar" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Bedah SplitVC &amp; State Manajemen
+        B. Taksonomi Kontrol Toolbar (NSToolbar)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Bedah SplitVC &amp; State Manajemen">
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-siklus-transisi-antarmode-appmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Siklus Transisi Antarmode (AppMode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-siklus-hidup-status-global-launch-runtime-persistensi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Siklus Hidup Status Global: Launch, Runtime &amp; Persistensi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-alur-interaksi-dari-aksi-klik-toolbar-ke-textview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Alur Interaksi: Dari Aksi Klik Toolbar ke TextView
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Alur Interaksi: Dari Aksi Klik Toolbar ke TextView">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mode-state-management" class="md-nav__link">
+  <a href="#a-alur-navigasi-halaman-toolbar-rightarrow-reader-textview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mode &amp; State Management
+        A. Alur Navigasi Halaman (Toolbar $\rightarrow$ Reader TextView)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-alur-penukaran-mode-antarmuka-mode-switching-in-memory-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Alur Penukaran Mode Antarmuka (Mode Switching &amp; In-Memory Transfer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-alur-restorasi-state-saat-peluncuran-aplikasi-cold-launch-restoration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Alur Restorasi State saat Peluncuran Aplikasi (Cold Launch Restoration)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-bedah-splitvc-manajemen-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Bedah SplitVC &amp; Manajemen State
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Bedah SplitVC &amp; Manajemen State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#siklus-hidup-readerstatemanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Siklus Hidup ReaderStateManager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readerstatecomponent-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderStateComponent (Protocol)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readerstate-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderState (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#penanganan-jendela-ganda-multi-window-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Penanganan Jendela Ganda (Multi-Window &amp; Tabs)
       
     </span>
   </a>
@@ -2855,6 +2999,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../features/reader/textview/" class="md-nav__link">
         
   
@@ -3573,33 +3745,177 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-interaksi-komponen" class="md-nav__link">
+  <a href="#1-arsitektur-komponen-visual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur &amp; Interaksi Komponen
+        1. Arsitektur Komponen Visual
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Arsitektur Komponen Visual">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-hierarki-kontainer-split-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Hierarki Kontainer &amp; Split View
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#bedah-splitvc-state-manajemen" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#b-taksonomi-kontrol-toolbar-nstoolbar" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Bedah SplitVC &amp; State Manajemen
+        B. Taksonomi Kontrol Toolbar (NSToolbar)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Bedah SplitVC &amp; State Manajemen">
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-siklus-transisi-antarmode-appmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Siklus Transisi Antarmode (AppMode)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-siklus-hidup-status-global-launch-runtime-persistensi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Siklus Hidup Status Global: Launch, Runtime &amp; Persistensi
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-alur-interaksi-dari-aksi-klik-toolbar-ke-textview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Alur Interaksi: Dari Aksi Klik Toolbar ke TextView
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Alur Interaksi: Dari Aksi Klik Toolbar ke TextView">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mode-state-management" class="md-nav__link">
+  <a href="#a-alur-navigasi-halaman-toolbar-rightarrow-reader-textview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mode &amp; State Management
+        A. Alur Navigasi Halaman (Toolbar $\rightarrow$ Reader TextView)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-alur-penukaran-mode-antarmuka-mode-switching-in-memory-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Alur Penukaran Mode Antarmuka (Mode Switching &amp; In-Memory Transfer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-alur-restorasi-state-saat-peluncuran-aplikasi-cold-launch-restoration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Alur Restorasi State saat Peluncuran Aplikasi (Cold Launch Restoration)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-bedah-splitvc-manajemen-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Bedah SplitVC &amp; Manajemen State
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Bedah SplitVC &amp; Manajemen State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#siklus-hidup-readerstatemanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Siklus Hidup ReaderStateManager
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readerstatecomponent-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderStateComponent (Protocol)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readerstate-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderState (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#penanganan-jendela-ganda-multi-window-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Penanganan Jendela Ganda (Multi-Window &amp; Tabs)
       
     </span>
   </a>
@@ -3678,101 +3994,299 @@
 
 
 
-<h1 id="splitvc-core-ui-macos">SplitVC &amp; Core UI (macOS)</h1>
-<p>Dokumentasi ini membedah implementasi <code>SplitVC</code> sebagai container terpadu untuk berbagai mode aplikasi di Maktabah (Viewer, Search, dan Narrator), beserta komponen-komponen UI pendukungnya.</p>
-<h2 id="arsitektur-interaksi-komponen">Arsitektur &amp; Interaksi Komponen</h2>
-<p>Diagram berikut menggambarkan bagaimana <code>SplitVC</code> berinteraksi dengan berbagai layer <code>NSViewController</code> dan manajer state dalam arsitektur aplikasi.</p>
-<pre class="mermaid"><code>graph TD
-    A[SplitVC] --&gt;|State Management| B(ReaderStateManager)
-    B --&gt;|Content Sidebar| C(Sidebar)
-    B --&gt;|Root Layout| D(ViewerSplitVC)
-    D --&gt;|Content Viewer| E(IbarotTextVC)
-    D --&gt;|Table Of Contents| F(SidebarVC)
-
-    C --&gt;|macOS 26+ Accessory| G(SplitVCAccessoryItem)
-    G --&gt;|Viewer| H(LibraryVC)
-    G --&gt;|Search| I(SearchSidebarVC)
-    G --&gt;|Narrator| J(RowiSidebarVC)
-
-    %% Invisible links: Memaksa K &amp; L berada di bawah rank E &amp; F
-    E ~~~ K
-    F ~~~ L
-
-    %% Garis tetap merujuk langsung dari D
-    D --&gt;|Search| K(OptionSearchVC)
-    D --&gt;|Narrator| L(RowiResultsVC)
-
-    K --&gt;|Search Input| M(DSFSearchField)
-    L --&gt;|Search Input| M(DSFSearchField)</code></pre>
-<h2 id="bedah-splitvc-state-manajemen">Bedah SplitVC &amp; State Manajemen</h2>
-<p><code>SplitVC</code> adalah subclass dari <code>NSSplitViewController</code> yang bertindak sebagai fondasi utama tata letak Maktabah. Daripada membuat window atau split view controller terpisah untuk setiap mode, Maktabah mendaur ulang instance ini untuk menghemat memori dan memperhalus transisi.</p>
-<h3 id="mode-state-management">Mode &amp; State Management</h3>
-<p>Manajemen state seperti tata letak ketebalan panel, status <em>collapsed</em> dari sidebar, hingga elemen aktif diatur secara persisten menggunakan <code>ReaderStateManager</code>.</p>
+<h1 id="splitvc-window-architecture-macos">SplitVC &amp; Window Architecture (macOS)</h1>
+<p>Dokumentasi ini membedah arsitektur antarmuka tingkat atas (<em>Top-Level UI</em>) pada platform macOS, mencakup jendela utama (<code>MainWindow</code>), bilah alat kustom (<code>NSToolbar</code>), dan pengontrol kontainer terpadu (<code>SplitVC</code>) yang mengatur transisi antarmode (Viewer, Search, dan Narrator).</p>
+<p>Sumber kode:</p>
 <ul>
-<li>
-<p><strong>Peralihan Mode (<code>switchToMode(_:)</code>)</strong>
-    Ketika berganti mode (misalnya dari Viewer ke Search), aplikasi mengeksekusi langkah-langkah berikut:</p>
+<li>Window &amp; Toolbar: <code>Source/UI/macOS/Window/</code></li>
+<li>SplitView Container: <code>Source/UI/macOS/SplitView/SplitVC.swift</code></li>
+</ul>
+<hr />
+<h2 id="1-arsitektur-komponen-visual">1. Arsitektur Komponen Visual</h2>
+<p>Hierarki antarmuka tingkat atas di macOS diorganisasikan ke dalam kontainer bertingkat:</p>
+<h3 id="a-hierarki-kontainer-split-view">A. Hierarki Kontainer &amp; Split View</h3>
+<pre class="mermaid"><code>flowchart TD
+    WIN["MainWindow (NSWindow)"]
+    SVC["SplitVC (NSSplitViewController)"]
+    ACC["SplitVCAccessoryItem (Header Search)"]
+
+    WIN --&gt; SVC
+    SVC --&gt; ACC
+
+    SIDEBAR["Sidebar (LibraryVC / SearchSidebarVC / RowiSidebarVC)"]
+    READER_AREA["Reader Area (ViewerSplitVC &amp; IbarotTextVC)"]
+
+    SVC --&gt; SIDEBAR
+    SVC --&gt; READER_AREA
+
+    SIDEBAR ~~~ BOTTOM_SPLIT
+    READER_AREA ~~~ BOTTOM_SPLIT
+
+    BOTTOM_SPLIT["Bottom Split (OptionSearchVC / RowiResultsVC)"]
+    SVC -.-&gt;|"Mode Search / Narrator"| BOTTOM_SPLIT
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class WIN,SVC,ACC,SIDEBAR,READER_AREA,BOTTOM_SPLIT ui;</code></pre>
+<h3 id="b-taksonomi-kontrol-toolbar-nstoolbar">B. Taksonomi Kontrol Toolbar (<code>NSToolbar</code>)</h3>
+<pre class="mermaid"><code>mindmap
+  root((NSToolbar))
+    Mode Switching
+      modeSelector["modeSelector (Viewer / Search / Narrator)"]
+    Navigasi Pembaca
+      navSegment["navSegment (Prev / Next Page)"]
+      bookInfo["bookInfo (Book Metadata Popover)"]
+    Preferensi Tampilan
+      textViewOptions["textViewOptions (Font, Size, Theme)"]
+    Pencarian Konten
+      searchField["searchField (In-Book Search)"]
+    Tata Letak
+      trackingSeparator["trackingSeparator (NSTrackingSeparatorToolbarItem)"]</code></pre>
+<h3 id="c-siklus-transisi-antarmode-appmode">C. Siklus Transisi Antarmode (<code>AppMode</code>)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Viewer: Default Launch
+    Viewer --&gt; Search: Pilih Mode Search
+    Search --&gt; Narrator: Pilih Mode Narrator
+    Narrator --&gt; Viewer: Pilih Mode Viewer
+    Viewer --&gt; Narrator: Pilih Mode Narrator
+    Search --&gt; Viewer: Pilih Mode Viewer
+    Narrator --&gt; Search: Pilih Mode Search
+
+    state Viewer {
+        [*] --&gt; SetupLibrarySidebar
+        SetupLibrarySidebar --&gt; DisplayBookContent
+    }
+    state Search {
+        [*] --&gt; SetupSearchSidebar
+        SetupSearchSidebar --&gt; EmbedOptionSearchBottomPanel
+    }
+    state Narrator {
+        [*] --&gt; SetupRowiSidebar
+        SetupRowiSidebar --&gt; EmbedRowiResultsBottomPanel
+    }</code></pre>
+<h3 id="d-siklus-hidup-status-global-launch-runtime-persistensi">D. Siklus Hidup Status Global: Launch, Runtime &amp; Persistensi</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; AppLaunch: applicationDidFinishLaunching()
+    AppLaunch --&gt; RestoringState: restorePersistedState()
+    RestoringState --&gt; ActiveMode: Baca JSON dari Disk &amp; Restore UI
+
+    state ActiveMode {
+        [*] --&gt; Viewer: Default / Last Mode
+        Viewer --&gt; Search: Switch Mode (Save Old -&gt; Restore New)
+        Search --&gt; Narrator: Switch Mode (Save Old -&gt; Restore New)
+        Narrator --&gt; Viewer: Switch Mode (Save Old -&gt; Restore New)
+        Viewer --&gt; Narrator: Switch Mode (Save Old -&gt; Restore New)
+        Search --&gt; Viewer: Switch Mode (Save Old -&gt; Restore New)
+        Narrator --&gt; Search: Switch Mode (Save Old -&gt; Restore New)
+    }
+
+    ActiveMode --&gt; PersistingState: Window Will Close / Terminate
+    PersistingState --&gt; [*]: Tulis Atomik JSON ke Disk</code></pre>
+<hr />
+<h2 id="2-alur-interaksi-dari-aksi-klik-toolbar-ke-textview">2. Alur Interaksi: Dari Aksi Klik Toolbar ke TextView</h2>
+<p>Ketika pengguna menekan tombol navigasi halaman atau memilih bab tertentu pada <em>toolbar</em> jendela utama:</p>
+<h3 id="a-alur-navigasi-halaman-toolbar-rightarrow-reader-textview">A. Alur Navigasi Halaman (Toolbar $\rightarrow$ Reader TextView)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+
+    actor User as Pengguna
+    participant Win as MainWindow
+    participant Split as SplitVC
+    participant VC as IbarotTextVC
+
+    User-&gt;&gt;+Win: navAction() / bookInfoAction()
+    Win-&gt;&gt;+Split: IbarotTextVC.nextPage() / prevPage() / goToPage()
+    Split-&gt;&gt;+VC: ReaderViewModel.goToNextPage() / goToPrevPage()
+    deactivate Split
+    deactivate Win
+    deactivate VC</code></pre>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+
+    participant VC as IbarotTextVC
+    participant VM as ReaderViewModel
+    participant DB as BookConnection
+    participant TV as IbarotTextView
+
+    VC-&gt;&gt;+VM: getContent(bkId: book.id, contentId: newContentId)
+
+    VM-&gt;&gt;+DB: getContent()
+    DB--&gt;&gt;-VM: Content Data
+    VM-&gt;&gt;VM: ArabicTextRenderer.render()
+
+    VM--&gt;&gt;-VC: closure onPayloadChanged?(ContentRenderPayload) -&gt; Void
+    VC-&gt;&gt;+TV: textStorage.setAttributedString()
+    TV-&gt;&gt;TV: ensureLayout() &amp; restoreScrollPosition()
+    deactivate TV</code></pre>
+<h3 id="b-alur-penukaran-mode-antarmuka-mode-switching-in-memory-transfer">B. Alur Penukaran Mode Antarmuka (Mode Switching &amp; In-Memory Transfer)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Win as MainWindow
+    participant Split as SplitVC
+    participant State as ReaderStateManager
+    participant View as IbarotTextView / UI
+
+    Note over User,State: 1. Pemicu &amp; Penyimpanan State Mode Lama
+    Action-&gt;&gt;Win: NSToolbarItem.Identifier.modeSelector - func modeSelectorChanged(_:)
+    Win-&gt;&gt;Split: switchToMode(newMode)
+    Split-&gt;&gt;State: saveState(for: currentMode)
+    State--&gt;&gt;View: updateState inout ReaderState
+
+    Note over Split,View: 2. Teardown &amp; Reset
+    View-&gt;&gt;View: IbarotTextView.string.removeAll()
+    Split-&gt;&gt;Split: Hapus dan ganti item sidebar yang persisten
+
+    Note over Split,State: 3. Konfigurasi Mode Baru &amp; Restorasi
+    Split-&gt;&gt;Split: setupForMode(newMode)
+    Split-&gt;&gt;State: restoreState(for: newMode)
+    State--&gt;&gt;View: Restore UI from ReaderState
+    Split-&gt;&gt;Split: Pulihkan sidebarItem.isCollapsed</code></pre>
+<h3 id="c-alur-restorasi-state-saat-peluncuran-aplikasi-cold-launch-restoration">C. Alur Restorasi State saat Peluncuran Aplikasi (<em>Cold Launch Restoration</em>)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant App as AppDelegate
+    participant Win as MainWindow
+    participant Split as SplitVC
+
+    App-&gt;&gt;App: applicationDidFinishLaunching()
+    App-&gt;&gt;+Win: restorePersistedState()
+    Win-&gt;&gt;Win: Baca UserDefaults.lastAppMode
+    Win-&gt;&gt;+Split: setupForMode(lastMode)
+    Split-&gt;&gt;Split: setupAutoSave()&lt;br/&gt;(UnifiedSplitView AutosaveName)
+    Split--&gt;&gt;-Win: Kontainer siap
+    deactivate Win</code></pre>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant Split as SplitVC
+    participant State as ReaderStateManager
+    participant Comp as Komponen UI
+    participant Win as MainWindow
+
+    Split-&gt;&gt;+State: restoreState(for: lastMode)
+    State-&gt;&gt;State: Baca &amp; decode JSON dari Disk&lt;br/&gt;({mode}_state.json)
+    State-&gt;&gt;+Comp: component.restore(from: state)&lt;br/&gt;(Ibarot, Option, Rowi)
+    Comp--&gt;&gt;-State: Komponen pulih
+    State--&gt;&gt;-Split: State siap
+    Split-&gt;&gt;+Win: setupView() &amp; displayIfNeeded()
+    Win--&gt;&gt;-Split: Jendela &amp; UI pulih</code></pre>
+<h3 id="d-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence">D. Alur Persistensi State ke Disk saat Jendela Ditutup (<em>Window Close &amp; Disk Persistence</em>)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+
+    actor User as Pengguna
+    participant App as AppDelegate
+    participant Split as SplitVC
+    participant State as ReaderStateManager
+    participant Comp as Komponen UI
+
+    User-&gt;&gt;+App: Tutup Jendela (Cmd+W) / willCloseNotification
+    App-&gt;&gt;+Split: persistCurrentStateToDisk()
+
+    Split-&gt;&gt;+State: saveState(for: currentMode)
+    State-&gt;&gt;+Comp: updateState(&amp;state)
+    Note over Comp: Simpan Book, Page, Scroll, Selection, Query
+    Comp--&gt;&gt;-State: State terbarui
+
+    State-&gt;&gt;State: persisToDisk(for: currentMode)&lt;br/&gt;(JSONEncoder &amp; Tulis Atomik ke Disk)
+    State--&gt;&gt;-Split: Selesai simpan ke disk
+    Split--&gt;&gt;-App: Persist selesai
+
+    App-&gt;&gt;App: mainWindowController = nil
+    deactivate App</code></pre>
+<hr />
+<h2 id="3-bedah-splitvc-manajemen-state">3. Bedah SplitVC &amp; Manajemen State</h2>
+<p><code>SplitVC</code> adalah <em>subclass</em> dari <code>NSSplitViewController</code> yang bertindak sebagai fondasi utama tata letak Maktabah pada macOS. Maktabah mendaur ulang <em>instance</em> ini untuk seluruh mode guna menghemat alokasi memori dan menjaga kelancaran animasi transisi.</p>
+<h3 id="siklus-hidup-readerstatemanager">Siklus Hidup <code>ReaderStateManager</code></h3>
+<p>Manajemen status antarmuka (seperti kitab aktif, nomor halaman, posisi <em>scroll</em>, rentang seleksi teks, kueri pencarian, serta status <em>collapsed</em> pada <em>sidebar</em>) dikelola oleh <code>ReaderStateManager</code> melalui 3 fase siklus:</p>
 <ol>
-<li>Menyimpan state (layout, <em>collapsed state</em>) mode saat ini melalui <code>stateManager.saveState</code>.</li>
-<li>Membersihkan layar konten bacaan (<code>ibarotTextVC.textView.string.removeAll()</code>).</li>
-<li>Menghapus seluruh sub-item <code>splitViewItems</code> kecuali satu <em>persistent container</em> (<code>sidebarItem</code>).</li>
-<li>Mengonfigurasi ulang child controllers untuk mode yang baru (via <code>setupForMode</code>).</li>
-<li>Mengembalikan state tersimpan milik mode baru menggunakan <code>stateManager.restoreState</code>.</li>
-</ol>
+<li><strong>Restorasi saat Peluncuran (<code>restorePersistedState</code>)</strong></li>
+<li>Dipicu di <code>AppDelegate.applicationDidFinishLaunching(_:)</code> saat jendela utama pertama kali dibuka.</li>
+<li>Mengambil mode terakhir dari <code>UserDefaults.standard.lastAppMode</code> (misalnya <code>.viewer</code>, <code>.search</code>, atau <code>.narrator</code>).</li>
+<li>Memanggil <code>splitVC.setupForMode(lastMode)</code> dan <code>splitVC.setupAutoSave()</code>.</li>
+<li>Mengeksekusi <code>stateManager.restoreState(for: lastMode, components: splitVC.components(for: lastMode))</code>.</li>
+<li><code>ReaderStateManager</code> memuat berkas JSON secara <em>lazy</em> dari direktori <code>~/Library/Application Support/Maktabah/States/{viewer,search,author}_state.json</code>.</li>
+<li>
+<p>Setiap komponen yang mengadopsi <em>protocol</em> <code>ReaderStateComponent</code> (<code>IbarotTextVC</code>, <code>OptionSearchVC</code>, atau <code>RowiResultsVC</code>) memulihkan kondisi UI mereka secara sinkron.</p>
 </li>
 <li>
-<p><strong>Menyimpan State (<code>persistCurrentStateToDisk()</code>)</strong>
-    Setiap perubahan rasio UI secara proaktif disimpan ke <em>disk</em> sehingga saat aplikasi direstart, state (termasuk status <em>collapsed</em> panel anotasi atau daftar isi) tidak hilang.</p>
+<p><strong>Penyimpanan &amp; Restorasi saat Beralih Mode (<code>switchToMode</code>)</strong></p>
 </li>
+<li>Dipicu ketika pengguna memilih mode pada <em>segmented control</em> di <em>toolbar</em> atau menu bar.</li>
+<li><strong>Langkah 1 (Simpan Mode Lama)</strong>: <code>stateManager.saveState(for: currentMode, components: components(for: currentMode))</code> mengumpulkan data UI mutakhir ke memori RAM (<code>ReaderState</code>).</li>
+<li><strong>Langkah 2 (Teardown Tampilan)</strong>: Mengosongkan teks bacaan (<code>ibarotTextVC.textView.string.removeAll()</code>) dan menghapus seluruh item split kecuali kontainer <em>sidebar</em> persisten.</li>
+<li><strong>Langkah 3 (Setup Mode Baru)</strong>: Memasang <em>child controllers</em> mode baru via <code>setupForMode(newMode)</code> dan memulihkan status <em>collapsed</em> pada <em>sidebar</em> (<code>sidebarItem.isCollapsed</code>).</li>
+<li>
+<p><strong>Langkah 4 (Restorasi Mode Baru)</strong>: <code>stateManager.restoreState(for: newMode, components: components(for: currentMode))</code> memulihkan <em>state</em> mode baru dari <em>cache</em> memori (atau memuat dari <em>disk</em> jika mode tersebut belum pernah dibuka pada sesi aktif).</p>
+</li>
+<li>
+<p><strong>Persistensi ke Disk saat Jendela Ditutup (<code>persistCurrentStateToDisk</code>)</strong></p>
+</li>
+<li><code>AppDelegate</code> mengamati notifikasi <code>NSWindow.willCloseNotification</code> melalui <code>windowObserverWillCloseNotification(_:)</code>.</li>
+<li>Memanggil <code>window.splitVC.persistCurrentStateToDisk()</code>.</li>
+<li><code>stateManager.saveState(for: currentMode, components: components(for: currentMode))</code> memperbarui <em>state</em> di memori.</li>
+<li><code>stateManager.persisToDisk(for: currentMode)</code> melakukan serialisasi <code>ReaderState</code> ke format JSON (<code>.prettyPrinted</code>, <code>.sortedKeys</code>) dan menuliskannya secara atomik ke <em>disk</em> (<code>.atomic</code>).</li>
+</ol>
+<h3 id="readerstatecomponent-protocol"><code>ReaderStateComponent</code> (Protocol)</h3>
+<p>Komponen UI yang berpartisipasi dalam persistensi <em>state</em> mengadopsi <em>protocol</em> <code>@MainActor ReaderStateComponent</code>:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">ReaderStateComponent</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">updateState</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">state</span><span class="p">:</span><span class="w"> </span><span class="kr">inout</span><span class="w"> </span><span class="n">ReaderState</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">restore</span><span class="p">(</span><span class="n">from</span><span class="w"> </span><span class="n">state</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderState</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">cleanUpState</span><span class="p">()</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong><code>updateState(_ state: inout ReaderState)</code></strong>: Mengisi properti relevan pada objek <code>ReaderState</code> (seperti ID buku, nomor halaman, posisi <em>scroll</em>, rentang seleksi, atau kueri pencarian).</li>
+<li><strong><code>restore(from state: ReaderState)</code></strong>: Membaca nilai dari <code>ReaderState</code> dan menerapkannya kembali ke UI (misalnya membuka kembali kitab, memposisikan <em>scroll</em>, atau merender ulang hasil pencarian).</li>
+<li><strong><code>cleanUpState()</code></strong>: Mengembalikan UI ke kondisi awal saat pengguna mengeksekusi <em>reset</em> melalui menu <em>Reset Current View</em> (<code>AppDelegate.resetCurrentViewState()</code>).</li>
+</ul>
+<h3 id="readerstate-struct"><code>ReaderState</code> (Struct)</h3>
+<p>Objek <em>state</em> dienkapsulasi dalam struktur <code>Codable</code> yang disimpan pada direktori <code>~/Library/Application Support/Maktabah/States/</code>:</p>
+<ul>
+<li><code>viewer_state.json</code>: Menyimpan <em>state</em> mode pembaca (kitab aktif, halaman, posisi <em>scroll</em>, seleksi, status TOC).</li>
+<li><code>search_state.json</code>: Menyimpan <em>state</em> pencarian (kueri, opsi FTS, hasil pencarian, dan buku terpilih).</li>
+<li><code>author_state.json</code>: Menyimpan <em>state</em> biografi perawi (perawi aktif, kueri rujukan, dan hasil biografi).</li>
+</ul>
+<h3 id="penanganan-jendela-ganda-multi-window-tabs">Penanganan Jendela Ganda (<em>Multi-Window &amp; Tabs</em>)</h3>
+<ul>
+<li><strong>Jendela Utama (<em>Primary Window</em>)</strong>: Menjalankan <code>restorePersistedState(_:)</code> untuk memulihkan sesi terakhir dari <em>disk</em>.</li>
+<li><strong>Tab / Jendela Baru (<code>newWindowForTab(_:)</code>)</strong>: Memanggil <code>setupContentView(restoreState: false)</code> yang menginisialisasi <code>ReaderState()</code> baru di memori tanpa memuat <em>state</em> lama dari <em>disk</em>, mencegah benturan antarjendela.</li>
 </ul>
 <h3 id="struct-class-enum-terkait">Struct, Class, &amp; Enum Terkait</h3>
 <ul>
-<li>
-<p><strong><code>AppMode</code> (Enum)</strong>
-    Representasi dari mode aktif pada layar utama aplikasi.</p>
-<ul>
-<li><code>.viewer</code>: Mode baca buku tunggal dengan library pada sidebar.</li>
-<li><code>.search</code>: Mode pencarian komprehensif (FTS) dengan filter pada sidebar dan hasil pencarian di panel bawah.</li>
-<li><code>.narrator</code>: Mode ensiklopedia perawi dengan daftar nama pada sidebar dan hasil analisis perawi di panel bawah.</li>
-</ul>
-</li>
-<li>
-<p><strong><code>SplitVC</code> (Class)</strong>
-    Komponen sentral (<code>NSSplitViewController</code>).</p>
-<ul>
-<li>Secara dinamis memuat komponen lazily seperti <code>ibarotTextVC</code> dan <code>viewerSplitVC</code>.</li>
-<li>Memiliki referensi instan ke seluruh varian Sidebar: <code>libraryVC</code>, <code>searchSidebarVC</code>, dan <code>rowiSidebarVC</code>.</li>
-<li>Mengontrol visibilitas alat-alat pencarian (<code>hideLibrarySearchField()</code>, <code>setupSearchFieldTahoe()</code>).</li>
-<li>Meneruskan event ke <em>content renderer</em> terkait, seperti <code>nextPage()</code>, <code>prevPage()</code>, atau <code>displayAnnotations()</code>.</li>
-</ul>
-</li>
+<li><strong><code>AppMode</code> (Enum)</strong>: Representasi mode aktif pada layar utama aplikasi (<code>.viewer</code>, <code>.search</code>, <code>.narrator</code>).</li>
+<li><strong><code>SplitVC</code> (Class)</strong>: Komponen sentral (<code>NSSplitViewController</code>) yang mengelola <em>sidebar</em>, <em>viewer</em>, dan panel bawah, serta meneruskan aksi seperti <code>nextPage()</code>, <code>prevPage()</code>, dan <code>displayAnnotations()</code>.</li>
 </ul>
 <h2 id="komponen-pendukung">Komponen Pendukung</h2>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">SplitView Logic</label><label for="__tabbed_1_2">Toolbar &amp; Accessory</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <h3 id="customsplitview">CustomSplitView</h3>
-<p><code>CustomSplitView</code> adalah subclass khusus <code>NSSplitView</code> yang memberikan fleksibilitas untuk mengubah tampilan antarmuka pemisah panel (<em>divider</em>), menyesuaikan diri dengan skema tema bacaan (seperti sepia atau mode malam).</p>
+<p><code>CustomSplitView</code> adalah <em>subclass</em> khusus <code>NSSplitView</code> yang memberikan fleksibilitas untuk mengubah tampilan pemisah panel (<em>divider</em>), menyesuaikan diri dengan skema tema bacaan (seperti sepia atau mode gelap).</p>
 <ul>
-<li><strong>Warna Custom (<code>customDividerColor</code>)</strong>: Properti khusus untuk meng-override warna pembatas bawaan macOS (<code>.separatorColor</code>). Nilai baru akan memicu kalkulasi ulang tata letak melalui <code>setNeedsDisplay</code> dan <code>layoutSubtreeIfNeeded()</code> pada blok <code>DispatchQueue.main.async</code>.</li>
-<li><strong>Ketebalan Pembatas (<code>dividerThickness</code>)</strong>: Mengganti ketebalan garis menjadi tepat <code>1.0</code> poin untuk menjaga desain tetap minimalis.</li>
-<li><strong>Adaptasi Background</strong>: Fungsi <code>updateDividerColor(to bgColor: BackgroundColor)</code> melakukan injeksi warna pemisah berdasarkan tema bacaan, mencakup nuansa <code>.darkSepia</code>, <code>.sepia</code>, <code>.black</code>, <code>.gray</code>, hingga <code>.white</code> yang dikalkulasi dengan tingkat bayangan dinamis (<code>shadow(withLevel:)</code>).</li>
+<li><strong>Warna Kustom (<code>customDividerColor</code>)</strong>: Properti untuk menimpa (<em>override</em>) warna pembatas bawaan macOS (<code>.separatorColor</code>). Perubahan nilai memicu kalkulasi ulang tata letak melalui <code>setNeedsDisplay</code> dan <code>layoutSubtreeIfNeeded()</code> pada blok <code>DispatchQueue.main.async</code>.</li>
+<li><strong>Ketebalan Pembatas (<code>dividerThickness</code>)</strong>: Menetapkan ketebalan garis tepat <code>1.0</code> poin untuk menjaga estetika desain minimalis.</li>
+<li><strong>Adaptasi Latar Belakang</strong>: Fungsi <code>updateDividerColor(to bgColor: BackgroundColor)</code> menyuntikkan warna pemisah berdasarkan tema aktif (<code>.darkSepia</code>, <code>.sepia</code>, <code>.black</code>, <code>.gray</code>, <code>.white</code>).</li>
 </ul>
 </div>
 <div class="tabbed-block">
 <h3 id="splitvcaccessoryitem">SplitVCAccessoryItem</h3>
-<p>Tersedia untuk target sistem operasi macOS 26.0+, kelas <code>SplitVCAccessoryItem</code> memfasilitasi integrasi Toolbar dan kolom pencarian yang terbenam mulus pada judul Sidebar atas (<code>NSSplitViewItemAccessoryViewController</code>).</p>
+<p>Tersedia untuk target macOS 26.0+, <code>class</code> <code>SplitVCAccessoryItem</code> memfasilitasi integrasi <em>toolbar</em> dan kolom pencarian yang terbenam pada judul <em>sidebar</em> (<code>NSSplitViewItemAccessoryViewController</code>).</p>
 <ul>
-<li><strong>State Penyimpanan Mandiri</strong>: Membedakan <code>DSFSearchField</code> berdasarkan setiap mode (Viewer, Search, Narrator) agar fitur bawaan <em>Recents Search</em> AppKit bisa diisolasi menggunakan nama unik (seperti <code>"LibraryVCSearch"</code> atau <code>"RecentsRowiSidebarSearchField"</code>).</li>
-<li><strong>Layout Fleksibel</strong>: Mengandalkan <code>NSStackView</code> vertikal. Layout ini membantu Maktabah menyisipkan widget lain selain kolom pencarian (seperti menautkan tombol "Select All" melalui metode <code>addButton(_:)</code>) tanpa merusak constraint Autolayout.</li>
-<li><strong>Pembaruan Konteks (<code>setupView(mode:)</code>)</strong>: Secara instan menukar dan mengaitkan <em>search field</em> aktif ke sub-view yang tepat tanpa harus memicu alokasi ulang hierarki objek secara keseluruhan.</li>
+<li><strong>Isolasi State Pencarian</strong>: Membedakan <code>DSFSearchField</code> untuk setiap mode (Viewer, Search, Narrator) agar fitur <em>Recents Search</em> bawaan AppKit terisolasi menggunakan pengenal unik (seperti <code>"LibraryVCSearch"</code> atau <code>"RecentsRowiSidebarSearchField"</code>).</li>
+<li><strong>Tata Letak Fleksibel</strong>: Menggunakan <code>NSStackView</code> vertikal untuk menyisipkan kontrol tambahan tanpa merusak batasan Autolayout.</li>
+<li><strong>Pembaruan Konteks (<code>setupView(mode:)</code>)</strong>: Mengaitkan <em>search field</em> aktif ke sub-tampilan yang tepat tanpa alokasi ulang hierarki objek secara keseluruhan.</li>
 </ul>
 </div>
 </div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Autosave Konfigurasi</p>
-<p><code>SplitVC</code> dan kontrolernya secara otomatis menyimpan ketebalan sidebar menggunakan <code>autosaveName</code> dari AppKit (seperti <code>"UnifiedViewerSplitView"</code> dan <code>"UnifiedSplitView"</code>). Hal ini bekerja selaras dengan metode persistensi internal milik <code>ReaderStateManager</code>.</p>
+<p><code>SplitVC</code> secara otomatis menyimpan posisi dan ketebalan <em>sidebar</em> menggunakan <code>autosaveName</code> bawaan AppKit (<code>"UnifiedViewerSplitView"</code> dan <code>"UnifiedSplitView"</code>), bekerja selaras dengan metode persistensi milik <code>ReaderStateManager</code>.</p>
 </div>
 
 
@@ -3793,6 +4307,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3823,10 +4343,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

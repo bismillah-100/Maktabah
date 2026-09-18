@@ -1364,10 +1364,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-protokol-resultsdelegate" class="md-nav__link">
+  <a href="#1-resultsdelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Protokol ResultsDelegate
+        1. ResultsDelegate (Protocol)
       
     </span>
   </a>
@@ -2827,6 +2827,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3545,10 +3573,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-protokol-resultsdelegate" class="md-nav__link">
+  <a href="#1-resultsdelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Protokol ResultsDelegate
+        1. ResultsDelegate (Protocol)
       
     </span>
   </a>
@@ -3623,17 +3651,17 @@
 
 
 <h1 id="contracts-loose-coupling">Contracts &amp; Loose Coupling</h1>
-<p>Dokumentasi ini menjelaskan antarmuka abstraksi dan protokol komunikasi yang didefinisikan pada direktori <code>Source/Features/Bookmarks/Protocols/</code>.</p>
+<p>Dokumentasi ini menjelaskan antarmuka abstraksi dan <em>protocol</em> komunikasi yang didefinisikan pada direktori <code>Source/Features/Bookmarks/Protocols/</code>.</p>
 <hr />
-<h2 id="1-protokol-resultsdelegate">1. Protokol <code>ResultsDelegate</code></h2>
-<p>Protokol utama yang menjembatani interaksi antara antarmuka markah hasil pencarian dengan modul pencarian (<em>Search Feature</em>) dan pembaca (<em>Reader Feature</em>).</p>
+<h2 id="1-resultsdelegate-protocol">1. <code>ResultsDelegate</code> (Protocol)</h2>
+<p><em>Protocol</em> utama yang menjembatani interaksi antara antarmuka markah hasil pencarian dengan modul pencarian (<em>Search Feature</em>) dan pembaca (<em>Reader Feature</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">import</span><span class="w"> </span><span class="nc">Foundation</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">ResultsDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">/// Dipanggil saat pengguna memilih atau mengeklik ganda suatu simpul hasil pencarian tersimpan.</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="c1">/// Dipanggil saat pengguna memilih atau mengeklik ganda suatu node hasil pencarian tersimpan.</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="c1">///</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="c1">/// - Parameter savedResults: Koleksi item hasil pencarian yang dikandung oleh simpul terpilih.</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="c1">/// - Parameter savedResults: Koleksi item hasil pencarian yang dikandung oleh node terpilih.</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelect</span><span class="p">(</span><span class="n">savedResults</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SavedResultsItem</span><span class="p">])</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
 </span></code></pre></div>
@@ -3671,8 +3699,33 @@
 </tbody>
 </table>
 <hr />
-<h2 id="3-alur-kerja-sistem-titik-panggilan-invocation-points">3. Alur Kerja Sistem &amp; Titik Panggilan (Invocation Points)</h2>
-<p>Metode <code>didSelect(savedResults:)</code> dipicu saat pengguna melakukan aksi pemilihan simpul pada antarmuka pengguna:</p>
+<h2 id="3-alur-kerja-sistem-titik-panggilan-invocation-points">3. Alur Kerja Sistem &amp; Titik Panggilan (<em>Invocation Points</em>)</h2>
+<pre class="mermaid"><code>flowchart TD
+    ACT(["Pengguna Klik Ganda Baris Markah"]) --&gt; OV["NSOutlineView (macOS) / iOSFolderContentList (iOS)"]
+    OV --&gt; RVM["ResultsViewManager / ResultsViewModel"]
+
+    RVM ~~~ DEL
+
+    DEL["ResultsDelegate (Protocol Abstrak)"]
+    RVM --&gt;|"didSelect(savedResults:)"| DEL
+
+    DEL ~~~ SEARCH
+
+    SEARCH["OptionSearchVC (Search Feature) / iOSNavigationManager"]
+    DEL --&gt;|"Implementasi Kontrak"| SEARCH
+
+    SEARCH --&gt; DISMISS(["Tutup Sheet / Popover"])
+    SEARCH --&gt; SE["SearchEngine (Muat Hasil Tersimpan)"]
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class ACT,DISMISS event;
+    class OV,SEARCH ui;
+    class RVM,DEL,SE store;</code></pre>
 <pre class="mermaid"><code>sequenceDiagram
     participant User as Pengguna
     participant Outline as NSOutlineView (macOS)
@@ -3680,7 +3733,7 @@
     participant Del as OptionSearchVC (Search Feature)
     participant SearchEngine as Search Engine Worker
 
-    User-&gt;&gt;Outline: Klik Ganda (Double Click) pada Baris Hasil
+    User-&gt;&gt;Outline: Klik Ganda pada Baris Hasil
     Outline-&gt;&gt;RVM: onDoubleClick()
     activate RVM
     RVM-&gt;&gt;RVM: Validasi item as ResultNode
@@ -3694,7 +3747,7 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS (<code>OptionSearchVC</code>)</label><label for="__tabbed_1_2">iOS (<code>iOSNavigationManager</code>)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>Pada lingkungan macOS, kontroler <code>OptionSearchVC</code> (bagian dari <code>Source/Features/Search/macOS/</code>) mengadopsi protokol ini:</p>
+<p>Pada lingkungan macOS, kontroler <code>OptionSearchVC</code> (bagian dari <code>Source/Features/Search/macOS/</code>) mengadopsi <em>protocol</em> ini:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">extension</span><span class="w"> </span><span class="nc">OptionSearchVC</span><span class="p">:</span><span class="w"> </span><span class="n">ResultsDelegate</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelect</span><span class="p">(</span><span class="n">savedResults</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SavedResultsItem</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="c1">// 1. Tutup popover / sheet daftar bookmark</span>
@@ -3707,7 +3760,7 @@
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<p>Pada platform iOS, delegasi dilakukan secara langsung melalui <em>Environment Object</em> <code>iOSNavigationManager</code> di dalam closure <code>loadResult</code>:</p>
+<p>Pada platform iOS, delegasi dilakukan secara langsung melalui <em>Environment Object</em> <code>iOSNavigationManager</code> di dalam <em>closure</em> <code>loadResult</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">loadResult</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">resultNode</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">dismiss</span><span class="p">()</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">navigationManager</span><span class="p">.</span><span class="n">searchViewModel</span><span class="p">.</span><span class="n">loadSavedResults</span><span class="p">(</span><span class="n">resultNode</span><span class="p">.</span><span class="n">items</span><span class="p">)</span>
@@ -3718,10 +3771,10 @@
 </div>
 <hr />
 <h2 id="4-keuntungan-loose-coupling">4. Keuntungan Loose Coupling</h2>
-<p>Dengan menggunakan protokol <code>ResultsDelegate</code>:</p>
+<p>Dengan menggunakan <em>protocol</em> <code>ResultsDelegate</code>:</p>
 <ul>
-<li><strong>Pelepasan Keterikatan (Decoupling)</strong>: Modul Bookmarks sama sekali tidak perlu mengetahui tipe kelas konkret dari kontroler yang membukanya (<code>OptionSearchVC</code>, <code>SplitVC</code>, atau komponen navigasi lainnya).</li>
-<li><strong>Kemudahan Pengujian (Testability)</strong>: Implementasi <em>Mock Delegate</em> dapat diinjeksikan dengan mudah dalam unit test untuk memverifikasi apakah klik ganda pada <code>ResultsViewManager</code> benar-benar memicu pengiriman data <code>[SavedResultsItem]</code> yang akurat.</li>
+<li><strong>Pelepasan Keterikatan (<em>Decoupling</em>)</strong>: Modul Bookmarks sama sekali tidak perlu mengetahui <em>class</em> konkret dari kontroler yang membukanya (<code>OptionSearchVC</code>, <code>SplitVC</code>, atau komponen navigasi lainnya).</li>
+<li><strong>Kemudahan Pengujian (<em>Testability</em>)</strong>: Implementasi <em>Mock Delegate</em> dapat diinjeksikan dalam <em>unit test</em> untuk memverifikasi apakah interaksi pada <code>ResultsViewManager</code> memicu pengiriman data <code>[SavedResultsItem]</code> yang akurat.</li>
 </ul>
 
 
@@ -3742,6 +3795,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3772,10 +3831,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

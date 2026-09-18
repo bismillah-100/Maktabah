@@ -2866,6 +2866,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3701,7 +3729,7 @@
 
 
 <h1 id="state-management-viewmodel">State Management (ViewModel)</h1>
-<p>Manajemen state untuk modul History dikendalikan oleh kelas tunggal <code>HistoryViewModel</code>. Komponen ini bertindak sebagai perantara (<em>middleman</em>) antara lapisan persisten (<code>HistoryDatabaseManager</code>), lapisan sinkronisasi (<code>CloudKitSyncManager</code>), dan UI yang reaktif (baik SwiftUI di iOS maupun NSCollectionView di macOS).</p>
+<p>Manajemen state untuk modul History dikendalikan oleh <em>class</em> tunggal <code>HistoryViewModel</code>. Komponen ini bertindak sebagai perantara (<em>middleman</em>) antara lapisan persistensi (<code>HistoryDatabaseManager</code>), lapisan sinkronisasi (<code>CloudKitSyncManager</code>), dan UI yang reaktif (baik SwiftUI di iOS maupun NSCollectionView di macOS).</p>
 <h2 id="historyviewmodel"><code>HistoryViewModel</code></h2>
 <p>Berlokasi di <code>Source/Features/History/ViewModel/HistoryViewModel.swift</code>, <em>view model</em> ini menggunakan framework <code>Observation</code> (makro <code>@Observable</code>) bawaan Swift 5.9+, bukan lagi memakai <code>@Published</code> milik <code>Combine</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
@@ -3726,14 +3754,14 @@
 <li><code>searchText</code>: Digunakan oleh <em>Search Bar</em> (khusus iOS/iPadOS) untuk memfilter koleksi favorit atau history secara lokal di sisi klien.</li>
 </ul>
 <h3 id="concurrency-debouncing">Concurrency &amp; Debouncing</h3>
-<p>Agar tidak menghabiskan thread utama (UI thread) saat operasi masif terjadi (seperti saat sinkronisasi CloudKit menarik ratusan rekaman modifikasi sekaligus), VM ini menggunakan <code>Task</code> asinkronus (Concurrency) yang dibatalkan (<em>cancelled</em>) jika <em>event</em> yang sama terjadi berurutan dalam periode singkat:</p>
+<p>Agar tidak membebani thread utama (UI thread) saat operasi masif terjadi (seperti saat sinkronisasi CloudKit menarik ratusan rekaman modifikasi sekaligus), VM ini menggunakan <code>Task</code> asinkron (Concurrency) yang dibatalkan (<em>cancelled</em>) jika <em>event</em> yang sama terjadi berurutan dalam periode singkat:</p>
 <ol>
 <li>
-<p><strong><code>scheduleSave()</code></strong><br />
+<p><strong><code>scheduleSave()</code></strong>
    Melakukan <em>debouncing</em> selama 500 ms sebelum menulis modifikasi array <code>historyOrder</code> ke SQLite. Dijalankan dengan <code>Task.detached</code>.</p>
 </li>
 <li>
-<p><strong><code>scheduleReloadBooksData()</code></strong><br />
+<p><strong><code>scheduleReloadBooksData()</code></strong>
    Melakukan <em>debouncing</em> 150 ms setiap ada perintah <em>reload UI</em>. Perintah ini akan menarik ulang <code>BooksData</code> berdasarkan <code>entriesByBookId</code> terbaru. Menggunakan <code>@MainActor</code> guna memastikan modifikasi referensi koleksi berjalan aman bagi SwiftUI/AppKit.</p>
 </li>
 </ol>
@@ -3781,6 +3809,12 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -3810,10 +3844,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

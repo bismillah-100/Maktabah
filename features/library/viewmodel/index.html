@@ -2827,6 +2827,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3637,7 +3665,7 @@
 </ul>
 <hr />
 <h2 id="1-arsitektur-state-observable">1. Arsitektur State <code>@Observable</code></h2>
-<p><code>LibraryViewModel</code> mengadopsi kerangka kerja observasi modern Swift (<code>@Observable</code>) dan mengimplementasikan protokol <code>ViewModelBase</code>. ViewModel ini bertindak sebagai koordinator state terpusat untuk katalog kitab di kedua platform.</p>
+<p><code>LibraryViewModel</code> mengadopsi kerangka kerja observasi modern Swift (<code>@Observable</code>) dan mengimplementasikan <em>protocol</em> <code>ViewModelBase</code>. ViewModel ini bertindak sebagai koordinator <em>state</em> terpusat untuk katalog kitab di kedua platform.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">LibraryViewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ViewModelBase</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="c1">// Singletons</span>
@@ -3677,7 +3705,7 @@
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>             └── refreshSubject (Combine) ─────► Debounce 300ms ──► Apply Filter
 </span></code></pre></div>
 <h3 id="a-debounced-streams-refreshsubject">A. Debounced Streams (<code>refreshSubject</code>)</h3>
-<p>Saat katalog dimutasi beruntun (misalnya pengunduhan batch banyak kitab), event dipancarkan ke <code>refreshSubject</code> dan di-<em>debounce</em> selama 300 milidetik pada <code>RunLoop.main</code> sebelum memicu pembangunan ulang hierarki kategori:</p>
+<p>Saat katalog mengalami mutasi beruntun (misalnya pengunduhan <em>batch</em> beberapa kitab sekaligus), <em>event</em> dipancarkan ke <code>refreshSubject</code> dan di-<em>debounce</em> selama 300 milidetik pada <code>RunLoop.main</code> sebelum memicu pembangunan ulang hierarki kategori:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">refreshSubject</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="p">.</span><span class="n">debounce</span><span class="p">(</span><span class="k">for</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">seconds</span><span class="p">(</span><span class="mf">0.3</span><span class="p">),</span><span class="w"> </span><span class="n">scheduler</span><span class="p">:</span><span class="w"> </span><span class="n">RunLoop</span><span class="p">.</span><span class="n">main</span><span class="p">)</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="p">.</span><span class="n">sink</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="k">in</span>
@@ -3693,7 +3721,7 @@
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="k">in</span><span class="p">:</span><span class="w"> </span><span class="p">&amp;</span><span class="n">cancellables</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="b-proteksi-konkurensi-reload-task-mutex">B. Proteksi Konkurensi Reload Task (<code>Mutex</code>)</h3>
-<p>Saat pengguna mengubah folder perpustakaan (<code>.libraryFolderChanged</code>), mutasi state dilindungi oleh <code>Mutex&lt;Task&lt;Void, Never&gt;?&gt;</code>:</p>
+<p>Saat pengguna mengubah folder direktori perpustakaan (<code>.libraryFolderChanged</code>), mutasi <em>state</em> dilindungi oleh <code>Mutex&lt;Task&lt;Void, Never&gt;?&gt;</code>:</p>
 <p><div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">reloadTask</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">currentTask</span><span class="w"> </span><span class="k">in</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">currentTask</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span><span class="n">currentTask</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Task</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="k">in</span>
@@ -3704,15 +3732,15 @@
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
 </span></code></pre></div>
-Pola ini mencegah beberapa reload task saling bertabrakan saat event folder didispatch berulang kali.</p>
+Pola ini mencegah beberapa <em>reload task</em> saling bertabrakan saat <em>event</em> folder dipancarkan berulang kali.</p>
 <hr />
 <h2 id="3-fitur-view-model-extensions">3. Fitur View-Model Extensions</h2>
-<p>Untuk menjaga keterbacaan, fungsionalitas <code>LibraryViewModel</code> dipecah menjadi modul extension:</p>
+<p>Fungsionalitas <code>LibraryViewModel</code> dibagi menjadi modul-modul <em>extension</em>:</p>
 <ul>
-<li><strong><code>FilterLibrary.swift</code></strong>: Menangani logika filter pencarian kitab (<code>searchQuery</code>), penyaringan kitab yang telah diunduh (<code>showOnlyDownloaded</code>), dan mode tampilan (<code>.category</code> vs <code>.author</code>). Pencarian teks memanfaatkan debounce task 300ms untuk membatalkan kueri lama saat pengguna masih mengetik.</li>
-<li><strong><code>PaginationLibrary.swift</code></strong>: Mengatur lazy loading dan batching item pada mode daftar pengarang (<em>Author Hierarchy</em>) untuk mencegah lag memori pada ribuan pengarang.</li>
+<li><strong><code>FilterLibrary.swift</code></strong>: Menangani logika filter pencarian kitab (<code>searchQuery</code>), penyaringan kitab yang telah diunduh (<code>showOnlyDownloaded</code>), dan mode tampilan (<code>.category</code> vs <code>.author</code>). Pencarian teks memanfaatkan <em>debounce task</em> 300ms untuk membatalkan kueri lama saat pengguna masih mengetik.</li>
+<li><strong><code>PaginationLibrary.swift</code></strong>: Mengatur <em>lazy loading</em> dan <em>batching</em> item pada mode daftar pengarang (<em>Author Hierarchy</em>) untuk mencegah beban memori berlebih pada ribuan data pengarang.</li>
 <li><strong><code>SelectionLibrary.swift</code></strong>: Menyimpan dan memvalidasi <code>Set&lt;Int&gt;</code> ID buku yang dipilih pengguna untuk operasi multi-seleksi.</li>
-<li><strong><code>BulkActionLibrary.swift</code></strong>: Mengkoordinasikan penghapusan massal (<em>bulk deletion</em>), pengunduhan massal (<em>bulk download</em>), serta pembaruan katalog massal.</li>
+<li><strong><code>BulkActionLibrary.swift</code></strong>: Mengoordinasikan penghapusan massal (<em>bulk deletion</em>), pengunduhan massal (<em>bulk download</em>), serta pembaruan katalog massal.</li>
 </ul>
 
 
@@ -3733,6 +3761,12 @@ Pola ini mencegah beberapa reload task saling bertabrakan saat event folder didi
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3763,10 +3797,12 @@ Pola ini mencegah beberapa reload task saling bertabrakan saat event folder didi
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

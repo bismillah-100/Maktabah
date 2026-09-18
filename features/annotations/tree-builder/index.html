@@ -1198,10 +1198,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-manipulasi-pohon-filter-kitab-hilang" class="md-nav__link">
+  <a href="#4-manipulasi-hierarki-filter-kitab-yang-belum-terunduh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Manipulasi Pohon &amp; Filter Kitab Hilang
+        4. Manipulasi Hierarki &amp; Filter Kitab yang Belum Terunduh
       
     </span>
   </a>
@@ -2866,6 +2866,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3673,10 +3701,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-manipulasi-pohon-filter-kitab-hilang" class="md-nav__link">
+  <a href="#4-manipulasi-hierarki-filter-kitab-yang-belum-terunduh" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Manipulasi Pohon &amp; Filter Kitab Hilang
+        4. Manipulasi Hierarki &amp; Filter Kitab yang Belum Terunduh
       
     </span>
   </a>
@@ -3704,13 +3732,13 @@
 <p>Sumber kode: <code>Source/Features/Annotations/Database/AnnotationTreeBuilder.swift</code></p>
 <hr />
 <h2 id="1-peran-tanggung-jawab">1. Peran &amp; Tanggung Jawab</h2>
-<p><code>AnnotationTreeBuilder</code> adalah komponen pengelola hierarki data pohon (<em>tree data structure</em>) yang menjembatani data mentah dari <code>AnnotationStore</code> ke komponen UI sidebar (<code>NSOutlineView</code> di macOS dan tampilan list bertingkat di iOS).</p>
+<p><code>AnnotationTreeBuilder</code> adalah komponen pengelola struktur data hierarki (<em>tree data structure</em>) yang menjembatani data mentah dari <code>AnnotationStore</code> ke komponen UI <em>sidebar</em> (<code>NSOutlineView</code> di macOS dan tampilan daftar bertingkat di iOS).</p>
 <p>Komponen ini bertanggung jawab untuk:</p>
 <ol>
-<li>Mengelompokkan (<em>grouping</em>) ribuan catatan anotasi ke dalam hierarki pohon logis sesuai preferensi pengguna.</li>
-<li>Memproses mutasi data secara asinkron di antrean terisolasi (<code>treeQueue</code>).</li>
-<li>Menghitung perubahan struktural (<em>diffing</em>) secara presisi agar UI dapat melakukan animasi baris secara efisien tanpa <em>full reload</em>.</li>
-<li>Mengelola penyortiran dan penyaringan kitab yang belum terunduh.</li>
+<li>Mengelompokkan (<em>grouping</em>) ribuan catatan anotasi ke dalam struktur hierarki logis sesuai preferensi pengguna.</li>
+<li>Memproses mutasi data secara asinkron pada antrean terisolasi (<code>treeQueue</code>).</li>
+<li>Menghitung perubahan struktural melalui <em>tree diffing</em> secara presisi agar UI dapat melakukan animasi baris secara efisien tanpa <em>full reload</em>.</li>
+<li>Mengelola pengurutan dan penyaringan kitab yang belum terunduh.</li>
 </ol>
 <hr />
 <h2 id="2-mode-pengelompokan-annotationgroupingmode">2. Mode Pengelompokan (<code>AnnotationGroupingMode</code>)</h2>
@@ -3722,7 +3750,7 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="a-pengelompokan-berdasarkan-kitab-book">A. Pengelompokan Berdasarkan Kitab (<code>.book</code>)</h3>
-<p>Menyusun anotasi berdasarkan induk kitabnya:
+<p>Menyusun anotasi berdasarkan node induk kitabnya:
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Root
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>└── [Book Node] Shahih Bukhari (12 catatan)
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    ├── [Annotation Node] Hadits 1 - Hal 12 (Kuning)
@@ -3750,20 +3778,20 @@
 </span></code></pre></div></p>
 <hr />
 <h2 id="3-mekanisme-diffing-animasi-ui-annotationtreediff">3. Mekanisme Diffing &amp; Animasi UI (<code>AnnotationTreeDiff</code>)</h2>
-<p>Ketika terjadi penambahan, pengubahan, atau penghapusan anotasi, <code>AnnotationTreeBuilder</code> tidak membangun ulang seluruh pohon dari nol. Sebaliknya, ia menghitung delta perubahan dan memancarkannya melalui Combine Publisher:</p>
+<p>Ketika terjadi penambahan, pengubahan, atau penghapusan anotasi, <code>AnnotationTreeBuilder</code> tidak membangun ulang seluruh struktur hierarki dari awal. Sebaliknya, komponen ini menghitung delta perubahan (<em>tree diffing</em>) dan memancarkannya melalui Combine Publisher:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">diffPublisher</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">PassthroughSubject</span><span class="p">&lt;</span><span class="n">AnnotationTreeDiff</span><span class="p">?,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;()</span>
 </span></code></pre></div>
 <h3 id="keuntungan-arsitektur-diffing">Keuntungan Arsitektur Diffing:</h3>
 <ul>
-<li><strong>Performa Tinggi</strong>: Operasi pembaruan berjalan di <code>DispatchQueue(label: "com.maktab.annotationTreeBuilder.queue", qos: .userInitiated)</code> sehingga tidak membebani main thread.</li>
+<li><strong>Performa Tinggi</strong>: Operasi pembaruan berjalan di <code>DispatchQueue(label: "com.maktab.annotationTreeBuilder.queue", qos: .userInitiated)</code> sehingga tidak membebani <em>main thread</em>.</li>
 <li><strong>Animasi Native AppKit</strong>: <code>AnnotationsOutlineDataSource</code> di macOS dapat menangkap <code>AnnotationTreeDiff</code> dan memanggil <code>outlineView.insertItems(...)</code> atau <code>outlineView.removeItems(...)</code> dengan animasi mulus, menghindari kedipan layar yang terjadi jika menggunakan <code>outlineView.reloadData()</code>.</li>
 </ul>
 <hr />
-<h2 id="4-manipulasi-pohon-filter-kitab-hilang">4. Manipulasi Pohon &amp; Filter Kitab Hilang</h2>
+<h2 id="4-manipulasi-hierarki-filter-kitab-yang-belum-terunduh">4. Manipulasi Hierarki &amp; Filter Kitab yang Belum Terunduh</h2>
 <p><code>AnnotationTreeBuilder</code> juga menangani kondisi khusus ketersediaan kitab lokal:</p>
 <ul>
-<li><strong>Penyortiran Dinamis (<code>AnnotationSortOption</code>)</strong>: Mengurutkan anak-anak node berdasarkan tanggal pembuatan (<code>createdAt</code>), posisi kitab (<code>page</code>/<code>part</code>), atau judul secara <em>ascending</em> maupun <em>descending</em>.</li>
-<li><strong>Observasi Kitab Hilang (<code>hideMissingBookAnnotations</code>)</strong>: Memantau <code>UserDefaults</code>. Jika opsi ini aktif, anotasi yang kitabnya belum diunduh di perangkat pengguna akan otomatis disaring keluar dari pohon tampilan secara reaktif.</li>
+<li><strong>Penyortiran Dinamis (<code>AnnotationSortOption</code>)</strong>: Mengurutkan <em>child nodes</em> berdasarkan tanggal pembuatan (<code>createdAt</code>), posisi kitab (<code>page</code>/<code>part</code>), atau judul secara <em>ascending</em> maupun <em>descending</em>.</li>
+<li><strong>Observasi Kitab yang Belum Terunduh (<code>hideMissingBookAnnotations</code>)</strong>: Memantau <code>UserDefaults</code>. Jika opsi ini aktif, anotasi yang berkas kitabnya belum diunduh di perangkat pengguna akan otomatis disaring keluar dari hierarki tampilan secara reaktif.</li>
 </ul>
 
 
@@ -3784,6 +3812,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3814,10 +3848,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

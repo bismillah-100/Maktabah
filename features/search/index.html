@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reader/textview/" class="md-nav__link">
         
   
@@ -3545,43 +3573,43 @@
 
 
 <h1 id="search">Search</h1>
-<p>Modul <strong>Search</strong> menangani pencarian <em>Full Text Search</em> (FTS) dalam pustaka kitab yang tersedia. Modul ini terintegrasi erat dengan <code>SearchEngine</code> dari <em>Core</em> dan mengelola pencarian di ribuan tabel secara konkuren dengan kapabilitas <em>pause/resume</em>, serta filter kriteria pencarian yang komprehensif (Frasa, Mengandung, OR, dan Jarak Kedekatan / Near).</p>
+<p>Modul <strong>Search</strong> menangani pencarian <em>Full-Text Search</em> (FTS) dalam pustaka kitab yang tersedia. Modul ini terintegrasi erat dengan <code>SearchEngine</code> dari <em>Core</em> dan mengelola pencarian di ribuan tabel secara konkuren dengan kapabilitas jeda/lanjutkan (<em>pause/resume</em>), serta filter kriteria pencarian yang komprehensif (Frasa, Mengandung, OR, dan Jarak Kedekatan / <em>Near</em>).</p>
 <h2 id="arsitektur-pipeline">Arsitektur &amp; Pipeline</h2>
-<p>Modul ini dibangun menggunakan pendekatan MVVM (Model-View-ViewModel) dengan <code>SearchViewModel</code> sebagai pengendali <em>state</em> dan konduktor pencarian lintas platform.</p>
-<pre class="mermaid"><code>graph TD
-    %% UI Layer
-    subgraph UI ["UI Layer (macOS &amp; iOS)"]
-        MAC["OptionSearchVC &amp; SearchSidebarVC (macOS)"]
-        IOS["SearchModeView &amp; SearchComponents (iOS)"]
-    end
+<p>Modul ini dibangun menggunakan pola arsitektur MVVM (<em>Model-View-ViewModel</em>) dengan <code>SearchViewModel</code> sebagai pengendali <em>state</em> dan konduktor pencarian lintas platform.</p>
+<pre class="mermaid"><code>flowchart TD
+    MAC["OptionSearchVC &amp; SearchSidebarVC (macOS)"] --&gt; SVM["SearchViewModel (@Observable)"]
+    IOS["SearchModeView &amp; SearchComponents (iOS)"] --&gt; SVM
 
-    %% State Management
-    subgraph VM ["ViewModel Layer"]
-        SVM["SearchViewModel&lt;br/&gt;(@Observable)"]
-    end
+    SVM ~~~ Core
 
-    %% Core Dependencies
     subgraph Core ["Core Engine &amp; Database"]
-        SE["SearchEngine&lt;br/&gt;(FTS Engine)"]
-        LDM["LibraryDataManager&lt;br/&gt;(Book Tracking)"]
-        BC["BookConnection&lt;br/&gt;(SQLite Database)"]
+        SE["SearchEngine (FTS Engine)"]
+        LDM["LibraryDataManager (Book Tracking)"]
+        BC[("BookConnection (SQLite Archives)")]
     end
 
-    %% Flow
-    MAC --&gt;|Input Query/Mode| SVM
-    IOS --&gt;|Input Query/Mode| SVM
+    SVM --&gt;|"Kirim Params Scope"| LDM
+    SVM --&gt;|"Eksekusi Kueri FTS"| SE
+    SVM --&gt;|"Ambil Konten Detail"| BC
 
-    SVM --&gt;|Kirim Params| LDM
-    SVM --&gt;|Eksekusi FTS| SE
-    SVM --&gt;|Ambil Konten Detail| BC
+    SE --&gt;|"Streaming Hasil"| SVM
 
-    SE --&gt;|Streaming Hasil| SVM</code></pre>
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class MAC,IOS ui;
+    class SVM vm;
+    class SE,LDM store;
+    class BC db;</code></pre>
 <h2 id="fitur-utama">Fitur Utama</h2>
 <ul>
-<li><strong>Pencarian Konkuren:</strong> Memanfaatkan <code>SearchEngine</code> dengan multithreading dan <code>Task.detached</code>.</li>
-<li><strong>Mode Pencarian:</strong> Frasa utuh, Semua Kata (AND), Salah Satu Kata (OR), dan Kedekatan (Near) untuk fleksibilitas.</li>
+<li><strong>Pencarian Konkuren:</strong> Memanfaatkan <code>SearchEngine</code> dengan <em>multithreading</em> dan <code>Task.detached</code>.</li>
+<li><strong>Mode Pencarian:</strong> Frasa utuh (<em>Exact Phrase</em>), Semua Kata (<em>AND / All Words</em>), Salah Satu Kata (<em>OR / Any Word</em>), dan Kedekatan (<em>Near Distance</em>).</li>
 <li><strong>Bookmarks (Saved Results):</strong> Memulihkan dan menampilkan kembali hasil pencarian yang disimpan.</li>
-<li><strong>State Restoration:</strong> Kemampuan memulihkan pencarian terakhir secara otomatis.</li>
+<li><strong>State Restoration:</strong> Kemampuan memulihkan sesi pencarian terakhir secara otomatis.</li>
 </ul>
 
 
@@ -3602,6 +3630,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3632,10 +3666,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

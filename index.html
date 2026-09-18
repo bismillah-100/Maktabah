@@ -2853,6 +2853,34 @@
   
   
     <li class="md-nav__item">
+      <a href="features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="features/reader/textview/" class="md-nav__link">
         
   
@@ -3680,46 +3708,53 @@
 <p>Dokumentasi arsitektur dan teknis internal aplikasi <strong>Maktabah</strong> (macOS &amp; iOS).</p>
 <hr />
 <h2 id="gambaran-arsitektur">Gambaran Arsitektur</h2>
-<p>Maktabah menggunakan arsitektur dual-platform modular berbasis Swift:</p>
+<p>Maktabah menggunakan arsitektur modular lintas platform berbasis Swift:</p>
 <ul>
-<li><strong>Platform UI</strong>: macOS (AppKit) &amp; iOS (SwiftUI + UIKit bridge)</li>
-<li><strong>Penyimpanan Lokal</strong>: SQLite (libsqlite3) terkompresi Zstandard (<code>zstd</code>)</li>
+<li><strong>Platform UI</strong>: macOS (AppKit) &amp; iOS (SwiftUI + UIKit <em>bridge</em>)</li>
+<li><strong>Penyimpanan Lokal</strong>: SQLite (<code>libsqlite3</code>) terkompresi Zstandard (<code>zstd</code>)</li>
 <li><strong>Sinkronisasi</strong>: CloudKit Custom Zone (Private Database)</li>
-<li><strong>Pencarian</strong>: SQLite FTS5 concurrent worker pool</li>
+<li><strong>Pencarian</strong>: SQLite FTS5 <em>concurrent worker pool</em></li>
 </ul>
-<h3 id="siklus-hidup-aplikasi-app-lifecycle-entry-point">Siklus Hidup Aplikasi (App Lifecycle &amp; Entry Point)</h3>
-<p>Pipa (pipeline) inisialisasi aplikasi berjalan secara sistematis sebelum antarmuka pengguna ditampilkan:</p>
+<h3 id="siklus-hidup-aplikasi-app-lifecycle-entry-point">Siklus Hidup Aplikasi (<em>App Lifecycle &amp; Entry Point</em>)</h3>
+<p>Alur inisialisasi (<em>pipeline</em>) aplikasi berjalan secara sistematis sebelum antarmuka pengguna ditampilkan:</p>
 <pre class="mermaid"><code>flowchart TD
-    Start((Launch App))
+    Start(["Launch App"]) --&gt; Mac["macOS: AppDelegate"]
+    Start --&gt; IOS["iOS: MaktabahApp (@main)"]
 
-    subgraph OS Entry Point
-        Mac[macOS: AppDelegate]
-        IOS[iOS: MaktabahApp @main]
-    end
-
-    Start --&gt; Mac
-    Start --&gt; IOS
-
-    Mac --&gt; CheckDB{Cek Ketersediaan&lt;br&gt;Core Files SQLite}
+    Mac --&gt; CheckDB{"Core SQLite Tersedia?"}
     IOS --&gt; CheckDB
 
-    CheckDB -- "Tidak Ada / Usang" --&gt; Download[CoreDatabaseDownloader&lt;br&gt;Unduh &amp; Ekstrak zstd dari GitHub]
-    CheckDB -- "Tersedia" --&gt; Sync[CloudKitSyncManager&lt;br&gt;Fetch Data Latar Belakang]
-    Download --&gt; Sync
+    CheckDB --&gt;|"Tidak Ada / Usang"| Download["CoreDatabaseDownloader (Unduh &amp; Ekstrak zstd)"]
+    Download --&gt; DB_FILES[("main.sqlite &amp; special.sqlite")]
 
-    subgraph Main User Interface
-        Split[macOS: SplitVC&lt;br&gt;Sidebar + Reader]
-        Main[iOS: iOSMainView&lt;br&gt;TabView / iPadLayout]
-    end
+    CheckDB --&gt;|"Tersedia"| DB_FILES
+    DB_FILES --&gt; Sync["CloudKitSyncManager (Fetch Data Latar Belakang)"]
+
+    Sync ~~~ Split
+    Sync ~~~ Main
+
+    Split["macOS: SplitVC (Sidebar + Reader)"]
+    Main["iOS: iOSMainView (TabView / iPadLayout)"]
 
     Sync --&gt; Split
-    Sync --&gt; Main</code></pre>
+    Sync --&gt; Main
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class Start event;
+    class Mac,IOS,Split,Main ui;
+    class CheckDB,Download,Sync store;
+    class DB_FILES db;</code></pre>
 <ol>
-<li><strong>Entry Point OS</strong>: Aplikasi diluncurkan melalui delegasi native (AppKit <code>AppDelegate</code> di Mac, atau SwiftUI <code>@main</code> di iOS).</li>
-<li><strong>Pemeriksaan Core Database</strong>: Sistem memvalidasi keberadaan <code>main.sqlite</code> dan <code>special.sqlite</code> pada direktori <em>Application Support</em>.</li>
-<li><strong>Download &amp; Ekstraksi</strong>: Jika arsip tidak ada (pengguna baru) atau versi usang, <code>CoreDatabaseDownloader</code> akan mengambil paket <code>.zst</code> dari GitHub Releases dan mengekstraknya seketika.</li>
-<li><strong>CloudKit Sync</strong>: Menarik mutasi data anotasi, histori, dan markah luring (<em>offline pending sync</em>) secara asinkron agar konsisten lintas perangkat.</li>
-<li><strong>Presentasi View</strong>: Alur memuncak pada perenderan antarmuka utama (<code>SplitVC</code> di macOS, <code>iOSMainView</code> di iOS) yang siap merespons interaksi pengguna.</li>
+<li><strong>Titik Masuk Aplikasi (<em>Entry Point</em>)</strong>: Aplikasi dijalankan melalui delegasi bawaan (<em>native</em>) (AppKit <code>AppDelegate</code> di macOS, atau SwiftUI <code>@main</code> di iOS).</li>
+<li><strong>Pemeriksaan Basis Data Utama (<em>Core Database</em>)</strong>: Sistem memvalidasi keberadaan berkas <code>main.sqlite</code> dan <code>special.sqlite</code> pada direktori <em>Application Support</em>.</li>
+<li><strong>Pengunduhan &amp; Ekstraksi</strong>: Jika arsip belum tersedia (pengguna baru) atau versinya usang, <code>CoreDatabaseDownloader</code> akan mengunduh paket <code>.zst</code> dari GitHub Releases dan mengekstraknya seketika.</li>
+<li><strong>Sinkronisasi CloudKit</strong>: Menarik pembaruan data anotasi, riwayat, serta antrean sinkronisasi tertunda (<em>pending sync</em>) secara asinkron agar data tetap konsisten lintas perangkat.</li>
+<li><strong>Penyajian Tampilan (<em>View Presentation</em>)</strong>: Tahapan akhir berupa rendering antarmuka utama (<code>SplitVC</code> di macOS, <code>iOSMainView</code> di iOS) yang siap menerima interaksi pengguna.</li>
 </ol>
 <hr />
 <h2 id="struktur-dokumentasi">Struktur Dokumentasi</h2>
@@ -3774,6 +3809,12 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -3803,10 +3844,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="javascripts/extra.js"></script>
       
     
   </body>

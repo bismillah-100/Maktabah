@@ -2463,10 +2463,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tabel-terkait-di-specialsqlite" class="md-nav__link">
+  <a href="#skema-tabel-di-specialsqlite" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabel Terkait di special.sqlite
+        Skema Tabel di special.sqlite
       
     </span>
   </a>
@@ -2785,6 +2785,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3546,10 +3574,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#tabel-terkait-di-specialsqlite" class="md-nav__link">
+  <a href="#skema-tabel-di-specialsqlite" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tabel Terkait di special.sqlite
+        Skema Tabel di special.sqlite
       
     </span>
   </a>
@@ -3579,21 +3607,21 @@
 
 
 <h1 id="persistence-database">Persistence &amp; Database</h1>
-<p>Pengelolaan data Al-Quran dan Tafsir berpusat pada <code>QuranDataManager</code>.</p>
+<p>Pengelolaan data Al-Qur'an dan Tafsir berpusat pada <code>QuranDataManager</code>.</p>
 <h2 id="qurandatamanager"><code>QuranDataManager</code></h2>
-<p>Sebuah <em>singleton</em> yang mengelola koneksi database khusus (<code>special.sqlite</code>) dan mengoordinasikan pembacaan data Al-Quran serta buku-buku tafsir.</p>
+<p>Sebuah <em>singleton</em> yang mengelola koneksi basis data khusus (<code>special.sqlite</code>) dan mengoordinasikan pembacaan teks ayat Al-Qur'an serta kitab-kitab tafsir.</p>
 <h3 id="tanggung-jawab-utama">Tanggung Jawab Utama</h3>
 <ul>
-<li><strong>Memuat Surah &amp; Ayat</strong>: Mengambil data dari tabel <code>Qr</code> dan <code>Sora</code> di database khusus.</li>
-<li><strong>Memuat Tafsir</strong>: Memfilter daftar buku di <code>LibraryDataManager</code> yang memiliki kategori Tafsir (ID 127 atau 70) dan memiliki nama tafsir (<code>tafseerNam</code>).</li>
-<li><strong>Membaca Konten</strong>: Menggunakan <code>BookConnection</code> untuk menghubungkan arsip SQLite dan mengambil konten dari buku tafsir pada surah dan ayat yang spesifik menggunakan <code>loadTafseer(for:in:)</code>.</li>
-<li><strong>Navigasi Halaman</strong>: Menyediakan fungsi <code>nextPage()</code> dan <code>prevPage()</code> untuk membaca halaman tafsir selanjutnya atau sebelumnya.</li>
-<li><strong>Pencarian</strong>: Memungkinkan pencarian pada nama Surah (<code>searchSurah</code>) dan pencarian buku tafsir (<code>searchTafseerBooks</code>).</li>
+<li><strong>Memuat Surah &amp; Ayat</strong>: Mengambil data dari tabel <code>Qr</code> dan <code>Sora</code> di basis data <code>special.sqlite</code>.</li>
+<li><strong>Memuat Kitab Tafsir</strong>: Memfilter daftar kitab di <code>LibraryDataManager</code> yang memiliki kategori Tafsir (ID 127 atau 70) dan memiliki nama tafsir (<code>tafseerNam</code>).</li>
+<li><strong>Membaca Konten</strong>: Menggunakan <code>BookConnection</code> untuk menghubungkan arsip SQLite dan mengambil konten dari kitab tafsir pada surah dan ayat spesifik melalui <code>loadTafseer(for:in:)</code>.</li>
+<li><strong>Navigasi Halaman</strong>: Menyediakan fungsi <code>nextPage()</code> dan <code>prevPage()</code> untuk membaca halaman tafsir berikutnya atau sebelumnya.</li>
+<li><strong>Pencarian</strong>: Mendukung pencarian nama surah (<code>searchSurah</code>) dan pencarian kitab tafsir (<code>searchTafseerBooks</code>).</li>
 </ul>
-<h3 id="tabel-terkait-di-specialsqlite">Tabel Terkait di <code>special.sqlite</code></h3>
+<h3 id="skema-tabel-di-specialsqlite">Skema Tabel di <code>special.sqlite</code></h3>
 <ul>
-<li><strong><code>Qr</code></strong>: Menyimpan teks ayat Al-Quran (<code>nass</code>), nomor surah (<code>sora</code>), nomor ayat (<code>aya</code>), dan nomor halaman (<code>Page</code>).</li>
-<li><strong><code>Sora</code></strong>: Menyimpan metadata surah, termasuk nama surah (<code>sora</code>).</li>
+<li><strong><code>Qr</code></strong>: Menyimpan teks ayat Al-Qur'an (<code>nass</code>), nomor surah (<code>sora</code>), nomor ayat (<code>aya</code>), dan nomor halaman mushaf (<code>Page</code>).</li>
+<li><strong><code>Sora</code></strong>: Menyimpan metadata surah, termasuk nama surah dalam bahasa Arab (<code>sora</code>).</li>
 </ul>
 
 
@@ -3614,6 +3642,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3644,10 +3678,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

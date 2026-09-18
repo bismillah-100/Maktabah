@@ -1986,15 +1986,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-navigasi-pembacaan-librarydelegate" class="md-nav__link">
+  <a href="#1-librarydelegate-protocol-navigasi-pembacaan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Navigasi Pembacaan (LibraryDelegate)
+        1. LibraryDelegate (Protocol) - Navigasi Pembacaan
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Navigasi Pembacaan (LibraryDelegate)">
+    <nav class="md-nav" aria-label="1. LibraryDelegate (Protocol) - Navigasi Pembacaan">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2014,10 +2014,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-seleksi-item-baris-libraryviewdelegate" class="md-nav__link">
+  <a href="#2-libraryviewdelegate-protocol-seleksi-item-baris" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Seleksi Item Baris (LibraryViewDelegate)
+        2. LibraryViewDelegate (Protocol) - Seleksi Item Baris
       
     </span>
   </a>
@@ -2025,15 +2025,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-integrasi-kolom-pencarian-macos-searchablelibrarysidebar" class="md-nav__link">
+  <a href="#3-searchablelibrarysidebar-protocol-integrasi-kolom-pencarian-macos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Integrasi Kolom Pencarian macOS (SearchableLibrarySidebar)
+        3. SearchableLibrarySidebar (Protocol) - Integrasi Kolom Pencarian macOS
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Integrasi Kolom Pencarian macOS (SearchableLibrarySidebar)">
+    <nav class="md-nav" aria-label="3. SearchableLibrarySidebar (Protocol) - Integrasi Kolom Pencarian macOS">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2833,6 +2833,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3551,15 +3579,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-navigasi-pembacaan-librarydelegate" class="md-nav__link">
+  <a href="#1-librarydelegate-protocol-navigasi-pembacaan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Navigasi Pembacaan (LibraryDelegate)
+        1. LibraryDelegate (Protocol) - Navigasi Pembacaan
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Navigasi Pembacaan (LibraryDelegate)">
+    <nav class="md-nav" aria-label="1. LibraryDelegate (Protocol) - Navigasi Pembacaan">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3579,10 +3607,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-seleksi-item-baris-libraryviewdelegate" class="md-nav__link">
+  <a href="#2-libraryviewdelegate-protocol-seleksi-item-baris" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Seleksi Item Baris (LibraryViewDelegate)
+        2. LibraryViewDelegate (Protocol) - Seleksi Item Baris
       
     </span>
   </a>
@@ -3590,15 +3618,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-integrasi-kolom-pencarian-macos-searchablelibrarysidebar" class="md-nav__link">
+  <a href="#3-searchablelibrarysidebar-protocol-integrasi-kolom-pencarian-macos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Integrasi Kolom Pencarian macOS (SearchableLibrarySidebar)
+        3. SearchableLibrarySidebar (Protocol) - Integrasi Kolom Pencarian macOS
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. Integrasi Kolom Pencarian macOS (SearchableLibrarySidebar)">
+    <nav class="md-nav" aria-label="3. SearchableLibrarySidebar (Protocol) - Integrasi Kolom Pencarian macOS">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3637,9 +3665,9 @@
 <h1 id="library-protocols-inter-module-contracts">Library Protocols &amp; Inter-Module Contracts</h1>
 <p>Sumber kode: <code>Source/Features/Library/Protocols/</code></p>
 <hr />
-<h2 id="1-navigasi-pembacaan-librarydelegate">1. Navigasi Pembacaan (<code>LibraryDelegate</code>)</h2>
-<p>Protokol <code>LibraryDelegate</code> adalah kontrak utama yang menghubungkan modul <strong>Library</strong> ke modul <strong>Reader</strong> (<code>IbarotTextVC</code> di macOS atau <code>iOSReaderView</code> di iOS). </p>
-<p>Ketika pengguna memilih salah satu kitab dari katalog, Library tidak memanipulasi reader secara langsung, melainkan mendelegasikannya melalui protokol ini:</p>
+<h2 id="1-librarydelegate-protocol-navigasi-pembacaan">1. <code>LibraryDelegate</code> (Protocol) - Navigasi Pembacaan</h2>
+<p><em>Protocol</em> <code>LibraryDelegate</code> adalah kontrak utama yang menghubungkan modul <strong>Library</strong> ke modul <strong>Reader</strong> (<code>IbarotTextVC</code> di macOS atau <code>iOSReaderView</code> di iOS). </p>
+<p>Ketika pengguna memilih salah satu kitab dari katalog, Library tidak memanipulasi <em>reader</em> secara langsung, melainkan mendelegasikannya melalui <em>protocol</em> ini:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">LibraryDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelectBook</span><span class="p">(</span><span class="k">for</span><span class="w"> </span><span class="n">book</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span><span class="p">,</span><span class="w"> </span><span class="n">loadContent</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span><span class="p">)</span><span class="w"> </span><span class="k">async</span>
@@ -3648,19 +3676,19 @@
 <h3 id="parameter">Parameter:</h3>
 <ul>
 <li><code>book</code>: Objek data <code>BooksData</code> yang memuat metadata lengkap kitab (ID, judul, kategori, jumlah jilid, status ketersediaan arsip).</li>
-<li><code>loadContent</code>: Boolean penentu apakah konten teks halaman pertama harus langsung dimuat ke Text Engine atau hanya menyiapkan metadata koneksi database buku.</li>
+<li><code>loadContent</code>: Nilai <em>boolean</em> penentu apakah konten teks halaman pertama harus langsung dimuat ke <em>Text Engine</em> atau hanya menyiapkan metadata koneksi basis data buku.</li>
 </ul>
 <hr />
-<h2 id="2-seleksi-item-baris-libraryviewdelegate">2. Seleksi Item Baris (<code>LibraryViewDelegate</code>)</h2>
-<p>Protokol <code>LibraryViewDelegate</code> digunakan untuk komunikasi antara komponen presentasi sub-view (misalnya outline baris atau tabel sel katalog) dengan manajer data katalog:</p>
+<h2 id="2-libraryviewdelegate-protocol-seleksi-item-baris">2. <code>LibraryViewDelegate</code> (Protocol) - Seleksi Item Baris</h2>
+<p><em>Protocol</em> <code>LibraryViewDelegate</code> digunakan untuk komunikasi antara komponen presentasi <em>sub-view</em> (misalnya baris <em>outline</em> atau sel tabel katalog) dengan manajer data katalog:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">LibraryViewDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelectItem</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">row</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span><span class="w"> </span><span class="k">async</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <hr />
-<h2 id="3-integrasi-kolom-pencarian-macos-searchablelibrarysidebar">3. Integrasi Kolom Pencarian macOS (<code>SearchableLibrarySidebar</code>)</h2>
-<p>Pada platform macOS, komponen pencarian sidebar menggunakan kustom <code>DSFSearchField</code>. Protokol <code>SearchableLibrarySidebar</code> menyediakan abstraksi default implementation untuk menghubungkan input pencarian toolbar atau split view ke <code>LibraryViewManager</code>:</p>
+<h2 id="3-searchablelibrarysidebar-protocol-integrasi-kolom-pencarian-macos">3. <code>SearchableLibrarySidebar</code> (Protocol) - Integrasi Kolom Pencarian macOS</h2>
+<p>Pada platform macOS, komponen pencarian <em>sidebar</em> menggunakan <code>DSFSearchField</code>. <em>Protocol</em> <code>SearchableLibrarySidebar</code> menyediakan implementasi default untuk menghubungkan input pencarian <em>toolbar</em> atau <em>split view</em> ke <code>LibraryViewManager</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cp">#if</span><span class="w"> </span><span class="cp">os</span><span class="p">(</span><span class="cp">macOS</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">SearchableLibrarySidebar</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
@@ -3670,7 +3698,7 @@
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="cp">#endif</span>
 </span></code></pre></div>
 <h3 id="manfaat-arsitektur">Manfaat Arsitektur:</h3>
-<p>Protokol ini memungkinkan beberapa controller sidebar berbeda (<code>LibraryVC</code>, <code>SearchSidebarVC</code>, dan <code>RowiSidebarVC</code>) untuk menggunakan logika pengikatan kolom pencarian (<em>search field binding</em>), delegasi fokus ring, dan penyesuaian <em>content inset</em> yang seragam (DRY principle).</p>
+<p><em>Protocol</em> ini memungkinkan beberapa <em>controller sidebar</em> yang berbeda (<code>LibraryVC</code>, <code>SearchSidebarVC</code>, dan <code>RowiSidebarVC</code>) untuk menggunakan logika pengikatan kolom pencarian (<em>search field binding</em>), delegasi <em>focus ring</em>, dan penyesuaian <em>content inset</em> yang seragam (prinsip DRY).</p>
 
 
 
@@ -3690,6 +3718,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3720,10 +3754,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -2668,10 +2668,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-eror-batasan-edge-cases-limitations" class="md-nav__link">
+  <a href="#penanganan-edge-cases-batasan-edge-cases-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)
+        Penanganan Edge Cases &amp; Batasan (Edge Cases &amp; Limitations)
       
     </span>
   </a>
@@ -2786,6 +2786,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3555,10 +3583,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-eror-batasan-edge-cases-limitations" class="md-nav__link">
+  <a href="#penanganan-edge-cases-batasan-edge-cases-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)
+        Penanganan Edge Cases &amp; Batasan (Edge Cases &amp; Limitations)
       
     </span>
   </a>
@@ -3585,14 +3613,14 @@
   <h1>Cache</h1>
 
 <h2 id="gambaran-umum-overview">Gambaran Umum (Overview)</h2>
-<p><code>BookPageCache</code> adalah mekanisme <em>in-memory</em> Singleton yang bertugas menampung objek <code>BookContent</code> (teks buku yang telah didekompresi dan siap dirender) serta teks yang telah diproses <code>ProcessedArabicContent</code>. Komponen ini bertumpu pada <code>NSCache</code> OS bawaan yang secara implisit mengelola kebijakan pengusiran (eviction) berdasarkan alokasi memori dan batas jumlah objek, meminimalisasi siklus baca-tulis (I/O) ke database SQLite secara repetitif.</p>
+<p><code>BookPageCache</code> adalah mekanisme <em>in-memory cache</em> berbasis pola <em>Singleton</em> yang bertugas menampung objek <code>BookContent</code> (teks buku yang telah didekompresi dan siap di-<em>render</em>) serta objek teks yang telah diproses <code>ProcessedArabicContent</code>. Komponen ini memanfaatkan <code>NSCache</code> bawaan sistem operasi yang secara implisit mengelola kebijakan pengosongan (<em>eviction</em>) berdasarkan alokasi memori dan batas jumlah objek, sehingga meminimalkan siklus I/O pembacaan berulang ke <em>database</em> SQLite.</p>
 <h2 id="spesifikasi-teknis-parameter-technical-specifications">Spesifikasi Teknis &amp; Parameter (Technical Specifications)</h2>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">Komponen / Parameter</th>
 <th style="text-align: left;">Tipe</th>
-<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Nilai Default</th>
 <th style="text-align: left;">Deskripsi</th>
 </tr>
 </thead>
@@ -3600,25 +3628,25 @@
 <tr>
 <td style="text-align: left;"><code>cache</code></td>
 <td style="text-align: left;"><code>NSCache</code></td>
-<td style="text-align: left;">2000 count</td>
-<td style="text-align: left;">Menampung <code>BookContent</code> dengan key berbasis ID buku.</td>
+<td style="text-align: left;">2000 <em>count</em></td>
+<td style="text-align: left;">Menampung <code>BookContent</code> dengan <em>key</em> berbasis ID buku.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>processedCache</code></td>
 <td style="text-align: left;"><code>NSCache</code></td>
-<td style="text-align: left;">2000 count</td>
-<td style="text-align: left;">Menampung <code>ProcessedArabicContent</code> berdasarkan kombinasi <em>setting</em> visual (harakat, dll).</td>
+<td style="text-align: left;">2000 <em>count</em></td>
+<td style="text-align: left;">Menampung <code>ProcessedArabicContent</code> berdasarkan kombinasi konfigurasi visual (harakat, dll.).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>lock</code></td>
 <td style="text-align: left;"><code>NSLock</code></td>
 <td style="text-align: left;">N/A</td>
-<td style="text-align: left;">Mutex thread-safe untuk mengamankan operasi penambahan/pengambilan.</td>
+<td style="text-align: left;"><em>Mutex thread-safe</em> untuk mengamankan operasi penambahan dan pengambilan entri <em>cache</em>.</td>
 </tr>
 </tbody>
 </table>
 <h2 id="alur-implementasi-contoh-kode-implementation">Alur Implementasi &amp; Contoh Kode (Implementation)</h2>
-<p>Untuk mengoptimalkan pengelompokan memori per buku, <code>BookPageCache</code> memetakan ID buku (<code>NSNumber</code>) sebagai kunci utama yang mereferensikan sebuah <code>NSMutableDictionary</code>. Dictionary tersebut kemudian memetakan ID halaman ke dalam instansinya. Seluruh fungsi pembacaan diamankan oleh <code>NSLock</code>.</p>
+<p>Untuk mengoptimalkan pengelompokan memori per buku, <code>BookPageCache</code> memetakan ID buku (<code>NSNumber</code>) sebagai kunci utama yang mereferensikan sebuah <code>NSMutableDictionary</code>. <em>Dictionary</em> tersebut kemudian memetakan ID halaman ke instansinya masing-masing. Seluruh fungsi pembacaan dan penulisan diamankan oleh <code>NSLock</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BookPageCache</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">nonisolated</span><span class="p">(</span><span class="n">unsafe</span><span class="p">)</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">BookPageCache</span><span class="p">()</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
@@ -3626,8 +3654,8 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">lock</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSLock</span><span class="p">()</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">init</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="n">cache</span><span class="p">.</span><span class="n">countLimit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2000</span><span class="w">     </span><span class="c1">// Batas total instansi cache</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">        </span><span class="n">cache</span><span class="p">.</span><span class="n">totalCostLimit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="c1">// Batasan 50 MB memori (opsional)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="n">cache</span><span class="p">.</span><span class="n">countLimit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2000</span><span class="w">     </span><span class="c1">// Batas total entri cache</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">        </span><span class="n">cache</span><span class="p">.</span><span class="n">totalCostLimit</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="c1">// Batas 50 MB memori (opsional)</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">contentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">BookContent</span><span class="p">?</span><span class="w"> </span><span class="p">{</span>
@@ -3651,9 +3679,9 @@
 </span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="penanganan-eror-batasan-edge-cases-limitations">Penanganan Eror &amp; Batasan (Edge Cases &amp; Limitations)</h2>
+<h2 id="penanganan-edge-cases-batasan-edge-cases-limitations">Penanganan Edge Cases &amp; Batasan (Edge Cases &amp; Limitations)</h2>
 <ul>
-<li><strong>Batasan Skalabilitas Dictionary</strong>: Penyimpanan objek secara hirarkis menggunakan <code>NSMutableDictionary</code> di dalam <code>NSCache</code> dapat mengecoh kebijakan <em>eviction</em> OS, karena OS hanya melihat satu objek <code>NSMutableDictionary</code> sebagai <em>value</em>, bukan mengukur jumlah sub-elemen halaman secara parsial. Jika alokasi memory limit (<code>50MB</code>) tembus, seluruh koleksi halaman dalam satu buku akan terhapus sekaligus.</li>
+<li><strong>Batasan Skalabilitas Dictionary</strong>: Penyimpanan objek secara hierarkis menggunakan <code>NSMutableDictionary</code> di dalam <code>NSCache</code> dapat memengaruhi kebijakan <em>eviction</em> sistem operasi, karena OS hanya mengenali satu objek <code>NSMutableDictionary</code> sebagai <em>value</em>, tanpa menghitung jumlah sub-elemen halaman secara individual. Apabila batas memori (<code>50MB</code>) tercapai, seluruh koleksi halaman dalam satu buku akan terhapus sekaligus dari <em>cache</em>.</li>
 </ul>
 
 
@@ -3674,6 +3702,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3704,10 +3738,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

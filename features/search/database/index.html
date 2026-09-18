@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#persistence-database" class="md-skip">
+        <a href="#persistence-database-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -2978,22 +3006,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#eksekusi-ke-modul-core" class="md-nav__link">
+  <a href="#1-arsitektur-pipeline-pencarian" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Eksekusi ke Modul Core
+        1. Arsitektur Pipeline Pencarian
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Eksekusi ke Modul Core">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pemisahan-arsip-konten-tabel-virtual-fts5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pemisahan Arsip Konten &amp; Tabel Virtual FTS5
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-sqliteconnectionpool-searchworker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. SQLiteConnectionPool &amp; SearchWorker
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. SQLiteConnectionPool &amp; SearchWorker">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-searchengine-fts" class="md-nav__link">
+  <a href="#sqliteconnectionpool-actor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. SearchEngine (FTS)
+        SQLiteConnectionPool (Actor)
       
     </span>
   </a>
@@ -3001,21 +3051,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-librarydatamanager" class="md-nav__link">
+  <a href="#algoritma-pencarian-dua-tahap-searchworker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. LibraryDataManager
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-bookconnection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. BookConnection
+        Algoritma Pencarian Dua Tahap (SearchWorker)
       
     </span>
   </a>
@@ -3028,13 +3067,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#batas-manajemen-bookmarks" class="md-nav__link">
+  <a href="#4-optimasi-sqlite-pragma-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Batas Manajemen (Bookmarks)
+        4. Optimasi SQLite Pragma &amp; Caching
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="4. Optimasi SQLite Pragma &amp; Caching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#penyetelan-pragma-performa-tinggi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Penyetelan Pragma Performa Tinggi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statement-caching-lru-sqliteconnection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statement Caching LRU (SQLiteConnection)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3545,22 +3612,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#eksekusi-ke-modul-core" class="md-nav__link">
+  <a href="#1-arsitektur-pipeline-pencarian" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Eksekusi ke Modul Core
+        1. Arsitektur Pipeline Pencarian
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Eksekusi ke Modul Core">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pemisahan-arsip-konten-tabel-virtual-fts5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pemisahan Arsip Konten &amp; Tabel Virtual FTS5
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-sqliteconnectionpool-searchworker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. SQLiteConnectionPool &amp; SearchWorker
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. SQLiteConnectionPool &amp; SearchWorker">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-searchengine-fts" class="md-nav__link">
+  <a href="#sqliteconnectionpool-actor" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. SearchEngine (FTS)
+        SQLiteConnectionPool (Actor)
       
     </span>
   </a>
@@ -3568,21 +3657,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-librarydatamanager" class="md-nav__link">
+  <a href="#algoritma-pencarian-dua-tahap-searchworker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. LibraryDataManager
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-bookconnection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. BookConnection
+        Algoritma Pencarian Dua Tahap (SearchWorker)
       
     </span>
   </a>
@@ -3595,13 +3673,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#batas-manajemen-bookmarks" class="md-nav__link">
+  <a href="#4-optimasi-sqlite-pragma-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Batas Manajemen (Bookmarks)
+        4. Optimasi SQLite Pragma &amp; Caching
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="4. Optimasi SQLite Pragma &amp; Caching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#penyetelan-pragma-performa-tinggi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Penyetelan Pragma Performa Tinggi
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#statement-caching-lru-sqliteconnection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statement Caching LRU (SQLiteConnection)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3622,19 +3728,88 @@
 
 
 
-<h1 id="persistence-database">Persistence &amp; Database</h1>
-<p>Modul <strong>Search</strong> secara konseptual merupakan modul representasi (<em>Presentation &amp; Query Orchestration</em>). Oleh karena itu, modul ini tidak mendefinisikan struktur penyimpanan berkas atau lapisan basis datanya secara eksplisit di dalam direktori <code>Search</code>. </p>
-<p>Alih-alih mengelola SQLite secara langsung, pencarian mengandalkan API basis data yang disediakan secara terpusat oleh lapis <strong>Core</strong>.</p>
-<h2 id="eksekusi-ke-modul-core">Eksekusi ke Modul Core</h2>
-<p>Interaksi kueri teks mengeksekusi layanan dengan menggunakan komponen sebagai berikut:</p>
-<h3 id="1-searchengine-fts">1. <code>SearchEngine</code> (FTS)</h3>
-<p>Berperan sebagai tulang punggung (motor utama) pencarian. <code>SearchEngine</code> menaungi operasi SQLite FTS5 (<em>Full Text Search</em>) secara konkuren di beragam koleksi arsip. Kueri FTS5 didelegasikan oleh <code>SearchViewModel</code> menuju instruksi <em>pause/resume/stop</em> milik unit pencari ini.</p>
-<h3 id="2-librarydatamanager">2. <code>LibraryDataManager</code></h3>
-<p>Manajer sinkronisasi katalog yang bertugas mendeteksi pustaka, ketersediaan arsip, dan menetapkan filter seleksi kategori buku. Parameter pencarian (<code>LibrarySearchParams</code>) diserahkan menuju fungsi penjelajah tabel agar manajer dapat menyelaraskan pencarian FTS ke ruang arsip yang valid.</p>
-<h3 id="3-bookconnection">3. <code>BookConnection</code></h3>
-<p>Konektor SQLite ini digunakan untuk mengambil teks kitab secara langsung ke dalam memori aplikasi. Modul Search menginisialisasi modul ini khususnya saat memulihkan riwayat "Saved Results", guna mengekstraksi dekompresi teks baris tertentu (melalui utilitas <code>LZString</code> dekompresi).</p>
-<h2 id="batas-manajemen-bookmarks">Batas Manajemen (<em>Bookmarks</em>)</h2>
-<p>Hasil markah atau simpanan pengguna (<em>Saved Results</em>) tidak disimpan melalui ekstensi direktori ini. Modul <em>Bookmarks</em> dan utilitas <em>CloudKit</em> menangani pengarsipan (<em>persistence</em>) berkas SQLite hasil carian secara terpisah. Modul <em>Search</em> bertindak semata-mata sebagai konsumen (<em>consumer</em>) yang me-render ulasan cadangan tersebut.</p>
+<h1 id="persistence-database-architecture">Persistence &amp; Database Architecture</h1>
+<p>Meskipun modul <strong>Search</strong> secara konseptual merupakan modul representasi dan orkestrasi kueri (<em>Presentation &amp; Query Orchestration</em>), mesin eksekusinya berakar langsung pada infrastruktur SQLite tingkat rendah di lapisan <strong>Core</strong> (<code>Source/Core/SearchEngine/</code>). Mesin ini dioptimalkan untuk pencarian teks skala besar (FTS5) yang mencakup jutaan baris kitab dalam puluhan arsip basis data secara konkuren.</p>
+<hr />
+<h2 id="1-arsitektur-pipeline-pencarian">1. Arsitektur Pipeline Pencarian</h2>
+<p>Berikut adalah alur eksekusi kueri dari ViewModel hingga pembacaan tabel FTS5 dan konten kitab:</p>
+<pre class="mermaid"><code>graph TD
+    VM["SearchViewModel"] --&gt;|"ftsQuery + Target Tables"| ENGINE["SearchEngine"]
+
+    ENGINE --&gt;|"Dispatch Archive Workers"| WORKER["SearchWorker (Per Archive)"]
+
+    subgraph PoolLayer ["Concurrency &amp; Connection Pooling"]
+        WORKER --&gt;|"Chunk Parallel Requests"| POOL["SQLiteConnectionPool (Actor)"]
+        POOL --&gt;|"Round-Robin Dispatch"| CONN["SQLiteConnection (Cached Stmt)"]
+    end
+
+    subgraph StorageLayer ["SQLite Storage (Disk)"]
+        CONN --&gt;|"1. Match Query (nass_clean)"| FTS[("fts_{id}.sqlite (Attached fts_db)")]
+        CONN --&gt;|"2. Batch Fetch BLOB"| CONTENT[("{id}.sqlite (Content Archive)")]
+    end
+
+    CONTENT --&gt;|"LZString Decompress"| PARSER["BookContent Stream"]
+    PARSER --&gt;|"onResult Callback"| VM
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class VM vm;
+    class ENGINE,WORKER,POOL,PARSER store;
+    class CONN event;
+    class FTS,CONTENT db;</code></pre>
+<hr />
+<h2 id="2-pemisahan-arsip-konten-tabel-virtual-fts5">2. Pemisahan Arsip Konten &amp; Tabel Virtual FTS5</h2>
+<p>Untuk menjaga efisiensi I/O dan mencegah fragmentasi basis data utama, Maktabah menerapkan arsitektur berkas ganda:</p>
+<ol>
+<li><strong>Content Archive Database (<code>{archiveId}.sqlite</code>)</strong>:</li>
+<li>Berisi tabel <code>b{id}</code> yang menyimpan teks kitab terkompresi <code>LZString</code> beserta metadata halaman (<code>page</code>, <code>part</code>, <code>volume</code>).</li>
+<li><strong>FTS Database (<code>fts_{archiveId}.sqlite</code>)</strong>:</li>
+<li>Berisi tabel virtual FTS5 <code>b{id}_fts</code> yang mengindeks kolom <code>nass_clean</code> (teks Arab yang telah dinormalisasi dan dibersihkan dari harakat).</li>
+<li>Dilampirkan (<em>attached</em>) ke koneksi arsip utama saat inisialisasi koneksi menggunakan skema <code>fts_db</code>:
+     <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">ftsPath</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">dbPath</span><span class="p">.</span><span class="n">replacing</span><span class="p">(</span><span class="s">".sqlite"</span><span class="p">,</span><span class="w"> </span><span class="n">with</span><span class="p">:</span><span class="w"> </span><span class="s">"_fts.sqlite"</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">try</span><span class="w"> </span><span class="n">db</span><span class="p">?.</span><span class="n">safeAttachDatabase</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="n">ftsPath</span><span class="p">,</span><span class="w"> </span><span class="n">schema</span><span class="p">:</span><span class="w"> </span><span class="s">"fts_db"</span><span class="p">)</span>
+</span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="3-sqliteconnectionpool-searchworker">3. SQLiteConnectionPool &amp; SearchWorker</h2>
+<p>Eksekusi pencarian memanfaatkan model konkurensi Swift untuk memaksimalkan utilisasi multi-core tanpa menimbulkan <em>database lock contention</em>.</p>
+<h3 id="sqliteconnectionpool-actor"><code>SQLiteConnectionPool</code> (Actor)</h3>
+<p><div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">SQLiteConnectionPool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">connections</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">DBConnectionType</span><span class="p">]</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">read</span><span class="p">&lt;</span><span class="n">T</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="p">&gt;(</span><span class="n">at</span><span class="w"> </span><span class="n">index</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="kc">_</span><span class="w"> </span><span class="n">body</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">escaping</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">(</span><span class="n">DBConnectionType</span><span class="p">)</span><span class="w"> </span><span class="kr">throws</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">T</span><span class="p">)</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="kr">throws</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nv">conn</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">getConnection</span><span class="p">(</span><span class="n">at</span><span class="p">:</span><span class="w"> </span><span class="n">index</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="n">Task</span><span class="p">.</span><span class="n">detached</span><span class="p">(</span><span class="n">priority</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">userInitiated</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="n">body</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span><span class="w"> </span><span class="p">}.</span><span class="n">value</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
+</span></code></pre></div>
+- Menampung sejumlah koneksi <code>SQLiteConnection</code> yang dibuka secara independen.
+- Menjalankan operasi pembacaan secara terisolasi pada <em>thread</em> terpisah (<code>Task.detached</code> dengan prioritas <code>.userInitiated</code>).</p>
+<h3 id="algoritma-pencarian-dua-tahap-searchworker">Algoritma Pencarian Dua Tahap (<code>SearchWorker</code>)</h3>
+<p><code>SearchWorker</code> memproses setiap tabel kitab dalam dua langkah efisien:
+1. <strong>Fase Pencocokan Indeks (Matching Phase)</strong>:
+   Mengeksekusi kueri indeks ringan untuk mengumpulkan seluruh <code>rowid</code> yang cocok:
+   <div class="language-sql highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">rowid</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">b</span><span class="err">{</span><span class="n">id</span><span class="err">}</span><span class="n">_fts</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">nass_clean</span><span class="w"> </span><span class="k">MATCH</span><span class="w"> </span><span class="o">?</span>
+</span></code></pre></div>
+2. <strong>Fase Paralel Konten (Chunk Parallel Fetching)</strong>:
+   Array <code>rowid</code> hasil pencocokan dipecah menjadi potongan-potongan (<em>chunks</em>) berukuran tertentu (<code>batchSize = 200</code>), kemudian diambil dan didekompresi secara paralel menggunakan koneksi yang berbeda di dalam <em>connection pool</em>.</p>
+<hr />
+<h2 id="4-optimasi-sqlite-pragma-caching">4. Optimasi SQLite Pragma &amp; Caching</h2>
+<p>Mesin pencarian mengaplikasikan sejumlah penyetelan <em>pragma</em> dan teknik <em>caching</em> untuk memastikan latensi minimal:</p>
+<h3 id="penyetelan-pragma-performa-tinggi">Penyetelan Pragma Performa Tinggi</h3>
+<p>Pada proses migrasi dan pembacaan indeks FTS (<code>FtsMigrationManager</code> &amp; <code>SQLiteDatabase</code>):
+- <strong><code>PRAGMA synchronous = OFF;</code></strong>: Menghindari operasi <em>flush disk</em> sinkron pada saat pembentukan indeks kueri sementara.
+- <strong><code>PRAGMA journal_mode = MEMORY;</code></strong>: Mengalihkan penulisan <em>rollback journal</em> ke RAM untuk kecepatan maksimum.
+- <strong><code>PRAGMA temp_store = MEMORY;</code></strong>: Menyimpan tabel sementara (<em>temp tables</em>) dan hasil <em>sorting</em> di memori utama.
+- <strong><code>PRAGMA query_only = ON;</code></strong>: Menandai koneksi <em>pool</em> murni sebagai <em>read-only</em> untuk mencegah modifikasi tidak disengaja dan memfasilitasi penguncian memori (<em>shared cache lock</em>).</p>
+<h3 id="statement-caching-lru-sqliteconnection">Statement Caching LRU (<code>SQLiteConnection</code>)</h3>
+<p>Setiap objek <code>SQLiteConnection</code> mengelola <em>cache prepared statement</em> (<code>sqlite3_prepare_v2</code>) hingga 50 <em>statement</em> (<code>maxCacheSize = 50</code>) dengan algoritma pergantian <em>LRU</em> (<em>Least Recently Used</em>):
+- Penggunaan <code>executionLock</code> (<code>NSLock</code>) menjamin keamanan konkurensi (<em>thread-safety</em>) saat eksekusi dan manipulasi <em>dictionary</em>.
+- <code>sqlite3_reset</code> dan <code>sqlite3_clear_bindings</code> dipanggil sebelum penggunaan ulang untuk membersihkan parameter <em>binding</em> tanpa perlu mengompilasi ulang <em>query string</em> SQLite.</p>
 
 
 
@@ -3654,6 +3829,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3684,10 +3865,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

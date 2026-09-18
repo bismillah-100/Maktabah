@@ -2208,10 +2208,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#aliran-pencarian-fts-stream" class="md-nav__link">
+  <a href="#alur-pencarian-fts-stream" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Aliran Pencarian (FTS Stream)
+        Alur Pencarian (FTS Stream)
       
     </span>
   </a>
@@ -2785,6 +2785,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3546,10 +3574,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#aliran-pencarian-fts-stream" class="md-nav__link">
+  <a href="#alur-pencarian-fts-stream" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Aliran Pencarian (FTS Stream)
+        Alur Pencarian (FTS Stream)
       
     </span>
   </a>
@@ -3579,33 +3607,30 @@
 
 
 <h1 id="persistence-database">Persistence &amp; Database</h1>
-<p>Terdapat dua pengelola basis data (Data Manager) spesifik untuk fitur Narrator. Keduanya dikonfigurasikan agar bisa berjalan secara bebas rintangan (non-blocking) di latar belakang (Thread/Task asinkron).</p>
+<p>Terdapat dua pengelola basis data (<em>Data Manager</em>) spesifik untuk fitur Narrator. Keduanya dikonfigurasikan agar berjalan secara asinkron (<em>non-blocking</em>) di latar belakang (<em>background Tasks/Threads</em>).</p>
 <h2 id="rowidatamanager"><code>RowiDataManager</code></h2>
-<p>Mengelola pemuatan daftar pokok perawi (Rowa). Berjalan di atas tabel <code>rowa</code> dari database spesifik <code>special.sqlite</code>.</p>
+<p>Mengelola pemuatan daftar pokok perawi (<em>Rowa</em>). Berjalan di atas tabel <code>rowa</code> dari basis data <code>special.sqlite</code>.</p>
 <ul>
-<li>Menyediakan <code>tabaqaGroups</code> (Daftar perawi yang dikelompokkan).</li>
+<li>Menyediakan <code>tabaqaGroups</code> (Daftar perawi yang dikelompokkan berdasarkan generasi).</li>
 <li>Fitur utama:<ul>
-<li><strong><code>loadData()</code></strong>: Mengambil data ID, Nama, dan Tabaqah dari seluruh perawi dan memetakannya.</li>
-<li><strong><code>loadRowiData(_:)</code></strong>: Mengambil detail spesifik (Lazy loading) profil perawi ketika perawi tersebut dipilih (Jarh, Syekh, Tilmidz, dsb).</li>
-<li><strong><code>loadMore(_:completion:)</code></strong>: Mekanisme pentalan (pagination) untuk daftar Tabaqah agar UI tidak hang memuat ribuan perawi sekaligus.</li>
+<li><strong><code>loadData()</code></strong>: Mengambil data ID, Nama, dan Tabaqah dari seluruh perawi dan memetakannya ke dalam memori.</li>
+<li><strong><code>loadRowiData(_:)</code></strong>: Mengambil detail profil perawi secara bertahap (<em>lazy loading</em>) ketika perawi tersebut dipilih (Jarh, Syekh, Tilmidz, dsb.).</li>
+<li><strong><code>loadMore(_:completion:)</code></strong>: Mekanisme paginasi (<em>pagination</em>) untuk daftar Tabaqah agar UI tetap responsif saat memuat ribuan data perawi.</li>
 </ul>
 </li>
 </ul>
 <h2 id="tarjamahglobalmanager"><code>TarjamahGlobalManager</code></h2>
-<p>Pengelola data kompleks untuk menangani pencarian biografi lintas kitab.</p>
+<p>Pengelola data untuk menangani pencarian biografi lintas kitab.</p>
 <ul>
-<li>Mengandalkan isolasi via <strong>Actor</strong> (<code>TarjamahDatabaseActor</code>) untuk menghindari kondisi balapan (race-condition) saat kueri SQLite.</li>
-<li><strong>Connection Pooling</strong>: Membuka koneksi <code>SQLiteConnectionPool</code> untuk setiap arsip <code>1-20.sqlite</code> di latar belakang secara <em>on-demand</em>. Pool di-<em>cache</em> agar akses baca berikutnya lebih cepat.</li>
-<li><strong>Optimasi FTS</strong>: Di lingkungan macOS (<code>#if os(macOS)</code>), manager ini memiliki logika untuk melakukan optimasi (membuat tabel FTS <code>special_fts.sqlite</code>, memadatkannya menggunakan <em>Zstd Compression</em>, dan membersihkan index FTS <code>unicode61</code>).</li>
+<li>Mengandalkan isolasi via <strong>Actor</strong> (<code>TarjamahDatabaseActor</code>) untuk mencegah kondisi pacu (<em>race conditions</em>) saat kueri SQLite berlangsung.</li>
+<li><strong>Connection Pooling</strong>: Membuka koneksi <code>SQLiteConnectionPool</code> untuk setiap arsip <code>1-20.sqlite</code> di latar belakang secara <em>on-demand</em>. <em>Pool</em> disimpan di <em>cache</em> agar akses baca berikutnya lebih cepat.</li>
+<li><strong>Optimasi FTS</strong>: Di lingkungan macOS (<code>#if os(macOS)</code>), <em>manager</em> ini memiliki logika untuk melakukan optimasi (membuat tabel FTS <code>special_fts.sqlite</code>, memadatkannya menggunakan <em>Zstandard Compression</em>, dan mengindeks dengan FTS <code>unicode61</code>).</li>
 </ul>
-<h3 id="aliran-pencarian-fts-stream">Aliran Pencarian (FTS Stream)</h3>
-<p>Ketika melakukan kueri pencarian biografi (<code>searchTarjamah</code>), mekanisme yang berjalan adalah:</p>
-<ol>
-<li>Tabel FTS Virtual <code>men_u_fts</code> dan <code>men_b_fts</code> dieksekusi.</li>
-<li>Hasil tidak dikembalikan secara masif. Algoritme menggunakan <code>enumerated()</code> dan menyela eksekusi setiap 10 item untuk mengecek <code>pauseController</code>.</li>
-<li>Setelah 5 item terkumpul, fungsi akan memanggil <code>onBatchResult</code> untuk melempar kumpulan hasil sementara ke ViewModel (Streaming).</li>
-<li>Sembari hasil di-<em>stream</em>, <code>loadMultipleTarjamahContent</code> dipanggil asinkron untuk mengambil teks murni (Nass) dari arsip dan membuat pemformatan kata kunci (Highlight AttributedText).</li>
-</ol>
+<h3 id="alur-pencarian-fts-stream">Alur Pencarian (FTS Stream)</h3>
+<p>Ketika mengeksekusi kueri pencarian biografi (<code>searchTarjamah</code>), mekanisme yang berjalan:
+1. Membuka koneksi ke basis data FTS biografi.
+2. Mengeksekusi pencarian <em>match query</em> pada indeks kata kunci nama perawi.
+3. Mengembalikan hasil secara bertahap (<em>batch streaming</em>) ke <code>NarratorViewModel</code> agar antarmuka dapat menyajikan data tanpa jeda.</p>
 
 
 
@@ -3625,6 +3650,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3655,10 +3686,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

@@ -1757,6 +1757,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#1-data-pipeline-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Data Pipeline &amp; Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-event-dispatch-invalidation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Event Dispatch &amp; Invalidation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#prinsip-pemisahan-tanggung-jawab-separation-of-concerns" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1768,10 +1790,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#alur-import-import-pipeline" class="md-nav__link">
+  <a href="#alur-impor-import-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alur Import (Import Pipeline)
+        Alur Impor (Import Pipeline)
       
     </span>
   </a>
@@ -1875,10 +1897,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bookupdatemanager" class="md-nav__link">
+  <a href="#bookupdatemanager-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BookUpdateManager
+        BookUpdateManager (Class)
       
     </span>
   </a>
@@ -2972,6 +2994,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reader/textview/" class="md-nav__link">
         
   
@@ -3713,6 +3763,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#1-data-pipeline-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Data Pipeline &amp; Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-event-dispatch-invalidation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Event Dispatch &amp; Invalidation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#prinsip-pemisahan-tanggung-jawab-separation-of-concerns" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3724,10 +3796,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#alur-import-import-pipeline" class="md-nav__link">
+  <a href="#alur-impor-import-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Alur Import (Import Pipeline)
+        Alur Impor (Import Pipeline)
       
     </span>
   </a>
@@ -3831,10 +3903,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bookupdatemanager" class="md-nav__link">
+  <a href="#bookupdatemanager-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BookUpdateManager
+        BookUpdateManager (Class)
       
     </span>
   </a>
@@ -3913,107 +3985,145 @@
 
 
 <h1 id="dokumentasi-proses-book-import-offline-import">Dokumentasi Proses Book Import &amp; Offline Import</h1>
-<p>Proses ini menangani mekanisme impor kitab secara luring (<em>offline</em>), penggantian (<em>replace</em>) kitab, serta pengubahan identitas kitab (<em>change book ID</em>) secara aman tanpa menghilangkan data pengguna yang berharga (seperti anotasi dan <em>bookmark</em>). Dokumentasi ini membedah arsitektur secara mendalam (<em>deep-dive</em>) untuk memastikan pengembang dapat memahami pipeline secara utuh.</p>
+<p>Proses ini menangani mekanisme impor kitab secara luring (<em>offline</em>), penggantian (<em>replace</em>) kitab, serta pengubahan identitas kitab (<em>change book ID</em>) secara aman tanpa menghilangkan data pengguna yang berharga (seperti anotasi dan <em>bookmark</em>). Dokumentasi ini membedah arsitektur secara mendalam (<em>deep-dive</em>) untuk memastikan pengembang dapat memahami <em>pipeline</em> secara utuh.</p>
 <h2 id="architecture-pipeline">Architecture Pipeline</h2>
-<p>Alur kerja untuk memproses buku baru maupun pembaruan melibatkan antarmuka pengguna, lapisan <em>ViewModel</em>, dan subsistem sinkronisasi sebelum akhirnya dikerjakan oleh mesin basis data SQLite.</p>
+<p>Alur kerja untuk memproses buku baru maupun pembaruan melibatkan antarmuka pengguna, lapisan <em>ViewModel</em>, dan subsistem sinkronisasi sebelum dieksekusi oleh mesin basis data SQLite.</p>
 <h3 id="diagram-interaksi-komponen">Diagram Interaksi Komponen</h3>
-<pre class="mermaid"><code>graph TD
-    %% View Layer
-    View[OfflineImportFormView] --&gt; |User Input &amp; File| VM[BookImportViewModel]
+<h3 id="1-data-pipeline-persistence">1. Data Pipeline &amp; Persistence</h3>
+<pre class="mermaid"><code>flowchart TD
+    View["OfflineImportFormView"] --&gt;|"User Input &amp; File"| VM["BookImportViewModel"]
 
-    %% ViewModel Layer
-    VM --&gt; |Trigger Change ID| BUM_Change[BookUpdateManager.changeBookId]
-    VM --&gt; |Trigger Import| BUM_Import[BookUpdateManager.importOfflineUpdate]
-    VM --&gt; |Update Domain| Annot[AnnotationStore]
-    VM --&gt; |Update Domain| Res[ResultsHandler]
-    VM --&gt; |Upload Sync| Cloud[CloudKitSyncManager]
+    VM --&gt;|"Mode 0/1: Import"| BUM_Import["BookUpdateManager.importOfflineUpdate"]
+    VM --&gt;|"Mode 2: Change ID"| BUM_Change["BookUpdateManager.changeBookId"]
+    VM --&gt;|"Sync Domain"| SyncGrp["AnnotationStore &amp; ResultsHandler"]
 
-    %% Managers &amp; Core Engine
-    BUM_Import --&gt; |Staging| Stage[StagedBookUpdate]
-    Stage --&gt; |Compress ZSTD| Zstd[ZstdDecompressor]
-    Stage --&gt; |Replace &amp; Build FTS| Archive[ArchiveDatabaseTools]
+    SyncGrp --&gt;|"Upload Changes"| Cloud["CloudKitSyncManager"]
 
-    BUM_Change --&gt; |Main DB| MainDB[(SQLite Main)]
-    BUM_Change --&gt; |Archive DB| ArchDB[(SQLite Archive)]
-    BUM_Change --&gt; |FTS DB| FtsDB[(SQLite FTS)]
+    BUM_Import --&gt;|"1. Staging"| Stage["StagedBookUpdate"]
+    Stage --&gt;|"2. Kompres ZSTD"| Zstd["ZstdDecompressor"]
+    Stage --&gt;|"3. Build FTS"| Archive["ArchiveDatabaseTools"]
 
-    %% Notifications
-    BUM_Import -.-&gt; |Notification| Notif1([.bookIntegrated])
-    VM -.-&gt; |Notification| Notif2([.bookIdMigrated])
+    subgraph Persistence ["Basis Data Target"]
+        MainDB[("SQLite Main (main.sqlite)")]
+        ArchDB[("SQLite Archive (1-20.sqlite)")]
+        FtsDB[("SQLite FTS")]
+    end
 
-    %% Subscribers
-    Notif1 --&gt; Subs1[Library / Reader Cache]
-    Notif2 --&gt; Subs2[App Coordinator / UI]</code></pre>
+    Archive --&gt;|"Commit Atomik"| ArchDB
+    Archive --&gt;|"Commit FTS5"| FtsDB
+    BUM_Change --&gt;|"Update Metadata"| MainDB
+    BUM_Change --&gt;|"Rename b{id}"| ArchDB
+    BUM_Change --&gt;|"Rename b{id}_fts"| FtsDB
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+
+    class View ui;
+    class VM vm;
+    class BUM_Change,BUM_Import,SyncGrp,Cloud store;
+    class MainDB,ArchDB,FtsDB,Stage,Zstd,Archive db;</code></pre>
+<h3 id="2-event-dispatch-invalidation">2. Event Dispatch &amp; Invalidation</h3>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Triggers ["Emitters"]
+        Archive["ArchiveDatabaseTools"]
+        BUM_Change["BookUpdateManager.changeBookId"]
+    end
+
+    subgraph Events ["NotificationCenter"]
+        Notif1([".bookIntegrated"])
+        Notif2([".bookIdMigrated"])
+    end
+
+    subgraph Handlers ["Subscribers / Invalidation"]
+        Subs1["Library / Reader Cache Invalidation"]
+        Subs2["Reader Hot-Reload &amp; UI Coordination"]
+    end
+
+    Archive --&gt;|"Post"| Notif1
+    BUM_Change --&gt;|"Post"| Notif2
+
+    Notif1 --&gt; Subs1
+    Notif2 --&gt; Subs2
+
+    classDef store fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+
+    class Archive,BUM_Change store;
+    class Notif1,Notif2 event;
+    class Subs1,Subs2 ui;</code></pre>
 <h3 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (Separation of Concerns)</h3>
 <p>Sistem pembaruan pustaka Maktabah dirancang dengan batasan tanggung jawab yang ketat:</p>
 <ol>
 <li>
 <p><strong>View Layer (<code>OfflineImportFormView</code>)</strong>
-    Fokus utama pada antarmuka <em>SwiftUI</em>. Menampilkan kolom form, menangani pemilihan file (<code>.fileImporter</code>), dan menangani interaksi pengguna. Tidak ada logika <em>database</em> yang berjalan di sini.</p>
+    Fokus utama pada antarmuka <em>SwiftUI</em>. Menampilkan formulir input, menangani pemilihan berkas (<code>.fileImporter</code>), dan menangani interaksi pengguna tanpa logika basis data langsung.</p>
 </li>
 <li>
 <p><strong>ViewModel Layer (<code>BookImportViewModel</code>)</strong>
-    Mengelola kondisi tampilan (<em>state</em>) dan memvalidasi interaksi. ViewModel memutuskan kapan memanggil fungsi penggantian ID versus kapan mengimpor data baru, lalu meminta subsistem sinkronisasi (<code>CloudKitSyncManager</code>) untuk mencadangkan hasil mutasi lokal.</p>
+    Mengelola kondisi tampilan (<em>state</em>) dan memvalidasi interaksi. ViewModel menentukan kapan memanggil fungsi penggantian ID versus kapan mengimpor data baru, lalu meminta subsistem sinkronisasi (<code>CloudKitSyncManager</code>) untuk mencadangkan hasil mutasi lokal.</p>
 </li>
 <li>
 <p><strong>Core Database Engine (<code>BookUpdateManager</code>)</strong>
-    Sebagai mesin utama yang mengeksekusi <em>raw SQL query</em>. Mesin ini menanggung beban paling berat seperti melampirkan (<em>attach</em>) <em>database</em> ganda, membuat tabel FTS sementara, menukar nama tabel, hingga membersihkan berkas usai transaksi selesai.</p>
+    Sebagai mesin utama yang mengeksekusi <em>raw SQL query</em>. Mesin ini menangani operasi seperti melampirkan (<em>attach</em>) <em>database</em> ganda, membuat tabel FTS sementara, menukar nama tabel, hingga membersihkan berkas setelah transaksi selesai.</p>
 </li>
 </ol>
-<h3 id="alur-import-import-pipeline">Alur Import (Import Pipeline)</h3>
-<p>Proses impor buku dari <em>file</em> sistem pengguna berjalan melalui tahapan yang dirancang agar kebal (<em>resilient</em>) terhadap kegagalan sebagian:</p>
+<h3 id="alur-impor-import-pipeline">Alur Impor (Import Pipeline)</h3>
+<p>Proses impor buku dari berkas sistem pengguna berjalan melalui tahapan yang dirancang agar memiliki ketahanan terhadap kegagalan parsial:</p>
 <ol>
 <li>
-<p><strong>Pemilihan File dan Staging</strong>
-    Pengguna memilih <em>file</em> SQLite. <code>OfflineImportFormView</code> mengamankan akses file (<code>startAccessingSecurityScopedResource</code>) lalu menyalin file ke folder sementara (<em>temporary directory</em>).</p>
+<p><strong>Pemilihan Berkas dan Staging</strong>
+    Pengguna memilih berkas SQLite. <code>OfflineImportFormView</code> mengamankan akses berkas (<code>startAccessingSecurityScopedResource</code>) lalu menyalin berkas ke direktori kerja sementara (<em>temporary directory</em>).</p>
 </li>
 <li>
 <p><strong>Ekstraksi Metadata dan Persiapan (Preparation)</strong>
-    Fungsi <code>importOfflineUpdate</code> dipanggil. Sistem akan mengekstrak <code>BookMetadata</code> langsung dari berkas sumber. File tersebut kemudian dipisah menjadi <em>file archive</em> (untuk konten dan TOC) serta <em>file FTS Source</em> (tabel sumber agar mesin FTS bisa membaca nass utuh).</p>
+    Fungsi <code>importOfflineUpdate</code> dipanggil. Sistem mengekstrak <code>BookMetadata</code> langsung dari berkas sumber. Berkas tersebut kemudian disiapkan menjadi berkas arsip (untuk konten dan TOC) serta berkas <em>FTS Source</em> (tabel sumber agar mesin FTS dapat membaca teks lengkap).</p>
 </li>
 <li>
-<p><strong>Kompresi Konten ZSTD (Data Conversion)</strong>
-    Mesin akan memindai kolom nass. Karena ukuran nass bisa sangat besar, setiap nass dikonversi menjadi BLOB menggunakan Zstandard (<code>ZstdDecompressor</code>). Tabel sementara (<code>_zstd</code>) dibangun lalu namanya dikembalikan menjadi <code>b{id}</code>.</p>
+<p><strong>Kompresi Konten Zstandard (Data Conversion)</strong>
+    Mesin memindai kolom teks. Setiap teks dikonversi menjadi BLOB menggunakan Zstandard (<code>ZstdDecompressor</code>). Tabel sementara (<code>_zstd</code>) dibangun lalu namanya dikembalikan menjadi <code>b{id}</code>.</p>
 </li>
 <li>
 <p><strong>Integrasi ke Archive Database (Build &amp; Replace)</strong>
     Fungsi <code>replaceArchiveDatabase</code> dipanggil secara atomik:</p>
 <ul>
-<li>Fungsi ini melakukan <code>ATTACH DATABASE</code> untuk <code>source_db</code> (asal), <code>fts_source_db</code> (nass belum dikompres), dan <code>fts_db</code> (tabel pencarian target).</li>
-<li>Tabel data utama (<code>b{id}</code>) dan TOC (<code>t{id}</code>) disalin (<em>copy table</em>) dalam satu sesi <em>Transaction</em>.</li>
-<li>Tabel <code>b{id}_fts</code> dibangun dari <code>fts_source_db</code> dan dimasukkan ke <code>fts_db</code> yang terpisah agar performa pencarian FTS5 tetap tinggi.</li>
+<li>Menjalankan <code>ATTACH DATABASE</code> untuk <code>source_db</code> (asal), <code>fts_source_db</code> (teks belum dikompresi), dan <code>fts_db</code> (tabel pencarian target).</li>
+<li>Tabel data utama (<code>b{id}</code>) dan TOC (<code>t{id}</code>) disalin dalam satu sesi transaksi (<em>transaction</em>).</li>
+<li>Tabel <code>b{id}_fts</code> dibangun dari <code>fts_source_db</code> dan dimasukkan ke <code>fts_db</code> terpisah agar performa pencarian FTS5 tetap optimal.</li>
 </ul>
 </li>
 <li>
 <p><strong>Finalisasi (Checkpoint &amp; Notification)</strong>
-    Sistem merilis (<em>detach</em>) <em>database</em> dan memaksa <em>Write-Ahead Logging</em> (WAL) untuk melakukan <em>checkpoint</em>. Kemudian, notifikasi <code>NotificationCenter</code> (yakni <code>.bookIntegrated</code>) dipancarkan agar Cache pembaca memuat ulang buku tersebut.</p>
+    Sistem merilis (<em>detach</em>) basis data dan memicu <em>checkpoint</em> pada <em>Write-Ahead Logging</em> (WAL). Kemudian, notifikasi <code>.bookIntegrated</code> dipancarkan melalui <code>NotificationCenter</code> agar <em>cache</em> pembaca memuat ulang buku tersebut.</p>
 </li>
 </ol>
 <h3 id="metode-manipulasi-database">Metode Manipulasi Database</h3>
-<p>Terdapat tiga metode utama yang dijalankan oleh pengguna, tergantung pada <code>importMode</code>:</p>
+<p>Terdapat tiga mode operasi utama yang dijalankan tergantung pada nilai <code>importMode</code>:</p>
 <ul>
 <li>
 <p><strong>Mode 0 (New) &amp; Mode 1 (Replace)</strong>
-    Mengandalkan <code>importOfflineUpdate</code>. Pada mode ini, <em>database</em> dimigrasi utuh dan tabel yang sebelumnya sudah ada akan ditimpa. Metode ini mengeksekusi klausa SQL <code>DROP TABLE IF EXISTS</code> dan merekonstruksi FTS secara penuh dari nol.</p>
+    Mengandalkan <code>importOfflineUpdate</code>. Pada mode ini, basis data dimigrasikan secara penuh dan tabel yang sudah ada sebelumnya akan ditimpa. Metode ini mengeksekusi klausa SQL <code>DROP TABLE IF EXISTS</code> dan merekonstruksi FTS dari awal.</p>
 </li>
 <li>
 <p><strong>Mode 2 (Change Book ID)</strong>
-    Sistem mengeksekusi <code>changeBookId(oldId:newId:)</code>. Mode ini tidak memindahkan teks atau mengubah ZSTD.</p>
+    Sistem mengeksekusi <code>changeBookId(oldId:newId:)</code>. Mode ini tidak memindahkan teks atau mengubah Zstandard.</p>
 <ul>
-<li>Tahapan dimulai dengan mengambil lokasi berkas <code>Archive</code> (misal <code>20.sqlite</code>) di dalam pangkalan data utama.</li>
+<li>Tahapan dimulai dengan mengambil lokasi berkas arsip (misalnya <code>20.sqlite</code>) di dalam basis data utama.</li>
 <li>Mengeksekusi <code>ALTER TABLE "b{oldId}" RENAME TO "b{newId}";</code> serta hal yang sama untuk tabel TOC (<code>t{oldId}</code>).</li>
-<li>Jika gagal di tengah jalan (misalnya tabel <code>t</code> gagal diganti), tabel <code>b</code> akan dikembalikan ke nama semula (<em>rollback</em>).</li>
-<li>Jika berhasil, tabel FTS di dalam berkas independen FTS akan diubah dengan kueri serupa: <code>ALTER TABLE "b{oldId}_fts" RENAME TO "b{newId}_fts";</code>.</li>
-<li>Terakhir, kolom sinkronisasi anotasi dan riwayat membaca dipanggil untuk mencerminkan ID baru lalu didorong ke CloudKit.</li>
+<li>Jika gagal di tengah proses, perubahan pada tabel akan dikembalikan ke nama semula (<em>rollback</em>).</li>
+<li>Jika berhasil, tabel FTS di dalam berkas independen FTS akan diubah namanya: <code>ALTER TABLE "b{oldId}_fts" RENAME TO "b{newId}_fts";</code>.</li>
+<li>Terakhir, rekaman sinkronisasi anotasi dan riwayat membaca diperbarui ke ID baru lalu dikirim ke CloudKit.</li>
 </ul>
 </li>
 </ul>
 <div class="admonition note">
-<p class="admonition-title">Kenapa FTS Source Dipisahkan?</p>
-<p>Tabel data (<em>Archive</em>) menyimpan teks dalam format kompresi ZSTD (tipe data BLOB). Namun, mekanisme internal <em>Full-Text Search</em> SQLite tidak bisa melakukan pencarian teks yang terkompresi. Oleh karena itu, kita mempertahankan file sementara (<code>fts_source_db</code>) yang masih bertipe TEXT murni agar <em>engine</em> FTS bisa membangun indeks <em>Virtual Table</em> sebelum file sementara tersebut dihancurkan.</p>
+<p class="admonition-title">Pemisahan FTS Source</p>
+<p>Tabel data arsip menyimpan teks dalam format kompresi Zstandard (tipe data BLOB). Namun, mekanisme internal <em>Full-Text Search</em> SQLite tidak dapat mengindeks teks yang terkompresi secara langsung. Oleh karena itu, sistem mempertahankan berkas sementara (<code>fts_source_db</code>) bertipe teks murni agar mesin FTS dapat membangun indeks <em>Virtual Table</em> sebelum berkas sementara tersebut dihapus.</p>
 </div>
 <h2 id="bedah-komponen-dan-struktur-data">Bedah Komponen dan Struktur Data</h2>
-<p>Bagian ini membedah kode sumber, mendokumentasikan setiap tipe objek penting secara rinci.</p>
+<p>Bagian ini mendokumentasikan tipe objek utama secara rinci.</p>
 <h3 id="1-view-layer">1. View Layer</h3>
 <h4 id="offlineimportformview"><code>OfflineImportFormView</code></h4>
 <p>Tampilan utama berbasis form yang kompatibel di macOS dan iOS. Memanfaatkan <code>@State</code> untuk membungkus <code>BookImportViewModel</code>.</p>
@@ -4043,7 +4153,7 @@
 </div>
 </div>
 </div>
-<p>Fitur utama tampilan ini adalah <em>file picker</em> (<code>fileImporter</code>), pengecekan validasi ID interaktif (<em>status badge</em> berwarna merah atau jingga), dan pembaruan antarmuka secara adaptif berdasarkan nilai <code>importMode</code>.</p>
+<p>Fitur utama tampilan ini adalah <em>file picker</em> (<code>fileImporter</code>), pengecekan validasi ID interaktif, dan pembaruan antarmuka secara adaptif berdasarkan nilai <code>importMode</code>.</p>
 <h3 id="2-viewmodel-layer">2. ViewModel Layer</h3>
 <h4 id="bookimportviewmodel"><code>BookImportViewModel</code></h4>
 <p>ViewModel berbasis <code>Observation</code> (menggunakan makro <code>@Observable</code> dan anotasi <code>@unchecked Sendable</code>).</p>
@@ -4068,21 +4178,21 @@
 </span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li>Berisi URL dari berkas lokal yang telah dipindahkan ke folder sementara (<em>temporary</em>).</li>
+<li>Berisi URL dari berkas lokal yang telah disalin ke direktori sementara (<em>temporary</em>).</li>
 <li>Mode operasi: <code>0</code> = Buku Baru, <code>1</code> = Timpa Buku, <code>2</code> = Ganti ID Kitab.</li>
-<li>ID buku tujuan, ditampung sebagai string agar bisa menerima masukan <em>TextField</em> sebelum divalidasi dengan <code>Int(customBookIdText)</code>.</li>
+<li>ID buku tujuan, ditampung sebagai <em>string</em> untuk masukan <em>TextField</em> sebelum divalidasi menjadi integer.</li>
 </ol>
-<p>ViewModel ini memanggil <code>executeDatabaseChanges(oldId:newId:)</code> pada proses <em>Change ID</em>, yang memicu tiga panggilan berurutan secara transaksional di <em>thread</em> belakang:</p>
+<p>ViewModel ini memanggil <code>executeDatabaseChanges(oldId:newId:)</code> pada proses <em>Change ID</em>, yang memicu tiga panggilan berurutan secara transaksional di <em>background thread</em>:</p>
 <ol>
 <li><code>BookUpdateManager.shared.changeBookId</code></li>
 <li><code>AnnotationStore.shared.updateAnnotationsBookId</code></li>
 <li><code>ResultsHandler.shared.migrateBookId</code></li>
 </ol>
 <h3 id="3-manager-database-engine">3. Manager &amp; Database Engine</h3>
-<h4 id="bookupdatemanager"><code>BookUpdateManager</code></h4>
+<h4 id="bookupdatemanager-class"><code>BookUpdateManager</code> (Class)</h4>
 <p>Manajer tunggal (<em>singleton</em>) yang bertanggung jawab atas proses SQL level rendah.</p>
 <h4 id="stagedbookupdate-struct"><code>StagedBookUpdate</code> (Struct)</h4>
-<p>Struktur perantara yang menyatukan seluruh artefak pembaruan buku sebelum operasi <em>replace</em> atau ekspor dijalankan.</p>
+<p><em>Struct</em> perantara yang menyatukan artefak pembaruan buku sebelum operasi <em>replace</em> atau ekspor dijalankan.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">StagedBookUpdate</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">entry</span><span class="p">:</span><span class="w"> </span><span class="n">BookIndexEntry</span><span class="w"> </span><span class="c1">// (1)!</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">metadata</span><span class="p">:</span><span class="w"> </span><span class="n">BookMetadata</span><span class="w"> </span><span class="c1">// (2)!</span>
@@ -4093,11 +4203,11 @@
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li>Informasi buku tingkat katalog (nama kitab, kategori, ukuran file).</li>
+<li>Informasi buku tingkat katalog (nama kitab, kategori, ukuran berkas).</li>
 <li>Metadata lengkap isi buku (versi, betaka, nama tafsir).</li>
-<li>Tautan lokasi sistem berkas (URL) yang berisi basis data konten ZSTD murni.</li>
-<li>Tautan lokasi berkas sekunder untuk indeks FTS murni berwujud teks.</li>
-<li>Konteks nama dan ID pengarang terkait, bisa <em>nil</em> jika penulis sudah ada atau tidak didefinisikan.</li>
+<li>URL berkas yang berisi basis data konten Zstandard.</li>
+<li>URL berkas sekunder untuk indeks FTS teks mentah.</li>
+<li>Konteks pengarang terkait (bisa bernilai <code>nil</code> jika data pengarang sudah ada atau tidak didefinisikan).</li>
 </ol>
 <h4 id="authorcontext-struct"><code>AuthorContext</code> (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">AuthorContext</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -4106,9 +4216,9 @@
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">downloadURL</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Struktur bantuan untuk mengambil, mengunduh, atau mengonfirmasi keberadaan <em>database</em> pengarang (<code>special.sqlite</code>) agar tidak terputus (<em>orphan records</em>).</p>
+<p><em>Struct</em> pembantu untuk mengambil, mengunduh, atau mengonfirmasi keberadaan data pengarang di <code>special.sqlite</code> guna mencegah <em>orphan records</em>.</p>
 <h4 id="bookversionstate-enum"><code>BookVersionState</code> (Enum)</h4>
-<p>Representasi status mesin (meskipun lebih condong ke proses daring, ini menjadi landasan validasi apakah buku boleh ditimpa atau tidak).</p>
+<p>Representasi status versi buku di basis data lokal:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookVersionState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">notInLibrary</span><span class="w"> </span><span class="c1">// (1)!</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">unknownVersion</span><span class="w"> </span><span class="c1">// (2)!</span>
@@ -4119,25 +4229,25 @@
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li>ID Buku tidak terdaftar di direktori lokal mana pun.</li>
-<li>Buku ada, namun tidak memiliki pragma/metadata baris versi (biasanya untuk buku warisan/lama).</li>
-<li>Buku terdaftar bersama label versinya (misal: versi <code>2</code>).</li>
+<li>ID Buku tidak terdaftar di direktori lokal.</li>
+<li>Buku ada, namun tidak memiliki metadata baris versi (skema lawas).</li>
+<li>Buku terdaftar bersama versi numeriknya.</li>
 </ol>
 <h3 id="4-manajemen-status-dan-notifikasi-notification-events">4. Manajemen Status dan Notifikasi (Notification Events)</h3>
-<p>Sistem menggunakan <code>NotificationCenter</code> untuk merangkai subsistem terpisah setelah mutasi SQLite berhasil dijalankan.</p>
+<p>Sistem menggunakan <code>NotificationCenter</code> untuk mengoordinasikan subsistem setelah mutasi SQLite selesai:</p>
 <ul>
 <li>
 <p><code>Notification.Name.bookIntegrated</code>:
-    Dipicu dari dalam <code>BookUpdateManager.replaceArchiveDatabase</code>. Membawa ID buku di dalam objek <em>payload</em>. Komponen pendengar (<code>BookPageCache</code>, UI Pustaka) akan membuang memori <em>cache</em> mereka dan memuat teks secara bersih.</p>
+    Dipicu dari dalam <code>BookUpdateManager.replaceArchiveDatabase</code> dengan <em>payload</em> ID buku. Komponen pendengar (<code>BookPageCache</code>, UI Library) akan membuang <em>cache in-memory</em> dan memuat ulang data terbaru.</p>
 </li>
 <li>
 <p><code>Notification.Name.bookIdMigrated</code>:
-    Dipicu dari <code>BookImportViewModel.performChangeBookId</code>. Membawa paket <em>dictionary</em> berisi <code>oldId</code> dan <code>newId</code>. Fitur Reader yang kebetulan sedang membuka buku dengan <code>oldId</code> wajib mendeteksi interupsi ini dan memantulkan posisinya ke ID buku yang baru secara seketika (<em>hot-reload</em>).</p>
+    Dipicu dari <code>BookImportViewModel.performChangeBookId</code> dengan <em>dictionary</em> <code>oldId</code> dan <code>newId</code>. Fitur Reader yang sedang membuka buku dengan <code>oldId</code> akan mendeteksi perubahan ini dan memperbarui posisinya ke ID baru secara otomatis (<em>hot-reload</em>).</p>
 </li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Peringatan Migrasi CloudKit</p>
-<p>Ketika <code>changeBookId</code> dijalankan, <code>BookImportViewModel</code> akan memicu unggahan paksa anotasi (<code>CloudKitSyncManager.shared.upload(annotations:)</code>). Jika pengguna berada dalam kondisi luring (tanpa internet) saat melakukan <em>Change ID</em>, pengelola sinkronisasi akan menyimpan tiket sinkronisasi gantung (<em>pending sync zone</em>) agar tidak lenyap saat aplikasi tertutup.</p>
+<p>Ketika <code>changeBookId</code> dijalankan, <code>BookImportViewModel</code> memicu unggahan anotasi (<code>CloudKitSyncManager.shared.upload(annotations:)</code>). Jika perangkat dalam kondisi luring (tanpa koneksi internet), pengelola sinkronisasi akan menyimpan status di antrean sinkronisasi luring (<em>offline queue / pending sync zone</em>) agar tidak hilang saat aplikasi ditutup.</p>
 </div>
 
 
@@ -4158,6 +4268,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4188,10 +4304,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../../javascripts/extra.js"></script>
       
     
   </body>

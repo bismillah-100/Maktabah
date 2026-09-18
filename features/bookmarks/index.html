@@ -2799,6 +2799,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reader/textview/" class="md-nav__link">
         
   
@@ -3567,65 +3595,61 @@
 
 
 <h1 id="bookmarks-saved-results-architecture">Bookmarks (Saved Results) Architecture</h1>
-<p>Modul <strong>Bookmarks</strong> (secara internal diimplementasikan sebagai <em>Saved Results</em>) mengelola penyimpanan persisten, organisasi hierarkis berbasis folder, dan sinkronisasi cloud untuk hasil pencarian kitab di aplikasi Maktabah. Modul ini memungkinkan pengguna menyimpan kueri pencarian beserta referensi kitab dan halaman yang cocok ke dalam struktur pohon direktori kustom.</p>
+<p>Modul <strong>Bookmarks</strong> (secara internal diimplementasikan sebagai <em>Saved Results</em>) mengelola penyimpanan persisten, organisasi hierarkis berbasis folder, dan sinkronisasi CloudKit untuk hasil pencarian kitab di aplikasi Maktabah. Modul ini memungkinkan pengguna menyimpan kueri pencarian beserta referensi kitab dan halaman yang cocok ke dalam struktur direktori hierarkis kustom.</p>
 <hr />
-<h2 id="1-arsitektur-diagram-alur-architecture-pipeline">1. Arsitektur &amp; Diagram Alur (Architecture &amp; Pipeline)</h2>
-<p>Arsitektur modul ini dibangun menggunakan pola MVVM yang terpisah rapi dengan persistensi lokal SQLite dan sinkronisasi CloudKit dua arah.</p>
-<pre class="mermaid"><code>graph TD
-    %% UI Layer
-    subgraph UI ["UI Layer (macOS &amp; iOS)"]
-        MAC["SavedResults (macOS)"]
-        IOS["iOSSavedResultsView (iOS)"]
-    end
+<h2 id="1-arsitektur-diagram-alur-architecture-pipeline">1. Arsitektur &amp; Diagram Alur (<em>Architecture &amp; Pipeline</em>)</h2>
+<p>Arsitektur modul ini dibangun menggunakan pola MVVM dengan persistensi lokal SQLite dan sinkronisasi CloudKit dua arah:</p>
+<pre class="mermaid"><code>flowchart TD
+    MAC["SavedResults (macOS)"] --&gt; RVM["ResultsViewModel (@Observable)"]
+    IOS["iOSSavedResultsView (iOS)"] --&gt; RVM
 
-    %% State Management
-    subgraph VM ["ViewModel Layer"]
-        RVM["ResultsViewModel&lt;br/&gt;(@Observable)"]
-    end
+    DB["ResultsHandler"]
+    SYNC["CloudKitSyncManager (ResultSyncHandler)"]
+    MD["LibraryDataManager (Book Metadata Lookup)"]
 
-    %% Core Dependencies
-    subgraph Core ["Core Engine &amp; Database"]
-        DB["ResultsHandler&lt;br/&gt;(SQLite Database)"]
-        SYNC["CloudKitSyncManager&lt;br/&gt;(ResultSyncHandler)"]
-        MD["LibraryDataManager&lt;br/&gt;(Book Title Lookup)"]
-    end
+    RVM --&gt;|"Upsert / Load"| DB
+    RVM --&gt;|"Sync CloudKit"| SYNC
+    RVM --&gt;|"Join Book Metadata"| MD
 
-    %% Flow
-    MAC --&gt;|Observe &amp; Action| RVM
-    IOS --&gt;|Observe &amp; Action| RVM
+    DB --&gt; SQLite[("SearchResults.sqlite (WAL Mode)")]
+    SYNC &lt;--&gt;|"Fetch / Upload"| CloudKit[("CloudKit Custom Zone")]
 
-    RVM --&gt;|Upsert / Load| DB
-    RVM --&gt;|Sync CloudKit| SYNC
-    RVM --&gt;|Join Book Metadata| MD
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
-    DB --&gt;|Read/Write| SQLite[(SearchResults.sqlite)]
-    SYNC &lt;--&gt;|Fetch/Upload| CloudKit((CloudKit Zone))</code></pre>
+    class MAC,IOS ui;
+    class RVM vm;
+    class DB,SYNC,MD store;
+    class SQLite,CloudKit db;</code></pre>
 <hr />
-<h2 id="2-pemisahan-tanggung-jawab-separation-of-concerns">2. Pemisahan Tanggung Jawab (Separation of Concerns)</h2>
-<p>Komponen-komponen dalam feature-slice ini mematuhi batas tanggung jawab yang tegas:</p>
+<h2 id="2-pemisahan-tanggung-jawab-separation-of-concerns">2. Pemisahan Tanggung Jawab (<em>Separation of Concerns</em>)</h2>
+<p>Komponen-komponen dalam modul ini mematuhi batas tanggung jawab yang tegas:</p>
 <ul>
 <li>
 <p><strong>UI Layer (macOS &amp; iOS)</strong>:</p>
 <ul>
-<li>Mengatur visualisasi representasi pohon direktori (hierarki folder dan item hasil pencarian).</li>
-<li>Platform macOS (<code>SavedResults</code>, <code>ResultsViewManager</code>) mengonsumsi <code>BookmarkTreeChange</code> untuk mengeksekusi animasi batch pada <code>NSOutlineView</code> (<code>insertItems</code>, <code>removeItems</code>, <code>moveItem</code>).</li>
-<li>Platform iOS (<code>iOSSavedResultsView</code>, <code>iOSFolderContentList</code>) memanfaatkan deklarasi hierarki berbasis <code>NavigationStack</code>, <em>swipe actions</em>, dan sheet navigasi interaktif.</li>
+<li>Mengatur visualisasi representasi hierarki direktori (folder dan item hasil pencarian).</li>
+<li>Platform macOS (<code>SavedResults</code>, <code>ResultsViewManager</code>) mengonsumsi <code>BookmarkTreeChange</code> untuk mengeksekusi animasi <em>batch</em> pada <code>NSOutlineView</code> (<code>insertItems</code>, <code>removeItems</code>, <code>moveItem</code>).</li>
+<li>Platform iOS (<code>iOSSavedResultsView</code>, <code>iOSFolderContentList</code>) memanfaatkan deklarasi hierarki berbasis <code>NavigationStack</code>, <em>swipe actions</em>, dan <em>sheet</em> navigasi interaktif.</li>
 </ul>
 </li>
 <li>
 <p><strong>ViewModel Layer (<code>ResultsViewModel</code>)</strong>:</p>
 <ul>
 <li>Berperan sebagai <em>single source of truth</em> untuk antarmuka pengguna pada kedua platform.</li>
-<li>Memelihara cache struktural dalam memori (<code>folderById</code>, <code>parentById</code>, <code>resultById</code>) untuk lookup <code>O(1)</code> selama pembaruan parsial.</li>
+<li>Memelihara <em>cache</em> struktural dalam memori (<code>folderById</code>, <code>parentById</code>, <code>resultById</code>) untuk <em>lookup</em> $O(1)$ selama pembaruan parsial.</li>
 <li>Mencegah siklus tak berujung (<em>circular dependency</em>) pada operasi pemindahan folder (<em>drag-and-drop</em>).</li>
 </ul>
 </li>
 <li>
 <p><strong>Data Access Layer (<code>ResultsHandler</code>)</strong>:</p>
 <ul>
-<li>Mengisolasi seluruh query SQL, migrasi skema tabel, dan eksekusi transaksi database <code>SearchResults.sqlite</code>.</li>
-<li>Menangani resolusi folder/hasil yatim (<em>orphan nodes</em>) akibat perbedaan urutan penerimaan data sinkronisasi CloudKit.</li>
-<li>Mengantrekan mutasi offline ke dalam <code>SyncPendingStore</code>.</li>
+<li>Mengisolasi seluruh kueri SQL, migrasi skema tabel, dan eksekusi transaksi basis data <code>SearchResults.sqlite</code>.</li>
+<li>Menangani resolusi <em>orphan records</em> akibat perbedaan urutan penerimaan data sinkronisasi CloudKit.</li>
+<li>Mencatat mutasi luring ke dalam <code>SyncPendingStore</code>.</li>
 </ul>
 </li>
 <li>
@@ -3638,14 +3662,13 @@
 </ul>
 <hr />
 <h2 id="3-peta-navigasi-dokumentasi-teknis">3. Peta Navigasi Dokumentasi Teknis</h2>
-<p>Untuk memahami detail implementasi setiap komponen secara mendalam, silakan telusuri sub-dokumen berikut:</p>
 <ul>
 <li><a href="database/">Database &amp; CloudKit Persistence</a><ul>
-<li>Skema SQLite, indeks unik gabungan, isolasi thread <code>SQLiteDatabase</code>, pemulihan simpul yatim (<em>orphan resolution</em>), dan sinkronisasi CloudKit.</li>
+<li>Skema SQLite, indeks unik gabungan, isolasi <em>thread</em> <code>SQLiteDatabase</code>, pemulihan <em>orphan records</em>, dan sinkronisasi CloudKit.</li>
 </ul>
 </li>
 <li><a href="models/">Data Models &amp; State Types</a><ul>
-<li>Struktur data pohon, simpul hasil pencarian, model sinkronisasi, dan enum mutasi diffing.</li>
+<li>Struktur data hierarki, <em>result node</em>, model sinkronisasi, dan <em>tree diffing</em>.</li>
 </ul>
 </li>
 <li><a href="ios/">iOS SwiftUI Implementation</a><ul>
@@ -3653,7 +3676,7 @@
 </ul>
 </li>
 <li><a href="macos/">macOS AppKit Implementation</a><ul>
-<li>Implementasi <code>NSOutlineView</code>, animasi diffing presisi tinggi (<em>batch updates</em>), drag-and-drop antar-hierarki, dan menu kontekstual.</li>
+<li>Implementasi <code>NSOutlineView</code>, animasi <em>diffing</em> presisi tinggi (<em>batch updates</em>), <em>drag-and-drop</em> antar-hierarki, dan menu kontekstual.</li>
 </ul>
 </li>
 <li><a href="protocols/">Protocols &amp; Delegation</a><ul>
@@ -3661,7 +3684,7 @@
 </ul>
 </li>
 <li><a href="viewmodel/">ViewModel &amp; Reactive Workflows</a><ul>
-<li>Manajemen state berbasis <code>@Observable</code>, cache lookup <code>O(1)</code>, operasi rekursif pohon, dan integrasi notifikasi.</li>
+<li>Manajemen <em>state</em> berbasis <code>@Observable</code>, <em>cache lookup</em> $O(1)$, operasi rekursif hierarki, dan integrasi notifikasi.</li>
 </ul>
 </li>
 </ul>
@@ -3684,6 +3707,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3714,10 +3743,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

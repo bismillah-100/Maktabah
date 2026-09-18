@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#protocols" class="md-skip">
+        <a href="#protocols-contracts" class="md-skip">
           Skip to content
         </a>
       
@@ -2468,10 +2468,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#qurandelegate" class="md-nav__link">
+  <a href="#qurandelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        QuranDelegate
+        QuranDelegate (Protocol)
       
     </span>
   </a>
@@ -2757,6 +2757,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3495,10 +3523,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#qurandelegate" class="md-nav__link">
+  <a href="#qurandelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        QuranDelegate
+        QuranDelegate (Protocol)
       
     </span>
   </a>
@@ -3522,18 +3550,18 @@
 
 
 
-<h1 id="protocols">Protocols</h1>
-<p>Definisi kontrak komunikasi antar komponen UI pada fitur Quran.</p>
-<h2 id="qurandelegate"><code>QuranDelegate</code></h2>
-<p>Protokol ini berjalan di Main Actor (<code>@MainActor</code>) dan digunakan untuk menginformasikan apabila pengguna memilih suatu ayat tertentu.</p>
+<h1 id="protocols-contracts">Protocols &amp; Contracts</h1>
+<p>Definisi kontrak komunikasi antarkomponen UI pada fitur Quran.</p>
+<h2 id="qurandelegate-protocol"><code>QuranDelegate</code> (Protocol)</h2>
+<p><em>Protocol</em> ini berjalan di bawah isolasi <code>@MainActor</code> dan digunakan untuk memberitahukan pembaruan saat pengguna memilih suatu ayat tertentu:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">QuranDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelectAya</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">surah</span><span class="p">:</span><span class="w"> </span><span class="n">SurahNode</span><span class="p">,</span><span class="w"> </span><span class="n">aya</span><span class="p">:</span><span class="w"> </span><span class="n">Quran</span><span class="p">)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong>Implementasi</strong>: Biasanya diimplementasikan oleh <code>QuranNashVC</code> untuk memuat nass tafsir dari ayat yang dipilih.</li>
-<li><strong>Pemanggil</strong>: Dipanggil oleh <code>QuranSidebarVC</code> saat baris di <em>outline view</em> di-klik.</li>
+<li><strong>Implementasi</strong>: Diadopsi oleh <code>QuranNashVC</code> untuk memuat teks tafsir dari ayat yang dipilih.</li>
+<li><strong>Pemanggil</strong>: Dipanggil oleh <code>QuranSidebarVC</code> saat baris di <code>NSOutlineView</code> diklik oleh pengguna.</li>
 </ul>
 
 
@@ -3554,6 +3582,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3584,10 +3618,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

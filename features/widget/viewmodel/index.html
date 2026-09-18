@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#state-management" class="md-skip">
+        <a href="#state-management-coordination" class="md-skip">
           Skip to content
         </a>
       
@@ -2719,6 +2719,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3289,13 +3317,113 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#timeline-provider" class="md-nav__link">
+  <a href="#1-arsitektur-koordinasi-pembaruan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Timeline Provider
+        1. Arsitektur Koordinasi Pembaruan
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-widgetupdatecoordinator-host-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. WidgetUpdateCoordinator (Host App)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. WidgetUpdateCoordinator (Host App)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#observasi-dan-thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observasi dan Thread Safety
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flush-dan-throttling-cloudkit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flush dan Throttling CloudKit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dukungan-silent-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dukungan Silent Push
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-timeline-provider-widget-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Timeline Provider (Widget Extension)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Timeline Provider (Widget Extension)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#varian-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Varian Provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metode-siklus-hidup-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metode Siklus Hidup Provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kebijakan-refresh-nextrefresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kebijakan Refresh (.nextRefresh)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3495,13 +3623,113 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#timeline-provider" class="md-nav__link">
+  <a href="#1-arsitektur-koordinasi-pembaruan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Timeline Provider
+        1. Arsitektur Koordinasi Pembaruan
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-widgetupdatecoordinator-host-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. WidgetUpdateCoordinator (Host App)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. WidgetUpdateCoordinator (Host App)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#observasi-dan-thread-safety" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Observasi dan Thread Safety
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flush-dan-throttling-cloudkit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flush dan Throttling CloudKit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dukungan-silent-push" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dukungan Silent Push
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-timeline-provider-widget-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Timeline Provider (Widget Extension)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Timeline Provider (Widget Extension)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#varian-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Varian Provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metode-siklus-hidup-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metode Siklus Hidup Provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kebijakan-refresh-nextrefresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kebijakan Refresh (.nextRefresh)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3522,18 +3750,91 @@
 
 
 
-<h1 id="state-management">State Management</h1>
-<div class="admonition note">
-<p class="admonition-title">Tidak Ada ViewModel Tradisional</p>
-<p>Karena sifat WidgetKit yang sepenuhnya dikendalikan oleh sistem (<em>Timeline-driven</em>), tidak ada konsep ViewModel yang <em>reactive</em> (seperti <code>@Observable</code> atau <code>ObservableObject</code>) pada lapisan widget. Peran pengelola state digantikan oleh <code>Provider</code>.</p>
-</div>
-<h2 id="timeline-provider">Timeline Provider</h2>
-<p>Fungsi utama pengelola state di Widget dipegang oleh <em>Timeline Provider</em>.</p>
+<h1 id="state-management-coordination">State Management &amp; Coordination</h1>
+<p>WidgetKit beroperasi dengan paradigma <em>timeline-driven</em> pasif yang dikendalikan oleh sistem operasi. Oleh karena itu, pada target Widget tidak digunakan <em>reactive ViewModel</em> konvensional (<code>@Observable</code> atau <code>ObservableObject</code>). Sebagai gantinya, arsitektur manajemen state dibagi menjadi dua lapisan: <strong><code>WidgetUpdateCoordinator</code></strong> di sisi Host Application dan <strong><code>TimelineProvider</code></strong> di sisi Widget Extension.</p>
+<hr />
+<h2 id="1-arsitektur-koordinasi-pembaruan">1. Arsitektur Koordinasi Pembaruan</h2>
+<p>Berikut adalah siklus aliran data dari mutasi aplikasi utama hingga rendering entri timeline pada widget:</p>
+<pre class="mermaid"><code>graph TD
+    MUT["Domain Mutation (AnnotationStore / HistoryDB)"] --&gt;|"Notify Observer"| COORD["WidgetUpdateCoordinator"]
+
+    subgraph HostApp ["Host Application"]
+        COORD --&gt;|"withLock { isDirty = true }"| FLAGS{"Dirty Flags (NSLock)"}
+        FLAGS --&gt;|"flushPendingUpdates"| COMP["compileSnapshot()"]
+        COMP --&gt;|"saveIfChanged"| FCOORD["FileCoordinator (App Group JSON)"]
+        COMP --&gt;|"Throttle Check (30 Min)"| CK["CloudKit Upload (Private DB)"]
+        FCOORD --&gt;|"reloadTimelines(ofKind:)"| WCENTER["WidgetCenter"]
+    end
+
+    subgraph Extension ["Widget Extension"]
+        WCENTER -.-&gt;|"Trigger Reload"| PROV["AppIntentTimelineProvider"]
+        PROV --&gt;|"Fetch Active / Local"| ENTRY["TimelineEntry (Policy: .nextRefresh)"]
+        ENTRY --&gt;|"Render"| VIEW["Widget View Hierarchy"]
+    end
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class VIEW ui;
+    class COORD,COMP,PROV store;
+    class MUT,FCOORD,CK,ENTRY db;
+    class FLAGS,WCENTER event;</code></pre>
+<hr />
+<h2 id="2-widgetupdatecoordinator-host-app">2. WidgetUpdateCoordinator (Host App)</h2>
+<p><code>WidgetUpdateCoordinator</code> adalah singleton berstatus <code>@unchecked Sendable</code> yang bertindak sebagai orkestrator sentral pembaruan data widget dari aplikasi utama.</p>
+<h3 id="observasi-dan-thread-safety">Observasi dan Thread Safety</h3>
+<p>Koordinator memantau perubahan data domain secara otomatis:
+- <strong>Anotasi</strong>: Mendengarkan <code>AnnotationStore.shared.events</code> melalui Combine pipeline (<code>sink</code> di <code>DispatchQueue.main</code>).
+- <strong>Riwayat</strong>: Mendengarkan notifikasi <code>.historyDidChange</code> dari <code>NotificationCenter</code>.</p>
+<p>Status kotor (<em>dirty state</em>) disimpan dalam flag boolean privat dan dilindungi oleh <code>NSLock</code>:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isHistoryDirty</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isAnnotationDirty</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">lock</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSLock</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kd">func</span><span class="w"> </span><span class="nf">markHistoryDirty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="n">lock</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">isHistoryDirty</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kd">func</span><span class="w"> </span><span class="nf">markAnnotationDirty</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="n">lock</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">isAnnotationDirty</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="flush-dan-throttling-cloudkit">Flush dan Throttling CloudKit</h3>
+<p>Saat aplikasi berpindah ke latar belakang (<code>applicationDidResignActive</code>) atau sebelum terminasi, <code>flushPendingUpdates(forceCloudKit:)</code> dieksekusi secara asinkron:</p>
+<ol>
+<li><strong>Atomisitas Flag</strong>: Membaca dan mereset kedua flag dirty sekaligus di dalam blok <code>lock.withLock</code> agar tidak ada pembaruan mutasi yang hilang.</li>
+<li><strong>Kompilasi Snapshot</strong>: Mengompilasi 6 item terbaru dari database riwayat (<code>HistoryDatabaseManager</code>) atau anotasi (<code>AnnotationStore</code>) beserta resolusi judul kitab dari <code>LibraryDataManager</code>.</li>
+<li><strong>Penyimpanan Lokal &amp; Deteksi Perubahan</strong>: Memanggil <code>snapshot.saveIfChanged(comparingWith:)</code>. Apabila ada perubahan konten, <code>WidgetCenter.shared.reloadTimelines(ofKind:)</code> langsung dipanggil untuk merefresh widget lokal.</li>
+<li><strong>CloudKit Throttling</strong>: Pengunggahan snapshot ke iCloud dibatasi dengan interval 30 menit (<code>uploadThrottleInterval = 30 * 60</code>) untuk menghemat kuota jaringan dan baterai, kecuali parameter <code>bypassThrottle</code> bernilai <code>true</code>.</li>
+</ol>
+<h3 id="dukungan-silent-push">Dukungan Silent Push</h3>
+<p>Aplikasi mendaftarkan langganan <code>CKRecordZoneSubscription</code> dengan <code>shouldSendContentAvailable = true</code>. Ketika ada pembaruan dari perangkat lain:</p>
+<ol>
+<li>Sistem memanggil <code>handleSilentPush()</code>.</li>
+<li>Koordinator mengambil record <code>sharedHistorySnapshot</code> dan <code>sharedAnnotationSnapshot</code> secara paralel menggunakan <code>withTaskGroup</code>.</li>
+<li>Memanggil <code>Snapshot.resolve(remote:)</code> untuk memeriksa versi generasi (<code>generation</code>) atau tanggal terbaru.</li>
+<li>Jika payload remote lebih baru, file App Group lokal diperbarui dan timeline widget direfresh dalam batas timeout 25 detik.</li>
+</ol>
+<hr />
+<h2 id="3-timeline-provider-widget-extension">3. Timeline Provider (Widget Extension)</h2>
+<p>Di dalam target Widget Extension, siklus hidup state dikelola melalui implementasi <code>AppIntentTimelineProvider</code>.</p>
+<h3 id="varian-provider">Varian Provider</h3>
 <ul>
-<li><strong><code>AnnotationProvider</code></strong>: Mengimplementasikan <code>AppIntentTimelineProvider</code>. Bertugas memanggil data dari <code>CloudKitFetcher</code> dan memetakan struktur <code>AnnotationSnapshot</code> menjadi entitas <code>Timeline&lt;AnnotationEntry&gt;</code>.</li>
-<li><strong><code>HistoryProvider</code></strong>: Bertugas memetakan data dari <code>HistorySnapshot</code> menjadi <code>Timeline&lt;HistoryEntry&gt;</code>.</li>
+<li><strong><code>AnnotationProvider</code></strong>: Mengelola widget anotasi dengan konfigurasi intent <code>AnnotationConfigurationIntent</code>.</li>
+<li><strong><code>HistoryProvider</code></strong>: Mengelola widget riwayat membaca dengan intent <code>HistoryConfigurationIntent</code>.</li>
 </ul>
-<p>Kedua provider menentukan kebijakan pembaruan dengan <code>policy: .nextRefresh</code>, yang berarti WidgetKit akan merender ulang UI secara dinamis berdasarkan siklus dari sistem operasi, atau di-<em>trigger</em> secara proaktif oleh aplikasi utama saat ada pembaruan data (menggunakan <code>WidgetCenter</code>).</p>
+<h3 id="metode-siklus-hidup-provider">Metode Siklus Hidup Provider</h3>
+<p>Setiap provider mengimplementasikan 3 <em>protocol</em> esensial:</p>
+<ol>
+<li><strong><code>placeholder(in:)</code></strong>: Menghasilkan data dummy instan (<code>Kitab Al-Umm</code>) saat widget pertama kali ditambahkan ke galeri widget sebelum data nyata terbaca.</li>
+<li><strong><code>snapshot(for:in:)</code></strong>: Mengambil data snapshot tercepat via <code>Snapshot.loadLocal()</code> dari file JSON di App Group container untuk ditampilkan pada pratinjau galeri widget.</li>
+<li><strong><code>timeline(for:in:)</code></strong>: Memanggil <code>CloudKitFetcher.shared.fetchActive()</code> (yang memprioritaskan App Group lokal lalu remote fallback), memetakan item menjadi <code>TimelineEntry</code>, dan mengembalikan <code>Timeline(entries: [entry], policy: .nextRefresh)</code>.</li>
+</ol>
+<h3 id="kebijakan-refresh-nextrefresh">Kebijakan Refresh (<code>.nextRefresh</code>)</h3>
+<p>Kebijakan <code>.nextRefresh</code> menyerahkan kendali jadwal evaluasi ulang kepada sistem operasi berdasarkan frekuensi keterlihatan (<em>widget budget</em>), sambil tetap mengizinkan invalidasi instan secara terprogram dari Host App melalui <code>WidgetCenter.shared.reloadTimelines</code>.</p>
 
 
 
@@ -3553,6 +3854,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3583,10 +3890,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

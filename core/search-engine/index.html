@@ -738,10 +738,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#callback-types" class="md-nav__link">
+  <a href="#tipe-callback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Callback Types
+        Tipe Callback
       
     </span>
   </a>
@@ -754,10 +754,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ftsqueryparser-logika-kueri-lanjut" class="md-nav__link">
+  <a href="#ftsqueryparser-logika-kueri-lanjutan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FtsQueryParser: Logika Kueri Lanjut
+        FtsQueryParser: Logika Kueri Lanjutan
       
     </span>
   </a>
@@ -3021,6 +3021,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../features/reader/textview/" class="md-nav__link">
         
   
@@ -3962,10 +3990,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#callback-types" class="md-nav__link">
+  <a href="#tipe-callback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Callback Types
+        Tipe Callback
       
     </span>
   </a>
@@ -3978,10 +4006,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ftsqueryparser-logika-kueri-lanjut" class="md-nav__link">
+  <a href="#ftsqueryparser-logika-kueri-lanjutan" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FtsQueryParser: Logika Kueri Lanjut
+        FtsQueryParser: Logika Kueri Lanjutan
       
     </span>
   </a>
@@ -4011,64 +4039,81 @@
 
 
 <h1 id="search-engine-core">Search Engine Core</h1>
-<p>Dokumentasi ini membedah secara teknis arsitektur, desain konkurensi, dan komponen-komponen utama yang membangun fitur pencarian berkecepatan tinggi (FTS) di Maktabah.</p>
+<p>Dokumentasi ini membedah secara teknis arsitektur, desain konkurensi, dan komponen-komponen utama yang membangun fitur pencarian berkecepatan tinggi (<em>Full-Text Search</em> / FTS) di Maktabah.</p>
 <h2 id="architecture-pipeline">Architecture Pipeline</h2>
 <h3 id="diagram-interaksi-komponen">Diagram Interaksi Komponen</h3>
-<p>Diagram berikut menggambarkan bagaimana komponen di dalam folder <code>SearchEngine</code> berinteraksi satu sama lain, mulai dari penerimaan kueri hingga pengiriman hasil.</p>
-<pre class="mermaid"><code>graph TD
-    UI[UI / Callers] --&gt;|startSearch| SE[SearchEngine]
-    UI --&gt;|pause/resume/stop| SE
-    SE --&gt;|buildFtsQuery| FQP[FtsQueryParser]
-    SE --&gt;|pause/resume| PC[PauseController]
-    SE --&gt;|spawn| SW[SearchWorker]
-    SW --&gt;|waitIfPaused| PC
-    SW --&gt;|read chunk| SCP[SQLiteConnectionPool]
-    SCP --&gt;|getConnection| SC[SQLiteConnection]
-    SC --&gt;|execute SQL| SQLite[(SQLite FTS Tables)]
-    SW --&gt;|callbacks.onResult| SE
-    SE --&gt;|onResult callback| UI</code></pre>
-<h3 id="konkurensi-pekerja-worker-concurrency">Konkurensi Pekerja (Worker Concurrency)</h3>
-<p>Pencarian dirancang agar berjalan secara paralel, baik pada level database file maupun table chunks. Maktabah menginisialisasi beberapa instance <code>SearchWorker</code>, biasanya satu per archive (<code>1-20.sqlite</code>, dsb). Setiap worker memiliki <code>SQLiteConnectionPool</code> dengan beberapa koneksi.</p>
+<p>Diagram berikut menggambarkan interaksi antarkomponen di dalam modul <code>SearchEngine</code>, mulai dari penerimaan kueri hingga pengiriman hasil ke antarmuka pengguna:</p>
+<pre class="mermaid"><code>flowchart TD
+    UI["UI / Callers (OptionSearchVC / SearchModeView)"] --&gt;|"startSearch / cancel"| SE["SearchEngine (Facade)"]
+
+    SE --&gt;|"buildFtsQuery"| FQP["FtsQueryParser"]
+    SE --&gt;|"pause / resume"| PC["PauseController"]
+
+    SE --&gt;|"spawn"| SW["SearchWorker (Per Archive)"]
+    SW --&gt;|"waitIfPaused"| PC
+
+    SW ~~~ POOL
+
+    POOL["SQLiteConnectionPool"]
+    SC["SQLiteConnection"]
+    DB[("SQLite FTS Tables (*_fts)")]
+
+    SW --&gt;|"read chunk"| POOL
+    POOL --&gt;|"getConnection"| SC
+    SC --&gt;|"execute FTS SQL"| DB
+
+    SW --&gt;|"callbacks.onResult"| SE
+    SE --&gt;|"onResult callback"| UI
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class UI ui;
+    class SE,FQP,PC,SW,POOL,SC store;
+    class DB db;</code></pre>
+<h3 id="konkurensi-pekerja-worker-concurrency">Konkurensi Pekerja (<em>Worker Concurrency</em>)</h3>
+<p>Pencarian dirancang agar berjalan secara paralel, baik pada level berkas basis data maupun pecahan tabel (<em>chunks</em>). Maktabah menginisialisasi beberapa <em>instance</em> <code>SearchWorker</code>, umumnya satu per arsip (<code>1.sqlite</code> s.d. <code>20.sqlite</code>). Setiap <em>worker</em> memiliki <code>SQLiteConnectionPool</code> tersendiri.</p>
 <ol>
-<li><code>SearchEngine.startSearch</code> memicu proses pencarian dengan detached task.</li>
-<li>Setiap <code>SearchWorker</code> mengumpulkan matched row IDs terlebih dahulu dari tabel FTS <code>*_fts</code>.</li>
-<li>Setelah total ID didapatkan, worker membagi kumpulan ID tersebut (chunk) ke dalam Task Group paralel (<code>executeParallelChunks</code>).</li>
-<li>Jumlah koneksi paralel diatur oleh ukuran <code>SQLiteConnectionPool</code> per worker. Tiap koneksi menangani chunk ID tertentu (<code>searchChunkByIDs</code>), menjalankan query ke tabel utama.</li>
-<li>Hasil dari tiap chunk dikumpulkan dan diproses secara asinkron dalam stream, kemudian dikirim ke UI melalui callback.</li>
+<li><code>SearchEngine.startSearch</code> memicu proses pencarian melalui <code>Task.detached</code>.</li>
+<li>Setiap <code>SearchWorker</code> mengumpulkan ID baris yang cocok (<em>matched row IDs</em>) dari tabel FTS <code>*_fts</code>.</li>
+<li>Setelah seluruh ID terkumpul, <em>worker</em> membagi kumpulan ID tersebut (<em>chunk</em>) ke dalam <em>Task Group</em> paralel (<code>executeParallelChunks</code>).</li>
+<li>Jumlah koneksi paralel diatur oleh kapasitas <code>SQLiteConnectionPool</code>. Setiap koneksi menangani pecahan ID tertentu (<code>searchChunkByIDs</code>) dan mengeksekusi kueri ke tabel utama.</li>
+<li>Hasil dari setiap <em>chunk</em> dikumpulkan dan diproses secara asinkron dalam <em>stream</em>, kemudian dikirimkan ke UI melalui fungsi <em>callback</em>.</li>
 </ol>
 <h3 id="metode-pause-resume-dan-stop">Metode Pause, Resume, dan Stop</h3>
-<p>Pengontrolan siklus hidup pencarian (Pause, Resume, Stop) dikoordinasi secara tersentralisasi oleh <code>PauseController</code>, sebuah actor yang membungkus status <code>isPaused</code> dan daftar <code>CheckedContinuation</code>.</p>
+<p>Pengontrolan siklus hidup pencarian (Jeda, Lanjutkan, Hentikan) dikoordinasikan secara terpusat oleh <code>PauseController</code>, sebuah <em>actor</em> yang mengelola status <code>isPaused</code> dan daftar <code>CheckedContinuation</code>.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Idle
+    Idle --&gt; Running: startSearch()
+    Running --&gt; Paused: pause() [CheckedContinuation]
+    Paused --&gt; Running: resume() [cont.resume()]
+    Running --&gt; Finished: All Chunks Completed
+    Running --&gt; Stopped: stop() / Task.cancel()
+    Paused --&gt; Stopped: stopAndResumeAll()
+    Finished --&gt; [*]
+    Stopped --&gt; [*]</code></pre>
 <ul>
-<li><strong>Pause (<code>pause()</code>)</strong>: Menandai flag <code>isPaused = true</code>. Setiap kali worker memproses iterasi chunk, worker akan memanggil <code>await pauseController.waitIfPaused()</code>. Jika dijeda, execution tertahan karena <code>CheckedContinuation</code> ditambahkan ke antrean tanpa di-resume.</li>
-<li><strong>Resume (<code>resume()</code>)</strong>: Membalikkan flag <code>isPaused = false</code> lalu memanggil <code>cont.resume()</code> ke semua continuation yang tertahan, melepaskan aliran eksekusi para worker seketika.</li>
-<li><strong>Stop (<code>stopAndResumeAll()</code>)</strong>: Karena task tidak bisa merespons cancellation saat suspended oleh continuation, memanggil stop wajib me-resume seluruh task yang dijeda (<code>resume()</code>) sembari membatalkan <code>Task</code> utama.</li>
+<li><strong>Pause (<code>pause()</code>)</strong>: Menandai <code>isPaused = true</code>. Setiap kali memproses iterasi <em>chunk</em>, <em>worker</em> memanggil <code>await pauseController.waitIfPaused()</code>. Jika pencarian dijeda, eksekusi tertahan karena <code>CheckedContinuation</code> dimasukkan ke dalam antrean tanpa dilanjutkan (<em>resume</em>).</li>
+<li><strong>Resume (<code>resume()</code>)</strong>: Mengubah <code>isPaused = false</code> lalu memanggil <code>cont.resume()</code> pada seluruh <em>continuation</em> yang tertahan, melepaskan penundaan eksekusi <em>worker</em> seketika.</li>
+<li><strong>Stop (<code>stopAndResumeAll()</code>)</strong>: Karena sebuah <em>task</em> tidak dapat merespons pembatalan (<em>cancellation</em>) saat berstatus <em>suspended</em> oleh <em>continuation</em>, pemanggilan <code>stop</code> wajib melanjutkan (<em>resume</em>) seluruh <em>task</em> yang tertahan sembari membatalkan <code>Task</code> utama.</li>
 </ul>
-<h3 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (Separation of Concerns)</h3>
-<p>Komponen pada Search Engine dibangun mengikuti prinsip pemisahan tanggung jawab yang tegas:</p>
+<h3 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (<em>Separation of Concerns</em>)</h3>
+<p>Komponen pada mesin pencari dirancang dengan batas tanggung jawab yang jelas:</p>
 <ul>
-<li><strong><code>SearchEngine</code></strong>: Fasilitator utama (Facade). Mengatur lifecycle task utama, menyimpan daftar worker, dan meneruskan instruksi kontrol ke <code>PauseController</code>.<ul>
-<li>Menginisialisasi workers.</li>
-<li>Mengikat callback progres dan completion.</li>
-</ul>
-</li>
-<li><strong><code>SearchWorker</code></strong>: Berfokus murni pada logika orkestrasi paralel (Chunking) untuk satu arsip / tabel. Tidak peduli tentang parsing query atau status UI.<ul>
-<li>Menjalankan <code>executeParallelChunks</code> dengan pembagian <code>matchedIDs</code>.</li>
-<li>Mengirim progres kembali melalui berbagai callback.<ul>
-<li><code>onResult</code> untuk tiap baris yang cocok.</li>
-<li><code>onRowProgress</code> untuk progres hitungan baris.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><strong><code>SQLiteConnection</code> &amp; <code>SQLiteConnectionPool</code></strong>: Abstraksi lapisan koneksi thread-safe ke libsqlite3. Mengatur isolasi pemanggilan prepared statement.</li>
-<li><strong><code>FtsQueryParser</code></strong>: Stateless utility yang bertanggung jawab penuh terhadap sanitasi, stemming teks Arab, dan konversi kueri.</li>
-<li><strong><code>PauseController</code></strong>: Khusus mengurus logika suspensi asinkron (yielding) via <code>CheckedContinuation</code> di lingkungan Swift Concurrency.</li>
+<li><strong><code>SearchEngine</code></strong>: Fasilitator utama (<em>Facade</em>). Mengatur siklus hidup tugas utama, mengelola daftar <em>worker</em>, dan meneruskan instruksi kontrol ke <code>PauseController</code>.</li>
+<li><strong><code>SearchWorker</code></strong>: Berfokus murni pada logika orkestrasi paralel (<em>chunking</em>) untuk satu berkas arsip / kelompok tabel.</li>
+<li><strong><code>SQLiteConnection</code> &amp; <code>SQLiteConnectionPool</code></strong>: Abstraksi koneksi <em>thread-safe</em> ke <code>libsqlite3</code> serta isolasi eksekusi <em>prepared statements</em>.</li>
+<li><strong><code>FtsQueryParser</code></strong>: Utilitas <em>stateless</em> yang bertugas melakukan sanitasi, pemotongan kata dasar (<em>stemming</em>) teks Arab, dan konversi format kueri FTS.</li>
+<li><strong><code>PauseController</code></strong>: Mengelola logika penundaan asinkron melalui <code>CheckedContinuation</code> di lingkungan Swift Concurrency.</li>
 </ul>
 <hr />
 <h2 id="bedah-komponen-teknis">Bedah Komponen Teknis</h2>
 <h3 id="struct-dan-class">Struct dan Class</h3>
 <h4 id="searchengine-actor"><code>SearchEngine</code> (Actor)</h4>
-<p>Actor pengatur siklus hidup pencarian utama. Menerima permintaan, membuat FTS query, mendelegasikan tugas ke worker, dan mem-proxy callback ke UI.</p>
+<p><em>Actor</em> pengatur siklus hidup pencarian utama. Bertugas menerima permintaan, menyusun kueri FTS, mendelegasikan tugas ke <em>worker</em>, serta meneruskan <em>callback</em> hasil ke antarmuka pengguna.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">SearchEngine</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">private</span><span class="p">(</span><span class="kr">set</span><span class="p">)</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">workers</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SearchWorker</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="c1">// (1)!</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">pauseController</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">PauseController</span><span class="p">()</span>
@@ -4078,14 +4123,14 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <ol>
-<li>Kumpulan worker yang dipetakan per ID arsip database.</li>
+<li>Kumpulan <em>worker</em> yang dipetakan per ID arsip basis data.</li>
 </ol>
 <div class="admonition note">
 <p class="admonition-title">Task Cancellation</p>
-<p>SearchEngine me-manage penugasan task utamanya dalam <code>searchTask</code> yang bisa dipanggil dengan <code>.cancel()</code> ketika operasi diinterupsi.</p>
+<p><code>SearchEngine</code> mengelola penugasan tugas utamanya dalam properti <code>searchTask</code>, yang dapat dibatalkan melalui <code>.cancel()</code> saat operasi diinterupsi oleh pengguna.</p>
 </div>
 <h4 id="searchworker-class"><code>SearchWorker</code> (Class)</h4>
-<p>Worker yang bertugas melakukan FTS query untuk serangkaian tabel (buku) di dalam satu Archive ID. Dibangun dengan pola <code>Sendable</code> meskipun bertipe class (<code>@unchecked Sendable</code> asalkan immutable state).</p>
+<p><em>Class</em> <em>worker</em> yang bertugas menjalankan kueri FTS untuk serangkaian tabel (kitab) di dalam satu berkas arsip. Mengadopsi <em>protocol</em> <code>@unchecked Sendable</code> dengan menjaga <em>immutable state</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SearchWorker</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archiveId</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">tables</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span>
@@ -4094,13 +4139,13 @@
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>archiveId</code></strong>: Pengidentifikasi arsip (database file), misalnya "1".</li>
-<li><strong><code>tables</code></strong>: Daftar nama tabel yang akan dicari dalam archive ini.</li>
-<li><strong><code>pool</code></strong>: Connection Pool agar dapat melakukan pembacaan konkuren (<code>executeParallelChunks</code>).</li>
-<li><strong><code>batchSize</code></strong>: Jumlah maksimum baris (IDs) yang diambil (fetch) dalam satu SQL query IN clause. Standarnya 200.</li>
+<li><strong><code>archiveId</code></strong>: Pengenal arsip basis data (misalnya <code>"1"</code>).</li>
+<li><strong><code>tables</code></strong>: Daftar nama tabel kitab yang dicari di dalam arsip ini.</li>
+<li><strong><code>pool</code></strong>: <em>Connection Pool</em> untuk eksekusi kueri konkuren (<code>executeParallelChunks</code>).</li>
+<li><strong><code>batchSize</code></strong>: Jumlah maksimum baris (ID) yang diambil dalam satu klausa SQL <code>IN</code> (nilai bawaan: 200).</li>
 </ul>
 <h4 id="sqliteconnection-class"><code>SQLiteConnection</code> (Class)</h4>
-<p>Membungkus interaksi low-level C API dari SQLite3. Class ini menahan opaque pointer untuk database dan mengimplementasikan statement cache dasar.</p>
+<p>Membungkus interaksi tingkat rendah C API dari <code>libsqlite3</code>. <em>Class</em> ini menyimpan <em>opaque pointer</em> koneksi basis data dan mengimplementasikan mekanisme <em>statement cache</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SQLiteConnection</span><span class="p">:</span><span class="w"> </span><span class="n">DBConnectionType</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">db</span><span class="p">:</span><span class="w"> </span><span class="n">OpaquePointer</span><span class="p">?</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">statementCache</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">:</span><span class="w"> </span><span class="n">OpaquePointer</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
@@ -4110,23 +4155,23 @@
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>db</code></strong>: Pointer koneksi SQLite (tipe <code>OpaquePointer</code>).</li>
-<li><strong><code>statementCache</code></strong>: Cache prepared statement (menghindari penyiapan ulang SQL berulang-ulang, menaikkan performa).</li>
-<li><strong><code>cacheKeys</code> &amp; <code>maxCacheSize</code></strong>: Logika sederhana implementasi LRU (Least Recently Used) cache.</li>
-<li><strong><code>executionLock</code></strong>: Mutex (<code>NSLock</code>) untuk mencegah <code>EXC_BAD_ACCESS</code> jika satu instance <code>SQLiteConnection</code> tak sengaja dipanggil secara konkuren.</li>
+<li><strong><code>db</code></strong>: <em>Pointer</em> koneksi SQLite (bertipe <code>OpaquePointer</code>).</li>
+<li><strong><code>statementCache</code></strong>: <em>Cache</em> untuk menyimpan <em>prepared statements</em> agar kueri yang dieksekusi berulang kali tidak perlu diuraikan ulang.</li>
+<li><strong><code>cacheKeys</code> &amp; <code>maxCacheSize</code></strong>: Implementasi <em>cache eviction</em> berbasis LRU (<em>Least Recently Used</em>).</li>
+<li><strong><code>executionLock</code></strong>: Mutex (<code>NSLock</code>) untuk mencegah <em>data race</em> atau <code>EXC_BAD_ACCESS</code> saat <em>instance</em> dipanggil.</li>
 </ul>
 <h4 id="sqliteconnectionpool-actor"><code>SQLiteConnectionPool</code> (Actor)</h4>
-<p>Menyediakan kumpulan koneksi SQLite yang terisolasi. Berguna saat worker melakukan chunking.</p>
+<p>Menyediakan kumpulan koneksi SQLite yang terisolasi untuk mendukung operasi <em>chunking</em> paralel pada <em>worker</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">SQLiteConnectionPool</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">connections</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">DBConnectionType</span><span class="p">]</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// ...</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>connections</code></strong>: Kumpulan koneksi database (<code>DBConnectionType</code>). Saat worker memanggil fungsi <code>read(at:)</code>, pool akan memilih koneksi dengan index modulo dari jumlah koneksi (misal <code>index % connections.count</code>), menjamin rotasi pemakaian.</li>
+<li><strong><code>connections</code></strong>: Kumpulan koneksi basis data (<code>DBConnectionType</code>). Saat <em>worker</em> memanggil fungsi <code>read(at:)</code>, <em>pool</em> memilih koneksi menggunakan operasi modulo indeks (<code>index % connections.count</code>), menjamin rotasi penggunaan koneksi secara merata.</li>
 </ul>
 <h4 id="pausecontroller-actor"><code>PauseController</code> (Actor)</h4>
-<p>Mengelola state pause/resume dengan aman dalam lingkungan asinkron.</p>
+<p>Mengelola status jeda (<em>pause</em>) dan lanjut (<em>resume</em>) secara <em>thread-safe</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">PauseController</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isPaused</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">continuations</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">CheckedContinuation</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
@@ -4134,11 +4179,11 @@
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>isPaused</code></strong>: Status penanda apakah pencarian dijeda.</li>
-<li><strong><code>continuations</code></strong>: Array dari <code>CheckedContinuation</code> yang mem-parkir Task selagi status pause aktif.</li>
+<li><strong><code>isPaused</code></strong>: Penanda status apakah proses pencarian sedang dijeda.</li>
+<li><strong><code>continuations</code></strong>: <em>Array</em> dari <code>CheckedContinuation</code> yang menahan eksekusi <em>Task</em> selama status jeda aktif.</li>
 </ul>
 <h4 id="searchqueryoptions-struct"><code>SearchQueryOptions</code> (Struct)</h4>
-<p>Membawa parameter kueri dari luar (UI/ViewModel) masuk ke dalam SearchEngine.</p>
+<p>Membawa parameter kueri dari lapisan UI / ViewModel menuju <code>SearchEngine</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchQueryOptions</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">keywords</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
@@ -4148,14 +4193,14 @@
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>query</code></strong>: String kueri utuh dari input pengguna.</li>
-<li><strong><code>keywords</code></strong>: Fallback bila query kosong, digabung menjadi kueri.</li>
-<li><strong><code>allowedTables</code></strong>: Set tabel yang difilter (opsional, jika nil berarti cari di semua tabel <code>SearchWorker</code>).</li>
-<li><strong><code>mode</code></strong>: Tipe operasi <code>SearchMode</code> (phrase, contains, or, near).</li>
-<li><strong><code>nearDistance</code></strong>: Toleransi jarak kata untuk operasi <code>NEAR()</code>, default 10.</li>
+<li><strong><code>query</code></strong>: Teks kueri pencarian dari pengguna.</li>
+<li><strong><code>keywords</code></strong>: Kata kunci alternatif apabila kueri utama kosong.</li>
+<li><strong><code>allowedTables</code></strong>: Himpunan tabel yang difilter (jika bernilai <code>nil</code>, pencarian mencakup seluruh tabel).</li>
+<li><strong><code>mode</code></strong>: Tipe operasi <code>SearchMode</code> (<code>phrase</code>, <code>contains</code>, <code>or</code>, <code>near</code>).</li>
+<li><strong><code>nearDistance</code></strong>: Batas toleransi jarak antarkata untuk operator <code>NEAR()</code> (nilai bawaan: 10).</li>
 </ul>
 <h4 id="safecounter-class"><code>SafeCounter</code> (Class)</h4>
-<p>Counter aman untuk konkurensi (Thread-safe) menggunakan Mutex. Digunakan saat menghitung penyelesaian tabel lintas Task konkuren.</p>
+<p>Penghitung (<em>counter</em>) <em>thread-safe</em> menggunakan <code>Synchronization.Mutex</code>. Digunakan saat menghitung progres penyelesaian tabel lintas tugas konkuren.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SafeCounter</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">&lt;</span><span class="nb">Int</span><span class="p">&gt;(</span><span class="mi">0</span><span class="p">)</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
@@ -4168,17 +4213,14 @@
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">}</span>
 </span></code></pre></div>
 <h4 id="serialtaskqueue-class"><code>SerialTaskQueue</code> (Class)</h4>
-<p>Antrean asinkron untuk memastikan task-task dieksekusi secara serial (satu persatu). Ini membantu menertibkan urutan mutasi state atau proses tulis di UI/Disk.</p>
+<p>Antrean asinkron untuk memastikan tugas-tugas dieksekusi secara sekuensial (satu per satu). Membantu menertibkan urutan mutasi <em>state</em> atau proses penulisan ke antarmuka dan <em>disk</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SerialTaskQueue</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">tailState</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">&lt;</span><span class="n">Task</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;?</span><span class="o">&gt;</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="c1">// ...</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<ul>
-<li><strong><code>tailState</code></strong>: Mutex membungkus ekor task, mengatur chaining pembatalan task dan eksekusi sekuensial.</li>
-</ul>
 <h4 id="tocloaderrefcount-actor"><code>TOCLoaderRefCount</code> (Actor)</h4>
-<p>Manajer siklus hidup untuk memuat Table of Contents (TOC). Memiliki mekanisme cache, in-flight request deduplication, dan reference counting.</p>
+<p>Manajer siklus hidup pemuatan daftar isi / TOC. Dilengkapi mekanisme <em>cache</em>, <em>request deduplication</em>, dan <em>reference counting</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">TOCLoaderRefCount</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="kd">struct</span><span class="w"> </span><span class="nc">Entry</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">task</span><span class="p">:</span><span class="w"> </span><span class="n">Task</span><span class="o">&lt;</span><span class="p">[</span><span class="n">TOCNode</span><span class="p">],</span><span class="w"> </span><span class="n">Error</span><span class="p">&gt;</span>
@@ -4190,12 +4232,12 @@
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>Entry</code></strong>: Membungkus status <code>Task</code> aktif dan jumlah pemanggil <code>consumers</code>.</li>
-<li><strong><code>inFlight</code></strong>: Memastikan buku yang sama tidak memicu dua ekstraksi struktur TOC bersamaan.</li>
+<li><strong><code>Entry</code></strong>: Menyimpan status <code>Task</code> aktif dan jumlah pemanggil (<code>consumers</code>).</li>
+<li><strong><code>inFlight</code></strong>: Memastikan buku yang sama tidak memicu ekstraksi struktur TOC ganda secara bersamaan.</li>
 </ul>
 <h3 id="enums-event-types">Enums &amp; Event Types</h3>
 <h4 id="searchmode-enum"><code>SearchMode</code> (Enum)</h4>
-<p>Menentukan perilaku (operator relasional) logika pencarian ke dalam <code>FtsQueryParser</code>.</p>
+<p>Menentukan operator logika pencarian yang diterapkan oleh <code>FtsQueryParser</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SearchMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">CaseIterable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">phrase</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="bp">contains</span>
@@ -4203,50 +4245,39 @@
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">near</span>
 </span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Tipe mode pencarian mengubah cara perlakuan input:</p>
 <ul>
-<li><strong><code>phrase</code></strong>: Teks pencarian dibungkus dengan kutip murni (contoh: <code>"kata satu dua"</code>), harus pas persis.</li>
-<li><strong><code>contains</code></strong>: Teks pencarian digabung dengan operator <code>AND</code> (contoh: <code>"kata" AND "satu"</code>).</li>
-<li><strong><code>or</code></strong>: Teks pencarian digabung dengan operator <code>OR</code> (contoh: <code>"kata" OR "satu"</code>).</li>
-<li><strong><code>near</code></strong>: Pencarian berdekatan menggunakan <code>NEAR(kata satu dua, 10)</code>, kata berada berdekatan hingga limit parameter (distance).</li>
+<li><strong><code>phrase</code></strong>: Teks pencarian dibungkus tanda kutip ganda (contoh: <code>"kata satu dua"</code>), mencocokkan frasa secara persis.</li>
+<li><strong><code>contains</code></strong>: Kata kunci digabungkan dengan operator <code>AND</code> (contoh: <code>"kata" AND "satu"</code>).</li>
+<li><strong><code>or</code></strong>: Kata kunci digabungkan dengan operator <code>OR</code> (contoh: <code>"kata" OR "satu"</code>).</li>
+<li><strong><code>near</code></strong>: Pencarian kedekatan kata menggunakan <code>NEAR(kata satu dua, 10)</code>.</li>
 </ul>
 <h4 id="sqlvalue-enum"><code>SQLValue</code> (Enum)</h4>
-<p>Abstraksi tipe data safe untuk parameter binding pada SQLite.</p>
+<p>Abstraksi tipe data aman untuk pengikatan parameter (<em>parameter binding</em>) pada SQLite:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SQLValue</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="nb">String</span><span class="p">)</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">int</span><span class="p">(</span><span class="nb">Int</span><span class="p">)</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">null</span>
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<h4 id="callback-types">Callback Types</h4>
-<p>Berbagai struct callbacks digunakan di antara lapisan <code>SearchEngine</code> dan <code>SearchWorker</code> sebagai antarmuka (interface) komunikasi ke pengamat:</p>
+<h4 id="tipe-callback">Tipe Callback</h4>
+<p>Berbagai struktur <em>callback</em> digunakan sebagai antarmuka komunikasi:</p>
 <ul>
-<li><strong><code>SearchEngineCallbacks</code></strong>: Callback level-atas seperti <code>onInitialize</code>, <code>onTableComplete</code>, <code>onResult</code>.</li>
-<li><strong><code>SearchWorkerCallbacks</code></strong>: Callback antara Engine dan Worker.</li>
-<li><strong><code>SearchCallbacks</code></strong>: Dipakai untuk progres internal table/chunk (murni progres baris).</li>
+<li><strong><code>SearchEngineCallbacks</code></strong>: <em>Callback</em> tingkat atas (<code>onInitialize</code>, <code>onTableComplete</code>, <code>onResult</code>).</li>
+<li><strong><code>SearchWorkerCallbacks</code></strong>: <em>Callback</em> antara Engine dan Worker.</li>
+<li><strong><code>SearchCallbacks</code></strong>: Digunakan untuk pembaruan progres baris internal tabel / <em>chunk</em>.</li>
 </ul>
 <div class="admonition warning">
-<p class="admonition-title">Callback Execution</p>
-<p>Pastikan pembaruan antarmuka pada pengamat (caller) dilakukan melalui <code>@MainActor</code> karena callbacks dieksekusi dari background queue / <code>Task.detached</code>.</p>
+<p class="admonition-title">Eksekusi Callback pada UI</p>
+<p>Pastikan pembaruan antarmuka pengguna pada pemanggil (<em>caller</em>) diarahkan ke <code>@MainActor</code> karena fungsi <em>callback</em> dipancarkan dari <em>background queue</em> (<code>Task.detached</code>).</p>
 </div>
-<h3 id="ftsqueryparser-logika-kueri-lanjut">FtsQueryParser: Logika Kueri Lanjut</h3>
-<p>FtsQueryParser memiliki logika spesifik untuk mendeteksi perintah kueri manual pengguna menggunakan fitur <code>NEAR</code>. Parser memprioritaskan regex berikut:</p>
+<h3 id="ftsqueryparser-logika-kueri-lanjutan">FtsQueryParser: Logika Kueri Lanjutan</h3>
+<p><code>FtsQueryParser</code> memiliki logika khusus untuk mendeteksi perintah kueri manual pengguna yang memanfaatkan sintaks <code>NEAR</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">#</span><span class="s">"(?i)(?:NEAR\s*</span><span class="si">\(</span><span class="err">\</span><span class="n">s</span><span class="o">*</span><span class="p">[</span><span class="o">^</span><span class="p">,</span><span class="err">\</span><span class="si">)</span><span class="s">]+(?:,\s*(\d+))?\s*\)|[^\s]+\s+NEAR(?:/(\d+))?\s+[^\s]+)"</span><span class="p">#</span>
 </span></code></pre></div>
-<p>Jika pengguna menulis eksplisit <code>kata NEAR/5 lain</code>, maka parser secara cerdas melewati <code>SearchMode</code> dan menerapkan operator eksplisit dengan jarak spesifik <code>5</code>.</p>
-<p>Kueri biasa di-sanitize secara mendalam dengan metode chaining:
+<p>Jika pengguna menulis kueri secara eksplisit seperti <code>kata NEAR/5 lain</code>, parser langsung menerapkan operator tersebut dengan jarak spesifik <code>5</code>.</p>
+<p>Kueri teks disanitasi secara berantai:
 <code>text.trimmingCharacters(in: .whitespacesAndNewlines).normalizeArabic().stemArabicLight10()</code></p>
-<p>Hal ini membuang harakat, melakukan stemming awal (misal awalan "al"), dan menghapus tanda baca agar sinkron dengan implementasi Tokenizer internal SQLite.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">iOS</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Pemanggilan native antarmuka UI dilakukan melalui delegate standar AppKit sesudah menerima rilis <code>onResult</code>.</p>
-</div>
-<div class="tabbed-block">
-<p>Penyebaran status dan array updates diteruskan sebagai published objects di ekosistem Observable.</p>
-</div>
-</div>
-</div>
+<p>Langkah ini membersihkan harakat, melakukan <em>stemming</em> awal pada kata Arab (seperti awalan <em>"al-"</em>), dan menghapus tanda baca agar selaras dengan konfigurasi <em>tokenizer</em> SQLite.</p>
 
 
 
@@ -4266,6 +4297,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4296,10 +4333,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

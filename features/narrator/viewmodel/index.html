@@ -2799,6 +2799,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3567,10 +3595,10 @@
 
 
 <h1 id="viewmodel">ViewModel</h1>
-<p><code>NarratorViewModel</code> adalah sumber kebenaran (source of truth) dari fitur pencarian dan pembacaan profil perawi.</p>
-<p>ViewModel ini dideklarasikan dengan macro <code>@Observable</code> untuk sinkronisasi state di SwiftUI (iOS) dan mengekspos properti/callback standar untuk <em>bindings</em> di AppKit (macOS).</p>
+<p><code>NarratorViewModel</code> adalah sumber kebenaran (<em>single source of truth</em>) dari fitur pencarian dan pembacaan profil perawi.</p>
+<p>ViewModel ini dideklarasikan dengan makro <code>@Observable</code> untuk sinkronisasi <em>state</em> di SwiftUI (iOS) dan mengekspos properti/<em>callback</em> standar untuk <em>bindings</em> di AppKit (macOS).</p>
 <h2 id="state-management">State Management</h2>
-<p>Beberapa state penting yang dikelola oleh ViewModel:</p>
+<p>Beberapa <em>state</em> penting yang dikelola oleh ViewModel:</p>
 <ul>
 <li><code>tabaqaGroups</code>: Daftar grup <em>Tabaqah</em> perawi (Hierarki).</li>
 <li><code>currentRowi</code>: Perawi yang saat ini sedang dipilih untuk dilihat detailnya.</li>
@@ -3582,8 +3610,8 @@
 <h2 id="fts-full-text-search-pipeline">FTS (Full-Text Search) Pipeline</h2>
 <p>ViewModel ini mendukung pencarian teks penuh (FTS) lintas arsip (lintas kitab) yang berjumlah ribuan secara asinkron.</p>
 <ol>
-<li><strong>Pencarian</strong>: Method <code>startSearch(query:)</code> akan dipanggil.</li>
-<li><strong>Streaming</strong>: Memanggil <code>TarjamahGlobalManager.shared.searchTarjamah</code>. Selama hasil didapat secara <em>batch</em>, callback <code>onBatchResult</code> akan menempelkan hasil pencarian ke <code>searchTarjamahList</code>.</li>
+<li><strong>Pencarian</strong>: Metode <code>startSearch(query:)</code> akan dipanggil.</li>
+<li><strong>Streaming</strong>: Memanggil <code>TarjamahGlobalManager.shared.searchTarjamah</code>. Selama hasil didapat secara <em>batch</em>, <em>callback</em> <code>onBatchResult</code> akan menambahkan hasil pencarian ke <code>searchTarjamahList</code>.</li>
 <li><strong>Animasi UI</strong>: Di macOS, <code>onSearchBatchAppended</code> akan dieksekusi agar UI <code>NSTableView</code> bisa menyisipkan baris baru dengan efek <em>fade</em> tanpa <em>freeze</em>.</li>
 </ol>
 <div class="admonition tip">
@@ -3619,6 +3647,12 @@
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
       </main>
       
         <footer class="md-footer">
@@ -3648,10 +3682,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

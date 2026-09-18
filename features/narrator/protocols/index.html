@@ -2213,10 +2213,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#rowisidebardelegate" class="md-nav__link">
+  <a href="#rowisidebardelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RowiSidebarDelegate
+        RowiSidebarDelegate (Protocol)
       
     </span>
   </a>
@@ -2224,10 +2224,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tarjamahbdelegate" class="md-nav__link">
+  <a href="#tarjamahbdelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TarjamahBDelegate
+        TarjamahBDelegate (Protocol)
       
     </span>
   </a>
@@ -2768,6 +2768,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3506,10 +3534,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#rowisidebardelegate" class="md-nav__link">
+  <a href="#rowisidebardelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RowiSidebarDelegate
+        RowiSidebarDelegate (Protocol)
       
     </span>
   </a>
@@ -3517,10 +3545,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tarjamahbdelegate" class="md-nav__link">
+  <a href="#tarjamahbdelegate-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TarjamahBDelegate
+        TarjamahBDelegate (Protocol)
       
     </span>
   </a>
@@ -3545,27 +3573,23 @@
 
 
 <h1 id="protocols-contracts">Protocols &amp; Contracts</h1>
-<p>Fitur Narrator mendefinisikan beberapa protokol sederhana untuk mendelegasikan event dari tampilan daftar ke tampilan utama (terutama di macOS di mana kita membagi Sidebar dan Results ke dalam beberapa ViewController).</p>
-<p>File definisi protokol berada di <code>RowiProtocols.swift</code>.</p>
-<h2 id="rowisidebardelegate"><code>RowiSidebarDelegate</code></h2>
-<p>Dijalankan ketika pengguna memilih profil perawi dari sidebar hierarki <code>Tabaqah</code>.</p>
+<p>Fitur Narrator mendefinisikan beberapa <em>protocol</em> untuk mendelegasikan <em>event</em> dari tampilan daftar ke tampilan utama (terutama di macOS saat membagi <em>Sidebar</em> dan <em>Results</em> ke dalam beberapa <em>ViewController</em>).</p>
+<p>Berkas definisi <em>protocol</em> berada di <code>RowiProtocols.swift</code>.</p>
+<h2 id="rowisidebardelegate-protocol"><code>RowiSidebarDelegate</code> (Protocol)</h2>
+<p>Dijalankan ketika pengguna memilih profil perawi dari <em>sidebar</em> hierarki <code>Tabaqah</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">RowiSidebarDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelect</span><span class="p">(</span><span class="n">rowi</span><span class="p">:</span><span class="w"> </span><span class="n">Rowi</span><span class="p">)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="tarjamahbdelegate"><code>TarjamahBDelegate</code></h2>
-<p>Dijalankan ketika berinteraksi dengan daftar hasil pencarian Tarjamah (biografi) atau menekan tombol <em>chip</em> kategori biografi.</p>
+<h2 id="tarjamahbdelegate-protocol"><code>TarjamahBDelegate</code> (Protocol)</h2>
+<p>Dijalankan ketika berinteraksi dengan daftar hasil pencarian Tarjamah (biografi) atau menekan tombol filter kategori biografi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">TarjamahBDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelectRowi</span><span class="p">(</span><span class="n">rowi</span><span class="p">:</span><span class="w"> </span><span class="n">Rowi</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelect</span><span class="p">(</span><span class="n">tarjamahB</span><span class="p">:</span><span class="w"> </span><span class="n">TarjamahMen</span><span class="p">,</span><span class="w"> </span><span class="n">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?)</span><span class="w"> </span><span class="k">async</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelectTarjamah</span><span class="p">(</span><span class="n">result</span><span class="p">:</span><span class="w"> </span><span class="n">TarjamahResult</span><span class="p">)</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">iOS Abstraction</p>
-<p>Pada iOS, arsitekturnya sepenuhnya reaktif menggunakan SwiftUI, sehingga protokol-protokol delegasi ini lebih jarang digunakan. iOS mengandalkan ikatan status (State Binding) via <code>Coordinator</code> atau closure langsung di dalam komponen <code>UIViewControllerRepresentable</code>.</p>
-</div>
 
 
 
@@ -3585,6 +3609,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3615,10 +3645,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

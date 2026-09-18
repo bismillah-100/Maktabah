@@ -2157,10 +2157,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#rowi" class="md-nav__link">
+  <a href="#rowi-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rowi
+        Rowi (Struct)
       
     </span>
   </a>
@@ -2168,10 +2168,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tabaqagroup" class="md-nav__link">
+  <a href="#tabaqagroup-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TabaqaGroup
+        TabaqaGroup (Struct)
       
     </span>
   </a>
@@ -2179,10 +2179,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tarjamahmen" class="md-nav__link">
+  <a href="#tarjamahmen-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TarjamahMen
+        TarjamahMen (Struct)
       
     </span>
   </a>
@@ -2190,10 +2190,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tarjamahresult" class="md-nav__link">
+  <a href="#tarjamahresult-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TarjamahResult
+        TarjamahResult (Struct)
       
     </span>
   </a>
@@ -2213,10 +2213,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#rowidisplaymode" class="md-nav__link">
+  <a href="#rowidisplaymode-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RowiDisplayMode
+        RowiDisplayMode (Enum)
       
     </span>
   </a>
@@ -2818,6 +2818,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3556,10 +3584,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#rowi" class="md-nav__link">
+  <a href="#rowi-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Rowi
+        Rowi (Struct)
       
     </span>
   </a>
@@ -3567,10 +3595,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tabaqagroup" class="md-nav__link">
+  <a href="#tabaqagroup-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TabaqaGroup
+        TabaqaGroup (Struct)
       
     </span>
   </a>
@@ -3578,10 +3606,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tarjamahmen" class="md-nav__link">
+  <a href="#tarjamahmen-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TarjamahMen
+        TarjamahMen (Struct)
       
     </span>
   </a>
@@ -3589,10 +3617,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tarjamahresult" class="md-nav__link">
+  <a href="#tarjamahresult-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TarjamahResult
+        TarjamahResult (Struct)
       
     </span>
   </a>
@@ -3612,10 +3640,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#rowidisplaymode" class="md-nav__link">
+  <a href="#rowidisplaymode-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        RowiDisplayMode
+        RowiDisplayMode (Enum)
       
     </span>
   </a>
@@ -3646,7 +3674,7 @@
 
 <h1 id="models">Models</h1>
 <p>Model data pada fitur Narrator merepresentasikan struktur perawi hadis, pengelompokan berdasarkan Tabaqah, dan biografi.</p>
-<h2 id="rowi"><code>Rowi</code></h2>
+<h2 id="rowi-struct"><code>Rowi</code> (Struct)</h2>
 <p>Merepresentasikan seorang perawi hadis (dari tabel <code>rowa</code>).</p>
 <ul>
 <li><strong>Properti Utama</strong>:<ul>
@@ -3662,9 +3690,9 @@
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Normalisasi String</p>
-<p>Properti seperti <code>sheok</code>, <code>telmez</code>, dan <code>who</code> akan otomatis diformat dan dinormalisasi (termasuk mengganti singkatan kode kitab) melalui <em>property observers</em> saat objek diinisialisasi atau diperbarui nilainya.</p>
+<p>Properti seperti <code>sheok</code>, <code>telmez</code>, dan <code>who</code> otomatis diformat dan dinormalisasi (termasuk mengganti singkatan kode kitab) melalui <em>property observers</em> saat objek diinisialisasi atau diperbarui nilainya.</p>
 </div>
-<h2 id="tabaqagroup"><code>TabaqaGroup</code></h2>
+<h2 id="tabaqagroup-struct"><code>TabaqaGroup</code> (Struct)</h2>
 <p>Mengelompokkan daftar perawi berdasarkan <em>Tabaqah</em> (tingkatan zaman/generasi).</p>
 <ul>
 <li><strong>Properti Utama</strong>:<ul>
@@ -3675,7 +3703,7 @@
 </ul>
 </li>
 </ul>
-<h2 id="tarjamahmen"><code>TarjamahMen</code></h2>
+<h2 id="tarjamahmen-struct"><code>TarjamahMen</code> (Struct)</h2>
 <p>Merepresentasikan entri pencarian biografi dari tabel <code>men_b</code> dan <code>men_u</code>.</p>
 <ul>
 <li><strong>Properti Utama</strong>:<ul>
@@ -3686,18 +3714,18 @@
 </ul>
 </li>
 </ul>
-<h2 id="tarjamahresult"><code>TarjamahResult</code></h2>
-<p>Struktur lengkap hasil pencarian biografi yang siap dirender di UI. Termasuk potongan teks asli (Nass).</p>
+<h2 id="tarjamahresult-struct"><code>TarjamahResult</code> (Struct)</h2>
+<p><em>Struct</em> lengkap hasil pencarian biografi yang siap dirender di UI. Termasuk potongan teks asli (Nass).</p>
 <ul>
 <li><strong>Properti Utama</strong>:<ul>
 <li><code>tarjamah</code>: Objek <code>TarjamahMen</code> asalnya.</li>
 <li><code>content</code>: Teks asli tanpa pemformatan kaya.</li>
-<li><code>attributedText</code>: Teks berformat <code>NSAttributedString</code> dengan penyorotan (highlight) kata kunci pencarian.</li>
+<li><code>attributedText</code>: Teks berformat <code>NSAttributedString</code> dengan penyorotan (<em>highlight</em>) kata kunci pencarian.</li>
 </ul>
 </li>
 </ul>
 <h2 id="enums">Enums</h2>
-<h3 id="rowidisplaymode"><code>RowiDisplayMode</code></h3>
+<h3 id="rowidisplaymode-enum"><code>RowiDisplayMode</code> (Enum)</h3>
 <p>Enum untuk mengatur apa yang sedang dilihat pengguna dari profil seorang perawi:</p>
 <ul>
 <li><code>.tilmidz</code> (التلاميذ): Menampilkan daftar murid.</li>
@@ -3724,6 +3752,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3754,10 +3788,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

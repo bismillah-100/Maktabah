@@ -1358,10 +1358,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-resolusi-node-yatim-resultsorphansswift" class="md-nav__link">
+  <a href="#3-resolusi-orphan-records-resultsorphansswift" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Resolusi Node Yatim (ResultsOrphans.swift)
+        3. Resolusi Orphan Records (ResultsOrphans.swift)
       
     </span>
   </a>
@@ -1425,10 +1425,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#penanganan-mode-offline-syncpendingstore" class="md-nav__link">
+  <a href="#penanganan-mode-luring-syncpendingstore" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Mode Offline (SyncPendingStore)
+        Penanganan Mode Luring (SyncPendingStore)
       
     </span>
   </a>
@@ -2927,6 +2927,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3723,10 +3751,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-resolusi-node-yatim-resultsorphansswift" class="md-nav__link">
+  <a href="#3-resolusi-orphan-records-resultsorphansswift" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Resolusi Node Yatim (ResultsOrphans.swift)
+        3. Resolusi Orphan Records (ResultsOrphans.swift)
       
     </span>
   </a>
@@ -3790,10 +3818,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#penanganan-mode-offline-syncpendingstore" class="md-nav__link">
+  <a href="#penanganan-mode-luring-syncpendingstore" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Mode Offline (SyncPendingStore)
+        Penanganan Mode Luring (SyncPendingStore)
       
     </span>
   </a>
@@ -3829,20 +3857,20 @@
 <p>Seluruh markah dan struktur foldernya disimpan di dalam berkas basis data SQLite khusus bernama <code>SearchResults.sqlite</code> yang berlokasi di direktori aplikasi:
 <code>~/Library/Application Support/Maktabah/annotations_FolderPath/SearchResults.sqlite</code></p>
 <h3 id="konfigurasi-koneksi-thread-safety">Konfigurasi Koneksi &amp; Thread Safety</h3>
-<p>Inisialisasi basis data diatur dengan bendera performa tinggi dan keamanan konkurensi bawaan:</p>
+<p>Inisialisasi basis data diatur dengan konfigurasi performa tinggi dan keamanan konkurensi:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">flags</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SQLITE_OPEN_READWRITE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">SQLITE_OPEN_CREATE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">SQLITE_OPEN_FULLMUTEX</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">let</span><span class="w"> </span><span class="nv">database</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="n">SQLiteDatabase</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">.</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">flags</span><span class="p">:</span><span class="w"> </span><span class="n">flags</span><span class="p">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">database</span><span class="p">.</span><span class="n">enableWALMode</span><span class="p">()</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">database</span><span class="p">.</span><span class="n">checkpoint</span><span class="p">()</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>SQLITE_OPEN_FULLMUTEX</code></strong>: Mengaktifkan mode <em>serialized threading</em> SQLite di mana beberapa utas dapat berbagi koneksi secara aman tanpa risiko korupsi internal.</li>
-<li><strong><code>NSRecursiveLock</code></strong>: Di lapisan <code>SQLiteDatabase</code>, seluruh eksekusi query (<code>fetch</code>, <code>execute</code>, <code>transaction</code>) dilindungi oleh lok rekursif untuk mencegah bentrokan instruksi <em>read-write</em>.</li>
-<li><strong>WAL Mode (Write-Ahead Logging)</strong>: Menjamin operasi pembacaan tidak memblokir penulisan, dan penulisan tidak memblokir pembacaan.</li>
+<li><strong><code>SQLITE_OPEN_FULLMUTEX</code></strong>: Mengaktifkan mode <em>serialized threading</em> SQLite di mana beberapa <em>thread</em> dapat berbagi koneksi secara aman tanpa risiko korupsi internal.</li>
+<li><strong><code>NSRecursiveLock</code></strong>: Di lapisan <code>SQLiteDatabase</code>, seluruh eksekusi kueri (<code>fetch</code>, <code>execute</code>, <code>transaction</code>) dilindungi oleh <em>recursive lock</em> (<code>NSRecursiveLock</code>) untuk mencegah bentrokan instruksi <em>read-write</em>.</li>
+<li><strong>WAL Mode (Write-Ahead Logging)</strong>: Menjamin operasi pembacaan tidak memblokir penulisan, dan operasi penulisan tidak memblokir pembacaan.</li>
 </ul>
 <hr />
 <h2 id="2-skema-tabel-sqlite-relasi-kaskade">2. Skema Tabel SQLite &amp; Relasi Kaskade</h2>
-<p>Basis data terdiri dari dua tabel relasional utama serta satu tabel pelacak sinkronisasi tertunda:</p>
+<p>Basis data terdiri dari dua tabel relasional utama serta satu tabel pelacak antrean sinkronisasi tertunda (<em>pending sync</em>):</p>
 <pre class="mermaid"><code>erDiagram
     FOLDERS ||--o{ FOLDERS : "parent_id"
     FOLDERS ||--o{ RESULTS : "folder_id (CASCADE)"
@@ -3872,7 +3900,7 @@
         INTEGER near_distance
     }</code></pre>
 <h3 id="tabel-folders">Tabel <code>folders</code></h3>
-<p>Menyimpan hierarki direktori markah.</p>
+<p>Menyimpan hierarki direktori markah buku (<em>bookmarks</em>).</p>
 <table>
 <thead>
 <tr>
@@ -3885,7 +3913,7 @@
 <tr>
 <td style="text-align: left;"><code>id</code></td>
 <td style="text-align: left;"><code>INTEGER PRIMARY KEY AUTOINCREMENT</code></td>
-<td style="text-align: left;">Kunci unik lokal baris folder.</td>
+<td style="text-align: left;">Kunci primer lokal baris folder.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>name</code></td>
@@ -3895,7 +3923,7 @@
 <tr>
 <td style="text-align: left;"><code>parent</code></td>
 <td style="text-align: left;"><code>INTEGER</code></td>
-<td style="text-align: left;">Kunci asing (<em>foreign key</em>) yang merujuk ke <code>folders(id)</code>. Nilai <code>NULL</code> menandakan folder berada di <em>root</em>.</td>
+<td style="text-align: left;">Kunci asing (<em>foreign key</em>) yang merujuk ke <code>folders(id)</code>. Nilai <code>NULL</code> menandakan folder berada di tingkat <em>root</em>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>ckRecordId</code></td>
@@ -3905,7 +3933,7 @@
 <tr>
 <td style="text-align: left;"><code>lastModified</code></td>
 <td style="text-align: left;"><code>INTEGER</code></td>
-<td style="text-align: left;">Stempel waktu modifikasi lokal terakhir (epoch seconds).</td>
+<td style="text-align: left;">Stempel waktu modifikasi lokal terakhir (UNIX <em>timestamp</em> detik).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>parentCkRecordId</code></td>
@@ -3928,7 +3956,7 @@
 <tr>
 <td style="text-align: left;"><code>id</code></td>
 <td style="text-align: left;"><code>INTEGER PRIMARY KEY AUTOINCREMENT</code></td>
-<td style="text-align: left;">Kunci unik lokal item.</td>
+<td style="text-align: left;">Kunci primer lokal item.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>folder_id</code></td>
@@ -3938,7 +3966,7 @@
 <tr>
 <td style="text-align: left;"><code>name</code></td>
 <td style="text-align: left;"><code>TEXT</code></td>
-<td style="text-align: left;">Label nama simpul bookmark.</td>
+<td style="text-align: left;">Label nama <em>node bookmark</em>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>query</code></td>
@@ -3948,7 +3976,7 @@
 <tr>
 <td style="text-align: left;"><code>archives</code></td>
 <td style="text-align: left;"><code>INTEGER</code></td>
-<td style="text-align: left;">Nomor arsip database asal (misal <code>1</code> sampai <code>20</code>).</td>
+<td style="text-align: left;">Nomor berkas arsip basis data asal (misal <code>1</code> sampai <code>20</code>).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>bkId</code></td>
@@ -3983,7 +4011,7 @@
 <tr>
 <td style="text-align: left;"><code>near_distance</code></td>
 <td style="text-align: left;"><code>INTEGER</code></td>
-<td style="text-align: left;">Toleransi jarak pencarian kata dekat (<em>proximity</em>).</td>
+<td style="text-align: left;">Toleransi jarak pencarian kata dekat (<em>proximity search</em>).</td>
 </tr>
 </tbody>
 </table>
@@ -4001,9 +4029,9 @@
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_results_ck_record_id</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="p">(</span><span class="n">ckRecordId</span><span class="p">);</span>
 </span></code></pre></div>
 <hr />
-<h2 id="3-resolusi-node-yatim-resultsorphansswift">3. Resolusi Node Yatim (<code>ResultsOrphans.swift</code>)</h2>
-<p>Saat sinkronisasi CloudKit berlangsung, rekaman anak sering kali tiba lebih awal daripada rekaman induknya (<em>out-of-order delivery</em>). Kondisi ini menyebabkan nilai <code>parent</code> atau <code>folder_id</code> lokal bernilai <code>NULL</code> sementara referensi <code>parentCkRecordId</code> sebenarnya ada.</p>
-<p>Sistem mengatasi kondisi ini melalui dua metode penyembuhan otomatis:</p>
+<h2 id="3-resolusi-orphan-records-resultsorphansswift">3. Resolusi Orphan Records (<code>ResultsOrphans.swift</code>)</h2>
+<p>Saat sinkronisasi CloudKit berlangsung, <em>child record</em> sering kali tiba lebih awal daripada <em>parent record</em>-nya (<em>out-of-order delivery</em>). Kondisi ini menyebabkan nilai <code>parent</code> atau <code>folder_id</code> lokal bernilai <code>NULL</code> sementara referensi <code>parentCkRecordId</code> sebenarnya ada.</p>
+<p>Sistem mengatasi kondisi ini melalui dua metode penyelarasan otomatis:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">resolveOrphanFolders</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="c1">// Mencocokkan folder yang memiliki parentCkRecordId dengan folder yang baru dibuat</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"""</span>
@@ -4030,47 +4058,78 @@
 </span></code></pre></div>
 <hr />
 <h2 id="4-alur-sinkronisasi-cloudkit-resultscloudkitswift">4. Alur Sinkronisasi CloudKit (<code>ResultsCloudKit.swift</code>)</h2>
-<p>Sinkronisasi markah memanfaatkan zona kustom (<em>Custom Zone</em>) di database pribadi (<em>Private Database</em>) CloudKit pengguna.</p>
+<p>Sinkronisasi markah memanfaatkan zona kustom (<em>Custom Zone</em>) di <em>Private Database</em> CloudKit pengguna.</p>
 <h3 id="alur-sinkronisasi-keluar-upload-delete">Alur Sinkronisasi Keluar (Upload &amp; Delete)</h3>
-<pre class="mermaid"><code>graph TD
-    UI[Aksi Pengguna: Buat / Edit / Pindah / Hapus] --&gt; VM[ResultsViewModel]
-    VM --&gt;|Mutasi Hirarki &amp; Diffing| Handler[ResultsHandler]
-    Handler --&gt;|Catat Antrean| Pending[SyncPendingStore&lt;br/&gt;operation: upload / delete]
+<pre class="mermaid"><code>flowchart TD
+    ACT(["Aksi Pengguna: Buat / Edit / Pindah / Hapus"]) --&gt; VM["ResultsViewModel"]
+    VM --&gt;|"Mutasi Hirarki &amp; Diffing"| Handler["ResultsHandler"]
 
-    Handler --&gt;|Simpan Lokal| SQLite[(SearchResults.sqlite&lt;br/&gt;WAL Mode)]
-    Handler --&gt;|Push Perubahan| CK[CloudKitSyncManager.shared]
+    Handler ~~~ STORES
 
-    CK --&gt;|Kirim Batch CKRecord| CloudKit((CloudKit Private Zone))
-    CloudKit --&gt;|Sukses| ClearPending[Hapus ID dari SyncPendingStore]</code></pre>
+    subgraph STORES ["Persistensi Lokal"]
+        Pending[("SyncPendingStore (Queue)")]
+        SQLite[("SearchResults.sqlite (WAL Mode)")]
+    end
+
+    Handler --&gt;|"Catat Antrean"| Pending
+    Handler --&gt;|"Simpan Lokal"| SQLite
+
+    Handler --&gt;|"Push Perubahan"| CK["CloudKitSyncManager.shared"]
+    CloudKit[("CloudKit Private Zone")]
+
+    CK --&gt;|"Kirim Batch CKRecord"| CloudKit
+    CloudKit --&gt;|"Sukses"| ClearPending(["Hapus ID dari SyncPendingStore"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class ACT,ClearPending event;
+    class VM vm;
+    class Handler,CK store;
+    class Pending,SQLite,CloudKit db;</code></pre>
 <h3 id="format-id-rekaman-deterministik">Format ID Rekaman Deterministik</h3>
-<p>Untuk mencegah duplikasi antarperangkat saat dua perangkat membuat folder dengan nama yang sama di induk yang sama secara offline, Maktabah menggunakan pola penamaan deterministik:</p>
+<p>Untuk mencegah duplikasi antarperangkat saat dua perangkat membuat folder dengan nama yang sama di induk yang sama secara luring (<em>offline</em>), Maktabah menggunakan pola penamaan deterministik:</p>
 <ul>
 <li><strong>Folder Record ID</strong>: <code>"folder_\(name)_\(parentIdentifier)"</code></li>
 <li><strong>Result Record ID</strong>: <code>"result_\(folderIdentifier)_\(name)_\(bkId)_\(archive)"</code></li>
 </ul>
 <h3 id="alur-sinkronisasi-masuk-resolusi-konflik-lww-topological-sort">Alur Sinkronisasi Masuk &amp; Resolusi Konflik (LWW + Topological Sort)</h3>
-<p>Saat <code>CloudKitSyncManager</code> menerima rekaman remote via <code>fetchChanges</code>, rekaman diproses oleh <code>ResultsHandler</code>:</p>
-<pre class="mermaid"><code>graph TD
-    Remote[Terima Rekaman dari CloudKit] --&gt; Topo[Topological Sort Folders&lt;br/&gt;Parent sebelum Child]
-    Topo --&gt; CheckExisting{Apakah Rekaman Ada di SQLite?}
+<p>Saat <code>CloudKitSyncManager</code> menerima rekaman dari server via <code>fetchChanges</code>, rekaman diproses oleh <code>ResultsHandler</code>:</p>
+<pre class="mermaid"><code>flowchart TD
+    Remote(["Terima Rekaman dari CloudKit"]) --&gt; Topo["Topological Sort Folders (Parent Sebelum Child)"]
+    Topo --&gt; CheckExisting{"Apakah Rekaman Ada di SQLite?"}
 
-    CheckExisting -- Ya --&gt; CompareTime{remoteLastModified &gt;= localLastModified?}
-    CompareTime -- Ya --&gt; UpdateLocal[Perbarui Data Lokal dengan Data Remote]
-    CompareTime -- Tidak --&gt; DropRemote[Pertahankan Data Lokal]
+    CheckExisting --&gt;|"Ya"| CompareTime{"remoteLastModified &gt;= localLastModified?"}
+    CompareTime --&gt;|"Ya"| UpdateLocal["Perbarui Data Lokal dengan Data Remote"]
+    CompareTime --&gt;|"Tidak"| DropRemote["Pertahankan Data Lokal"]
 
-    CheckExisting -- Tidak --&gt; CheckConflict{Ada Baris Lain dengan Nama &amp; Induk Sama?}
-    CheckConflict -- Ya --&gt; ResolveConflict[Timpa / Satukan Baris Konflik Berdasarkan LWW]
-    CheckConflict -- Tidak --&gt; InsertNew[Sisipkan Baris Baru ke SQLite]
+    CheckExisting --&gt;|"Tidak"| CheckConflict{"Ada Baris Lain dengan Nama Sama?"}
+    CheckConflict --&gt;|"Ya"| ResolveConflict["Satukan Baris Berdasarkan LWW"]
+    CheckConflict --&gt;|"Tidak"| InsertNew["Sisipkan Baris Baru ke SQLite"]
 
-    UpdateLocal --&gt; OrphanFix[Orphan Resolution Engine&lt;br/&gt;Sambungkan Kembali Parent &amp; Folder ID]
+    UpdateLocal --&gt; OrphanFix["Orphan Resolution Engine"]
     ResolveConflict --&gt; OrphanFix
     InsertNew --&gt; OrphanFix
 
-    OrphanFix --&gt; Persist[Simpan ke SearchResults.sqlite]
-    Persist --&gt; Notify[Picu Diffing &amp; Reload UI via ResultsViewModel]</code></pre>
-<h3 id="pengurutan-topologis-topological-sorting">Pengurutan Topologis (Topological Sorting)</h3>
-<p>Sebelum menyimpan daftar folder yang diterima dari CloudKit ke database SQLite, sistem menjalankan pengurutan topologis (<code>sortFoldersTopologically</code>) untuk memastikan folder tingkat atas disisipkan terlebih dahulu sebelum subfoldernya, menjaga validitas integritas referensi relasional.</p>
-<h3 id="penanganan-mode-offline-syncpendingstore">Penanganan Mode Offline (<code>SyncPendingStore</code>)</h3>
+    OrphanFix --&gt; Persist[("Simpan ke SearchResults.sqlite")]
+    Persist --&gt; Notify(["Picu Diffing &amp; Reload UI"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class Remote,Notify event;
+    class Topo,UpdateLocal,DropRemote,ResolveConflict,InsertNew,OrphanFix store;
+    class CheckExisting,CompareTime,CheckConflict ui;
+    class Persist db;</code></pre>
+<h3 id="pengurutan-topologis-topological-sorting">Pengurutan Topologis (<em>Topological Sorting</em>)</h3>
+<p>Sebelum menyimpan daftar folder yang diterima dari CloudKit ke basis data SQLite, sistem menjalankan pengurutan topologis (<code>sortFoldersTopologically</code>) untuk memastikan <em>parent folder</em> disisipkan terlebih dahulu sebelum <em>child folder</em>-nya, menjaga validitas integritas referensi relasional.</p>
+<h3 id="penanganan-mode-luring-syncpendingstore">Penanganan Mode Luring (<code>SyncPendingStore</code>)</h3>
 <p>Setiap mutasi lokal (Insert, Update, Delete) membungkus operasi penyimpanan dengan pendaftaran ke <code>SyncPendingStore</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">try</span><span class="w"> </span><span class="n">transaction</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="n">exec</span><span class="p">(</span><span class="n">insertResultSQL</span><span class="p">,</span><span class="w"> </span><span class="n">parameters</span><span class="p">:</span><span class="w"> </span><span class="n">params</span><span class="p">)</span>
@@ -4078,7 +4137,7 @@
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="kc">self</span><span class="p">.</span><span class="n">addPendingSync</span><span class="p">(</span><span class="n">ckRecordId</span><span class="p">:</span><span class="w"> </span><span class="n">cId</span><span class="p">,</span><span class="w"> </span><span class="n">operation</span><span class="p">:</span><span class="w"> </span><span class="s">"upload"</span><span class="p">)</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Bila perangkat sedang offline, data pending tersimpan aman di tabel SQLite lokal dan akan dikuras (<em>flushed</em>) secara otomatis oleh <code>CloudKitSyncManager</code> sesaat setelah konektivitas internet pulih.</p>
+<p>Bila perangkat sedang luring, data tertunda tersimpan aman di tabel SQLite lokal dan akan di-<em>flush</em> secara otomatis oleh <code>CloudKitSyncManager</code> sesaat setelah konektivitas internet pulih.</p>
 
 
 
@@ -4098,6 +4157,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -4128,10 +4193,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

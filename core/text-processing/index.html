@@ -566,10 +566,43 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#konversi-range-relatif-delta-events" class="md-nav__link">
+  <a href="#konversi-rentang-relatif-delta-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Konversi Range Relatif (Delta Events)
+        Konversi Rentang Relatif (Delta Events)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-penggantian-frasa-doa-ligatur-honorificreplacementevent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Penggantian Frasa Doa / Ligatur (HonorificReplacementEvent)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-kalkulasi-koordinat-dua-arah-arabicrenderresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Kalkulasi Koordinat Dua Arah (ArabicRenderResult)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pembersihan-tag-html-kode-hadis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pembersihan Tag HTML &amp; Kode Hadis
       
     </span>
   </a>
@@ -582,10 +615,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-pencarian-snippets-stringsearchswift" class="md-nav__link">
+  <a href="#3-pencarian-cuplikan-teks-stringsearchswift" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Pencarian &amp; Snippets (String+Search.swift)
+        3. Pencarian &amp; Cuplikan Teks (String+Search.swift)
       
     </span>
   </a>
@@ -2827,6 +2860,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../features/reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../features/reader/textview/" class="md-nav__link">
         
   
@@ -3568,10 +3629,43 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#konversi-range-relatif-delta-events" class="md-nav__link">
+  <a href="#konversi-rentang-relatif-delta-events" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Konversi Range Relatif (Delta Events)
+        Konversi Rentang Relatif (Delta Events)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1-penggantian-frasa-doa-ligatur-honorificreplacementevent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Penggantian Frasa Doa / Ligatur (HonorificReplacementEvent)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-kalkulasi-koordinat-dua-arah-arabicrenderresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Kalkulasi Koordinat Dua Arah (ArabicRenderResult)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-pembersihan-tag-html-kode-hadis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pembersihan Tag HTML &amp; Kode Hadis
       
     </span>
   </a>
@@ -3584,10 +3678,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-pencarian-snippets-stringsearchswift" class="md-nav__link">
+  <a href="#3-pencarian-cuplikan-teks-stringsearchswift" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Pencarian &amp; Snippets (String+Search.swift)
+        3. Pencarian &amp; Cuplikan Teks (String+Search.swift)
       
     </span>
   </a>
@@ -3623,57 +3717,104 @@
 
 
 <h1 id="text-processing-string-extensions">Text Processing &amp; String Extensions</h1>
-<p>Sub-sistem pemrosesan teks di Maktabah berfokus pada normalisasi teks Arab, pembersihan <em>harakat</em> (diakritik), kalkulasi pemetaan <em>range</em> (<em>range mapping</em>), serta rendering teks secara tipografis. Logika ini sebagian besar terkapsulasi di dalam <code>Source/Core/TextProcessing/</code> melalui <em>extensions</em> <code>String</code> bawaan.</p>
+<p>Subsistem pemrosesan teks di Maktabah berfokus pada normalisasi teks Arab, pembersihan harakat (<em>tashkeel</em>), kalkulasi pemetaan rentang (<em>range mapping</em>), serta rendering teks secara tipografis. Logika ini terkapsulasi di dalam <code>Source/Core/TextProcessing/</code> melalui <em>extensions</em> <code>String</code> bawaan.</p>
 <hr />
 <h2 id="1-arsitektur-rendering-state-teks">1. Arsitektur Rendering &amp; State Teks</h2>
-<p>Maktabah memisahkan antara state (pengaturan font, warna) dan mesin <em>renderer</em> (pemroses <em>NSAttributedString</em>).</p>
-<pre class="mermaid"><code>graph TD
+<p>Maktabah memisahkan antara status pengaturan (<em>font</em>, ukuran, tema warna) dan mesin perender (<em>NSAttributedString builder</em>).</p>
+<pre class="mermaid"><code>flowchart TD
     UI["UI Layer (Reader / Search)"]
+    TVS["TextViewState (Singleton: Ukuran, Tema, Harakat)"]
+    ATR["ArabicTextRenderer (NSAttributedString Builder)"]
 
-    subgraph Text Rendering Engine
-        TVS["TextViewState&lt;br/&gt;(Singleton: Ukuran, Warna, Status Harakat)"]
-        ATR["ArabicTextRenderer&lt;br/&gt;(NSAttributedString Builder)"]
-    end
+    UI --&gt;|"Baca Pengaturan"| TVS
+    UI --&gt;|"Kirim Teks Mentah"| ATR
+    TVS -.-&gt;|"Injeksi Atribut Tipografi"| ATR
+    ATR --&gt;|"Return Rendered Text"| UI
 
-    UI --&gt;|Baca Pengaturan| TVS
-    UI --&gt;|Render Teks| ATR
-    TVS -.-&gt;|Injeksi Atribut| ATR
-    ATR --&gt;|Return Rendered Text| UI</code></pre>
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class UI ui;
+    class TVS,ATR store;</code></pre>
 <ul>
-<li><strong><code>TextViewState</code></strong>: <em>Singleton</em> yang menyimpan konfigurasi <em>font</em> Arab (KFGQPC Uthmanic, dll), ukuran <em>font</em>, <em>theme</em> warna, serta sakelar (<em>toggle</em>) visibilitas harakat.</li>
-<li><strong><code>ArabicTextRenderer</code></strong>: Bertugas menghasilkan <code>NSAttributedString</code> dengan mengonversi teks mentah SQLite berdasarkan atribut dari <code>TextViewState</code>, termasuk perataan teks kanan-ke-kiri (RTL) secara native.</li>
+<li><strong><code>TextViewState</code></strong>: <em>Singleton</em> yang menyimpan konfigurasi <em>font</em> Arab (KFGQPC Uthmanic, dll.), ukuran <em>font</em>, tema warna, serta sakelar (<em>toggle</em>) visibilitas harakat.</li>
+<li><strong><code>ArabicTextRenderer</code></strong>: Bertugas menghasilkan <code>NSAttributedString</code> dengan mengonversi teks mentah SQLite berdasarkan atribut dari <code>TextViewState</code>, termasuk perataan teks kanan-ke-kiri (RTL) secara <em>native</em>.</li>
 </ul>
 <hr />
 <h2 id="2-pembersihan-pemetaan-teks-stringtextcleaningswift">2. Pembersihan &amp; Pemetaan Teks (<code>String+TextCleaning.swift</code>)</h2>
-<p>Buku-buku dari Shamela seringkali mengandung format bawaan yang kotor (seperti <em>tag</em> <code>&lt;span class="footnote"&gt;</code>, kode singkatan, atau tag HTML khusus). Pembersihan teks tidak boleh merusak indeks letak anotasi yang sudah dibuat oleh pengguna.</p>
-<h3 id="konversi-range-relatif-delta-events">Konversi Range Relatif (Delta Events)</h3>
-<p>Ketika sebuah teks dibersihkan dari harakat atau elemen HTML, panjang <em>string</em> akan berubah. Maktabah menggunakan pola <strong>TextCleanDeltaEvent</strong> untuk melacak setiap karakter yang dihapus sehingga <em>range</em> anotasi tetap presisi.</p>
+<p>Data kitab dari Shamela sering kali memuat pemformatan bawaan (seperti tag <code>&lt;span class="footnote"&gt;</code>, kode singkatan, atau tag HTML khusus). Pembersihan teks tidak boleh merusak indeks letak anotasi yang telah dibuat oleh pengguna.</p>
+<h3 id="konversi-rentang-relatif-delta-events">Konversi Rentang Relatif (<em>Delta Events</em>)</h3>
+<p>Ketika teks dibersihkan dari harakat atau elemen HTML, panjang <em>string</em> akan berubah. Maktabah menggunakan pola <strong>TextCleanDeltaEvent</strong> dan <strong>HonorificReplacementEvent</strong> untuk melacak setiap karakter yang dihapus atau diganti sehingga kalkulasi rentang (<em>range</em>) anotasi tetap presisi.</p>
 <pre class="mermaid"><code>graph TD
-    A[Teks Asli dengan Harakat/Tag] --&gt;|Pembersihan &amp; Parsing| B(CleanedTextParseOutput)
-    B --&gt;|Teks Bersih| C[UI Reader]
-    B --&gt;|Delta Events Array| D[Range Mapper]
-    D -.-&gt;|Kalkulasi Ulang| E[Posisi Anotasi Presisi]</code></pre>
-<p>Fungsi utama:</p>
+    SRC["Teks Sumber SQLite (Dengan Harakat, Span, Teks Doa)"] --&gt;|"Pembersihan &amp; Penggantian Ligatur"| ARR["ArabicRenderResult"]
+
+    subgraph CoordinateMapping ["Bidirectional Range Mapping"]
+        ARR --&gt;|"HonorificReplacementEvent&lt;br/&gt;(oldRange, newLength)"| CALC["ArabicRangeCalculator / Remapper"]
+        CALC --&gt;|"sourceOffset &amp;larr;&amp;rarr; displayedOffset"| AFF["HonorificBoundaryAffinity&lt;br/&gt;(.leading / .trailing)"]
+    end
+
+    ARR --&gt;|"Rendered AttributedString"| READER["UI Reader (IbarotTextView)"]
+    READER --&gt;|"User Drag Selection (Display Coords)"| CALC
+    CALC --&gt;|"Translate to Raw Coords"| DB[(SQLite Annotation Table)]
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class READER ui;
+    class ARR,CALC store;
+    class SRC,DB db;
+    class AFF event;</code></pre>
+<h3 id="1-penggantian-frasa-doa-ligatur-honorificreplacementevent">1. Penggantian Frasa Doa / Ligatur (<code>HonorificReplacementEvent</code>)</h3>
+<p>Dalam teks turats Islam, frasa doa umum seperti:
+- <code>"صلى الله عليه وسلم"</code>
+- <code>"رضي الله عنه"</code>
+- <code>"رحمه الله"</code>
+- <code>"عز وجل"</code></p>
+<p>Sering kali dirender menjadi satu glif kaligrafi (<em>calligraphic ligatures</em>) pada <em>font</em> khusus seperti KFGQPC Uthmanic Script. Penggantian frasa sepanjang 18 karakter menjadi 1 karakter glif menyebabkan pergeseran koordinat (<em>length delta</em>) yang signifikan:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">HonorificReplacementEvent</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">oldRange</span><span class="p">:</span><span class="w"> </span><span class="n">NSRange</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">newLength</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">HonorificBoundaryAffinity</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">leading</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">trailing</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="2-kalkulasi-koordinat-dua-arah-arabicrenderresult">2. Kalkulasi Koordinat Dua Arah (<code>ArabicRenderResult</code>)</h3>
+<p>Struktur <code>ArabicRenderResult</code> menyediakan fungsi translasi dua arah antara sistem koordinat sumber (<em>source offset</em> di basis data) dan koordinat tampilan (<em>displayed offset</em> di TextKit):</p>
 <ul>
-<li><code>cleanedTextWithRanges(mapping:)</code>: Membuang harakat dan menggeser rentang (<code>NSRange</code>) anotasi secara matematis. Ini sangat krusial agar stabilo (<em>highlight</em>) selalu menyorot kata yang persis sama, baik saat harakat ditampilkan maupun disembunyikan.</li>
-<li><code>stripSpanTagsWithRanges()</code>: Menghapus tag <code>span</code> HTML dari <em>database</em> lawas dan mengekstraksi posisinya (misal untuk pewarnaan judul atau catatan kaki).</li>
-<li><code>replaceKutubCodes()</code>: Menerjemahkan sandi angka perawi hadis (<em>kutub codes</em>) menjadi singkatan teks (misal: "خ" untuk Bukhari).</li>
+<li><strong><code>displayedOffset(forSourceOffset:affinity:)</code></strong>: Menghitung pergeseran kumulatif $\Delta = \sum (\text{newLength} - \text{oldRange.length})$ untuk memposisikan sorotan teks (<em>highlight</em>) yang sedang ditampilkan di layar.</li>
+<li><strong><code>sourceOffset(forDisplayedOffset:affinity:)</code></strong>: Menerjemahkan kembali seleksi kursor pengguna pada teks bertampilan ligatur menjadi rentang absolut pada teks mentah di basis data SQLite.</li>
+<li><strong><code>HonorificBoundaryAffinity</code></strong>: Menentukan apakah seleksi kursor yang jatuh tepat di batas frasa ligatur condong ke awal (<code>.leading</code>) atau ke akhir (<code>.trailing</code>) teks asli, mencegah terpotongnya sorotan satu kata.</li>
+</ul>
+<h3 id="3-pembersihan-tag-html-kode-hadis">3. Pembersihan Tag HTML &amp; Kode Hadis</h3>
+<ul>
+<li><code>cleanedTextWithRanges(mapping:)</code>: Menghapus harakat dan menggeser rentang (<code>NSRange</code>) anotasi secara matematis agar sorotan teks (<em>highlight</em>) selalu menandai kata yang sama, baik saat harakat ditampilkan maupun disembunyikan.</li>
+<li><code>stripSpanTagsWithRanges()</code>: Menghapus tag <code>span</code> HTML dari basis data warisan (<em>legacy</em>) dan mengekstrak posisinya (misalnya untuk pewarnaan judul atau catatan kaki).</li>
+<li><code>replaceKutubCodes()</code>: Menerjemahkan sandi angka perawi hadis (<em>kutub codes</em>) menjadi singkatan teks (misalnya: "خ" untuk Bukhari).</li>
 </ul>
 <hr />
-<h2 id="3-pencarian-snippets-stringsearchswift">3. Pencarian &amp; Snippets (<code>String+Search.swift</code>)</h2>
-<p>Mesin pencari membutuhkan cara cerdas untuk menyorot kata kunci dalam bahasa Arab di tengah teks panjang.</p>
+<h2 id="3-pencarian-cuplikan-teks-stringsearchswift">3. Pencarian &amp; Cuplikan Teks (<code>String+Search.swift</code>)</h2>
+<p>Mesin pencari memerlukan normalisasi khusus untuk menyorot kata kunci dalam bahasa Arab di tengah teks panjang.</p>
 <ul>
-<li><strong>Normalisasi Skalar (<code>NormalizedArabicScalarMap</code>)</strong>: Memetakan huruf Arab yang bentuk dasarnya sama tapi variasi Unicode-nya berbeda (seperti <em>alif</em>, <em>alif maksura</em>, <em>ya</em>, <em>hamza</em>) agar <em>matching</em> pencarian lebih tahan banting terhadap kesalahan ketik.</li>
-<li><strong><code>snippetNear(keywords:nearDistance:)</code></strong>: Algoritma ekstraksi cuplikan teks (<em>snippet</em>) khusus mode "Search Near" (Pencarian Jarak Dekat). Algoritma menggunakan fungsi <em>sliding window</em> dan menghitung batas-batas klaster kata yang memenuhi toleransi kedekatan (<code>nearDistance</code>) sebelum memotong teks konteks (<code>contextLength</code>).</li>
-<li><strong><code>highlightedAttributedText()</code></strong>: Menginjeksikan warna kuning/merah muda ke atas <code>NSAttributedString</code> untuk setiap kemunculan <em>keywords</em>.</li>
+<li><strong>Normalisasi Skalar (<code>NormalizedArabicScalarMap</code>)</strong>: Memetakan huruf Arab yang bentuk dasarnya sama tetapi kode Unicode-nya berbeda (seperti <em>alif</em>, <em>alif maksura</em>, <em>ya</em>, <em>hamza</em>) agar pencocokan kueri tahan terhadap variasi penulisan.</li>
+<li><strong><code>snippetNear(keywords:nearDistance:)</code></strong>: Algoritma ekstraksi cuplikan teks (<em>snippet</em>) khusus mode <em>Search Near</em> (pencarian kedekatan kata). Menggunakan metode <em>sliding window</em> untuk menghitung batas-batas klaster kata yang memenuhi toleransi kedekatan (<code>nearDistance</code>) sebelum memotong teks konteks (<code>contextLength</code>).</li>
+<li><strong><code>highlightedAttributedText()</code></strong>: Menyuntikkan atribut warna latar belakang ke dalam <code>NSAttributedString</code> untuk setiap kemunculan kata kunci (<em>keywords</em>).</li>
 </ul>
 <hr />
 <h2 id="4-analisis-morfologi-arab-stringarabicswift">4. Analisis Morfologi Arab (<code>String+Arabic.swift</code>)</h2>
-<p>Berisi fungsionalitas murni manipulasi <em>string</em> Arab:</p>
+<p>Berisi fungsionalitas manipulasi <em>string</em> teks Arab:</p>
 <ul>
-<li><code>normalizeArabic(_ removeDiacritics:)</code>: Standardisasi konversi <em>unicode</em> karakter Arab.</li>
+<li><code>normalizeArabic(_ removeDiacritics:)</code>: Standardisasi konversi Unicode karakter Arab.</li>
 <li><code>convertToArabicDigits()</code>: Mengonversi digit desimal ("123") ke digit Arab ("١٢٣").</li>
-<li><strong>Stemmer Light10 (<code>stemArabicLight10</code>)</strong>: Implementasi parsial algoritma morfologi (stemming) <em>Light10</em> yang dioptimalkan untuk membuang awalan (<em>prefixes</em>) seperti "ال", "وال", "بال", dan akhiran (<em>suffixes</em>) dari kata Arab. Berguna untuk meningkatkan relevansi FTS5 dan normalisasi kueri (<em>search query</em>).</li>
+<li><strong>Stemmer Light10 (<code>stemArabicLight10</code>)</strong>: Implementasi algoritma morfologi (<em>stemming</em>) <em>Light10</em> yang dioptimalkan untuk membuang awalan (<em>prefixes</em>) seperti "ال", "وال", "بال", dan akhiran (<em>suffixes</em>) dari kata Arab, meningkatkan relevansi pencarian FTS5 dan normalisasi kueri.</li>
 </ul>
 
 
@@ -3694,6 +3835,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3724,10 +3871,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

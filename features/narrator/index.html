@@ -2128,6 +2128,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#daftar-dokumen-teknis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daftar Dokumen Teknis
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2774,6 +2785,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3539,6 +3578,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#daftar-dokumen-teknis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daftar Dokumen Teknis
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3557,36 +3607,54 @@
 
 
 <h1 id="narrator-rijal">Narrator (Rijāl)</h1>
-<p>Fitur <strong>Narrator</strong> (atau Rijālul Hadith) dalam aplikasi Maktabah digunakan untuk menelusuri, mencari, dan membaca biografi para perawi hadis. Fitur ini memungkinkan pengguna untuk melihat detail perawi berdasarkan tingkatan (Tabaqah), serta mencari biografi (Tarjamah) secara global dari kitab-kitab biografi yang didukung.</p>
+<p>Fitur <strong>Narrator</strong> (<em>Rijālul Hadīts</em>) dalam aplikasi Maktabah digunakan untuk menelusuri, mencari, dan membaca biografi para perawi hadis. Fitur ini memungkinkan pengguna untuk melihat detail perawi berdasarkan tingkatan (<em>Tabaqah</em>), serta mencari biografi (<em>Tarjamah</em>) secara global dari kitab-kitab biografi yang didukung.</p>
 <h2 id="arsitektur">Arsitektur</h2>
-<p>Fitur Narrator dibangun menggunakan arsitektur MVVM (Model-View-ViewModel) yang memisahkan logika antarmuka pengguna dari logika pengelolaan data SQLite (baik untuk data referensi perawi maupun teks biografi di dalam <em>archives</em>).</p>
-<pre class="mermaid"><code>graph TD
-    %% Flow
-    User --&gt; UI
-    UI --&gt; VM
-    VM --&gt; Core
-
-    subgraph UI [UI Layer]
-        Mac[macOS: RowiSidebarVC, RowiResultsVC]
-        IOS[iOS: iOSRowiSidebarView]
+<p>Fitur Narrator dibangun menggunakan arsitektur MVVM (<em>Model-View-ViewModel</em>) yang memisahkan logika antarmuka pengguna dari logika pengelolaan data SQLite (baik untuk data referensi perawi maupun teks biografi di dalam arsip basis data).</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph UI ["Lapisan Presentasi UI"]
+        Mac["macOS (RowiSidebarVC + RowiResultsVC)"]
+        IOS["iOS (iOSRowiSidebarView + NarratorDetailView)"]
     end
 
-    subgraph VM [ViewModel Layer]
-        NVM[NarratorViewModel]
-    end
-
-    subgraph Core [Core &amp; Database Layer]
-        RDM[RowiDataManager]
-        TGM[TarjamahGlobalManager]
+    subgraph VM ["Lapisan ViewModel"]
+        NVM["NarratorViewModel (@Observable)"]
     end
 
     Mac --&gt; NVM
     IOS --&gt; NVM
+
+    subgraph Core ["Pengelola Data (Core)"]
+        RDM["RowiDataManager"]
+        TGM["TarjamahGlobalManager"]
+    end
+
     NVM --&gt; RDM
     NVM --&gt; TGM
-    RDM --&gt; DB1[(special.sqlite: rowa)]
-    TGM --&gt; DB2[(special.sqlite: men_u, men_b)]
-    TGM --&gt; DB3[(Archives: 1-20.sqlite)]</code></pre>
+
+    RDM ~~~ DB_FILES
+    TGM ~~~ DB_FILES
+
+    subgraph DB_FILES ["Basis Data SQLite"]
+        SPEC[("special.sqlite (Tabel rowa)")]
+        ARCH[("Archives 1-20.sqlite (Teks Biografi)")]
+        FTS[("special_fts.sqlite")]
+    end
+
+    RDM --&gt; SPEC
+    TGM --&gt; SPEC
+    TGM --&gt; ARCH
+    TGM --&gt; FTS
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class Mac,IOS ui;
+    class NVM vm;
+    class RDM,TGM store;
+    class SPEC,ARCH,FTS db;</code></pre>
 <h3 id="komponen-utama">Komponen Utama</h3>
 <ol>
 <li><strong>Core &amp; Database</strong>: <ul>
@@ -3595,7 +3663,7 @@
 </ul>
 </li>
 <li><strong>ViewModel</strong>: <ul>
-<li><code>NarratorViewModel</code> bertanggung jawab menjaga status pencarian, status perawi yang dipilih, mode tampilan, dan sinkronisasi data antar utas.</li>
+<li><code>NarratorViewModel</code> bertanggung jawab menjaga status pencarian, status perawi yang dipilih, mode tampilan, dan sinkronisasi data antar-thread.</li>
 </ul>
 </li>
 <li><strong>UI (macOS / iOS)</strong>: <ul>
@@ -3603,6 +3671,15 @@
 </ul>
 </li>
 </ol>
+<h2 id="daftar-dokumen-teknis">Daftar Dokumen Teknis</h2>
+<ul>
+<li><a href="database/">Database Layer</a>: Akses ke <code>special.sqlite</code>, pembentukan <code>special_fts.sqlite</code>, dan <em>connection pool</em>.</li>
+<li><a href="models/">Data Models</a>: Model data perawi (<code>Rowi</code>), <em>tabaqah</em> (<code>TabaqaGroup</code>), dan biografi (<code>TarjamahResult</code>).</li>
+<li><a href="viewmodel/">State Management (ViewModel)</a>: Manajemen <em>state</em> reaktif dan <em>streaming pipeline</em> FTS perawi.</li>
+<li><a href="ios/">iOS Implementation</a>: Antarmuka <em>hierarchical collection</em> dan integrasi profil SwiftUI.</li>
+<li><a href="macos/">macOS Implementation</a>: Navigasi <em>sidebar</em> AppKit dan integrasi tampilan hasil biografi.</li>
+<li><a href="protocols/">Protocols &amp; Contracts</a>: Kontrak delegasi antar-<em>controller</em>.</li>
+</ul>
 
 
 
@@ -3622,6 +3699,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3652,10 +3735,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

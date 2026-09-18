@@ -935,10 +935,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#membedah-custom-tablecellview" class="md-nav__link">
+  <a href="#custom-tablecellview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Membedah Custom TableCellView
+        Custom TableCellView
       
     </span>
   </a>
@@ -946,10 +946,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#membedah-timelineoutlineviews" class="md-nav__link">
+  <a href="#timelineoutlineviews" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Membedah TimelineOutlineViews
+        TimelineOutlineViews
       
     </span>
   </a>
@@ -1012,10 +1012,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#manajemen-filter-tag-tag-merge" class="md-nav__link">
+  <a href="#manajemen-filter-tag-penggabungan-tag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Manajemen Filter Tag &amp; Tag Merge
+        Manajemen Filter Tag &amp; Penggabungan Tag
       
     </span>
   </a>
@@ -2887,6 +2887,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reader/textview/" class="md-nav__link">
         
   
@@ -3627,10 +3655,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#membedah-custom-tablecellview" class="md-nav__link">
+  <a href="#custom-tablecellview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Membedah Custom TableCellView
+        Custom TableCellView
       
     </span>
   </a>
@@ -3638,10 +3666,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#membedah-timelineoutlineviews" class="md-nav__link">
+  <a href="#timelineoutlineviews" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Membedah TimelineOutlineViews
+        TimelineOutlineViews
       
     </span>
   </a>
@@ -3704,10 +3732,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#manajemen-filter-tag-tag-merge" class="md-nav__link">
+  <a href="#manajemen-filter-tag-penggabungan-tag" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Manajemen Filter Tag &amp; Tag Merge
+        Manajemen Filter Tag &amp; Penggabungan Tag
       
     </span>
   </a>
@@ -3744,148 +3772,194 @@
 
 <h1 id="antarmuka-anotasi-macos">Antarmuka Anotasi macOS</h1>
 <h2 id="pendahuluan-interaksi-komponen-ui">Pendahuluan: Interaksi Komponen UI</h2>
-<p>Arsitektur antarmuka anotasi pada platform macOS didesain dengan memisahkan logika presentasi dari manajemen data. <code>AnnotationsVC</code> bertindak sebagai pengontrol utama tampilan, sedangkan <code>AnnotationOutlineDataSource</code> menangani abstraksi data dan manipulasi hierarki untuk <code>NSOutlineView</code>. Komunikasi dengan mesin pembaca (<code>IbarotTextVC</code>) dijembatani oleh protokol <code>AnnotationDelegate</code>.</p>
-<pre class="mermaid"><code>graph TD
-    VC["AnnotationsVC&lt;br&gt;(Popover / NSPanel)"] --&gt; DS["AnnotationOutlineDataSource"]
+<p>Arsitektur antarmuka anotasi pada platform macOS didesain dengan memisahkan logika presentasi dari manajemen data. <code>AnnotationsVC</code> bertindak sebagai pengontrol utama tampilan, sedangkan <code>AnnotationOutlineDataSource</code> menangani abstraksi data dan manipulasi hierarki untuk <code>NSOutlineView</code>. Komunikasi dengan mesin pembaca (<code>IbarotTextVC</code>) dijembatani oleh <em>protocol</em> <code>AnnotationDelegate</code>.</p>
+<pre class="mermaid"><code>flowchart TD
+    VC["AnnotationsVC (Popover / NSPanel)"] --&gt; DS["AnnotationOutlineDataSource"]
     DS --&gt; OV["NSOutlineView"]
+
     OV --&gt; CV["AnnotationCellView"]
     OV --&gt; TV["TimelineGroupCellView"]
 
-    DS -- "didSelect(annotation:)" --&gt; Del["AnnotationDelegate"]
-    Del --&gt; Reader["IbarotTextVC&lt;br&gt;(Reader Engine)"]
+    CV ~~~ Del
+    TV ~~~ Del
 
-    VM["AnnotationViewModel"] -- "onIncrementalUpdate" --&gt; DS
-    Store["AnnotationStore"] -- "Combine Events" --&gt; VM
-    VC -- "Aksi Pengguna (Hapus/Tag/Edit)" --&gt; Store</code></pre>
+    DS --&gt;|"didSelect(annotation:)"| Del["AnnotationDelegate"]
+    Del --&gt; Reader["IbarotTextVC (Reader Engine)"]
+
+    Reader ~~~ VM
+
+    Store["AnnotationStore"] --&gt;|"Combine Events"| VM["AnnotationViewModel"]
+    VM --&gt;|"onIncrementalUpdate"| DS
+    VC --&gt;|"Aksi Pengguna"| ACTION(["Mutasi Anotasi (Hapus/Tag/Edit)"])
+    ACTION --&gt; Store
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class VC,OV,CV,TV,Reader ui;
+    class DS,Del,Store store;
+    class VM vm;
+    class ACTION event;</code></pre>
 <h2 id="mode-windowing-popover-vs-nspanel">Mode Windowing: Popover vs. NSPanel</h2>
-<p><code>AnnotationsVC</code> memiliki fleksibilitas mode tampilan untuk mendukung multitasking di macOS:</p>
+<p><code>AnnotationsVC</code> memiliki fleksibilitas mode tampilan untuk mendukung <em>multitasking</em> di macOS:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Popover: Buka dari Toolbar (SharedPopover)
+    Popover --&gt; FloatingPanel: Pengguna Memilih "Detach to Panel" (openAsPanel)
+    FloatingPanel --&gt; Popover: Panel Ditutup / Kembalikan ke Toolbar
+
+    state Popover {
+        [*] --&gt; AnchorToToolbar
+        AnchorToToolbar --&gt; AutoDismissOnOutsideClick
+    }
+    state FloatingPanel {
+        [*] --&gt; SetupNSPanel
+        SetupNSPanel --&gt; InjectTitlebarAccessory
+        InjectTitlebarAccessory --&gt; KeepOnTopWhenFloating
+    }</code></pre>
 <ul>
-<li><strong>Mode Popover Tersemat</strong>:
-    Secara bawaan, tampilan anotasi muncul sebagai popover (<code>SharedPopover.annotationsPopover</code>) yang melekat pada toolbar jendela utama pembaca.</li>
-<li><strong>Mode Panel Melayang (<code>openAsPanel</code>)</strong>:
-    Pengguna dapat melepaskan popover menjadi jendela utilitas mandiri menggunakan <code>NSPanel</code> (<code>utilityWindow</code>, <code>resizable</code>, <code>closable</code>).<ul>
-<li><code>isFloatingPanel</code>: Bila opsi float aktif, panel selalu berada di atas jendela dokumen (<code>UserDefaults.standard.annotationFloatWindow</code>).</li>
+<li>
+<p><strong>Mode Popover Tersemat</strong>:
+    Secara bawaan, tampilan anotasi muncul sebagai <em>popover</em> (<code>SharedPopover.annotationsPopover</code>) yang melekat pada <em>toolbar</em> jendela utama pembaca.</p>
+</li>
+<li>
+<p><strong>Mode Panel Melayang (<code>openAsPanel</code>)</strong>:
+    Pengguna dapat melepaskan <em>popover</em> menjadi jendela utilitas mandiri menggunakan <code>NSPanel</code> (<code>utilityWindow</code>, <code>resizable</code>, <code>closable</code>).</p>
+<ul>
+<li><code>isFloatingPanel</code>: Bila opsi <em>float</em> aktif, panel selalu berada di atas jendela dokumen (<code>UserDefaults.standard.annotationFloatWindow</code>).</li>
 <li><code>hidesOnDeactivate</code>: Mengontrol apakah panel otomatis disembunyikan saat aplikasi Maktabah kehilangan fokus (<code>NSWindow.hidesOnDeactivate</code>).</li>
-<li><strong>Injeksi Titlebar Accessory</strong>: Saat bertransformasi menjadi panel mandiri (<code>setupLayoutPanel</code>), <code>titlebarRootStack</code> (yang berisi kolom pencarian dan filter tag) dicabut dari hierarki <code>rootStackView</code> dan disematkan langsung ke bawah titlebar panel menggunakan <code>NSTitlebarAccessoryViewController</code> (<code>layoutAttribute = .bottom</code>).</li>
+<li><strong>Injeksi Titlebar Accessory</strong>: Saat bertransformasi menjadi panel mandiri (<code>setupLayoutPanel</code>), <code>titlebarRootStack</code> (yang berisi kolom pencarian dan filter tag) dicabut dari hierarki <code>rootStackView</code> dan disematkan ke bawah <em>titlebar</em> panel menggunakan <code>NSTitlebarAccessoryViewController</code> (<code>layoutAttribute = .bottom</code>).</li>
 </ul>
 </li>
 </ul>
-<h2 id="membedah-custom-tablecellview">Membedah Custom TableCellView</h2>
-<p>Komponen <code>AnnotationCellView</code> adalah turunan dari <code>NSTableCellView</code> yang dirancang spesifik untuk merender detail anotasi secara kustom.</p>
+<h2 id="custom-tablecellview">Custom TableCellView</h2>
+<p>Komponen <code>AnnotationCellView</code> adalah turunan dari <code>NSTableCellView</code> yang dirancang untuk merender detail anotasi secara kustom.</p>
 <ul>
-<li><strong>Tipografi Arab</strong>:
-    Menggunakan <code>BundledArabicTextField</code> pada variabel <code>context</code>, <code>note</code>, dan <code>pagePart</code>. Konfigurasi ini secara otomatis mengimplementasikan perataan teks dari kanan ke kiri (RTL) yang sesuai dengan aturan tipografi Arab.</li>
-<li><strong>Tata Letak</strong>:
-    Elemen-elemen antarmuka disusun menggunakan <code>NSStackView</code> secara vertikal. Terdapat pengikatan batas fleksibel (<code>contentStackLeadingConstraint</code> dan <code>contentStackTrailingConstraint</code>) untuk menyesuaikan ruang margin secara dinamis.</li>
-<li><strong>Elemen Garis Waktu</strong>:
-    Sel memiliki <code>timelineRail</code> dan <code>timelineDot</code>. Secara bawaan elemen ini disembunyikan dan hanya dimunculkan saat antarmuka beralih ke mode garis waktu melalui fungsi <code>setTimelineInset(_:)</code>.</li>
-<li><strong>Pembatas Sisi</strong>:
-    Terdapat kotak dekoratif (border box) pada sisi kanan dan bawah untuk memisahkan antar kolom dan baris pada mode non-timeline.</li>
+<li>
+<p><strong>Tipografi Arab</strong>:
+    Menggunakan <code>BundledArabicTextField</code> pada variabel <code>context</code>, <code>note</code>, dan <code>pagePart</code>. Konfigurasi ini secara otomatis mengimplementasikan perataan teks dari kanan ke kiri (RTL) yang sesuai dengan aturan tipografi Arab.</p>
+</li>
+<li>
+<p><strong>Tata Letak</strong>:
+    Elemen antarmuka disusun menggunakan <code>NSStackView</code> vertikal dengan batasan fleksibel (<code>contentStackLeadingConstraint</code> dan <code>contentStackTrailingConstraint</code>) untuk menyesuaikan ruang margin secara dinamis.</p>
+</li>
+<li>
+<p><strong>Elemen Linimasa</strong>:
+    Sel memiliki <code>timelineRail</code> dan <code>timelineDot</code>. Elemen ini dimunculkan saat antarmuka beralih ke mode linimasa melalui fungsi <code>setTimelineInset(_:)</code>.</p>
+</li>
+<li>
+<p><strong>Pembatas Sisi</strong>:
+    Terdapat batas dekoratif (<em>border box</em>) pada sisi kanan dan bawah untuk memisahkan antarkolom dan baris pada mode non-linimasa.</p>
+</li>
 </ul>
-<h2 id="membedah-timelineoutlineviews">Membedah TimelineOutlineViews</h2>
-<p>Berkas <code>TimelineOutlineViews.swift</code> bertanggung jawab penuh atas elemen visual penunjuk rute waktu (timeline) pada judul grup.</p>
+<h2 id="timelineoutlineviews">TimelineOutlineViews</h2>
+<p>Berkas <code>TimelineOutlineViews.swift</code> bertanggung jawab atas elemen visual penunjuk linimasa pada judul grup.</p>
 <ul>
-<li><strong>TimelineNodeView</strong>:
-    Subkelas <code>NSView</code> kustom yang bertugas menggambar titik lingkar (node) secara manual menggunakan rute lintasan <code>NSBezierPath</code>.</li>
-<li><strong>TimelineGroupCellView</strong>:
-    Digunakan secara khusus untuk baris grup pada saat mode timeline aktif. Sel ini menggabungkan <code>topTimelineRail</code> dan <code>bottomTimelineRail</code> yang diatur sebagai garis separator untuk menciptakan ilusi rute vertikal yang saling menyambung di antar sel.</li>
+<li>
+<p><strong>TimelineNodeView</strong>:
+    Subkelas <code>NSView</code> kustom yang bertugas menggambar titik <em>node</em> secara manual menggunakan jalur <code>NSBezierPath</code>.</p>
+</li>
+<li>
+<p><strong>TimelineGroupCellView</strong>:
+    Digunakan khusus untuk baris grup saat mode linimasa aktif. Sel ini menggabungkan <code>topTimelineRail</code> dan <code>bottomTimelineRail</code> untuk menciptakan jalur vertikal yang tersambung antar-sel.</p>
+</li>
 </ul>
 <h2 id="logika-grouping-modes">Logika Grouping Modes</h2>
-<p><code>NSOutlineView</code> dapat mengelompokkan data berdasarkan Buku, Tag, atau Garis Waktu. Transisi antarmode dikelola secara terpusat oleh <code>AnnotationOutlineDataSource</code>.</p>
+<p><code>NSOutlineView</code> dapat mengelompokkan data berdasarkan Buku, Tag, atau Linimasa. Transisi antarmode dikelola oleh <code>AnnotationOutlineDataSource</code>.</p>
 <ul>
 <li><strong>Konfigurasi Visual</strong>:
-    Metode <code>applyOutlineViewConfiguration()</code> menyesuaikan perilaku tabel ketika terjadi perpindahan mode.<ul>
-<li>Mode Garis Waktu: Fungsi <code>floatsGroupRows</code> diaktifkan agar header grup melayang di atas saat digulir, parameter <code>indentationPerLevel</code> bernilai 0, dan jarak antar sel dihilangkan.</li>
-<li>Mode Standar: Parameter <code>indentationPerLevel</code> bernilai 13 guna memberikan jarak margin yang pas pada struktur percabangan.</li>
+    Metode <code>applyOutlineViewConfiguration()</code> menyesuaikan tata letak tabel ketika terjadi perpindahan mode:<ul>
+<li>Mode Linimasa: Properti <code>floatsGroupRows</code> diaktifkan agar <em>header</em> grup melayang saat digulir, parameter <code>indentationPerLevel</code> disetel ke 0, dan jarak antar-sel dihilangkan.</li>
+<li>Mode Standar: Parameter <code>indentationPerLevel</code> disetel ke 13 guna memberikan indentasi margin pada struktur hierarki.</li>
 </ul>
 </li>
-<li><strong>Penyusunan Pohon (Tree Builder)</strong>:
-    Data dari pengontrol hierarki direpresentasikan dalam bentuk pohon oleh <code>AnnotationTreeBuilder</code>. Konsep hierarki induk-anak ini dibaca oleh kerangka kerja <code>NSOutlineView</code> untuk memperlihatkan baris sesuai mode yang aktif.</li>
+<li><strong>Penyusunan Hierarki (<em>Tree Builder</em>)</strong>:
+    Data dari pengontrol hierarki direpresentasikan dalam bentuk struktur hierarki oleh <code>AnnotationTreeBuilder</code>. Relasi <em>parent-child</em> ini dibaca oleh <code>NSOutlineView</code> untuk merender baris sesuai mode yang aktif.</li>
 </ul>
 <h2 id="kalkulasi-tinggi-baris-dinamis-annotationrowheightcalculator">Kalkulasi Tinggi Baris Dinamis (<code>AnnotationRowHeightCalculator</code>)</h2>
-<p>Karena teks kutipan Arab, catatan tambahan pengguna, serta daftar tag memiliki panjang yang tidak seragam, penentuan tinggi baris dilakukan melalui utilitas <code>@MainActor enum AnnotationRowHeightCalculator</code>:</p>
+<p>Karena kutipan teks Arab, catatan pengguna, serta daftar tag memiliki panjang yang bervariasi, penentuan tinggi baris dilakukan melalui <code>@MainActor enum AnnotationRowHeightCalculator</code>:</p>
 <ul>
 <li><strong>Pengukuran Komponen Teks (<code>measuredHeight</code>)</strong>:<ul>
-<li>Kutipan teks Arab (<code>context</code>): Dihitung dengan font Arab bawaan dan dibatasi oleh nilai preferensi <code>UserDefaults.standard.ctxMaxNumberOfLines</code>.</li>
-<li>Catatan tambahan (<code>note</code>): Jika ada, dihitung menggunakan font sistem reguler dan dibatasi oleh <code>UserDefaults.standard.annMaxNumberOfLines</code>.</li>
-<li>Metadata (<code>pagePart</code>): Menghitung ruang untuk nomor jilid/halaman dan tag chips.</li>
+<li>Kutipan teks Arab (<code>context</code>): Dihitung dengan <em>font</em> Arab bawaan dan dibatasi oleh nilai preferensi <code>UserDefaults.standard.ctxMaxNumberOfLines</code>.</li>
+<li>Catatan tambahan (<code>note</code>): Dihitung menggunakan <em>font</em> sistem dan dibatasi oleh <code>UserDefaults.standard.annMaxNumberOfLines</code>.</li>
+<li>Metadata (<code>pagePart</code>): Menghitung ruang untuk nomor jilid/halaman dan <em>tag chips</em>.</li>
 </ul>
 </li>
 <li><strong>Formula Padding &amp; Spacing</strong>:
     Menghitung tinggi total secara presisi dengan formula:
     $$\text{Total Height} = \lceil 20 + \max(\text{contextHeight}, \text{dateHeight} + 8) + \text{pagePartHeight} + \text{noteHeight} + \text{stackSpacing} \rceil$$
-    Metode ini dipanggil langsung oleh <code>outlineView(_:heightOfRowByItem:)</code> pada <code>AnnotationsOutlineDelegate</code>, sehingga penghitungan tinggi baris berjalan instan dan mulus tanpa lag saat pengguliran cepat.</li>
+    Metode ini dipanggil langsung oleh <code>outlineView(_:heightOfRowByItem:)</code> pada <code>AnnotationsOutlineDelegate</code> sehingga penghitungan tinggi baris berjalan mulus tanpa jeda saat pengguliran cepat.</li>
 </ul>
 <h2 id="interaksi-pengguna-navigasi-reader">Interaksi Pengguna &amp; Navigasi Reader</h2>
 <p>Saat pengguna berinteraksi dengan daftar baris:</p>
 <ol>
-<li><strong>Seleksi Anotasi</strong>:
-    Ketika baris anotasi dipilih, delegasi <code>outlineViewSelectionDidChange(_:)</code> mendeteksi perubahan. Jika item yang dipilih adalah simpul daun (<code>AnnotationNode</code> yang memiliki objek <code>Annotation</code>), delegasi memanggil:
+<li>
+<p><strong>Seleksi Anotasi</strong>:
+    Ketika baris anotasi dipilih, delegasi <code>outlineViewSelectionDidChange(_:)</code> mendeteksi perubahan. Jika item yang dipilih adalah <em>leaf node</em> (<code>AnnotationNode</code> yang memiliki objek <code>Annotation</code>), delegasi memanggil:
     <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">delegate</span><span class="p">?.</span><span class="n">didSelect</span><span class="p">(</span><span class="n">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">annotation</span><span class="p">)</span>
-</span></code></pre></div></li>
-<li><strong>Penanganan di Mesin Reader</strong>:
-    Objek <code>AnnotationOutlineDataSource.delegate</code> dihubungkan ke <code>IbarotTextVC</code> oleh <code>SplitVC</code>. Saat <code>didSelect(annotation:)</code> diterima:<ul>
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Penanganan di Mesin Reader</strong>:
+    Objek <code>AnnotationOutlineDataSource.delegate</code> dihubungkan ke <code>IbarotTextVC</code> oleh <code>SplitVC</code>. Saat <code>didSelect(annotation:)</code> diterima:</p>
+<ul>
 <li>Kitab yang sesuai dimuat jika belum aktif.</li>
 <li>Halaman target dibuka melalui <code>contentId</code>.</li>
-<li>Kursor dan posisi gulir digeser ke rentang teks anotasi yang bersangkutan (<code>highlightRange</code>).</li>
+<li>Kursor dan posisi gulir diarahkan ke rentang teks anotasi yang bersangkutan (<code>highlightRange</code>).</li>
 </ul>
 </li>
 </ol>
 <h2 id="aksi-baris-menu-konteks-pengeditan">Aksi Baris, Menu Konteks &amp; Pengeditan</h2>
-<p>macOS menyediakan interaksi menyeluruh untuk memanipulasi anotasi langsung dari sidebar:</p>
+<p>macOS menyediakan interaksi langsung dari <em>sidebar</em>:</p>
 <ul>
 <li><strong>Trailing Swipe Action (Hapus)</strong>:
-    Mengimplementasikan <code>NSTableViewDelegate.tableView(_:rowActionsForRow:edge:)</code> pada sisi <code>.trailing</code>. Menyediakan aksi geser dengan ikon <code>trash.slash.fill</code> bergaya destruktif untuk menghapus anotasi terpilih secara instan.</li>
+    Mengimplementasikan <code>NSTableViewDelegate.tableView(_:rowActionsForRow:edge:)</code> pada sisi <code>.trailing</code>. Menyediakan aksi geser dengan ikon <code>trash.slash.fill</code> untuk menghapus anotasi terpilih secara instan.</li>
 <li><strong>Menu Konteks Baris (<code>AnnotationMenu</code>)</strong>:
-    Menyediakan aksi klik kanan: Salin teks (<code>copyMenuItem</code>), Tambah/Hapus Tag, Ubah Tipe (Highlight vs. Underline), serta opsi hapus.</li>
+    Menyediakan aksi klik kanan: Salin teks (<code>copyMenuItem</code>), Tambah/Hapus Tag, Ubah Tipe (<em>Highlight</em> vs. <em>Underline</em>), serta opsi hapus.</li>
 <li><strong>Menu Palet Warna Cepat (<code>AnnotationColorMenuView</code>)</strong>:
-    Menampilkan deretan titik warna kustom di dalam menu konteks, memungkinkan pengguna mengganti warna sorotan anotasi tanpa membuka editor penuh.</li>
+    Menampilkan deretan titik warna di dalam menu konteks, memungkinkan pengguna mengganti warna sorotan tanpa membuka editor penuh.</li>
 <li><strong>Panel Editor Anotasi (<code>AnnotationEditorVC</code>)</strong>:
-    Panel popover khusus untuk mengedit catatan teks lengkap, mengubah status <em>underline</em>, memilih warna dari <code>NSColorWell</code>, serta mengatur tag token via <code>NSTokenField</code>.</li>
+    Panel <em>popover</em> untuk mengedit catatan teks lengkap, mengubah tipe garis bawah, memilih warna dari <code>NSColorWell</code>, serta mengatur tag melalui <code>NSTokenField</code>.</li>
 </ul>
 <h2 id="pencarian-scope-panel-melayang">Pencarian &amp; Scope Panel Melayang</h2>
 <ul>
 <li><strong>Kolom Pencarian (<code>DSFSearchField</code>)</strong>:
-    Terintegrasi dengan debounce di <code>AnnotationViewModel.searchText</code>. Perubahan teks secara asinkron menyaring struktur pohon anotasi.</li>
+    Terintegrasi dengan <em>debounce</em> di <code>AnnotationViewModel.searchText</code>. Perubahan teks secara asinkron menyaring struktur hierarki anotasi.</li>
 <li><strong>Scope Panel Melayang (<code>scopePanel</code>)</strong>:
-    Ketika kolom pencarian aktif, sebuah <code>NSPanel</code> melayang tak berbingkai (<code>level = .popUpMenu</code>) muncul tepat di bawah kolom pencarian. Panel ini memuat kontrol segmen (<code>NSSegmentedControl</code>) yang membatasi cakupan pencarian ke area spesifik: Semua (<em>All</em>), Teks Konteks (<em>Text</em>), Catatan (<em>Notes</em>), atau Tag (<em>Tags</em>).</li>
+    Ketika kolom pencarian aktif, sebuah <code>NSPanel</code> melayang tak berbingkai (<code>level = .popUpMenu</code>) muncul tepat di bawah kolom pencarian. Panel ini memuat kontrol segmen (<code>NSSegmentedControl</code>) yang membatasi cakupan pencarian: Semua (<em>All</em>), Teks Konteks (<em>Text</em>), Catatan (<em>Notes</em>), atau Tag (<em>Tags</em>).</li>
 </ul>
-<h2 id="manajemen-filter-tag-tag-merge">Manajemen Filter Tag &amp; Tag Merge</h2>
+<h2 id="manajemen-filter-tag-penggabungan-tag">Manajemen Filter Tag &amp; Penggabungan Tag</h2>
 <ul>
 <li><strong>Penyusunan Bilah Filter (<code>createTagFilterBar</code>)</strong>:
-    Antarmuka filter dirancang melalui pembentukan <code>NSStackView</code> secara programatik (tanpa <em>Storyboard</em>). Susunannya mencakup tombol ikon filter, tombol pergantian mode logika (AND/OR), serta area gulir horizontal (<code>NSScrollView</code>) untuk menampung cip tag (<em>tag chips</em>).</li>
-<li><strong>Penyematan Aksesori (Accessory Injection)</strong>:
-    Saat dalam mode panel mandiri, <code>NSStackView</code> tersebut dibungkus sebagai <code>view</code> utama milik objek <code>NSTitlebarAccessoryViewController</code> (<code>layoutAttribute = .bottom</code>), memastikan bilah filter melekat tepat di bagian pinggir bawah judul jendela (<em>titlebar</em>).</li>
-<li><strong>Penyesuaian Visual Dinamis</strong>:
-    Pada versi macOS mutakhir, atribut <code>preferredScrollEdgeEffectStyle</code> disetel ke <code>.soft</code> untuk memberikan efek pinggiran gulir yang halus, serta memperluas batas ketinggian bingkai (<em>frame height</em>) secara proaktif agar bilah tag filter memiliki ruang yang cukup.</li>
+    Antarmuka filter dirancang menggunakan <code>NSStackView</code> secara programatik, mencakup tombol filter, sakelar logika (AND/OR), serta area gulir horizontal (<code>NSScrollView</code>) untuk menampung <em>tag chips</em>.</li>
+<li><strong>Penyematan Aksesori (<em>Accessory Injection</em>)</strong>:
+    Saat dalam mode panel mandiri, <code>NSStackView</code> tersebut dibungkus sebagai <code>view</code> utama milik <code>NSTitlebarAccessoryViewController</code> (<code>layoutAttribute = .bottom</code>), melekat di bawah <em>titlebar</em>.</li>
 <li><strong>Tag Popover (<code>AnnotationTagVC</code>)</strong>:
-    Ditampilkan saat aksi penambahan atau pencabutan tag dipicu dari menu baris atau toolbar.</li>
+    Ditampilkan saat aksi penambahan atau penghapusan tag dipicu dari menu baris atau <em>toolbar</em>.</li>
 <li><strong>Penggabungan Tag (<code>TagMergePopoverVC</code>)</strong>:
-    Menyediakan dialog popover untuk menggabungkan (<em>merge</em>) dua tag berbeda menjadi satu nama tag di seluruh basis data anotasi.</li>
+    Menyediakan dialog <em>popover</em> untuk menggabungkan (<em>merge</em>) dua tag berbeda menjadi satu nama tag di seluruh basis data anotasi.</li>
 </ul>
 <h2 id="penerimaan-event-combine">Penerimaan Event Combine</h2>
-<p>Aplikasi memanfaatkan observasi Combine (serta callback reaktif yang sejalan) untuk merespons transisi status secara sangat efisien, tanpa mengharuskan pemuatan ulang tampilan secara keseluruhan.</p>
+<p>Aplikasi memanfaatkan observasi Combine untuk merespons pembaruan status secara efisien tanpa memuat ulang antarmuka secara keseluruhan.</p>
 <div class="admonition note">
 <p class="admonition-title">Mekanisme Pembaruan Inkremental</p>
-<p>Setiap perubahan data akan memicu pengiriman objek <code>AnnotationTreeDiff</code> melalui metode <code>onIncrementalUpdate</code>. Objek perbedaan (diff) ini memberikan pedoman rinci bagi data source perihal bagian baris yang spesifik untuk dimodifikasi.</p>
+<p>Setiap perubahan data memicu pengiriman objek <code>AnnotationTreeDiff</code> melalui metode <code>onIncrementalUpdate</code>. Objek <em>diff</em> ini memberikan pedoman rinci bagi <em>data source</em> perihal baris spesifik yang perlu dimodifikasi.</p>
 </div>
 <ul>
 <li><strong>Saat Menghapus Anotasi</strong>:<ol>
-<li>Tindakan hapus akan memperbarui struktur data (Store), yang kemudian memicu ViewModel untuk merumuskan objek <em>diff</em> dengan tipe <code>.deleted</code>.</li>
-<li>Protokol <code>AnnotationOutlineDataSource</code> menerima objek <em>diff</em> ini dan segera mengeksekusi metode <code>handleDeletedAnnotation()</code>.</li>
-<li>Fungsi ini mencari posisi indeks baris spesifik dari anotasi tersebut dan menghapusnya menggunakan <code>removeItems(at:inParent:withAnimation:)</code> disertai animasi pergeseran <code>slideUp</code>.</li>
-<li>Apabila parent grup menjadi sepenuhnya kosong akibat dampak penghapusan anak simpul, metode <code>cleanupEmptyParentNode()</code> akan membersihkan nama grup tersebut dari layar.</li>
+<li>Tindakan hapus memperbarui <code>AnnotationStore</code>, yang kemudian memicu ViewModel menghasilkan objek <em>diff</em> dengan tipe <code>.deleted</code>.</li>
+<li><code>AnnotationOutlineDataSource</code> menerima objek <em>diff</em> ini dan mengeksekusi metode <code>handleDeletedAnnotation()</code>.</li>
+<li>Fungsi ini mencari posisi indeks baris spesifik dan menghapusnya menggunakan <code>removeItems(at:inParent:withAnimation:)</code> disertai animasi pergeseran <code>slideUp</code>.</li>
+<li>Apabila <em>parent node</em> menjadi kosong akibat penghapusan <em>child node</em>, metode <code>cleanupEmptyParentNode()</code> membersihkan nama grup tersebut dari layar.</li>
 </ol>
 </li>
 <li><strong>Saat Membuka Popover Tag</strong>:<ol>
-<li>Permintaan interaktif untuk memanipulasi tag akan memancarkan sinyal <code>onAddTagsRequested</code> atau <code>onRemoveTagsRequested</code>.</li>
-<li>Lapis kontrol <code>AnnotationsVC</code> merespons permintaan ini dengan menayangkan kotak dialog (popover) pemilihan tag.</li>
-<li>Ketika pemakai selesai memodifikasi dan menyimpan tag, sistem merakit objek <code>TagUpdateDiff</code> yang berisi senarai penambahan, pembaruan, dan pelepasan relasi ikatan tag.</li>
-<li>Metode <code>handleTagModeUpdate()</code> lalu secara tangkas memproses rentetan diferensiasi ini di sela-sela blok <code>beginUpdates()</code> dan <code>endUpdates()</code>:<ul>
-<li>Mengeksekusi metode <code>applyTagModeRemovals()</code> untuk mencabut sel anotasi dari rumpun grup yang lama.</li>
-<li>Mengeksekusi metode <code>applyTagModeAdditions()</code> untuk menyelipkan ulang sel anotasi ke dalam rumpun grup yang baru melalui animasi <code>slideDown</code>.</li>
-</ul>
-</li>
+<li>Permintaan manipulasi tag memancarkan sinyal <code>onAddTagsRequested</code> atau <code>onRemoveTagsRequested</code>.</li>
+<li>Lapisan kontrol <code>AnnotationsVC</code> merespons dengan menampilkan <em>popover</em> pemilihan tag.</li>
+<li>Saat pengguna menyimpan perubahan tag, sistem menyusun objek <code>TagUpdateDiff</code>.</li>
+<li>Metode <code>handleTagModeUpdate()</code> memproses perubahan di antara blok <code>beginUpdates()</code> dan <code>endUpdates()</code> menggunakan animasi <code>slideDown</code>.</li>
 </ol>
 </li>
 </ul>
@@ -3908,6 +3982,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3938,10 +4018,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

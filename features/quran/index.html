@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#quran" class="md-skip">
+        <a href="#quran-tafsir" class="md-skip">
           Skip to content
         </a>
       
@@ -2366,6 +2366,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sub-komponen-dokumentasi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Komponen Dokumentasi
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2757,6 +2768,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3505,6 +3544,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sub-komponen-dokumentasi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sub-Komponen Dokumentasi
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3522,36 +3572,43 @@
 
 
 
-<h1 id="quran">Quran</h1>
-<p>Fitur <code>Quran</code> menyediakan kemampuan membaca Al-Quran beserta tafsirnya. Fitur ini dirancang khusus untuk macOS saat ini, menggunakan <code>QuranDataManager</code> untuk memuat data Al-Quran (Surah dan Ayat) dan mencocokkannya dengan buku-buku tafsir yang ada di perpustakaan Maktabah Syamilah.</p>
+<h1 id="quran-tafsir">Quran &amp; Tafsir</h1>
+<p>Fitur <strong>Quran</strong> menyediakan kemampuan membaca mushaf Al-Qur'an beserta kitab-kitab tafsirnya. Fitur ini memanfaatkan <code>QuranDataManager</code> untuk memuat data Al-Qur'an (Surah dan Ayat) dari basis data khusus serta mencocokkannya dengan kitab-kitab tafsir yang tersedia di perpustakaan Maktabah.</p>
 <h2 id="arsitektur-pipeline">Arsitektur Pipeline</h2>
-<pre class="mermaid"><code>graph TD
-    subgraph UI
-        QuranSplitVC
-        QuranSidebarVC
-        QuranTafseerVC
-        QuranNashVC
-    end
+<pre class="mermaid"><code>flowchart TD
+    SPLIT["QuranSplitVC (NSSplitViewController)"]
 
-    subgraph Core
-        QuranDataManager
-        BookConnection
-        SQLiteDatabase
-    end
+    SIDE["QuranSidebarVC (Daftar Surah &amp; Ayat)"]
+    NASH["QuranNashVC (Mushaf / Nash Quran)"]
+    TAFSEER["QuranTafseerVC (Daftar Kitab Tafsir)"]
 
-    %% Flow
-    QuranSplitVC --&gt; QuranSidebarVC
-    QuranSplitVC --&gt; QuranTafseerVC
-    QuranSplitVC --&gt; QuranNashVC
+    SPLIT --&gt; SIDE
+    SPLIT --&gt; NASH
+    SPLIT --&gt; TAFSEER
 
-    QuranSidebarVC -- "didSelectAya" --&gt; QuranDelegate
-    QuranDelegate --&gt; QuranNashVC
+    SIDE ~~~ DEL
+    NASH ~~~ DEL
 
-    QuranTafseerVC -- "didSelectBook" --&gt; QuranSplitVC
-    QuranSplitVC -- "connectBookWithBundleFallback" --&gt; QuranDataManager
+    SIDE --&gt;|"didSelectAya"| DEL["QuranDelegate"]
+    DEL --&gt; NASH
 
-    QuranDataManager --&gt; BookConnection
-    QuranDataManager --&gt; SQLiteDatabase</code></pre>
+    TAFSEER --&gt;|"didSelectBook"| SPLIT
+    SPLIT --&gt;|"loadTafseer"| NASH
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+
+    class SPLIT,SIDE,NASH,TAFSEER ui;
+    class DEL store;</code></pre>
+<h2 id="sub-komponen-dokumentasi">Sub-Komponen Dokumentasi</h2>
+<ul>
+<li><strong><a href="database/">Database Layer</a></strong>: Pengelolaan <code>special.sqlite</code> (tabel <code>Qr</code> dan <code>Sora</code>) serta integrasi kitab tafsir.</li>
+<li><strong><a href="models/">Data Models</a></strong>: Struktur data ayat (<code>Quran</code>) dan surah (<code>SurahNode</code>).</li>
+<li><strong><a href="viewmodel/">State Management</a></strong>: Koordinasi <em>state</em> berbasis <em>Data Manager</em> dan <em>delegation</em>.</li>
+<li><strong><a href="macos/">macOS Implementation</a></strong>: Implementasi AppKit dengan <em>three-pane</em> <code>NSSplitView</code>.</li>
+<li><strong><a href="ios/">iOS Implementation</a></strong>: Status implementasi pada platform iOS.</li>
+<li><strong><a href="protocols/">Protocols &amp; Contracts</a></strong>: Kontrak <code>QuranDelegate</code> untuk sinkronisasi antarmuka.</li>
+</ul>
 
 
 
@@ -3571,6 +3628,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3601,10 +3664,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/extra.js"></script>
       
     
   </body>

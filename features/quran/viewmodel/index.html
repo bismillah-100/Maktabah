@@ -2445,6 +2445,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Management (ViewModel)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -2461,6 +2479,36 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#alur-data-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Data &amp; State
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -2709,6 +2757,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reader/menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3440,6 +3516,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#alur-data-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Data &amp; State
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -3455,11 +3550,15 @@
 
 
 
-<h1 id="viewmodel-state-management">ViewModel (State Management)</h1>
-<div class="admonition note">
-<p class="admonition-title">Tidak Digunakan</p>
-<p>Fitur <code>Quran</code> saat ini tidak menggunakan ViewModel atau arsitektur MVVM konvensional. Manajemen state dan akses data ditangani secara langsung oleh <code>QuranDataManager</code> (Singleton) dan dikoordinasikan melalui <em>delegation</em> atau <em>closure</em> di dalam komponen AppKit (macOS).</p>
-</div>
+<h1 id="viewmodel-state-management">ViewModel &amp; State Management</h1>
+<p>Manajemen <em>state</em> dan akses data pada fitur Quran ditangani secara langsung oleh <code>QuranDataManager</code> (berpola <em>Singleton</em>) dan dikoordinasikan melalui <em>protocol</em> delegasi (<em>delegation pattern</em>) antar-komponen antarmuka pengguna di macOS.</p>
+<h2 id="alur-data-state">Alur Data &amp; State</h2>
+<ol>
+<li><strong>Inisialisasi</strong>: <code>QuranDataManager</code> memuat daftar Surah dari <code>special.sqlite</code> dan daftar kitab tafsir dari <code>LibraryDataManager</code>.</li>
+<li><strong>Seleksi Ayat</strong>: Ketika pengguna memilih ayat di <code>QuranSidebarVC</code>, <em>event</em> diteruskan melalui <code>QuranDelegate</code> ke <code>QuranNashVC</code>.</li>
+<li><strong>Pemuatan Tafsir</strong>: <code>QuranNashVC</code> meminta konten tafsir yang sesuai ke <code>QuranDataManager.loadTafseer(for:in:)</code>.</li>
+<li><strong>Navigasi Konten</strong>: Perubahan halaman dikomunikasikan kembali ke <em>sidebar</em> untuk menyinkronkan posisi ayat yang sedang aktif dibaca.</li>
+</ol>
 
 
 
@@ -3479,6 +3578,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3509,10 +3614,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>

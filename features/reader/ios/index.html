@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ios-implementation-swiftui-uikit" class="md-skip">
+        <a href="#reader-ios-implementation-swiftui-uikit" class="md-skip">
           Skip to content
         </a>
       
@@ -2695,33 +2695,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-arsitektur-reaktif-langsung-observable" class="md-nav__link">
+  <a href="#1-arsitektur-komponen-visual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Arsitektur Reaktif Langsung (Observable)
+        1. Arsitektur Komponen Visual
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-jembatan-iosibarottextview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Jembatan iOSIbarotTextView
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. Jembatan iOSIbarotTextView">
+    <nav class="md-nav" aria-label="1. Arsitektur Komponen Visual">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pembuatan-dan-pembaruan-tampilan" class="md-nav__link">
+  <a href="#a-hierarki-kontainer-pembaca" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pembuatan dan Pembaruan Tampilan
+        A. Hierarki Kontainer Pembaca
       
     </span>
   </a>
@@ -2729,10 +2718,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#coordinator-sebagai-penengah-sistem" class="md-nav__link">
+  <a href="#b-taksonomi-lembaran-modal-toolbar-sheets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Coordinator sebagai Penengah Sistem
+        B. Taksonomi Lembaran Modal (Toolbar Sheets)
       
     </span>
   </a>
@@ -2745,13 +2734,63 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-penanganan-ekstensi-ui-gestur-edge-cases" class="md-nav__link">
+  <a href="#2-alur-interaksi-dari-aksi-klik-toolbar-sheet-ke-textview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Penanganan Ekstensi UI &amp; Gestur (Edge Cases)
+        2. Alur Interaksi: Dari Aksi Klik Toolbar / Sheet ke TextView
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-bedah-komponen-logika-antarmuka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Bedah Komponen &amp; Logika Antarmuka
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Bedah Komponen &amp; Logika Antarmuka">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-ekosistem-lembaran-toolbar-toolbar-sheets-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Ekosistem Lembaran Toolbar (Toolbar Sheets Manager)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-jembatan-iosibarottextview-uiviewrepresentable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Jembatan iOSIbarotTextView (UIViewRepresentable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (Fullscreen)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2807,6 +2846,34 @@
     
   
     Protocols
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../menu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Selection & Context Menu
   
 
     
@@ -3545,33 +3612,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-arsitektur-reaktif-langsung-observable" class="md-nav__link">
+  <a href="#1-arsitektur-komponen-visual" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Arsitektur Reaktif Langsung (Observable)
+        1. Arsitektur Komponen Visual
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-jembatan-iosibarottextview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Jembatan iOSIbarotTextView
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="2. Jembatan iOSIbarotTextView">
+    <nav class="md-nav" aria-label="1. Arsitektur Komponen Visual">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pembuatan-dan-pembaruan-tampilan" class="md-nav__link">
+  <a href="#a-hierarki-kontainer-pembaca" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pembuatan dan Pembaruan Tampilan
+        A. Hierarki Kontainer Pembaca
       
     </span>
   </a>
@@ -3579,10 +3635,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#coordinator-sebagai-penengah-sistem" class="md-nav__link">
+  <a href="#b-taksonomi-lembaran-modal-toolbar-sheets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Coordinator sebagai Penengah Sistem
+        B. Taksonomi Lembaran Modal (Toolbar Sheets)
       
     </span>
   </a>
@@ -3595,13 +3651,63 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-penanganan-ekstensi-ui-gestur-edge-cases" class="md-nav__link">
+  <a href="#2-alur-interaksi-dari-aksi-klik-toolbar-sheet-ke-textview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Penanganan Ekstensi UI &amp; Gestur (Edge Cases)
+        2. Alur Interaksi: Dari Aksi Klik Toolbar / Sheet ke TextView
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-bedah-komponen-logika-antarmuka" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Bedah Komponen &amp; Logika Antarmuka
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Bedah Komponen &amp; Logika Antarmuka">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-ekosistem-lembaran-toolbar-toolbar-sheets-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Ekosistem Lembaran Toolbar (Toolbar Sheets Manager)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-jembatan-iosibarottextview-uiviewrepresentable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Jembatan iOSIbarotTextView (UIViewRepresentable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (Fullscreen)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3622,77 +3728,156 @@
 
 
 
-<h1 id="ios-implementation-swiftui-uikit">iOS Implementation (SwiftUI &amp; UIKit)</h1>
-<p>Implementasi antarmuka layar pembaca pada platform iOS menggunakan integrasi tingkat lanjut antara <strong>SwiftUI</strong> dan <strong>UIKit</strong>. Tidak seperti macOS yang murni menggunakan AppKit dengan metode penyampaian <em>Callbacks</em>, iOS bersandar pada kapabilitas reaktif bawaan dari <code>@Observable</code> (<em>Swift 5.9+ Macros</em>).</p>
+<h1 id="reader-ios-implementation-swiftui-uikit">Reader iOS Implementation (SwiftUI &amp; UIKit)</h1>
+<p>Implementasi antarmuka layar pembaca pada platform iOS menggunakan integrasi antara arsitektur deklaratif <strong>SwiftUI</strong> (sebagai pengelola kontainer, <em>toolbar</em>, dan lembar modal) dan <strong>UIKit</strong> (<code>UITextView</code> melalui <code>UIViewRepresentable</code>) demi stabilitas tipografi teks Arab berharakat serta performa <em>rendering</em> yang tinggi.</p>
+<p>Sumber kode: <code>Source/Features/Reader/iOS/</code></p>
 <hr />
-<h2 id="1-arsitektur-reaktif-langsung-observable">1. Arsitektur Reaktif Langsung (Observable)</h2>
-<p>Kontainer tertinggi dari <em>Reader</em> iOS adalah struktur deklaratif <code>iOSReaderView</code>. Karena SwiftUI secara inheren menangani perubahan data (melalui siklus <code>body</code>), pembaruan teks tidak memerlukan pendaftaran <em>callback</em> secara manual.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">iOSReaderView</span><span class="p">:</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">book</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="c1">// 1. Integrasi Langsung ke Observable State</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">viewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderViewModel</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p">@</span><span class="n">State</span><span class="w"> </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isReading</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">body</span><span class="p">:</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">        </span><span class="c1">// 2. SwiftUI akan mendeteksi mutasi $viewModel secara otomatis</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="n">iOSIbarotTextView</span><span class="p">(</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">            </span><span class="n">text</span><span class="p">:</span><span class="w"> </span><span class="err">$</span><span class="n">viewModel</span><span class="p">.</span><span class="n">contentText</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">            </span><span class="n">annotations</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">currentAnnotations</span><span class="p">,</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">            </span><span class="n">targetAnnotation</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">targetAnnotation</span><span class="p">,</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">            </span><span class="n">viewModel</span><span class="p">:</span><span class="w"> </span><span class="n">viewModel</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">        </span><span class="p">)</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">        </span><span class="c1">// ...</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="p">}</span>
-</span></code></pre></div>
-<p>Di iOS, perenderan teks kompleks masih ditangani oleh <code>UITextView</code> (UIKit) karena komponen murni <code>Text</code> milik SwiftUI belum cukup stabil dan kaya fitur (misal: kustomisasi menu <em>selection</em>, perhitungan spasi harakat dinamis).</p>
-<p>Jembatan antar- <em>framework</em> ini dikelola oleh <code>UIViewRepresentable</code>. <code>UIViewRepresentable</code> secara pintar menyinkronkan <em>state updates</em> dari lingkungan deklaratif SwiftUI (asynchronous RunLoop) dan mengeksekusinya ke siklus hidup <em>UIKit</em> (<code>updateUIView</code>) dengan presisi di <em>Main Thread</em> (sinkron secara internal).</p>
-<p>Oleh karenanya, fenomena inkonsistensi tata letak (<em>flickering</em> atau <em>layout jump</em>) yang menjadi masalah jika diterapkan ke <code>NSTextView</code> di macOS, berhasil diselesaikan secara mulus oleh orkestrasi internal <code>UIViewRepresentable</code> iOS tanpa memerlukan peretasan tambahan dengan <em>Callbacks</em>.</p>
+<h2 id="1-arsitektur-komponen-visual">1. Arsitektur Komponen Visual</h2>
+<p>Arsitektur antarmuka pembaca iOS mengombinasikan orkestrasi modal deklaratif SwiftUI dengan <em>rendering engine</em> UIKit:</p>
+<h3 id="a-hierarki-kontainer-pembaca">A. Hierarki Kontainer Pembaca</h3>
+<pre class="mermaid"><code>flowchart TD
+    IRV["iOSReaderView (SwiftUI Root)"]
+    TOP_BAR["Top Navigation Bar"]
+    BOT_TB["iOSReaderBottomToolbarView"]
+
+    IRV --&gt; TOP_BAR
+    IRV --&gt; BOT_TB
+
+    BOT_TB ~~~ ITVR
+
+    ITVR["iOSIbarotTextView (UIViewRepresentable)"]
+    COORD["Coordinator (UITextViewDelegate)"]
+    UTV["UITextView (Native Text Container)"]
+
+    IRV --&gt; ITVR
+    ITVR --&gt; COORD
+    COORD --&gt; UTV
+
+    UTV ~~~ RVM
+
+    RVM["ReaderViewModel (@Observable)"]
+    IRV &lt;--&gt;|"State Binding"| RVM
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class IRV,TOP_BAR,BOT_TB,ITVR,COORD,UTV ui;
+    class RVM vm;</code></pre>
+<h3 id="b-taksonomi-lembaran-modal-toolbar-sheets">B. Taksonomi Lembaran Modal (<em>Toolbar Sheets</em>)</h3>
+<pre class="mermaid"><code>mindmap
+  root((Sheets iOSReaderView))
+    Navigasi &amp; Konten
+      TOCView["showingTOC (Daftar Isi Bab)"]
+      PageJumpSheet["showingNavigation (Lompat Halaman &amp; Juz)"]
+      TabsSheet["showingTabsList (Penjelajah Multi-Tab)"]
+    Pencarian &amp; Catatan
+      SearchInBookSheet["showingSearch (Cari Dalam Kitab)"]
+      AnnotationListView["showingAnnotationsList (Daftar Anotasi Kitab)"]
+      AnnotationEditorSheet["showingAnnotationActionSheet (Editor Catatan)"]
+    Preferensi &amp; Informasi
+      AppearanceSheet["showingOptions (Font, Tema, Harakat)"]
+      BookInfoSheet["showingBookInfo (Informasi Bibliografi Kitab)"]</code></pre>
 <hr />
-<h2 id="2-jembatan-iosibarottextview">2. Jembatan <code>iOSIbarotTextView</code></h2>
-<p><code>iOSIbarotTextView</code> adalah <em>UIViewRepresentable</em> kustom yang membungkus <code>UITextView</code> menjadi ekosistem SwiftUI.</p>
-<h3 id="pembuatan-dan-pembaruan-tampilan">Pembuatan dan Pembaruan Tampilan</h3>
+<h2 id="2-alur-interaksi-dari-aksi-klik-toolbar-sheet-ke-textview">2. Alur Interaksi: Dari Aksi Klik Toolbar / Sheet ke TextView</h2>
+<p>Ketika pengguna memilih bab dari Daftar Isi (TOC), melompat ke halaman tertentu, atau mengetuk hasil pencarian dalam kitab:</p>
+<pre class="mermaid"><code>flowchart TD
+    USER(["Pengguna Memilih di Sheet / Toolbar"]) --&gt; LOAD_PAGE["ReaderViewModel.loadPage(contentId:)"]
+
+    LOAD_PAGE --&gt; CACHE_CHECK{"Cek BookPageCache?"}
+    CACHE_CHECK --&gt;|"Hit (Cache)"| CACHE_GET["Ambil BookContent dari LRU Cache"]
+    CACHE_CHECK --&gt;|"Miss"| DB_GET[("BookConnection.getContent()")]
+    DB_GET --&gt; CACHE_SAVE["Simpan ke BookPageCache"]
+
+    CACHE_GET --&gt; RENDER["ArabicTextRenderer.render()"]
+    CACHE_SAVE --&gt; RENDER
+
+    RENDER --&gt; OBS_UPDATE["@Observable ReaderViewModel.contentText"]
+    OBS_UPDATE --&gt; BRIDGE_UPDATE["iOSIbarotTextView.updateUIView()"]
+
+    BRIDGE_UPDATE --&gt; TV_SET["UITextView.attributedText = renderedText"]
+    TV_SET --&gt; TV_SCROLL["UITextView.restoreScrollPosition()"]
+    TV_SCROLL --&gt; DISMISS(["Sheet Ditutup"])
+
+    classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
+    classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
+    classDef store fill:#22c55e26,stroke:#16a34a,stroke-width:2px;
+    classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
+    classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
+
+    class USER,DISMISS event;
+    class CACHE_CHECK,BRIDGE_UPDATE,TV_SET,TV_SCROLL ui;
+    class CACHE_GET,CACHE_SAVE,RENDER store;
+    class LOAD_PAGE,OBS_UPDATE vm;
+    class DB_GET db;</code></pre>
+<hr />
+<h2 id="3-bedah-komponen-logika-antarmuka">3. Bedah Komponen &amp; Logika Antarmuka</h2>
+<h3 id="a-ekosistem-lembaran-toolbar-toolbar-sheets-manager">A. Ekosistem Lembaran Toolbar (<em>Toolbar Sheets Manager</em>)</h3>
+<p><code>iOSReaderView</code> mengontrol visibilitas tampilan modal melalui variabel <code>@State</code> boolean terdedikasi:</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Siklus Hidup</th>
-<th style="text-align: left;">Tanggung Jawab (Separation of Concerns)</th>
+<th style="text-align: left;">Variabel State</th>
+<th style="text-align: left;">Komponen Sheet</th>
+<th style="text-align: left;">Fungsi Utama</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><code>makeUIView</code></td>
-<td style="text-align: left;">Menginisialisasi kelas pembaca turunan <code>UITextView</code>. Mengaktifkan dukungan <em>Paging</em> (halaman ke halaman) atau <em>Continuous Scrolling</em>. Menyiapkan <em>Coordinator</em> sebagai pelayan delegasi (<code>UITextViewDelegate</code>).</td>
+<td style="text-align: left;"><code>showingTOC</code></td>
+<td style="text-align: left;"><code>TOCView</code></td>
+<td style="text-align: left;">Menampilkan struktur hierarki bab (<em>outline</em>) kitab.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>updateUIView</code></td>
-<td style="text-align: left;">Menerima injeksi <em>Attributed String</em> baru dari <em>ViewModel</em>. Di sinilah lapisan warna anotasi (seperti <code>.backgroundColor</code>) ditumpangkan secara dinamis berdasarkan kalkulasi matriks <em>Range Mapping</em>.</td>
+<td style="text-align: left;"><code>showingOptions</code></td>
+<td style="text-align: left;"><code>iOSReaderAppearanceSheet</code></td>
+<td style="text-align: left;">Mengonfigurasi ukuran font Arab, famili font, visibilitas harakat, dan tema latar belakang (Sepia, Dark, Black, White).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>showingSearch</code></td>
+<td style="text-align: left;"><code>SearchInBookSheet</code></td>
+<td style="text-align: left;">Pencarian teks cepat khusus di dalam halaman-halaman kitab aktif.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>showingAnnotationsList</code></td>
+<td style="text-align: left;"><code>AnnotationListView</code></td>
+<td style="text-align: left;">Menampilkan seluruh penanda dan catatan teks yang tersimpan untuk kitab ini.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>showingBookInfo</code></td>
+<td style="text-align: left;"><code>BookInfoSheet</code></td>
+<td style="text-align: left;">Kartu informasi bibliografi, penerbit, nomor cetakan, dan tahun wafat pengarang.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>showingAnnotationActionSheet</code></td>
+<td style="text-align: left;"><code>iOSAnnotationEditorSheet</code></td>
+<td style="text-align: left;">Panel modal penyuntingan isi catatan (<em>note</em>), pergantian warna sorotan, atau penghapusan anotasi.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>showingNavigation</code></td>
+<td style="text-align: left;"><code>PageJumpSheet</code></td>
+<td style="text-align: left;">Bilah geser (<em>slider</em>) cepat dan kolom masukan nomor halaman/juz.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>showingTabsList</code></td>
+<td style="text-align: left;"><code>TabsSheet</code></td>
+<td style="text-align: left;">Menampilkan daftar kitab yang sedang dibuka secara bersamaan (<em>multi-tab reader</em>).</td>
 </tr>
 </tbody>
 </table>
-<h3 id="coordinator-sebagai-penengah-sistem"><em>Coordinator</em> sebagai Penengah Sistem</h3>
-<p>Di dalam <code>iOSIbarotTextView</code>, <em>Coordinator</em> bertindak ganda sebagai pendengar ketukan (<em>Tap Gesture Recognizer</em>) dan delegasi sistem:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">class</span><span class="w"> </span><span class="nc">Coordinator</span><span class="p">:</span><span class="w"> </span><span class="bp">NSObject</span><span class="p">,</span><span class="w"> </span><span class="bp">UITextViewDelegate</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">parent</span><span class="p">:</span><span class="w"> </span><span class="n">iOSIbarotTextView</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">init</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">parent</span><span class="p">:</span><span class="w"> </span><span class="n">iOSIbarotTextView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="kc">self</span><span class="p">.</span><span class="n">parent</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">parent</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="c1">// Mendengarkan seleksi (blok) teks oleh jari pengguna</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">textViewDidChangeSelection</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">textView</span><span class="p">:</span><span class="w"> </span><span class="bp">UITextView</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nv">range</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">textView</span><span class="p">.</span><span class="n">selectedRange</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="c1">// Tampilkan menu modifikasi kustom iOS (seperti UIMenu)</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">        </span><span class="c1">// untuk pembuatan highlight atau underline baru.</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">}</span>
-</span></code></pre></div>
-<hr />
-<h2 id="3-penanganan-ekstensi-ui-gestur-edge-cases">3. Penanganan Ekstensi UI &amp; Gestur (Edge Cases)</h2>
+<h3 id="b-jembatan-iosibarottextview-uiviewrepresentable">B. Jembatan <code>iOSIbarotTextView</code> (<code>UIViewRepresentable</code>)</h3>
+<p>Mengintegrasikan <code>UITextView</code> UIKit ke dalam arsitektur deklaratif SwiftUI:</p>
 <ul>
-<li><strong>Toggling Fullscreen Mode</strong>: Pengguna dapat mengetuk bagian tengah teks untuk beralih antara Mode Navigasi (Toolbar aktif) dan Mode Membaca (Toolbar hilang). Properti <code>@State isReading</code> memicu <code>.toolbarVisibility(.hidden, for: .navigationBar, .bottomBar)</code>.</li>
-<li><strong>Rotasi &amp; Safe Area</strong>: Status <em>fullscreen</em> sangat mengubah geometri layar karena masuk dan hilangnya takik (<em>Notch</em> / <em>Dynamic Island</em>). UIKit <em>ScrollView</em> di belakang layar harus selalu mengkalkulasi ulang <em>safe area insets</em> dan melakukan paksaan reposisi batas gulir (<em>scroll bound restore</em>) agar kata terakhir yang dibaca pengguna tidak melompat ketika perangkat dirotasi dari mode <em>Portrait</em> ke <em>Landscape</em>.</li>
+<li><strong><code>makeUIView</code></strong>: Menginisialisasi <code>UITextView</code> kustom dengan properti <em>non-editable</em>, <em>selectable</em>, serta mendukung perpindahan per halaman (<em>paging mode</em>) maupun pengguliran kontinu (<em>continuous scrolling</em>).</li>
+<li><strong><code>updateUIView</code></strong>: Menerima injeksi <code>NSAttributedString</code> baru dari <code>ReaderViewModel</code>. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks.</li>
+<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk memunculkan menu pembuatan <em>highlight/underline</em> baru serta mencegat ketukan pada rentang anotasi yang telah ada (<code>onTapAnnotation</code>).</li>
+</ul>
+<h3 id="c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen">C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (<em>Fullscreen</em>)</h3>
+<ul>
+<li><strong>Toggle Fullscreen Mode</strong>: Pengguna dapat mengetuk bagian tengah teks untuk menyembunyikan bilah navigasi atas dan <em>toolbar</em> bawah (<code>isReading.toggle()</code>), memberikan ruang baca penuh yang imersif.</li>
+<li><strong>Geometri Layar &amp; Rotasi</strong>: Saat <em>toolbar</em> disembunyikan atau orientasi perangkat diputar (<em>Portrait</em> $\leftrightarrow$ <em>Landscape</em>), tata letak UIKit menyesuaikan <em>safe area insets</em> dan melakukan pemulihan posisi gulir (<em>scroll position restoration</em>) agar paragraf yang sedang dibaca tidak bergeser.</li>
 </ul>
 
 
@@ -3713,6 +3898,12 @@
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
         
       </main>
       
@@ -3743,10 +3934,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../../javascripts/extra.js"></script>
       
     
   </body>
