@@ -439,7 +439,6 @@
 		F321E02C2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		F321E02D2FC7059100CB37DD /* CloudKitSyncable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2CCE35AFE445BF8BEF37C5F /* CloudKitSyncable.swift */; };
 		F323BCA22F2EE70200EFD4F4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
-		F3D33FF93041BC970036D4DE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
 		F32A8B5A304572D000C28F42 /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = F3C507843044B61C00BBEC32 /* Fonts */; };
 		F32BA47B300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
 		F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */; };
@@ -720,6 +719,7 @@
 		F3D33FED3041BC970036D4DE /* WidgetDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D33FEA3041BC970036D4DE /* WidgetDeepLink.swift */; };
 		F3D33FEE3041BC970036D4DE /* WidgetDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D33FEA3041BC970036D4DE /* WidgetDeepLink.swift */; };
 		F3D33FF03041BC970036D4DE /* CloudKitFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D33FEF3041BC970036D4DE /* CloudKitFetcher.swift */; };
+		F3D33FF93041BC970036D4DE /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F323BCA02F2EE70200EFD4F4 /* InfoPlist.strings */; };
 		F3D38A922FD47C3200387BA4 /* HistoryComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */; };
 		F3D38A942FD4B2F200387BA4 /* HistoryFavoriteSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */; };
 		F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
@@ -1780,6 +1780,15 @@
 			path = SplitView;
 			sourceTree = "<group>";
 		};
+		F39B6EDF30595DC100CB5E1C /* Setting */ = {
+			isa = PBXGroup;
+			children = (
+				4BDAB98B2F69E860007D0945 /* SettingsView.swift */,
+				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
+			);
+			path = Setting;
+			sourceTree = "<group>";
+		};
 		F3AE62B8304C5760002569BB /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -1909,6 +1918,7 @@
 				FE7000000000000000000000 /* Library */,
 				FE6000000000000000000000 /* History */,
 				FE5000000000000000000000 /* Search */,
+				F39B6EDF30595DC100CB5E1C /* Setting */,
 				FE3000000000000000000000 /* Quran */,
 				57B8DDACA498A70AEF548A0C /* Widget */,
 			);
@@ -2512,7 +2522,6 @@
 				F3AE62E1304C5C43002569BB /* Extensions */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
-				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -2554,7 +2563,6 @@
 				F34047CB30367EBC003B4B57 /* DonationSheetView.swift */,
 				90D47941A1D403C301B2748A /* FtsMigrationProgressView.swift */,
 				4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */,
-				4BDAB98B2F69E860007D0945 /* SettingsView.swift */,
 				4B5E70682EF4FEFC00E7D351 /* SharedPopover.swift */,
 				F3ABDF742FBF429700A8965E /* WelcomeScreenView.swift */,
 			);
