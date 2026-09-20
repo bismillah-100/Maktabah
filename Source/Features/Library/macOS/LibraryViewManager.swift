@@ -345,7 +345,6 @@ extension LibraryViewManager: NSOutlineViewDelegate {
 
         if let item = outlineView.item(atRow: selectedRow) as? BooksData {
             ReusableFunc.updateBuiltInRecents(with: item.book, in: searchField)
-            viewModel.handleBookSelection(book: item)
         }
         // Do not set viewModel.selectedBookName = nil when selectedRow is -1
         // as this breaks selection restoration during data reloads/updates.
