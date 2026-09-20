@@ -61,15 +61,15 @@ class MainWindow: NSWindow {
         )
     }
 
-    func setupContentView(restoreState: Bool = true) {
+    func setupContentView(mode: AppMode? = nil, restoreState: Bool = true) {
         let currentFrame = frame
-        // Restore last mode
-        splitVC.currentMode = UserDefaults.standard.lastAppMode
+        let targetMode = mode ?? UserDefaults.standard.lastAppMode
+        splitVC.currentMode = targetMode
 
         if !restoreState {
-            splitVC.setupForMode(currentMode)
+            splitVC.setupForMode(targetMode)
             splitVC.setupAutoSave()
-            splitVC.stateManager.setState(ReaderState(), for: currentMode)
+            splitVC.stateManager.setState(ReaderState(), for: targetMode)
         }
         contentViewController = splitVC
 

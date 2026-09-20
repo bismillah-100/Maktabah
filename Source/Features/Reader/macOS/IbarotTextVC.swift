@@ -455,6 +455,7 @@ extension IbarotTextVC {
                     style: .critical
                 )
             }
+            throw error
         }
     }
 

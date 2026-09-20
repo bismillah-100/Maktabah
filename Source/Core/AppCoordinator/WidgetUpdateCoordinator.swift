@@ -313,6 +313,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     }
 
     /// Called by AppDelegate/SceneDelegate when receiving a silent push
+    @discardableResult
     func handleSilentPush() async -> Bool {
         let zoneId = CloudKitCoreManager.shared.zoneId
         let historyId = CKRecord.ID(recordName: sharedHistorySnapshot, zoneID: zoneId)
