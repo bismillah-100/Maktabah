@@ -12,8 +12,9 @@ import UIKit
 #endif
 import Foundation
 import SQLite3
+import Synchronization
 
-struct ShortsMapping {
+struct ShortsMapping: Sendable {
     let map: [String: String]
     let sortedKeys: [String]
     var isEmpty: Bool {
@@ -22,12 +23,25 @@ struct ShortsMapping {
 }
 
 /// DatabaseManager.swift
-class DatabaseManager {
-    nonisolated(unsafe) static let shared: DatabaseManager = .init()
+final class DatabaseManager: Sendable {
+    static let shared: DatabaseManager = .init()
 
-    private(set) var db: SQLiteDatabase?
-    private(set) var dbSpecial: SQLiteDatabase?
-    private let lock = NSLock()
+    private struct DatabaseState: Sendable {
+        var db: SQLiteDatabase?
+        var dbSpecial: SQLiteDatabase?
+        var shortsCache: [String: ShortsMapping] = [:]
+        var archiveAvailabilityCache: [Int: Bool] = [:]
+    }
+
+    private let state: Mutex<DatabaseState> = .init(DatabaseState())
+
+    var db: SQLiteDatabase? {
+        state.withLock { $0.db }
+    }
+
+    var dbSpecial: SQLiteDatabase? {
+        state.withLock { $0.dbSpecial }
+    }
 
     // Table names
     private let booksTableName = "\"0bok\""
@@ -57,23 +71,15 @@ class DatabaseManager {
     private let colAuthInf = "inf"
     private let colAuthLng = "Lng"
 
-    var shortsCache: [String: ShortsMapping] = [:]
-
-    // MARK: - Archive Availability
-
-    private var archiveAvailabilityCache: [Int: Bool] = [:]
-
     private init() {
         setupFolders()
     }
 
     func setupFolders() {
-        lock.lock()
-        defer { lock.unlock() }
-
-        // Tutup koneksi lama jika ada
-        db = nil
-        dbSpecial = nil
+        state.withLock { s in
+            s.db = nil
+            s.dbSpecial = nil
+        }
 
         // Database files path (main.sqlite, special.sqlite)
         guard let mainPath = AppConfig.mainDatabasePath,
@@ -97,18 +103,25 @@ class DatabaseManager {
 
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
 
+        let newDb: SQLiteDatabase
         do {
-            db = try SQLiteDatabase(path: mainPath, flags: flags, queryOnly: true)
+            newDb = try SQLiteDatabase(path: mainPath, flags: flags, queryOnly: true)
         } catch {
             handleSetupError()
             return
         }
 
+        let newDbSpecial: SQLiteDatabase
         do {
-            dbSpecial = try SQLiteDatabase(path: specialPath, flags: flags, queryOnly: true)
+            newDbSpecial = try SQLiteDatabase(path: specialPath, flags: flags, queryOnly: true)
         } catch {
             handleSetupError()
             return
+        }
+
+        state.withLock { s in
+            s.db = newDb
+            s.dbSpecial = newDbSpecial
         }
     }
 
@@ -181,9 +194,6 @@ class DatabaseManager {
     }
 
     func fetchAllCategories() throws -> [CategoryData] {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let db else { return [] }
 
         let sql = "SELECT \(colCatId), \(colCatName), \(colCatLevel), \(colCatOrder) FROM \(categoryTableName) ORDER BY \(colCatOrder), \(colCatId)"
@@ -218,9 +228,6 @@ class DatabaseManager {
     }
 
     func fetchAllBooksGroupedByCategory() throws -> [Int: [BooksData]] {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let db else { return [:] }
 
         var groupedBooks: [Int: [BooksData]] = [:]
@@ -237,9 +244,6 @@ class DatabaseManager {
     }
 
     func getMaxBookId() -> Int {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let db else { return 0 }
         let sql = "SELECT MAX(\(colBokId)) FROM \(booksTableName)"
 
@@ -249,9 +253,6 @@ class DatabaseManager {
     }
 
     func getMaxAuthId() -> Int {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let dbSpecial else { return 0 }
         let sql = "SELECT MAX(\(colAuthId)) FROM \(authTableName)"
 
@@ -261,9 +262,6 @@ class DatabaseManager {
     }
 
     func fetchAllAuthors() -> [(id: Int, muallif: Muallif)] {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let dbSpecial else { return [] }
         let sql = "SELECT \(colAuthId), \(colAuthName), \(colAuthInf), \(colAuthLng) FROM \(authTableName) ORDER BY \(colAuthName)"
 
@@ -277,9 +275,6 @@ class DatabaseManager {
     }
 
     func fetchBook(byId bookId: Int) throws -> BooksData? {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let db else {
             throw NSError(domain: "No database connection", code: 1)
         }
@@ -295,8 +290,6 @@ class DatabaseManager {
     }
 
     func bookExists(id: Int) -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
         guard let db else { return false }
 
         let sql = "SELECT 1 FROM `0bok` WHERE `bkid` = ? LIMIT 1;"
@@ -304,8 +297,6 @@ class DatabaseManager {
     }
 
     func isAuthorUsed(authorId: Int) -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
         guard let db else { return false }
 
         let sql = "SELECT 1 FROM \(booksTableName) WHERE \(colBokMuallif) = ? LIMIT 1;"
@@ -313,9 +304,6 @@ class DatabaseManager {
     }
 
     func fetchBooksInfo(for bookData: BooksData) {
-        lock.lock()
-        defer { lock.unlock() }
-
         guard let db else { return }
 
         let sql = "SELECT \(colBokBithoqoh), \(colBokInf) FROM \(booksTableName) WHERE \(colBokId) = ?"
@@ -329,10 +317,7 @@ class DatabaseManager {
     }
 
     func loadShortsForBook(_ bkid: String) -> ShortsMapping {
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let cached = shortsCache[bkid] {
+        if let cached = state.withLock({ $0.shortsCache[bkid] }) {
             return cached
         }
 
@@ -353,7 +338,7 @@ class DatabaseManager {
 
         let sortedKeys = dict.keys.sorted { $0.count > $1.count }
         let mapping = ShortsMapping(map: dict, sortedKeys: sortedKeys)
-        shortsCache[bkid] = mapping
+        state.withLock { $0.shortsCache[bkid] = mapping }
         return mapping
     }
 
@@ -361,9 +346,6 @@ class DatabaseManager {
         if let cached = LibraryDataManager.shared.getAuthorFromCache(id: id) {
             return cached
         }
-
-        lock.lock()
-        defer { lock.unlock() }
 
         guard let dbSpecial else {
             return nil
@@ -387,12 +369,9 @@ class DatabaseManager {
     // MARK: - Archive File Management
 
     func checkArchiveAvailability(archiveId: Int) -> Bool {
-        lock.lock()
-        if let cached = archiveAvailabilityCache[archiveId] {
-            lock.unlock()
+        if let cached = state.withLock({ $0.archiveAvailabilityCache[archiveId] }) {
             return cached
         }
-        lock.unlock()
 
         let fm = FileManager.default
         guard let archiveFile = AppConfig.archiveDatabasePath(archiveId: archiveId),
@@ -403,16 +382,16 @@ class DatabaseManager {
 
         let isAvailable = fm.isNonEmptyFile(atPath: archiveFile) && fm.isNonEmptyFile(atPath: ftsFtsFile)
 
-        lock.lock()
-        archiveAvailabilityCache[archiveId] = isAvailable
-        lock.unlock()
+        state.withLock {
+            $0.archiveAvailabilityCache[archiveId] = isAvailable
+        }
         return isAvailable
     }
 
     func invalidateArchiveCache(archiveId: Int) {
-        lock.lock()
-        archiveAvailabilityCache.removeValue(forKey: archiveId)
-        lock.unlock()
+        state.withLock {
+            _ = $0.archiveAvailabilityCache.removeValue(forKey: archiveId)
+        }
         IntegrationCache.shared.invalidate(archiveId: archiveId)
     }
 
