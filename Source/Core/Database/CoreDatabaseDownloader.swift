@@ -71,7 +71,7 @@ enum DownloadEvent {
 // MARK: - CoreDatabaseDownloader
 
 final class CoreDatabaseDownloader: NSObject, Sendable {
-    private nonisolated(unsafe) let fileManager = FileManager.default
+    private var fileManager: FileManager { .default }
 
     typealias ProgressHandler = @Sendable (_ progress: Double, _ detail: String) -> Void
     typealias CompletionHandler = @Sendable (_ error: Error?) -> Void
