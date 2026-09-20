@@ -41,10 +41,10 @@ enum BookDownloadError: LocalizedError {
     }
 }
 
-final class BookDownloadManager: @unchecked Sendable {
+final class BookDownloadManager: Sendable {
     static let shared = BookDownloadManager()
 
-    private let fileManager = FileManager.default
+    private var fileManager: FileManager { .default }
     private let networkMonitor = NetworkMonitor.shared
     private let indexCache = BookDownloadIndexCache.shared
     private let singleFlight = SingleFlight<Int, URL>()
@@ -58,15 +58,19 @@ final class BookDownloadManager: @unchecked Sendable {
     }()
 
     private init() {
-        Task {
-            await networkMonitor.registerConnectivityCallbacks(
-                onLost: {
-                    Task { [weak self] in
-                        await self?.cancelAllDownloads()
-                    }
-                }
-            )
+        Task { [weak self] in
+            await self?.startNetworkMonitor()
         }
+    }
+
+    nonisolated private func startNetworkMonitor() async {
+        await networkMonitor.registerConnectivityCallbacks(
+            onLost: {
+                Task { [weak self] in
+                    await self?.cancelAllDownloads()
+                }
+            }
+        )
     }
 
     func localBookURL(bookId: Int) -> URL? {

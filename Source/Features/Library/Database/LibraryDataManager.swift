@@ -10,7 +10,7 @@ import Synchronization
 
 final class LibraryDataManager: Sendable {
     static let shared = LibraryDataManager()
-    nonisolated(unsafe) let db: DatabaseManager = .shared
+    let db: DatabaseManager = .shared
 
     private struct LibraryState: Sendable {
         var allRootCategories: [CategoryData] = []

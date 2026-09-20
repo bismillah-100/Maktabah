@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct SyncPendingStore {
+struct SyncPendingStore: Sendable {
     static let tableName = "sync_pending"
 
     static let createTableSQL = """

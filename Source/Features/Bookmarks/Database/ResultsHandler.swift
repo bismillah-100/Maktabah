@@ -7,6 +7,7 @@
 
 import Foundation
 import SQLite3
+import Synchronization
 
 extension Notification.Name {
     static let savedResultsTreeDidUpdate = Notification.Name("savedResultsTreeDidUpdate")
@@ -72,10 +73,23 @@ struct ResultSaveOptions: Sendable {
     var nearDistance: Int = 10
 }
 
-class ResultsHandler: SyncPendingManaging {
-    private(set) var db: SQLiteDatabase?
-    var syncPendingStore: SyncPendingStore?
-    nonisolated(unsafe) static let shared: ResultsHandler = .init()
+final class ResultsHandler: SyncPendingManaging, Sendable {
+    static let shared: ResultsHandler = .init()
+
+    private struct State: Sendable {
+        var db: SQLiteDatabase?
+        var syncPendingStore: SyncPendingStore?
+    }
+
+    private let state = Mutex(State())
+
+    var db: SQLiteDatabase? {
+        state.withLock { $0.db }
+    }
+
+    var syncPendingStore: SyncPendingStore? {
+        state.withLock { $0.syncPendingStore }
+    }
 
     let foldersTable = "folders"
     let colId = "id"
@@ -150,9 +164,11 @@ class ResultsHandler: SyncPendingManaging {
     private init() {}
 
     func disconnect() {
-        db?.checkpoint()
-        db = nil
-        syncPendingStore = nil
+        state.withLock { s in
+            s.db?.checkpoint()
+            s.db = nil
+            s.syncPendingStore = nil
+        }
     }
 
     func setupResultDatabase(at folderURL: URL?) throws {
@@ -168,8 +184,11 @@ class ResultsHandler: SyncPendingManaging {
             let database = try SQLiteDatabase(path: url.path, flags: flags)
             database.enableWALMode()
             database.checkpoint() // Ensure WAL is committed and truncated
-            db = database
-            syncPendingStore = SyncPendingStore(database: database)
+            let store = SyncPendingStore(database: database)
+            state.withLock { s in
+                s.db = database
+                s.syncPendingStore = store
+            }
         } catch {
             throw NSError(domain: "ResultsHandler", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to open SearchResults database: \(error.localizedDescription)"])
         }
