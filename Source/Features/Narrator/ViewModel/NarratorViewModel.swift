@@ -247,7 +247,7 @@ final class NarratorViewModel: ViewModelBase {
                         #endif
                     }
                 },
-                onComplete: {
+                onComplete: { [weak self] in
                     guard !Task.isCancelled else { return }
                     Task { [weak self] in
                         await self?.stopSearch()

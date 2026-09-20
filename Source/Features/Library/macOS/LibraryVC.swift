@@ -47,7 +47,7 @@ class LibraryVC: NSViewController {
             forName: .libraryFolderChanged,
             object: nil,
             queue: .main
-        ) { _ in
+        ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 isDataLoaded = false
@@ -65,6 +65,9 @@ class LibraryVC: NSViewController {
     }
 
     deinit {
+        #if DEBUG
+        print("deinit LibraryVC")
+        #endif
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -87,7 +90,7 @@ class LibraryVC: NSViewController {
     }
 
     private func setupViewModelCallbacks() {
-        dataVM.viewModel.onStateChanged = { state in
+        dataVM.viewModel.onStateChanged = { [weak self] state in
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 if state == .loading {

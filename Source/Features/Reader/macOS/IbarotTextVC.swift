@@ -54,12 +54,11 @@ class IbarotTextVC: NSViewController {
         textDelegate = textView
     }
 
-    override func viewWillDisappear() {
-        super.viewWillDisappear()
-        for token in observerTokens {
-            NotificationCenter.default.removeObserver(token)
-        }
-        observerTokens.removeAll()
+    deinit {
+        #if DEBUG
+        print("IbarotTextVC deinit")
+        #endif
+        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - Setup
@@ -150,27 +149,27 @@ class IbarotTextVC: NSViewController {
         }
     }
 
-    private var observerTokens: [NSObjectProtocol] = []
+    private var observerTokens: [NotificationToken] = []
 
     private func setupNotificationObservers() {
-        observerTokens.append(NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
             queue: .main
-        ) { _ in
+        ) { [weak self] _ in
             MainActor.assumeIsolated { [weak self] in
                 guard let self else { return }
                 cleanUpState()
                 viewModel.cleanUpState()
                 viewModel.tocViewModel.cleanUp()
             }
-        })
+        }))
 
-        observerTokens.append(NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .bookIntegrated,
             object: nil,
             queue: .main
-        ) { notification in
+        ) { [weak self] notification in
             guard let bookId = notification.object as? Int else { return }
             MainActor.assumeIsolated { [weak self] in
                 guard let self else { return }
@@ -180,20 +179,20 @@ class IbarotTextVC: NSViewController {
                     }
                 }
             }
-        })
+        }))
 
-        observerTokens.append(NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .bookIdMigrated,
             object: nil,
             queue: .main
-        ) { notification in
+        ) { [weak self] notification in
             guard let userInfo = notification.userInfo,
                   let oldId = userInfo["oldId"] as? Int,
                   let newId = userInfo["newId"] as? Int
             else { return }
 
             MainActor.assumeIsolated { [weak self] in
-                guard let self else { return}
+                guard let self else { return }
 
                 if viewModel.currentBook?.id == oldId {
                     // ReaderViewModel handleBookIdMigrated will update its currentBook.
@@ -204,7 +203,7 @@ class IbarotTextVC: NSViewController {
                     }
                 }
             }
-        })
+        }))
     }
 
     // MARK: - State Accessors

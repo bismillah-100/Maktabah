@@ -101,6 +101,12 @@ class RowiResultsVC: NSViewController {
         ReusableFunc.setupSearchField(searchField)
     }
 
+    deinit {
+        #if DEBUG
+        print("RowiResultsVC deinit")
+        #endif
+    }
+
     // MARK: - ViewModel Binding
 
     private func bindViewModel() {

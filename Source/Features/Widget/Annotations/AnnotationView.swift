@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WidgetKit
 
 struct AnnotationView: View {
     @Environment(\.widgetFamily) var family

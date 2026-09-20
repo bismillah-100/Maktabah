@@ -60,6 +60,12 @@ class RowiSidebarVC: NSViewController {
         }
     }
 
+    deinit {
+        #if DEBUG
+        print("RowiSidebarVC deinit")
+        #endif
+    }
+
     func unhideSearchField() {
         ReusableFunc.unhideSearchField(
             searchFieldIsHidden: searchFieldIsHidden,
