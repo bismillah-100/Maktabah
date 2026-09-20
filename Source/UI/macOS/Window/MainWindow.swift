@@ -98,11 +98,7 @@ class MainWindow: NSWindow {
         mainToolbar.allowsUserCustomization = true
         mainToolbar.displayMode = .iconOnly
 
-        if #available(macOS 15, *) {
-            #if compiler(>=6.0)
-            mainToolbar.allowsDisplayModeCustomization = true
-            #endif
-        }
+        mainToolbar.allowsDisplayModeCustomization = true
 
         toolbar = mainToolbar
         toolbarConfigured = true

@@ -38,9 +38,7 @@ class WindowController: NSWindowController {
         window.subtitle = ""
         window.setFrameAutosaveName("MainWindow")
         window.animationBehavior = .default
-        if #available(macOS 11.0, *) {
-            window.toolbarStyle = .unified
-        }
+        window.toolbarStyle = .unified
         self.window = window
     }
 
