@@ -85,7 +85,7 @@ class SplitVC: NSSplitViewController {
         }
     }
 
-    func switchToMode(_ mode: AppMode) {
+    func switchToMode(_ mode: AppMode, restoreState: Bool = true) {
         // Simpan title sebelum switch
         stateManager.saveState(
             for: currentMode,
@@ -102,11 +102,13 @@ class SplitVC: NSSplitViewController {
         sidebarItem.isCollapsed =
             stateManager.getState(for: mode).isSidebarCollapsed
 
-        // Pass rowiResultsVC untuk Author mode restore
-        stateManager.restoreState(
-            for: mode,
-            components: components(for: currentMode)
-        )
+        if restoreState {
+            // Pass rowiResultsVC untuk Author mode restore
+            stateManager.restoreState(
+                for: mode,
+                components: components(for: currentMode)
+            )
+        }
 
         setAnnotationsPanelDelegate()
 
