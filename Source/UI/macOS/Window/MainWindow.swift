@@ -169,11 +169,11 @@ class MainWindow: NSWindow {
         switchToMode(mode)
     }
 
-    func switchToMode(_ mode: AppMode) {
+    func switchToMode(_ mode: AppMode, restoreState: Bool = true) {
         UserDefaults.standard.lastAppMode = mode
 
         if mode != currentMode {
-            splitVC.switchToMode(mode)
+            splitVC.switchToMode(mode, restoreState: restoreState)
         }
         updateDelegateAndSegment()
     }

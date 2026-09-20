@@ -26,6 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
 
     fileprivate var mainWindowController: NSWindowController!
+    private var hasPendingDeepLink = false
 
     fileprivate weak var quranWindow: NSWindow?
     fileprivate weak var settingsWindow: NSWindow?
@@ -69,10 +70,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
+        )
+    }
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSAppleEventManager.shared().setEventHandler(self, andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)), forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
         NSApplication.shared.activate(ignoringOtherApps: true)
-        restorePersistedState(mainWindowController.window as? MainWindow)
+        if !hasPendingDeepLink {
+            restorePersistedState(mainWindowController.window as? MainWindow)
+        } else if let window = mainWindowController?.window as? MainWindow {
+            window.setupContentView(restoreState: false)
+        }
         buildViewMenu()
 
         BookConnection.tocTreeCache.countLimit = 20
@@ -617,12 +630,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @IBAction func newWindow(_ sender: Any) {
+        newWindow(sender, restoreState: true)
+    }
+
+    func newWindow(_ sender: Any, restoreState: Bool) {
         let wc = WindowController()
         wc.window?.setFrameAutosaveName("MainWindow")
 
         guard let w = wc.window as? MainWindow else { return }
 
-        if mainWindowController == nil {
+        if mainWindowController == nil && restoreState {
             restorePersistedState(w)
         } else {
             w.setupContentView(restoreState: false)
@@ -640,7 +657,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @discardableResult
-    func ensureActiveMainWindow() -> MainWindow? {
+    func ensureActiveMainWindow(restoreState: Bool = true) -> MainWindow? {
         NSApp.activate(ignoringOtherApps: true)
 
         if let existingWindow = (NSApp.windows.first(where: { $0 is MainWindow && !$0.isMiniaturized }) as? MainWindow) ?? (keyWindow ?? mainWindowController?.window as? MainWindow) {
@@ -654,44 +671,56 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return minimizedWindow
         }
 
-        newWindow(self)
+        newWindow(self, restoreState: restoreState)
         return keyWindow ?? (mainWindowController?.window as? MainWindow)
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let url = urls.first, let deepLink = WidgetDeepLink.parse(from: url) else { return }
+        hasPendingDeepLink = true
+        Task { @MainActor in
+            await handleDeepLink(deepLink)
+        }
     }
 
     @objc func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
         guard let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
               let url = URL(string: urlString),
-              let deepLink = WidgetDeepLink.parse(from: url),
-              let targetWindow = ensureActiveMainWindow()
+              let deepLink = WidgetDeepLink.parse(from: url)
         else { return }
+
+        hasPendingDeepLink = true
+        Task { @MainActor in
+            await handleDeepLink(deepLink)
+        }
+    }
+
+    @MainActor
+    private func handleDeepLink(_ deepLink: WidgetDeepLink) async {
+        guard let targetWindow = ensureActiveMainWindow(restoreState: false) else { return }
+
+        targetWindow.switchToMode(.viewer, restoreState: false)
+        let ibarotVC = targetWindow.splitVC.ibarotTextVC
 
         switch deepLink {
         case let .annotation(annId):
             guard let annotation = AnnotationStore.shared.loadAnnotationById(annId) else { return }
-
-            Task { @MainActor in
-                targetWindow.switchToMode(.viewer)
-                targetWindow.splitVC.ibarotTextVC.didSelect(annotation: annotation)
+            do {
+                try await ibarotVC.openAnnotation(annotation)
+            } catch {
+                #if DEBUG
+                print("Failed to open annotation from deep link: \(error)")
+                #endif
             }
 
         case let .history(bkId, contentId):
             guard let book = LibraryDataManager.shared.getBook([bkId]).first else { return }
-
-            Task { @MainActor in
-                targetWindow.switchToMode(.viewer)
-                let splitVC = targetWindow.splitVC
-                do {
-                    if splitVC.ibarotTextVC.currentBook?.id != book.id {
-                        try await splitVC.ibarotTextVC.displayBook(book, loadContent: contentId == nil)
-                    }
-                    if let contentId {
-                        splitVC.ibarotTextVC.handleDelegate(contentId)
-                    }
-                } catch {
-                    #if DEBUG
-                    print("Failed to open history book: \(error)")
-                    #endif
-                }
+            do {
+                try await ibarotVC.openHistory(book: book, contentId: contentId)
+            } catch {
+                #if DEBUG
+                print("Failed to open history book from deep link: \(error)")
+                #endif
             }
         }
     }
