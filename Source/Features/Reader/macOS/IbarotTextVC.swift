@@ -264,7 +264,13 @@ class IbarotTextVC: NSViewController {
             book: book, page: currentPage, part: currentPart
         )
 
-        libraryVC?.dataVM.viewModel.selectedBookName = book.book
+        if viewModel.recordHistory {
+            // upload history to cloudkit and update library sidebar
+            libraryVC?.dataVM.viewModel.handleBookSelection(book: book)
+        } else {
+            libraryVC?.dataVM.viewModel.selectedBookName = book.book
+        }
+
         libraryVC?.dataVM.restoreSelection(byBookName: book.book)
     }
 
