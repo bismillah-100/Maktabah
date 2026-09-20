@@ -73,7 +73,7 @@ class QuranSplitVC: ReaderSplitVC {
     func setupClosure() {
         tafseerVC.didSelectBook = { [weak self] book in
             guard let self else { return }
-            Task.detached { [weak self, weak book] in
+            Task { [weak self, weak book] in
                 guard let self, let book else { return }
                 let manager = QuranDataManager.shared
                 do {
@@ -81,16 +81,14 @@ class QuranSplitVC: ReaderSplitVC {
                 } catch is CancellationError {
                     return
                 } catch {
-                    await MainActor.run {
-                        ReusableFunc.showAlert(
-                            title: DatabaseError.bookNotFound(
-                                book.id
-                            ).localizedDescription,
-                            message: ArchiveError.archiveNotAvailable(
-                                archiveId: book.archive
-                            ).localizedDescription
-                        )
-                    }
+                    ReusableFunc.showAlert(
+                        title: DatabaseError.bookNotFound(
+                            book.id
+                        ).localizedDescription,
+                        message: ArchiveError.archiveNotAvailable(
+                            archiveId: book.archive
+                        ).localizedDescription
+                    )
                 }
             }
         }

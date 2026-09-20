@@ -8,8 +8,9 @@
 import Foundation
 import SQLite3
 
-class QuranDataManager {
-    nonisolated(unsafe) static let shared: QuranDataManager = .init()
+@MainActor
+final class QuranDataManager {
+    static let shared: QuranDataManager = .init()
     private var db: SQLiteDatabase?
 
     private(set) var surahNodes: [SurahNode] = []
