@@ -26,7 +26,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
 
     fileprivate var mainWindowController: NSWindowController!
-    private var hasPendingDeepLink = false
+    private var pendingDeepLink: WidgetDeepLink?
+    private var isFinishedLaunching = false
+    private var activeDeepLinkTask: Task<Void, Never>?
 
     fileprivate weak var quranWindow: NSWindow?
     fileprivate weak var settingsWindow: NSWindow?
@@ -56,21 +58,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AppConfig.initializeMode()
         AppConfig.setupAnnotationsAndResults()
         CoreDatabaseBootstrap.run()
-
         UserDefaults.standard.register(defaults: ["AplFirstLaunch": true])
+    }
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
         let wc = WindowController()
         mainWindowController = wc
         guard let window = wc.window else { return }
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]
-            == "1"
-        {
-            return
-        }
+            == "1" { return }
 
         window.makeKeyAndOrderFront(nil)
-    }
 
-    func applicationWillFinishLaunching(_ notification: Notification) {
         NSAppleEventManager.shared().setEventHandler(
             self,
             andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
@@ -81,11 +80,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSApplication.shared.activate(ignoringOtherApps: true)
-        if !hasPendingDeepLink {
+        if let deepLink = pendingDeepLink {
+            pendingDeepLink = nil
+            if let window = mainWindowController?.window as? MainWindow {
+                window.setupContentView(mode: .viewer, restoreState: false)
+            }
+            activeDeepLinkTask = Task { @MainActor in
+                await handleDeepLink(deepLink)
+            }
+        } else {
             restorePersistedState(mainWindowController.window as? MainWindow)
-        } else if let window = mainWindowController?.window as? MainWindow {
-            window.setupContentView(restoreState: false)
         }
+        isFinishedLaunching = true
         buildViewMenu()
 
         BookConnection.tocTreeCache.countLimit = 20
@@ -97,29 +103,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         _ = ScreenTimeManager.shared // untuk init supaya pengaturan diload.
         _ = WidgetUpdateCoordinator.shared // untuk init observer widget & snapshot awal
 
-        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.lineHeight: 1.0])
-        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorDark: 3])
-        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorLight: 0])
-        UserDefaults.standard.register(defaults: ["annotationsLayoutDirection": 1])
-
-        if UserDefaults.standard.data(forKey: AppConfig.annotationsAndResultsFolder) == nil {
-            UserDefaults.standard.register(defaults: [AppConfig.useICloudKey: true])
-        }
-
-        #if DIRECT_DISTRIBUTION
-        UserDefaults.standard.register(
-            defaults: [UserDefaults.autoCheckAppUpdatesKey: true]
-        )
-        Task.detached(priority: .low) { [weak self] in
-            if !UserDefaults.standard.autoCheckAppUpdates {
-                return
-            }
-            await Task.yield()
-            await self?.checkAppUpdates(true)
-        }
-        #else
-        appUpdatesMenuItem.isHidden = true
-        #endif
+        registerUserDefaults()
 
         CloudKitSyncManager.shared.initializeOnLaunch()
         // Register for CloudKit remote notifications
@@ -146,13 +130,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func registerUserDefaults() {
+        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.lineHeight: 1.0])
+        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorDark: 3])
+        UserDefaults.standard.register(defaults: [UserDefaults.TextViewKeys.backgroundColorLight: 0])
+        UserDefaults.standard.register(defaults: ["annotationsLayoutDirection": 1])
+
+        if UserDefaults.standard.data(forKey: AppConfig.annotationsAndResultsFolder) == nil {
+            UserDefaults.standard.register(defaults: [AppConfig.useICloudKey: true])
+        }
+
+        #if DIRECT_DISTRIBUTION
+        UserDefaults.standard.register(
+            defaults: [UserDefaults.autoCheckAppUpdatesKey: true]
+        )
+        Task.detached(priority: .low) { [weak self] in
+            if !UserDefaults.standard.autoCheckAppUpdates {
+                return
+            }
+            await Task.yield()
+            await self?.checkAppUpdates(true)
+        }
+        #else
+        appUpdatesMenuItem.isHidden = true
+        #endif
+    }
+
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
         Task {
             try await Task.sleep(for: .seconds(5))
             CloudKitSyncManager.shared.fetchChanges()
-        }
-        Task {
-            _ = await WidgetUpdateCoordinator.shared.handleSilentPush()
+            await WidgetUpdateCoordinator.shared.handleSilentPush()
         }
     }
 
@@ -633,7 +641,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         newWindow(sender, restoreState: true)
     }
 
-    func newWindow(_ sender: Any, restoreState: Bool) {
+    func newWindow(_ sender: Any, restoreState: Bool, mode: AppMode? = nil) {
         let wc = WindowController()
         wc.window?.setFrameAutosaveName("MainWindow")
 
@@ -642,7 +650,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if mainWindowController == nil && restoreState {
             restorePersistedState(w)
         } else {
-            w.setupContentView(restoreState: false)
+            w.setupContentView(mode: mode, restoreState: false)
         }
 
         mainWindowController = wc
@@ -657,7 +665,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @discardableResult
-    func ensureActiveMainWindow(restoreState: Bool = true) -> MainWindow? {
+    func ensureActiveMainWindow(mode: AppMode? = nil, restoreState: Bool = true) -> MainWindow? {
         NSApp.activate(ignoringOtherApps: true)
 
         if let existingWindow = (NSApp.windows.first(where: { $0 is MainWindow && !$0.isMiniaturized }) as? MainWindow) ?? (keyWindow ?? mainWindowController?.window as? MainWindow) {
@@ -671,16 +679,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return minimizedWindow
         }
 
-        newWindow(self, restoreState: restoreState)
+        newWindow(self, restoreState: restoreState, mode: mode)
         return keyWindow ?? (mainWindowController?.window as? MainWindow)
+    }
+
+    private func processDeepLink(_ deepLink: WidgetDeepLink) {
+        if isFinishedLaunching {
+            activeDeepLinkTask?.cancel()
+            activeDeepLinkTask = Task { @MainActor in
+                await handleDeepLink(deepLink)
+            }
+        } else {
+            pendingDeepLink = deepLink
+        }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
         guard let url = urls.first, let deepLink = WidgetDeepLink.parse(from: url) else { return }
-        hasPendingDeepLink = true
-        Task { @MainActor in
-            await handleDeepLink(deepLink)
-        }
+        processDeepLink(deepLink)
     }
 
     @objc func handleGetURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
@@ -689,19 +705,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
               let deepLink = WidgetDeepLink.parse(from: url)
         else { return }
 
-        hasPendingDeepLink = true
-        Task { @MainActor in
-            await handleDeepLink(deepLink)
-        }
+        processDeepLink(deepLink)
     }
 
     @MainActor
     private func handleDeepLink(_ deepLink: WidgetDeepLink) async {
-        guard let targetWindow = ensureActiveMainWindow(restoreState: false) else { return }
+        guard !Task.isCancelled else { return }
+        guard let targetWindow = ensureActiveMainWindow(mode: .viewer, restoreState: false) else { return }
 
+        guard !Task.isCancelled else { return }
         targetWindow.switchToMode(.viewer, restoreState: false)
         let ibarotVC = targetWindow.splitVC.ibarotTextVC
 
+        guard !Task.isCancelled else { return }
         switch deepLink {
         case let .annotation(annId):
             guard let annotation = AnnotationStore.shared.loadAnnotationById(annId) else { return }

@@ -87,10 +87,7 @@ class SplitVC: NSSplitViewController {
 
     func switchToMode(_ mode: AppMode, restoreState: Bool = true) {
         // Simpan title sebelum switch
-        stateManager.saveState(
-            for: currentMode,
-            components: components(for: currentMode)
-        )
+        persistCurrentStateToDisk(persistToDisk: !restoreState)
 
         ibarotTextVC.textView.string.removeAll()
 
@@ -106,7 +103,7 @@ class SplitVC: NSSplitViewController {
             // Pass rowiResultsVC untuk Author mode restore
             stateManager.restoreState(
                 for: mode,
-                components: components(for: currentMode)
+                components: components(for: mode)
             )
         }
 
@@ -115,13 +112,15 @@ class SplitVC: NSSplitViewController {
         currentMode = mode
     }
 
-    func persistCurrentStateToDisk() {
+    func persistCurrentStateToDisk(persistToDisk: Bool = true) {
         stateManager.saveState(
             for: currentMode,
             components: components(for: currentMode)
         )
 
-        stateManager.persisToDisk(for: currentMode)
+        if persistToDisk {
+            stateManager.persistToDisk()
+        }
     }
 
     // MARK: - Mode Setup Helpers
