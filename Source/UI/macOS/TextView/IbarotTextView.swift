@@ -174,9 +174,7 @@ class IbarotTextView: NSTextView {
             using: { [weak self] notification in
                 guard let userInfo = notification.userInfo,
                       let enable = userInfo["enable"] as? Bool
-                else {
-                    return
-                }
+                else { return }
                 MainActor.assumeIsolated {
                     self?.editAnnotationOnClick(enable)
                 }

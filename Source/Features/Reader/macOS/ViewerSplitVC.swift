@@ -93,9 +93,10 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingLineHeight() {
         lineHeightObservation = NotificationCenter.default.addObserver(
             forName: .didChangeLineHeight, object: nil,
-            queue: .main, using: { _ in
+            queue: .main, using: { [weak self] _ in
                 MainActor.assumeIsolated { [weak self] in
-                    self?.ibarotVC.textView.updateLineHeight()
+                    guard let self else { return }
+                    ibarotVC.textView.updateLineHeight()
                 }
             }
         )
@@ -109,9 +110,10 @@ class ViewerSplitVC: ReaderSplitVC {
         appearanceObservation = splitView.observe(
             \.effectiveAppearance,
             options: [.new]
-        ) { _, _ in
+        ) { [weak self] _, _ in
             MainActor.assumeIsolated { [weak self] in
-                self?.applyThemeBasedOnSystem()
+                guard let self else { return }
+                applyThemeBasedOnSystem()
             }
         }
     }
@@ -119,7 +121,7 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingBgColor() {
         bgObserver = NotificationCenter.default.addObserver(
             forName: .didChangeBackground, object: nil,
-            queue: .main, using: { _ in
+            queue: .main, using: { [weak self] _ in
                 MainActor.assumeIsolated { [weak self] in
                     guard let self else { return }
                     let bg = getBgColor()
@@ -132,12 +134,13 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingTasykil() {
         tasykilObserver = NotificationCenter.default.addObserver(
             forName: .didChangeHarakat, object: nil,
-            queue: .main, using: { notif in
+            queue: .main, using: { [weak self] notif in
                 guard let userInfo = notif.userInfo,
                       let on = userInfo["on"] as? Bool
                 else { return }
                 MainActor.assumeIsolated { [weak self] in
-                    self?.ibarotVC.toggleHarakat(on)
+                    guard let self else { return }
+                    ibarotVC.toggleHarakat(on)
                 }
             }
         )
@@ -146,12 +149,13 @@ class ViewerSplitVC: ReaderSplitVC {
     private func startObservingFont() {
         fontObserver = NotificationCenter.default.addObserver(
             forName: .didChangeFont, object: nil,
-            queue: .main, using: { notif in
+            queue: .main, using: { [weak self] notif in
                 guard let userInfo = notif.userInfo,
                       let redraw = userInfo["redraw"] as? Bool
                 else { return }
                 MainActor.assumeIsolated { [weak self] in
-                    self?.ibarotVC.applyFont(redraw)
+                    guard let self else { return }
+                    ibarotVC.applyFont(redraw)
                 }
             }
         )
@@ -259,17 +263,17 @@ class ViewerSplitVC: ReaderSplitVC {
     }
 
     deinit {
-        if let bgObserver,
-           let appearanceObservation,
-           let fontObserver,
-           let tasykilObserver,
-           let lineHeightObservation
-        {
+        if let bgObserver {
             NotificationCenter.default.removeObserver(bgObserver)
-            NotificationCenter.default.removeObserver(appearanceObservation)
-            NotificationCenter.default.removeObserver(lineHeightObservation)
+        }
+        if let fontObserver {
             NotificationCenter.default.removeObserver(fontObserver)
+        }
+        if let tasykilObserver {
             NotificationCenter.default.removeObserver(tasykilObserver)
+        }
+        if let lineHeightObservation {
+            NotificationCenter.default.removeObserver(lineHeightObservation)
         }
         bgObserver = nil
         appearanceObservation = nil

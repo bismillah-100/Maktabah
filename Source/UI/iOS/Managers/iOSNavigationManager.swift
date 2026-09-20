@@ -56,7 +56,7 @@ class iOSNavigationManager {
                     forName: .bookIntegrated,
                     object: nil,
                     queue: .main
-                ) { notification in
+                ) { [weak self] notification in
                     guard let bookId = notification.object as? Int else {
                         return
                     }
@@ -74,7 +74,7 @@ class iOSNavigationManager {
                     forName: .libraryFolderChanged,
                     object: nil,
                     queue: .main
-                ) { _ in
+                ) { [weak self] _ in
                     Task { @MainActor [weak self] in
                         self?.clearAllTabs()
                     }
@@ -223,7 +223,7 @@ class iOSNavigationManager {
         state.detail = ""
         state.progress = 0
 
-        Task {
+        Task { [weak self] in
             do {
                 try await BookArchiveIntegrator.shared.ensureBookIntegrated(
                     book,
@@ -234,22 +234,22 @@ class iOSNavigationManager {
                     }
                 )
 
-                await MainActor.run {
-                    if !MaktabahApp.isIpad, self.selectedBook != nil {
+                await MainActor.run { [weak self] in
+                    if !MaktabahApp.isIpad, self?.selectedBook != nil {
                         // Do not automatically push a new book if there is already an active reader on iPhone
                     } else {
-                        self.presentReader(book, initialContentId: initialContentId)
+                        self?.presentReader(book, initialContentId: initialContentId)
                     }
-                    self.activeIntegrationStates.removeAll { $0.id == state.id }
+                    self?.activeIntegrationStates.removeAll { $0.id == state.id }
                 }
             } catch is CancellationError {
-                await MainActor.run {
-                    self.activeIntegrationStates.removeAll { $0.id == state.id }
+                await MainActor.run { [weak self] in
+                    self?.activeIntegrationStates.removeAll { $0.id == state.id }
                 }
             } catch {
-                await MainActor.run {
-                    self.activeIntegrationStates.removeAll { $0.id == state.id }
-                    self.alertMessage = AlertMessage(
+                await MainActor.run { [weak self] in
+                    self?.activeIntegrationStates.removeAll { $0.id == state.id }
+                    self?.alertMessage = AlertMessage(
                         title: NSLocalizedString("Download Failed", comment: "Download failed alert title"),
                         message: error.localizedDescription
                     )

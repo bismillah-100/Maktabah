@@ -75,6 +75,17 @@ class SidebarVC: NSViewController {
         }
     }
 
+    deinit {
+        #if DEBUG
+        print("SidebarVC deinit")
+        #endif
+        windowsObservation = nil
+        if let obs = tabBarObservation {
+            NotificationCenter.default.removeObserver(obs)
+            tabBarObservation = nil
+        }
+    }
+
     func startWindowObservation() {
         guard windowsObservation == nil,
               let window = view.window,
@@ -84,7 +95,7 @@ class SidebarVC: NSViewController {
         windowsObservation = tabGroup.observe(
             \.windows,
             options: []
-        ) { _, _ in
+        ) { [weak self] _, _ in
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 updateScrollViewInsets(searchContainer.isHidden)
@@ -94,7 +105,7 @@ class SidebarVC: NSViewController {
         tabBarObservation = NotificationCenter.default.addObserver(
             forName: .windowTabBarDidChange,
             object: nil, queue: .main,
-            using: { _ in
+            using: { [weak self] _ in
                 MainActor.assumeIsolated { [weak self] in
                     guard let self else { return }
                     updateScrollViewInsets(searchContainer.isHidden)
