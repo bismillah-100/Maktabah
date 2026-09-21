@@ -2,7 +2,7 @@
 
 Bagian ini membedah berbagai `struct`, `class`, dan `enum` murni yang berada di folder `Models/`. Model-model ini dirancang bebas dari ketergantungan sistem luar agar ringan dan *thread-safe* (mengadopsi *protocol* `Sendable`).
 
-## `Annotation` (Struct)
+## Annotation (Struct)
 
 Entitas utama yang merepresentasikan sebuah anotasi (*highlight*, *underline*, atau *note*).
 
@@ -42,7 +42,7 @@ struct Annotation: Sendable {
 - *Protocol* `Sendable`: `Annotation` dijamin aman untuk diteruskan antar-*thread* (Task/Actor) secara konkuren tanpa risiko *data race*.
 - Teks Konteks (`context`): Menyimpan salinan denormalisasi potongan teks agar saat pencarian/filter tidak perlu membaca basis data buku utama secara berulang.
 
-## `ContentKey` (Struct)
+## ContentKey (Struct)
 
 Kunci untuk *in-memory cache map* (`AnnotationStore`).
 
@@ -55,7 +55,7 @@ struct ContentKey: Hashable, Sendable {
 
 Digunakan sebagai *key* pada kamus *caching* per konten buku `[ContentKey: [Annotation]]` agar operasi *lookup* berjalan dalam kompleksitas waktu $O(1)$.
 
-## `AnnotationNode` (Class) & Hierarki
+## AnnotationNode (Class)
 
 Digunakan untuk membentuk struktur hierarki (*tree*) pada antarmuka `NSOutlineView` atau `SwiftUI List`.
 
@@ -73,7 +73,7 @@ final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
 !!! warning "Catatan Thread-Safety"
     *Class* `AnnotationNode` menggunakan atribut `@unchecked Sendable`. Hal ini karena mutasi dilakukan eksklusif saat fase pembentukan struktur hierarki di *background thread*. Setelah dipublikasikan ke antarmuka pengguna, objek ini dianggap *read-only* (*frozen*). Hindari memutasi objek ini dari Main Actor secara langsung.
 
-### `AnnotationNodeKind` (Enum)
+### AnnotationNodeKind (Enum)
 
 ```swift
 enum AnnotationNodeKind {
@@ -86,7 +86,7 @@ enum AnnotationNodeKind {
 }
 ```
 
-### `DateBucket` (Enum)
+### DateBucket (Enum)
 
 Digunakan untuk pengelompokan (*grouping*) linimasa secara kronologis (Today, Yesterday, dsb.).
 
@@ -105,7 +105,7 @@ Tipe ini mengadopsi `Comparable` untuk memudahkan pengurutan (*sorting*) kelompo
 
 ## Status & Filter (Enum)
 
-### `AnnotationMode` (Enum)
+### AnnotationMode (Enum)
 
 Menentukan bentuk visual anotasi.
 
@@ -116,7 +116,7 @@ enum AnnotationMode: Int, Sendable {
 }
 ```
 
-### `AnnotationSortOption` (Enum) & Enums
+### AnnotationSortOption (Enum)
 
 Enum yang mengatur bagaimana antarmuka pengguna menyortir dan mengelompokkan data.
 
@@ -140,7 +140,7 @@ enum TagFilterMode {
 }
 ```
 
-## `AnnotationEvent` (Enum)
+## AnnotationEvent (Enum)
 
 Menggunakan tipe data aljabar (*algebraic data types* / enum dengan *associated values*) untuk dipancarkan melalui `PassthroughSubject` di Combine.
 

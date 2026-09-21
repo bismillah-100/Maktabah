@@ -94,7 +94,7 @@ private struct CacheState: Sendable {
 
 ### Pengamanan Thread-Safety (`Synchronization.Mutex`)
 
-Status *cache* dilindungi oleh `Mutex` bawaan framework `Synchronization` (Swift 6):
+*State* *cache* dilindungi oleh `Mutex` bawaan framework `Synchronization` (Swift 6):
 
 ```swift
 import Synchronization
@@ -121,7 +121,7 @@ func loadAnnotations(bkId: Int, contentId: Int) -> [Annotation] {
 }
 ```
 
-Penggunaan `Mutex.withLock` berbasis kunci atomik tingkat OS memastikan tidak ada kondisi *race condition* saat membaca ataupun memperbarui data anotasi secara konkuren oleh *search worker* dan Main Thread.
+Penggunaan `Mutex.withLock` berbasis operasi *lock* atomik tingkat OS memastikan tidak ada kondisi *data race* saat membaca ataupun memperbarui data anotasi secara konkuren oleh *search worker* dan Main Thread.
 
 ## Alur Sinkronisasi Offline & CloudKit (`AnnotationSyncHandler.swift`)
 
@@ -197,7 +197,7 @@ Apabila sinkronisasi menarik versi Cloud yang lebih baru dari versi lokal, SQLit
 
 ### Penanganan Mode Luring (`SyncPendingStore`)
 
-Setiap mutasi (Insert, Update, Delete) yang dilakukan di `AnnotationRepository` dicatat ke dalam antrean sinkronisasi tunda (*pending sync*):
+Setiap mutasi (Insert, Update, Delete) yang dilakukan di `AnnotationRepository` dicatat ke dalam antrean sinkronisasi tertunda (*pending sync*):
 
 ```swift
 try transaction {

@@ -28,7 +28,7 @@ Saat pengguna mengaktifkan atau menonaktifkan tampilan harakat di *reader*:
 
 ---
 
-## Mekanisme `ArabicRangeCalculator`
+## ArabicRangeCalculator (Class)
 
 Saat pengguna membuat sorotan (*highlight*) baru, sistem menjalankan fungsi `calculateRanges`:
 

@@ -17,7 +17,7 @@ Komponen ini bertanggung jawab untuk:
 
 ---
 
-## 2. Mode Pengelompokan (`AnnotationGroupingMode`)
+## 2. Mode Pengelompokan (AnnotationGroupingMode)
 
 Sistem mendukung 3 mode organisasi data:
 
@@ -63,7 +63,7 @@ Root
 
 ---
 
-## 3. Mekanisme Diffing & Animasi UI (`AnnotationTreeDiff`)
+## 3. Mekanisme Diffing & Animasi UI (AnnotationTreeDiff)
 
 Ketika terjadi penambahan, pengubahan, atau penghapusan anotasi, `AnnotationTreeBuilder` tidak membangun ulang seluruh struktur hierarki dari awal. Sebaliknya, komponen ini menghitung delta perubahan (*tree diffing*) dan memancarkannya melalui Combine Publisher:
 

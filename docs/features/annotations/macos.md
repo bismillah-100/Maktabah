@@ -89,7 +89,7 @@ Komponen `AnnotationCellView` adalah turunan dari `NSTableCellView` yang diranca
 Berkas `TimelineOutlineViews.swift` bertanggung jawab atas elemen visual penunjuk linimasa pada judul grup.
 
 *   **TimelineNodeView**:
-    Subkelas `NSView` kustom yang bertugas menggambar titik *node* secara manual menggunakan jalur `NSBezierPath`.
+    *Subclass* `NSView` kustom yang berfungsi menggambar titik *node* secara manual menggunakan jalur `NSBezierPath`.
 
 *   **TimelineGroupCellView**:
     Digunakan khusus untuk baris grup saat mode linimasa aktif. Sel ini menggabungkan `topTimelineRail` dan `bottomTimelineRail` untuk menciptakan jalur vertikal yang tersambung antar-sel.

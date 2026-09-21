@@ -70,7 +70,7 @@ Saat pengguna memilih baris catatan, sistem menavigasi pembaca ke kitab dan hala
 
 ### macOS: Delegasi AppKit
 
-* **Protocol**: [`AnnotationDelegate`](file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/Protocols/AnnotationDelegate.swift).
+* **Protocol**: [AnnotationDelegate](protocols.md).
 * **Alur**: `NSOutlineView` mendeteksi pergantian baris $\rightarrow$ `AnnotationsOutlineDelegate.outlineViewSelectionDidChange` $\rightarrow$ memanggil `dataSource.delegate?.didSelect(annotation:)` $\rightarrow$ ditangkap oleh `IbarotTextVC` yang dihubungkan melalui `SplitVC`.
 * **Aksi**: Reader memuat kitab target jika belum terbuka, membuka halaman via `contentId`, dan menggeser *viewport* teks ke `highlightRange`.
 
@@ -85,7 +85,7 @@ Saat pengguna memilih baris catatan, sistem menavigasi pembaca ke kitab dan hala
 
 ## Komponen Bersama (*Multiplatform Component*)
 
-### `TagFilterSelectionView`
+### TagFilterSelectionView (Struct)
 Meskipun tersimpan di direktori `Source/Features/Annotations/macOS/`, komponen ini dirancang *multiplatform* dengan kompilasi kondisional (`#if os(macOS)` dan `#if os(iOS)`):
 
 * **macOS**: Ditampilkan di dalam *popover* pemilihan tag dengan batasan lebar 220–300 pt.

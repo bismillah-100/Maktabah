@@ -1,6 +1,6 @@
 # Contracts & Loose Coupling
 
-Folder `Protocols/` menyimpan seluruh definisi kontrak (*protocol*) yang bertugas sebagai antarmuka abstraksi. Penggunaan *protocol* sangat krusial dalam arsitektur Maktabah untuk mencegah ketergantungan yang kuat (*tight coupling*) antar-modul, khususnya komunikasi lintas layar (seperti dari Sidebar Annotations ke modul Reader).
+Folder `Protocols/` menyimpan seluruh definisi kontrak (*protocol*) yang berfungsi sebagai antarmuka abstraksi. Penggunaan *protocol* sangat krusial dalam arsitektur Maktabah untuk mencegah ketergantungan yang kuat (*tight coupling*) antar-modul, khususnya komunikasi lintas layar (seperti dari Sidebar Annotations ke modul Reader).
 
 ## AnnotationDelegate (Protocol)
 

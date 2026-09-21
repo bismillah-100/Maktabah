@@ -2,7 +2,7 @@
 
 Bagian ini membahas manajemen *state*, penanganan konkurensi (async/await, Task, debounce), serta aliran reaktivitas antara Storage, Tree Builder, dan antarmuka pengguna menggunakan `Combine` dan `@Observable`.
 
-## Arsitektur Aliran Data (*Data Flow*)
+## Arsitektur Alur Data (*Data Flow*)
 
 Alur reaktivitas anotasi dirancang satu arah (*unidirectional*) untuk memastikan prediktabilitas:
 
@@ -11,7 +11,7 @@ Alur reaktivitas anotasi dirancang satu arah (*unidirectional*) untuk memastikan
 3. **Transformasi ViewModel**: `AnnotationViewModel` berlangganan (*subscribe*) pada hasil dari `AnnotationTreeBuilder`. Apabila pencarian atau filter aktif, ViewModel melakukan pemfilteran tambahan.
 4. **Binding Antarmuka Pengguna**: UI (SwiftUI atau AppKit) dirender ulang secara otomatis melalui makro `@Observable` atau pembaruan inkremental via `onIncrementalUpdate`.
 
-## AnnotationViewModel
+## AnnotationViewModel (Class)
 
 Berperan sebagai sumber kebenaran (*source of truth*) untuk tampilan daftar anotasi.
 
@@ -76,7 +76,7 @@ private func filterNodesByTags(_ nodes: [AnnotationNode], tags: Set<String>? = n
 
 Jika dalam mode `AND`, properti `availableTags` difilter sedemikian rupa sehingga hanya menampilkan tag yang muncul bersamaan (*co-occurring*) dalam sisa anotasi yang cocok.
 
-## AnnotationTreeBuilder
+## AnnotationTreeBuilder (Class)
 
 Merupakan mesin latar belakang (*background engine*) yang bertugas mengubah daftar linier (*flat list*) `[Annotation]` menjadi struktur hierarki `AnnotationNode` untuk antarmuka `NSOutlineView` atau `SwiftUI List`.
 
@@ -93,7 +93,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
 ### Antrean Serial & Sinkronisasi
 
-`AnnotationTreeBuilder` memproses seluruh mutasi menggunakan antrean serial `treeQueue` dengan tingkat QoS `.userInitiated`. Hal ini menjamin bahwa seluruh manipulasi pada `rootNode` bersifat *thread-safe* dan terhindar dari *data race*, mengeliminasi kebutuhan penggunaan kunci sinkronisasi internal secara eksplisit.
+`AnnotationTreeBuilder` memproses seluruh mutasi menggunakan antrean serial `treeQueue` dengan tingkat QoS `.userInitiated`. Hal ini menjamin bahwa seluruh manipulasi pada `rootNode` bersifat *thread-safe* dan terhindar dari *data race*, mengeliminasi kebutuhan mekanisme *lock* sinkronisasi internal secara eksplisit.
 
 ### Alur Sinkronisasi & Pembaruan Inkremental
 

@@ -30,7 +30,7 @@ flowchart TD
     UI_Mac[AppKit UI<br>AnnotationsVC, OutlineView] --> VM[AnnotationViewModel]
     UI_iOS[SwiftUI & UIKit UI<br>iOSAnnotationViewController] --> VM
 
-    VM --> Tree[AnnotationTreeBuilder<br>Mutasi Hirarki & Diffing]
+    VM --> Tree[AnnotationTreeBuilder<br>Mutasi Hierarki & Diffing]
     Tree -.-> Publish([Publish Annotation Event])
     VM --> Store[AnnotationStore<br>In-Memory Cache & Mutex]
 

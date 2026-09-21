@@ -1,8 +1,8 @@
 # Antarmuka Pengguna iOS Anotasi
 
-Implementasi antarmuka anotasi di iOS dan iPadOS mengadopsi arsitektur *hybrid* yang menggabungkan deklaratif SwiftUI untuk level kontainer dan UIKit modern (`UICollectionViewCompositionalLayout` & `UICollectionViewDiffableDataSource`) untuk performa tinggi daftar hierarki teks Arab.
+Implementasi antarmuka anotasi di iOS dan iPadOS mengadopsi arsitektur hibrida (*hybrid*) yang menggabungkan paradigma deklaratif SwiftUI untuk level kontainer dan UIKit modern (`UICollectionViewCompositionalLayout` & `UICollectionViewDiffableDataSource`) untuk performa tinggi daftar hierarki teks Arab.
 
-## Arsitektur Hybrid & Diagram Aliran Data
+## Arsitektur Hibrida & Diagram Alur Data
 
 Alur rendering dan pembagian tanggung jawab antarkomponen diatur sebagai berikut:
 
@@ -180,7 +180,7 @@ listConfig.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath i
 *   **Pengeditan Berpusat di Reader (`iOSAnnotationEditorSheet`)**:
     Pengubahan catatan (*note*), warna sorotan, tipe garis bawah (*underline*), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (`iOSReaderView`) melalui lembar modal `iOSAnnotationEditorSheet` saat teks beranotasi diketuk.
 
-## Modal Sheet Filter Tag (`TagFilterSelectionView`)
+## Modal Sheet Filter Tag (TagFilterSelectionView)
 
 Saat tombol filter pada `iOSTagFilterHeaderView` diketuk:
 
