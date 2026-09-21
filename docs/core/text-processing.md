@@ -1,6 +1,6 @@
 # Pemrosesan Teks & Ekstensi String
 
-Subsistem pemrosesan teks di Maktabah berfokus pada normalisasi teks Arab, pembersihan harakat (*tashkeel*), kalkulasi pemetaan rentang (*range mapping*), serta perenderan tipografi teks. Logika ini sebagian besar terpusat di dalam `Source/Core/TextProcessing/` melalui ekstensi (*extensions*) pada tipe bawaan `String`.
+Subsistem pemrosesan teks di Maktabah berfokus pada normalisasi teks Arab, pembersihan harakat (*tashkeel*), kalkulasi pemetaan rentang (*range mapping*), serta perenderan tipografi teks. Logika ini sebagian besar terpusat di dalam `Source/Core/TextProcessing/` melalui *extension* `String` bawaan.
 
 ---
 
@@ -74,7 +74,7 @@ Dalam teks turats Islam, frasa doa umum seperti:
 - `"رحمه الله"`
 - `"عز وجل"`
 
-Sering kali dirender menjadi satu glif kaligrafi (*calligraphic ligatures*) pada *font* khusus seperti KFGQPC Uthmanic Script. Penggantian frasa sepanjang 18 karakter menjadi satu glif karakter tunggal menyebabkan pergeseran koordinat (*length delta*) yang signifikan:
+Sering kali dirender menjadi satu glif kaligrafi (*calligraphic ligatures*) pada *font* khusus seperti KFGQPC Uthmanic Script. Penggantian frasa sepanjang 18 karakter menjadi satu glif kaligrafi tunggal menyebabkan pergeseran koordinat (*length delta*) yang signifikan:
 
 ```swift
 struct HonorificReplacementEvent {
