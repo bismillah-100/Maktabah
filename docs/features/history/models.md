@@ -2,7 +2,7 @@
 
 Bagian ini membedah struktur data utama yang menyokong modul History & Favorites. Keseluruhan modul ini menggunakan `ReadingEntry` sebagai model tunggal (*Single Source of Truth*) yang merepresentasikan metadata interaksi pengguna dengan satu buku.
 
-## `ReadingEntry` (Struct)
+## ReadingEntry (Struct)
 
 `ReadingEntry` adalah *struct* (*value type*) utama yang menyimpan informasi terkait riwayat dan status favorit dari suatu buku. Berkas ini berlokasi di `Source/Features/History/Models/ReadingEntry.swift`.
 

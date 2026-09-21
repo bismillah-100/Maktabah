@@ -1,6 +1,6 @@
 # AppKit Implementation (macOS)
 
-Arsitektur aplikasi pada macOS untuk modul History dirancang secara minimalis. Tidak ada folder khusus `macOS/` di dalam struktur `Source/Features/History/`. Sebagai gantinya, History dan Favorites secara cerdas memanfaatkan kembali (*re-use*) hierarki tampilan (*View Hierarchy*) milik `LibraryVC`.
+Arsitektur aplikasi pada macOS untuk modul History dirancang secara minimalis. Tidak ada folder khusus `macOS/` di dalam struktur `Source/Features/History/`. Sebagai gantinya, History dan Favorites memanfaatkan kembali (*re-use*) hierarki tampilan (*View Hierarchy*) milik `LibraryVC`.
 
 ## Integrasi *Diffable Data Source* pada `LibraryVC`
 

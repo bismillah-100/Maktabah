@@ -48,7 +48,7 @@ Untuk menangani parameter dalam jumlah besar, `HistoryDatabaseManager` mengeksek
 
 ## Thread-Safety & Concurrency
 
-Meskipun bertipe *class* biasa (bukan model `actor`) dan dianotasi dengan `@unchecked Sendable`, `HistoryDatabaseManager` menjamin *thread-safety* melalui *lock* reklusif (`NSRecursiveLock` atau flag `SQLITE_OPEN_FULLMUTEX`) yang diproses di internal modul `SQLiteDatabase`.
+Meskipun bertipe *class* biasa (bukan model `actor`) dan dianotasi dengan `@unchecked Sendable`, `HistoryDatabaseManager` menjamin *thread-safety* melalui *lock* rekursif (`NSRecursiveLock` atau flag `SQLITE_OPEN_FULLMUTEX`) yang diproses di internal modul `SQLiteDatabase`.
 
 ```swift
 func transaction(_ block: () throws -> Void) throws {

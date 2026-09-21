@@ -105,7 +105,7 @@ sequenceDiagram
     VM->>+DB: getContent(contentId)
     DB-->>-VM: sourceText (LZString/Zstd)
     VM->>VM: ArabicTextRenderer.render()
-    VM-->>-Rdr: State terbarui (@Observable contentText)
+    VM-->>-Rdr: State diperbarui (@Observable contentText)
 
     Rdr->>+TV: updateUIView(attributedText)
     TV->>TV: UITextView.attributedText = renderedText
@@ -117,7 +117,7 @@ sequenceDiagram
 
 ## 3. Bedah Komponen & Logika Antarmuka
 
-### A. `iOSHistoryView`
+### A. iOSHistoryView (Struct)
 Sebagai kontainer beranda (*Root View*) ketika pengguna memilih menu "History & Favorites" di `iPhoneLayout` atau bilah samping `iPadLayout`, `iOSHistoryView` mengombinasikan koleksi favorit dan linimasa buku terakhir yang dibuka secara vertikal:
 
 ```swift
@@ -152,7 +152,7 @@ Fitur ini memanfaatkan makro `@Observable` (dari properti `viewModel.filteredFav
 ### B. `HistoryFavoriteSections.swift`
 Berkas ini bertugas sebagai pembungkus (*wrapper*) bagian tampilan. Komponen statis seperti `Section(header: Text("History"))` dibungkus dalam modul terisolasi agar iPad dapat me-*render* bagian ini secara independen di *sidebar* tanpa perlu me-*render* ulang `ThemeList` secara penuh.
 
-### C. `HistoryHorizontalGrid`
+### C. HistoryHorizontalGrid (Struct)
 Karena riwayat yang baru dibaca disajikan di posisi teratas dalam tampilan *carousel* geser menyamping (*horizontal grid*), Maktabah menyediakan komponen `HistoryHorizontalGrid`:
 
 ```swift

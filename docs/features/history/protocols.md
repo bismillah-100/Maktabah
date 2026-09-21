@@ -10,7 +10,7 @@ Modul History mengintegrasikan fungsionalitasnya dengan memanfaatkan *protocol* 
 2. **Ketergantungan terhadap Kontrak Eksternal (*External Contracts*)**
    Modul ini mengadopsi *protocol* inti dari lapisan *Core*:
 
-   ### `SyncPendingManaging` (Protocol)
+   ### SyncPendingManaging (Protocol)
    `HistoryDatabaseManager` mengimplementasikan *protocol* ini untuk standardisasi antrean sinkronisasi luring:
    
    ```swift

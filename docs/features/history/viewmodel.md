@@ -2,7 +2,7 @@
 
 Manajemen state untuk modul History dikendalikan oleh *class* tunggal `HistoryViewModel`. Komponen ini bertindak sebagai perantara (*middleman*) antara lapisan persistensi (`HistoryDatabaseManager`), lapisan sinkronisasi (`CloudKitSyncManager`), dan UI yang reaktif (baik SwiftUI di iOS maupun NSCollectionView di macOS).
 
-## `HistoryViewModel`
+## HistoryViewModel (Class)
 
 Berlokasi di `Source/Features/History/ViewModel/HistoryViewModel.swift`, *view model* ini menggunakan framework `Observation` (makro `@Observable`) bawaan Swift 5.9+, bukan lagi memakai `@Published` milik `Combine`.
 
