@@ -30,7 +30,7 @@ iOS/
 
 ## 3. Komponen Utama & Alur Navigasi
 
-### `iOSSavedResultsView`
+### iOSSavedResultsView (Struct)
 
 Merupakan kontainer navigasi terluar yang membungkus seluruh hierarki markah menggunakan `NavigationStack`:
 

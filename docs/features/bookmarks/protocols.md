@@ -4,7 +4,7 @@ Dokumentasi ini menjelaskan antarmuka abstraksi dan *protocol* komunikasi yang d
 
 ---
 
-## 1. `ResultsDelegate` (Protocol)
+## 1. ResultsDelegate (Protocol)
 
 *Protocol* utama yang menjembatani interaksi antara antarmuka markah hasil pencarian dengan modul pencarian (*Search Feature*) dan pembaca (*Reader Feature*).
 

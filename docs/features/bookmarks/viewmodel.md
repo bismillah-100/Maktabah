@@ -4,7 +4,7 @@ Dokumentasi ini membedah arsitektur logika bisnis, alur kerja reaktif, manajemen
 
 ---
 
-## 1. Arsitektur Inti `ResultsViewModel`
+## 1. ResultsViewModel (Class)
 
 `ResultsViewModel` dirancang sebagai `class` *singleton* yang mengadopsi makro Swift Observation `@Observable` dan diikat secara mutlak ke antrean utama (`@MainActor`). Pendekatan ini menjamin bahwa seluruh mutasi properti yang diamati oleh SwiftUI maupun AppKit selalu terjadi secara aman di *main thread*.
 

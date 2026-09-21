@@ -111,7 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_results_ck_record_id ON results (ckRecordId);
 
 ---
 
-## 3. Resolusi Orphan Records (`ResultsOrphans.swift`)
+## 3. Resolusi Rekaman Tanpa Induk (*Orphan Records*)
 
 Saat sinkronisasi CloudKit berlangsung, *child record* sering kali tiba lebih awal daripada *parent record*-nya (*out-of-order delivery*). Kondisi ini menyebabkan nilai `parent` atau `folder_id` lokal bernilai `NULL` sementara referensi `parentCkRecordId` sebenarnya ada.
 
@@ -156,7 +156,7 @@ Sinkronisasi markah memanfaatkan zona kustom (*Custom Zone*) di *Private Databas
 ```mermaid
 flowchart TD
     ACT(["Aksi Pengguna: Buat / Edit / Pindah / Hapus"]) --> VM["ResultsViewModel"]
-    VM -->|"Mutasi Hirarki & Diffing"| Handler["ResultsHandler"]
+    VM -->|"Mutasi Hierarki & Diffing"| Handler["ResultsHandler"]
     
     Handler ~~~ STORES
     

@@ -8,7 +8,7 @@ Berkas ini mendokumentasikan seluruh struktur data, model node hierarki (*tree n
 
 Maktabah merepresentasikan markah dalam bentuk struktur hierarki bertingkat (*n-ary tree*) yang memisahkan antara entitas folder (direktori penampung) dan entitas hasil kueri pencarian.
 
-### `FolderNode` (Class)
+### FolderNode (Class)
 
 *Class* node yang merepresentasikan folder hierarki di dalam basis data lokal dan antarmuka pengguna.
 
@@ -64,7 +64,7 @@ final class FolderNode: Identifiable, Hashable, @unchecked Sendable {
 
 ---
 
-### `ResultNode` (Class)
+### ResultNode (Class)
 
 *Class* *leaf node* yang merepresentasikan sekumpulan hasil pencarian tersimpan di bawah naungan suatu folder.
 
@@ -123,7 +123,7 @@ final class ResultNode: Identifiable, Hashable, @unchecked Sendable {
 
 ## 2. Struktur Data Konten & Payload
 
-### `SavedResultsItem` (Struct)
+### SavedResultsItem (Struct)
 
 *Struct* ringan yang mewakili satu kecocokan baris pada kitab tertentu.
 
@@ -151,7 +151,7 @@ struct SavedResultsItem {
 
 ---
 
-### `GroupedResult` (Struct)
+### GroupedResult (Struct)
 
 *Struct* pembantu (*intermediate grouping*) yang memadatkan data hasil pencarian sebelum disimpan ke tabel SQLite.
 
@@ -168,7 +168,7 @@ struct GroupedResult {
 
 ---
 
-### `SearchResultWithPath` (Struct)
+### SearchResultWithPath (Struct)
 
 *Struct* pembungkus yang digunakan pada fitur pencarian global di dalam antarmuka *bookmarks*.
 
@@ -184,7 +184,7 @@ struct SearchResultWithPath {
 
 ---
 
-## 3. `BookmarkTreeChange` (Enum) - Tree Diffing
+## 3. BookmarkTreeChange (Enum) - Tree Diffing
 
 Enum komprehensif yang menjadi jembatan antara ViewModel dan `NSOutlineView` di macOS untuk mendukung animasi perubahan data yang halus melalui mekanisme *tree diffing* tanpa memicu pemuatan ulang penuh (*full reload*).
 
