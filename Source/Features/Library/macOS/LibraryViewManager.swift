@@ -23,6 +23,7 @@ class LibraryViewManager: NSObject {
     var viewModel: LibraryViewModel
     var initialLoad: Bool = true
     var isSetupComplete: Bool = false
+    var isUpdatingOutline: Bool = false
 
     var cancellables = Set<AnyCancellable>()
     let dataManager = LibraryDataManager.shared
@@ -79,9 +80,7 @@ class LibraryViewManager: NSObject {
         switch update {
         case .reloadData:
             outlineView.reloadData()
-            if viewModel.searchQuery.isEmpty {
-                restoreSelection(byBookName: viewModel.selectedBookName)
-            }
+            restoreSelection(byBookName: viewModel.selectedBookName)
         case let .reloadItem(item, reloadChildren):
             outlineView.reloadItem(item, reloadChildren: reloadChildren)
         case let .expandItem(item):
@@ -109,9 +108,11 @@ class LibraryViewManager: NSObject {
     private func handleMutationUpdate(_ update: LibraryUpdate) {
         switch update {
         case .beginUpdates:
+            isUpdatingOutline = true
             outlineView.beginUpdates()
         case .endUpdates:
             outlineView.endUpdates()
+            isUpdatingOutline = false
         case let .removeItems(indexes, parent):
             outlineView.removeItems(at: indexes, inParent: parent, withAnimation: [.slideUp])
         case let .insertItems(indexes, parent):
@@ -151,9 +152,8 @@ class LibraryViewManager: NSObject {
         let query = viewModel.searchQuery
         if !query.isEmpty {
             outlineView.expandItem(nil, expandChildren: true)
-        } else {
-            restoreSelection(byBookName: viewModel.selectedBookName)
         }
+        restoreSelection(byBookName: viewModel.selectedBookName)
     }
 
     func applyFilter(_ mode: LibraryFilterMode) {
@@ -186,21 +186,30 @@ class LibraryViewManager: NSObject {
     func restoreFlatSelection(byBookName bookName: String?) {
         guard let bookName,
               let firstCat = viewModel.displayedCategories.first,
-              let book = firstCat.children.compactMap({
-                  $0 as? BooksData
-              }).first(where: { $0.book == bookName })
+              let index = firstCat.children.firstIndex(where: { ($0 as? BooksData)?.book == bookName })
         else {
-            outlineView.deselectAll(nil)
             return
         }
 
-        safelySelectOutlineRow(for: book)
+        selectFlatRow(index)
+    }
+
+    private func selectFlatRow(_ row: Int) {
+        guard row >= 0, row < outlineView.numberOfRows else { return }
+        if outlineView.selectedRow != row {
+            isUpdatingOutline = true
+            outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+            isUpdatingOutline = false
+            outlineView.scrollRowToVisible(row)
+        }
     }
 
     private func safelySelectOutlineRow(for book: BooksData) {
         let row = outlineView.row(forItem: book)
-        if row >= 0 {
+        if row >= 0, outlineView.selectedRow != row {
+            isUpdatingOutline = true
             outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+            isUpdatingOutline = false
             outlineView.scrollRowToVisible(row)
         }
     }
@@ -335,19 +344,20 @@ extension LibraryViewManager: NSOutlineViewDelegate {
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
+        guard !isUpdatingOutline else { return }
         guard let outlineView = notification.object as? NSOutlineView else { return }
         if outlineView.selectedRowIndexes.count > 1 {
             return
         }
 
         let selectedRow = outlineView.selectedRow
+        guard selectedRow >= 0 else { return }
+
         selectionSubject.send(selectedRow)
 
         if let item = outlineView.item(atRow: selectedRow) as? BooksData {
             ReusableFunc.updateBuiltInRecents(with: item.book, in: searchField)
         }
-        // Do not set viewModel.selectedBookName = nil when selectedRow is -1
-        // as this breaks selection restoration during data reloads/updates.
     }
 
     func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
