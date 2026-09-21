@@ -21,8 +21,8 @@ extension HistoryViewModel {
         HistoryDatabaseManager.shared.upsertEntry(entry)
         if reloadUI {
             loadBooksData()
+            notifyHistoryChanged()
         }
-        notifyHistoryChanged()
         CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
     }
 

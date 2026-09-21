@@ -51,7 +51,9 @@ extension LibraryViewModel {
     }
 
     func performSearch(_ query: String) {
-        searchQuery = query
+        if searchQuery != query {
+            searchQuery = query
+        }
         resetAuthorPagination()
         updateDisplayedCategories()
     }
@@ -70,7 +72,7 @@ extension LibraryViewModel {
         updateTrigger += 1
         #else
         updateSubject.send(.reloadData)
-        if !searchQuery.isEmpty {
+        if !searchQuery.isEmpty, !isFlatMode {
             updateSubject.send(.expandItem(nil))
         }
         #endif

@@ -31,7 +31,6 @@ final class LibraryViewModel: ViewModelBase {
     var singleBookToDelete: BooksData?
     let reloadTask = Mutex<Task<Void, Never>?>(nil)
     var availableUpdateCount: Int = 0
-    var historySelectionTask: Task<Void, Never>?
 
     var onStateChanged: ((ViewModelState) -> Void)?
     var state: ViewModelState = .loading {
@@ -52,6 +51,7 @@ final class LibraryViewModel: ViewModelBase {
 
     var searchQuery: String = "" {
         didSet {
+            guard searchQuery != oldValue else { return }
             searchTask?.cancel()
             searchTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(0.3))

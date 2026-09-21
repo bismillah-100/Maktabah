@@ -10,7 +10,7 @@ import Cocoa
 extension LibraryViewManager {
     func setupNotificationObservers() {
         NotificationCenter.default.publisher(for: .historyDidChange)
-            .receive(on: DispatchQueue.main)
+            .debounce(for: .seconds(3), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
                 updateFlatList(
@@ -52,8 +52,24 @@ extension LibraryViewManager {
         categoryName: String
     ) {
         guard viewModel.isFlatMode, viewModel.filterMode == mode else { return }
+
+        let baseCategory = CategoryData(id: categoryId, name: categoryName, level: 1, order: 0)
+        baseCategory.children = newBooks
+        viewModel.baseCategories = [baseCategory]
+
+        let query = viewModel.searchQuery.trimmingCharacters(in: .whitespaces)
+        let booksToDisplay: [BooksData]
+        if query.isEmpty {
+            booksToDisplay = newBooks
+        } else {
+            let normalizedQuery = query.normalizeArabic(false)
+            booksToDisplay = newBooks.filter { book in
+                book.normalizedBook.contains(normalizedQuery)
+            }
+        }
+
         updateFlatListIncrementally(
-            newBooks: newBooks,
+            newBooks: booksToDisplay,
             fallbackCategoryId: categoryId,
             fallbackCategoryName: categoryName
         )
@@ -71,6 +87,9 @@ extension LibraryViewManager {
                 return cat
             }()]
             outlineView.reloadData()
+            if viewModel.isFlatMode, let selectedBook = viewModel.selectedBookName {
+                restoreFlatSelection(byBookName: selectedBook)
+            }
             return
         }
 
@@ -78,9 +97,15 @@ extension LibraryViewManager {
         let oldIds = oldBooks.map(\.id)
         let newIds = newBooks.map(\.id)
 
-        if oldIds == newIds { return }
+        if oldIds == newIds {
+            if viewModel.isFlatMode, let selectedBook = viewModel.selectedBookName {
+                restoreFlatSelection(byBookName: selectedBook)
+            }
+            return
+        }
 
         var currentBooks = oldBooks
+        isUpdatingOutline = true
         outlineView.beginUpdates()
 
         let newIdSet = Set(newIds)
@@ -106,6 +131,7 @@ extension LibraryViewManager {
             }
         }
         outlineView.endUpdates()
+        isUpdatingOutline = false
 
         if viewModel.isFlatMode, let selectedBook = viewModel.selectedBookName {
             restoreFlatSelection(byBookName: selectedBook)
@@ -196,6 +222,11 @@ extension LibraryViewManager {
             return
         }
         if BookArchiveIntegrator.shared.isBookIntegrated(book) {
+            let query = viewModel.searchQuery.trimmingCharacters(in: .whitespaces)
+            if !query.isEmpty {
+                let normalizedQuery = query.normalizeArabic(false)
+                guard book.normalizedBook.contains(normalizedQuery) else { return }
+            }
             insertIntegratedBookIntoDisplayed(book)
         } else if viewModel.showOnlyDownloaded {
             removeBookFromDisplayed(bookId: bookId)
@@ -246,8 +277,10 @@ extension LibraryViewManager {
 
             if rootChanged {
                 viewModel.displayedCategories = list
-                viewModel.baseCategories = viewModel.displayedCategories
-            } else {
+                if viewModel.searchQuery.isEmpty {
+                    viewModel.baseCategories = viewModel.displayedCategories
+                }
+            } else if viewModel.searchQuery.isEmpty {
                 viewModel.baseCategories = list
             }
         }
@@ -353,6 +386,10 @@ extension LibraryViewManager {
 
         if let insertIndex {
             outlineView.insertItems(at: IndexSet(integer: insertIndex), inParent: leaf, withAnimation: [.slideDown])
+        }
+
+        if viewModel.searchQuery.isEmpty {
+            viewModel.baseCategories = viewModel.displayedCategories
         }
 
         if let bookName = viewModel.selectedBookName {
