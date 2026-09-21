@@ -3626,7 +3626,7 @@
     UI_Mac[AppKit UI&lt;br&gt;AnnotationsVC, OutlineView] --&gt; VM[AnnotationViewModel]
     UI_iOS[SwiftUI &amp; UIKit UI&lt;br&gt;iOSAnnotationViewController] --&gt; VM
 
-    VM --&gt; Tree[AnnotationTreeBuilder&lt;br&gt;Mutasi Hirarki &amp; Diffing]
+    VM --&gt; Tree[AnnotationTreeBuilder&lt;br&gt;Mutasi Hierarki &amp; Diffing]
     Tree -.-&gt; Publish([Publish Annotation Event])
     VM --&gt; Store[AnnotationStore&lt;br&gt;In-Memory Cache &amp; Mutex]
 

@@ -1053,10 +1053,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-aliran-data-data-flow" class="md-nav__link">
+  <a href="#arsitektur-alur-data-data-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur Aliran Data (Data Flow)
+        Arsitektur Alur Data (Data Flow)
       
     </span>
   </a>
@@ -1064,15 +1064,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotationviewmodel" class="md-nav__link">
+  <a href="#annotationviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationViewModel
+        AnnotationViewModel (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationViewModel">
+    <nav class="md-nav" aria-label="AnnotationViewModel (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1103,15 +1103,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotationtreebuilder" class="md-nav__link">
+  <a href="#annotationtreebuilder-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationTreeBuilder
+        AnnotationTreeBuilder (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationTreeBuilder">
+    <nav class="md-nav" aria-label="AnnotationTreeBuilder (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3601,10 +3601,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-aliran-data-data-flow" class="md-nav__link">
+  <a href="#arsitektur-alur-data-data-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur Aliran Data (Data Flow)
+        Arsitektur Alur Data (Data Flow)
       
     </span>
   </a>
@@ -3612,15 +3612,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotationviewmodel" class="md-nav__link">
+  <a href="#annotationviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationViewModel
+        AnnotationViewModel (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationViewModel">
+    <nav class="md-nav" aria-label="AnnotationViewModel (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3651,15 +3651,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotationtreebuilder" class="md-nav__link">
+  <a href="#annotationtreebuilder-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationTreeBuilder
+        AnnotationTreeBuilder (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationTreeBuilder">
+    <nav class="md-nav" aria-label="AnnotationTreeBuilder (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3708,7 +3708,7 @@
 
 <h1 id="state-management-combine-async-workflows">State Management, Combine &amp; Async Workflows</h1>
 <p>Bagian ini membahas manajemen <em>state</em>, penanganan konkurensi (async/await, Task, debounce), serta aliran reaktivitas antara Storage, Tree Builder, dan antarmuka pengguna menggunakan <code>Combine</code> dan <code>@Observable</code>.</p>
-<h2 id="arsitektur-aliran-data-data-flow">Arsitektur Aliran Data (<em>Data Flow</em>)</h2>
+<h2 id="arsitektur-alur-data-data-flow">Arsitektur Alur Data (<em>Data Flow</em>)</h2>
 <p>Alur reaktivitas anotasi dirancang satu arah (<em>unidirectional</em>) untuk memastikan prediktabilitas:</p>
 <ol>
 <li><strong>Mutasi Data</strong>: Terjadi di <code>AnnotationStore</code> secara sinkron (dengan proteksi <code>Mutex</code>) dan memancarkan <code>AnnotationEvent</code> via <code>PassthroughSubject</code>.</li>
@@ -3716,7 +3716,7 @@
 <li><strong>Transformasi ViewModel</strong>: <code>AnnotationViewModel</code> berlangganan (<em>subscribe</em>) pada hasil dari <code>AnnotationTreeBuilder</code>. Apabila pencarian atau filter aktif, ViewModel melakukan pemfilteran tambahan.</li>
 <li><strong>Binding Antarmuka Pengguna</strong>: UI (SwiftUI atau AppKit) dirender ulang secara otomatis melalui makro <code>@Observable</code> atau pembaruan inkremental via <code>onIncrementalUpdate</code>.</li>
 </ol>
-<h2 id="annotationviewmodel">AnnotationViewModel</h2>
+<h2 id="annotationviewmodel-class">AnnotationViewModel (Class)</h2>
 <p>Berperan sebagai sumber kebenaran (<em>source of truth</em>) untuk tampilan daftar anotasi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationViewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ViewModelBase</span><span class="w"> </span><span class="p">{</span>
@@ -3771,7 +3771,7 @@
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Jika dalam mode <code>AND</code>, properti <code>availableTags</code> difilter sedemikian rupa sehingga hanya menampilkan tag yang muncul bersamaan (<em>co-occurring</em>) dalam sisa anotasi yang cocok.</p>
-<h2 id="annotationtreebuilder">AnnotationTreeBuilder</h2>
+<h2 id="annotationtreebuilder-class">AnnotationTreeBuilder (Class)</h2>
 <p>Merupakan mesin latar belakang (<em>background engine</em>) yang bertugas mengubah daftar linier (<em>flat list</em>) <code>[Annotation]</code> menjadi struktur hierarki <code>AnnotationNode</code> untuk antarmuka <code>NSOutlineView</code> atau <code>SwiftUI List</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationTreeBuilder</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">AnnotationTreeBuilder</span><span class="p">()</span>
@@ -3783,7 +3783,7 @@
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="antrean-serial-sinkronisasi">Antrean Serial &amp; Sinkronisasi</h3>
-<p><code>AnnotationTreeBuilder</code> memproses seluruh mutasi menggunakan antrean serial <code>treeQueue</code> dengan tingkat QoS <code>.userInitiated</code>. Hal ini menjamin bahwa seluruh manipulasi pada <code>rootNode</code> bersifat <em>thread-safe</em> dan terhindar dari <em>data race</em>, mengeliminasi kebutuhan penggunaan kunci sinkronisasi internal secara eksplisit.</p>
+<p><code>AnnotationTreeBuilder</code> memproses seluruh mutasi menggunakan antrean serial <code>treeQueue</code> dengan tingkat QoS <code>.userInitiated</code>. Hal ini menjamin bahwa seluruh manipulasi pada <code>rootNode</code> bersifat <em>thread-safe</em> dan terhindar dari <em>data race</em>, mengeliminasi kebutuhan mekanisme <em>lock</em> sinkronisasi internal secara eksplisit.</p>
 <h3 id="alur-sinkronisasi-pembaruan-inkremental">Alur Sinkronisasi &amp; Pembaruan Inkremental</h3>
 <p>Alih-alih memicu pemuatan ulang seluruh daftar (<code>reloadData</code>), Builder menghasilkan objek <code>AnnotationTreeDiff</code> (<em>tree diffing</em>) pada setiap perubahan parsial (Add, Update, Delete).</p>
 <p>Pada <code>AnnotationViewModel</code>:

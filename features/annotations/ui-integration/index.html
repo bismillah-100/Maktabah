@@ -1227,10 +1227,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tagfilterselectionview" class="md-nav__link">
+  <a href="#tagfilterselectionview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TagFilterSelectionView
+        TagFilterSelectionView (Struct)
       
     </span>
   </a>
@@ -3741,10 +3741,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#tagfilterselectionview" class="md-nav__link">
+  <a href="#tagfilterselectionview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TagFilterSelectionView
+        TagFilterSelectionView (Struct)
       
     </span>
   </a>
@@ -3862,7 +3862,7 @@
 <p>Saat pengguna memilih baris catatan, sistem menavigasi pembaca ke kitab dan halaman target:</p>
 <h3 id="macos-delegasi-appkit">macOS: Delegasi AppKit</h3>
 <ul>
-<li><strong>Protocol</strong>: <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/Protocols/AnnotationDelegate.swift"><code>AnnotationDelegate</code></a>.</li>
+<li><strong>Protocol</strong>: <a href="../protocols/">AnnotationDelegate</a>.</li>
 <li><strong>Alur</strong>: <code>NSOutlineView</code> mendeteksi pergantian baris $\rightarrow$ <code>AnnotationsOutlineDelegate.outlineViewSelectionDidChange</code> $\rightarrow$ memanggil <code>dataSource.delegate?.didSelect(annotation:)</code> $\rightarrow$ ditangkap oleh <code>IbarotTextVC</code> yang dihubungkan melalui <code>SplitVC</code>.</li>
 <li><strong>Aksi</strong>: Reader memuat kitab target jika belum terbuka, membuka halaman via <code>contentId</code>, dan menggeser <em>viewport</em> teks ke <code>highlightRange</code>.</li>
 </ul>
@@ -3877,7 +3877,7 @@
 </ul>
 <hr />
 <h2 id="komponen-bersama-multiplatform-component">Komponen Bersama (<em>Multiplatform Component</em>)</h2>
-<h3 id="tagfilterselectionview"><code>TagFilterSelectionView</code></h3>
+<h3 id="tagfilterselectionview-struct">TagFilterSelectionView (Struct)</h3>
 <p>Meskipun tersimpan di direktori <code>Source/Features/Annotations/macOS/</code>, komponen ini dirancang <em>multiplatform</em> dengan kompilasi kondisional (<code>#if os(macOS)</code> dan <code>#if os(iOS)</code>):</p>
 <ul>
 <li><strong>macOS</strong>: Ditampilkan di dalam <em>popover</em> pemilihan tag dengan batasan lebar 220–300 pt.</li>

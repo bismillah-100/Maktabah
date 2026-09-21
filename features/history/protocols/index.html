@@ -3563,7 +3563,7 @@
    Modul ini mengadopsi <em>protocol</em> inti dari lapisan <em>Core</em>:</p>
 </li>
 </ol>
-<p>### <code>SyncPendingManaging</code> (Protocol)
+<p>### SyncPendingManaging (Protocol)
    <code>HistoryDatabaseManager</code> mengimplementasikan <em>protocol</em> ini untuk standardisasi antrean sinkronisasi luring:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">class</span><span class="w"> </span><span class="nc">HistoryDatabaseManager</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingManaging</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">syncPendingStore</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingStore</span><span class="p">?</span>

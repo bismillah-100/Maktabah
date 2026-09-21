@@ -1709,10 +1709,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#a-ioshistoryview" class="md-nav__link">
+  <a href="#a-ioshistoryview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A. iOSHistoryView
+        A. iOSHistoryView (Struct)
       
     </span>
   </a>
@@ -1731,10 +1731,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-historyhorizontalgrid" class="md-nav__link">
+  <a href="#c-historyhorizontalgrid-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C. HistoryHorizontalGrid
+        C. HistoryHorizontalGrid (Struct)
       
     </span>
   </a>
@@ -3685,10 +3685,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#a-ioshistoryview" class="md-nav__link">
+  <a href="#a-ioshistoryview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A. iOSHistoryView
+        A. iOSHistoryView (Struct)
       
     </span>
   </a>
@@ -3707,10 +3707,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-historyhorizontalgrid" class="md-nav__link">
+  <a href="#c-historyhorizontalgrid-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C. HistoryHorizontalGrid
+        C. HistoryHorizontalGrid (Struct)
       
     </span>
   </a>
@@ -3837,7 +3837,7 @@
     VM-&gt;&gt;+DB: getContent(contentId)
     DB--&gt;&gt;-VM: sourceText (LZString/Zstd)
     VM-&gt;&gt;VM: ArabicTextRenderer.render()
-    VM--&gt;&gt;-Rdr: State terbarui (@Observable contentText)
+    VM--&gt;&gt;-Rdr: State diperbarui (@Observable contentText)
 
     Rdr-&gt;&gt;+TV: updateUIView(attributedText)
     TV-&gt;&gt;TV: UITextView.attributedText = renderedText
@@ -3845,7 +3845,7 @@
     deactivate TV</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-logika-antarmuka">3. Bedah Komponen &amp; Logika Antarmuka</h2>
-<h3 id="a-ioshistoryview">A. <code>iOSHistoryView</code></h3>
+<h3 id="a-ioshistoryview-struct">A. iOSHistoryView (Struct)</h3>
 <p>Sebagai kontainer beranda (<em>Root View</em>) ketika pengguna memilih menu "History &amp; Favorites" di <code>iPhoneLayout</code> atau bilah samping <code>iPadLayout</code>, <code>iOSHistoryView</code> mengombinasikan koleksi favorit dan linimasa buku terakhir yang dibuka secara vertikal:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">iOSHistoryView</span><span class="p">:</span><span class="w"> </span><span class="n">View</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">viewModel</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">HistoryViewModel</span><span class="p">.</span><span class="n">shared</span>
@@ -3875,7 +3875,7 @@
 <p>Fitur ini memanfaatkan makro <code>@Observable</code> (dari properti <code>viewModel.filteredFavorites</code> dan <code>filteredHistory</code>) untuk <em>rendering</em> secara reaktif. Seluruh penyaringan data dikelola pada lapisan logika <code>HistoryViewModel</code> (misalnya saat kolom pencarian diisi teks).</p>
 <h3 id="b-historyfavoritesectionsswift">B. <code>HistoryFavoriteSections.swift</code></h3>
 <p>Berkas ini bertugas sebagai pembungkus (<em>wrapper</em>) bagian tampilan. Komponen statis seperti <code>Section(header: Text("History"))</code> dibungkus dalam modul terisolasi agar iPad dapat me-<em>render</em> bagian ini secara independen di <em>sidebar</em> tanpa perlu me-<em>render</em> ulang <code>ThemeList</code> secara penuh.</p>
-<h3 id="c-historyhorizontalgrid">C. <code>HistoryHorizontalGrid</code></h3>
+<h3 id="c-historyhorizontalgrid-struct">C. HistoryHorizontalGrid (Struct)</h3>
 <p>Karena riwayat yang baru dibaca disajikan di posisi teratas dalam tampilan <em>carousel</em> geser menyamping (<em>horizontal grid</em>), Maktabah menyediakan komponen <code>HistoryHorizontalGrid</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Di dalam HistoryComponents.swift</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">@</span><span class="n">State</span><span class="w"> </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">scrollState</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">ScrollState</span><span class="p">()</span>

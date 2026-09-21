@@ -1358,10 +1358,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-resolusi-orphan-records-resultsorphansswift" class="md-nav__link">
+  <a href="#3-resolusi-rekaman-tanpa-induk-orphan-records" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Resolusi Orphan Records (ResultsOrphans.swift)
+        3. Resolusi Rekaman Tanpa Induk (Orphan Records)
       
     </span>
   </a>
@@ -3751,10 +3751,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-resolusi-orphan-records-resultsorphansswift" class="md-nav__link">
+  <a href="#3-resolusi-rekaman-tanpa-induk-orphan-records" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Resolusi Orphan Records (ResultsOrphans.swift)
+        3. Resolusi Rekaman Tanpa Induk (Orphan Records)
       
     </span>
   </a>
@@ -4029,7 +4029,7 @@
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">idx_results_ck_record_id</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">results</span><span class="w"> </span><span class="p">(</span><span class="n">ckRecordId</span><span class="p">);</span>
 </span></code></pre></div>
 <hr />
-<h2 id="3-resolusi-orphan-records-resultsorphansswift">3. Resolusi Orphan Records (<code>ResultsOrphans.swift</code>)</h2>
+<h2 id="3-resolusi-rekaman-tanpa-induk-orphan-records">3. Resolusi Rekaman Tanpa Induk (<em>Orphan Records</em>)</h2>
 <p>Saat sinkronisasi CloudKit berlangsung, <em>child record</em> sering kali tiba lebih awal daripada <em>parent record</em>-nya (<em>out-of-order delivery</em>). Kondisi ini menyebabkan nilai <code>parent</code> atau <code>folder_id</code> lokal bernilai <code>NULL</code> sementara referensi <code>parentCkRecordId</code> sebenarnya ada.</p>
 <p>Sistem mengatasi kondisi ini melalui dua metode penyelarasan otomatis:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">resolveOrphanFolders</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
@@ -4062,7 +4062,7 @@
 <h3 id="alur-sinkronisasi-keluar-upload-delete">Alur Sinkronisasi Keluar (Upload &amp; Delete)</h3>
 <pre class="mermaid"><code>flowchart TD
     ACT(["Aksi Pengguna: Buat / Edit / Pindah / Hapus"]) --&gt; VM["ResultsViewModel"]
-    VM --&gt;|"Mutasi Hirarki &amp; Diffing"| Handler["ResultsHandler"]
+    VM --&gt;|"Mutasi Hierarki &amp; Diffing"| Handler["ResultsHandler"]
 
     Handler ~~~ STORES
 

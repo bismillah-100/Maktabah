@@ -963,15 +963,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotationnode-class-hierarki" class="md-nav__link">
+  <a href="#annotationnode-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationNode (Class) &amp; Hierarki
+        AnnotationNode (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationNode (Class) &amp; Hierarki">
+    <nav class="md-nav" aria-label="AnnotationNode (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1025,10 +1025,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#annotationsortoption-enum-enums" class="md-nav__link">
+  <a href="#annotationsortoption-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationSortOption (Enum) &amp; Enums
+        AnnotationSortOption (Enum)
       
     </span>
   </a>
@@ -3645,15 +3645,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#annotationnode-class-hierarki" class="md-nav__link">
+  <a href="#annotationnode-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationNode (Class) &amp; Hierarki
+        AnnotationNode (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationNode (Class) &amp; Hierarki">
+    <nav class="md-nav" aria-label="AnnotationNode (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3707,10 +3707,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#annotationsortoption-enum-enums" class="md-nav__link">
+  <a href="#annotationsortoption-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        AnnotationSortOption (Enum) &amp; Enums
+        AnnotationSortOption (Enum)
       
     </span>
   </a>
@@ -3752,7 +3752,7 @@
 
 <h1 id="data-models-state-types">Data Models &amp; State Types</h1>
 <p>Bagian ini membedah berbagai <code>struct</code>, <code>class</code>, dan <code>enum</code> murni yang berada di folder <code>Models/</code>. Model-model ini dirancang bebas dari ketergantungan sistem luar agar ringan dan <em>thread-safe</em> (mengadopsi <em>protocol</em> <code>Sendable</code>).</p>
-<h2 id="annotation-struct"><code>Annotation</code> (Struct)</h2>
+<h2 id="annotation-struct">Annotation (Struct)</h2>
 <p>Entitas utama yang merepresentasikan sebuah anotasi (<em>highlight</em>, <em>underline</em>, atau <em>note</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">Annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span><span class="w"> </span><span class="c1">// (1)!</span>
@@ -3789,7 +3789,7 @@
 <li><em>Protocol</em> <code>Sendable</code>: <code>Annotation</code> dijamin aman untuk diteruskan antar-<em>thread</em> (Task/Actor) secara konkuren tanpa risiko <em>data race</em>.</li>
 <li>Teks Konteks (<code>context</code>): Menyimpan salinan denormalisasi potongan teks agar saat pencarian/filter tidak perlu membaca basis data buku utama secara berulang.</li>
 </ul>
-<h2 id="contentkey-struct"><code>ContentKey</code> (Struct)</h2>
+<h2 id="contentkey-struct">ContentKey (Struct)</h2>
 <p>Kunci untuk <em>in-memory cache map</em> (<code>AnnotationStore</code>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ContentKey</span><span class="p">:</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3797,7 +3797,7 @@
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Digunakan sebagai <em>key</em> pada kamus <em>caching</em> per konten buku <code>[ContentKey: [Annotation]]</code> agar operasi <em>lookup</em> berjalan dalam kompleksitas waktu $O(1)$.</p>
-<h2 id="annotationnode-class-hierarki"><code>AnnotationNode</code> (Class) &amp; Hierarki</h2>
+<h2 id="annotationnode-class">AnnotationNode (Class)</h2>
 <p>Digunakan untuk membentuk struktur hierarki (<em>tree</em>) pada antarmuka <code>NSOutlineView</code> atau <code>SwiftUI List</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationNode</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">title</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -3812,7 +3812,7 @@
 <p class="admonition-title">Catatan Thread-Safety</p>
 <p><em>Class</em> <code>AnnotationNode</code> menggunakan atribut <code>@unchecked Sendable</code>. Hal ini karena mutasi dilakukan eksklusif saat fase pembentukan struktur hierarki di <em>background thread</em>. Setelah dipublikasikan ke antarmuka pengguna, objek ini dianggap <em>read-only</em> (<em>frozen</em>). Hindari memutasi objek ini dari Main Actor secara langsung.</p>
 </div>
-<h3 id="annotationnodekind-enum"><code>AnnotationNodeKind</code> (Enum)</h3>
+<h3 id="annotationnodekind-enum">AnnotationNodeKind (Enum)</h3>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationNodeKind</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">root</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">book</span>
@@ -3822,7 +3822,7 @@
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">annotation</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="datebucket-enum"><code>DateBucket</code> (Enum)</h3>
+<h3 id="datebucket-enum">DateBucket (Enum)</h3>
 <p>Digunakan untuk pengelompokan (<em>grouping</em>) linimasa secara kronologis (Today, Yesterday, dsb.).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">DateBucket</span><span class="p">:</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="nb">Comparable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">today</span>
@@ -3835,14 +3835,14 @@
 </span></code></pre></div>
 <p>Tipe ini mengadopsi <code>Comparable</code> untuk memudahkan pengurutan (<em>sorting</em>) kelompok waktu secara kronologis.</p>
 <h2 id="status-filter-enum">Status &amp; Filter (Enum)</h2>
-<h3 id="annotationmode-enum"><code>AnnotationMode</code> (Enum)</h3>
+<h3 id="annotationmode-enum">AnnotationMode (Enum)</h3>
 <p>Menentukan bentuk visual anotasi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">highlight</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">underline</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="annotationsortoption-enum-enums"><code>AnnotationSortOption</code> (Enum) &amp; Enums</h3>
+<h3 id="annotationsortoption-enum">AnnotationSortOption (Enum)</h3>
 <p>Enum yang mengatur bagaimana antarmuka pengguna menyortir dan mengelompokkan data.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationSortField</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">createdAt</span>
@@ -3862,7 +3862,7 @@
 </span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">and</span>
 </span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="annotationevent-enum"><code>AnnotationEvent</code> (Enum)</h2>
+<h2 id="annotationevent-enum">AnnotationEvent (Enum)</h2>
 <p>Menggunakan tipe data aljabar (<em>algebraic data types</em> / enum dengan <em>associated values</em>) untuk dipancarkan melalui <code>PassthroughSubject</code> di Combine.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationEvent</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">added</span><span class="p">(</span><span class="n">Annotation</span><span class="p">)</span>

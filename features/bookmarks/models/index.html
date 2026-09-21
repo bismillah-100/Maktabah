@@ -3869,7 +3869,7 @@
 <hr />
 <h2 id="1-node-hierarki-direktori-tree-nodes">1. Node Hierarki Direktori (<em>Tree Nodes</em>)</h2>
 <p>Maktabah merepresentasikan markah dalam bentuk struktur hierarki bertingkat (<em>n-ary tree</em>) yang memisahkan antara entitas folder (direktori penampung) dan entitas hasil kueri pencarian.</p>
-<h3 id="foldernode-class"><code>FolderNode</code> (Class)</h3>
+<h3 id="foldernode-class">FolderNode (Class)</h3>
 <p><em>Class</em> node yang merepresentasikan folder hierarki di dalam basis data lokal dan antarmuka pengguna.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">FolderNode</span><span class="p">:</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -3948,7 +3948,7 @@
 <p><code>FolderNode</code> ditandai sebagai <code>@unchecked Sendable</code> dengan makro <code>@Observable</code>. Struktur data ini dimutasi secara terisolasi saat fase pembentukan di <em>background thread</em> (<code>Task.detached</code>). Setelah dipublikasikan ke Main Actor, node-node ini dianggap <em>frozen</em> dan mutasi hanya dilakukan melalui metode terpusat di <code>ResultsViewModel</code>.</p>
 </div>
 <hr />
-<h3 id="resultnode-class"><code>ResultNode</code> (Class)</h3>
+<h3 id="resultnode-class">ResultNode (Class)</h3>
 <p><em>Class</em> <em>leaf node</em> yang merepresentasikan sekumpulan hasil pencarian tersimpan di bawah naungan suatu folder.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">ResultNode</span><span class="p">:</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -4036,7 +4036,7 @@
 </table>
 <hr />
 <h2 id="2-struktur-data-konten-payload">2. Struktur Data Konten &amp; Payload</h2>
-<h3 id="savedresultsitem-struct"><code>SavedResultsItem</code> (Struct)</h3>
+<h3 id="savedresultsitem-struct">SavedResultsItem (Struct)</h3>
 <p><em>Struct</em> ringan yang mewakili satu kecocokan baris pada kitab tertentu.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SavedResultsItem</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archive</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -4059,7 +4059,7 @@
 <li><code>nearDistance</code> (<code>Int</code>): Jarak kedekatan kata yang digunakan.</li>
 </ul>
 <hr />
-<h3 id="groupedresult-struct"><code>GroupedResult</code> (Struct)</h3>
+<h3 id="groupedresult-struct">GroupedResult (Struct)</h3>
 <p><em>Struct</em> pembantu (<em>intermediate grouping</em>) yang memadatkan data hasil pencarian sebelum disimpan ke tabel SQLite.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">GroupedResult</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archive</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -4072,7 +4072,7 @@
 <p>Jika suatu kueri menghasilkan 50 halaman yang cocok pada satu kitab yang sama, sistem tidak menyimpan 50 baris SQLite terpisah. Melalui <code>GroupedResult</code>, seluruh ID halaman (<code>contentId</code>) digabungkan menjadi <em>string</em> dipisahkan koma (misalnya: <code>"12,45,78,102"</code>), menghemat ruang penyimpanan dan mempercepat siklus I/O basis data.</p>
 </div>
 <hr />
-<h3 id="searchresultwithpath-struct"><code>SearchResultWithPath</code> (Struct)</h3>
+<h3 id="searchresultwithpath-struct">SearchResultWithPath (Struct)</h3>
 <p><em>Struct</em> pembungkus yang digunakan pada fitur pencarian global di dalam antarmuka <em>bookmarks</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchResultWithPath</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">result</span><span class="p">:</span><span class="w"> </span><span class="n">ResultNode</span>
@@ -4084,7 +4084,7 @@
 <li><code>folderPath</code>: Representasi visual jalur hierarki folder (misalnya: <code>"Tafsir / Ibnu Katsir"</code>). Memudahkan pengguna mengenali letak konteks hasil saat daftar markah diratakan (<em>flattened list</em>) selama pencarian.</li>
 </ul>
 <hr />
-<h2 id="3-bookmarktreechange-enum-tree-diffing">3. <code>BookmarkTreeChange</code> (Enum) - Tree Diffing</h2>
+<h2 id="3-bookmarktreechange-enum-tree-diffing">3. BookmarkTreeChange (Enum) - Tree Diffing</h2>
 <p>Enum komprehensif yang menjadi jembatan antara ViewModel dan <code>NSOutlineView</code> di macOS untuk mendukung animasi perubahan data yang halus melalui mekanisme <em>tree diffing</em> tanpa memicu pemuatan ulang penuh (<em>full reload</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookmarkTreeChange</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">fullReload</span>

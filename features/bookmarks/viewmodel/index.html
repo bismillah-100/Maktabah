@@ -1392,15 +1392,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-arsitektur-inti-resultsviewmodel" class="md-nav__link">
+  <a href="#1-resultsviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Arsitektur Inti ResultsViewModel
+        1. ResultsViewModel (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Arsitektur Inti ResultsViewModel">
+    <nav class="md-nav" aria-label="1. ResultsViewModel (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3651,15 +3651,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-arsitektur-inti-resultsviewmodel" class="md-nav__link">
+  <a href="#1-resultsviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Arsitektur Inti ResultsViewModel
+        1. ResultsViewModel (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Arsitektur Inti ResultsViewModel">
+    <nav class="md-nav" aria-label="1. ResultsViewModel (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3809,7 +3809,7 @@
 <h1 id="state-management-asynchronous-workflows">State Management &amp; Asynchronous Workflows</h1>
 <p>Dokumentasi ini membedah arsitektur logika bisnis, alur kerja reaktif, manajemen konkurensi, dan perluasan modular yang dikelola oleh <code>ResultsViewModel</code> pada direktori <code>Source/Features/Bookmarks/ViewModel/</code>.</p>
 <hr />
-<h2 id="1-arsitektur-inti-resultsviewmodel">1. Arsitektur Inti <code>ResultsViewModel</code></h2>
+<h2 id="1-resultsviewmodel-class">1. ResultsViewModel (Class)</h2>
 <p><code>ResultsViewModel</code> dirancang sebagai <code>class</code> <em>singleton</em> yang mengadopsi makro Swift Observation <code>@Observable</code> dan diikat secara mutlak ke antrean utama (<code>@MainActor</code>). Pendekatan ini menjamin bahwa seluruh mutasi properti yang diamati oleh SwiftUI maupun AppKit selalu terjadi secara aman di <em>main thread</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span><span class="w"> </span><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">ResultsViewModel</span><span class="w"> </span><span class="p">{</span>

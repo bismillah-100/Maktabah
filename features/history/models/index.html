@@ -3630,7 +3630,7 @@
 
 <h1 id="data-models-state-types">Data Models &amp; State Types</h1>
 <p>Bagian ini membedah struktur data utama yang menyokong modul History &amp; Favorites. Keseluruhan modul ini menggunakan <code>ReadingEntry</code> sebagai model tunggal (<em>Single Source of Truth</em>) yang merepresentasikan metadata interaksi pengguna dengan satu buku.</p>
-<h2 id="readingentry-struct"><code>ReadingEntry</code> (Struct)</h2>
+<h2 id="readingentry-struct">ReadingEntry (Struct)</h2>
 <p><code>ReadingEntry</code> adalah <em>struct</em> (<em>value type</em>) utama yang menyimpan informasi terkait riwayat dan status favorit dari suatu buku. Berkas ini berlokasi di <code>Source/Features/History/Models/ReadingEntry.swift</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ReadingEntry</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>

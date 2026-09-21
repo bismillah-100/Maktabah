@@ -3595,7 +3595,7 @@
 
 
 <h1 id="appkit-implementation-macos">AppKit Implementation (macOS)</h1>
-<p>Arsitektur aplikasi pada macOS untuk modul History dirancang secara minimalis. Tidak ada folder khusus <code>macOS/</code> di dalam struktur <code>Source/Features/History/</code>. Sebagai gantinya, History dan Favorites secara cerdas memanfaatkan kembali (<em>re-use</em>) hierarki tampilan (<em>View Hierarchy</em>) milik <code>LibraryVC</code>.</p>
+<p>Arsitektur aplikasi pada macOS untuk modul History dirancang secara minimalis. Tidak ada folder khusus <code>macOS/</code> di dalam struktur <code>Source/Features/History/</code>. Sebagai gantinya, History dan Favorites memanfaatkan kembali (<em>re-use</em>) hierarki tampilan (<em>View Hierarchy</em>) milik <code>LibraryVC</code>.</p>
 <h2 id="integrasi-diffable-data-source-pada-libraryvc">Integrasi <em>Diffable Data Source</em> pada <code>LibraryVC</code></h2>
 <p>Komponen macOS <code>NSCollectionView</code> pada antarmuka korpus Maktabah (<code>LibraryVC</code>) memiliki opsi segmentasi kontrol di bagian <em>Toolbar</em> (melalui <code>NSSegmentedControl</code>) yang salah satunya memuat opsi <em>History</em>.</p>
 <p>Ketika pengguna beralih mode ke <em>History</em> atau <em>Favorites</em>, pengelola (<em>Manager</em>) pustaka (<code>LibraryViewManager</code>) secara langsung mendengarkan status koleksi array dari <code>HistoryViewModel</code>.</p>

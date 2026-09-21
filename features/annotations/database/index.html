@@ -3937,7 +3937,7 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <h3 id="pengamanan-thread-safety-synchronizationmutex">Pengamanan Thread-Safety (<code>Synchronization.Mutex</code>)</h3>
-<p>Status <em>cache</em> dilindungi oleh <code>Mutex</code> bawaan framework <code>Synchronization</code> (Swift 6):</p>
+<p><em>State</em> <em>cache</em> dilindungi oleh <code>Mutex</code> bawaan framework <code>Synchronization</code> (Swift 6):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">import</span><span class="w"> </span><span class="nc">Synchronization</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">cache</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">(</span><span class="n">CacheState</span><span class="p">())</span>
@@ -3961,7 +3961,7 @@
 </span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">loaded</span>
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Penggunaan <code>Mutex.withLock</code> berbasis kunci atomik tingkat OS memastikan tidak ada kondisi <em>race condition</em> saat membaca ataupun memperbarui data anotasi secara konkuren oleh <em>search worker</em> dan Main Thread.</p>
+<p>Penggunaan <code>Mutex.withLock</code> berbasis operasi <em>lock</em> atomik tingkat OS memastikan tidak ada kondisi <em>data race</em> saat membaca ataupun memperbarui data anotasi secara konkuren oleh <em>search worker</em> dan Main Thread.</p>
 <h2 id="alur-sinkronisasi-offline-cloudkit-annotationsynchandlerswift">Alur Sinkronisasi Offline &amp; CloudKit (<code>AnnotationSyncHandler.swift</code>)</h2>
 <p>Untuk mendukung kesinambungan baca lintas perangkat, modul Anotasi terhubung ke <code>CloudKitSyncManager</code> melalui zona kustom (<em>Custom Zone</em>) di <em>Private Database</em> CloudKit pengguna.</p>
 <h3 id="alur-sinkronisasi-keluar-upload-delete">Alur Sinkronisasi Keluar (Upload &amp; Delete)</h3>
@@ -4023,7 +4023,7 @@
     class UpdateLocal,DropRemote,InsertNew,UpdateCache store;</code></pre>
 <p>Apabila sinkronisasi menarik versi Cloud yang lebih baru dari versi lokal, SQLite akan menimpa (<em>overwrite</em>) versi lokal, <em>cache</em> memori diperbarui di bawah proteksi <code>Mutex</code>, dan antarmuka Reader dipicu untuk merender anotasi terbaru. Jika data <em>remote</em> lebih usang, data tersebut diabaikan untuk menjaga integritas data lokal.</p>
 <h3 id="penanganan-mode-luring-syncpendingstore">Penanganan Mode Luring (<code>SyncPendingStore</code>)</h3>
-<p>Setiap mutasi (Insert, Update, Delete) yang dilakukan di <code>AnnotationRepository</code> dicatat ke dalam antrean sinkronisasi tunda (<em>pending sync</em>):</p>
+<p>Setiap mutasi (Insert, Update, Delete) yang dilakukan di <code>AnnotationRepository</code> dicatat ke dalam antrean sinkronisasi tertunda (<em>pending sync</em>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">try</span><span class="w"> </span><span class="n">transaction</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="n">exec</span><span class="p">(</span><span class="n">insertAnnotationSQL</span><span class="p">,</span><span class="w"> </span><span class="n">parameters</span><span class="p">:</span><span class="w"> </span><span class="n">params</span><span class="p">)</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="c1">// ...</span>

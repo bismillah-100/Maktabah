@@ -1619,15 +1619,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#historyviewmodel" class="md-nav__link">
+  <a href="#historyviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HistoryViewModel
+        HistoryViewModel (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="HistoryViewModel">
+    <nav class="md-nav" aria-label="HistoryViewModel (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3612,15 +3612,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#historyviewmodel" class="md-nav__link">
+  <a href="#historyviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HistoryViewModel
+        HistoryViewModel (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="HistoryViewModel">
+    <nav class="md-nav" aria-label="HistoryViewModel (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3730,7 +3730,7 @@
 
 <h1 id="state-management-viewmodel">State Management (ViewModel)</h1>
 <p>Manajemen state untuk modul History dikendalikan oleh <em>class</em> tunggal <code>HistoryViewModel</code>. Komponen ini bertindak sebagai perantara (<em>middleman</em>) antara lapisan persistensi (<code>HistoryDatabaseManager</code>), lapisan sinkronisasi (<code>CloudKitSyncManager</code>), dan UI yang reaktif (baik SwiftUI di iOS maupun NSCollectionView di macOS).</p>
-<h2 id="historyviewmodel"><code>HistoryViewModel</code></h2>
+<h2 id="historyviewmodel-class">HistoryViewModel (Class)</h2>
 <p>Berlokasi di <code>Source/Features/History/ViewModel/HistoryViewModel.swift</code>, <em>view model</em> ini menggunakan framework <code>Observation</code> (makro <code>@Observable</code>) bawaan Swift 5.9+, bukan lagi memakai <code>@Published</code> milik <code>Combine</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">class</span><span class="w"> </span><span class="nc">HistoryViewModel</span><span class="p">:</span><span class="w"> </span><span class="n">ViewModelBase</span><span class="w"> </span><span class="p">{</span>

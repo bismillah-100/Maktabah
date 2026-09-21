@@ -3741,7 +3741,7 @@
 <li>Mengelola pengurutan dan penyaringan kitab yang belum terunduh.</li>
 </ol>
 <hr />
-<h2 id="2-mode-pengelompokan-annotationgroupingmode">2. Mode Pengelompokan (<code>AnnotationGroupingMode</code>)</h2>
+<h2 id="2-mode-pengelompokan-annotationgroupingmode">2. Mode Pengelompokan (AnnotationGroupingMode)</h2>
 <p>Sistem mendukung 3 mode organisasi data:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationGroupingMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">book</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="c1">// Kelompok berdasarkan Kitab</span>
@@ -3777,7 +3777,7 @@
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>└── [Timeline Node] September 2026
 </span></code></pre></div></p>
 <hr />
-<h2 id="3-mekanisme-diffing-animasi-ui-annotationtreediff">3. Mekanisme Diffing &amp; Animasi UI (<code>AnnotationTreeDiff</code>)</h2>
+<h2 id="3-mekanisme-diffing-animasi-ui-annotationtreediff">3. Mekanisme Diffing &amp; Animasi UI (AnnotationTreeDiff)</h2>
 <p>Ketika terjadi penambahan, pengubahan, atau penghapusan anotasi, <code>AnnotationTreeBuilder</code> tidak membangun ulang seluruh struktur hierarki dari awal. Sebaliknya, komponen ini menghitung delta perubahan (<em>tree diffing</em>) dan memancarkannya melalui Combine Publisher:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">diffPublisher</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">PassthroughSubject</span><span class="p">&lt;</span><span class="n">AnnotationTreeDiff</span><span class="p">?,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;()</span>
 </span></code></pre></div>

@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#text-processing-string-extensions" class="md-skip">
+        <a href="#pemrosesan-teks-ekstensi-string" class="md-skip">
           Skip to content
         </a>
       
@@ -3716,11 +3716,11 @@
 
 
 
-<h1 id="text-processing-string-extensions">Text Processing &amp; String Extensions</h1>
-<p>Subsistem pemrosesan teks di Maktabah berfokus pada normalisasi teks Arab, pembersihan harakat (<em>tashkeel</em>), kalkulasi pemetaan rentang (<em>range mapping</em>), serta rendering teks secara tipografis. Logika ini terkapsulasi di dalam <code>Source/Core/TextProcessing/</code> melalui <em>extensions</em> <code>String</code> bawaan.</p>
+<h1 id="pemrosesan-teks-ekstensi-string">Pemrosesan Teks &amp; Ekstensi String</h1>
+<p>Subsistem pemrosesan teks di Maktabah berfokus pada normalisasi teks Arab, pembersihan harakat (<em>tashkeel</em>), kalkulasi pemetaan rentang (<em>range mapping</em>), serta perenderan tipografi teks. Logika ini sebagian besar terpusat di dalam <code>Source/Core/TextProcessing/</code> melalui <em>extension</em> <code>String</code> bawaan.</p>
 <hr />
 <h2 id="1-arsitektur-rendering-state-teks">1. Arsitektur Rendering &amp; State Teks</h2>
-<p>Maktabah memisahkan antara status pengaturan (<em>font</em>, ukuran, tema warna) dan mesin perender (<em>NSAttributedString builder</em>).</p>
+<p>Maktabah memisahkan antara kondisi pengaturan (<em>state</em> font, ukuran, tema warna) dan mesin perender (<em>NSAttributedString builder</em>).</p>
 <pre class="mermaid"><code>flowchart TD
     UI["UI Layer (Reader / Search)"]
     TVS["TextViewState (Singleton: Ukuran, Tema, Harakat)"]
@@ -3747,7 +3747,7 @@
 <h2 id="2-pembersihan-pemetaan-teks-stringtextcleaningswift">2. Pembersihan &amp; Pemetaan Teks (<code>String+TextCleaning.swift</code>)</h2>
 <p>Data kitab dari Shamela sering kali memuat pemformatan bawaan (seperti tag <code>&lt;span class="footnote"&gt;</code>, kode singkatan, atau tag HTML khusus). Pembersihan teks tidak boleh merusak indeks letak anotasi yang telah dibuat oleh pengguna.</p>
 <h3 id="konversi-rentang-relatif-delta-events">Konversi Rentang Relatif (<em>Delta Events</em>)</h3>
-<p>Ketika teks dibersihkan dari harakat atau elemen HTML, panjang <em>string</em> akan berubah. Maktabah menggunakan pola <strong>TextCleanDeltaEvent</strong> dan <strong>HonorificReplacementEvent</strong> untuk melacak setiap karakter yang dihapus atau diganti sehingga kalkulasi rentang (<em>range</em>) anotasi tetap presisi.</p>
+<p>Ketika teks dibersihkan dari harakat atau elemen HTML, panjang karakter (<em>string length</em>) mengalami perubahan. Maktabah menggunakan pola <strong>TextCleanDeltaEvent</strong> dan <strong>HonorificReplacementEvent</strong> untuk melacak setiap karakter yang dihapus atau diganti sehingga kalkulasi rentang (<em>range</em>) anotasi tetap presisi.</p>
 <pre class="mermaid"><code>graph TD
     SRC["Teks Sumber SQLite (Dengan Harakat, Span, Teks Doa)"] --&gt;|"Pembersihan &amp; Penggantian Ligatur"| ARR["ArabicRenderResult"]
 
@@ -3776,7 +3776,7 @@
 - <code>"رضي الله عنه"</code>
 - <code>"رحمه الله"</code>
 - <code>"عز وجل"</code></p>
-<p>Sering kali dirender menjadi satu glif kaligrafi (<em>calligraphic ligatures</em>) pada <em>font</em> khusus seperti KFGQPC Uthmanic Script. Penggantian frasa sepanjang 18 karakter menjadi 1 karakter glif menyebabkan pergeseran koordinat (<em>length delta</em>) yang signifikan:</p>
+<p>Sering kali dirender menjadi satu glif kaligrafi (<em>calligraphic ligatures</em>) pada <em>font</em> khusus seperti KFGQPC Uthmanic Script. Penggantian frasa sepanjang 18 karakter menjadi satu glif kaligrafi tunggal menyebabkan pergeseran koordinat (<em>length delta</em>) yang signifikan:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">HonorificReplacementEvent</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">oldRange</span><span class="p">:</span><span class="w"> </span><span class="n">NSRange</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">newLength</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3792,13 +3792,13 @@
 <ul>
 <li><strong><code>displayedOffset(forSourceOffset:affinity:)</code></strong>: Menghitung pergeseran kumulatif $\Delta = \sum (\text{newLength} - \text{oldRange.length})$ untuk memposisikan sorotan teks (<em>highlight</em>) yang sedang ditampilkan di layar.</li>
 <li><strong><code>sourceOffset(forDisplayedOffset:affinity:)</code></strong>: Menerjemahkan kembali seleksi kursor pengguna pada teks bertampilan ligatur menjadi rentang absolut pada teks mentah di basis data SQLite.</li>
-<li><strong><code>HonorificBoundaryAffinity</code></strong>: Menentukan apakah seleksi kursor yang jatuh tepat di batas frasa ligatur condong ke awal (<code>.leading</code>) atau ke akhir (<code>.trailing</code>) teks asli, mencegah terpotongnya sorotan satu kata.</li>
+<li><strong><code>HonorificBoundaryAffinity</code></strong>: Menentukan apakah seleksi kursor yang jatuh tepat di batas frasa ligatur condong ke awal (<code>.leading</code>) atau ke akhir (<code>.trailing</code>) teks asli, guna mencegah terpotongnya sorotan (<em>highlight</em>) pada kata tersebut.</li>
 </ul>
 <h3 id="3-pembersihan-tag-html-kode-hadis">3. Pembersihan Tag HTML &amp; Kode Hadis</h3>
 <ul>
 <li><code>cleanedTextWithRanges(mapping:)</code>: Menghapus harakat dan menggeser rentang (<code>NSRange</code>) anotasi secara matematis agar sorotan teks (<em>highlight</em>) selalu menandai kata yang sama, baik saat harakat ditampilkan maupun disembunyikan.</li>
-<li><code>stripSpanTagsWithRanges()</code>: Menghapus tag <code>span</code> HTML dari basis data warisan (<em>legacy</em>) dan mengekstrak posisinya (misalnya untuk pewarnaan judul atau catatan kaki).</li>
-<li><code>replaceKutubCodes()</code>: Menerjemahkan sandi angka perawi hadis (<em>kutub codes</em>) menjadi singkatan teks (misalnya: "خ" untuk Bukhari).</li>
+<li><code>stripSpanTagsWithRanges()</code>: Menghapus tag <code>span</code> HTML dari basis data terdahulu (<em>legacy database</em>) dan mengekstrak posisinya (misalnya untuk pewarnaan judul atau catatan kaki).</li>
+<li><code>replaceKutubCodes()</code>: Menerjemahkan kode numerik kitab rujukan hadis (<em>kutub codes</em>) menjadi singkatan teks (misalnya: "خ" untuk Shahih Bukhari).</li>
 </ul>
 <hr />
 <h2 id="3-pencarian-cuplikan-teks-stringsearchswift">3. Pencarian &amp; Cuplikan Teks (<code>String+Search.swift</code>)</h2>

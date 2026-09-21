@@ -1081,15 +1081,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-hybrid-diagram-aliran-data" class="md-nav__link">
+  <a href="#arsitektur-hibrida-diagram-alur-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur Hybrid &amp; Diagram Aliran Data
+        Arsitektur Hibrida &amp; Diagram Alur Data
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Arsitektur Hybrid &amp; Diagram Aliran Data">
+    <nav class="md-nav" aria-label="Arsitektur Hibrida &amp; Diagram Alur Data">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3639,15 +3639,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-hybrid-diagram-aliran-data" class="md-nav__link">
+  <a href="#arsitektur-hibrida-diagram-alur-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur Hybrid &amp; Diagram Aliran Data
+        Arsitektur Hibrida &amp; Diagram Alur Data
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Arsitektur Hybrid &amp; Diagram Aliran Data">
+    <nav class="md-nav" aria-label="Arsitektur Hibrida &amp; Diagram Alur Data">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3783,8 +3783,8 @@
 
 
 <h1 id="antarmuka-pengguna-ios-anotasi">Antarmuka Pengguna iOS Anotasi</h1>
-<p>Implementasi antarmuka anotasi di iOS dan iPadOS mengadopsi arsitektur <em>hybrid</em> yang menggabungkan deklaratif SwiftUI untuk level kontainer dan UIKit modern (<code>UICollectionViewCompositionalLayout</code> &amp; <code>UICollectionViewDiffableDataSource</code>) untuk performa tinggi daftar hierarki teks Arab.</p>
-<h2 id="arsitektur-hybrid-diagram-aliran-data">Arsitektur Hybrid &amp; Diagram Aliran Data</h2>
+<p>Implementasi antarmuka anotasi di iOS dan iPadOS mengadopsi arsitektur hibrida (<em>hybrid</em>) yang menggabungkan paradigma deklaratif SwiftUI untuk level kontainer dan UIKit modern (<code>UICollectionViewCompositionalLayout</code> &amp; <code>UICollectionViewDiffableDataSource</code>) untuk performa tinggi daftar hierarki teks Arab.</p>
+<h2 id="arsitektur-hibrida-diagram-alur-data">Arsitektur Hibrida &amp; Diagram Alur Data</h2>
 <p>Alur rendering dan pembagian tanggung jawab antarkomponen diatur sebagai berikut:</p>
 <pre class="mermaid"><code>flowchart TD
     ALV["AnnotationListView (SwiftUI Root)"]
@@ -3969,7 +3969,7 @@
 <li><strong>Pengeditan Berpusat di Reader (<code>iOSAnnotationEditorSheet</code>)</strong>:
     Pengubahan catatan (<em>note</em>), warna sorotan, tipe garis bawah (<em>underline</em>), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (<code>iOSReaderView</code>) melalui lembar modal <code>iOSAnnotationEditorSheet</code> saat teks beranotasi diketuk.</li>
 </ul>
-<h2 id="modal-sheet-filter-tag-tagfilterselectionview">Modal Sheet Filter Tag (<code>TagFilterSelectionView</code>)</h2>
+<h2 id="modal-sheet-filter-tag-tagfilterselectionview">Modal Sheet Filter Tag (TagFilterSelectionView)</h2>
 <p>Saat tombol filter pada <code>iOSTagFilterHeaderView</code> diketuk:</p>
 <ol>
 <li>Fungsi <code>presentTagFilterSheet()</code> menginisialisasi tampilan SwiftUI <code>TagFilterSelectionView</code>.</li>
