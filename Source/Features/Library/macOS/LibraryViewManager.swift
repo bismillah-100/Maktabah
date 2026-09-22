@@ -170,17 +170,64 @@ class LibraryViewManager: NSObject {
 
     // MARK: - Selection Restore (UI)
 
+    private var restoreSelectionTask: Task<Void, Never>?
+
     func restoreSelection(byBookName bookName: String?) {
+        guard let bookName else { return }
+
         if viewModel.isFlatMode {
             restoreFlatSelection(byBookName: bookName)
             return
         }
 
-        guard let bookName,
-              let (category, book) = viewModel.restoreSelectionEntry(byBookName: bookName)
-        else { return }
-        outlineView.expandItem(category)
-        safelySelectOutlineRow(for: book)
+        restoreSelectionTask?.cancel()
+        let categories = viewModel.displayedCategories
+        restoreSelectionTask = Task.detached(priority: .userInitiated) { [weak self] in
+            guard let result = self?.findCategoryPathAndBook(for: bookName, in: categories) else {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            await MainActor.run { [weak self] in
+                guard let self, self.viewModel.selectedBookName == bookName else { return }
+                for cat in result.categoryPath {
+                    self.outlineView.expandItem(cat)
+                }
+                self.safelySelectOutlineRow(for: result.book)
+            }
+        }
+    }
+
+    private nonisolated func findCategoryPathAndBook(
+        for bookName: String,
+        in categories: [CategoryData]
+    ) -> (categoryPath: [CategoryData], book: BooksData)? {
+        for category in categories {
+            if let result = searchCategoryHierarchy(category: category, path: [category], targetBookName: bookName) {
+                return result
+            }
+        }
+        return nil
+    }
+
+    private nonisolated func searchCategoryHierarchy(
+        category: CategoryData,
+        path: [CategoryData],
+        targetBookName: String
+    ) -> (categoryPath: [CategoryData], book: BooksData)? {
+        for child in category.children {
+            if let book = child as? BooksData, book.book == targetBookName {
+                return (path, book)
+            } else if let subCategory = child as? CategoryData {
+                if let found = searchCategoryHierarchy(
+                    category: subCategory,
+                    path: path + [subCategory],
+                    targetBookName: targetBookName
+                ) {
+                    return found
+                }
+            }
+        }
+        return nil
     }
 
     func restoreFlatSelection(byBookName bookName: String?) {
@@ -196,12 +243,10 @@ class LibraryViewManager: NSObject {
 
     private func selectFlatRow(_ row: Int) {
         guard row >= 0, row < outlineView.numberOfRows else { return }
-        if outlineView.selectedRow != row {
-            isUpdatingOutline = true
-            outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-            isUpdatingOutline = false
-            outlineView.scrollRowToVisible(row)
-        }
+        isUpdatingOutline = true
+        outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        isUpdatingOutline = false
+        outlineView.scrollRowToVisible(row)
     }
 
     private func safelySelectOutlineRow(for book: BooksData) {
