@@ -103,10 +103,19 @@ public struct WidgetSnapshot<Descriptor: WidgetSnapshotDescriptor>: WidgetSnapsh
 }
 
 public extension WidgetSnapshotRecord {
+    /// Identifier App Group sesuai platform (macOS membutuhkan Team ID prefix)
+    static var appGroupIdentifier: String {
+        #if DIRECT_DISTRIBUTION
+        return "Q37L5CJ4ZG.group.com.Drn.maktabah"
+        #else
+        return "group.com.Drn.maktabah"
+        #endif
+    }
+
     /// Lokasi file JSON di App Group
     static var appGroupURL: URL? {
         guard let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.Drn.maktabah"
+            forSecurityApplicationGroupIdentifier: appGroupIdentifier
         ) else { return nil }
 
         // Use Application Support directory for isolation
