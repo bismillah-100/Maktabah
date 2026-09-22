@@ -23,6 +23,7 @@ class IbarotTextVC: NSViewController {
     let viewModel: ReaderViewModel = .init()
 
     private let defaultFontSize: CGFloat = 18.0
+    private var pendingRestoreTask: Task<Void, Never>?
 
     // MARK: - Window Title Properties
 
@@ -456,6 +457,51 @@ extension IbarotTextVC {
 
         viewModel.fetchContentById(contentId)
     }
+
+    func openAnnotation(_ annotation: Annotation) async throws {
+        let bkId = annotation.bkId
+        let contentId = annotation.contentId
+        guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
+            ReusableFunc.showAlert(
+                title: String(localized: .bookNotFound(bookID: bkId)),
+                message: String(localized: .bookMissingOnAnnotationClick)
+            )
+            return
+        }
+
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
+
+        do {
+            if currentBook?.id != bkId {
+                try await displayBook(book, loadContent: false)
+            }
+        } catch {
+            ReusableFunc.showAlert(
+                title: DatabaseError.bookNotFound(bkId).localizedDescription,
+                message: DatabaseError.noConnection.localizedDescription
+            )
+            return
+        }
+
+        if contentId != viewModel.currentContentId {
+            handleDelegate(contentId)
+        }
+
+        await textDelegate?.highlightAndScrollToAnns(annotation)
+    }
+
+    func openHistory(book: BooksData, contentId: Int?) async throws {
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
+
+        if currentBook?.id != book.id {
+            try await displayBook(book, loadContent: contentId == nil)
+        }
+        if let contentId {
+            handleDelegate(contentId)
+        }
+    }
 }
 
 // MARK: - SidebarDelegate
@@ -574,20 +620,17 @@ extension IbarotTextVC: ReaderStateComponent {
             return
         }
 
-        Task { [weak self] in
-            guard let self else { return }
+        libraryVC?.dataVM.viewModel.selectedBookName = book.book
 
-            await MainActor.run { [weak self] in
-                guard let self else { return }
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled else { return }
 
-                viewModel.restore(from: state)
+            viewModel.restore(from: state)
 
-                if let range = state.selectedRange {
-                    textView.setSelectedRange(range)
-                    view.window?.makeFirstResponder(textView)
-                }
-
-                libraryVC?.dataVM.viewModel.selectedBookName = book.book
+            if let range = state.selectedRange {
+                textView.setSelectedRange(range)
+                view.window?.makeFirstResponder(textView)
             }
 
             if let query = state.searchQuery {
@@ -596,6 +639,8 @@ extension IbarotTextVC: ReaderStateComponent {
                 await textDelegate?.highlightAndScrollToText(query, mode: mode, nearDistance: nearDistance)
             }
 
+            guard !Task.isCancelled else { return }
+
             if let scrollPos = state.scrollPosition {
                 await textDelegate?.scrollTo(scrollPos)
             }
@@ -603,6 +648,8 @@ extension IbarotTextVC: ReaderStateComponent {
     }
 
     func cleanUpState() {
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
         clearUI()
         var newState = ReaderState()
         newState.isSidebarCollapsed = splitVC?.sidebarItem.isCollapsed ?? false
