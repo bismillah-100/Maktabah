@@ -139,16 +139,21 @@ jobs:
 
           team = os.environ['TEAM_ID']
 
-          def patch_target_release(config_id, uuid):
+          def patch_target_release(config_id, uuid, entitlements=None):
               global content
               if not config_id or not uuid:
                   return
               pattern = r'(' + config_id + r' /\* Release \*/ = \{[^{]*buildSettings = \{)(.*?)(\};)'
               def replace_target(match):
                   h, s, f = match.group(1), match.group(2), match.group(3)
-                  for k in ['CODE_SIGN_STYLE', 'CODE_SIGN_IDENTITY', 'PROVISIONING_PROFILE_SPECIFIER', 'DEVELOPMENT_TEAM']:
+                  keys_to_remove = ['CODE_SIGN_STYLE', 'CODE_SIGN_IDENTITY', 'PROVISIONING_PROFILE_SPECIFIER', 'DEVELOPMENT_TEAM']
+                  if entitlements:
+                      keys_to_remove.append('CODE_SIGN_ENTITLEMENTS')
+                  for k in keys_to_remove:
                       s = re.sub(rf'\s+{k}\s+=\s+[^;]+;', '', s)
                   new = f'\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Developer ID Application";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{uuid}";\n\t\t\t\tDEVELOPMENT_TEAM = {team};'
+                  if entitlements:
+                      new += f'\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = "{entitlements}";'
                   return h + new + s + f
               content = re.sub(pattern, replace_target, content, flags=re.DOTALL)
 
@@ -158,7 +163,7 @@ jobs:
 
           # 2. Patch MaktabahWidgetExtension
           widget_config_id = get_release_config_id('MaktabahWidgetExtension')
-          patch_target_release(widget_config_id, os.environ.get('UUID_WIDGET_PROFILE', ''))
+          patch_target_release(widget_config_id, os.environ.get('UUID_WIDGET_PROFILE', ''), 'Source/Features/Widget/MaktabahWidgetDirect.entitlements')
 
           # 3. Patch Project-level (agar tidak fallback ke Development)
           content = content.replace('CODE_SIGN_IDENTITY = "Apple Development";', 'CODE_SIGN_IDENTITY = "Developer ID Application";')
