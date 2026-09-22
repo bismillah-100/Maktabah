@@ -624,6 +624,21 @@ extension IbarotTextVC: ReaderStateComponent {
         viewModel.updateState(&state)
     }
 
+    private func waitForSearchLayoutSettle() async {
+        guard let splitVC, splitVC.currentMode == .search,
+              let optionSearchVC = splitVC.optionSearchVC
+        else { return }
+
+        while optionSearchVC.viewModel.state != .loaded {
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+        }
+
+        // Tambahkan sedikit delay agar layout split view benar-benar settle
+        // setelah progress indicator disembunyikan di `OptionSearchVC`.
+        await Task.yield()
+    }
+
     func restore(from state: ReaderState) {
         guard state.hasContent, let book = state.currentBook
         else { clearUI(); return }
@@ -637,18 +652,21 @@ extension IbarotTextVC: ReaderStateComponent {
             return
         }
 
-        viewModel.restore(from: state)
-
-        if let range = state.selectedRange {
-            textView.setSelectedRange(range)
-            view.window?.makeFirstResponder(textView)
-        }
-
         libraryVC?.dataVM.viewModel.selectedBookName = book.book
 
         pendingRestoreTask?.cancel()
         pendingRestoreTask = Task { @MainActor [weak self] in
             guard let self, !Task.isCancelled else { return }
+
+            await waitForSearchLayoutSettle()
+            guard !Task.isCancelled else { return }
+
+            viewModel.restore(from: state)
+
+            if let range = state.selectedRange {
+                textView.setSelectedRange(range)
+                view.window?.makeFirstResponder(textView)
+            }
 
             if let query = state.searchQuery {
                 let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
