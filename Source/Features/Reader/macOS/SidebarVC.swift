@@ -82,7 +82,7 @@ class SidebarVC: NSViewController {
         windowsObservation = tabGroup.observe(
             \.windows,
              options: []
-        ) { _,_ in
+        ) { [weak self] _, _ in
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 updateScrollViewInsets(searchContainer.isHidden)

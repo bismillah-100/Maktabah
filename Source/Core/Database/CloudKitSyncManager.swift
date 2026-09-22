@@ -33,7 +33,7 @@ final class CloudKitSyncManager {
     // MARK: - Network Monitoring
 
     private func setupNetworkMonitor() {
-        Task {
+        Task { [weak self] in
             await NetworkMonitor.shared.registerConnectivityCallbacks(
                 onRestored: { [weak self] in
                     #if DEBUG

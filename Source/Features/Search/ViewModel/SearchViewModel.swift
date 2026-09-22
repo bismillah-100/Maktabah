@@ -330,8 +330,8 @@ final class SearchViewModel: ViewModelBase {
             }
             return
         }
-        Task.detached(priority: .userInitiated) { [weak libraryViewManager] in
-            guard let libraryViewManager else { await onComplete(); return }
+        Task.detached(priority: .userInitiated) { [weak self, weak libraryViewManager] in
+            guard let self, let libraryViewManager else { await onComplete(); return }
             await libraryViewManager.prepareData { [weak self] in
                 guard let self else { onComplete(); return }
                 Task.detached { [weak self] in

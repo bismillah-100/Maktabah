@@ -65,7 +65,7 @@ open class ViewModelBase {
     open func migrateBookId(from oldId: Int, to newId: Int) {}
 
     public func enableBookIdMigrationObserver() {
-        addObserver(forName: .bookIdMigrated, object: nil, queue: .main) { notification in
+        addObserver(forName: .bookIdMigrated, object: nil, queue: .main) { [weak self] notification in
             Task { @MainActor [weak self] in
                 guard let self, let migration = notification.bookIdMigration else { return }
                 migrateBookId(from: migration.oldId, to: migration.newId)

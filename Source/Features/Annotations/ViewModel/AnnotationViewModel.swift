@@ -203,7 +203,8 @@ class AnnotationViewModel: ViewModelBase, @unchecked Sendable {
     override init() {
         super.init()
 
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            guard let self else { return }
             searchSubject
                 .debounce(for: .seconds(0.3), scheduler: RunLoop.main)
                 .sink { [weak self] _ in

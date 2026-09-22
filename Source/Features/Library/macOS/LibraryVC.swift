@@ -50,7 +50,7 @@ class LibraryVC: NSViewController {
             forName: .libraryFolderChanged,
             object: nil,
             queue: .current
-        ) { _ in
+        ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 isDataLoaded = false

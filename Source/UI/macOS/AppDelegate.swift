@@ -152,7 +152,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
         Task {
-            try await Task.sleep(for: .seconds(5))
+            try? await Task.sleep(for: .seconds(5))
             CloudKitSyncManager.shared.fetchChanges()
         }
         WidgetUpdateCoordinator.shared.handleSilentPush { _ in }

@@ -211,7 +211,7 @@ class iOSNavigationManager {
             state.detail = ""
             state.progress = 0
 
-            Task {
+            Task { [weak self] in
                 do {
                     try await BookArchiveIntegrator.shared.ensureBookIntegrated(
                         book,
@@ -222,7 +222,8 @@ class iOSNavigationManager {
                         }
                     )
 
-                    await MainActor.run {
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
                         if !MaktabahApp.isIpad, self.selectedBook != nil {
                             // Do not automatically push a new book if there is already an active reader on iPhone
                         } else {
@@ -231,13 +232,13 @@ class iOSNavigationManager {
                         self.activeIntegrationStates.removeAll { $0.id == state.id }
                     }
                 } catch is CancellationError {
-                    await MainActor.run {
-                        self.activeIntegrationStates.removeAll { $0.id == state.id }
+                    await MainActor.run { [weak self] in
+                        self?.activeIntegrationStates.removeAll { $0.id == state.id }
                     }
                 } catch {
-                    await MainActor.run {
-                        self.activeIntegrationStates.removeAll { $0.id == state.id }
-                        self.alertMessage = AlertMessage(
+                    await MainActor.run { [weak self] in
+                        self?.activeIntegrationStates.removeAll { $0.id == state.id }
+                        self?.alertMessage = AlertMessage(
                             title: NSLocalizedString("Download Failed", comment: "Download failed alert title"),
                             message: error.localizedDescription
                         )

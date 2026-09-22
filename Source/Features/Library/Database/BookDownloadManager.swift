@@ -58,15 +58,19 @@ final class BookDownloadManager {
     }()
 
     private init() {
-        Task {
-            await networkMonitor.registerConnectivityCallbacks(
-                onLost: { [weak self] in
-                    Task {
-                        await self?.cancelAllDownloads()
-                    }
-                }
-            )
+        Task { [weak self] in
+            await self?.startNetworkMonitoring()
         }
+    }
+
+    nonisolated private func startNetworkMonitoring() async {
+        await networkMonitor.registerConnectivityCallbacks(
+            onLost: { [weak self] in
+                Task { [weak self] in
+                    await self?.cancelAllDownloads()
+                }
+            }
+        )
     }
 
     func localBookURL(bookId: Int) -> URL? {
