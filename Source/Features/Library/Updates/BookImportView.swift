@@ -492,14 +492,14 @@ struct OfflineImportFormView: View {
             closeButton
             Spacer()
             annotationsExist
-                .opacity(viewModel.newIdAnnotationCount > 0 ? 1 : 0)
+                .opacity(viewModel.newIdAnnotationCount > 0 || viewModel.showAnnotationsPopover ? 1 : 0)
             importButtonGroup
         }
         #else
         VStack(spacing: 12) {
             annotationsExist
-                .opacity(viewModel.newIdAnnotationCount > 0 ? 1 : 0)
-                .frame(height: viewModel.newIdAnnotationCount > 0 ? nil : 0)
+                .opacity(viewModel.newIdAnnotationCount > 0 || viewModel.showAnnotationsPopover ? 1 : 0)
+                .frame(height: viewModel.newIdAnnotationCount > 0 || viewModel.showAnnotationsPopover ? nil : 0)
                 .clipped()
             importButtonGroup
             closeButton

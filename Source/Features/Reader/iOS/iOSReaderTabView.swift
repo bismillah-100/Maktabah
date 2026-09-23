@@ -10,8 +10,8 @@ struct iOSReaderTabView: View {
         let colors: [Color] = [
             .white,
             .bgSepia,
-            .bgSepiaDark,
             .bgGray,
+            .bgSepiaDark,
             .black,
         ]
         let index = textViewState.backgroundColorIndex
