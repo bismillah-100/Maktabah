@@ -37,8 +37,8 @@ struct iOSReaderView: View {
         let colors: [Color] = [
             .white,
             .bgSepia,
-            .bgSepiaDark,
             .bgGray,
+            .bgSepiaDark,
             .black,
         ]
         let index = textViewState.backgroundColorIndex
@@ -95,6 +95,7 @@ struct iOSReaderView: View {
             )
         }
         .onTapGesture {
+            guard !viewModel.isPopoverPresented else { return }
             withAnimation(.easeInOut) {
                 isReading.toggle()
             }

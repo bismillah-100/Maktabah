@@ -86,6 +86,7 @@ class ReaderViewModel: ViewModelBase {
     var needsScrollRestore: Bool = false
     var fetchScrollPosition: (() -> CGPoint?)?
     var fetchSelectedRange: (() -> NSRange?)?
+    var isPopoverPresented: Bool = false
     #endif
 
     // MARK: - Computed Properties
