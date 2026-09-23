@@ -109,6 +109,7 @@ class ReaderViewModel: ViewModelBase {
     var fetchScrollPosition: (() -> CGPoint?)?
     var fetchSelectedRange: (() -> NSRange?)?
     var currentAnnotations: [Annotation] = []
+    var isPopoverPresented: Bool = false
     #endif
 
     // MARK: - Computed Properties
