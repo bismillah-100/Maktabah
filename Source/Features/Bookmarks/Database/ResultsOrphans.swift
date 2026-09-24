@@ -54,43 +54,30 @@ extension ResultsHandler {
     }
 
     func resolveOrphanResults() {
-        guard let db else { return }
         do {
             try transaction {
-                let sql = """
-                SELECT r.\(colId), r.\(colName), r.\(colBkId), f.\(colId) as expected_folder
-                FROM \(resultsTable) r
-                LEFT JOIN \(foldersTable) f ON r.\(colFolderCkRecordId) = f.\(colCkRecordId)
-                WHERE r.\(colFolderCkRecordId) IS NOT NULL
-                AND COALESCE(r.\(colFolderId), -1) != COALESCE(f.\(colId), -1)
+                let updateSql = """
+                UPDATE OR IGNORE \(resultsTable)
+                SET \(colFolderId) = (SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId))
+                WHERE \(colFolderCkRecordId) IS NOT NULL
+                  AND EXISTS (
+                      SELECT 1 FROM \(foldersTable) f
+                      WHERE f.\(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId)
+                      AND COALESCE(\(resultsTable).\(colFolderId), -1) != COALESCE(f.\(colId), -1)
+                  );
                 """
+                try exec(updateSql)
 
-                struct OrphanResultRow {
-                    let id: Int64
-                    let name: String
-                    let bkId: Int
-                    let expectedFolder: Int64?
-                }
-
-                let orphans = try db.fetch(query: sql) { row -> OrphanResultRow in
-                    OrphanResultRow(
-                        id: row.int64(at: 0),
-                        name: row.string(at: 1) ?? "",
-                        bkId: row.int(at: 2),
-                        expectedFolder: !row.isNull(at: 3) ? row.int64(at: 3) : nil
-                    )
-                }
-
-                for orphan in orphans {
-                    guard let newFolderId = orphan.expectedFolder else { continue }
-
-                    let conflictSql = "SELECT \(colId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? AND \(colId) != ? LIMIT 1"
-                    if let _ = try db.fetch(query: conflictSql, parameters: [newFolderId, orphan.name, orphan.bkId, orphan.id], mapping: { $0.int64(at: 0) }).first {
-                        try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [orphan.id])
-                    } else {
-                        try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colFolderId) = ?;", parameters: [newFolderId, orphan.id])
-                    }
-                }
+                let deleteSql = """
+                DELETE FROM \(resultsTable)
+                WHERE \(colFolderCkRecordId) IS NOT NULL
+                  AND EXISTS (
+                      SELECT 1 FROM \(foldersTable) f
+                      WHERE f.\(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId)
+                      AND COALESCE(\(resultsTable).\(colFolderId), -1) != COALESCE(f.\(colId), -1)
+                  );
+                """
+                try exec(deleteSql)
             }
         } catch {
             Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan results: \(error.localizedDescription, privacy: .public)")

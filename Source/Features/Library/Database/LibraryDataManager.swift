@@ -250,33 +250,29 @@ final class LibraryDataManager: Sendable {
     }
 
     func getBook(_ ids: [Int]) -> [BooksData] {
-        var books = [BooksData]()
-        var idsToFetch = [Int]()
+        guard !ids.isEmpty else { return [] }
 
-        state.withLock { state in
-            for id in ids {
-                if let book = state.booksById[id] {
-                    books.append(book)
-                } else {
-                    idsToFetch.append(id)
-                }
-            }
+        let idsToFetch: [Int] = state.withLock { state in
+            let missing = ids.filter { state.booksById[$0] == nil }
+            return Array(Set(missing))
         }
 
-        for id in idsToFetch {
+        if !idsToFetch.isEmpty {
             do {
-                if let book = try db.fetchBook(byId: id) {
-                    state.withLock { state in
-                        state.booksById[id] = book
+                let fetchedBooks = try db.fetchBooks(byIds: idsToFetch)
+                state.withLock { state in
+                    for book in fetchedBooks {
+                        state.booksById[book.id] = book
                     }
-                    books.append(book)
                 }
             } catch {
-                Logger.library.error("Failed to fetch book: \(error.localizedDescription, privacy: .public)")
+                Logger.library.error("Failed to fetch books: \(error.localizedDescription, privacy: .public)")
             }
         }
 
-        return books
+        return state.withLock { state in
+            ids.compactMap { state.booksById[$0] }
+        }
     }
 
     func categoryLevel(for book: BooksData) -> Int? {

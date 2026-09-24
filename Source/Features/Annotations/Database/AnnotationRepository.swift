@@ -502,18 +502,34 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         let sanitized = sanitizeTagNames(tags)
         guard !sanitized.isEmpty else { return }
 
-        for tag in sanitized {
-            let normalized = normalizedTagName(tag)
-            let insertTagSql = "INSERT OR IGNORE INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES (?, ?);"
-            try exec(insertTagSql, parameters: [tag, normalized])
+        for chunk in sanitized.chunked(into: 400) {
+            let insertPlaceholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
+            let insertTagSql = "INSERT OR IGNORE INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(insertPlaceholders);"
 
-            let selectTagIdSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1;"
-            guard let tagId = try _db.fetch(query: selectTagIdSql, parameters: [normalized], mapping: { $0.int64(at: 0) }).first else {
-                continue
+            var insertParams: [Any] = []
+            var normalizedNames: [String] = []
+            for tag in chunk {
+                let normalized = normalizedTagName(tag)
+                insertParams.append(tag)
+                insertParams.append(normalized)
+                normalizedNames.append(normalized)
             }
+            try exec(insertTagSql, parameters: insertParams)
 
-            let linkSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES (?, ?);"
-            try exec(linkSql, parameters: [annotationId, tagId])
+            let selectPlaceholders = String(repeating: "?,", count: normalizedNames.count).dropLast()
+            let selectTagIdSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders));"
+            let tagIds = try _db.fetch(query: selectTagIdSql, parameters: normalizedNames, mapping: { $0.int64(at: 0) })
+
+            guard !tagIds.isEmpty else { continue }
+            let linkPlaceholders = String(repeating: "(?, ?),", count: tagIds.count).dropLast()
+            let linkSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(linkPlaceholders);"
+
+            var linkParams: [Any] = []
+            for tagId in tagIds {
+                linkParams.append(annotationId)
+                linkParams.append(tagId)
+            }
+            try exec(linkSql, parameters: linkParams)
         }
     }
 

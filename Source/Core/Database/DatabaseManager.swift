@@ -290,6 +290,28 @@ final class DatabaseManager: Sendable {
         }
     }
 
+    func fetchBooks(byIds bookIds: [Int]) throws -> [BooksData] {
+        guard let db else {
+            throw NSError(domain: "No database connection", code: 1)
+        }
+
+        guard !bookIds.isEmpty else { return [] }
+
+        var allBooks: [BooksData] = []
+        let chunkSize = 900
+
+        for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
+            let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
+            let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ", ")
+            let sql = "SELECT \(bookSelectColumns) FROM \(booksTableName) WHERE \(colBokId) IN (\(placeholders))"
+
+            let chunkBooks = try db.fetch(query: sql, parameters: chunk, mapping: parseBookData(from:))
+            allBooks.append(contentsOf: chunkBooks)
+        }
+
+        return allBooks
+    }
+
     func bookExists(id: Int) -> Bool {
         guard let db else { return false }
 
