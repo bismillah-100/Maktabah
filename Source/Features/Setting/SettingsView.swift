@@ -50,7 +50,7 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 4)
             } header: {
-                Text("Search Index")
+                Text(.Setting.searchIndex)
             }
         }
     }
@@ -72,10 +72,10 @@ extension SettingsView {
         .formStyle(.grouped)
         .controlSize(.large)
         .frame(minWidth: 520, minHeight: 480)
-        .alert(.annotationMoveFolderFileExistsTitle, isPresented: $viewModel.showCollisionAlert) {
+        .alert(.Setting.annotationMoveFolderFileExistsTitle, isPresented: $viewModel.showCollisionAlert) {
             collisionAlertButtons
         } message: {
-            Text(.annotationsMoveFolderFileExistsDesc)
+            Text(.Setting.annotationsMoveFolderFileExistsDesc)
         }
 
     }
@@ -118,10 +118,10 @@ extension SettingsView {
         .controlSize(.large)
         .scrollContentBackground(.hidden)
         .background(Color.appBackground)
-        .alert(.annotationMoveFolderFileExistsTitle, isPresented: $viewModel.showCollisionAlert) {
+        .alert(.Setting.annotationMoveFolderFileExistsTitle, isPresented: $viewModel.showCollisionAlert) {
             collisionAlertButtons
         } message: {
-            Text(.annotationsMoveFolderFileExistsDesc)
+            Text(.Setting.annotationsMoveFolderFileExistsDesc)
         }
         .overlay {
             if showFtsMigrationOverlay {
@@ -148,15 +148,15 @@ extension SettingsView {
         Section {
             Toggle(isOn: $viewModel.useDefaultTheme) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Use System Theme")
-                    Text("Replace the default sepia theme with standard iOS system appereance.")
+                    Text(.Setting.useSystemTheme)
+                    Text(.Setting.useSystemThemeDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             .controlSize(.regular)
         } header: {
-            Text("Appearance")
+            Text(.Setting.appearance)
         }
     }
 
@@ -166,7 +166,7 @@ extension SettingsView {
                 viewModel.runVacuum()
             }) {
                 HStack {
-                    Text(.optimizeDatabase)
+                    Text(.Setting.optimizeDatabase)
                     if viewModel.isVacuuming {
                         Spacer()
                         ProgressView()
@@ -176,12 +176,12 @@ extension SettingsView {
             }
             .disabled(viewModel.isVacuuming)
 
-            Text(.optimizationIsNeededToReclaimDiskSpaceAfterDeletingBooks)
+            Text(.Setting.optimizationDesc)
                 .padding(2)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         } header: {
-            Text(.optimization)
+            Text(.Setting.optimization)
         }
     }
 }
@@ -196,14 +196,14 @@ extension SettingsView {
                 set: { viewModel.setBundleMode($0) }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Bundle Mode")
-                    Text("Use the app's built-in database (read-only). For the Full Library, disable this and choose a custom folder.")
+                    Text(.Setting.bundleMode)
+                    Text(.Setting.bundleModeDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }.controlSize(.regular)
         } header: {
-            Text("Database Mode")
+            Text(.Setting.databaseMode)
         }
     }
 
@@ -211,23 +211,23 @@ extension SettingsView {
         Section {
             Toggle(isOn: $viewModel.recordSearchHistory) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(.readingHistory)
-                    Text(.addBooksOpenedFromSearchResultsToReadingHistory)
+                    Text(.Setting.readingHistory)
+                    Text(.Setting.readingHistoryDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             .controlSize(.regular)
         } header: {
-            Text("History")
+            Text(.Setting.history)
         }
     }
 
     private var libraryStorageSection: some View {
         Section {
             if !viewModel.isBundleMode {
-                PathRow(label: "Database Files", path: viewModel.databaseFilesPath)
-                PathRow(label: "Archive Files", path: viewModel.archiveFilesPath)
+                PathRow(label: .Setting.databaseFiles, path: viewModel.databaseFilesPath)
+                PathRow(label: .Setting.archiveFiles, path: viewModel.archiveFilesPath)
             }
 
             #if os(macOS)
@@ -238,18 +238,20 @@ extension SettingsView {
 
             if !viewModel.isBundleMode && viewModel.hasBundledData {
                 VStack(alignment: .leading, spacing: 8) {
-                    Button("Cleanup Downloaded Data (Bundle Mode)") {
+                    Button {
                         viewModel.cleanupBundledData()
+                    } label: {
+                        Text(.Setting.cleanupDownloadedDataBundleMode)
                     }
                     .foregroundColor(.red)
 
-                    Text("This will delete all downloaded SQLite files, index, and cache from the bundle mode storage.")
+                    Text(.Setting.cleanupDownloadedDataBundleModeDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         } header: {
-            Text("Library Storage")
+            Text(.Setting.libraryStorage)
         }
     }
 
@@ -257,8 +259,8 @@ extension SettingsView {
         Section {
             Toggle(isOn: $viewModel.hideMissingBookAnnotations) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Hide Missing Book Annotations")
-                    Text("Hide annotations if the corresponding book is not found in the local library.")
+                    Text(.Setting.hideMissingBookAnnotations)
+                    Text(.Setting.hideMissingBookAnnotationsDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -270,8 +272,8 @@ extension SettingsView {
                 set: { viewModel.setICloud($0) }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Use CloudKit")
-                    Text("Sync annotations and search results across devices with CloudKit.")
+                    Text(.Setting.useCloudKit)
+                    Text(.Setting.useCloudKitDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -285,8 +287,8 @@ extension SettingsView {
                     set: { viewModel.setCrossPlatformSync($0) }
                 )) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Cross-Platform Sync")
-                        Text("Notify other platforms to sync when changes are made.")
+                        Text(.Setting.crossPlatformSync)
+                        Text(.Setting.crossPlatformSyncDesc)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -294,7 +296,7 @@ extension SettingsView {
                 .controlSize(.regular)
 
                 #if DEBUG
-                TextField("Debug Worker URL", text: Binding(
+                TextField(String(localized: .Setting.debugWorkerURL), text: Binding(
                     get: { viewModel.customWorkerURL },
                     set: { viewModel.setCustomWorkerURL($0) }
                 ))
@@ -304,7 +306,7 @@ extension SettingsView {
             }
 
             if !viewModel.useICloud {
-                PathRow(label: "Current Path", path: viewModel.annotationsPath)
+                PathRow(label: .Setting.currentPath, path: viewModel.annotationsPath)
             }
 
             #if os(macOS)
@@ -314,31 +316,39 @@ extension SettingsView {
             actionButtons
             #endif
         } header: {
-            Text("Annotations & Search Results")
+            Text(.Setting.annotationsAndSearchResults)
         }
     }
 
     @ViewBuilder
     private var libraryButtons: some View {
-        Button("Choose Library Folder…") {
+        Button {
             viewModel.chooseLibraryFolder()
+        } label: {
+            Text(.Setting.chooseLibraryFolder)
         }
 
-        Button("Switch to Bundle Mode") {
+        Button {
             viewModel.setBundleMode(true)
+        } label: {
+            Text(.Setting.switchToBundleMode)
         }
         .disabled(viewModel.isBundleMode)
     }
 
     @ViewBuilder
     private var actionButtons: some View {
-        Button("Choose Annotations Folder…") {
+        Button {
             viewModel.chooseAnnotationsFolder()
+        } label: {
+            Text(.Setting.chooseAnnotationsFolder)
         }
         .disabled(viewModel.useICloud)
 
-        Button("Re-Synchronise All Data") {
+        Button {
             viewModel.resetCloudKitToken()
+        } label: {
+            Text(.Setting.reSynchroniseAllData)
         }
         .foregroundColor(.red)
         .disabled(!viewModel.useICloud)
@@ -346,11 +356,15 @@ extension SettingsView {
 
     @ViewBuilder
     private var collisionAlertButtons: some View {
-        Button(.keepExistingDeleteOld) {
+        Button {
             viewModel.resolveCollision(.keepDestination)
+        } label: {
+            Text(.Setting.keepExistingDeleteOld)
         }
-        Button(.overwriteExisting, role: .destructive) {
+        Button(role: .destructive) {
             viewModel.resolveCollision(.overwriteDestination)
+        } label: {
+            Text(.Setting.overwriteExisting)
         }
         Button("Cancel", role: .cancel) {
             viewModel.resolveCollision(.ask) // used as cancel
@@ -375,8 +389,8 @@ extension SettingsView {
                 set: { viewModel.setAutoCheckAppUpdates($0) }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Application Update")
-                    Text("Check at Start")
+                    Text(.Setting.applicationUpdate)
+                    Text(.Setting.checkAtStart)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -389,11 +403,11 @@ extension SettingsView {
                     set: { viewModel.setEnableAutoCoreVersionCheck($0) }
                 )) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Library Update")
-                        Text("Semi-Annual Check")
+                        Text(.Setting.libraryUpdate)
+                        Text(.Setting.semiAnnualCheck)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text("Bi-Annual Routine Check until toggled off and on again.")
+                        Text(.Setting.biAnnualRoutineCheckDesc)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -401,24 +415,28 @@ extension SettingsView {
                 .controlSize(.regular)
             }
         } header: {
-            Text("Updates")
+            Text(.Setting.updates)
         }
     }
 
     private var downloadsSection: some View {
         Section {
             HStack(spacing: 8) {
-                Button("Download Full Library (Google Drive)") {
+                Button {
                     viewModel.openFullLibraryDownload()
+                } label: {
+                    Text(.Setting.downloadFullLibraryGoogleDrive)
                 }
                 #if os(macOS)
-                Button("Download Selective Library…") {
+                Button {
                     viewModel.openSelectiveDownload()
+                } label: {
+                    Text(.Setting.downloadSelectiveLibrary)
                 }
                 #endif
             }
             Label {
-                Text("Full Library will open the download link in your browser.")
+                Text(.Setting.fullLibraryBrowserDesc)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } icon: {
@@ -426,7 +444,7 @@ extension SettingsView {
                     .foregroundColor(.accentColor)
             }
         } header: {
-            Text("Downloads")
+            Text(.Setting.downloads)
         }
     }
 }
@@ -434,7 +452,7 @@ extension SettingsView {
 // MARK: - Helpers
 
 private struct PathRow: View {
-    let label: String
+    let label: LocalizedStringResource
     let path: String
 
     var body: some View {

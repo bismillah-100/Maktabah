@@ -168,7 +168,7 @@ final class SettingsViewModel {
                         onCompletion?(false)
                     } else {
                         ReusableFunc.showAlert(
-                            title: String(localized: "errorFolderAnnotations"),
+                            title: String(localized: .Setting.errorFolderAnnotations),
                             message: error.localizedDescription
                         )
                         onCompletion?(false)
@@ -224,7 +224,7 @@ final class SettingsViewModel {
                     if let error {
                         self.useICloud = false // rollback
                         ReusableFunc.showAlert(
-                            title: String(localized: "errorICloud"),
+                            title: String(localized: .Setting.errorICloud),
                             message: error.localizedDescription
                         )
                     }
@@ -244,7 +244,7 @@ final class SettingsViewModel {
                             if let error {
                                 self.useICloud = true // rollback
                                 ReusableFunc.showAlert(
-                                    title: String(localized: "errorICloud"),
+                                    title: String(localized: .Setting.errorICloud),
                                     message: error.localizedDescription
                                 )
                             }
@@ -264,7 +264,7 @@ final class SettingsViewModel {
         CloudKitSyncManager.shared.resetChangeToken()
         ReusableFunc.showAlert(
             title: String(localized: "success"),
-            message: String(localized: "CloudKit token has been reset. Full sync will start.")
+            message: String(localized: .Setting.cloudKitTokenResetMessage)
         )
     }
 
@@ -287,7 +287,7 @@ final class SettingsViewModel {
                         self.refreshPaths()
                     case .failure(let error):
                         ReusableFunc.showAlert(
-                            title: String(localized: "errorFolderAnnotations"),
+                            title: String(localized: .Setting.errorFolderAnnotations),
                             message: error.localizedDescription
                         )
                     case .none:
