@@ -7,6 +7,7 @@
 
 
 import Cocoa
+import OSLog
 
 extension ResultsViewManager: NSTextFieldDelegate {
     func controlTextDidEndEditing(_ obj: Notification) {
@@ -38,9 +39,7 @@ extension ResultsViewManager: NSTextFieldDelegate {
         } catch {
             showRenameError()
             outlineView.reloadItem(folderNode)
-            #if DEBUG
-            print(error)
-            #endif
+            Logger.bookmarks.error("Rename folder failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -51,9 +50,7 @@ extension ResultsViewManager: NSTextFieldDelegate {
         } catch {
             showRenameError()
             outlineView.reloadItem(resultNode)
-            #if DEBUG
-            print(error)
-            #endif
+            Logger.bookmarks.error("Rename result node failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 

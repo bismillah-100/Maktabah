@@ -5,6 +5,7 @@
 
 import Cocoa
 import Foundation
+import OSLog
 
 @MainActor
 class ReaderStateManager {
@@ -99,7 +100,7 @@ class ReaderStateManager {
             let data = try encoder.encode(state)
             try data.write(to: fileURL, options: [.atomic])
         } catch {
-            print("Failed to save \(mode) state: \(error.localizedDescription)")
+            Logger.reader.error("Failed to save \(mode.rawValue, privacy: .public) state: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -113,7 +114,7 @@ class ReaderStateManager {
             let data = try Data(contentsOf: fileURL)
             return try JSONDecoder().decode(ReaderState.self, from: data)
         } catch {
-            print("Failed to load \(mode) state: \(error)")
+            Logger.reader.error("Failed to load \(mode.rawValue, privacy: .public) state: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import OSLog
 import SwiftUI
 
 @Observable
@@ -85,9 +86,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
 
             } catch {
                 progressMessage = "Error: \(error.localizedDescription)"
-                #if DEBUG
-                print("❌ [Load Updates] Error: \(error)")
-                #endif
+                Logger.library.error("❌ [Load Updates] Error: \(error.localizedDescription, privacy: .public)")
             }
 
             isLoadingList = false
@@ -167,9 +166,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
             refreshAvailableUpdatesState()
         } catch {
             progressMessage = "Error: \(error.localizedDescription)"
-            #if DEBUG
-            print("❌ [Perform Updates] Error: \(error)")
-            #endif
+            Logger.library.error("❌ [Perform Updates] Error: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -234,9 +231,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
         } catch {
             context.item.status = .failed(error.localizedDescription)
             refreshAvailableUpdatesState()
-            #if DEBUG
-            print("[Update] Failed to update book \(context.item.id): \(error)")
-            #endif
+            Logger.library.error("[Update] Failed to update book \(context.item.id): \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
@@ -325,9 +320,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
             item.status = .downloaded
         } else if let error = output.error {
             item.status = .failed(error.localizedDescription)
-            #if DEBUG
-            print("[Download] Failed to download book \(item.id): \(error)")
-            #endif
+            Logger.library.error("[Download] Failed to download book \(item.id): \(error.localizedDescription, privacy: .public)")
         }
     }
 

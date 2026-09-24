@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 
 enum ZstdDecompressionError: LocalizedError {
     case emptyData
@@ -79,9 +80,7 @@ enum ZstdDecompressor {
         let expectedSize = ZSTD_getFrameContentSize(ptr.baseAddress, ptr.count)
 
         if expectedSize == ZSTD_CONTENTSIZE_ERROR || expectedSize == ZSTD_CONTENTSIZE_UNKNOWN {
-            #if DEBUG
-            print("Ukuran konten tidak diketahui")
-            #endif
+            Logger.db.error("Ukuran konten tidak diketahui")
             return ""
         }
 
@@ -108,9 +107,7 @@ enum ZstdDecompressor {
 
             if ZSTD_isError(decompressedSize) != 0 {
                 let errorName = String(cString: ZSTD_getErrorName(decompressedSize))
-                #if DEBUG
-                print("Zstd Error: \(errorName)")
-                #endif
+                Logger.db.error("Zstd Error: \(errorName, privacy: .public)")
                 return 0
             }
 
@@ -139,9 +136,7 @@ enum ZstdDecompressor {
 
         if ZSTD_isError(compressedSize) != 0 {
             let errorName = String(cString: ZSTD_getErrorName(compressedSize))
-            #if DEBUG
-            print("Zstd Compress Error: \(errorName)")
-            #endif
+            Logger.db.error("Zstd Compress Error: \(errorName, privacy: .public)")
             return nil
         }
 

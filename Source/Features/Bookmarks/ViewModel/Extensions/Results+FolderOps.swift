@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension ResultsViewModel {
     // MARK: - Folder Operations
@@ -125,9 +126,7 @@ extension ResultsViewModel {
         // 1. Cek apakah newParent adalah descendant dari draggedNode
         if let parent = newParent {
             if isDescendant(parent, of: draggedNode) {
-                #if DEBUG
-                print("Tidak bisa memindahkan folder ke dalam dirinya sendiri")
-                #endif
+                Logger.bookmarks.debug("Tidak bisa memindahkan folder ke dalam dirinya sendiri")
                 return
             }
         }

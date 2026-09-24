@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import OSLog
 import SwiftUI
 
 @MainActor
@@ -278,8 +279,6 @@ class AnnotationsVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("annotationsVC deinit")
-        #endif
+        Logger.annotations.debug("annotationsVC deinit")
     }
 }

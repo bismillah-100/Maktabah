@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import OSLog
 import SwiftUI
 
 enum AnnotationSearchScope: Int, CaseIterable, Identifiable {
@@ -394,7 +395,7 @@ class AnnotationViewModel: ViewModelBase {
         do {
             try AnnotationStore.shared.deleteAnnotation(id: id)
         } catch {
-            print("Failed to delete annotation: \(error.localizedDescription)")
+            Logger.annotations.error("Failed to delete annotation: \(error.localizedDescription, privacy: .public)")
         }
     }
 

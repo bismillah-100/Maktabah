@@ -5,6 +5,7 @@
 
 import Combine
 import Foundation
+import OSLog
 import Synchronization
 
 final class AnnotationStore: Sendable {
@@ -324,7 +325,7 @@ final class AnnotationStore: Sendable {
                 emit(.treeInvalidated)
             }
         } catch {
-            print("AnnotationStore: Failed to apply CloudKit changes - \(error)")
+            Logger.annotations.error("AnnotationStore: Failed to apply CloudKit changes - \(error.localizedDescription, privacy: .public)")
             return false
         }
 
@@ -336,11 +337,9 @@ final class AnnotationStore: Sendable {
             try repository.nukeDatabase()
             clearAllCaches()
             emit(.treeInvalidated)
-            #if DEBUG
-            print("AnnotationStore: Local database purged.")
-            #endif
+            Logger.annotations.debug("AnnotationStore: Local database purged.")
         } catch {
-            print("AnnotationStore: Failed to purge database - \(error)")
+            Logger.annotations.error("AnnotationStore: Failed to purge database - \(error.localizedDescription, privacy: .public)")
         }
     }
 

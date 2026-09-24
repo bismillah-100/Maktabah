@@ -6,8 +6,8 @@
 //
 
 @preconcurrency import Cocoa
-import Combine
-import Synchronization
+@preconcurrency import Combine
+import OSLog
 
 class IbarotTextView: NSTextView {
     let state = TextViewState.shared
@@ -147,9 +147,7 @@ class IbarotTextView: NSTextView {
     }
 
     deinit {
-        #if DEBUG
-        print("deinit IbarotTextView")
-        #endif
+        Logger.reader.debug("deinit IbarotTextView")
         if let annotationClickSetting {
             NotificationCenter.default.removeObserver(annotationClickSetting)
         }
@@ -283,10 +281,7 @@ class IbarotTextView: NSTextView {
             let ns = try NSAttributedString(attributedString, including: \.appKit)
             textStorage?.setAttributedString(ns)
         } catch {
-            print(
-                "error converting NSAttributedString on displayAuthor: ",
-                error.localizedDescription
-            )
+            Logger.reader.error("error converting NSAttributedString on displayAuthor: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -659,9 +654,7 @@ class IbarotTextView: NSTextView {
         do {
             try applyAnnotations(in: sel, with: color, mode: .highlight)
         } catch {
-            #if DEBUG
-            print("Failed to save or update highlight: \(error)")
-            #endif
+            Logger.annotations.error("Failed to save or update highlight: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -672,9 +665,7 @@ class IbarotTextView: NSTextView {
             let color = UserDefaults.standard.recentHighlightColors.first ?? .labelColor
             try applyAnnotations(in: sel, with: color, mode: .underline)
         } catch {
-            #if DEBUG
-            print("Failed to save highlight: \(error)")
-            #endif
+            Logger.annotations.error("Failed to save highlight: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -766,7 +757,7 @@ class IbarotTextView: NSTextView {
                     try AnnotationStore.shared.updateAnnotation(updated)
                 }
             } catch {
-                print("Gagal menyimpan/update anotasi:", error)
+                Logger.annotations.error("Gagal menyimpan/update anotasi: \(error.localizedDescription, privacy: .public)")
             }
             pop?.performClose(nil)
         }
@@ -775,7 +766,7 @@ class IbarotTextView: NSTextView {
             do {
                 try AnnotationStore.shared.deleteAnnotation(id: id)
             } catch {
-                print("Gagal menghapus anotasi:", error)
+                Logger.annotations.error("Gagal menghapus anotasi: \(error.localizedDescription, privacy: .public)")
             }
             pop?.performClose(nil)
         }

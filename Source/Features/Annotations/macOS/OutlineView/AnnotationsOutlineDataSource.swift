@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 @MainActor
 class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
@@ -92,9 +93,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     }
 
     deinit {
-        #if DEBUG
-        print("Annotations Data Source deinit")
-        #endif
+        Logger.annotations.debug("Annotations Data Source deinit")
     }
 
     // MARK: - Incremental Updates

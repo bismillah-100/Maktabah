@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import OSLog
 
 @MainActor
 class AnnotationTagVC: NSViewController {
@@ -222,9 +223,7 @@ class AnnotationTagVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-            print("deinit AnnotationTagVC")
-        #endif
+        Logger.annotations.debug("deinit AnnotationTagVC")
     }
 
     // MARK: - Dynamic Sizing

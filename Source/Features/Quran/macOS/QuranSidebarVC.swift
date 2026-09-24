@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class QuranSidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
@@ -77,9 +78,7 @@ class QuranSidebarVC: NSViewController {
         do {
             try manager.fetchSurahNodes()
         } catch {
-            #if DEBUG
-            print(error)
-            #endif
+            Logger.quran.error("Failed to fetch surah nodes: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -233,9 +232,7 @@ extension QuranSidebarVC: NSOutlineViewDelegate {
         guard let item = outlineView.item(atRow: row) as? Quran,
               let parent = outlineView.parent(forItem: item) as? SurahNode
         else {
-            #if DEBUG
-            print("item or parent not found")
-            #endif
+            Logger.quran.debug("item or parent not found")
             return
         }
 

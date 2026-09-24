@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 enum AnnotationJsonSerializer {
     private static let version = 1
@@ -59,7 +60,7 @@ enum AnnotationJsonSerializer {
         do {
             return try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys])
         } catch {
-            print("AnnotationJsonSerializer: failed to encode JSON: \(error)")
+            Logger.annotations.error("AnnotationJsonSerializer: failed to encode JSON: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }

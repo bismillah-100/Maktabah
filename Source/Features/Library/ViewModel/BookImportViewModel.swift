@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SwiftUI
 
 @Observable
@@ -231,15 +232,11 @@ final class BookImportViewModel: @unchecked Sendable {
                 try FileManager.default.copyItem(at: selectedURL, to: tempURL)
                 sqliteURL = tempURL
             } catch {
-                #if DEBUG
-                print("Error copying file: \(error.localizedDescription)")
-                #endif
+                Logger.library.error("Error copying file: \(error.localizedDescription, privacy: .public)")
             }
 
         case let .failure(error):
-            #if DEBUG
-            print("Error picking file: \(error.localizedDescription)")
-            #endif
+            Logger.library.error("Error picking file: \(error.localizedDescription, privacy: .public)")
         }
     }
 

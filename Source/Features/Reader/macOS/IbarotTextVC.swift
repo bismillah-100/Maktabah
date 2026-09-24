@@ -7,6 +7,7 @@
 
 import Cocoa
 import Observation
+import OSLog
 
 @MainActor
 class IbarotTextVC: NSViewController {
@@ -55,9 +56,7 @@ class IbarotTextVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("IbarotTextVC deinit")
-        #endif
+        Logger.reader.debug("IbarotTextVC deinit")
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -109,7 +108,7 @@ class IbarotTextVC: NSViewController {
             do {
                 try self?.viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
             } catch {
-                print("Failed to add annotation: \(error)")
+                Logger.annotations.error("Failed to add annotation: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -117,7 +116,7 @@ class IbarotTextVC: NSViewController {
             do {
                 try self?.viewModel.updateAnnotation(annotation)
             } catch {
-                print("Failed to update annotation: \(error)")
+                Logger.annotations.error("Failed to update annotation: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -125,7 +124,7 @@ class IbarotTextVC: NSViewController {
             do {
                 try self?.viewModel.deleteAnnotation(id: id)
             } catch {
-                print("Failed to delete annotation: \(error)")
+                Logger.annotations.error("Failed to delete annotation: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -563,9 +562,7 @@ extension IbarotTextVC {
             $0.currentRowi = rowi
             $0.authorDisplayMode = .rowiInfo
         }
-        #if DEBUG
-        print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
-        #endif
+        Logger.reader.debug("Author mode: display mode (\(String(describing: state.authorDisplayMode), privacy: .public))")
     }
 }
 
@@ -590,9 +587,7 @@ extension IbarotTextVC: TarjamahBDelegate {
             bkId: tarjamahB.bk,
             contentId: tarjamahB.id
         ) else {
-            #if DEBUG
-            print("unable to get content from tarjamahB")
-            #endif
+            Logger.reader.debug("unable to get content from tarjamahB")
             return
         }
 

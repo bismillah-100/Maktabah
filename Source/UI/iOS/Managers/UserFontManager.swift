@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OSLog
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -95,7 +96,7 @@ final class UserFontManager {
                 let nsError = error as NSError
                 // 305 = kCTFontManagerErrorAlreadyRegistered. We can ignore this and return the name
                 if nsError.code != 305 {
-                    print("Error registering custom font: \(error.localizedDescription)")
+                    Logger.app.error("Error registering custom font: \(error.localizedDescription, privacy: .public)")
                     return nil
                 }
             }

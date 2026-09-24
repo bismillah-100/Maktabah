@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension HistoryViewModel {
     // MARK: - Load from Database
@@ -43,9 +44,7 @@ extension HistoryViewModel {
                     CloudKitSyncManager.shared.delete(ckRecordIds: ckIdsToDeleteSafe, target: .history, trackPending: false)
                 }
             } catch {
-                #if DEBUG
-                print("Failed to save clearHistory: \(error)")
-                #endif
+                Logger.history.error("Failed to save clearHistory: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -90,9 +89,7 @@ extension HistoryViewModel {
                         }
                     }
                 } catch {
-                    #if DEBUG
-                    print("Failed to save pruneOrphanedEntries: \(error)")
-                    #endif
+                    Logger.history.error("Failed to save pruneOrphanedEntries: \(error.localizedDescription, privacy: .public)")
                 }
             }
         } else if !ckIdsToDelete.isEmpty {

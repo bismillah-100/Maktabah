@@ -8,6 +8,7 @@
 import CloudKit
 import Combine
 import Foundation
+import OSLog
 import WidgetKit
 #if canImport(UIKit)
 import UIKit
@@ -267,9 +268,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
                 savePolicy: .allKeys,
                 atomically: false
             )
-            #if DEBUG
-            print("WidgetUpdateCoordinator: Uploaded \(taskName) to CloudKit")
-            #endif
+            Logger.widget.debug("WidgetUpdateCoordinator: Uploaded \(taskName, privacy: .public) to CloudKit")
         } catch let error as CKError where error.code == .serverRecordChanged {
             if let serverRecord = error.serverRecord {
                 serverRecord["payload"] = payloadData as NSData
@@ -281,9 +280,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
                 )
             }
         } catch {
-            #if DEBUG
-            print("WidgetUpdateCoordinator: CloudKit upload error for \(taskName) - \(error)")
-            #endif
+            Logger.widget.error("WidgetUpdateCoordinator: CloudKit upload error for \(taskName, privacy: .public) - \(error.localizedDescription, privacy: .public)")
         }
     }
 

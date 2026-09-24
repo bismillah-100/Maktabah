@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension BookUpdateManager {
@@ -148,30 +149,22 @@ extension BookUpdateManager {
 
     func resolveVersionColumn(in db: OpaquePointer) -> String? {
         if let cached = cachedVersionColumn.withLock({ $0 }) {
-            #if DEBUG
-            print("📦 [Version] Using cached version column: \(cached)")
-            #endif
+            Logger.library.debug("📦 [Version] Using cached version column: \(cached, privacy: .public)")
             return cached
         }
 
         let columns = fetchPragmaColumns(in: db, table: "0bok")
-        #if DEBUG
-        print("📋 [Version] Available columns: \(columns)")
-        #endif
+        Logger.library.debug("📋 [Version] Available columns: \(columns, privacy: .public)")
 
         let lowered = columns.map { $0.lowercased() }
         if let index = lowered.firstIndex(where: { versionColumnCandidates.contains($0) }) {
             let matched = columns[index]
             cachedVersionColumn.withLock { $0 = matched }
-            #if DEBUG
-            print("✅ [Version] Resolved version column: \(matched)")
-            #endif
+            Logger.library.debug("✅ [Version] Resolved version column: \(matched, privacy: .public)")
             return matched
         }
 
-        #if DEBUG
-        print("❌ [Version] No version column found among candidates: \(versionColumnCandidates)")
-        #endif
+        Logger.library.debug("❌ [Version] No version column found among candidates: \(self.versionColumnCandidates, privacy: .public)")
         return nil
     }
 
@@ -179,9 +172,7 @@ extension BookUpdateManager {
         let sql = "PRAGMA table_info('\(table)');"
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            #if DEBUG
-            print("⚠️ [Version] Failed to prepare PRAGMA statement")
-            #endif
+            Logger.library.error("⚠️ [Version] Failed to prepare PRAGMA statement")
             return []
         }
         defer { sqlite3_finalize(stmt) }

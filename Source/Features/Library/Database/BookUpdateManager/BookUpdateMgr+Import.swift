@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension BookUpdateManager {
@@ -83,9 +84,7 @@ extension BookUpdateManager {
         let db = try openDatabase(path: targetPath)
         defer { sqlite3_close_v2(db) }
 
-        #if DEBUG
-        print("[Import] Pre-creating tables in archive \(archiveId)...")
-        #endif
+        Logger.library.debug("[Import] Pre-creating tables in archive \(archiveId)...")
 
         let contentSchema = "(nass BLOB, part INTEGER, id INTEGER, page INTEGER)"
         let tocSchema = "(tit TEXT, lvl INTEGER, sub INTEGER, id INTEGER)"

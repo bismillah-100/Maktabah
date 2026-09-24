@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 
 @MainActor
 class TagMergePopoverVC: NSViewController {
@@ -42,9 +43,7 @@ class TagMergePopoverVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("TagMergePopoverVC deinitialized")
-        #endif
+        Logger.annotations.debug("TagMergePopoverVC deinitialized")
     }
 }
 
@@ -140,8 +139,6 @@ class TagMergeConfirmationView: NSView {
     }
 
     deinit {
-        #if DEBUG
-        print("TagMergeConfirmationView deinitialized")
-        #endif
+        Logger.annotations.debug("TagMergeConfirmationView deinitialized")
     }
 }

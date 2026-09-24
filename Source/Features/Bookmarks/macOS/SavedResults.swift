@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 @MainActor
 class SavedResults: NSViewController {
@@ -131,9 +132,7 @@ class SavedResults: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("deinit savedResults")
-        #endif
+        Logger.bookmarks.debug("deinit savedResults")
     }
 }
 

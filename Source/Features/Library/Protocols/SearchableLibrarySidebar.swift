@@ -5,6 +5,7 @@
 
 #if os(macOS)
 import AppKit
+import OSLog
 
 @MainActor
 protocol SearchableLibrarySidebar: AnyObject {
@@ -20,7 +21,7 @@ extension SearchableLibrarySidebar {
         onConnected: (() -> Void)? = nil
     ) {
         guard let searchField else {
-            print("searchField nil")
+            Logger.library.debug("searchField nil")
             return
         }
         field.delegate = searchField.delegate

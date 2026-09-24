@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class AnnotationEditorVC: NSViewController {
     // MARK: - UI
@@ -116,7 +117,7 @@ class AnnotationEditorVC: NSViewController {
                     try AnnotationStore.shared.updateAnnotation(updated)
                 }
             } catch {
-                print("Gagal menyimpan/update anotasi:", error)
+                Logger.annotations.error("Gagal menyimpan/update anotasi: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -132,7 +133,7 @@ class AnnotationEditorVC: NSViewController {
             do {
                 try AnnotationStore.shared.deleteAnnotation(id: id)
             } catch {
-                print("Gagal menghapus anotasi:", error)
+                Logger.annotations.error("Gagal menghapus anotasi: \(error.localizedDescription, privacy: .public)")
             }
         }
 

@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class ResultWriter: NSViewController {
     @IBOutlet weak var queryTextField: NSTextField!
@@ -95,7 +96,7 @@ class ResultWriter: NSViewController {
             outlineView.reloadData()
         } catch {
             ResultsViewManager.showAlertCreateFolderError()
-            print("Add folder error:", error)
+            Logger.bookmarks.error("Add folder error: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -105,7 +106,7 @@ class ResultWriter: NSViewController {
             outlineView.reloadItem(parentNode, reloadChildren: true)
         } catch {
             ResultsViewManager.showAlertCreateFolderError(subFolder: true)
-            print("Add subfolder error:", error)
+            Logger.bookmarks.error("Add subfolder error: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -125,7 +126,7 @@ class ResultWriter: NSViewController {
         let name = textField.stringValue.trimmingCharacters(in: .whitespaces)
 
         guard !name.isEmpty else {
-            print("Nama result kosong")
+            Logger.bookmarks.debug("Nama result kosong")
             return
         }
 
@@ -145,9 +146,7 @@ class ResultWriter: NSViewController {
                 message: ResultsViewManager.saveResultErrorDesc,
                 style: .critical
             )
-            #if DEBUG
-            print(error)
-            #endif
+            Logger.bookmarks.error("Failed to save search results: \(error.localizedDescription, privacy: .public)")
         }
     }
 

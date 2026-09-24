@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -259,9 +260,7 @@ final class BookUpdateManager: Sendable {
             destination.appendPathExtension("sqlite")
         }
 
-        #if DEBUG
-        print("destination:", destination)
-        #endif
+        Logger.library.debug("destination: \(destination.path, privacy: .public)")
 
         try FileManager.default.moveItem(at: tempURL, to: destination)
         return destination

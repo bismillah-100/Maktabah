@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 extension AnnotationOutlineDataSource: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -240,9 +241,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
             do {
                 try viewModel.deleteTag(named: node.title)
             } catch {
-                #if DEBUG
-                print("Error deleting tag '\(node.title)': \(error)")
-                #endif
+                Logger.annotations.error("Error deleting tag '\(node.title, privacy: .public)': \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -253,9 +252,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
             do {
                 try AnnotationStore.shared.deleteAnnotation(id: id)
             } catch {
-                #if DEBUG
-                print("Error deleting annotation \(id): \(error)")
-                #endif
+                Logger.annotations.error("Error deleting annotation \(id): \(error.localizedDescription, privacy: .public)")
             }
         }
     }

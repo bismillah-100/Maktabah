@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class SplitVC: NSSplitViewController {
 
@@ -385,9 +386,7 @@ class SplitVC: NSSplitViewController {
     }
 
     deinit {
-        #if DEBUG
-            print("SplitVC deinit")
-        #endif
+        Logger.app.debug("SplitVC deinit")
     }
 }
 
@@ -423,7 +422,7 @@ extension SplitVC {
     }
 
     func hideLibrarySearchField() {
-        print("hideLibrarySearchField")
+        Logger.app.debug("hideLibrarySearchField")
         switch currentMode {
         case .viewer:
             if #available(macOS 26.1, *) {

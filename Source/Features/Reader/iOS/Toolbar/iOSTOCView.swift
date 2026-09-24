@@ -5,6 +5,7 @@
 //  Created by Ghoys Mawahib on 28/05/26.
 //
 
+import OSLog
 import SwiftUI
 
 struct iOSTOCView: View {
@@ -111,7 +112,7 @@ struct iOSTOCView: View {
         tocViewModel: dummyVM,
         selectedId: 3,
         onSelect: { selectedId in
-            print("Selected ID: \(selectedId)")
+            Logger.reader.debug("Selected ID: \(selectedId)")
         }
     )
 }

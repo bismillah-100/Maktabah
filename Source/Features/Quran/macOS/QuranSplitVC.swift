@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class QuranSplitVC: ReaderSplitVC {
 
@@ -146,8 +147,6 @@ class QuranSplitVC: ReaderSplitVC {
 
 
     deinit {
-        #if DEBUG
-        print("QuranSplitVC deinit")
-        #endif
+        Logger.quran.debug("QuranSplitVC deinit")
     }
 }

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -86,9 +87,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
 
         let isNewDatabase = !fm.fileExists(atPath: url.path)
 
-        #if DEBUG
-        print("AnnotationRepository: setupAnnotationsDatabase at \(url.path), isNewDatabase: \(isNewDatabase)")
-        #endif
+        Logger.annotations.debug("AnnotationRepository: setupAnnotationsDatabase at \(url.path, privacy: .public), isNewDatabase: \(isNewDatabase)")
 
         connect()
         try createAnnotationsTableAndSchemaIfNeeded()

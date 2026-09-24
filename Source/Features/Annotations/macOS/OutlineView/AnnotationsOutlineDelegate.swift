@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegate {
     private enum CellIdentifier {
@@ -122,9 +123,7 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         guard let item = outlineView.item(atRow: row) as? AnnotationNode,
               let annotation = item.annotation
         else {
-            #if DEBUG
-            print("outlineView item not as Annotations")
-            #endif
+            Logger.annotations.debug("outlineView item not as Annotations")
             return
         }
 

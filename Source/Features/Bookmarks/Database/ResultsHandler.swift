@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -213,9 +214,7 @@ final class ResultsHandler: SyncPendingManaging, Sendable {
             try migrateTableColumnsIfNeeded()
             try backfillResultsCloudKitFieldsIfNeeded()
         } catch {
-            #if DEBUG
-            print("Error creating tables: \(error)")
-            #endif
+            Logger.db.error("Error creating tables: \(error.localizedDescription, privacy: .public)")
         }
 
         createUniqueIndex()
@@ -313,11 +312,9 @@ final class ResultsHandler: SyncPendingManaging, Sendable {
                 try exec("DELETE FROM \(resultsTable);")
                 try exec("DELETE FROM \(foldersTable);")
             }
-            #if DEBUG
-            print("ResultsHandler: Local database purged.")
-            #endif
+            Logger.db.debug("ResultsHandler: Local database purged.")
         } catch {
-            print("ResultsHandler: Failed to purge database - \(error)")
+            Logger.db.error("ResultsHandler: Failed to purge database: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -355,9 +352,7 @@ final class ResultsHandler: SyncPendingManaging, Sendable {
             try exec("DROP INDEX IF EXISTS idx_results_folder_name")
             try exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_results_folder_name_bk ON results (COALESCE(folder_id, 0), name, bkId)")
         } catch {
-            #if DEBUG
-            print("Create index error:", error)
-            #endif
+            Logger.db.error("Create index error: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class WindowController: NSWindowController {
 
@@ -51,8 +52,6 @@ class WindowController: NSWindowController {
     }
 
     deinit {
-        #if DEBUG
-        print("WindowController deinit - This should only happen on close")
-        #endif
+        Logger.app.debug("WindowController deinit - This should only happen on close")
     }
 }

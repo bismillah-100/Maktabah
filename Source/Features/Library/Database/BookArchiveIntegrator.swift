@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 // MARK: - IntegratePhase
@@ -148,13 +149,11 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             let sourceURL = try await resolveValidSourceURL(for: book.id)
 
             do {
-                #if DEBUG
                 let sourceTables = listTables(path: sourceURL.path)
-                print("[BookIntegrate] source:", sourceURL.path)
-                print("[BookIntegrate] source tables:", sourceTables.joined(separator: ", "))
-                print("[BookIntegrate] archive:", archiveDbPath)
-                print("[BookIntegrate] fts:", ftsDbPath)
-                #endif
+                Logger.library.debug("[BookIntegrate] source: \(sourceURL.path, privacy: .public)")
+                Logger.library.debug("[BookIntegrate] source tables: \(sourceTables.joined(separator: ", "), privacy: .public)")
+                Logger.library.debug("[BookIntegrate] archive: \(archiveDbPath, privacy: .public)")
+                Logger.library.debug("[BookIntegrate] fts: \(ftsDbPath, privacy: .public)")
                 // Jalankan pekerjaan CPU-intensif di background, tetapi tetap bisa
                 // mengawait callback onProgress ke MainActor.
                 try await Task.detached(priority: .userInitiated) { [weak self] in
@@ -227,9 +226,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archiveDbPath)
             try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsDbPath)
         } catch {
-            #if DEBUG
-            print("Error replacing databases during removal: \(error)")
-            #endif
+            Logger.library.error("Error replacing databases during removal: \(error.localizedDescription, privacy: .public)")
             fileReplacementFailedError = error
         }
 
@@ -256,9 +253,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             try exec(archiveDb, SQL.dropTable(name: tocTable))
             try exec(ftsDb, SQL.dropTable(name: ftsTable))
         } catch {
-            #if DEBUG
-            print("Error dropping tables during removal: \(error)")
-            #endif
+            Logger.library.error("Error dropping tables during removal: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -271,9 +266,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             try exec(mainDb, query)
             mainDb.truncateAndClose()
         } catch {
-            #if DEBUG
-            print("Error deleting book from main database: \(error)")
-            #endif
+            Logger.library.error("Error deleting book from main database: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -286,9 +279,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             try exec(specialDb, "DELETE FROM Auth WHERE authid = \(muallifId);")
             specialDb.truncateAndClose()
         } catch {
-            #if DEBUG
-            print("Error deleting author from special database: \(error)")
-            #endif
+            Logger.library.error("Error deleting author from special database: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -304,9 +295,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
                 continue
             }
 
-            #if DEBUG
-            print("[Vacuum] Attempting archive: \(archiveId)")
-            #endif
+            Logger.library.debug("[Vacuum] Attempting archive: \(archiveId)")
 
             // Mencoba vacuum. Jika buku sedang dibuka, ini mungkin gagal (Busy),
             // namun sesuai instruksi, kita akan tetap membersihkan daftar ID setelah proses selesai.
@@ -400,9 +389,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         let archiveWritePath = try prepareWritableDatabasePath(archiveDbPath)
         let ftsWritePath = try prepareWritableDatabasePath(ftsDbPath)
 
-        #if DEBUG
         logIntegrationDiagnostics(archiveDbPath: archiveDbPath, archiveWritePath: archiveWritePath, ftsDbPath: ftsDbPath, ftsWritePath: ftsWritePath)
-        #endif
 
         var archiveDbPtr: OpaquePointer? = try openDatabase(path: archiveWritePath)
         guard let archiveDb = archiveDbPtr else {
@@ -416,10 +403,8 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             }
         }
 
-        #if DEBUG
         let isReadonly = sqlite3_db_readonly(archiveDb, "main") == 1
-        print("[BookIntegrate] sqlite readonly(main):", isReadonly)
-        #endif
+        Logger.library.debug("[BookIntegrate] sqlite readonly(main): \(isReadonly)")
 
         try await performIntegrationTasks(
             archiveDb: archiveDb,
@@ -461,10 +446,8 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         let tocTable = "t\(bookId)"
 
         guard tableExists(db: archiveDb, schemaName: "source_db", tableName: bookTable) else {
-            #if DEBUG
             let tables = listTables(db: archiveDb, schemaName: "source_db")
-            print("[BookIntegrate] source_db tables:", tables.joined(separator: ", "))
-            #endif
+            Logger.library.debug("[BookIntegrate] source_db tables: \(tables.joined(separator: ", "), privacy: .public)")
             throw BookArchiveIntegrateError.sourceTableMissing(bookTable)
         }
 
@@ -515,31 +498,20 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         }
     }
 
-    #if DEBUG
     private func logIntegrationDiagnostics(archiveDbPath: String, archiveWritePath: String, ftsDbPath: String, ftsWritePath: String) {
         if let attrs = try? FileManager.default.attributesOfItem(atPath: archiveDbPath) {
             let perms = attrs[.posixPermissions] as? NSNumber
             let immutable = attrs[.immutable] as? NSNumber
             let appendOnly = attrs[.appendOnly] as? NSNumber
-            print(
-                "[BookIntegrate] archive writable:",
-                FileManager.default.isWritableFile(atPath: archiveDbPath),
-                "perms:",
-                perms ?? -1,
-                "immutable:",
-                immutable ?? -1,
-                "appendOnly:",
-                appendOnly ?? -1
-            )
+            Logger.library.debug("[BookIntegrate] archive writable: \(FileManager.default.isWritableFile(atPath: archiveDbPath)) perms: \(perms ?? -1) immutable: \(immutable ?? -1) appendOnly: \(appendOnly ?? -1)")
         }
         if archiveWritePath != archiveDbPath {
-            print("[BookIntegrate] using temp archive:", archiveWritePath)
+            Logger.library.debug("[BookIntegrate] using temp archive: \(archiveWritePath, privacy: .public)")
         }
         if ftsWritePath != ftsDbPath {
-            print("[BookIntegrate] using temp fts:", ftsWritePath)
+            Logger.library.debug("[BookIntegrate] using temp fts: \(ftsWritePath, privacy: .public)")
         }
     }
-    #endif
 
     private func openDatabase(path: String) throws -> OpaquePointer {
         var dbPtr: OpaquePointer?

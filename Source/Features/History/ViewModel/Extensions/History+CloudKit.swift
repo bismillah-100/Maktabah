@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension HistoryViewModel {
     // MARK: - CloudKit Sync Support
@@ -96,9 +97,7 @@ extension HistoryViewModel {
             do {
                 try HistoryDatabaseManager.shared.saveCloudKitChanges(deletedIds: finalDeleted, upsertedEntries: upsertedEntries, finalOrder: finalOrder)
             } catch {
-                #if DEBUG
-                print("Failed to applyCloudKitChanges: \(error)")
-                #endif
+                Logger.history.error("Failed to applyCloudKitChanges: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 enum RowiMode {
     case sidebar
@@ -102,9 +103,7 @@ class RowiResultsVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("RowiResultsVC deinit")
-        #endif
+        Logger.narrator.debug("RowiResultsVC deinit")
     }
 
     // MARK: - ViewModel Binding
@@ -430,9 +429,7 @@ extension RowiResultsVC: ReaderStateComponent {
 
         rowiTextField.stringValue = "إسم الراوي من الشريط الجانبي"
 
-        #if DEBUG
-            print("🔄 Updated UI for restored mode: \(rowiMode)")
-        #endif
+        Logger.narrator.debug("🔄 Updated UI for restored mode: \(String(describing: self.rowiMode), privacy: .public)")
     }
 }
 

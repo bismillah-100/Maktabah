@@ -6,6 +6,7 @@
 //
 
 import Observation
+import OSLog
 import SQLite3
 import SwiftUI
 
@@ -120,9 +121,7 @@ final class SettingsViewModel {
             }
             refreshPaths()
         } catch {
-            #if DEBUG
-            print("Failed to cleanup bundled data:", error)
-            #endif
+            Logger.reader.error("Failed to cleanup bundled data: \(error.localizedDescription, privacy: .public)")
         }
     }
 

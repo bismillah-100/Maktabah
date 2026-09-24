@@ -6,6 +6,7 @@
 //
 
 @preconcurrency import Cocoa
+import OSLog
 
 @MainActor
 class SidebarVC: NSViewController {
@@ -76,9 +77,7 @@ class SidebarVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("SidebarVC deinit")
-        #endif
+        Logger.reader.debug("SidebarVC deinit")
         windowsObservation = nil
         if let obs = tabBarObservation {
             NotificationCenter.default.removeObserver(obs)
@@ -288,9 +287,7 @@ extension SidebarVC: NSOutlineViewDelegate {
 
         guard let node = item as? TOCNode else { return }
 
-        #if DEBUG
-        print("Selected: \(node.bab), id: \(node.id)")
-        #endif
+        Logger.reader.debug("Selected: \(node.bab), id: \(node.id)")
 
         delegate?.didSelectItem(node.id)
 

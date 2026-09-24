@@ -3,6 +3,7 @@
 //  Maktabah
 //
 
+import OSLog
 import SwiftUI
 import UniformTypeIdentifiers
 

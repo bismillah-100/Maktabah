@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension ResultsHandler {
     func resolveOrphanFolders() {
@@ -48,7 +49,7 @@ extension ResultsHandler {
                 }
             }
         } catch {
-            print("ResultsHandler: Failed to resolve orphan folders - \(error)")
+            Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan folders: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -87,12 +88,12 @@ extension ResultsHandler {
                     if let _ = try db.fetch(query: conflictSql, parameters: [newFolderId, orphan.name, orphan.bkId, orphan.id], mapping: { $0.int64(at: 0) }).first {
                         try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?;", parameters: [orphan.id])
                     } else {
-                        try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colId) = ?;", parameters: [newFolderId, orphan.id])
+                        try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colFolderId) = ?;", parameters: [newFolderId, orphan.id])
                     }
                 }
             }
         } catch {
-            print("ResultsHandler: Failed to resolve orphan results - \(error)")
+            Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan results: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

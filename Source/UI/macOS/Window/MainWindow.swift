@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class MainWindow: NSWindow {
     private var toolbarConfigured = false
@@ -189,9 +190,7 @@ class MainWindow: NSWindow {
     // MARK: - Cleanup
 
     override func close() {
-        #if DEBUG
-        print("MainWindow close() called")
-        #endif
+        Logger.app.debug("MainWindow close() called")
 
         super.close()
 
@@ -201,9 +200,7 @@ class MainWindow: NSWindow {
     }
 
     deinit {
-        #if DEBUG
-        print("MainWindow deinit")
-        #endif
+        Logger.app.debug("MainWindow deinit")
     }
 }
 

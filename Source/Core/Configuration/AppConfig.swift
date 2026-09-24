@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(iOS)
@@ -37,7 +38,7 @@ enum AppConfig {
             }
             return cachePath.path
         } catch {
-            print("Error creating archive cache directory:", error)
+            Logger.app.error("Error creating archive cache directory: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
@@ -346,7 +347,7 @@ enum AppConfig {
 
             return maktabahDir
         } catch {
-            print("Failed to create Maktabah folder:", error)
+            Logger.app.error("Failed to create Maktabah folder: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
@@ -372,7 +373,7 @@ enum AppConfig {
             _ = url.startAccessingSecurityScopedResource()
             return url
         } catch {
-            print("Bookmark resolve error:", error)
+            Logger.app.error("Bookmark resolve error: \(error.localizedDescription, privacy: .public)")
         }
         return nil
     }
@@ -389,7 +390,7 @@ enum AppConfig {
                                                     relativeTo: nil)
             UserDefaults.standard.set(bookmarkData, forKey: key)
         } catch {
-            print("Gagal membuat bookmark: \(error)")
+            Logger.app.error("Gagal membuat bookmark: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -447,7 +448,7 @@ enum AppConfig {
             }
             return path
         } catch {
-            print("Error creating directory:", error)
+            Logger.app.error("Error creating directory: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
@@ -477,7 +478,7 @@ enum AppConfig {
         // Ensure archive cache folder exists
         let fm = FileManager.default
         guard let cachePath = archiveCachePath else {
-            print("Archive cache path tidak tersedia")
+            Logger.app.error("Archive cache path tidak tersedia")
             return false
         }
 
@@ -488,20 +489,16 @@ enum AppConfig {
                     atPath: cachePath,
                     withIntermediateDirectories: true
                 )
-                #if DEBUG
-                print("Created archive cache directory")
-                #endif
+                Logger.app.debug("Created archive cache directory")
             }
 
             // Set Bundle Mode flag
             isUsingBundleMode = true
-            #if DEBUG
-            print("Bundle Mode setup selesai")
-            print("Archive cache: \(cachePath)")
-            #endif
+            Logger.app.debug("Bundle Mode setup selesai")
+            Logger.app.debug("Archive cache: \(cachePath, privacy: .public)")
             return true
         } catch {
-            print("Error setup Bundle Mode:", error)
+            Logger.app.error("Error setup Bundle Mode: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -551,23 +548,17 @@ enum AppConfig {
                     // Copy hanya jika destination belum ada (respect existing user files)
                     if !fm.fileExists(atPath: destPath), fm.fileExists(atPath: sourcePath) {
                         try fm.copyItem(atPath: sourcePath, toPath: destPath)
-                        #if DEBUG
-                        print("Copied \(fileName) ke custom folder")
-                        #endif
+                        Logger.app.debug("Copied \(fileName, privacy: .public) ke custom folder")
                     }
                 }
             }
 
             // 4. Disable Bundle Mode
             isUsingBundleMode = false
-            #if DEBUG
-            print("Migrated to Custom Mode: \(folderUrl.path)")
-            #endif
+            Logger.app.debug("Migrated to Custom Mode: \(folderUrl.path, privacy: .public)")
             return true
         } catch {
-            #if DEBUG
-            print("Error migrating to Custom Mode:", error)
-            #endif
+            Logger.app.error("Error migrating to Custom Mode: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }

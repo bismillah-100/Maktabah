@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 
 /// Actor untuk menangani sinkronisasi file I/O secara aman tanpa memblokir thread
 public actor FileCoordinator {
@@ -36,7 +37,7 @@ public actor FileCoordinator {
             do {
                 try data.write(to: newURL)
             } catch {
-                print("Failed to write coordinated data: \(error)")
+                Logger.widget.error("Failed to write coordinated data: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
