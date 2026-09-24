@@ -1,0 +1,1110 @@
+{
+   "sourceLanguage": "en",
+   "strings": {
+      "annotationMoveFolderFileExistsTitle": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تم العثور على التعليقات التوضيحية الحالية"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Existing Annotations Found"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Anotasi Yang Ada Ditemukan"
+               }
+            }
+         }
+      },
+      "annotationsAndSearchResults": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "التعليقات ونتائج البحث"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Anotasi & Hasil Pencarian"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Annotations & Search Results"
+               }
+            }
+         }
+      },
+      "annotationsMoveFolderFileExistsDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "التعليقات التوضيحية موجودة بالفعل في مجلد الوجهة. هل ترغب في الاحتفاظ بها (وحذف القديمة) أو الكتابة فوقها بالقديمة؟"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Annotations already exist in the destination folder. Would you like to keep them (and delete the old ones) or overwrite them with the old ones?"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Anotasi sudah ada di folder tujuan. Apakah Anda ingin menggunakan anotasi di folder tujuan (dan menghapus yang lama) atau menimpa anotasi di folder tujuan dengan yang lama?"
+               }
+            }
+         }
+      },
+      "appearance": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "المظهر"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Appearance"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Tampilan"
+               }
+            }
+         }
+      },
+      "applicationUpdate": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تحديث التطبيق"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Application Update"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pembaruan Aplikasi"
+               }
+            }
+         }
+      },
+      "archiveFiles": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "ملفات الأرشيف"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Archive Files"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Berkas Arsip"
+               }
+            }
+         }
+      },
+      "biAnnualRoutineCheckDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "فحص دوري نصف سنوي حتى إيقاف المفتاح وإعادة تشغيله."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pemeriksaan rutin setengah tahunan hingga tombol dinonaktifkan dan dinyalakan ulang."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Bi-Annual Routine Check until toggled off and on again."
+               }
+            }
+         }
+      },
+      "bundleMode": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "وضع الحزمة"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Mode Bundel"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Bundle Mode"
+               }
+            }
+         }
+      },
+      "bundleModeDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "استخدم قاعدة البيانات المدمجة في التطبيق (للقراءة فقط). بالنسبة للمكتبة الكاملة، قم بتعطيل هذا واختر مجلدا مخصصا."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Gunakan basis data bawaan aplikasi (hanya baca). Untuk Perpustakaan Lengkap, nonaktifkan ini dan pilih folder khusus."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Use the app's built-in database (read-only). For the Full Library, disable this and choose a custom folder."
+               }
+            }
+         }
+      },
+      "checkAtStart": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تحديث تلقائي عند فتح التطبيق"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Check Updates when App Open"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Cek Pembaruan saat Aplikasi Dibuka"
+               }
+            }
+         }
+      },
+      "chooseAnnotationsFolder": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "اختر مجلد التعليقات…"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Choose Annotations Folder…"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pilih Folder Catatan…"
+               }
+            }
+         }
+      },
+      "chooseLibraryFolder": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "اختر مجلد المكتبة…"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Choose Library Folder…"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pilih Folder Perpustakaan…"
+               }
+            }
+         }
+      },
+      "cleanupDownloadedDataBundleMode": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تنظيف البيانات التي تم تنزيلها (وضع الحزمة)"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Bersihkan Data yang Diunduh (Mode Bundel)"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Cleanup Downloaded Data (Bundle Mode)"
+               }
+            }
+         }
+      },
+      "cleanupDownloadedDataBundleModeDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "سيؤدي هذا إلى حذف جميع ملفات SQLite التي تم تنزيلها، والفهرس، وذاكرة التخزين المؤقت من تخزين وضع الحزمة."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Ini akan menghapus semua file SQLite yang diunduh, indeks, dan cache dari penyimpanan mode bundel."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "This will delete all downloaded SQLite files, index, and cache from the bundle mode storage."
+               }
+            }
+         }
+      },
+      "cloudKitTokenResetMessage": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تم إعادة تعيين رمز CloudKit. ستبدأ المزامنة الكاملة."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Token CloudKit telah diatur ulang. Sinkronisasi penuh akan dimulai."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "CloudKit token has been reset. Full sync will start."
+               }
+            }
+         }
+      },
+      "crossPlatformSync": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "المزامنة عبر الأنظمة الأساسية"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Sinkronisasi Lintas-Platform"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Cross-Platform Sync"
+               }
+            }
+         }
+      },
+      "crossPlatformSyncDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "قم بإخطار الأنظمة الأساسية الأخرى بالمزامنة عند إجراء التغييرات."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Beri tahu platform lain untuk melakukan sinkronisasi saat terdapat perubahan."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Notify other platforms to sync when changes are made."
+               }
+            }
+         }
+      },
+      "currentPath": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "المسار الحالي"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Current Path"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Jalur Saat Ini"
+               }
+            }
+         }
+      },
+      "databaseFiles": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "ملفات قاعدة البيانات"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Database Files"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Berkas Basis Data"
+               }
+            }
+         }
+      },
+      "databaseMode": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "وضع قاعدة البيانات"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Mode Basis Data"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Database Mode"
+               }
+            }
+         }
+      },
+      "debugWorkerURL": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "عنوان URL لعامل تصحيح الأخطاء"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Debug Worker URL"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "URL Worker Debug"
+               }
+            }
+         }
+      },
+      "downloadFullLibraryGoogleDrive": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "قم بتنزيل المكتبة الكاملة (Google Drive)"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Unduh Perpustakaan Lengkap (Google Drive)"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Download Full Library (Google Drive)"
+               }
+            }
+         }
+      },
+      "downloadSelectiveLibrary": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تنزيل المكتبة المحددة…"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Download Selective Library…"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Unduh Perpustakaan Selektif…"
+               }
+            }
+         }
+      },
+      "downloads": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "التنزيلات"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Unduhan"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Downloads"
+               }
+            }
+         }
+      },
+      "errorFolderAnnotations": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "مجلد التعليقات غير موجود"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Annotations Folder Not Found"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Folder Anotasi Tidak Ditemukan"
+               }
+            }
+         }
+      },
+      "errorICloud": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "حدث خطأ أثناء محاولة تنزيل ملف في iCloud Drive"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "An error occurred when trying to download a file in iCloud Drive"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Terjadi kesalahan saat mencoba mengunduh file di iCloud Drive"
+               }
+            }
+         }
+      },
+      "fullLibraryBrowserDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "ستفتح المكتبة الكاملة رابط التنزيل في متصفحك."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Perpustakaan Lengkap akan membuka tautan unduhan di peramban Anda."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Full Library will open the download link in your browser."
+               }
+            }
+         }
+      },
+      "hideMissingBookAnnotations": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "إخفاء حواشي الكتب المفقودة"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Sembunyikan Anotasi Kitab yang Hilang"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Hide Missing Book Annotations"
+               }
+            }
+         }
+      },
+      "hideMissingBookAnnotationsDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "إخفاء الحواشي إذا لم يتم العثور على الكتاب المقابل في المكتبة المحلية."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Sembunyikan anotasi jika kitab yang bersangkutan tidak ditemukan di perpustakaan lokal."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Hide annotations if the corresponding book is not found in the local library."
+               }
+            }
+         }
+      },
+      "history": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "السجل"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "History"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Riwayat"
+               }
+            }
+         }
+      },
+      "keepExistingDeleteOld": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "احتفظ بالوجود (احذف القديم)"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Keep Existing (Delete Old)"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pertahankan yang Sudah Ada (Hapus yang Lama)"
+               }
+            }
+         }
+      },
+      "libraryStorage": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تخزين المكتبة"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Penyimpanan Perpustakaan"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Library Storage"
+               }
+            }
+         }
+      },
+      "libraryUpdate": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تحديث المكتبة"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pembaruan Perpustakaan"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Updating Library"
+               }
+            }
+         }
+      },
+      "optimization": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تحسين"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Optimization"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Optimasi"
+               }
+            }
+         }
+      },
+      "optimizationDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "التحسين مطلوب لاستعادة مساحة القرص بعد حذف الكتب."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Optimization is needed to reclaim disk space after deleting books."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Optimasi diperlukan untuk memulihkan ruang disk setelah menghapus kitab."
+               }
+            }
+         }
+      },
+      "optimizeDatabase": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تحسين قاعدة البيانات"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Optimize Database"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Optimasi Database"
+               }
+            }
+         }
+      },
+      "overwriteExisting": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "الكتابة فوق الموجود"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Overwrite Existing"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Timpa Yang Ada"
+               }
+            }
+         }
+      },
+      "reSynchroniseAllData": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "إعادة مزامنة جميع البيانات"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Sinkronkan Ulang Semua Data"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Re-Synchronise All Data"
+               }
+            }
+         }
+      },
+      "readingHistory": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تاريخ القراءة"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Reading History"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Riwayat Membaca"
+               }
+            }
+         }
+      },
+      "readingHistoryDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "أضف الكتب المفتوحة من نتائج البحث إلى سجل القراءة."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Add books opened from search results to reading history."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Tambahkan buku yang dibuka dari hasil pencarian ke riwayat bacaan."
+               }
+            }
+         }
+      },
+      "searchIndex": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "فهرس البحث"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Indeks Pencarian"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Search Index"
+               }
+            }
+         }
+      },
+      "semiAnnualCheck": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "فحص نصف سنوي"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pengecekan Setengah Tahunan"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Semi-Annual Check"
+               }
+            }
+         }
+      },
+      "switchToBundleMode": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "التبديل إلى وضع الحزمة"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Beralih ke Mode Bundel"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Switch to Bundle Mode"
+               }
+            }
+         }
+      },
+      "updates": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "تحديثات"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Pembaruan"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Updates"
+               }
+            }
+         }
+      },
+      "useCloudKit": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "استخدام CloudKit"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Gunakan CloudKit"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Use CloudKit"
+               }
+            }
+         }
+      },
+      "useCloudKitDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "قم بمزامنة التعليقات التوضيحية والنتائج عبر الأجهزة باستخدام CloudKit."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Selaraskan anotasi dan hasil pencarian di seluruh perangkat dengan CloudKit."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Sync annotations and search results across devices with CloudKit."
+               }
+            }
+         }
+      },
+      "useSystemTheme": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "استخدم مظهر النظام"
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Use System Theme"
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Gunakan Tema Sistem"
+               }
+            }
+         }
+      },
+      "useSystemThemeDesc": {
+         "extractionState": "manual",
+         "localizations": {
+            "ar": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "استبدل مظهر السيبيا الافتراضي بمظهر نظام iOS القياسي."
+               }
+            },
+            "en": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Replace the default sepia theme with standard iOS system appearance."
+               }
+            },
+            "id": {
+               "stringUnit": {
+                  "state": "translated",
+                  "value": "Ganti tema sepia bawaan dengan tampilan sistem iOS standar."
+               }
+            }
+         }
+      }
+   },
+   "version": "1.1"
+}

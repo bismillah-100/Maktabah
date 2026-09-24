@@ -526,6 +526,9 @@
 		F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
 		F37C05A73050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
 		F37C05A83050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
+		F39B6EE130595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
+		F39B6EE230595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
+		F39B6EE330595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
 		F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
@@ -1170,6 +1173,7 @@
 		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
 		F37C05A53050066A009DFDF7 /* Annotation.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Annotation.xcstrings; sourceTree = "<group>"; };
+		F39B6EE030595DC100CB5E1C /* Setting.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Setting.xcstrings; sourceTree = "<group>"; };
 		F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationChangeTypes.swift; sourceTree = "<group>"; };
 		F38A74ED2FF43E9300198CDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookInfoView.swift; sourceTree = "<group>"; };
@@ -1791,6 +1795,7 @@
 			children = (
 				4BDAB98B2F69E860007D0945 /* SettingsView.swift */,
 				F32BA47A300EDD14002EA1F6 /* SettingsViewModel.swift */,
+				F39B6EE030595DC100CB5E1C /* Setting.xcstrings */,
 			);
 			path = Setting;
 			sourceTree = "<group>";
@@ -2723,6 +2728,7 @@
 				F3C507863044B64D00BBEC32 /* Fonts in Resources */,
 				4B0139E82EEB3CB000424CFA /* InitProgress.xib in Resources */,
 				F37C05A83050066A009DFDF7 /* Annotation.xcstrings in Resources */,
+				F39B6EE130595DC100CB5E1C /* Setting.xcstrings in Resources */,
 				4BA7269A2EFC760C003CA0ED /* SidebarVC.xib in Resources */,
 				4BA726922EFC714F003CA0ED /* BookInfo.xib in Resources */,
 				4BF392BF2EFC9AB800460756 /* SearchSidebarVC.xib in Resources */,
@@ -2762,6 +2768,7 @@
 				4B7C910B2F83494200454BE1 /* InitProgress.xib in Resources */,
 				4B7C910C2F83494200454BE1 /* SidebarVC.xib in Resources */,
 				F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */,
+				F39B6EE230595DC100CB5E1C /* Setting.xcstrings in Resources */,
 				4B7C910D2F83494200454BE1 /* BookInfo.xib in Resources */,
 				4B7C910E2F83494200454BE1 /* SearchSidebarVC.xib in Resources */,
 				4B7C910F2F83494200454BE1 /* Assets.xcassets in Resources */,
@@ -2801,6 +2808,7 @@
 				F32A8B5A304572D000C28F42 /* Fonts in Resources */,
 				F305774F2FA46222005732C6 /* Assets.xcassets in Resources */,
 				F37C05A73050066A009DFDF7 /* Annotation.xcstrings in Resources */,
+				F39B6EE330595DC100CB5E1C /* Setting.xcstrings in Resources */,
 				F3D0965C3037CB8800E4A7D7 /* Donation.xcstrings in Resources */,
 				F30577512FA46222005732C6 /* PrivacyInfo.xcprivacy in Resources */,
 				F30577992FA4BE8D005732C6 /* LaunchScreen.storyboard in Resources */,
