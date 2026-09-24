@@ -8,6 +8,7 @@
 
 import Foundation
 import Network
+import OSLog
 
 enum BookDownloadError: LocalizedError {
     case invalidBaseURL
@@ -472,9 +473,7 @@ actor BookDownloadIndexCache {
         do {
             try data.write(to: fileURL, options: [.atomic])
         } catch {
-            #if DEBUG
-            print("Failed to cache index.json:", error)
-            #endif
+            Logger.library.error("Failed to cache index.json: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

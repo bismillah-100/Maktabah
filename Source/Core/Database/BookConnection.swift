@@ -11,6 +11,7 @@ import AppKit
 import UIKit
 #endif
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -113,9 +114,7 @@ final class BookConnection: Sendable {
                 return nil
             }.compactMap { $0 }.first
         } catch {
-            #if DEBUG
-            print("fetchTafseer error:", error)
-            #endif
+            Logger.db.error("fetchTafseer error: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
@@ -222,7 +221,7 @@ extension BookConnection {
                 return content
             }
         } catch {
-            print("\(errorContext) error:", error)
+            Logger.db.error("\(errorContext, privacy: .public) error: \(error.localizedDescription, privacy: .public)")
         }
 
         return nil
@@ -233,9 +232,7 @@ extension BookConnection {
         -> BookContent?
     {
         if let cached = getCached(bkId: bkid, idContent: contentId) {
-            #if DEBUG
-            print("return cached")
-            #endif
+            Logger.db.debug("return cached")
             return cached
         }
 
@@ -431,7 +428,7 @@ extension BookConnection {
                 )
             }.compactMap { $0 }
         } catch {
-            print("getTOCEntries error:", error)
+            Logger.db.error("getTOCEntries error: \(error.localizedDescription, privacy: .public)")
             return []
         }
     }

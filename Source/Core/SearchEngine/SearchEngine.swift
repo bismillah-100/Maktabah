@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -103,11 +104,11 @@ actor SearchEngine {
         let isPaused = await currentlyPaused()
 
         if isPaused {
-            print("Pencarian saat ini dijeda. Melanjutkan (Resuming)...")
+            Logger.search.debug("Pencarian saat ini dijeda. Melanjutkan (Resuming)...")
             await resume()
             return true
         } else {
-            print("Pencarian saat ini tidak dijeda. Memerlukan Start Baru.")
+            Logger.search.debug("Pencarian saat ini tidak dijeda. Memerlukan Start Baru.")
             return false
         }
     }

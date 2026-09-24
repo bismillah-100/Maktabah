@@ -6,6 +6,7 @@
 import CloudKit
 import Foundation
 import Network
+import OSLog
 import Synchronization
 
 /// Manajer sinkronisasi tingkat tinggi yang mengoordinasikan CloudKit, debounce upload,
@@ -66,9 +67,7 @@ final class CloudKitSyncManager: Sendable {
         Task.detached { [weak self] in
             await NetworkMonitor.shared.registerConnectivityCallbacks(
                 onRestored: { [weak self] in
-                    #if DEBUG
-                    print("CloudKitSyncManager: Network restored, retrying pending operations")
-                    #endif
+                    Logger.sync.debug("CloudKitSyncManager: Network restored, retrying pending operations")
                     self?.retryAllPendingOperations()
                 }
             )
@@ -230,9 +229,7 @@ final class CloudKitSyncManager: Sendable {
                 self?.performInitialUploadCheck()
                 self?.retryAllPendingOperations()
             case let .failure(error):
-                #if DEBUG
-                print("CloudKitSyncManager: Error creating custom zone: \(error)")
-                #endif
+                Logger.sync.error("CloudKitSyncManager: Error creating custom zone: \(error.localizedDescription, privacy: .public)")
             }
         }
         operation.qualityOfService = .userInitiated

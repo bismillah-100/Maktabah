@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 class RowiDataManager: @unchecked Sendable {
@@ -32,7 +33,7 @@ class RowiDataManager: @unchecked Sendable {
 
     nonisolated func loadData() async {
         guard let db = DatabaseManager.shared.dbSpecial else {
-            print("Database connection tidak tersedia")
+            Logger.narrator.error("Database connection tidak tersedia")
             return
         }
 
@@ -53,7 +54,7 @@ class RowiDataManager: @unchecked Sendable {
             }
             groupByTabaqa()
         } catch {
-            print("Error loading data: \(error)")
+            Logger.narrator.error("Error loading data: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -101,12 +102,10 @@ class RowiDataManager: @unchecked Sendable {
                 rowi.tuwuffi = result.tuwuffi
                 rowi.isLoaded = true
 
-                #if DEBUG
-                print("rowi:", rowi.name ?? "", "maulid:", rowi.wulida ?? "", "rutbah:", rowi.rotba ?? "")
-                #endif
+                Logger.narrator.debug("rowi: \(rowi.name ?? "", privacy: .public), maulid: \(rowi.wulida ?? "", privacy: .public), rutbah: \(rowi.rotba ?? "", privacy: .public)")
             }
         } catch {
-            print("loadRowiData error:", error)
+            Logger.narrator.error("loadRowiData error: \(error.localizedDescription, privacy: .public)")
         }
     }
 

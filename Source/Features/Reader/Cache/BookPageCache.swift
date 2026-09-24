@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import Synchronization
 
 final class BookPageCache: @unchecked Sendable {
@@ -34,9 +35,7 @@ final class BookPageCache: @unchecked Sendable {
         lock.withLock { _ in
             let bookKey = bookId as NSNumber
             let pages = cache.object(forKey: bookKey)
-            #if DEBUG
-                print("Cache HIT: \(bookKey), \(String(describing: pages))")
-            #endif
+            Logger.reader.debug("Cache HIT: \(bookKey), \(String(describing: pages), privacy: .public)")
             return pages?[contentId as NSNumber] as? BookContent
         }
     }
@@ -76,9 +75,7 @@ final class BookPageCache: @unchecked Sendable {
             // Langsung hapus satu buku beserta seluruh halamannya
             cache.removeObject(forKey: bookId as NSNumber)
             processedCache.removeObject(forKey: bookId as NSNumber)
-            #if DEBUG
-                print("Cache REMOVED all content for bookId: \(bookId)")
-            #endif
+            Logger.reader.debug("Cache REMOVED all content for bookId: \(bookId)")
         }
     }
 

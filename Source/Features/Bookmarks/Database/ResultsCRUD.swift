@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension ResultsHandler {
@@ -129,7 +130,7 @@ extension ResultsHandler {
             let results = try fetchRawResultRows(db: db, sql: sql, params: params)
             groupedResults = groupRawResultRows(results)
         } catch {
-            print("Failed to fetch results: \(error)")
+            Logger.bookmarks.error("Failed to fetch results: \(error.localizedDescription, privacy: .public)")
         }
 
         return buildResultNodes(from: groupedResults)
@@ -235,7 +236,7 @@ extension ResultsHandler {
                 CloudKitSyncManager.shared.delete(ckRecordIds: ckIds, target: .result, trackPending: false)
             }
         } catch {
-            print(error.localizedDescription)
+            Logger.bookmarks.error("Failed to delete results: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -350,7 +351,7 @@ extension ResultsHandler {
                 CloudKitSyncManager.shared.uploadResultsData(folders: [], results: updatedResults, trackPending: false)
             }
         } catch {
-            print("Failed to update results folder: \(error)")
+            Logger.bookmarks.error("Failed to update results folder: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -387,7 +388,7 @@ extension ResultsHandler {
         do {
             return try fetchSyncResults()
         } catch {
-            print("Failed to fetch all sync results: \(error)")
+            Logger.bookmarks.error("Failed to fetch all sync results: \(error.localizedDescription, privacy: .public)")
             return []
         }
     }

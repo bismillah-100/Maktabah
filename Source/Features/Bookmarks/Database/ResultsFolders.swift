@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension ResultsHandler {
@@ -77,7 +78,7 @@ extension ResultsHandler {
                 }
             }
         } catch {
-            print("Failed to fetch folder tree: \(error)")
+            Logger.bookmarks.error("Failed to fetch folder tree: \(error.localizedDescription, privacy: .public)")
         }
 
         return roots
@@ -115,7 +116,7 @@ extension ResultsHandler {
                 CloudKitSyncManager.shared.delete(ckRecordIds: ckIdsToDelete, target: .result, trackPending: false)
             }
         } catch {
-            print("Delete transaction failed:", error)
+            Logger.bookmarks.error("Delete transaction failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -176,7 +177,7 @@ extension ResultsHandler {
                 _getAllDescendantIds(of: childId, ids: &ids, db: db)
             }
         } catch {
-            print("Failed to get descendant IDs: \(error)")
+            Logger.bookmarks.error("Failed to get descendant IDs: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -195,7 +196,7 @@ extension ResultsHandler {
         do {
             return try fetchSyncFolders()
         } catch {
-            print("Failed to fetch all sync folders: \(error)")
+            Logger.bookmarks.error("Failed to fetch all sync folders: \(error.localizedDescription, privacy: .public)")
             return []
         }
     }

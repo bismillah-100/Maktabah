@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 @MainActor
@@ -31,30 +32,22 @@ final class QuranDataManager {
         do {
             db = try SQLiteDatabase(path: path, flags: readWriteFlags, queryOnly: true)
         } catch {
-            #if DEBUG
-            print("error saat mencoba membuka database:", error)
-            #endif
+            Logger.quran.error("error saat mencoba membuka database: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     func connect(to book: BooksData) {
-        #if DEBUG
-        print("QuranDataManager connect")
-        #endif
+        Logger.quran.debug("QuranDataManager connect")
         try? bkConn.connect(archive: book.archive)
         selectedBook = book
     }
 
     @discardableResult
     func loadTafseer(for aya: Int, in surah: Int) -> String? {
-        #if DEBUG
-        print("loadTafseer")
-        #endif
+        Logger.quran.debug("loadTafseer")
         selectedQuran = (aya: aya, surah: surah)
         guard let selectedBook else {
-            #if DEBUG
-            print("no selectedBook")
-            #endif
+            Logger.quran.debug("no selectedBook")
             return nil
         }
         currentBookContent = bkConn.fetchTafseer(
@@ -118,9 +111,7 @@ final class QuranDataManager {
             }
 
         surahNodes = nodes
-        #if DEBUG
-        print("total nodes:", nodes.count)
-        #endif
+        Logger.quran.debug("total nodes: \(nodes.count)")
     }
 
     func buildTafseerMap() {
@@ -133,9 +124,7 @@ final class QuranDataManager {
             }
         }
 
-        #if DEBUG
-        print("tafseerBooks:", tafseerBooks.count)
-        #endif
+        Logger.quran.debug("tafseerBooks: \(self.tafseerBooks.count)")
     }
 
     func setCurrentBookContent(_ content: BookContent?) {

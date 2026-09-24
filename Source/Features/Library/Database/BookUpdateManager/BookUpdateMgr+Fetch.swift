@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension BookUpdateManager {
@@ -16,24 +17,18 @@ extension BookUpdateManager {
     func fetchAvailableUpdates(
         from indexURL: URL
     ) async throws -> [BookUpdateItem] {
-        #if DEBUG
-        print("📋 [Fetch Updates] Loading available updates from CSV...")
-        #endif
+        Logger.library.debug("📋 [Fetch Updates] Loading available updates from CSV...")
 
         let entries = try await fetchIndexEntries(from: indexURL)
 
-        #if DEBUG
-        print("📋 [Fetch Updates] Found \(entries.count) entries in CSV")
-        #endif
+        Logger.library.debug("📋 [Fetch Updates] Found \(entries.count) entries in CSV")
 
         let items = entries.map { createUpdateItem(from: $0) }
 
-        #if DEBUG
         let needsUpdateCount = items.reduce(into: 0) { count, item in
             if item.needsUpdate { count += 1 }
         }
-        print("📋 [Fetch Updates] Processed \(items.count) books: \(needsUpdateCount) need update")
-        #endif
+        Logger.library.debug("📋 [Fetch Updates] Processed \(items.count) books: \(needsUpdateCount) need update")
 
         return items
     }
@@ -62,12 +57,10 @@ extension BookUpdateManager {
             item.status = .upToDate
         }
 
-        #if DEBUG
         if item.needsUpdate {
             let currentVersionText = currentVersion.map(String.init) ?? (item.newBook ? "NEW" : "NULL")
-            print("🔄 [Fetch Updates] Book \(entry.bkid) needs update: \(currentVersionText) → \(entry.versionName)")
+            Logger.library.debug("🔄 [Fetch Updates] Book \(entry.bkid) needs update: \(currentVersionText, privacy: .public) → \(entry.versionName, privacy: .public)")
         }
-        #endif
 
         return item
     }

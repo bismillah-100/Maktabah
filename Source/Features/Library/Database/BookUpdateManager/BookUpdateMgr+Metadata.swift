@@ -6,13 +6,12 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension BookUpdateManager {
     func readBookMetadata(from url: URL, fallbackBookId: Int) throws -> BookMetadata? {
-        #if DEBUG
-        print("url:", url.absoluteString)
-        #endif
+        Logger.library.debug("url: \(url.absoluteString, privacy: .public)")
 
         let db = try openDatabase(path: url.path)
         defer { sqlite3_close_v2(db) }
@@ -93,9 +92,7 @@ extension BookUpdateManager {
                 bindOptionalInt(stmt, index: 1, value: metadata.bVer)
                 sqlite3_bind_int64(stmt, 2, Int64(metadata.bkid))
             }
-            #if DEBUG
-            print("[Update Version] bVer berhasil diperbarui ke \(metadata.bVer ?? 0) untuk book \(metadata.bkid)")
-            #endif
+            Logger.library.debug("[Update Version] bVer berhasil diperbarui ke \(metadata.bVer ?? 0) untuk book \(metadata.bkid)")
         }
     }
 
@@ -118,9 +115,7 @@ extension BookUpdateManager {
                 bindCommonMetadataFields(metadata, to: stmt, startingAt: 1)
                 sqlite3_bind_int64(stmt, 10, Int64(metadata.bkid))
             }
-            #if DEBUG
-            print("[Update Metadata] Metadata berhasil diperbarui untuk book \(metadata.bkid)")
-            #endif
+            Logger.library.debug("[Update Metadata] Metadata berhasil diperbarui untuk book \(metadata.bkid)")
         }
     }
 

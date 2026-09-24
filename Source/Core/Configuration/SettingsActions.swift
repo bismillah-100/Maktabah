@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 import SwiftUI
 #if os(macOS)
 import AppKit
@@ -185,9 +186,7 @@ enum SettingsActions {
             )
         }
 
-        #if DEBUG
-        print("Custom folder selected and migrated: \(url.path)")
-        #endif
+        Logger.app.debug("Custom folder selected and migrated: \(url.path, privacy: .public)")
         return true
     }
 

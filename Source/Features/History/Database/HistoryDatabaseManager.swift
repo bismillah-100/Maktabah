@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import Synchronization
 
 final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
@@ -38,9 +39,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
 
     func setupDatabase() {
         guard let folderURL = AppConfig.folder(for: AppConfig.annotationsAndResultsFolder) else {
-            #if DEBUG
-            print("HistoryDatabaseManager: No folder URL available for History database")
-            #endif
+            Logger.history.error("HistoryDatabaseManager: No folder URL available for History database")
             return
         }
 
@@ -62,9 +61,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
             }
             try createTables()
         } catch {
-            #if DEBUG
-            print("HistoryDatabaseManager: Failed to setup database: \(error)")
-            #endif
+            Logger.history.error("HistoryDatabaseManager: Failed to setup database: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -196,9 +193,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
                 try replaceHistoryOrder(order)
             }
         } catch {
-            #if DEBUG
-            print("HistoryDatabaseManager: saveHistoryOrder failed: \(error)")
-            #endif
+            Logger.history.error("HistoryDatabaseManager: saveHistoryOrder failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -268,9 +263,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
         UserDefaults.standard.removeObject(forKey: legacyPendingUploadsKey)
         UserDefaults.standard.removeObject(forKey: legacyPendingDeletesKey)
 
-        #if DEBUG
-        print("HistoryDatabaseManager: Successfully migrated from UserDefaults to SQLite")
-        #endif
+        Logger.history.debug("HistoryDatabaseManager: Successfully migrated from UserDefaults to SQLite")
     }
 
     private func migrateStoredReadingEntries() -> Bool {
@@ -289,9 +282,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
             }
             return true
         } catch {
-            #if DEBUG
-            print("HistoryDatabaseManager: Migration failed: \(error)")
-            #endif
+            Logger.history.error("HistoryDatabaseManager: Migration failed: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -318,9 +309,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
                 }
             }
         } catch {
-            #if DEBUG
-            print("HistoryDatabaseManager: \(key) migration failed: \(error)")
-            #endif
+            Logger.history.error("HistoryDatabaseManager: \(key, privacy: .public) migration failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

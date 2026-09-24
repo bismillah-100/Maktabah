@@ -11,6 +11,7 @@ import AppKit
 import UIKit
 #endif
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -85,7 +86,7 @@ final class DatabaseManager: Sendable {
         guard let mainPath = AppConfig.mainDatabasePath,
               let specialPath = AppConfig.specialDatabasePath
         else {
-            print("databaseFilesPath is nil - database will not be initialized")
+            Logger.db.error("databaseFilesPath is nil - database will not be initialized")
             return
         }
 
@@ -98,7 +99,7 @@ final class DatabaseManager: Sendable {
             """
             try tempWriteDb.execute(query: sqlIndex)
         } catch {
-            print("\(error). Continue to ReadOnly Mode...")
+            Logger.db.error("\(error.localizedDescription, privacy: .public). Continue to ReadOnly Mode...")
         }
 
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX

@@ -10,6 +10,7 @@ import AppKit
 #elseif canImport(UIKit)
 import UIKit
 #endif
+import OSLog
 
 @MainActor
 class ReusableFunc {
@@ -114,9 +115,7 @@ class ReusableFunc {
             MainActor.assumeIsolated {
                 progressView.removeFromSuperview()
             }
-            #if DEBUG
-            print("Progress view removed from parent view")
-            #endif
+            Logger.app.debug("Progress view removed from parent view")
         }
     }
 
@@ -126,9 +125,7 @@ class ReusableFunc {
         if let folderNib = NSNib(nibNamed: nibName.rawValue, bundle: nil) {
             tableView.register(folderNib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: cellIdentifier.rawValue))
         } else {
-            #if DEBUG
-            print("couldnt register Nib", "\(cellIdentifier)")
-            #endif
+            Logger.app.error("couldnt register Nib \(cellIdentifier.rawValue, privacy: .public)")
         }
     }
 

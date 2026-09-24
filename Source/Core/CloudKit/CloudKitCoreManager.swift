@@ -5,6 +5,7 @@
 
 import CloudKit
 import Foundation
+import OSLog
 import Synchronization
 
 /// Manajer inti untuk operasi CloudKit yang kompatibel penuh dengan Swift 6.
@@ -266,15 +267,13 @@ final class CloudKitCoreManager: Sendable {
 
         let timeoutResult = semaphore.wait(timeout: .now() + 3.0)
 
-        #if DEBUG
         let requestError = errorState.withLock { $0 }
         if timeoutResult == .timedOut {
-            print("CloudKitSyncManager: Sync worker timed out on exit.")
+            Logger.sync.error("CloudKitSyncManager: Sync worker timed out on exit.")
         } else if let requestError {
-            print("CloudKitSyncManager: Failed to notify Android: \(requestError)")
+            Logger.sync.error("CloudKitSyncManager: Failed to notify Android: \(requestError.localizedDescription, privacy: .public)")
         } else {
-            print("CloudKitSyncManager: Successfully notified Android to sync before termination.")
+            Logger.sync.debug("CloudKitSyncManager: Successfully notified Android to sync before termination.")
         }
-        #endif
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class RowiSidebarVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
@@ -61,9 +62,7 @@ class RowiSidebarVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("RowiSidebarVC deinit")
-        #endif
+        Logger.narrator.debug("RowiSidebarVC deinit")
     }
 
     func unhideSearchField() {

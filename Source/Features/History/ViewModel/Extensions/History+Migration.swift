@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension HistoryViewModel {
     // MARK: - KVS Migration (Legacy)
@@ -31,9 +32,7 @@ extension HistoryViewModel {
                         self.loadBooksData()
                     }
                 } catch {
-                    #if DEBUG
-                    print("Failed to backfillCloudKitFields: \(error)")
-                    #endif
+                    Logger.history.error("Failed to backfillCloudKitFields: \(error.localizedDescription, privacy: .public)")
                 }
             }
         }
@@ -71,9 +70,7 @@ extension HistoryViewModel {
                         CloudKitSyncManager.shared.uploadHistory(entries: migratedEntries, debounce: false, trackPending: false)
                     }
                 } catch {
-                    #if DEBUG
-                    print("Failed to migrateLegacyKVSData: \(error)")
-                    #endif
+                    Logger.history.error("Failed to migrateLegacyKVSData: \(error.localizedDescription, privacy: .public)")
                 }
             }
         }
