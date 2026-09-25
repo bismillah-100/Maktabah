@@ -100,11 +100,8 @@ class TagMergeConfirmationView: NSView {
     }
 
     private func setupUI(oldName: String, newName: String) {
-        messageLabel.stringValue = String(localized: "Merge Tags?")
-        infoLabel.stringValue = String(
-            localized:
-                "'\(newName)' already exists. All annotations from '\(oldName)' will be merged into '\(newName)'."
-        )
+        messageLabel.stringValue = String(localized: .Annotation.mergeTagsPrompt)
+        infoLabel.stringValue = String(localized: .Annotation.mergeTagsMessage(newName, oldName))
 
         let buttonStack = NSStackView(views: [cancelButton, mergeButton])
         buttonStack.orientation = .horizontal

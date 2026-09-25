@@ -68,13 +68,13 @@ struct iOSAnnotationEditorSheet: View {
                     }) {
                         HStack {
                             Spacer()
-                            Text("Delete Annotation")
+                            Text(.Annotation.deleteAnnotation)
                             Spacer()
                         }
                     }
                 }
             }
-            .navigationTitle("Edit Annotation")
+            .navigationTitle(.Annotation.editAnnotation)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
