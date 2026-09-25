@@ -44,7 +44,7 @@ struct iPadLayout: View {
         case .viewer: String(localized: .Library.searchLibrary)
         case .search: String(localized: "Filter Books to Search")
         case .author: String(localized: "Search Narrators")
-        case .annotations: String(localized: "Search Annotations")
+        case .annotations: String(localized: .Annotation.searchAnnotations)
         case .history: String(localized: "Search History & Favorites")
         }
     }

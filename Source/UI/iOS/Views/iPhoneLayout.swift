@@ -117,7 +117,7 @@ struct iPhoneLayout: View {
         .searchable(
             text: Bindable(bManager.annotationViewModel).searchText,
             placement: .toolbar,
-            prompt: String(localized: "Search Annotations")
+            prompt: .Annotation.searchAnnotations
         )
         .searchScopes(Bindable(bManager.annotationViewModel).searchScope) {
             ForEach(AnnotationSearchScope.allCases) { scope in

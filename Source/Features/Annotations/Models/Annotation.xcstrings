@@ -1,6 +1,240 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Add Note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة ملاحظة"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambah Catatan"
+          }
+        }
+      }
+    },
+    "Add Tags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة وسوم"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambah Tag"
+          }
+        }
+      }
+    },
+    "annotationsImportedSuccess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم استيراد %lld تعليق بنجاح"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld annotations imported successfully"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld anotasi berhasil diimpor"
+          }
+        }
+      }
+    },
+    "Delete Annotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف التعليق التوضيحي"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Anotasi"
+          }
+        }
+      }
+    },
+    "Delete Highlight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف التمييز"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Sorotan"
+          }
+        }
+      }
+    },
+    "Delete Tag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف الوسم"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Tag"
+          }
+        }
+      }
+    },
+    "deleteHighlightNote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف التمييز والملاحظة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Highlight & Note"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Sorotan & Catatan"
+          }
+        }
+      }
+    },
+    "deleteTagAnnotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف الوسم والتعليق"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Tag & Annotation"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Tag & Anotasi"
+          }
+        }
+      }
+    },
+    "duplicateAnnotationsPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قد تكون بعض التعليقات موجودة بالفعل. كيف ترغب في التعامل مع التكرارات؟"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some annotations may already exist. How would you like to handle duplicates?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beberapa anotasi mungkin sudah ada. Bagaimana Anda ingin menangani duplikat?"
+          }
+        }
+      }
+    },
+    "Edit Annotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعديل التعليق"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Anotasi"
+          }
+        }
+      }
+    },
+    "Edit Note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعديل الملاحظة"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Catatan"
+          }
+        }
+      }
+    },
+    "exportAnnotationsJson" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصدير التعليقات (JSON)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Annotations (JSON)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekspor Anotasi (JSON)"
+          }
+        }
+      }
+    },
     "Group by Book" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18,7 +252,7 @@
         }
       }
     },
-    "Group By Tag" : {
+    "Group by Tag" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
@@ -35,7 +269,7 @@
         }
       }
     },
-    "Group By Timeline" : {
+    "Group by Timeline" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
@@ -48,6 +282,63 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grup Garis Waktu"
+          }
+        }
+      }
+    },
+    "Highlight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمييز"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorotan"
+          }
+        }
+      }
+    },
+    "Import Annotations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استيراد التعليقات"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impor Anotasi"
+          }
+        }
+      }
+    },
+    "importAnnotationsJson" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استيراد التعليقات (JSON)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Annotations (JSON)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impor Anotasi (JSON)"
           }
         }
       }
@@ -65,6 +356,149 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bulan Lalu"
+          }
+        }
+      }
+    },
+    "mergeTagsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%1$@' موجود بالفعل. سيتم دمج جميع التعليقات من '%2$@' في '%1$@'."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%1$@' already exists. All annotations from '%2$@' will be merged into '%1$@'."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%1$@' sudah ada. Semua anotasi dari '%2$@' akan digabungkan ke '%1$@'."
+          }
+        }
+      }
+    },
+    "mergeTagsPrompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دمج الوسوم؟"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge Tags?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gabungkan Tag?"
+          }
+        }
+      }
+    },
+    "noAnnotationsFoundInFile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم العثور على تعليقات في الملف المحدد."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No annotations found in the selected file."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada anotasi yang ditemukan dalam file yang dipilih."
+          }
+        }
+      }
+    },
+    "Remove Tags" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة الوسوم"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hapus Tag"
+          }
+        }
+      }
+    },
+    "Rename Tag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تسمية الوسم"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ubah Nama Tag"
+          }
+        }
+      }
+    },
+    "reSynchroniseAllData" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة مزامنة كافة البيانات"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-Synchronise All Data"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sinkronkan Ulang Semua Data"
+          }
+        }
+      }
+    },
+    "Search Annotations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث في التعليقات التوضيحية"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cari Anotasi"
           }
         }
       }
@@ -137,6 +571,23 @@
         }
       }
     },
+    "Untagged" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدون وسم"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanpa Tag"
+          }
+        }
+      }
+    },
     "Yesterday" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -155,5 +606,5 @@
       }
     }
   },
-  "version" : "1.1"
+  "version" : "1.0"
 }

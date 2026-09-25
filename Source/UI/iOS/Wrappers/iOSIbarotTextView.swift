@@ -685,7 +685,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         private func buildExistingAnnotationMenuChildren(for existing: Annotation) -> [UIMenuElement] {
             let editAction = UIAction(
-                title: String(localized: "Edit Note"),
+                title: String(localized: .Annotation.editNote),
                 image: UIImage(systemName: "square.and.pencil")
             ) { [weak self] _ in
                 if let id = existing.id {
@@ -693,7 +693,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
                 }
             }
 
-            let deleteTitle = existing.note == nil ? String(localized: "Delete Highlight") : String(localized: "Delete Highlight & Note")
+            let deleteTitle = existing.note == nil ? String(localized: .Annotation.deleteHighlight) : String(localized: .Annotation.deleteHighlightNote)
             let deleteAction = UIAction(
                 title: deleteTitle,
                 image: UIImage(systemName: "trash"),
@@ -719,7 +719,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
             }
 
             let highlightMenu = UIMenu(
-                title: String(localized: "Highlight"),
+                title: String(localized: .Annotation.highlight),
                 options: .displayInline,
                 children: highlightActions
             )

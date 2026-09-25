@@ -51,21 +51,21 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     lazy var addTagMenuItem: NSMenuItem = {
         let item = NSMenuItem()
-        item.title = "Add Tags".localized + threeDots
+        item.title = String(localized: .Annotation.addTags) + threeDots
         item.image = NSImage(systemSymbolName: "tag", accessibilityDescription: "")
         return item
     }()
 
     lazy var removeTagMenuItem: NSMenuItem = {
         let item = NSMenuItem()
-        item.title = "Remove Tags".localized + threeDots
+        item.title = String(localized: .Annotation.removeTags) + threeDots
         item.image = NSImage(systemSymbolName: "tag.slash", accessibilityDescription: "")
         return item
     }()
 
     lazy var renameTagMenuItem: NSMenuItem = {
         let item = NSMenuItem()
-        item.title = String(localized: "Rename Tag") + threeDots
+        item.title = String(localized: .Annotation.renameTag) + threeDots
         item.image = NSImage(systemSymbolName: "pencil.line", accessibilityDescription: "")
         return item
     }()
