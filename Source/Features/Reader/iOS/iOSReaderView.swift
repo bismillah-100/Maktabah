@@ -34,19 +34,7 @@ struct iOSReaderView: View {
     }
 
     var backgroundColor: Color {
-        let colors: [Color] = [
-            .white,
-            .bgSepia,
-            .bgGray,
-            .bgSepiaDark,
-            .black,
-        ]
-        let index = textViewState.backgroundColorIndex
-
-        if index >= 0, index < colors.count {
-            return colors[index]
-        }
-        return Color(UIColor.systemBackground)
+        textViewState.backgroundColor.color
     }
 
     var isDarkMode: Bool {

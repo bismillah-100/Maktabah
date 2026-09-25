@@ -6,22 +6,6 @@ struct iOSReaderTabView: View {
     @State private var showingBookInfo = false
     var textViewState = TextViewState.shared
 
-    var backgroundColor: Color {
-        let colors: [Color] = [
-            .white,
-            .bgSepia,
-            .bgGray,
-            .bgSepiaDark,
-            .black,
-        ]
-        let index = textViewState.backgroundColorIndex
-
-        if index >= 0, index < colors.count {
-            return colors[index]
-        }
-        return Color(UIColor.systemBackground)
-    }
-
     var isDarkMode: Bool {
         textViewState.isDarkMode
     }

@@ -16,13 +16,6 @@ struct ViewOptionsView: View {
         ArabicFont.allCases.map(\.rawValue) + userFontManager.userFontNames
     }
     let lineHeights = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
-    let backgroundColors: [Color] = [
-        .white,
-        .bgSepia,
-        .bgGray,
-        .bgSepiaDark,
-        .bgDark,
-    ]
 
     /// Binding for CoreGraphics to Double/Float conversion
     private var fontSizeBinding: Binding<CGFloat> {
@@ -123,10 +116,10 @@ struct ViewOptionsView: View {
 
                 ThemeSection("Background") {
                     HStack(spacing: 20) {
-                        ForEach(0 ..< backgroundColors.count, id: \.self) { index in
-                            let isSelected = state.backgroundColorIndex == index
+                        ForEach(BackgroundColor.allCases) { item in
+                            let isSelected = state.backgroundColorIndex == item.rawValue
                             Circle()
-                                .fill(backgroundColors[index])
+                                .fill(item.color)
                                 .frame(width: 30, height: 30)
                                 .overlay(
                                     Circle()
@@ -134,7 +127,7 @@ struct ViewOptionsView: View {
                                                 lineWidth: isSelected ? 3 : 1)
                                 )
                                 .onTapGesture {
-                                    state.setBackgroundColorIndex(index)
+                                    state.setBackgroundColor(item)
                                 }
                         }
                     }

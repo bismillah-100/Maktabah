@@ -12,26 +12,6 @@ enum BorderOptions {
     case darken
 }
 
-enum BackgroundColor: Int {
-    case white
-    case sepia
-    case gray
-    case darkSepia
-    case black
-
-    /// NSColor yang otomatis menyesuaikan mode terang/gelap sistem
-    /// berdasarkan definisi di Assets.xcassets.
-    var nsColor: NSColor {
-        return switch self {
-        case .white: .white
-        case .sepia: .bgSepia
-        case .gray: .bgGray
-        case .darkSepia: .bgSepiaDark
-        case .black: .bgDark
-        }
-    }
-}
-
 class BackgroundOptions: NSControl {
 
     // MARK: - Properties

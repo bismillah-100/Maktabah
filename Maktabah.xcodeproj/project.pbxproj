@@ -744,6 +744,9 @@
 		F3DD0CED3048964D00C0227C /* LibraryView+Diffing.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DD0CEB3048964D00C0227C /* LibraryView+Diffing.swift */; };
 		F3DD69E32FA4F76100BFEA0F /* ProgressBooksDownload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B8C9DE32F6995EE0049E4EF /* ProgressBooksDownload.swift */; };
 		F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */; };
+		F3DE7C7730671FC200E0FBBF /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */; };
+		F3DE7C7830671FC200E0FBBF /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */; };
+		F3DE7C793067203300E0FBBF /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */; };
 		F3E054F23042657000647936 /* MaktabahWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7CF4D3EED1CCDF5AC98A3B54 /* MaktabahWidgetExtension.appex */; };
 		F3E054FA3042765900647936 /* MaktabahWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7CF4D3EED1CCDF5AC98A3B54 /* MaktabahWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
@@ -1273,6 +1276,7 @@
 		F3D66912303215530030510C /* RightAlignedClipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightAlignedClipView.swift; sourceTree = "<group>"; };
 		F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZSTDContextWrapper.swift; sourceTree = "<group>"; };
 		F3DD0CEB3048964D00C0227C /* LibraryView+Diffing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryView+Diffing.swift"; sourceTree = "<group>"; };
+		F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColor.swift; sourceTree = "<group>"; };
 		F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationJsonSerializer.swift; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
@@ -1971,7 +1975,6 @@
 			isa = PBXGroup;
 			children = (
 				4B5695582EEFDAAE00ABEB48 /* Annotation.swift */,
-				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
 				FEA100010000000000000001 /* AnnotationNode.swift */,
 				FEA200010000000000000001 /* AnnotationSortOption.swift */,
 				F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */,
@@ -2480,6 +2483,8 @@
 		FE8000060000000000000006 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */,
+				4B5B4BA12EE8404C000C22D5 /* BackgroundOptions.swift */,
 				FE8400010000000000000001 /* BookContent.swift */,
 				FE8200010000000000000001 /* CleanedTextKey.swift */,
 				CAF000510000000000000051 /* IbarotTextOptions.swift */,
@@ -2915,6 +2920,7 @@
 				EBA9A66858B35459A6898AAD /* String+Search.swift in Sources */,
 				772E47588E795286B3873AA0 /* String+TextCleaning.swift in Sources */,
 				4BD6C33C2EE6AA7F008684E3 /* MainWindow.swift in Sources */,
+				F3DE7C793067203300E0FBBF /* BackgroundColor.swift in Sources */,
 				4BDAB98C2F69E860007D0945 /* SettingsView.swift in Sources */,
 				4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */,
 				F3A000022FA46222005732C6 /* AppLogger.swift in Sources */,
@@ -3249,6 +3255,7 @@
 				F3AE62E3304C5C43002569BB /* Reader+Content.swift in Sources */,
 				F3AE62E4304C5C43002569BB /* Reader+macOS.swift in Sources */,
 				F3AE62E5304C5C43002569BB /* Reader+Annotation.swift in Sources */,
+				F3DE7C7730671FC200E0FBBF /* BackgroundColor.swift in Sources */,
 				F3AE62E6304C5C43002569BB /* Reader+Citation.swift in Sources */,
 				F3AE62E7304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				4B7C90C82F83494200454BE1 /* ReaderState.swift in Sources */,
@@ -3444,6 +3451,7 @@
 				F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */,
 				F3A000042FBB000100000001 /* FileManager+Size.swift in Sources */,
 				F3A000082FBB000100000001 /* SyncPendingStore.swift in Sources */,
+				F3DE7C7830671FC200E0FBBF /* BackgroundColor.swift in Sources */,
 				F3A0000C2FBB000100000001 /* SingleFlight.swift in Sources */,
 				F3A001002FBB000100000001 /* ZstdDecompressor.swift in Sources */,
 				F3B60E2C2FC7FFA500A9EF58 /* iOSTOCView.swift in Sources */,
