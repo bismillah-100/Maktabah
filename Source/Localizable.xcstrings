@@ -441,28 +441,6 @@
         }
       }
     },
-    "'%@' already exists. All annotations from '%@' will be merged into '%@'." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "'%1$@' موجود بالفعل. سيتم دمج جميع التعليقات من '%2$@' في '%3$@'."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "'%1$@' already exists. All annotations from '%2$@' will be merged into '%3$@'."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "'%1$@' sudah ada. Semua anotasi dari '%2$@' akan digabungkan ke dalam '%3$@'."
-          }
-        }
-      }
-    },
     "\"%@\" and all its contents will be permanently deleted." : {
       "localizations" : {
         "ar" : {
@@ -506,28 +484,6 @@
         }
       },
       "shouldTranslate" : false
-    },
-    "%d annotations imported successfully" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم استيراد %d من التعليقات بنجاح"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d annotations imported successfully"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d anotasi berhasil diimpor"
-          }
-        }
-      }
     },
     "%lld" : {
       "shouldTranslate" : false
@@ -648,45 +604,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tambah Favorit"
-          }
-        }
-      }
-    },
-    "Add Note" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إنشاء الملاحظة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tambahkan Catatan"
-          }
-        }
-      }
-    },
-    "Add Tags" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إضافة علامات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Tags"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tambahkan Tag"
           }
         }
       }
@@ -1725,29 +1642,6 @@
         }
       }
     },
-    "Delete Annotation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حذف التعليق التوضيحي"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Annotation"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus Anotasi"
-          }
-        }
-      }
-    },
     "Delete Folder" : {
       "localizations" : {
         "ar" : {
@@ -1776,86 +1670,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hapus Font"
-          }
-        }
-      }
-    },
-    "Delete Highlight" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حذف التمييز"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus Sorotan"
-          }
-        }
-      }
-    },
-    "Delete Highlight & Note" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حذف التمييز والملاحظة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus Sorotan & Catatan"
-          }
-        }
-      }
-    },
-    "Delete Tag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حذف العلامة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Tag"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus Tag"
-          }
-        }
-      }
-    },
-    "Delete Tag & Annotation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حذف العلامة والتعليق"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Tag & Annotation"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus Tag & Anotasi"
           }
         }
       }
@@ -1966,45 +1780,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mengunduh kitab… (%1$lld/%2$lld)"
-          }
-        }
-      }
-    },
-    "Edit Annotation" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعديل التعليق"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit Annotation"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit Anotasi"
-          }
-        }
-      }
-    },
-    "Edit Note" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعديل الملاحظة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit Catatan"
           }
         }
       }
@@ -2424,28 +2199,6 @@
         }
       }
     },
-    "Export Annotations (JSON)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تصدير التعليقات (JSON)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export Annotations (JSON)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ekspor Anotasi (JSON)"
-          }
-        }
-      }
-    },
     "Export to JSON..." : {
       "localizations" : {
         "ar" : {
@@ -2727,40 +2480,6 @@
         }
       }
     },
-    "Group by Book" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التجميع حسب الكتاب"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grup Buku"
-          }
-        }
-      }
-    },
-    "Group by Tag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التجميع حسب الوسم"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grup Tag"
-          }
-        }
-      }
-    },
     "Help" : {
       "localizations" : {
         "ar" : {
@@ -2773,28 +2492,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bantuan"
-          }
-        }
-      }
-    },
-    "Highlight" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تمييز"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Highlight"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sorotan"
           }
         }
       }
@@ -2839,50 +2536,6 @@
     },
     "ID: %lld" : {
       "shouldTranslate" : false
-    },
-    "Import Annotations" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استيراد التعليقات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import Annotations"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Anotasi"
-          }
-        }
-      }
-    },
-    "Import Annotations (JSON)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استيراد التعليقات (JSON)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import Annotations (JSON)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Anotasi (JSON)"
-          }
-        }
-      }
     },
     "Import Font..." : {
       "localizations" : {
@@ -3191,29 +2844,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gabungkan"
-          }
-        }
-      }
-    },
-    "Merge Tags?" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "دمج العلامات؟"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Merge Tags?"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gabungkan Tag?"
           }
         }
       }
@@ -3557,28 +3187,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Halaman Berikutnya"
-          }
-        }
-      }
-    },
-    "No annotations found in the selected file." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لم يتم العثور على تعليقات في الملف المحدد."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No annotations found in the selected file."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tidak ada anotasi yang ditemukan dalam file yang dipilih."
           }
         }
       }
@@ -4092,22 +3700,6 @@
         }
       }
     },
-    "Re-Synchronise All Data" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعادة مزامنة جميع البيانات"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sinkronkan Ulang Semua Data"
-          }
-        }
-      }
-    },
     "Reader" : {
       "localizations" : {
         "ar" : {
@@ -4164,28 +3756,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hapus dari Riwayat"
-          }
-        }
-      }
-    },
-    "Remove Tags" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إزالة العلامات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove Tags"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bersihkan Tag"
           }
         }
       }
@@ -4264,29 +3834,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ubah Nama Hasil"
-          }
-        }
-      }
-    },
-    "Rename Tag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعادة تسمية العلامة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename Tag"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ubah Nama Tag"
           }
         }
       }
@@ -4471,28 +4018,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cari"
-          }
-        }
-      }
-    },
-    "Search Annotations" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "بحث في التعليقات"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search Annotations"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cari Anotasi"
           }
         }
       }
@@ -5002,28 +4527,6 @@
         }
       }
     },
-    "Some annotations may already exist. How would you like to handle duplicates?" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "قد تكون بعض التعليقات موجودة بالفعل. كيف ترغب في التعامل مع التكرار؟"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some annotations may already exist. How would you like to handle duplicates?"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beberapa anotasi mungkin sudah ada. Bagaimana Anda ingin menangani duplikat?"
-          }
-        }
-      }
-    },
     "Sort By" : {
       "localizations" : {
         "ar" : {
@@ -5412,29 +4915,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Garis Bawah"
-          }
-        }
-      }
-    },
-    "Untagged" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "غير موسومة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Untagged"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tidak ditandai"
           }
         }
       }

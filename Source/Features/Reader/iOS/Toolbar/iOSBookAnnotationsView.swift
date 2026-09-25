@@ -57,7 +57,7 @@ struct iOSBookAnnotationsView: View {
 
                             Text(
                                 ann.type == .highlight
-                                    ? "Highlight" : "Underline"
+                                    ? String(localized: .Annotation.highlight) : String(localized: "Underline")
                             )
                             .font(.caption2)
                             .foregroundColor(.secondary)
@@ -75,7 +75,7 @@ struct iOSBookAnnotationsView: View {
                 }
             }
             .environment(\.layoutDirection, .rightToLeft)
-            .searchable(text: $searchText, prompt: String(localized: "Search Annotations"))
+            .searchable(text: $searchText, prompt: String(localized: .Annotation.searchAnnotations))
             .navigationTitle("Annotations")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -114,13 +114,13 @@ struct AnnotationListView: View {
             Button {
                 exportAnnotations()
             } label: {
-                Label("Export Annotations (JSON)".localized, systemImage: "square.and.arrow.up")
+                Label(String(localized: .Annotation.exportAnnotationsJson), systemImage: "square.and.arrow.up")
             }
 
             Button {
                 isImporting = true
             } label: {
-                Label("Import Annotations (JSON)".localized, systemImage: "square.and.arrow.down")
+                Label(String(localized: .Annotation.importAnnotationsJson), systemImage: "square.and.arrow.down")
             }
 
             Divider()
@@ -128,7 +128,7 @@ struct AnnotationListView: View {
             Button(role: .destructive) {
                 CloudKitSyncManager.shared.resetChangeToken()
             } label: {
-                Label("Re-Synchronise All Data", systemImage: "arrow.counterclockwise.icloud")
+                Label(String(localized: .Annotation.reSynchroniseAllData), systemImage: "arrow.counterclockwise.icloud")
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down.circle")
@@ -162,7 +162,7 @@ struct AnnotationListView: View {
                     let decoded = try AnnotationJsonSerializer.decode(from: data)
                     await MainActor.run {
                         guard !decoded.isEmpty else {
-                            showImportAlert(title: "Import Annotations".localized, message: "No annotations found in the selected file.".localized)
+                            showImportAlert(title: String(localized: .Annotation.importAnnotations), message: String(localized: .Annotation.noAnnotationsFoundInFile))
                             return
                         }
                         pendingImportAnnotations = decoded
@@ -192,8 +192,8 @@ struct AnnotationListView: View {
             do {
                 let count = try AnnotationStore.shared.importAnnotations(annotations, overwrite: overwrite)
                 await MainActor.run {
-                    importAlertTitle = "Import Annotations".localized
-                    importAlertMessage = String(format: "%d annotations imported successfully".localized, count)
+                    importAlertTitle = String(localized: .Annotation.importAnnotations)
+                    importAlertMessage = String(localized: .Annotation.annotationsImportedSuccess(count))
                     showImportAlert = true
                 }
                 await viewModel.loadAnnotations()
@@ -242,7 +242,7 @@ private extension View {
     ) -> some View {
         self
             .confirmationDialog(
-                "Import Annotations".localized,
+                String(localized: .Annotation.importAnnotations),
                 isPresented: showDialog,
                 titleVisibility: .visible
             ) {
@@ -256,7 +256,7 @@ private extension View {
                     pendingAnnotations.wrappedValue = []
                 }
             } message: {
-                Text("Some annotations may already exist. How would you like to handle duplicates?".localized)
+                Text(.Annotation.duplicateAnnotationsPrompt)
             }
             .onChange(of: showDialog.wrappedValue) { _, isPresented in
                 if !isPresented {

@@ -16,15 +16,15 @@ class AnnotationTagVC: NSViewController {
 
         var title: String {
             switch self {
-            case .add: return String(localized: "Add Tags")
-            case .remove: return String(localized: "Remove Tags")
+            case .add: return String(localized: .Annotation.addTags)
+            case .remove: return String(localized: .Annotation.removeTags)
             }
         }
 
         var placeholder: String {
             switch self {
-            case .add: return "Add tags".localized + "..."
-            case .remove: return "Remove tags".localized + "..."
+            case .add: return String(localized: .Annotation.addTags) + "..."
+            case .remove: return String(localized: .Annotation.removeTags) + "..."
             }
         }
 

@@ -135,15 +135,15 @@ extension AnnotationsVC {
                     await MainActor.run {
                         guard !decoded.isEmpty else {
                             ReusableFunc.showAlert(
-                                title: "Import Annotations".localized,
-                                message: "No annotations found in the selected file.".localized
+                                title: String(localized: .Annotation.importAnnotations),
+                                message: String(localized: .Annotation.noAnnotationsFoundInFile)
                             )
                             return
                         }
 
                         let alert = NSAlert()
-                        alert.messageText = "Import Annotations".localized
-                        alert.informativeText = "Some annotations may already exist. How would you like to handle duplicates?".localized
+                        alert.messageText = String(localized: .Annotation.importAnnotations)
+                        alert.informativeText = String(localized: .Annotation.duplicateAnnotationsPrompt)
                         alert.addButton(withTitle: "Overwrite Existing".localized)
                         alert.addButton(withTitle: "Skip Duplicates".localized)
                         alert.addButton(withTitle: "Cancel".localized)
@@ -156,8 +156,8 @@ extension AnnotationsVC {
                             do {
                                 let count = try AnnotationStore.shared.importAnnotations(decoded, overwrite: overwrite)
                                 await MainActor.run {
-                                    let successMsg = String(format: "%d annotations imported successfully".localized, count)
-                                    ReusableFunc.showAlert(title: "Import Annotations".localized, message: successMsg)
+                                    let successMsg = String(localized: .Annotation.annotationsImportedSuccess(count))
+                                    ReusableFunc.showAlert(title: String(localized: .Annotation.importAnnotations), message: successMsg)
                                 }
                             } catch {
                                 await MainActor.run {

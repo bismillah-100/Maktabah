@@ -412,7 +412,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         }
 
         if !untagged.isEmpty {
-            let untaggedNode = AnnotationNode(title: String(localized: "Untagged"), kind: .untagged)
+            let untaggedNode = AnnotationNode(title: String(localized: .Annotation.untagged),
+                                              kind: .untagged)
             for annotation in untagged {
                 untaggedNode.children.append(
                     AnnotationNode(
@@ -670,7 +671,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             if let untaggedNode = root.children.first(where: { $0.kind == .untagged }) {
                 return (untaggedNode, false)
             }
-            let untaggedNode = AnnotationNode(title: String(localized: "Untagged"), kind: .untagged)
+            let untaggedNode = AnnotationNode(title: String(localized: .Annotation.untagged), kind: .untagged)
             root.children.append(untaggedNode)
             return (untaggedNode, true)
         }

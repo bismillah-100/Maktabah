@@ -51,9 +51,9 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
 
     private func updateDeleteMenuItemTitle(hasAnnotations: Bool, hasTagRoots: Bool, hasBookRoots: Bool) {
         if groupingMode == .tag, hasTagRoots {
-            deleteMenuItem.title = hasAnnotations ? String(localized: .deleteTagAnnotation) : String(localized: .deleteTag)
+            deleteMenuItem.title = hasAnnotations ? String(localized: .Annotation.deleteTagAnnotation) : String(localized: .Annotation.deleteTag)
         } else if groupingMode == .book, hasBookRoots, hasAnnotations {
-            deleteMenuItem.title = String(localized: .deleteAnnotation)
+            deleteMenuItem.title = String(localized: .Annotation.deleteAnnotation)
         } else {
             deleteMenuItem.title = String(localized: "Delete")
         }
