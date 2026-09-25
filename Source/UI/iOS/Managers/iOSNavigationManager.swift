@@ -200,10 +200,7 @@ class iOSNavigationManager {
 
             if let message {
                 self?.alertMessage = AlertMessage(
-                    title: NSLocalizedString(
-                        "Download Book",
-                        comment: "Bulk download window title"
-                    ),
+                    title: String(localized: .Library.downloadBook),
                     message: message
                 )
             }
@@ -216,10 +213,7 @@ class iOSNavigationManager {
         initialContentId: Int?
     ) {
         state.mode = .downloading
-        state.message = NSLocalizedString(
-            "Downloading book file from server...",
-            comment: "Book integrate downloading message"
-        )
+        state.message = String(localized: .Library.downloadingBookFromServer)
         state.detail = ""
         state.progress = 0
 
@@ -250,7 +244,7 @@ class iOSNavigationManager {
                 await MainActor.run { [weak self] in
                     self?.activeIntegrationStates.removeAll { $0.id == state.id }
                     self?.alertMessage = AlertMessage(
-                        title: NSLocalizedString("Download Failed", comment: "Download failed alert title"),
+                        title: String(localized: .Library.downloadFailed),
                         message: error.localizedDescription
                     )
                 }
@@ -317,16 +311,10 @@ class iOSNavigationManager {
             sizeString = ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
         }
 
-        let message = String(
-            format: String(
-                localized: .bulkBookDownloadAlert(
-                    totalBook: books.count
-                )
-            )
-        )
+        let message = String(localized: .Library.bulkBookDownloadAlert(books.count))
 
         let state = BundleArchiveDownloadProgressState(
-            title: String(localized: "Download Book"),
+            title: String(localized: .Library.downloadBook),
             message: message,
             mode: .confirmation,
             totalSizeString: sizeString
@@ -337,18 +325,9 @@ class iOSNavigationManager {
 
     private func showIntegratingState(for state: BundleArchiveDownloadProgressState) {
         state.mode = .integrating
-        state.title = NSLocalizedString(
-            "Integrating Book",
-            comment: "Book integrate phase title"
-        )
-        state.message = NSLocalizedString(
-            "Copying tables and rebuilding FTS index...",
-            comment: "Book integrate phase message"
-        )
-        state.detail = NSLocalizedString(
-            "Please wait, this process cannot be cancelled.",
-            comment: "Book integrate phase detail"
-        )
+        state.title = String(localized: .Library.integratingBook)
+        state.message = String(localized: .Library.copyingTablesAndRebuildingFts)
+        state.detail = String(localized: .Library.pleaseWaitProcessCannotBeCancelled)
         state.progress = 0
     }
 

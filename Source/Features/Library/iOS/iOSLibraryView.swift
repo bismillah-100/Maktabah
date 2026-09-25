@@ -39,25 +39,25 @@ struct iOSLibraryView: View {
             .task {
                 viewModel.checkBookUpdatesPeriodically()
             }
-            .alert("Import Success", isPresented: $viewModel.showImportSuccessAlert) {
+            .alert(.Library.importSuccess, isPresented: $viewModel.showImportSuccessAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text(String(localized: .importSuccessDesc))
+                Text(.Library.importSuccessDesc)
             }
-            .alert("Import Error", isPresented: importErrorBinding) {
+            .alert(.Library.importError, isPresented: importErrorBinding) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(viewModel.importErrorMessage ?? "")
             }
-            .alert("Delete Download", isPresented: $viewModel.showingDeleteConfirmation) {
+            .alert(.Library.deleteDownload, isPresented: $viewModel.showingDeleteConfirmation) {
                 Button("Delete", role: .destructive) {
                     viewModel.startBulkDeletion {}
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Are you sure you want to delete the downloaded content for \(viewModel.selectedDeleteCount) books?")
+                Text(.Library.deleteDownloadedMultipleConfirmation(viewModel.selectedDeleteCount))
             }
-            .alert("Delete Download", isPresented: singleDeleteBinding) {
+            .alert(.Library.deleteDownload, isPresented: singleDeleteBinding) {
                 Button("Delete", role: .destructive) {
                     if let book = viewModel.singleBookToDelete {
                         Task {
@@ -68,7 +68,7 @@ struct iOSLibraryView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Are you sure you want to delete the downloaded content for \"\(viewModel.singleBookToDelete?.book ?? "")\"?")
+                Text(.Library.deleteDownloadedSingleConfirmation(viewModel.singleBookToDelete?.book ?? ""))
             }
     }
 
@@ -94,9 +94,11 @@ struct iOSLibraryView: View {
         .ignoresSafeArea(edges: [.vertical])
         .overlay {
             if viewModel.state == .loading {
-                ProgressView("Loading Library...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .themeBackground()
+                ProgressView {
+                    Text(.Library.loadingLibrary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .themeBackground()
             }
         }
         .withActiveIntegrationStates()
@@ -202,7 +204,7 @@ struct iOSLibraryView: View {
             get: { viewModel.showOnlyDownloaded },
             set: { viewModel.showOnlyDownloaded = $0 }
         )) {
-            Label("Downloaded", systemImage: "line.3.horizontal.decrease")
+            Label(String(localized: .Library.downloaded), systemImage: "line.3.horizontal.decrease")
         }
         .labelStyle(.iconOnly)
         .toggleStyle(.button)
@@ -213,16 +215,17 @@ struct iOSLibraryView: View {
             Button {
                 viewModel.enterSelectionMode()
             } label: {
-                Label("Select".localized + "...", systemImage: "checkmark.circle")
+                Label(.Library.select, systemImage: "checkmark.circle")
             }
 
             Button {
                 viewModel.showingUpdateSheet = true
             } label: {
+                let bookUpdates = String(localized: .Library.booksUpdates)
                 Label(
                     viewModel.availableUpdateCount > 0
-                        ? "\("Update Books".localized) (\(viewModel.availableUpdateCount))"
-                        : "Update Books".localized,
+                        ? "\(bookUpdates) (\(viewModel.availableUpdateCount))"
+                        : bookUpdates,
                     systemImage: "arrow.triangle.2.circlepath"
                 )
             }
@@ -230,22 +233,19 @@ struct iOSLibraryView: View {
             Button {
                 viewModel.showingImportSheet = true
             } label: {
-                Label("Import Book", systemImage: "plus.viewfinder")
+                Label(String(localized: .Library.importBook), systemImage: "plus.viewfinder")
             }
         } label: {
             Image(systemName: "ellipsis")
         }
-        .accessibilityLabel(String(localized: "Library Options"))
-        .help(String(localized: "Library Options"))
+        .accessibilityLabel(String(localized: .Library.libraryOptions))
+        .help(String(localized: .Library.libraryOptions))
     }
 
     private func startSelectedDownloads(using viewModel: LibraryViewModel) {
         let state = BundleArchiveDownloadProgressState(
-            title: NSLocalizedString(
-                "Download Book",
-                comment: "Bulk download window title"
-            ),
-            message: String(localized: "Begin downloading..."),
+            title: String(localized: .Library.downloadBook),
+            message: String(localized: .Library.beginDownloading),
             mode: .downloading
         )
         navigationManager.activeIntegrationStates.append(state)
@@ -256,10 +256,7 @@ struct iOSLibraryView: View {
 
             if let message {
                 navigationManager.alertMessage = iOSNavigationManager.AlertMessage(
-                    title: NSLocalizedString(
-                        "Download Book",
-                        comment: "Bulk download window title"
-                    ),
+                    title: String(localized: .Library.downloadBook),
                     message: message
                 )
             }

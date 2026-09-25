@@ -53,12 +53,7 @@ final class BundleArchiveDownloadProgressState: Identifiable {
     }
 
     static func makeConfirmation(for book: BooksData) -> BundleArchiveDownloadProgressState {
-        let bodyFormat = String(localized: "Confirm Download Message")
-        let message = String(
-            format: bodyFormat,
-            locale: Locale.current,
-            book.book
-        )
+        let message = String(localized: .Library.confirmDownloadMessage(book.book))
 
         var sizeString = ""
         if let size = book.compressedDownloadSize, size > 0 {
@@ -109,20 +104,11 @@ struct BundleArchiveDownloadProgressView: View {
 
                     let badgeText: String = switch state.mode {
                     case .confirmation:
-                        NSLocalizedString(
-                            "Ready to Download",
-                            comment: "Ready to download badge"
-                        )
+                        String(localized: .Library.readyToDownload)
                     case .downloading:
-                        NSLocalizedString(
-                            "Downloading",
-                            comment: "Downloading badge"
-                        )
+                        String(localized: .Library.downloadingWithEllipsis)
                     case .integrating:
-                        NSLocalizedString(
-                            "Integrating",
-                            comment: "Integrating badge"
-                        )
+                        String(localized: .Library.integrating)
                     }
                     Text(badgeText)
                         .font(.caption2)
@@ -388,18 +374,9 @@ final class BookIntegrateModalCenter {
     func showIntegrating() {
         guard let state = progressState else { return }
         state.mode = .integrating
-        state.title = NSLocalizedString(
-            "Integrating Book",
-            comment: "Book integrate phase title"
-        )
-        state.message = NSLocalizedString(
-            "Copying tables and rebuilding FTS index...",
-            comment: "Book integrate phase message"
-        )
-        state.detail = NSLocalizedString(
-            "Please wait, this process cannot be cancelled.",
-            comment: "Book integrate phase detail"
-        )
+        state.title = String(localized: .Library.integratingBook)
+        state.message = String(localized: .Library.copyingTablesAndRebuildingFts)
+        state.detail = String(localized: .Library.pleaseWaitProcessCannotBeCancelled)
         state.progress = 0
         updateWindowSize(height: 180, animated: true)
     }
@@ -419,10 +396,7 @@ final class BookIntegrateModalCenter {
         }
 
         state.mode = .downloading
-        state.message = NSLocalizedString(
-            "Downloading book file from server...",
-            comment: "Book integrate downloading message"
-        )
+        state.message = String(localized: .Library.downloadingBookFromServer)
         state.detail = ""
         state.progress = 0
 

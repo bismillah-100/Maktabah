@@ -576,77 +576,6 @@
         }
       }
     },
-    "%lld book selected" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld الكتب المحددة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kitab terpilih"
-          }
-        }
-      }
-    },
-    "%lld books needs updates" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld كتب بحاجة إلى تحديثات"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kitab perlu diperbarui"
-          }
-        }
-      }
-    },
-    "%lld books to download." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld كتب للتنزيل."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kitab untuk diunduh."
-          }
-        }
-      }
-    },
-    "%lld completed, %lld failed." : {
-      "comment" : "Status message showing count of completed and failed downloads",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld اكتمل, %2$lld فشل."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld completed, %2$lld failed."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld berhasil, %2$lld gagal."
-          }
-        }
-      }
-    },
     "%lld%%" : {
       "shouldTranslate" : false
     },
@@ -778,23 +707,6 @@
         }
       }
     },
-    "All %lld books processed successfully." : {
-      "comment" : "Status message when all tasks finished successfully",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تمت معالجة جميع كتب %lld بنجاح."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Semua %lld kitab berhasil diproses."
-          }
-        }
-      }
-    },
     "All Anotations" : {
       "localizations" : {
         "ar" : {
@@ -813,38 +725,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Semua Anotasi"
-          }
-        }
-      }
-    },
-    "All books are up to date" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جميع الكتب محدثة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Semua kitab sudah terbaru"
-          }
-        }
-      }
-    },
-    "Already updated" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مُحدَّث بالفعل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sudah terbaru"
           }
         }
       }
@@ -912,23 +792,6 @@
         }
       }
     },
-    "Annotations & Search Results" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التعليقات ونتائج البحث"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anotasi & Hasil Pencarian"
-          }
-        }
-      }
-    },
     "anyWordsSearchDesc" : {
       "localizations" : {
         "ar" : {
@@ -969,29 +832,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "3. Cocokkan Kata Apa pun"
-          }
-        }
-      }
-    },
-    "Appearance" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المظهر"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tampilan"
           }
         }
       }
@@ -1040,38 +880,6 @@
         }
       }
     },
-    "Are you sure you want to delete the downloaded content for \"%@\"?" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هل أنت متأكد من أنك تريد حذف المحتوى الذي تم تنزيله لـ \"%@\"؟"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apakah Anda yakin ingin menghapus konten yang diunduh untuk \"%@\"?"
-          }
-        }
-      }
-    },
-    "Are you sure you want to delete the downloaded content for %lld books?" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هل أنت متأكد من أنك تريد حذف المحتوى الذي تم تنزيله لـ %lld من الكتب؟"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apakah Anda yakin ingin menghapus konten yang diunduh untuk %lld kitab?"
-          }
-        }
-      }
-    },
     "Ascending" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1101,54 +909,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Penulis"
-          }
-        }
-      }
-    },
-    "Author Info" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معلومات المؤلف"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Info Penulis"
-          }
-        }
-      }
-    },
-    "Author Information" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معلومات المؤلف"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Informasi Penulis"
-          }
-        }
-      }
-    },
-    "Author Name" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اسم المؤلف"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nama Penulis"
           }
         }
       }
@@ -1187,22 +947,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Latar Belakang"
-          }
-        }
-      }
-    },
-    "Begin downloading..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ابدأ في التنزيل..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mulai mengunduh..."
           }
         }
       }
@@ -1246,66 +990,6 @@
         }
       }
     },
-    "Book Info" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معلومات الكتاب"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Book Info"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Info Kitab"
-          }
-        }
-      }
-    },
-    "Book Information" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معلومات الكتاب"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Book Information"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Informasi Buku"
-          }
-        }
-      }
-    },
-    "Book Name (bk)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اسم الكتاب (bk)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nama Kitab (bk)"
-          }
-        }
-      }
-    },
     "Book Type" : {
       "localizations" : {
         "ar" : {
@@ -1318,130 +1002,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tipe Kitab"
-          }
-        }
-      }
-    },
-    "BookInfo" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المعلومة الكتاب"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Book Info"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Informasi Kitab"
-          }
-        }
-      }
-    },
-    "bookMissingOnAnnotationClick" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لم يتم العثور على الكتاب الخاص بهذه الملحوظة. إذا كان هذا الكتاب مستورداً يدوياً (Offline)، فيرجى التأكد من استيراده أيضاً على هذا الجهاز بنفس المعرف (ID) المستخدم في الجهاز الآخر، أو قم بإخفائه من الإعدادات."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The book for this annotation was not found. If this is an offline imported book, ensure you have also imported it on this device using the same ID as on your other device, or hide it via Settings."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitab untuk anotasi ini tidak ditemukan. Jika ini adalah kitab hasil import offline, pastikan Anda juga meng-import kitab tersebut di perangkat ini dengan id yang sama di perangkat lain, atau sembunyikan dari Pengaturan."
-          }
-        }
-      }
-    },
-    "bookNotFound" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ".لم يتم العثور pada الكتاب الذي يحمل المعرف %1$(bookID)lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Book with ID %1$(bookID)lld not found."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buku dengan ID %1$(bookID)lld tidak ditemukan."
-          }
-        }
-      }
-    },
-    "Books Updates" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحديثات الكتب"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pembaruan Kitab"
-          }
-        }
-      }
-    },
-    "bulkBookDownloadAlert" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هل أنت متأكد من أنك تريد تنزيل %1$(totalBook)lld كتاباً؟"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to download %1$(totalBook)lld books?"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apakah Anda yakin ingin mengunduh %1$(totalBook)lld buku?"
-          }
-        }
-      }
-    },
-    "Bundle Mode" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "وضع الحزمة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mode Bundel"
           }
         }
       }
@@ -1475,93 +1035,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kategori"
-          }
-        }
-      }
-    },
-    "Category (cat)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الفئة (cat)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kategori (cat)"
-          }
-        }
-      }
-    },
-    "Change Book ID" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تغيير رقم الكتاب"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change Book ID"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ubah ID Kitab"
-          }
-        }
-      }
-    },
-    "Check Again" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحقق مرة أخرى"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Periksa Lagi"
-          }
-        }
-      }
-    },
-    "Checking..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاري التحقق..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memeriksa…"
-          }
-        }
-      }
-    },
-    "Choose Annotations Folder…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر مجلد التعليقات..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih Folder Anotasi..."
           }
         }
       }
@@ -1725,50 +1198,6 @@
         }
       }
     },
-    "Completed! %lld/%lld books successfully updated." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تمّت العملية! تمّ تحديث الكتب %1$lld/%2$lld بنجاح."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Completed! %1$lld/%2$lld books successfully updated."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selesai! %1$lld/%2$lld kitab berhasil diperbarui."
-          }
-        }
-      }
-    },
-    "Confirm Download Message" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يرجى التنزيل للوصول إلى الكتاب."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please download to access book."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Silakan unduh untuk mengakses kitab."
-          }
-        }
-      }
-    },
     "Contents" : {
       "localizations" : {
         "ar" : {
@@ -1808,68 +1237,6 @@
         }
       }
     },
-    "Converter Tool & Help" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أداة المحول والمساعدة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alat Konverter & Bantuan"
-          }
-        }
-      }
-    },
-    "convertImportHelpDesc" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إذا كانت قاعدة بيانات SQLite الخاصة بك لا تتطابق مع التنسيق المطلوب لدينا، فاستخدم أداة Web Converter لتحويل ملفاتك. حاليا يتم دعم ملفات .docx و.epub فقط."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If your SQLite database doesn't match our required format, use our Web Converter tool to transform your files. Currently only .docx and .epub files are supported."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jika basis data SQLite Anda tidak sesuai dengan format yang kami butuhkan, gunakan alat Konverter Web kami untuk mengubah file Anda. Saat ini hanya file .docx dan .epub yang didukung."
-          }
-        }
-      }
-    },
-    "convertImportHelpTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هل تحتاج إلى مساعدة؟"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Need Help?"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Butuh Bantuan?"
-          }
-        }
-      }
-    },
     "Copy" : {
       "localizations" : {
         "ar" : {
@@ -1888,23 +1255,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Salin"
-          }
-        }
-      }
-    },
-    "Copying tables and rebuilding FTS index..." : {
-      "comment" : "Book integrate phase message",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "نسخ الجداول وإعادة بناء مؤشر FTS..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menyalin tabel dan membangun kembali indeks FTS..."
           }
         }
       }
@@ -2277,23 +1627,6 @@
         }
       }
     },
-    "Cross-Platform Sync" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المزامنة عبر الأنظمة الأساسية"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sinkronisasi Lintas-Platform"
-          }
-        }
-      }
-    },
     "Current" : {
       "localizations" : {
         "ar" : {
@@ -2322,23 +1655,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Koneksi Database tidak tersedia."
-          }
-        }
-      }
-    },
-    "Database Mode" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "وضع قاعدة البيانات"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mode Basis Data"
           }
         }
       }
@@ -2373,22 +1689,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tangal Dimodifikasi"
-          }
-        }
-      }
-    },
-    "Death Year" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "سنة الوفاة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tahun Wafat"
           }
         }
       }
@@ -2444,22 +1744,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hapus Anotasi"
-          }
-        }
-      }
-    },
-    "Delete Download" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حذف التنزيل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hapus Unduhan"
           }
         }
       }
@@ -2664,167 +1948,6 @@
         }
       }
     },
-    "Download Book" : {
-      "comment" : "Bulk download window title",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحميل الكتاب"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unduh Kitab"
-          }
-        }
-      }
-    },
-    "Download Complete. Begin integrating..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اكتمل التنزيل. ابدأ في دمج..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unduh Selesai. Mulai mengintegrasikan..."
-          }
-        }
-      }
-    },
-    "Download Failed" : {
-      "comment" : "Download failed alert title",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "فشل التنزيل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unduhan Gagal"
-          }
-        }
-      }
-    },
-    "Download phase completed (%lld/%lld). Starting processing..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اكتملت مرحلة التنزيل (%1$lld/%2$lld). بدء المعالجة..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Download phase completed (%1$lld/%2$lld). Starting processing..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fase unduhan selesai (%1$lld/%2$lld). Memulai proses…"
-          }
-        }
-      }
-    },
-    "Download Selective Library…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download Selective Library…"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unduh Perpustakaan Selektif..."
-          }
-        }
-      }
-    },
-    "Downloaded" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم تنزيله"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diunduh"
-          }
-        }
-      }
-    },
-    "Downloading" : {
-      "comment" : "Downloading badge",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحميل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengunduh"
-          }
-        }
-      }
-    },
-    "Downloading %lld of %lld books..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تنزيل %1$lld من كتب %2$lld..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Downloading %1$lld of %2$lld books..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengunduh %1$lld dari %2$lld kitab…"
-          }
-        }
-      }
-    },
-    "Downloading book file from server..." : {
-      "comment" : "Book integrate downloading message",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تنزيل ملف الكتاب من الخادم..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengunduh file kitab dari server..."
-          }
-        }
-      }
-    },
     "Downloading books... (%lld/%lld)" : {
       "localizations" : {
         "ar" : {
@@ -2843,131 +1966,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mengunduh kitab… (%1$lld/%2$lld)"
-          }
-        }
-      }
-    },
-    "Downloading..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاري التنزيل..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengunduh..."
-          }
-        }
-      }
-    },
-    "Downloads" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التنزيلات"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unduhan"
-          }
-        }
-      }
-    },
-    "e.g., %lld" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال، %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "e.g., %lld"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "contoh, %lld"
-          }
-        }
-      }
-    },
-    "e.g., 256 AH" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال: ٢٥٦ هـ"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "misal: 256 H"
-          }
-        }
-      }
-    },
-    "e.g., 32793" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال، 32793"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "e.g., 32793"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "contoh, 32793"
-          }
-        }
-      }
-    },
-    "e.g., Al-Bukhari" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال: البخاري"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "misal: Al-Bukhari"
-          }
-        }
-      }
-    },
-    "e.g., Sahih Bukhari" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مثال: صحيح البخاري"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "misal: Sahih Bukhari"
           }
         }
       }
@@ -3036,24 +2034,6 @@
           }
         }
       },
-      "shouldTranslate" : false
-    },
-    "error.decompressionFailed.%lld.%@" : {
-      "shouldTranslate" : false
-    },
-    "error.downloadFailed.%lld" : {
-      "shouldTranslate" : false
-    },
-    "error.httpStatus.%lld.%lld" : {
-      "shouldTranslate" : false
-    },
-    "error.invalidBaseURL" : {
-      "shouldTranslate" : false
-    },
-    "error.invalidResponse" : {
-      "shouldTranslate" : false
-    },
-    "error.networkUnavailable" : {
       "shouldTranslate" : false
     },
     "errorCreateFolderDesc" : {
@@ -3165,29 +2145,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Folder Hasil Pencarian Tidak Ditemukan"
-          }
-        }
-      }
-    },
-    "errorICloud" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "حدث خطأ أثناء محاولة تنزيل ملف في iCloud Drive"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An error occurred when trying to download a file in iCloud Drive"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terjadi kesalahan saat mencoba mengunduh file di iCloud Drive"
           }
         }
       }
@@ -3467,22 +2424,6 @@
         }
       }
     },
-    "Existing Author" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مؤلف موجود"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Penulis Sudah Ada"
-          }
-        }
-      }
-    },
     "Export Annotations (JSON)" : {
       "localizations" : {
         "ar" : {
@@ -3543,22 +2484,6 @@
         }
       }
     },
-    "Failed: %@" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "فشل: %@"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gagal: %@"
-          }
-        }
-      }
-    },
     "Favorites" : {
       "localizations" : {
         "ar" : {
@@ -3577,22 +2502,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Favorit"
-          }
-        }
-      }
-    },
-    "File: %@" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ملف: %@"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File: %@"
           }
         }
       }
@@ -3756,22 +2665,6 @@
         }
       }
     },
-    "Found %lld books that need to be updated" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم العثور على %lld كتب تحتاج إلى تحديث"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ditemukan %lld yang perlu diperbarui"
-          }
-        }
-      }
-    },
     "ftsIsMigratingAlert" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3791,22 +2684,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mohon tunggu migrasi selesai."
-          }
-        }
-      }
-    },
-    "Full Name (Lng)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الاسم الكامل (Lng)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nama Lengkap (Lng)"
           }
         }
       }
@@ -3944,28 +2821,6 @@
         }
       }
     },
-    "History & Favorites" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "السجل والمفضلة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "History & Favorites"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Riwayat & Favorit"
-          }
-        }
-      }
-    },
     "Home" : {
       "localizations" : {
         "ar" : {
@@ -3978,72 +2833,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beranda"
-          }
-        }
-      }
-    },
-    "ID %@ already has %lld local annotations, possibly from CloudKit synchronization with another device for a different book. Proceed only if you are sure these annotations belong to this book." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المعرف %1$@ يحتوي بالفعل على %2$lld تعليقاً محلياً، ربما من مزامنة CloudKit مع جهاز أخر لكتاب مختلف. تابع فقط إذا كنت متأكداً من أن هذه التعليقات تخص هذا الكتاب."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID %1$@ already has %2$lld local annotations, possibly from CloudKit synchronization with another device for a different book. Proceed only if you are sure these annotations belong to this book."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID %1$@ sudah memiliki %2$lld anotasi lokal, kemungkinan dari sinkronisasi CloudKit dengan perangkat lain untuk kitab yang berbeda. Lanjutkan hanya jika Anda yakin anotasi ini milik kitab ini."
-          }
-        }
-      }
-    },
-    "ID already taken" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الرقم مستخدم بالفعل"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID already taken"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID sudah terpakai"
-          }
-        }
-      }
-    },
-    "ID reserved by system" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الرقم محجوز من قبل النظام"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID reserved by system"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID dicadangkan oleh sistem"
           }
         }
       }
@@ -4095,60 +2884,6 @@
         }
       }
     },
-    "Import Book" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استيراد كتاب"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Kitab"
-          }
-        }
-      }
-    },
-    "Import Error" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خطأ في الاستيراد"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Gagal"
-          }
-        }
-      }
-    },
-    "Import Failed" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "فشل الاستيراد"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import Failed"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gagal Mengimpor"
-          }
-        }
-      }
-    },
     "Import Font..." : {
       "localizations" : {
         "ar" : {
@@ -4187,77 +2922,6 @@
         }
       }
     },
-    "Import Now" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استيراد الآن"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Sekarang"
-          }
-        }
-      }
-    },
-    "Import Success" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "نجاح الاستيراد"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Berhasil"
-          }
-        }
-      }
-    },
-    "Importing Book..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استيراد الكتب..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengimpor Buku..."
-          }
-        }
-      }
-    },
-    "importSuccessDesc" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم استيراد الكتاب بنجاح."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The book has been successfully imported."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitab telah berhasil diimpor."
-          }
-        }
-      }
-    },
     "importSuccessTitle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4277,56 +2941,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impor Berhasil"
-          }
-        }
-      }
-    },
-    "Information (inf)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "معلومات (inf)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Informasi (inf)"
-          }
-        }
-      }
-    },
-    "Integrating" : {
-      "comment" : "Integrating badge",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "دمج"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Integrasi"
-          }
-        }
-      }
-    },
-    "Integrating Book" : {
-      "comment" : "Book integrate phase title",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "كتاب متكامل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mengintegrasikan Kitab"
           }
         }
       }
@@ -4413,84 +3027,6 @@
         }
       }
     },
-    "Library" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المكتبة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maktabah"
-          }
-        }
-      }
-    },
-    "Library Options" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خيارات المكتبة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library Options"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilihan Pustaka"
-          }
-        }
-      }
-    },
-    "Library Storage" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تخزين المكتبة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Penyimpanan Perpustakaan"
-          }
-        }
-      }
-    },
-    "Library Update" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحديث المكتبة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pembaruan Perpustakaan"
-          }
-        }
-      }
-    },
     "Library Update Available" : {
       "localizations" : {
         "ar" : {
@@ -4529,28 +3065,6 @@
         }
       }
     },
-    "Loading Library..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاري تحميل المكتبة..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading Library..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memuat Perpustakaan..."
-          }
-        }
-      }
-    },
     "Loading Narrators..." : {
       "localizations" : {
         "ar" : {
@@ -4567,22 +3081,6 @@
         }
       }
     },
-    "Loading update lists..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جارٍ تحميل قوائم التحديث..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memuat daftar pembaruan…"
-          }
-        }
-      }
-    },
     "Maktabah" : {
       "localizations" : {
         "ar" : {
@@ -4595,6 +3093,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Maktabah"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maktabah"
+          }
+        }
+      }
+    },
+    "MaktabahTab" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المكتبة"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library"
           }
         },
         "id" : {
@@ -4963,22 +3484,6 @@
         }
       }
     },
-    "Needs update" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يتطلب تحديثًا"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Perlu pembaruan"
-          }
-        }
-      }
-    },
     "new" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5014,70 +3519,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Baru"
-          }
-        }
-      }
-    },
-    "New Author" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "مؤلف جديد"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Penulis Baru"
-          }
-        }
-      }
-    },
-    "New Author ID" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "رقم المؤلف الجديد"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID Penulis Baru"
-          }
-        }
-      }
-    },
-    "New Book" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "كتاب جديد"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitab Baru"
-          }
-        }
-      }
-    },
-    "New Book ID" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "رقم الكتاب الجديد"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ID Kitab Baru"
           }
         }
       }
@@ -5138,55 +3579,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tidak ada anotasi yang ditemukan dalam file yang dipilih."
-          }
-        }
-      }
-    },
-    "No books selected" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا توجد كتب محددة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tidak ada kitab terpilih"
-          }
-        }
-      }
-    },
-    "No books were successfully downloaded." : {
-      "comment" : "Status message when no books were downloaded",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لم يتم تنزيل أي كتب بنجاح."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tidak ada buku yang berhasil diunduh."
-          }
-        }
-      }
-    },
-    "No internet connection. Skipping downloads." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا يوجد اتصال بالإنترنت. تخطي التنزيلات."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tidak ada koneksi internet. Melewati unduhan."
           }
         }
       }
@@ -5335,22 +3727,6 @@
         }
       }
     },
-    "Offline Book Import" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استيراد كتاب أوفلاين"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impor Kitab Offline"
-          }
-        }
-      }
-    },
     "OK" : {
       "localizations" : {
         "ar" : {
@@ -5369,22 +3745,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
-          }
-        }
-      }
-    },
-    "Open Web Converter" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "محول الويب المفتوح"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buka Konversi Web"
           }
         }
       }
@@ -5578,23 +3938,6 @@
         }
       }
     },
-    "Please check your internet connection" : {
-      "comment" : "Network error message",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يرجى التحقق من اتصالك بالإنترنت"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mohon periksa koneksi internet Anda"
-          }
-        }
-      }
-    },
     "Please select one or more annotations or books to export." : {
       "localizations" : {
         "ar" : {
@@ -5613,23 +3956,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Silakan pilih satu atau lebih anotasi atau buku untuk diekspor."
-          }
-        }
-      }
-    },
-    "Please wait, this process cannot be cancelled." : {
-      "comment" : "Book integrate phase detail",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يرجى الانتظار، لا يمكن إلغاء هذه العملية."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mohon tunggu, proses ini tidak dapat dibatalkan."
           }
         }
       }
@@ -5656,28 +3982,6 @@
         }
       }
     },
-    "Preparing Library..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاري تحضير المكتبة..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preparing Library..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menyiapkan Perpustakaan..."
-          }
-        }
-      }
-    },
     "Previous Page" : {
       "localizations" : {
         "ar" : {
@@ -5696,44 +4000,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Halaman Sebelumnya"
-          }
-        }
-      }
-    },
-    "Processing: %@ (%lld/%lld)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المعالجة: %1$@ (%2$lld/%3$lld)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Processing: %1$@ (%2$lld/%3$lld)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memproses: %1$@ (%2$lld/%3$lld)"
-          }
-        }
-      }
-    },
-    "Processing..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاري المعالجة..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memproses…"
           }
         }
       }
@@ -5864,23 +4130,6 @@
         }
       }
     },
-    "Ready to Download" : {
-      "comment" : "Ready to download badge",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاهز للتنزيل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siap diunduh"
-          }
-        }
-      }
-    },
     "Remove Favorite" : {
       "localizations" : {
         "ar" : {
@@ -5964,28 +4213,6 @@
         }
       }
     },
-    "Rename book ID in-place and migrate local annotations." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تغيير رقم الكتاب في مكانه وترحيل التعليقات التوضيحية المحلية."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename book ID in-place and migrate local annotations."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ubah ID kitab secara langsung dan migrasikan anotasi lokal."
-          }
-        }
-      }
-    },
     "Rename Failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6060,22 +4287,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ubah Nama Tag"
-          }
-        }
-      }
-    },
-    "Replace Existing Book" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "استبدال كتاب موجود"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ganti Kitab yang Ada"
           }
         }
       }
@@ -6324,22 +4535,6 @@
         }
       }
     },
-    "Search books..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "البحث عن الكتب..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cari kitab..."
-          }
-        }
-      }
-    },
     "Search Contents" : {
       "localizations" : {
         "ar" : {
@@ -6451,45 +4646,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cari di Kitab yang terpilih"
-          }
-        }
-      }
-    },
-    "Search Index" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "فهرس البحث"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indeks Pencarian"
-          }
-        }
-      }
-    },
-    "Search Library" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "بحث في المكتبة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search Library"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cari Perpustakaan"
           }
         }
       }
@@ -6616,28 +4772,6 @@
         }
       }
     },
-    "Select a book to read" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر كتاباً للقراءة"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a book to read"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih kitab untuk dibaca"
-          }
-        }
-      }
-    },
     "Select All" : {
       "localizations" : {
         "ar" : {
@@ -6686,54 +4820,6 @@
         }
       }
     },
-    "Select book to download." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر كتابا لتنزيله."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih kitab untuk diunduh."
-          }
-        }
-      }
-    },
-    "Select Book to Replace" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر الكتاب للاستبدال"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih Kitab untuk Diganti"
-          }
-        }
-      }
-    },
-    "Select Category..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر الفئة..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih Kategori..."
-          }
-        }
-      }
-    },
     "Select Favorites" : {
       "localizations" : {
         "ar" : {
@@ -6752,22 +4838,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pilih Favorit"
-          }
-        }
-      }
-    },
-    "Select File" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر ملفا"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih Berkas"
           }
         }
       }
@@ -6800,22 +4870,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pilih Font..."
-          }
-        }
-      }
-    },
-    "Select Registered Author" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر المؤلف المسجل"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih Penulis Terdaftar"
           }
         }
       }
@@ -6948,22 +5002,6 @@
         }
       }
     },
-    "Skipped" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم التخطي"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dilewati"
-          }
-        }
-      }
-    },
     "Some annotations may already exist. How would you like to handle duplicates?" : {
       "localizations" : {
         "ar" : {
@@ -7030,22 +5068,6 @@
         }
       }
     },
-    "Starting %lld books update..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "جاري بدء تحديث %lld من الكتب..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Memulai pembaruan %lld kitab…"
-          }
-        }
-      }
-    },
     "Stop" : {
       "comment" : "Stop bulk download",
       "localizations" : {
@@ -7081,57 +5103,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hentikan Pencarian"
-          }
-        }
-      }
-    },
-    "Stopped downloads. %lld books completed." : {
-      "comment" : "Status message when user manually stops downloads",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "توقفت التنزيلات.%lld اكتملت الكتب."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unduhan dihentikan. %lld kitab selesai."
-          }
-        }
-      }
-    },
-    "Stopped. %lld books completed." : {
-      "comment" : "Status message when the task is cancelled",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "توقف.%lld اكتملت الكتب."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dihentikan. %lld kitab selesai."
-          }
-        }
-      }
-    },
-    "Stopping downloads. Integrating completed books..." : {
-      "comment" : "Bulk download stopping message",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إيقاف التنزيلات. دمج الكتب المكتملة..."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menghentikan unduhan. Mengintegrasikan kitab yang selesai..."
           }
         }
       }
@@ -7198,23 +5169,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ganti Mode"
-          }
-        }
-      }
-    },
-    "Switch to Bundle Mode" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التبديل إلى وضع الحزمة"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beralih ke Mode Bundel"
           }
         }
       }
@@ -7367,22 +5321,6 @@
         }
       }
     },
-    "There's Nothing Books to Download." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا يوجد شيء كتب لتنزيلها."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tidak Ada Buku untuk Diunduh."
-          }
-        }
-      }
-    },
     "Title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7517,38 +5455,6 @@
         }
       }
     },
-    "Update Only" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التحديث فقط"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hanya Pembaruan"
-          }
-        }
-      }
-    },
-    "Update selected (%lld)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تحديث المحدد (%lld)"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Perbarui yang dipilih (%lld)"
-          }
-        }
-      }
-    },
     "Updates" : {
       "localizations" : {
         "ar" : {
@@ -7653,22 +5559,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opsi Tampilan"
-          }
-        }
-      }
-    },
-    "Waiting" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "قيد الانتظار"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menunggu"
           }
         }
       }

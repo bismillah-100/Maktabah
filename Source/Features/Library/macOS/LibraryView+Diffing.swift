@@ -17,13 +17,13 @@ extension LibraryViewManager {
                     for: .history,
                     newBooks: historyManager.historyBooks,
                     categoryId: -2,
-                    categoryName: String(localized: "History")
+                    categoryName: String(localized: .Library.history)
                 )
                 updateFlatList(
                     for: .favorites,
                     newBooks: historyManager.favoriteBooks,
                     categoryId: -1,
-                    categoryName: String(localized: "Favorites")
+                    categoryName: String(localized: .Library.favorites)
                 )
             }
             .store(in: &cancellables)

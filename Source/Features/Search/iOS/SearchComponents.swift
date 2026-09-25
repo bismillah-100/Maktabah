@@ -68,7 +68,7 @@ struct SearchHistoryOverlay: View {
 
             Spacer()
 
-            Text("History")
+            Text(.Library.history)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

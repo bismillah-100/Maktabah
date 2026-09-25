@@ -72,7 +72,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
 
     func loadAvailableUpdates() {
         isLoadingList = true
-        progressMessage = "Loading update lists...".localized
+        progressMessage = String(localized: .Library.loadingUpdateLists)
 
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -82,7 +82,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
 
                 availableUpdates = items
                 updateSelectionSummary()
-                progressMessage = String(localized: "Found \(needsUpdateCount) books that need to be updated")
+                progressMessage = String(localized: .Library.foundBooksNeedUpdate(needsUpdateCount))
 
             } catch {
                 progressMessage = "Error: \(error.localizedDescription)"
@@ -121,12 +121,12 @@ final class BookUpdateViewModel: @unchecked Sendable {
     func performSelectedUpdates() {
         let selectedItems = availableUpdates.filter { $0.isSelected && $0.needsUpdate }
         guard !selectedItems.isEmpty else {
-            progressMessage = String(localized: "No books selected")
+            progressMessage = String(localized: .Library.noBooksSelected)
             return
         }
 
         isUpdating = true
-        progressMessage = String(localized: "Starting \(selectedItems.count) books update...")
+        progressMessage = String(localized: .Library.startingBooksUpdate(selectedItems.count))
         updateResults.removeAll()
 
         Task { @MainActor [weak self] in
@@ -155,7 +155,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
                 maxConcurrentDownloads: 3
             )
 
-            progressMessage = String(localized: "Download phase completed (\(stagedUpdates.count)/\(selectedItems.count)). Starting processing...")
+            progressMessage = String(localized: .Library.downloadPhaseCompleted(stagedUpdates.count, selectedItems.count))
 
             let results = await processStagedUpdates(
                 selectedContexts: selectedContexts, stagedUpdates: stagedUpdates, totalCount: selectedItems.count
@@ -198,7 +198,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
 
             context.item.status = .processing
             processingCount += 1
-            progressMessage = String(localized: "Processing: \(context.item.bookName) (\(processingCount)/\(totalCount))")
+            progressMessage = String(localized: .Library.processingBook(context.item.bookName, processingCount, totalCount))
 
             if let result = await applySingleStagedUpdate(context: context, stagedUpdate: stagedUpdate) {
                 results.append(result)
@@ -208,7 +208,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
             }
         }
 
-        progressMessage = String(localized: "Completed! \(completedCount)/\(totalCount) books successfully updated.")
+        progressMessage = String(localized: .Library.completedBooksUpdated(completedCount, totalCount))
         return results
     }
 

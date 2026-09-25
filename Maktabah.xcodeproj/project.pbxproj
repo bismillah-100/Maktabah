@@ -36,10 +36,6 @@
 		4B0139E92EEB3CB000424CFA /* InitProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E72EEB3CB000424CFA /* InitProgress.swift */; };
 		4B01CA0E2EFCD7B2002A66FA /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B01CA102EFCD7B2002A66FA /* MainMenu.xib */; };
 		4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B01CA2F2EFD366E002A66FA /* AppConfig.swift */; };
-		F3A000022FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
-		F3A000032FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
-		F3A000042FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
-		F3A000052FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
 		4B03185F2F41E7BD00CB1677 /* SplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03185E2F41E7BC00CB1677 /* SplitVC.swift */; };
 		4B03D9D12F42DB5B004E0FDB /* ReaderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */; };
 		4B03D9D72F42DD6D004E0FDB /* ReaderStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */; };
@@ -526,9 +522,6 @@
 		F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
 		F37C05A73050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
 		F37C05A83050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
-		F39B6EE130595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
-		F39B6EE230595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
-		F39B6EE330595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
 		F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5030026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
 		F37F1C5130026976002B5618 /* AnnotationChangeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */; };
@@ -554,9 +547,19 @@
 		F3919DFB304A44F200FC3760 /* BookImportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */; };
 		F3919DFC304A44F200FC3760 /* BookImportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */; };
 		F3919DFD304A44F200FC3760 /* BookImportViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */; };
+		F39B6EE130595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
+		F39B6EE230595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
+		F39B6EE330595DC100CB5E1C /* Setting.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EE030595DC100CB5E1C /* Setting.xcstrings */; };
+		F39B6EF130595DC100CB5E1C /* Library.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EF030595DC100CB5E1C /* Library.xcstrings */; };
+		F39B6EF230595DC100CB5E1C /* Library.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EF030595DC100CB5E1C /* Library.xcstrings */; };
+		F39B6EF330595DC100CB5E1C /* Library.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F39B6EF030595DC100CB5E1C /* Library.xcstrings */; };
+		F3A000022FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
 		F3A000022FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
+		F3A000032FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
 		F3A000032FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
+		F3A000042FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
 		F3A000042FBB000100000001 /* FileManager+Size.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FBB000100000001 /* FileManager+Size.swift */; };
+		F3A000052FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
 		F3A000062FBB000100000001 /* SyncPendingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000052FBB000100000001 /* SyncPendingStore.swift */; };
 		F3A000072FBB000100000001 /* SyncPendingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000052FBB000100000001 /* SyncPendingStore.swift */; };
 		F3A000082FBB000100000001 /* SyncPendingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000052FBB000100000001 /* SyncPendingStore.swift */; };
@@ -943,7 +946,6 @@
 		4B01CA0F2EFCD7B2002A66FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4B01CA112EFCD7B2002A66FA /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/MainMenu.xcstrings; sourceTree = "<group>"; };
 		4B01CA2F2EFD366E002A66FA /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
-		F3A000012FA46222005732C6 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		4B03185E2F41E7BC00CB1677 /* SplitVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitVC.swift; sourceTree = "<group>"; };
 		4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderState.swift; sourceTree = "<group>"; };
 		4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderStateManager.swift; sourceTree = "<group>"; };
@@ -1173,7 +1175,6 @@
 		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
 		F37C05A53050066A009DFDF7 /* Annotation.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Annotation.xcstrings; sourceTree = "<group>"; };
-		F39B6EE030595DC100CB5E1C /* Setting.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Setting.xcstrings; sourceTree = "<group>"; };
 		F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationChangeTypes.swift; sourceTree = "<group>"; };
 		F38A74ED2FF43E9300198CDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F38FF42D2FA817D9003E7B71 /* iOSBookInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSBookInfoView.swift; sourceTree = "<group>"; };
@@ -1185,6 +1186,9 @@
 		F3919DF2304A44BC00FC3760 /* AdaptiveLabeledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveLabeledContent.swift; sourceTree = "<group>"; };
 		F3919DF3304A44BC00FC3760 /* SearchSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSelectionView.swift; sourceTree = "<group>"; };
 		F3919DFA304A44F200FC3760 /* BookImportViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookImportViewModel.swift; sourceTree = "<group>"; };
+		F39B6EE030595DC100CB5E1C /* Setting.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Setting.xcstrings; sourceTree = "<group>"; };
+		F39B6EF030595DC100CB5E1C /* Library.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Library.xcstrings; sourceTree = "<group>"; };
+		F3A000012FA46222005732C6 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		F3A000012FBB000100000001 /* FileManager+Size.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+Size.swift"; sourceTree = "<group>"; };
 		F3A000052FBB000100000001 /* SyncPendingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPendingStore.swift; sourceTree = "<group>"; };
 		F3A000092FBB000100000001 /* SingleFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleFlight.swift; sourceTree = "<group>"; };
@@ -2403,6 +2407,7 @@
 				F3AE62CE304C5838002569BB /* LibraryFilterMode.swift */,
 				F3AE62D2304C58B0002569BB /* LibraryUpdate.swift */,
 				FE7200010000000000000001 /* Muallif.swift */,
+				F39B6EF030595DC100CB5E1C /* Library.xcstrings */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -2729,6 +2734,7 @@
 				4B0139E82EEB3CB000424CFA /* InitProgress.xib in Resources */,
 				F37C05A83050066A009DFDF7 /* Annotation.xcstrings in Resources */,
 				F39B6EE130595DC100CB5E1C /* Setting.xcstrings in Resources */,
+				F39B6EF130595DC100CB5E1C /* Library.xcstrings in Resources */,
 				4BA7269A2EFC760C003CA0ED /* SidebarVC.xib in Resources */,
 				4BA726922EFC714F003CA0ED /* BookInfo.xib in Resources */,
 				4BF392BF2EFC9AB800460756 /* SearchSidebarVC.xib in Resources */,
@@ -2769,6 +2775,7 @@
 				4B7C910C2F83494200454BE1 /* SidebarVC.xib in Resources */,
 				F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */,
 				F39B6EE230595DC100CB5E1C /* Setting.xcstrings in Resources */,
+				F39B6EF230595DC100CB5E1C /* Library.xcstrings in Resources */,
 				4B7C910D2F83494200454BE1 /* BookInfo.xib in Resources */,
 				4B7C910E2F83494200454BE1 /* SearchSidebarVC.xib in Resources */,
 				4B7C910F2F83494200454BE1 /* Assets.xcassets in Resources */,
@@ -2809,6 +2816,7 @@
 				F305774F2FA46222005732C6 /* Assets.xcassets in Resources */,
 				F37C05A73050066A009DFDF7 /* Annotation.xcstrings in Resources */,
 				F39B6EE330595DC100CB5E1C /* Setting.xcstrings in Resources */,
+				F39B6EF330595DC100CB5E1C /* Library.xcstrings in Resources */,
 				F3D0965C3037CB8800E4A7D7 /* Donation.xcstrings in Resources */,
 				F30577512FA46222005732C6 /* PrivacyInfo.xcprivacy in Resources */,
 				F30577992FA4BE8D005732C6 /* LaunchScreen.storyboard in Resources */,

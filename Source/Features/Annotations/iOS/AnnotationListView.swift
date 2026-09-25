@@ -51,10 +51,10 @@ struct AnnotationListView: View {
         .onChange(of: hideMissingBookAnnotations) { _, _ in
             viewModel.applyFilter()
         }
-        .alert(.bookNotFound(bookID: missingBookId), isPresented: $showMissingBookAlert) {
+        .alert(.Library.bookNotFound(missingBookId), isPresented: $showMissingBookAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(.bookMissingOnAnnotationClick)
+            Text(.Library.bookMissingOnAnnotationClick)
         }
         .withActiveIntegrationStates()
         .toolbar {
