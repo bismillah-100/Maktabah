@@ -36,9 +36,9 @@ struct UpdateView: View {
         #else
         NavigationStack {
             iOSLayout
-                .navigationTitle("Books Updates")
+                .navigationTitle(Text(.Library.booksUpdates))
                 .navigationBarTitleDisplayMode(.automatic)
-                .searchable(text: $searchText, prompt: "Search books...")
+                .searchable(text: $searchText, prompt: Text(.Library.searchBooks))
                 .toolbar {
                     toolbarContent
                 }
@@ -80,7 +80,7 @@ struct UpdateView: View {
     @ViewBuilder
     private var toolbarActionButtons: some View {
         let clearSelection = "Clear Selections".localized
-        let updateOnly = "Update Only".localized
+        let updateOnly = String(localized: .Library.updateOnly)
         let selectAll = "Select All".localized
         Button {
             viewModel.deselectAll()
@@ -116,7 +116,7 @@ struct UpdateView: View {
     private var macOSLayout: some View {
         NavigationStack {
             contentView
-                .searchable(text: $searchText, prompt: "Search books...")
+                .searchable(text: $searchText, prompt: Text(.Library.searchBooks))
                 .safeAreaInset(edge: .top, spacing: 0) {
                     macOSHeaderView
                 }
@@ -194,7 +194,7 @@ struct UpdateView: View {
 
     @ViewBuilder
     private var updateBookButton: some View {
-        let buttonTitle = "Update selected (\(viewModel.selectedCount))".localized
+        let buttonTitle = String(localized: .Library.updateSelected(viewModel.selectedCount))
         Button {
             viewModel.performSelectedUpdates()
         } label: {
@@ -222,7 +222,7 @@ struct UpdateView: View {
     private var bookUpdateInfo: some View {
         if viewModel.needsUpdateCount > 0 {
             statusBadge(
-                text: "\(viewModel.needsUpdateCount) books needs updates",
+                text: String(localized: .Library.foundBooksNeedUpdate(viewModel.needsUpdateCount)),
                 color: .orange
             )
         }
@@ -258,7 +258,7 @@ struct UpdateView: View {
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-            Text("Loading update lists...")
+            Text(.Library.loadingUpdateLists)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -270,11 +270,13 @@ struct UpdateView: View {
                 .font(.system(size: 50))
                 .foregroundStyle(.green)
 
-            Text("All books are up to date")
+            Text(.Library.allBooksUpToDate)
                 .font(.headline)
 
-            Button("Check Again") {
+            Button {
                 viewModel.loadAvailableUpdates()
+            } label: {
+                Text(.Library.checkAgain)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

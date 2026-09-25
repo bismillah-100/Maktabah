@@ -119,10 +119,10 @@ struct iOSReaderView: View {
                 Button(action: {
                     showingBookInfo = true
                 }) {
-                    Label("BookInfo", systemImage: "info.circle")
+                    Label(.Library.bookInfo, systemImage: "info.circle")
                 }
-                .accessibilityLabel(String(localized: "Book Information"))
-                .help(String(localized: "Book Information"))
+                .accessibilityLabel(String(localized: .Library.bookInfo))
+                .help(String(localized: .Library.bookInfo))
             }
 
             ToolbarItemGroup(placement: .bottomBar) {

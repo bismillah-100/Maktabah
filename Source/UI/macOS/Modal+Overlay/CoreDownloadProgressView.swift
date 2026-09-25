@@ -90,7 +90,7 @@ struct CoreDownloadProgressView: View {
             case .confirmation:
                 return String(localized: "Factory Setting")
             case .downloading:
-                return String(localized: "Downloading")
+                return String(localized: .Library.downloading)
             case .error:
                 return String(localized: "Error")
             }

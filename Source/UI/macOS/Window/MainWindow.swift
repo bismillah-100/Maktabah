@@ -342,7 +342,7 @@ extension MainWindow: NSToolbarDelegate {
                 paletteLabel: "Library",
                 systemImageName: "sidebar.leading",
                 action: #selector(MainWindow.sidebarLeadingToggle(_:)),
-                tooltip: String(localized: "Library"),
+                tooltip: String(localized: .Library.library),
                 isNavigational: false
             ),
             .searchSidebarLeadingContent: ActionButtonConfig(
@@ -358,7 +358,7 @@ extension MainWindow: NSToolbarDelegate {
                 paletteLabel: "Book Info",
                 systemImageName: "info.circle",
                 action: #selector(MainWindow.bookInfo(_:)),
-                tooltip: String(localized: "Book Info"),
+                tooltip: String(localized: .Library.bookInfo),
                 isNavigational: false
             ),
             .searchField: ActionButtonConfig(

@@ -46,10 +46,7 @@ final class BulkDownloadModalCenter {
             backing: .buffered,
             defer: false
         )
-        w.title = NSLocalizedString(
-            "Download Book",
-            comment: "Bulk download window title"
-        )
+        w.title = String(localized: .Library.downloadBook)
         w.contentViewController = bulkVC
         w.minSize = NSSize(width: 440, height: 360)
         w.isReleasedWhenClosed = false
@@ -92,10 +89,7 @@ final class BulkDownloadModalCenter {
         Task {
             await BookDownloadManager.shared.cancelAllDownloads()
             await MainActor.run { [weak vc] in
-                vc?.statusLabel.stringValue = NSLocalizedString(
-                    "Stopping downloads. Integrating completed books...",
-                    comment: "Bulk download stopping message"
-                )
+                vc?.statusLabel.stringValue = String(localized: .Library.stoppingDownloadsIntegrating)
                 vc?.stopButton.isEnabled = false
             }
         }
@@ -131,7 +125,7 @@ final class BulkDownloadModalCenter {
 
         if await !NetworkMonitor.shared.isConnected {
             shouldStopDownloads = true
-            vc.statusLabel.stringValue = String(localized: "No internet connection. Skipping downloads.")
+            vc.statusLabel.stringValue = String(localized: .Library.noInternetSkippingDownloads)
         }
 
         await withTaskGroup(of: (Int, Result<URL, Error>).self) { group in
@@ -239,15 +233,15 @@ final class BulkDownloadModalCenter {
         }.count
 
         if Task.isCancelled {
-            vc.statusLabel.stringValue = String(localized: "Stopped. \(completedIntegrations) books completed.", comment: "Status message when the task is cancelled")
+            vc.statusLabel.stringValue = String(localized: .Library.stoppedBooksCompleted(completedIntegrations))
         } else if failedCount > 0 {
-            vc.statusLabel.stringValue = String(localized: "\(completedIntegrations) completed, \(failedCount) failed.", comment: "Status message showing count of completed and failed downloads")
+            vc.statusLabel.stringValue = String(localized: .Library.completedAndFailedCount(completedIntegrations, failedCount))
         } else if integrateTotal == 0 {
-            vc.statusLabel.stringValue = String(localized: "No books were successfully downloaded.", comment: "Status message when no books were downloaded")
+            vc.statusLabel.stringValue = String(localized: .Library.noBooksDownloaded)
         } else if shouldStopDownloads {
-            vc.statusLabel.stringValue = String(localized: "Stopped downloads. \(completedIntegrations) books completed.", comment: "Status message when user manually stops downloads")
+            vc.statusLabel.stringValue = String(localized: .Library.stoppedDownloadsCompleted(completedIntegrations))
         } else {
-            vc.statusLabel.stringValue = String(localized: "All \(completedIntegrations) books processed successfully.", comment: "Status message when all tasks finished successfully")
+            vc.statusLabel.stringValue = String(localized: .Library.allBooksProcessedSuccessfully(completedIntegrations))
         }
     }
 }

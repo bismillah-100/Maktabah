@@ -52,7 +52,7 @@ struct iOSBookInfoView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("Book Info", selection: $selectedSegment) {
+                Picker(String(localized: .Library.bookInfo), selection: $selectedSegment) {
                     ForEach(BookInfoSegment.allCases) { segment in
                         Text(segment.title).tag(segment)
                     }
@@ -74,7 +74,7 @@ struct iOSBookInfoView: View {
                     ReadOnlyTextView(text: currentText)
                 }
             }
-            .navigationTitle("Book Info")
+            .navigationTitle(String(localized: .Library.bookInfo))
             .background(Color.appBackground)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

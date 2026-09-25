@@ -66,7 +66,7 @@ struct OfflineImportFormView: View {
                     VStack(spacing: 16) {
                         ProgressView()
                             .controlSize(.large)
-                        Text("Importing Book...")
+                        Text(.Library.importingBookWithEllipsis)
                             .font(.headline)
                     }
                     .padding(32)
@@ -81,7 +81,7 @@ struct OfflineImportFormView: View {
         .animation(.easeInOut, value: viewModel.isImporting)
         .sheet(isPresented: $viewModel.showBookPicker) {
             SearchSelectionView(
-                title: "Select Book to Replace",
+                title: String(localized: .Library.selectBookToReplace),
                 items: viewModel.books.map {
                     SearchSelectionItem(id: $0.id, title: $0.book, subtitle: "ID: \($0.id)")
                 },
@@ -92,7 +92,7 @@ struct OfflineImportFormView: View {
         }
         .sheet(isPresented: $viewModel.showAuthorPicker) {
             SearchSelectionView(
-                title: "Select Registered Author".localized,
+                title: String(localized: .Library.selectRegisteredAuthor),
                 items: viewModel.authors.map {
                     SearchSelectionItem(id: $0.id, title: $0.muallif.nama, subtitle: "ID: \($0.id)")
                 },
@@ -135,7 +135,7 @@ struct OfflineImportFormView: View {
                 Spacer()
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("Loading Library...")
+                    Text(.Library.loadingLibrary)
                         .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 32)
@@ -149,11 +149,11 @@ struct OfflineImportFormView: View {
     }
 
     private var bookInformationSection: some View {
-        Section("Book Information") {
+        Section {
             Picker("Book Type", selection: $viewModel.importMode) {
-                Text("New Book").tag(0)
-                Text("Replace Existing Book").tag(1)
-                Text("Change Book ID").tag(2)
+                Text(.Library.newBook).tag(0)
+                Text(.Library.replaceExistingBook).tag(1)
+                Text(.Library.changeBookId).tag(2)
             }
             .pickerStyle(.segmented)
 
@@ -169,6 +169,8 @@ struct OfflineImportFormView: View {
             if viewModel.importMode != 2 {
                 bookMetadataFields
             }
+        } header: {
+            Text(.Library.bookInfo)
         }
         #if os(iOS)
         .scrollContentBackground(.hidden)
@@ -177,7 +179,7 @@ struct OfflineImportFormView: View {
     }
 
     private var newBookIdField: some View {
-        AdaptiveLabeledContent("New Book ID") {
+        AdaptiveLabeledContent(.Library.newBookId) {
             HStack {
                 if viewModel.isBookIdTaken {
                     if let id = Int(viewModel.customBookIdText) {
@@ -185,7 +187,7 @@ struct OfflineImportFormView: View {
                         let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
                         statusBadge(
                             text: system
-                                ? "ID reserved by system".localized
+                                ? String(localized: .Library.idReservedBySystem)
                                 : "Will overwrite existing".localized,
                             color: system ? .red : .orange,
                             cornerRadius: 24
@@ -193,9 +195,13 @@ struct OfflineImportFormView: View {
                     }
                 }
 
-                TextField("", text: $viewModel.customBookIdText, prompt: Text("e.g., \(viewModel.maxBkid + 1)"))
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 120)
+                TextField(
+                    "",
+                    text: $viewModel.customBookIdText,
+                    prompt: Text(.Library.placeholderIDFormat(viewModel.maxBkid + 1))
+                )
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 120)
             }
         }
     }
@@ -207,7 +213,7 @@ struct OfflineImportFormView: View {
                     Text(title)
                         .foregroundColor(.primary)
                 } else {
-                    Text("Click to select...")
+                    Text("Click to select...".localized)
                         .foregroundColor(.secondary)
                 }
                 Spacer()
@@ -224,7 +230,7 @@ struct OfflineImportFormView: View {
     }
 
     private var selectBookField: some View {
-        AdaptiveLabeledContent("Select Book") {
+        AdaptiveLabeledContent(String(localized: "Select Book")) {
             let title = viewModel.selectedBookId.flatMap { bookId in
                 LibraryDataManager.shared.booksById[bookId].map { "\($0.book) (ID: \(bookId))" }
             }
@@ -235,17 +241,17 @@ struct OfflineImportFormView: View {
     }
 
     private var changeBookIdField: some View {
-        AdaptiveLabeledContent("New Book ID") {
+        AdaptiveLabeledContent(.Library.newBookId) {
             HStack {
                 if viewModel.isBookIdTaken {
                     statusBadge(
-                        text: "ID already taken".localized,
+                        text: String(localized: .Library.idAlreadyTaken),
                         color: .red,
                         cornerRadius: 24
                     )
                 }
 
-                TextField("", text: $viewModel.customBookIdText, prompt: Text("e.g., 32793"))
+                TextField("", text: $viewModel.customBookIdText, prompt: Text(.Library.placeholderBookID))
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 120)
             }
@@ -262,7 +268,7 @@ struct OfflineImportFormView: View {
             viewModel.showAnnotationsPopover = true
         }
         .popover(isPresented: $viewModel.showAnnotationsPopover) {
-            Text("ID \(viewModel.customBookIdText) already has \(viewModel.newIdAnnotationCount) local annotations, possibly from CloudKit synchronization with another device for a different book. Proceed only if you are sure these annotations belong to this book.")
+            Text(.Library.existingAnnotationsWarning(viewModel.customBookIdText, viewModel.newIdAnnotationCount))
                 .font(.caption)
                 .padding()
                 .frame(width: 280)
@@ -291,13 +297,13 @@ struct OfflineImportFormView: View {
 
     @ViewBuilder
     private var bookMetadataFields: some View {
-        AdaptiveLabeledContent("Book Name (bk)") {
-            TextField("", text: $viewModel.bookName, prompt: Text("e.g., Sahih Bukhari"))
+        AdaptiveLabeledContent(.Library.bookNameBk) {
+            TextField("", text: $viewModel.bookName, prompt: Text(.Library.placeholderBookName))
         }
 
-        AdaptiveLabeledContent("Category (cat)") {
+        AdaptiveLabeledContent(.Library.categoryCat) {
             Picker("", selection: $viewModel.categoryId) {
-                Text("Select Category...").tag(0)
+                Text(.Library.selectCategoryWithEllipsis).tag(0)
                 ForEach(viewModel.categories, id: \.id) { cat in
                     Text(cat.name).tag(cat.id)
                 }
@@ -317,7 +323,7 @@ struct OfflineImportFormView: View {
             TextField("", text: $viewModel.betaka, prompt: Text("Optional"))
         }
 
-        AdaptiveLabeledContent("Information (inf)") {
+        AdaptiveLabeledContent(.Library.informationInf) {
             TextField("", text: $viewModel.inf, prompt: Text("Optional"))
         }
 
@@ -331,10 +337,10 @@ struct OfflineImportFormView: View {
     }
 
     private var authorInformationSection: some View {
-        Section("Author Information") {
+        Section {
             Picker("Author Type", selection: $viewModel.isNewAuthor) {
-                Text("Existing Author").tag(false)
-                Text("New Author").tag(true)
+                Text(.Library.existingAuthor).tag(false)
+                Text(.Library.newAuthor).tag(true)
             }
             .pickerStyle(.segmented)
 
@@ -343,6 +349,8 @@ struct OfflineImportFormView: View {
             } else {
                 newAuthorFields
             }
+        } header: {
+            Text(.Library.authorInformation)
         }
         #if os(iOS)
         .listRowBackground(Color.appCellBackground)
@@ -363,25 +371,25 @@ struct OfflineImportFormView: View {
 
     @ViewBuilder
     private var newAuthorFields: some View {
-        AdaptiveLabeledContent("New Author ID") {
+        AdaptiveLabeledContent(.Library.newAuthorId) {
             Text("\(viewModel.maxAuthid + 1)")
                 .foregroundColor(.secondary)
         }
 
-        AdaptiveLabeledContent("Author Name") {
-            TextField("", text: $viewModel.authorName, prompt: Text("e.g., Al-Bukhari"))
+        AdaptiveLabeledContent(.Library.authorName) {
+            TextField("", text: $viewModel.authorName, prompt: Text(.Library.placeholderAuthorName))
         }
 
-        AdaptiveLabeledContent("Author Info") {
+        AdaptiveLabeledContent(.Library.authorInfo) {
             TextField("", text: $viewModel.authorInf, prompt: Text("Optional"))
         }
 
-        AdaptiveLabeledContent("Full Name (Lng)") {
+        AdaptiveLabeledContent(.Library.fullNameLng) {
             TextField("", text: $viewModel.authorLng, prompt: Text("Optional"))
         }
 
-        AdaptiveLabeledContent("Death Year") {
-            TextField("", text: $viewModel.authorHigriD, prompt: Text("e.g., 256 AH"))
+        AdaptiveLabeledContent(.Library.deathYear) {
+            TextField("", text: $viewModel.authorHigriD, prompt: Text(.Library.placeholderDeathYear))
         }
 
         AdaptiveLabeledContent("Version") {
@@ -393,24 +401,26 @@ struct OfflineImportFormView: View {
         HStack {
             if viewModel.importMode == 2 {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Change Book ID")
+                    Text(.Library.changeBookId)
                         .font(.title2)
                         .bold()
-                    Text("Rename book ID in-place and migrate local annotations.")
+                    Text(.Library.renameBookIDDesc)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Offline Book Import")
+                    Text(.Library.offlineBookImport)
                         .font(.title2)
                         .bold()
                     HStack {
-                        Text("File: \(viewModel.sqliteURL?.lastPathComponent ?? "None selected")")
+                        Text(.Library.fileWithParam(viewModel.sqliteURL?.lastPathComponent ?? String(localized: .Library.noneSelected)))
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Button("Select File") {
+                        Button {
                             viewModel.showFilePicker = true
+                        } label: {
+                            Text(.Library.selectFile)
                         }
                         .font(.caption)
                         .buttonStyle(.bordered)
@@ -450,13 +460,13 @@ struct OfflineImportFormView: View {
                 .font(.title3)
         }
         .buttonStyle(.plain)
-        .help("Converter Tool & Help")
+        .help(String(localized: .Library.converterToolAndHelp))
         .popover(isPresented: $viewModel.showHelpPopover) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(.convertImportHelpTitle)
+                Text(.Library.convertImportHelpTitle)
                     .font(.headline)
 
-                Text(.convertImportHelpDesc)
+                Text(.Library.convertImportHelpDesc)
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -468,7 +478,7 @@ struct OfflineImportFormView: View {
                     }
                     viewModel.showHelpPopover = false
                 } label: {
-                    Label("Open Web Converter", systemImage: "safari")
+                    Label(String(localized: .Library.openWebConverter), systemImage: "safari")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -544,7 +554,7 @@ struct OfflineImportFormView: View {
                     }
                 }
             } label: {
-                Text(viewModel.importMode == 2 ? "Change Book ID" : "Import Now")
+                Text(viewModel.importMode == 2 ? String(localized: .Library.changeBookId) : String(localized: .Library.importNow))
                     #if !os(macOS)
                     .frame(maxWidth: .infinity)
                     #endif

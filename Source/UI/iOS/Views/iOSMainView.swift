@@ -13,11 +13,11 @@ enum iOSTab: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .viewer: "Library".localized
+        case .viewer: "MaktabahTab".localized
         case .search: "Search".localized
         case .author: "Narrators".localized
         case .annotations: "Annotations".localized
-        case .history: "History".localized
+        case .history: String(localized: .Library.history)
         }
     }
 

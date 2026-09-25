@@ -412,11 +412,11 @@ extension LibraryViewManager: NSOutlineViewDelegate {
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
         let alert = NSAlert()
-        alert.messageText = NSLocalizedString("Delete Download", comment: "")
+        alert.messageText = String(localized: .Library.deleteDownload)
         if books.count == 1 {
-            alert.informativeText = String(localized: "Are you sure you want to delete the downloaded content for \"\(books[0].book)\"?")
+            alert.informativeText = String(localized: .Library.deleteDownloadedSingleConfirmation(books[0].book))
         } else {
-            alert.informativeText = String(localized: "Are you sure you want to delete the downloaded content for \(books.count) books?")
+            alert.informativeText = String(localized: .Library.deleteDownloadedMultipleConfirmation(books.count))
         }
         alert.addButton(withTitle: NSLocalizedString("Delete", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
@@ -458,7 +458,7 @@ extension LibraryViewManager: NSMenuDelegate {
         }
 
         let deleteItem = NSMenuItem(
-            title: NSLocalizedString("Delete Download", comment: ""),
+            title: String(localized: .Library.deleteDownload),
             action: #selector(deleteBookAction(_:)),
             keyEquivalent: ""
         )

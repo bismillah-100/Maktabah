@@ -60,7 +60,7 @@ struct iOSReaderTabView: View {
                     Image(systemName: "book.closed")
                         .font(.system(size: 64))
                         .foregroundColor(.secondary)
-                    Text("Select a book to read")
+                    Text(.Library.selectBookToRead)
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }

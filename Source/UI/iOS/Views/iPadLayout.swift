@@ -41,7 +41,7 @@ struct iPadLayout: View {
 
     private func searchPrompt(for tab: iOSTab) -> String {
         switch tab {
-        case .viewer: String(localized: "Search Library")
+        case .viewer: String(localized: .Library.searchLibrary)
         case .search: String(localized: "Filter Books to Search")
         case .author: String(localized: "Search Narrators")
         case .annotations: String(localized: "Search Annotations")

@@ -479,8 +479,8 @@ extension IbarotTextVC {
         let contentId = annotation.contentId
         guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
             ReusableFunc.showAlert(
-                title: String(localized: .bookNotFound(bookID: bkId)),
-                message: String(localized: .bookMissingOnAnnotationClick)
+                title: String(localized: .Library.bookNotFound(bkId)),
+                message: String(localized: .Library.bookMissingOnAnnotationClick)
             )
             return
         }

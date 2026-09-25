@@ -97,7 +97,7 @@ import Cocoa
          case .searchSidebarLeadingContent:
              return customToolbarItem(itemForItemIdentifier: .searchSidebarLeadingContent, label: "Search Book", paletteLabel: "", toolTip: String(localized: "Search Book"), itemContent: window.searchSidebarLeading.view ?? NSView())
          case .bookInfo:
-             return customToolbarItem(itemForItemIdentifier: .bookInfo, label: "Book Info", paletteLabel: "", toolTip: String(localized: "Book Info"), itemContent: window.bookInfo.view ?? NSView())
+             return customToolbarItem(itemForItemIdentifier: .bookInfo, label: "Book Info", paletteLabel: "", toolTip: String(localized: .Library.bookInfo), itemContent: window.bookInfo.view ?? NSView())
          case .navSegment:
              return customToolbarItem(itemForItemIdentifier: .navSegment, label: "Navigation", paletteLabel: "", toolTip: String(localized: "Navigation"), itemContent: window.navSegment.view ?? NSView())
          case .copyDetails:

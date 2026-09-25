@@ -23,21 +23,21 @@ enum BookDownloadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidBaseURL:
-            String(localized: "error.invalidBaseURL")
+            String(localized: .Library.errorInvalidBaseURL)
         case let .bookNotAvailable(bookId):
-            "Book \(bookId) is not available in the download index."
+            String(localized: .Library.errorBookNotAvailable(bookId))
         case .invalidResponse:
-            String(localized: "error.invalidResponse")
+            String(localized: .Library.errorInvalidResponse)
         case let .indexRequestFailed(statusCode):
-            "Index request failed with HTTP status \(statusCode)."
+            String(localized: .Library.errorIndexRequestFailed(statusCode))
         case let .httpStatus(bookId, statusCode):
-            String(localized: "error.httpStatus.\(bookId).\(statusCode)")
+            String(localized: .Library.errorHttpStatus(bookId, statusCode))
         case let .downloadFailed(bookId):
-            String(localized: "error.downloadFailed.\(bookId)")
+            String(localized: .Library.errorDownloadFailed(bookId))
         case let .decompressionFailed(bookId, reason):
-            String(localized: "error.decompressionFailed.\(bookId).\(reason)")
+            String(localized: .Library.errorDecompressionFailed(bookId, reason))
         case .networkUnavailable:
-            String(localized: "error.networkUnavailable")
+            String(localized: .Library.errorNetworkUnavailable)
         }
     }
 }

@@ -20,7 +20,9 @@ struct iOSBootstrapView: View {
                         .ignoresSafeArea()
 
                     if bootstrapManager.isChecking {
-                        ProgressView("Preparing Library...")
+                        ProgressView {
+                            Text(.Library.preparingLibrary)
+                        }
                     } else {
                         CoreDownloadProgressView(
                             state: bootstrapManager.coreDownloadState,

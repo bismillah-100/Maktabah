@@ -23,8 +23,8 @@ extension LibraryViewModel {
         guard !books.isEmpty else { return }
         isBulkDownloading = true
         progressState.mode = .downloading
-        progressState.title = NSLocalizedString("Download Book", comment: "Bulk download window title")
-        progressState.message = String(localized: "Begin downloading...")
+        progressState.title = String(localized: .Library.downloadBook)
+        progressState.message = String(localized: .Library.beginDownloading)
         progressState.detail = "0 / \(books.count)"
         progressState.progress = 0
 
@@ -103,7 +103,7 @@ extension LibraryViewModel {
                 }
                 downloadResults[bookId] = result
                 downloadedCount += 1
-                progressState.message = String(localized: "Downloading \(downloadedCount) of \(total) books...")
+                progressState.message = String(localized: .Library.downloadingCountOfTotal(downloadedCount, total))
                 progressState.detail = "\(downloadedCount) / \(total)"
                 progressState.progress = total > 0 ? Double(downloadedCount) / Double(total) : 0
                 if case let .failure(error) = result, isNetworkFailure(error) {
@@ -124,7 +124,7 @@ extension LibraryViewModel {
         var completedIntegrations = 0
 
         progressState.mode = .integrating
-        progressState.message = String(localized: "Download Complete. Begin integrating...")
+        progressState.message = String(localized: .Library.downloadCompleteBeginIntegrating)
         progressState.detail = "0 / \(integrateTotal)"
         progressState.progress = 0
 
@@ -159,13 +159,13 @@ extension LibraryViewModel {
         failedCount: Int
     ) -> String? {
         if isCancelled {
-            String(localized: "Stopped. \(completedIntegrations) books completed.", comment: "")
+            String(localized: .Library.stoppedBooksCompleted(completedIntegrations))
         } else if stoppedByNetwork {
-            NSLocalizedString("Please check your internet connection", comment: "")
+            String(localized: .Library.checkInternetConnection)
         } else if failedCount > 0 {
-            String(localized: "\(completedIntegrations) completed, \(failedCount) failed.", comment: "")
+            String(localized: .Library.completedAndFailedCount(completedIntegrations, failedCount))
         } else {
-            String(localized: "All \(completedIntegrations) books processed successfully.", comment: "")
+            String(localized: .Library.allBooksProcessedSuccessfully(completedIntegrations))
         }
     }
 }

@@ -28,7 +28,7 @@ enum DatabaseError: Error, LocalizedError {
             )
         case .bookNotFound(let id):
             return String(
-                localized: .bookNotFound(bookID: id)
+                localized: .Library.bookNotFound(id)
             )
         case .other(let message):
             return NSLocalizedString(

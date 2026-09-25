@@ -148,7 +148,7 @@ extension iOSLibraryViewController {
 
             let mainAction = if isDownloaded {
                 UIAction(
-                    title: String(localized: "Delete Download"),
+                    title: String(localized: .Library.deleteDownload),
                     image: UIImage(systemName: "trash"),
                     attributes: .destructive
                 ) { _ in
