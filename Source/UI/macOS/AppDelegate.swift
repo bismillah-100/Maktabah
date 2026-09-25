@@ -357,7 +357,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let window = ReusableFunc.makeWindow(
             contentView: hostingView,
             styleMask: [.fullSizeContentView, .titled, .resizable],
-            title: "Books Updates".localized
+            title: String(localized: .Library.booksUpdates)
         )
 
         // 4. Jalankan sebagai Modal
@@ -420,12 +420,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             BookUpdateManager.shared.integrateBooks(metadata: metadata)
 
             ReusableFunc.showAlert(
-                title: String(localized: .importSuccessTitle),
-                message: String(localized: .importSuccessDesc)
+                title: String(localized: .Library.importSuccess),
+                message: String(localized: .Library.importSuccessDesc)
             )
         } catch {
             ReusableFunc.showAlert(
-                title: "Import Error",
+                title: String(localized: .Library.importError),
                 message: error.localizedDescription
             )
 
@@ -503,8 +503,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let resetCurrentView = buildMenu(NSLocalizedString("ResetCurrentView", comment: ""), image: "arrow.counterclockwise", keyEquivalent: "r")
         let quranWindow = buildMenu(NSLocalizedString("QuranMenuBar", comment: ""), image: "character.book.closed.ar", keyEquivalent: "u")
         let annotations = buildMenu(NSLocalizedString("Annotations", comment: ""), image: "quote.closing", keyEquivalent: "p")
-        let bookInfo = buildMenu(NSLocalizedString("BookInfo", comment: ""), image: bookInfoImage, keyEquivalent: "i")
-        let viewOpt = buildMenu(NSLocalizedString("ViewOptions", comment: ""), image: "textformat.size.ar", keyEquivalent: "o")
+        let bookInfo = buildMenu(String(localized: .Library.bookInfo), image: bookInfoImage, keyEquivalent: "i")
+        let viewOpt = buildMenu(NSLocalizedString("View Options", comment: ""), image: "textformat.size.ar", keyEquivalent: "o")
         let pageSlider = buildMenu(NSLocalizedString("PageSlider", comment: ""), image: "slider.horizontal.below.square.filled.and.square", keyEquivalent: "p")
         let daftarIsi = buildMenu(NSLocalizedString("toggleTableOfContents", comment: ""), image: "doc.append.fill", keyEquivalent: "l")
 

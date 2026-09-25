@@ -189,9 +189,7 @@ final class BulkDownloadVC: NSViewController {
         // Status label
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.textColor = .secondaryLabelColor
-        statusLabel.stringValue = String(
-            localized: "Select book to download."
-        )
+        statusLabel.stringValue = String(localized: .Library.selectBookToDownload)
         statusLabel.lineBreakMode = .byTruncatingTail
         statusLabel.maximumNumberOfLines = 1
         statusLabel.usesSingleLineMode = true
@@ -380,10 +378,10 @@ final class BulkDownloadVC: NSViewController {
         let totalBooks = countBooks(in: dataVM?.viewModel.displayedCategories ?? [])
 
         guard selectedCount > 0 else {
-            return String(localized: "\(totalBooks) books to download.")
+            return String(localized: .Library.booksToDownloadCount(totalBooks))
         }
 
-        let title = String(localized: "\(selectedCount) book selected")
+        let title = String(localized: .Library.bookSelectedCount(selectedCount))
 
         let totalCompressedSize = selectedBooks.reduce(Int64(0)) {
             $0 + max(0, $1.compressedDownloadSize ?? 0)
@@ -426,15 +424,13 @@ final class BulkDownloadVC: NSViewController {
     func updateDownloadProgress(completed: Int, total: Int) {
         let label: String
         if total == 0 {
-            label = String(localized: "There's Nothing Books to Download.")
+            label = String(localized: .Library.noBooksToDownload)
         } else if completed == 0 {
-            label = String(localized: "Begin downloading...")
+            label = String(localized: .Library.beginDownloading)
         } else if completed < total {
-            label = String(
-                localized: "Downloading \(completed) of \(total) books..."
-            )
+            label = String(localized: .Library.downloadingCountOfTotal(completed, total))
         } else {
-            label = String(localized: "Download Complete. Begin integrating...")
+            label = String(localized: .Library.downloadCompleteBeginIntegrating)
         }
         statusLabel.stringValue = label
         progressBar.doubleValue =

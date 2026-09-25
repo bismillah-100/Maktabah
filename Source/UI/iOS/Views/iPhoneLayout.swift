@@ -66,7 +66,7 @@ struct iPhoneLayout: View {
         .searchable(
             text: Bindable(bManager.libraryViewModel).searchQuery,
             placement: .toolbar,
-            prompt: String(localized: "Search Library")
+            prompt: String(localized: .Library.searchLibrary)
         )
     }
 

@@ -17,7 +17,7 @@ struct HistorySection: View {
     var viewModel: HistoryViewModel
 
     var body: some View {
-        Section(header: Text("History")) {
+        Section(header: Text(.Library.history)) {
             HistoryHorizontalGrid(books: books, viewModel: viewModel)
                 .padding(.top, 12)
         }
@@ -37,7 +37,7 @@ struct FavoritesSection: View {
     let onOpen: (BooksData) -> Void
 
     var body: some View {
-        Section(header: Text("Favorites")) {
+        Section(header: Text(.Library.favorites)) {
             ForEach(books, id: \.id) { book in
                 BookCard(
                     book: book,

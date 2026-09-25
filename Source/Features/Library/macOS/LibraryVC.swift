@@ -125,10 +125,10 @@ class LibraryVC: NSViewController {
             action: #selector(filterSegmentChanged(_:))
         )
         segment.segmentStyle = .capsule
-        segment.setToolTip(String(localized: "Library"), forSegment: 0)
-        segment.setToolTip(String(localized: "Favorites"), forSegment: 1)
-        segment.setToolTip(String(localized: "History"), forSegment: 2)
-        segment.setToolTip(String(localized: "Downloaded"), forSegment: 3)
+        segment.setToolTip(String(localized: .Library.library), forSegment: 0)
+        segment.setToolTip(String(localized: .Library.favorites), forSegment: 1)
+        segment.setToolTip(String(localized: .Library.history), forSegment: 2)
+        segment.setToolTip(String(localized: .Library.downloaded), forSegment: 3)
 
         bg = createFilterSegmentContainer(segment: segment)
         view.addSubview(bg)

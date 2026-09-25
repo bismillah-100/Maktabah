@@ -69,17 +69,17 @@ enum UpdateStatus: Equatable, Sendable {
 
     var displayText: String {
         switch self {
-        case .pending: return String(localized: "Waiting")
-        case .checking: return String(localized: "Checking...")
+        case .pending: return String(localized: .Library.waiting)
+        case .checking: return String(localized: .Library.checking)
         case .new: return String(localized: "new").localizedUppercase
-        case .needsUpdate: return String(localized: "Needs update")
-        case .upToDate: return String(localized: "Already updated")
-        case .downloading: return String(localized: "Downloading...")
-        case .downloaded: return String(localized: "Downloaded")
-        case .processing: return String(localized: "Processing...")
+        case .needsUpdate: return String(localized: .Library.needsUpdate)
+        case .upToDate: return String(localized: .Library.alreadyUpdated)
+        case .downloading: return String(localized: .Library.downloadingWithEllipsis)
+        case .downloaded: return String(localized: .Library.downloaded)
+        case .processing: return String(localized: .Library.processing)
         case .completed: return String(localized: "Done")
-        case .failed(let msg): return String(localized: "Failed: \(msg)")
-        case .skipped: return String(localized: "Skipped")
+        case .failed(let msg): return String(localized: .Library.failedWithMessage(msg))
+        case .skipped: return String(localized: .Library.skipped)
         }
     }
 }
