@@ -11,7 +11,7 @@ struct SearchModeView: View {
     @State private var sortAscending: Bool = true
     var ftsManager = FtsMigrationManager.shared
     @State private var showFtsMigrationOverlay = false
-    @AppStorage("hideFtsMigrationBanner") private var hideFtsMigrationBanner = false
+    @AppStorage("hideFtsMigrationBannerv3") private var hideFtsMigrationBanner = false
 
     var body: some View {
         @Bindable var viewModel = navigationManager.searchViewModel

@@ -34,7 +34,7 @@ final class FtsMigrationManager {
         static let pragmaJournalMemory = "PRAGMA journal_mode = MEMORY;"
         static let pragmaTempStoreMemory = "PRAGMA temp_store = MEMORY;"
         static let createFtsMetadata = "CREATE TABLE IF NOT EXISTS fts_db.metadata (key TEXT PRIMARY KEY, value INTEGER);"
-        static let insertFtsVersion = "INSERT OR REPLACE INTO fts_db.metadata (key, value) VALUES ('fts_version', 2);"
+        static let insertFtsVersion = "INSERT OR REPLACE INTO fts_db.metadata (key, value) VALUES ('fts_version', \(AppConfig.currentFtsVersion));"
         static func dropFtsTable(_ table: String) -> String {
             "DROP TABLE IF EXISTS main.\(table)_fts;"
         }
@@ -58,7 +58,7 @@ final class FtsMigrationManager {
                let size = attrs[.size] as? Int64, size > 4096
             {
                 if let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: i) {
-                    if getArchiveFtsVersion(ftsPath: ftsPath) < 2 {
+                    if getArchiveFtsVersion(ftsPath: ftsPath) < AppConfig.currentFtsVersion {
                         outdated.append(i)
                     }
                 }
@@ -66,7 +66,7 @@ final class FtsMigrationManager {
                       let attrs = try? FileManager.default.attributesOfItem(atPath: path),
                       let size = attrs[.size] as? Int64, size > 4096
             {
-                if getArchiveFtsVersion(ftsPath: path) < 2 {
+                if getArchiveFtsVersion(ftsPath: path) < AppConfig.currentFtsVersion {
                     outdated.append(i)
                 }
             }

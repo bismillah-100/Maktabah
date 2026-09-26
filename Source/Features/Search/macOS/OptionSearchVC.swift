@@ -115,16 +115,14 @@ class OptionSearchVC: NSViewController {
     private func setupMigrationButtonIfNeeded() {
         FtsMigrationManager.shared.checkNeedsMigration()
 
-        let isHidden = UserDefaults.standard.bool(forKey: "hideFtsMigrationBanner")
+        let isHidden = UserDefaults.standard.bool(forKey: "hideFtsMigrationBannerv3")
         guard let stackView = optionsSegment.superview as? NSStackView,
               FtsMigrationManager.shared.needsMigration &&
                 migrationButton == nil && !isHidden
         else { return }
 
         let title = bkId.isEmpty
-        ? String(localized: .ftsMigrationUpdateNowCountBtn(
-            FtsMigrationManager.shared.totalArchivesToMigrate
-        ))
+        ? String(localized: .updateIndex)
         : String(localized: .ftsMigrationAvailableBook)
 
         let segmentedControl = NSSegmentedControl()
@@ -170,7 +168,7 @@ class OptionSearchVC: NSViewController {
     }
 
     @objc private func hideMigrationBanner() {
-        UserDefaults.standard.set(true, forKey: "hideFtsMigrationBanner")
+        UserDefaults.standard.set(true, forKey: "hideFtsMigrationBannerv3")
         migrationButton?.isHidden = true
         migrationButton?.removeFromSuperview()
         migrationButton = nil

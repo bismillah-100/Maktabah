@@ -33,7 +33,7 @@ enum ArchiveDatabaseTools {
         static let checkMetadata = "SELECT name FROM %@.sqlite_master WHERE type='table' AND name='metadata';"
         static let countFtsTables = "SELECT count(*) FROM %@.sqlite_master WHERE type='table' AND name LIKE '%%_fts';"
         static let createMetadata = "CREATE TABLE IF NOT EXISTS %@.metadata (key TEXT PRIMARY KEY, value INTEGER);"
-        static let insertMetadata = "INSERT OR REPLACE INTO %@.metadata (key, value) VALUES ('fts_version', 2);"
+        static let insertMetadata = "INSERT OR REPLACE INTO %@.metadata (key, value) VALUES ('fts_version', \(AppConfig.currentFtsVersion));"
         static let pragmaTableInfo = "PRAGMA %@.table_info('%@');"
     }
 
@@ -104,7 +104,9 @@ enum ArchiveDatabaseTools {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
                     guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return }
-                    let preProcessed = rawText.replacing("\n", with: " ").stripSpanTags()
+                    let preProcessed = rawText
+                        .cleaningLineBreaks()
+                        .stripSpanTags()
                     let normalized = preProcessed.stemArabicLight10()
                     guard !normalized.isEmpty else { return }
                     let rowId = sqlite3_column_int64(selectStmt, 0)
