@@ -22,6 +22,9 @@ struct AppConfig {
     static let bookIndexURLKey = "book_index_url"
     static let appcastURLKey = "appcast_url"
 
+    /// Target FTS index version
+    static let currentFtsVersion: Int = 3
+
     // MARK: - Archive Cache Path (untuk Bundle Mode)
     /// Path untuk archive files saat menggunakan Bundle Mode
     /// Located at: ~/Library/Application Support/Maktabah/Caches/
