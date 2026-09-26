@@ -40,6 +40,39 @@ private enum StringExtCache {
 extension String {
     static let sholawat = "صلى الله عليه وسلم"
 
+    /// Membersihkan escape sequences (\n, \r\n, \r) dan karakter baris baru menjadi spasi (Single Pass O(N))
+    func cleaningLineBreaks() -> String {
+        guard !isEmpty else { return self }
+        if !contains("\\") && !contains("\n") && !contains("\r") {
+            return self
+        }
+
+        var result = String.UnicodeScalarView()
+        result.reserveCapacity(unicodeScalars.count)
+
+        var iterator = unicodeScalars.makeIterator()
+        while let scalar = iterator.next() {
+            switch scalar.value {
+            case 0x0A, 0x0D:
+                result.append(" ")
+            case 0x5C:
+                if let next = iterator.next() {
+                    if next.value == 0x6E || next.value == 0x72 {
+                        result.append(" ")
+                    } else {
+                        result.append(scalar)
+                        result.append(next)
+                    }
+                } else {
+                    result.append(scalar)
+                }
+            default:
+                result.append(scalar)
+            }
+        }
+        return String(result)
+    }
+
     private var replacementL: String {
         if UserDefaults.standard.textViewFontName == ArabicFont.alBayan.rawValue ||
             UserDefaults.standard.textViewFontName == "DecoType Naskh"

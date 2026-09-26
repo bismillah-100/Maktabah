@@ -79,19 +79,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تحديث البحث FTS (Light10 Stemming) متاح."
+            "value" : "تحديث فهرس البحث FTS متاح."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "FTS Search Upgrade (Light10 Stemming) is available."
+            "value" : "FTS Search Index Update is available."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peningkatan pencarian FTS (Light10 Stemming) tersedia."
+            "value" : "Pembaruan Indeks Pencarian FTS tersedia."
           }
         }
       }
@@ -148,19 +148,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تقدم هذه الترقية تقنية Light10 Stemming، مما يتيح لك البحث في النص العربي مع تجاهل السوابق واللواحق الشائعة."
+            "value" : "يقوم هذا التحديث بتحسين فهرسة النصوص وتنظيف فواصل الأسطر لضمان دقة البحث في بدايات الفقرات."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This upgrade introduces Light10 Stemming, allowing you to search Arabic text by ignoring common prefixes and suffixes."
+            "value" : "This update optimizes text indexing and cleans line breaks to ensure accurate search results at the beginning of paragraphs."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Peningkatan ini menggunakan Light10 Arabic Stemming, memungkinkan pencarian dengan mengabaikan awalan dan akhiran umum."
+            "value" : "Pembaruan ini mengoptimalkan indeks teks dan membersihkan baris baru agar pencarian di awal paragraf lebih akurat."
           }
         }
       }
@@ -171,19 +171,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "مثال: البحث عن \"كتب\" سيجد أيضاً \"وكتب\"، \"فكتب\"، \"الكتب\"، إلخ."
+            "value" : "يحسّن دقة البحث عن العبارات وإبراز النتائج عبر فواصل الفقرات."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Example: Searching for \"كتب\" will also find \"وكتب\", \"فكتب\", \"الكتب\", etc."
+            "value" : "Improves phrase queries and snippet highlighting across paragraph boundaries."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Contoh: Mencari \"كتب\" juga akan menemukan \"وكتب\", \"فكتب\", \"الكتب\", dll."
+            "value" : "Meningkatkan akurasi pencarian frasa dan sorotan kata di seluruh batas paragraf."
           }
         }
       }
@@ -4915,6 +4915,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Garis Bawah"
+          }
+        }
+      }
+    },
+    "Update Index" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث الفهرس"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perbarui Indeks"
           }
         }
       }

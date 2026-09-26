@@ -583,7 +583,8 @@ extension LibraryDataManager {
             return (book?.book ?? "", book?.isMultiLanguage ?? false, book?.isImported ?? false)
         }
 
-        let strippedNash = isImported ? content.nash.stripSpanTags() : content.nash
+        let cleanedNash = content.nash.cleaningLineBreaks()
+        let strippedNash = isImported ? cleanedNash.stripSpanTags() : cleanedNash
         let normalizedNash = strippedNash.convertToArabicDigits(isMultilingual: isMultilingual)
         let searchKeywordsConverted = searchKeywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
         let snippet: String
