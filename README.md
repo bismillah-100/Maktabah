@@ -19,11 +19,11 @@
   </a>
 </p>
 <p align="center">
-  <a href="https://github.com/bismillah-100/Maktabah/actions/workflows/release.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/bismillah-100/Maktabah/release.yml?label=Build&logo=github" alt="Build Status">
-  </a>
   <a href="https://github.com/bismillah-100/Maktabah/actions/workflows/codeql.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/bismillah-100/Maktabah/codeql.yml?label=CodeQL&logo=github" alt="CodeQL Status">
+  </a>
+  <a href="https://bismillah-100.github.io/Maktabah/">
+    <img src="https://img.shields.io/badge/Docs-MkDocs-orange?logo=materialformkdocs&logoColor=white" alt="Documentation">
   </a>
   <a>
     <img src="https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white" alt="Swift 6.0">
@@ -46,6 +46,13 @@ Created as Sadaqah Jariyah — may it be beneficial for studying religious scien
 
 ## Screenshots
 ![App-Mode](https://raw.githubusercontent.com/bismillah-100/Maktabah/main/Screenshots/AppMode.gif)
+
+---
+
+## Documentation
+
+Full technical architecture, API references, and feature specifications are available on the documentation site:
+**[bismillah-100.github.io/Maktabah](https://bismillah-100.github.io/Maktabah/)**
 
 ---
 
