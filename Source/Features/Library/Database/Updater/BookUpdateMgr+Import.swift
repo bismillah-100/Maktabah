@@ -449,16 +449,8 @@ extension BookUpdateManager {
 
         // 1. Copy tabel data dan TOC ke main dalam transaksi atomik
         try ArchiveDatabaseTools.withTransaction(db: db) {
-            try ArchiveDatabaseTools.copyTable(
-                db: db,
-                sourceSchema: "source_db",
-                tableName: tableName
-            )
-            try ArchiveDatabaseTools.copyTable(
-                db: db,
-                sourceSchema: "source_db",
-                tableName: tocTable
-            )
+            try ArchiveDatabaseTools.copyTable(db: db, sourceSchema: "source_db", tableName: tableName)
+            try ArchiveDatabaseTools.copyTable(db: db, sourceSchema: "source_db", tableName: tocTable)
         }
 
         // 2. Build FTS terpisah di luar transaksi main

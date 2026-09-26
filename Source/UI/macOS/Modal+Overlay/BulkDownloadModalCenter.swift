@@ -99,10 +99,16 @@ final class BulkDownloadModalCenter {
 
     private func runBulkDownload(books: [BooksData], vc: BulkDownloadVC) async {
         let total = books.count
-        vc.updateDownloadProgress(completed: 0, total: total)
+        let totalBytes: Int64 = books.reduce(0) { $0 + max(0, $1.compressedDownloadSize ?? 0) }
+        vc.updateDownloadProgress(completed: 0, total: total, downloadedBytes: 0, totalBytes: totalBytes)
 
         // ── Fase 1: Download concurrent ──────────────────────────────────────
-        let downloadResults = await executeConcurrentDownloads(books: books, vc: vc, total: total)
+        let downloadResults = await executeConcurrentDownloads(
+            books: books,
+            vc: vc,
+            total: total,
+            totalBytes: totalBytes
+        )
 
         let successfulDownloads = books.filter {
             if case .success = downloadResults[$0.id] {
@@ -119,9 +125,15 @@ final class BulkDownloadModalCenter {
         finalizeProcess(books: books, vc: vc, completedIntegrations: completedIntegrations, integrateTotal: integrateTotal)
     }
 
-    private func executeConcurrentDownloads(books: [BooksData], vc: BulkDownloadVC, total: Int) async -> [Int: Result<URL, Error>] {
+    private func executeConcurrentDownloads(
+        books: [BooksData],
+        vc: BulkDownloadVC,
+        total: Int,
+        totalBytes: Int64
+    ) async -> [Int: Result<URL, Error>] {
         var downloadResults: [Int: Result<URL, Error>] = [:]
-        var downloadedCount = 0
+        let booksById: [Int: BooksData] = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+        let tracker = BulkDownloadProgressTracker(totalBooks: total, totalBytes: totalBytes)
 
         if await !NetworkMonitor.shared.isConnected {
             shouldStopDownloads = true
@@ -131,9 +143,7 @@ final class BulkDownloadModalCenter {
         await withTaskGroup(of: (Int, Result<URL, Error>).self) { group in
             for book in books {
                 guard !shouldStopDownloads, !Task.isCancelled else { break }
-                group.addTask {
-                    await BookDownloadManager.shared.downloadBookResult(bookId: book.id)
-                }
+                addDownloadTask(for: book, to: &group, tracker: tracker, vc: vc)
                 vc.updateStatus(bookId: book.id, status: .downloading)
             }
 
@@ -143,26 +153,73 @@ final class BulkDownloadModalCenter {
                     break
                 }
                 downloadResults[bookId] = result
-                downloadedCount += 1
-                vc.updateDownloadProgress(completed: downloadedCount, total: total)
-                switch result {
-                case .success:
-                    vc.updateStatus(bookId: bookId, status: .downloaded)
-                case let .failure(error):
-                    vc.updateStatus(
-                        bookId: bookId,
-                        status: .failed(error.localizedDescription)
-                    )
-                    if error is CancellationError ||
-                        vc.dataVM?.viewModel.isNetworkFailure(error) == true
-                    {
-                        shouldStopDownloads = true
-                        group.cancelAll()
-                    }
+                let shouldCancel = await handleDownloadResult(
+                    bookId: bookId,
+                    result: result,
+                    expectedSize: booksById[bookId]?.compressedDownloadSize,
+                    tracker: tracker,
+                    vc: vc
+                )
+                if shouldCancel {
+                    shouldStopDownloads = true
+                    group.cancelAll()
                 }
             }
         }
         return downloadResults
+    }
+
+    private func addDownloadTask(
+        for book: BooksData,
+        to group: inout TaskGroup<(Int, Result<URL, Error>)>,
+        tracker: BulkDownloadProgressTracker,
+        vc: BulkDownloadVC
+    ) {
+        group.addTask {
+            await BookDownloadManager.shared.downloadBookResult(
+                bookId: book.id,
+                expectedSize: book.compressedDownloadSize,
+                onProgress: { written, bookTotal in
+                    Task { @MainActor [weak vc] in
+                        let progress = await tracker.updateProgress(
+                            bookId: book.id,
+                            bytesWritten: written,
+                            bookTotal: bookTotal
+                        )
+                        vc?.updateDownloadProgress(
+                            completed: progress.completed,
+                            total: progress.total,
+                            downloadedBytes: progress.downloadedBytes,
+                            totalBytes: progress.totalBytes
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    private func handleDownloadResult(
+        bookId: Int,
+        result: Result<URL, Error>,
+        expectedSize: Int64?,
+        tracker: BulkDownloadProgressTracker,
+        vc: BulkDownloadVC
+    ) async -> Bool {
+        let progress = await tracker.markBookCompleted(bookId: bookId, expectedBookSize: expectedSize)
+        vc.updateDownloadProgress(
+            completed: progress.completed,
+            total: progress.total,
+            downloadedBytes: progress.downloadedBytes,
+            totalBytes: progress.totalBytes
+        )
+        switch result {
+        case .success:
+            vc.updateStatus(bookId: bookId, status: .downloaded)
+            return false
+        case let .failure(error):
+            vc.updateStatus(bookId: bookId, status: .failed(error.localizedDescription))
+            return error is CancellationError || vc.dataVM?.viewModel.isNetworkFailure(error) == true
+        }
     }
 
     private func executeSerialIntegrations(successfulDownloads: [BooksData], vc: BulkDownloadVC, integrateTotal: Int) async -> Int {
@@ -225,12 +282,12 @@ final class BulkDownloadModalCenter {
         downloadTask = nil
         vc.setDownloading(false)
 
-        let failedCount = books.filter {
+        let failedCount = books.count(where: {
             if case .failed = vc.bookStatuses[$0.id] {
                 return true
             }
             return false
-        }.count
+        })
 
         if Task.isCancelled {
             vc.statusLabel.stringValue = String(localized: .Library.stoppedBooksCompleted(completedIntegrations))
