@@ -3,7 +3,7 @@
 //  Maktabah
 //
 //  Created by Codex on 11/03/26.
-//  Manages per-book downloads for bundle mode
+//  Track book download progress.
 //
 
 import Foundation
@@ -64,7 +64,7 @@ final class BookDownloadManager: Sendable {
         }
     }
 
-    nonisolated private func startNetworkMonitor() async {
+    private nonisolated func startNetworkMonitor() async {
         await networkMonitor.registerConnectivityCallbacks(
             onLost: {
                 Task { [weak self] in
@@ -84,33 +84,62 @@ final class BookDownloadManager: Sendable {
         localBookURL(bookId: bookId) != nil
     }
 
-    func ensureBookDownloaded(bookId: Int) async throws -> URL {
+    func ensureBookDownloaded(
+        bookId: Int,
+        expectedSize: Int64? = nil,
+        onProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)? = nil
+    ) async throws -> URL {
         if let existing = localBookURL(bookId: bookId) {
             return existing
         }
 
         return try await singleFlight.run(key: bookId) {
-            try await self.performDownload(bookId: bookId)
+            try await self.performDownload(bookId: bookId, expectedSize: expectedSize, onProgress: onProgress)
         }
     }
 
-    nonisolated func downloadBookResult(bookId: Int) async -> (bookId: Int, result: Result<URL, Error>) {
+    nonisolated func downloadBookResult(
+        bookId: Int,
+        expectedSize: Int64? = nil,
+        onProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)? = nil
+    ) async -> (bookId: Int, result: Result<URL, Error>) {
         do {
-            let url = try await ensureBookDownloaded(bookId: bookId)
+            let url = try await ensureBookDownloaded(bookId: bookId, expectedSize: expectedSize, onProgress: onProgress)
             return (bookId, .success(url))
         } catch {
             return (bookId, .failure(error))
         }
     }
 
-    nonisolated private func performDownload(bookId: Int) async throws -> URL {
+    private nonisolated func resolveExpectedSize(for bookId: Int, explicit: Int64?) async -> Int64 {
+        if let explicit, explicit > 0 {
+            return explicit
+        }
+        if let indexURL = AppConfig.bookIndexURL,
+           let entry = try? await indexCache.entry(for: bookId, indexURL: indexURL, urlSession: urlSession),
+           let size = entry.sizeZst, size > 0
+        {
+            return size
+        }
+        return 0
+    }
+
+    private nonisolated func performDownload(
+        bookId: Int,
+        expectedSize: Int64? = nil,
+        onProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)? = nil
+    ) async throws -> URL {
         if let local = localBookURL(bookId: bookId) {
             return local
         }
-        return try await downloadBook(bookId: bookId)
+        return try await downloadBook(bookId: bookId, expectedSize: expectedSize, onProgress: onProgress)
     }
 
-    nonisolated private func downloadBook(bookId: Int) async throws -> URL {
+    private nonisolated func downloadBook(
+        bookId: Int,
+        expectedSize: Int64? = nil,
+        onProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)? = nil
+    ) async throws -> URL {
         guard await networkMonitor.isConnected else {
             throw BookDownloadError.networkUnavailable
         }
@@ -120,6 +149,8 @@ final class BookDownloadManager: Sendable {
 
         let destinationURL = URL(fileURLWithPath: destinationDir)
             .appendingPathComponent("\(bookId).sqlite")
+
+        let resolvedExpectedSize = await resolveExpectedSize(for: bookId, explicit: expectedSize)
 
         let candidates = await candidateURLs(for: bookId)
         guard !candidates.isEmpty else {
@@ -132,7 +163,9 @@ final class BookDownloadManager: Sendable {
                 try await downloadAndProcessCandidate(
                     candidate: candidate,
                     destinationURL: destinationURL,
-                    bookId: bookId
+                    bookId: bookId,
+                    expectedSize: resolvedExpectedSize,
+                    onProgress: onProgress
                 )
                 return destinationURL
             } catch {
@@ -144,25 +177,58 @@ final class BookDownloadManager: Sendable {
         throw lastError ?? BookDownloadError.downloadFailed(bookId: bookId)
     }
 
-    nonisolated private func downloadAndProcessCandidate(
+    private nonisolated func downloadStream(
+        for url: URL,
+        bookId: Int,
+        expectedSize: Int64
+    ) -> AsyncThrowingStream<BookDownloadEvent, Error> {
+        AsyncThrowingStream { continuation in
+            let delegate = BookDownloadDelegate(continuation: continuation, bookId: bookId, expectedSize: expectedSize)
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 120
+            config.timeoutIntervalForResource = 3600
+            config.waitsForConnectivity = true
+
+            let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+            let task = session.downloadTask(with: url)
+
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+                session.invalidateAndCancel()
+            }
+            task.resume()
+        }
+    }
+
+    private nonisolated func downloadAndProcessCandidate(
         candidate: URL,
         destinationURL: URL,
-        bookId: Int
+        bookId: Int,
+        expectedSize: Int64,
+        onProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)?
     ) async throws {
         try Task.checkCancellation()
         guard await networkMonitor.isConnected else {
             throw BookDownloadError.networkUnavailable
         }
-        let (tempURL, response) = try await urlSession.download(from: candidate)
+
+        var downloadedTempURL: URL?
+        var lastHTTPResponse: HTTPURLResponse?
+
+        for try await event in downloadStream(for: candidate, bookId: bookId, expectedSize: expectedSize) {
+            switch event {
+            case let .progress(bytesWritten, totalBytes):
+                onProgress?(bytesWritten, totalBytes)
+            case let .success(tempURL, response):
+                downloadedTempURL = tempURL
+                lastHTTPResponse = response
+            }
+        }
+
+        guard let tempURL = downloadedTempURL, let _ = lastHTTPResponse else {
+            throw BookDownloadError.downloadFailed(bookId: bookId)
+        }
         defer { try? fileManager.removeItem(at: tempURL) }
-
-        guard let http = response as? HTTPURLResponse else {
-            throw BookDownloadError.invalidResponse
-        }
-
-        guard (200 ..< 300).contains(http.statusCode) else {
-            throw BookDownloadError.httpStatus(bookId: bookId, statusCode: http.statusCode)
-        }
 
         if candidate.pathExtension.lowercased() == "zst" {
             do {
@@ -196,7 +262,7 @@ final class BookDownloadManager: Sendable {
         await singleFlight.cancelAll()
     }
 
-    nonisolated private func candidateURLs(for bookId: Int) async -> [URL] {
+    private nonisolated func candidateURLs(for bookId: Int) async -> [URL] {
         var urls: [URL] = []
 
         if let indexURL = AppConfig.bookIndexURL,

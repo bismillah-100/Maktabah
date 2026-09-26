@@ -117,10 +117,13 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     /// - Parameters:
     ///   - book: Data kitab yang akan diintegrasikan.
     ///   - onIntegrating: Dipanggil sekali saat proses integrasi dimulai (sebelum masuk fase detail).
+    ///   - onDownloadProgress: Dipanggil secara berkala saat pengunduhan berkas berlangsung (bytesWritten, totalBytes).
+    ///   - onIntegrating: Dipanggil sekali saat proses integrasi dimulai (setelah download selesai dan tervalidasi).
     ///   - onProgress: Dipanggil setiap pergantian fase integrasi — `.fts` saat build FTS dimulai,
     ///     `.data` saat copy tabel data dimulai.
     func ensureBookIntegrated(
         _ book: BooksData,
+        onDownloadProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)? = nil,
         onIntegrating: (@Sendable () async -> Void)? = nil,
         onProgress: (@Sendable (IntegratePhase) async -> Void)? = nil
     ) async throws {
@@ -131,9 +134,6 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         else {
             throw ArchiveError.databasePathNotAvailable
         }
-
-        // Notifikasi fase integrasi untuk caller (sekali per request).
-        await onIntegrating?()
 
         try await BookArchiveSingleFlight.shared.run(archiveId: book.archive, bookId: book.id) { [weak self] in
             guard let self else { return }
@@ -146,7 +146,14 @@ final class BookArchiveIntegrator: @unchecked Sendable {
                 return
             }
 
-            let sourceURL = try await resolveValidSourceURL(for: book.id)
+            let sourceURL = try await resolveValidSourceURL(
+                for: book.id,
+                expectedSize: book.compressedDownloadSize,
+                onProgress: onDownloadProgress
+            )
+
+            // Notifikasi fase integrasi untuk caller (setelah download selesai dan valid)
+            await onIntegrating?()
 
             do {
                 let sourceTables = listTables(path: sourceURL.path)
@@ -613,12 +620,18 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         try db.safeAttachDatabase(path: path, schema: schema)
     }
 
-    private func resolveValidSourceURL(for bookId: Int) async throws -> URL {
+    private func resolveValidSourceURL(
+        for bookId: Int,
+        expectedSize: Int64? = nil,
+        onProgress: (@Sendable (_ bytesWritten: Int64, _ totalBytes: Int64) -> Void)? = nil
+    ) async throws -> URL {
         var lastError: Error?
 
         for _ in 0 ..< 2 {
             let sourceURL = try await BookDownloadManager.shared.ensureBookDownloaded(
-                bookId: bookId
+                bookId: bookId,
+                expectedSize: expectedSize,
+                onProgress: onProgress
             )
 
             if sourceHasBookTable(sourceURL: sourceURL, bookId: bookId) {
@@ -681,9 +694,11 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         static func checkTableExists(schema: String) -> String {
             "SELECT 1 FROM \(schema).sqlite_master WHERE type='table' AND name=? LIMIT 1;"
         }
+
         static func dropTable(name: String) -> String {
             "DROP TABLE IF EXISTS \(name);"
         }
+
         static let detachSource = "DETACH DATABASE source_db;"
         static let detachFts = "DETACH DATABASE fts_db;"
         static let vacuum = "VACUUM;"

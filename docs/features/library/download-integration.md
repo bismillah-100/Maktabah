@@ -2,14 +2,18 @@
 
 Sumber kode:
 
-* `Source/Features/Library/Database/BookDownloadManager.swift`
-* `Source/Features/Library/Database/BookArchiveIntegrator.swift`
-* `Source/Features/Library/Database/BookUpdateManager/`
-    * `BookUpdateManager.swift`
-    * `BookUpdateMgr+Fetch.swift`
-    * `BookUpdateMgr+Import.swift`
-    * `BookUpdateMgr+Metadata.swift`
-    * `BookUpdateMgr+SQLite.swift`
+* `Source/Features/Library/Database/`
+    * `BookDownloadManager.swift`
+    * `BookArchiveIntegrator.swift`
+    * `Downloader/`
+        * `BookDownloadDelegate.swift`
+        * `BulkDownloadProgressTracker.swift`
+    * `Updater/`
+        * `BookUpdateManager.swift`
+        * `BookUpdateMgr+Fetch.swift`
+        * `BookUpdateMgr+Import.swift`
+        * `BookUpdateMgr+Metadata.swift`
+        * `BookUpdateMgr+SQLite.swift`
 
 ---
 
@@ -72,6 +76,41 @@ final class BookDownloadManager: @unchecked Sendable {
 
 ### B. Ketahanan Jaringan (NetworkMonitor)
 `BookDownloadManager` terhubung langsung ke `NetworkMonitor.shared`. Jika sambungan internet terputus saat proses pengunduhan, seluruh koneksi aktif dibatalkan secara tertib (`cancelAllDownloads()`), dan status parsial dibersihkan agar tidak meninggalkan berkas korup pada penyimpanan lokal.
+
+### C. Pelaporan Ukuran & Progress Terdownload (Byte-Level Progress)
+
+Sistem pengunduhan kitab dilengkapi pelacakan byte berbasis `URLSessionDownloadDelegate` yang mengalirkan progres ukuran nyata (baik untuk satu kitab maupun pengunduhan massal / *bulk download*):
+
+```mermaid
+flowchart TD
+    subgraph Metadata ["1. Sumber Metadata"]
+        IDX["index.json (size_zst)"] --> CACHE["BookDownloadIndexCache"]
+        CACHE --> BD["BooksData.compressedDownloadSize"]
+    end
+
+    subgraph Engine ["2. Download Engine"]
+        BDM["BookDownloadManager\n(URLSessionDownloadDelegate)"]
+        BDM -->|bytesWritten, totalExpectedBytes| STREAM["AsyncThrowingStream / Callback"]
+    end
+
+    subgraph SingleFlow ["3. Single Book Flow (On-Demand)"]
+        BAI["BookArchiveIntegrator\n.ensureBookIntegrated"] --> BDM
+        STREAM -->|onDownloadProgress| BAI
+        BAI -->|Update State| PBD["ProgressBooksDownload\n(state.detail: '4.2 MB / 12.5 MB'\nstate.progress: 0.34)"]
+    end
+
+    subgraph BulkFlow ["4. Bulk Download Flow (Concurrent)"]
+        BDMC["BulkDownloadModalCenter / BulkActionLibrary\n(BulkDownloadProgressTracker)"] --> BDM
+        STREAM -->|Update Book Progress| BDMC
+        BDMC -->|Update Agregat Ukuran| BVC["BulkDownloadVC / iOS State\n('Mengunduh 3 dari 10 kitab (15 MB / 60 MB)')\nprogressBar = bytesDownloaded / totalBytes"]
+    end
+```
+
+* **Prioritas Penentuan Total Ukuran**:
+  1. `HTTPURLResponse.expectedContentLength` dari server (jika > 0).
+  2. Fallback ke `expectedSize` pemanggil (`BooksData.compressedDownloadSize`).
+  3. Fallback ke `entry.sizeZst` dari `BookDownloadIndexCache`.
+* **BulkDownloadProgressTracker**: Aktor pengelola agregat akumulasi byte dan jumlah kitab secara *thread-safe* saat unduhan berlangsung paralel melalui `withTaskGroup`.
 
 ---
 

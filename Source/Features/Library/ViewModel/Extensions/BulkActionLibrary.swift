@@ -57,12 +57,12 @@ extension LibraryViewModel {
             progressState: progressState
         )
 
-        let failedCount = books.filter {
+        let failedCount = books.count(where: {
             if case .failure = downloadResults[$0.id] {
                 return true
             }
             return false
-        }.count
+        })
 
         selectedBookIds.subtract(books.map(\.id))
         isBulkDownloading = false
@@ -86,6 +86,10 @@ extension LibraryViewModel {
         var downloadResults: [Int: Result<URL, Error>] = [:]
         var stoppedByNetwork = false
 
+        let totalBytes: Int64 = books.reduce(0) { $0 + max(0, $1.compressedDownloadSize ?? 0) }
+        let booksById: [Int: BooksData] = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+        let tracker = BulkDownloadProgressTracker(totalBooks: total, totalBytes: totalBytes)
+
         if await !NetworkMonitor.shared.isConnected {
             return (downloadResults, true)
         }
@@ -94,7 +98,25 @@ extension LibraryViewModel {
             for book in books {
                 guard !Task.isCancelled else { break }
                 group.addTask {
-                    await BookDownloadManager.shared.downloadBookResult(bookId: book.id)
+                    await BookDownloadManager.shared.downloadBookResult(
+                        bookId: book.id,
+                        expectedSize: book.compressedDownloadSize,
+                        onProgress: { written, bookTotal in
+                            Task { @MainActor in
+                                let progress = await tracker.updateProgress(
+                                    bookId: book.id,
+                                    bytesWritten: written,
+                                    bookTotal: bookTotal
+                                )
+                                if progress.totalBytes > 0 {
+                                    let writtenStr = ByteCountFormatter.string(fromByteCount: progress.downloadedBytes, countStyle: .file)
+                                    let totalStr = ByteCountFormatter.string(fromByteCount: progress.totalBytes, countStyle: .file)
+                                    progressState.detail = "\(progress.completed)/\(progress.total) (\(writtenStr) / \(totalStr))"
+                                    progressState.progress = min(1.0, Double(progress.downloadedBytes) / Double(progress.totalBytes))
+                                }
+                            }
+                        }
+                    )
                 }
             }
             for await (bookId, result) in group {
@@ -103,9 +125,18 @@ extension LibraryViewModel {
                 }
                 downloadResults[bookId] = result
                 downloadedCount += 1
+                let expectedSize = booksById[bookId]?.compressedDownloadSize
+                let progress = await tracker.markBookCompleted(bookId: bookId, expectedBookSize: expectedSize)
                 progressState.message = String(localized: .Library.downloadingCountOfTotal(downloadedCount, total))
-                progressState.detail = "\(downloadedCount) / \(total)"
-                progressState.progress = total > 0 ? Double(downloadedCount) / Double(total) : 0
+                if progress.totalBytes > 0 {
+                    let writtenStr = ByteCountFormatter.string(fromByteCount: progress.downloadedBytes, countStyle: .file)
+                    let totalStr = ByteCountFormatter.string(fromByteCount: progress.totalBytes, countStyle: .file)
+                    progressState.detail = "\(downloadedCount)/\(total) (\(writtenStr) / \(totalStr))"
+                    progressState.progress = min(1.0, Double(progress.downloadedBytes) / Double(progress.totalBytes))
+                } else {
+                    progressState.detail = "\(downloadedCount) / \(total)"
+                    progressState.progress = total > 0 ? Double(downloadedCount) / Double(total) : 0
+                }
                 if case let .failure(error) = result, isNetworkFailure(error) {
                     stoppedByNetwork = true
                     group.cancelAll()

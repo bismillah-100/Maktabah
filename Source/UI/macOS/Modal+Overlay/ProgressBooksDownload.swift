@@ -56,7 +56,11 @@ final class BundleArchiveDownloadProgressState: Identifiable {
         let message = String(localized: .Library.confirmDownloadMessage(book.book))
 
         var sizeString = ""
-        if let size = book.compressedDownloadSize, size > 0 {
+        let size = book.compressedDownloadSize
+            ?? LibraryDataManager.shared.getBook([book.id]).first?.compressedDownloadSize
+
+        if let size, size > 0 {
+            book.compressedDownloadSize = size
             sizeString = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
         }
 
@@ -102,7 +106,7 @@ struct BundleArchiveDownloadProgressView: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
 
-                    let badgeText: String = switch state.mode {
+                    let badgeText = switch state.mode {
                     case .confirmation:
                         String(localized: .Library.readyToDownload)
                     case .downloading:
@@ -208,9 +212,9 @@ struct BundleArchiveDownloadProgressView: View {
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(.regularMaterial)
-            #if os(iOS)
+                #if os(iOS)
                 .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
-            #endif
+                #endif
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -397,7 +401,7 @@ final class BookIntegrateModalCenter {
 
         state.mode = .downloading
         state.message = String(localized: .Library.downloadingBookFromServer)
-        state.detail = ""
+        state.detail = state.totalSizeString.isEmpty ? "" : "0 B / \(state.totalSizeString)"
         state.progress = 0
 
         updateWindowSize(height: 180, animated: true)
@@ -470,6 +474,15 @@ extension BookIntegrateModalCenter {
 
         try await BookArchiveIntegrator.shared.ensureBookIntegrated(
             book,
+            onDownloadProgress: { [weak self] written, total in
+                Task { @MainActor [weak self] in
+                    guard let state = self?.progressState, state.mode == .downloading else { return }
+                    let writtenStr = ByteCountFormatter.string(fromByteCount: written, countStyle: .file)
+                    let totalStr = total > 0 ? ByteCountFormatter.string(fromByteCount: total, countStyle: .file) : ""
+                    state.detail = total > 0 ? "\(writtenStr) / \(totalStr)" : writtenStr
+                    state.progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
+                }
+            },
             onIntegrating: { [weak self] in
                 await self?.showIntegrating()
             }

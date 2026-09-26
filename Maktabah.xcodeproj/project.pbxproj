@@ -747,6 +747,12 @@
 		F3DE7C7730671FC200E0FBBF /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */; };
 		F3DE7C7830671FC200E0FBBF /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */; };
 		F3DE7C793067203300E0FBBF /* BackgroundColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */; };
+		F3DE7C7B306809EE00E0FBBF /* BookDownloadDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7A306809EE00E0FBBF /* BookDownloadDelegate.swift */; };
+		F3DE7C7C306809EE00E0FBBF /* BookDownloadDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7A306809EE00E0FBBF /* BookDownloadDelegate.swift */; };
+		F3DE7C7D306809EE00E0FBBF /* BookDownloadDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7A306809EE00E0FBBF /* BookDownloadDelegate.swift */; };
+		F3DE7C7F30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7E30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift */; };
+		F3DE7C8030680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7E30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift */; };
+		F3DE7C8130680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DE7C7E30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift */; };
 		F3E054F23042657000647936 /* MaktabahWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7CF4D3EED1CCDF5AC98A3B54 /* MaktabahWidgetExtension.appex */; };
 		F3E054FA3042765900647936 /* MaktabahWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7CF4D3EED1CCDF5AC98A3B54 /* MaktabahWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F3E900022FC0000100000001 /* AnnotationJsonSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */; };
@@ -1277,6 +1283,8 @@
 		F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZSTDContextWrapper.swift; sourceTree = "<group>"; };
 		F3DD0CEB3048964D00C0227C /* LibraryView+Diffing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryView+Diffing.swift"; sourceTree = "<group>"; };
 		F3DE7C7630671FB200E0FBBF /* BackgroundColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundColor.swift; sourceTree = "<group>"; };
+		F3DE7C7A306809EE00E0FBBF /* BookDownloadDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDownloadDelegate.swift; sourceTree = "<group>"; };
+		F3DE7C7E30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkDownloadProgressTracker.swift; sourceTree = "<group>"; };
 		F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationJsonSerializer.swift; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
@@ -1746,7 +1754,7 @@
 			path = Theme;
 			sourceTree = "<group>";
 		};
-		F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */ = {
+		F34D9FBF303D2DCC0000FB79 /* Updater */ = {
 			isa = PBXGroup;
 			children = (
 				4B3B966C2F35A74400B57E1D /* BookUpdateManager.swift */,
@@ -1755,7 +1763,7 @@
 				51B39A402BD353F58E642B11 /* BookUpdateMgr+Metadata.swift */,
 				ACF12F3B64BA5BCD81051D4A /* BookUpdateMgr+SQLite.swift */,
 			);
-			path = BookUpdateManager;
+			path = Updater;
 			sourceTree = "<group>";
 		};
 		F363824F2FA6F9F10006636C /* Bootstrap */ = {
@@ -1917,6 +1925,15 @@
 				E410D2542342B9DC54D00940 /* WidgetSnapshotRecord.swift */,
 			);
 			path = Common;
+			sourceTree = "<group>";
+		};
+		F3DE7C8230680AE600E0FBBF /* Downloader */ = {
+			isa = PBXGroup;
+			children = (
+				F3DE7C7A306809EE00E0FBBF /* BookDownloadDelegate.swift */,
+				F3DE7C7E30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift */,
+			);
+			path = Downloader;
 			sourceTree = "<group>";
 		};
 		F3E054F33042657000647936 /* Recovered References */ = {
@@ -2396,7 +2413,8 @@
 				4B8C9DD02F6984120049E4EF /* BookDownloadManager.swift */,
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
-				F34D9FBF303D2DCC0000FB79 /* BookUpdateManager */,
+				F34D9FBF303D2DCC0000FB79 /* Updater */,
+				F3DE7C8230680AE600E0FBBF /* Downloader */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -2964,6 +2982,7 @@
 				4B3B966D2F35A74400B57E1D /* BookUpdateManager.swift in Sources */,
 				4B73BF472EF09D67001ED591 /* AnnotationDelegate.swift in Sources */,
 				F334EB33303F382C001121BE /* ReaderSplitView.swift in Sources */,
+				F3DE7C7D306809EE00E0FBBF /* BookDownloadDelegate.swift in Sources */,
 				4BD728232EE44C5500ACEB7C /* IbarotTextView.swift in Sources */,
 				4BAB8A4C2F286C8A00732FC9 /* AnnotationCoordinator.swift in Sources */,
 				4B540F472EDF25A4001D8C0B /* BookConnection.swift in Sources */,
@@ -3109,6 +3128,7 @@
 				F3D02D4A2FE04D580054807F /* ViewModelProtocols.swift in Sources */,
 				F364898A30131EAE00B9285B /* NotificationToken.swift in Sources */,
 				F3D02D4B2FE04D580054807F /* ReaderViewModel.swift in Sources */,
+				F3DE7C8130680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */,
 				F3D02D4E2FE04D580054807F /* ViewModelBase.swift in Sources */,
 				F3919DF6304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */,
 				F3919DF7304A44BC00FC3760 /* SearchSelectionView.swift in Sources */,
@@ -3260,6 +3280,7 @@
 				F3AE62E7304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				4B7C90C82F83494200454BE1 /* ReaderState.swift in Sources */,
 				4B7C90C92F83494200454BE1 /* UserDefaults.swift in Sources */,
+				F3DE7C7F30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */,
 				F32D4415303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				4B7C90CA2F83494200454BE1 /* AppMode.swift in Sources */,
 				F3919DF4304A44BC00FC3760 /* AdaptiveLabeledContent.swift in Sources */,
@@ -3273,6 +3294,7 @@
 				F3902E8C2F9EE1CA004BA5D1 /* AnnotationTagVC.swift in Sources */,
 				F3902EAF2F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */,
 				F3F3FEA73035E85B00507E9A /* RTLScrollView.swift in Sources */,
+				F3DE7C7C306809EE00E0FBBF /* BookDownloadDelegate.swift in Sources */,
 				F34D9FC7303D64D10000FB79 /* AnnotationMenu.swift in Sources */,
 				4B7C90D12F83494200454BE1 /* BookArchiveIntegrator.swift in Sources */,
 				4B7C90D22F83494200454BE1 /* BookDownloadManager.swift in Sources */,
@@ -3423,6 +3445,7 @@
 				F3AE62F5304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				F3AE62F6304C5C43002569BB /* Reader+iOS.swift in Sources */,
 				FE4400040000000000000004 /* BookmarkTreeChange.swift in Sources */,
+				F3DE7C7B306809EE00E0FBBF /* BookDownloadDelegate.swift in Sources */,
 				F3AE6335304CFF34002569BB /* Results+Search.swift in Sources */,
 				F3AE6336304CFF34002569BB /* Results+ResultOps.swift in Sources */,
 				F3AE6337304CFF34002569BB /* Results+FolderOps.swift in Sources */,
@@ -3503,6 +3526,7 @@
 				F30576F62FA46222005732C6 /* ArabicTextRenderer.swift in Sources */,
 				F3BEC5652FD958D100FA0400 /* iOSAnnotationViewController.swift in Sources */,
 				F3BEC56D2FD97B0000FA0400 /* iOSAnVC+TagFilter.swift in Sources */,
+				F3DE7C8030680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */,
 				F3BEC56B2FD97B0000FA0400 /* iOSTagFilterHeaderView.swift in Sources */,
 				F3A8CE423051B4010027B362 /* SafeCounter.swift in Sources */,
 				F30576F72FA46222005732C6 /* ReusableFunc.swift in Sources */,
