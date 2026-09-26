@@ -39,15 +39,16 @@ The codebase is organized into three primary layers under `Source/`:
   - `Models/` & `ViewModels/`: Shared models, notification tokens, and base view model protocols.
 
 - **`Source/Features/`**: Domain-driven feature modules containing MVVM components (ViewModel, Database, Models, Protocols, macOS & iOS views):
-  - `Reader/`: Book reading experience (`IbarotTextVC`, `iOSReaderView`, `ReaderViewModel`, `BookPageCache`, `TOC`).
-  - `Library/`: Catalog browsing, book download/update management (`LibraryVC`, `iOSLibraryView`, `LibraryViewModel`, `BookDownloadManager`, `BookUpdateManager`).
-  - `Annotations/`: Highlight, note, and tag management (`AnnotationsVC`, `iOSAnnotationViewController`, `AnnotationStore`, `AnnotationRepository`, `AnnotationCoordinator`, `AnnotationViewModel`).
+  - `Reader/`: Book reading experience (`IbarotTextVC`, `iOSReaderTabView`, `iOSReaderView`, `ReaderViewModel`, `BookPageCache`, `TOC`, `BackgroundColor`).
+  - `Library/`: Catalog browsing, book download/update management (`LibraryVC`, `iOSLibraryView`, `LibraryViewModel`, `BookDownloadManager`, `BookUpdateManager`, `Library.xcstrings`).
+  - `Annotations/`: Highlight, note, and tag management (`AnnotationsVC`, `iOSAnnotationViewController`, `AnnotationStore`, `AnnotationRepository`, `AnnotationCoordinator`, `AnnotationViewModel`, `Annotation.xcstrings`).
   - `Bookmarks/`: Search results bookmarking and folder hierarchy (`SavedResults`, `iOSSavedResultsView`, `ResultsHandler`, `ResultsViewModel`).
   - `History/`: Reading history tracking (`HistoryDatabaseManager`, `HistoryViewModel`).
   - `Search/`: Multi-database FTS search UI and filtering (`SearchSidebarVC`, `SearchResultsListView`, `SearchViewModel`).
   - `Narrator/`: Hadith narrator / Rijāl analysis (`RowiDataManager`, `TarjamahDataManager`).
   - `Quran/`: Quran browser & Tafsir (`QuranDataManager`).
-  - `Widget/`: WidgetKit timeline providers and configurations.
+  - `Setting/`: Preferences, storage mode, CloudKit toggle, and update checks (`SettingsView`, `SettingsViewModel`, `Setting.xcstrings`).
+  - `Widget/`: WidgetKit timeline providers and configurations (`Localizable.xcstrings`).
 
 - **`Source/UI/`**: Platform-specific presentation shells, custom controls, and shared UI infrastructure:
   - `macOS/`: AppKit windows, split views, text views, and modals (`SplitVC`, `IbarotTextView`, `MainWindow`, `Toolbar`, XIBs).
@@ -74,6 +75,15 @@ The codebase is organized into three primary layers under `Source/`:
 - **Annotations**: Stored in a separate SQLite DB at `~/Library/Application Support/Maktabah/annotations_FolderPath/`. `AnnotationStore.shared` and `AnnotationRepository.shared` manage persistence, while `AnnotationCoordinator` handles range conversion (source ↔ display).
 - **Bookmarks (Saved Results)**: Managed via `ResultsHandler.shared` in the same directory.
 - Both domains are synced to CloudKit custom zones via `CloudKitSyncManager.shared` and their respective sync handlers (`AnnotationSyncHandler`, `ResultSyncHandler`).
+
+### Modular String Catalogs (.xcstrings)
+
+- Localization is partitioned into domain-specific String Catalogs to prevent merge conflicts:
+  - `Source/Features/Setting/Setting.xcstrings` — App preferences, sync settings, storage modes (`.Setting.*`)
+  - `Source/Features/Library/Models/Library.xcstrings` — Catalog, book downloads, imports, error prompts (`.Library.*`)
+  - `Source/Features/Annotations/Models/Annotation.xcstrings` — Annotations, tags, notes, and context menus (`.Annotation.*`)
+  - `Source/Features/Widget/Localizable.xcstrings` — Widget timeline localization
+  - `Source/Localizable.xcstrings` — Global UI and shared strings
 
 ### Key Singletons
 
