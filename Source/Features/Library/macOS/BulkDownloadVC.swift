@@ -11,8 +11,8 @@ enum BulkBookStatus {
     case downloading
     case downloaded
     case integrating
-    case integratingFTS  // Sedang build indeks FTS
-    case integratingData  // Sedang copy tabel data ke archive
+    case integratingFTS // Sedang build indeks FTS
+    case integratingData // Sedang copy tabel data ke archive
     case done
     case failed(String)
 }
@@ -21,8 +21,8 @@ enum BulkBookStatus {
 
 /// NSViewController yang ditampilkan sebagai modal window untuk bulk download kitab.
 final class BulkDownloadVC: NSViewController {
-
     // MARK: Outlets / subviews
+
     @IBOutlet weak var searchField: DSFSearchField!
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var selectAllButton: NSButton!
@@ -61,6 +61,7 @@ final class BulkDownloadVC: NSViewController {
     private let controlsStack = NSStackView()
 
     // MARK: Data
+
     private(set) var dataVM: LibraryViewManager?
     private let data = LibraryDataManager.shared
 
@@ -135,7 +136,7 @@ final class BulkDownloadVC: NSViewController {
         stackView.userInterfaceLayoutDirection = .rightToLeft
         // Kurangi inset agar tidak memakan ruang tinggi yang terbatas di titlebar
         stackView.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 20, right: -12)
-        searchField.constraints.forEach { c in
+        for c in searchField.constraints {
             c.isActive = false
         }
         searchField.translatesAutoresizingMaskIntoConstraints = false
@@ -206,7 +207,7 @@ final class BulkDownloadVC: NSViewController {
         stopButton.action = #selector(stopTapped)
 
         // Download button
-        downloadButton.title = String(localized:"Download")
+        downloadButton.title = String(localized: "Download")
         downloadButton.keyEquivalent = "\r"
         downloadButton.target = self
         downloadButton.action = #selector(downloadTapped)
@@ -320,7 +321,7 @@ final class BulkDownloadVC: NSViewController {
         scrollView.contentInsets.bottom = footerView.frame.height + 50
     }
 
-    nonisolated private func loadBooksData() async {
+    private nonisolated func loadBooksData() async {
         let filtered = data.filterNotIntegrated()
 
         await MainActor.run { [weak self, filtered] in
@@ -391,7 +392,7 @@ final class BulkDownloadVC: NSViewController {
             $0 + (($1.compressedDownloadSize ?? 0) > 0 ? 1 : 0)
         }
 
-        if knownSizeCount == selectedCount && totalCompressedSize > 0 {
+        if knownSizeCount == selectedCount, totalCompressedSize > 0 {
             let sizeString = ByteCountFormatter.string(
                 fromByteCount: totalCompressedSize,
                 countStyle: .file
@@ -399,7 +400,7 @@ final class BulkDownloadVC: NSViewController {
             return title + " (\(sizeString))."
         }
 
-        if knownSizeCount > 0 && totalCompressedSize > 0 {
+        if knownSizeCount > 0, totalCompressedSize > 0 {
             let sizeString = ByteCountFormatter.string(
                 fromByteCount: totalCompressedSize,
                 countStyle: .file
@@ -421,32 +422,43 @@ final class BulkDownloadVC: NSViewController {
         bookStatuses[bookId] = status
     }
 
-    func updateDownloadProgress(completed: Int, total: Int) {
-        let label: String
-        if total == 0 {
-            label = String(localized: .Library.noBooksToDownload)
+    func updateDownloadProgress(
+        completed: Int,
+        total: Int,
+        downloadedBytes: Int64 = 0,
+        totalBytes: Int64 = 0
+    ) {
+        let countLabel = if total == 0 {
+            String(localized: .Library.noBooksToDownload)
         } else if completed == 0 {
-            label = String(localized: .Library.beginDownloading)
+            String(localized: .Library.beginDownloading)
         } else if completed < total {
-            label = String(localized: .Library.downloadingCountOfTotal(completed, total))
+            String(localized: .Library.downloadingCountOfTotal(completed, total))
         } else {
-            label = String(localized: .Library.downloadCompleteBeginIntegrating)
+            String(localized: .Library.downloadCompleteBeginIntegrating)
         }
-        statusLabel.stringValue = label
-        progressBar.doubleValue =
-            total > 0 ? Double(completed) / Double(total) : 0
+
+        if totalBytes > 0, completed < total {
+            let writtenStr = ByteCountFormatter.string(fromByteCount: downloadedBytes, countStyle: .file)
+            let totalStr = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
+            statusLabel.stringValue = "\(countLabel) (\(writtenStr) / \(totalStr))"
+            progressBar.doubleValue = min(1.0, Double(downloadedBytes) / Double(totalBytes))
+        } else {
+            statusLabel.stringValue = countLabel
+            progressBar.doubleValue =
+                total > 0 ? Double(completed) / Double(total) : 0
+        }
     }
 
     func updateIntegrateProgress(completed: Int, total: Int) {
-        let label: String
-        if total == 0 {
-            label = "No books to integrate."
+        let label = if total == 0 {
+            "No books to integrate."
         } else if completed == 0 {
-            label = "Starting integration..."
+            "Starting integration..."
         } else if completed < total {
-            label = "Integrating \(completed) of \(total) books..."
+            "Integrating \(completed) of \(total) books..."
         } else {
-            label = "All books integrated."
+            "All books integrated."
         }
         statusLabel.stringValue = label
         progressBar.doubleValue =
