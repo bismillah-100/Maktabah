@@ -1,52 +1,52 @@
 import SwiftUI
-import Combine
 
 struct iOSReaderTabView: View {
     @Environment(iOSNavigationManager.self) var bManager
-    @State private var showingBookInfo = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     var textViewState = TextViewState.shared
 
     var isDarkMode: Bool {
         textViewState.isDarkMode
     }
 
-    var body: some View {
-        if bManager.openTabs.count > 0,
-           let activeTab = bManager.openTabs.first(where: { $0.id == bManager.activeTabId })
-               ?? bManager.openTabs.first
-        {
-            iOSReaderView(
-                book: activeTab.book,
-                viewModel: activeTab.viewModel,
-                initialContentId: activeTab.initialContentId
-            )
-            .id(activeTab.id)
-            .toolbar {
-                if bManager.openTabs.count > 1 {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        ReaderTabsView(isDarkMode: isDarkMode)
-                    }
-                }
+    var isRegularLayout: Bool {
+        horizontalSizeClass == .regular
+    }
 
-                if bManager.openTabs.count == 1,
-                    let activeTab = bManager.openTabs.first
-                {
-                    ToolbarItem(placement: .principal) {
-                        Text(activeTab.book.book)
-                            .font(ReaderViewModel.kfgqpc)
-                            .foregroundStyle(isDarkMode ? .white : .black)
+    var body: some View {
+        Group {
+            if bManager.openTabs.count > 0,
+               let activeTab = bManager.openTabs.first(where: { $0.id == bManager.activeTabId }) ?? bManager.openTabs.first
+            {
+                iOSReaderView(
+                    book: activeTab.book,
+                    viewModel: activeTab.viewModel,
+                    initialContentId: activeTab.initialContentId
+                )
+                .id(activeTab.id)
+            } else {
+                ThemeView {
+                    VStack(spacing: 16) {
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 64))
+                            .foregroundColor(.secondary)
+                        Text(.Library.selectBookToRead)
+                            .font(.title3)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
-        } else {
-            ThemeView {
-                VStack(spacing: 16) {
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 64))
-                        .foregroundColor(.secondary)
-                    Text(.Library.selectBookToRead)
-                        .font(.title3)
-                        .foregroundColor(.secondary)
+        }
+        .toolbar {
+            if isRegularLayout, bManager.openTabs.count > 1 {
+                ToolbarItem(placement: .principal) {
+                    ReaderTabsView()
+                }
+            } else if let activeTab = bManager.openTabs.first(where: { $0.id == bManager.activeTabId }) ?? bManager.openTabs.first {
+                ToolbarItem(placement: .principal) {
+                    Text(activeTab.book.book)
+                        .font(ReaderViewModel.kfgqpc)
+                        .foregroundStyle(isDarkMode ? .white : .black)
                 }
             }
         }
