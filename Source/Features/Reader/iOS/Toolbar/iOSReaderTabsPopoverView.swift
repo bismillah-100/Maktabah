@@ -11,17 +11,24 @@ struct iOSReaderTabsPopoverView: View {
     @Environment(iOSNavigationManager.self) var bManager
     @Binding var isPresented: Bool
 
+    @State private var highlightedTabId: UUID?
     private let cardHeight: CGFloat = 50
+
+    private var currentTabId: UUID? {
+        highlightedTabId ?? bManager.activeTabId
+    }
 
     var body: some View {
         NavigationStack {
             ThemeList(bManager.openTabs, id: \.id) { tab in
                 Button(action: {
-                    bManager.selectTab(id: tab.id)
                     isPresented = false
+                    if tab.id != bManager.activeTabId {
+                        bManager.selectTab(id: tab.id)
+                    }
                 }) {
                     HStack(spacing: 8) {
-                        if bManager.activeTabId == tab.id {
+                        if currentTabId == tab.id {
                             Circle()
                                 .fill(
                                     Color(
@@ -36,7 +43,7 @@ struct iOSReaderTabsPopoverView: View {
                             .font(ReaderViewModel.kfgqpcTitle)
                             .lineLimit(1)
                             .foregroundColor(
-                                bManager.activeTabId == tab.id
+                                currentTabId == tab.id
                                     ? .accentColor : .primary
                             )
                     }
@@ -61,6 +68,8 @@ struct iOSReaderTabsPopoverView: View {
                             bManager.closeTab(id: tab.id)
                             if bManager.openTabs.isEmpty {
                                 isPresented = false
+                            } else if tab.id == highlightedTabId {
+                                highlightedTabId = bManager.activeTabId
                             }
                         }
                     } label: {
@@ -73,6 +82,9 @@ struct iOSReaderTabsPopoverView: View {
             .navigationBarTitleDisplayMode(.inline)
             .environment(\.layoutDirection, .rightToLeft)
             .animation(.easeInOut(duration: 0.3), value: bManager.openTabs)
+            .onAppear {
+                highlightedTabId = bManager.activeTabId
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
