@@ -1,32 +1,32 @@
-# Book Structure
+# Struktur Data Kitab
 
-Dokumen ini adalah artikel arsitektur database dan mapping model untuk modul buku.
+Dokumen ini menjelaskan arsitektur basis data serta pemetaan model (*model mapping*) untuk modul kitab pada aplikasi Maktabah.
 
-Lihat: `Documentation/Optimasi-Penyimpanan.md` untuk detail kompresi ZSTD dan desain FTS hemat ruang.
+Lihat dokumen [Optimasi Penyimpanan](Optimasi%20Disk.md) untuk rincian kompresi ZSTD dan desain FTS hemat ruang.
 
 ## Ruang Lingkup
 
-- Database utama di `Managers/Database`
-- Mapping data di `Source/Models`
-- Transformasi teks: `shorts`, mapping `tabaqa`, kurung `{}`, dan ZSTD
-- Alur update buku + rebuild FTS
+- Basis data utama pada `Source/Core/Database/`
+- Pemetaan model data pada `Source/Features/`
+- Transformasi teks: `shorts`, pemetaan `tabaqa`, kurung ayat `{}`, dan ZSTD
+- Alur pembaruan buku dan pembangunan ulang (*rebuild*) indeks FTS
 
-## Peta Database
+## Peta Basis Data
 
-`DatabaseManager` membuka dua database inti:
+`DatabaseManager` membuka dua berkas basis data inti:
 
 - `Files/main.sqlite` (`DatabaseManager.db`)
 - `Files/special.sqlite` (`DatabaseManager.dbSpecial`)
 
-Selain itu aplikasi memakai database archive per nomor:
+Selain itu, aplikasi menggunakan berkas basis data arsip per nomor:
 
-- `N.sqlite` (contoh `1.sqlite`, `2.sqlite`) berisi konten kitab (`b{bkid}`) + TOC (`t{bkid}`)
-- `N_fts.sqlite` berisi indeks FTS5 per tabel kitab (`b{bkid}_fts`)
+- `N.sqlite` (misalnya `1.sqlite`, `2.sqlite`) berisi konten kitab (`b{bkid}`) dan daftar isi / TOC (`t{bkid}`).
+- `N_fts.sqlite` berisi indeks FTS5 per tabel kitab (`b{bkid}_fts`).
 
-Fitur Database Pengguna:
+Basis data pengguna:
 
-- `SearchResults.sqlite` (hasil pencarian tersimpan)
-- `Annotations.sqlite` (highlight/underline + catatan)
+- `SearchResults.sqlite` (hasil pencarian tersimpan / *bookmarks*)
+- `Annotations.sqlite` (sorotan teks, garis bawah, dan catatan)
 
 ## Skema Utama
 
@@ -34,280 +34,272 @@ Fitur Database Pengguna:
 
 #### Tabel `0bok`
 
-Kolom yang dipakai aplikasi (lihat `DatabaseManager`):
+Kolom yang digunakan aplikasi (lihat `DatabaseManager`):
 
-- `bkid` -> ID buku
-- `cat` -> kategori
-- `bk` -> judul buku
-- `Archive` -> id file archive (`N.sqlite`)
-- `betaka` -> metadata/bithoqoh
-- `authno` -> relasi penulis ke `Auth`
-- `inf` -> info buku
-- `TafseerNam` -> nama tafsir (opsional)
-- `bVer`/`bver` -> versi buku (dipakai update manager)
+- `bkid` $\rightarrow$ ID buku
+- `cat` $\rightarrow$ ID kategori
+- `bk` $\rightarrow$ Judul buku
+- `Archive` $\rightarrow$ ID berkas arsip (`N.sqlite`)
+- `betaka` $\rightarrow$ Metadata / bithoqoh kitab
+- `authno` $\rightarrow$ Relasi penulis ke tabel `Auth`
+- `inf` $\rightarrow$ Informasi buku
+- `TafseerNam` $\rightarrow$ Nama tafsir (opsional)
+- `bVer` / `bver` $\rightarrow$ Versi buku (digunakan oleh *update manager*)
 
 #### Tabel `0cat`
 
-- `id` -> ID kategori
-- `name` -> nama kategori
-- `Lvl` -> level kategori
-- `catord` -> urutan tampilan
+- `id` $\rightarrow$ ID kategori
+- `name` $\rightarrow$ Nama kategori
+- `Lvl` $\rightarrow$ Tingkat (*level*) kategori dalam hierarki
+- `catord` $\rightarrow$ Urutan tampilan kategori
 
 ### 2) `special.sqlite`
 
 #### Tabel `Auth`
 
-Dipakai untuk data penulis:
+Digunakan untuk data penulis / pengarang:
 
-- `authid`, `auth`, `inf`, `Lng`, `oVer` (dan kolom lain seperti `HigriD` saat update author)
+- `authid`, `auth`, `inf`, `Lng`, `oVer` (dan kolom lain seperti `HigriD` saat pembaruan data penulis).
 
 #### Tabel `shorts`
 
-Dipakai untuk ekspansi singkatan teks kitab:
+Digunakan untuk ekspansi singkatan teks kitab:
 
-- `Bk` -> ID buku
-- `Ramz` -> token singkatan
-- `Nass` -> teks pengganti
+- `Bk` $\rightarrow$ ID buku
+- `Ramz` $\rightarrow$ Token singkatan
+- `Nass` $\rightarrow$ Teks pengganti
 
 #### Tabel `rowa`
 
-Dipakai modul perawi:
+Digunakan oleh modul biografi perawi hadis (*Narrator*):
 
 - `id`, `name`, `AQUAL`, `ROTBA`, `R_ZAHBI`, `sheok`, `telmez`, `IsoName`, `TABAQA`, `WHO`, `birth`, `death`
 
-#### Tabel tarjamah
+#### Tabel `tarjamah`
 
-- `men_b` + `men_b_fts`
-- `men_u` + `men_u_fts`
+- `men_b` dan `men_b_fts`
+- `men_u` dan `men_u_fts`
 
 #### Tabel Quran
 
-- `Qr` (ayat)
-- `Sora` (nama surat)
+- `Qr` (teks ayat)
+- `Sora` (nama surah)
 
-### 3) `N.sqlite` (archive kitab)
+### 3) `N.sqlite` (Arsip Kitab)
 
-Per buku:
+Struktur tabel per buku:
 
-- `b{bkid}`: konten utama (`id`, `nass`, `page`, `part`, opsional `sora`, `aya`)
-- `t{bkid}`: daftar isi/TOC (`id`, `tit`, `lvl`, `sub`)
+- `b{bkid}`: Konten utama (`id`, `nass`, `page`, `part`, serta opsional `sora`, `aya`).
+- `t{bkid}`: Daftar isi / TOC (`id`, `tit`, `lvl`, `sub`).
 
 Catatan:
 
-- Pada state terbaru, `nass` disimpan sebagai `BLOB` terkompres ZSTD.
-- Beberapa data lama bisa masih `TEXT`; pembacaan di beberapa path sudah menangani fallback.
+- Pada format terbaru, kolom `nass` disimpan sebagai `BLOB` terkompresi ZSTD.
+- Data versi lama mungkin masih bertipe `TEXT`; alur pembacaan telah menyediakan mekanisme *fallback*.
 
 ### 4) `N_fts.sqlite`
 
-Per buku ada virtual table:
+Setiap buku memiliki tabel virtual (*virtual table*):
 
-- `b{bkid}_fts` dengan kolom `nass_clean` (`fts5`, `tokenize='unicode61'`)
-- `rowid` diset ke `id` baris asli agar join ke `b{bkid}` stabil
+- `b{bkid}_fts` dengan kolom `nass_clean` (`fts5`, `tokenize='unicode61'`).
+- `rowid` ditetapkan sama dengan `id` baris asli agar operasi *join* ke `b{bkid}` konsisten.
 
-## Mapping Database ke Model
+## Pemetaan Basis Data ke Model
 
-### Library
+### Perpustakaan (*Library*)
 
-- `0cat` -> `CategoryData`
-- `0bok` -> `BooksData`
-- `Auth` -> `Muallif`
+- `0cat` $\rightarrow$ `CategoryData`
+- `0bok` $\rightarrow$ `BooksData`
+- `Auth` $\rightarrow$ `Muallif`
 
-`LibraryDataManager` membangun hierarki kategori (`CategoryData.children`) dan cache `booksById`.
+`LibraryDataManager` membangun struktur hierarki kategori (`CategoryData.children`) dan *cache* `booksById`.
 
-### Konten Buku
+### Konten Kitab
 
-- `b{bkid}` -> `BookContent`
-- `t{bkid}` -> `TOC` -> `TOCNode`
+- `b{bkid}` $\rightarrow$ `BookContent`
+- `t{bkid}` $\rightarrow$ `TOC` $\rightarrow$ `TOCNode`
 
-`BookConnection` membaca `nass`, melakukan decompress, lalu menghasilkan `BookContent`.
+`BookConnection` membaca kolom `nass`, melakukan dekompresi ZSTD, kemudian mengembalikan objek `BookContent`.
 
 #### Daftar Isi Kitab (`BookConnection.buildTOCTree`)
 
-Masalah data asal Shamela:
+Karakteristik data bawaan Shamela:
 
-- Struktur `t{bkid}` tidak selalu konsisten antar kitab.
-- Nilai `lvl`/`sub` bisa tidak ideal.
-- Hubungan parent-child tidak tersimpan sebagai foreign key eksplisit.
+- Struktur tabel `t{bkid}` tidak selalu konsisten di setiap kitab.
+- Nilai `lvl` / `sub` terkadang tidak tersusun secara ideal.
+- Relasi induk-turunan (*parent-child*) tidak disimpan sebagai *foreign key* eksplisit.
 
-Strategi yang dipakai saat ini adalah heuristik bertahap:
+Strategi yang digunakan adalah pendekatan heuristik bertahap:
 
-1. Ambil flat TOC dari `t{bkid}` dengan query:
-   - `SELECT id, tit, COALESCE(lvl, 0), COALESCE(sub, 0) ORDER BY id`
-2. Buat semua `TOCNode` dulu (pass 1), lalu kelompokkan ke `levelStacks[level]`.
-3. Tentukan root awal dari level 1:
-   - `level == 1 && sub == 0`
-4. Untuk setiap node level > 1, cari parent kandidat dari level terdekat ke atas:
-   - cek level `currentLevel - 1` turun sampai `1`
-   - pilih parent terakhir dengan `parent.id <= node.id`
-5. Jika parent tidak ketemu, node dipromosikan jadi root (fallback agar tidak hilang dari UI).
+1. Mengambil data mentah TOC dari `t{bkid}` dengan kueri:
+    - `SELECT id, tit, COALESCE(lvl, 0), COALESCE(sub, 0) ORDER BY id`
+2. Menginstansiasi seluruh objek `TOCNode` pada *pass* pertama, kemudian mengelompokkannya ke dalam `levelStacks[level]`.
+3. Menentukan *root node* awal dari level 1 (`level == 1 && sub == 0`).
+4. Untuk setiap node dengan `level > 1`, sistem mencari *parent node* kandidat dari level terdekat di atasnya:
+    - Memeriksa level dari `currentLevel - 1` turun hingga `1`.
+    - Memilih *parent* terakhir dengan ketentuan `parent.id <= node.id`.
+5. Jika *parent node* tidak ditemukan, node tersebut dipromosikan menjadi *root node* (*fallback* agar konten tidak hilang dari antarmuka pengguna).
 
-Catatan penting:
+Catatan teknis:
 
-- Mengandalkan asumsi urutan `id` kurang-lebih mengikuti alur dokumen.
-- Karena sumber data tidak selalu rapi, fallback “promote to root” adalah kompromi supaya konten tetap tampil.
-- Hasil tree di-cache per buku via `tocTreeCache` untuk mengurangi rebuild.
-- `Task.isCancelled` dicek berkala agar proses bisa dibatalkan.
+- Mengandalkan asumsi bahwa urutan `id` merepresentasikan alur linier dokumen.
+- Promosi ke *root node* merupakan kompromi untuk memastikan seluruh bab tetap dapat diakses.
+- Hasil struktur hierarki di-*cache* per buku via `tocTreeCache` guna menghindari kalkulasi berulang.
+- Pembatalan tugas dipantau secara berkala melalui `Task.isCancelled`.
 
-### Rawi/Tarjamah
+### Rawi / Tarjamah
 
-- `rowa` -> `Rowi`
-- `men_b`/`men_u` -> `TarjamahMen`
-- konten dari `b{bkid}` -> `TarjamahResult`
+- `rowa` $\rightarrow$ `Rowi`
+- `men_b` / `men_u` $\rightarrow$ `TarjamahMen`
+- Konten dari `b{bkid}` $\rightarrow$ `TarjamahResult`
 
-Model `Rowi` memiliki normalisasi di `didSet` (mis. `aqual`, `rotba`, `sheok`, `telmez`, `who`).
+Model `Rowi` melakukan normalisasi data pada blok `didSet` (seperti `aqual`, `rotba`, `sheok`, `telmez`, `who`).
 
-#### Pengelompokan Rowi sesuai Tabaqa (`RowiDataManager.loadData().groupByTabaqa()`)
+#### Pengelompokan Perawi Berdasarkan Tabaqa (`RowiDataManager.loadData().groupByTabaqa()`)
 
-Masalah data asal Shamela:
+Karakteristik data bawaan Shamela:
 
-- Tabel `rowa` tidak punya kolom hirarki seperti `lvl` (berbeda dengan `0cat`).
-- Klasifikasi ada di kolom teks `TABAQA`, formatnya bisa campuran huruf/angka/teks.
+- Tabel `rowa` tidak memiliki kolom hierarki bertingkat seperti `lvl`.
+- Klasifikasi generasi perawi tersimpan pada kolom teks `TABAQA` dengan format gabungan huruf, angka, dan teks.
 
-Karena itu, struktur Rowi yang dibangun bukan tree multi-level murni, melainkan:
+Oleh karena itu, struktur perawi yang dibentuk berupa hierarki dua tingkat:
 
-- level 1: `TabaqaGroup` (kode F..P + fallback)
-- level 2: daftar `Rowi` di dalam grup
+- **Tingkat 1**: `TabaqaGroup` (kode `F`..`P` beserta *fallback*).
+- **Tingkat 2**: Daftar entitas `Rowi` di dalam grup terkait.
 
-Alur saat ini:
+Alur pemrosesan:
 
-1. `loadData()` memuat data ringan dulu (`id`, `TABAQA`, `IsoName`) untuk semua rowi.
-2. Tiap rowi dipetakan ke kode normal melalui `Rowi.getNormalizedTabaqaCode()`.
-3. `groupByTabaqa()` membentuk dictionary `[kode: [Rowi]]`.
-4. Grup disusun pakai urutan domain tetap `orderedCodes = [F...P]`.
-5. Kode sisa masuk fallback group (`Unknown` atau kode mentah).
-6. Tiap grup memakai pagination (`initialLoad`/`loadMore`) agar UI tidak render semua item sekaligus.
-
-Konsekuensi desain:
-
-- Tidak ada parent-child berbasis relasi DB, hanya grouping semantik berdasarkan normalisasi `TABAQA`.
-- Akurasi grouping sangat bergantung pada aturan parser `getNormalizedTabaqaCode()` dan mapping `TabaqaGroup`.
-- Pendekatan ini dipilih karena kompatibel dengan dataset lama yang tidak menyediakan struktur hierarki eksplisit.
+1. `loadData()` memuat kolom dasar (`id`, `TABAQA`, `IsoName`) untuk seluruh perawi.
+2. Setiap perawi dipetakan ke kode normal melalui `Rowi.getNormalizedTabaqaCode()`.
+3. `groupByTabaqa()` membentuk kamus data `[kode: [Rowi]]`.
+4. Grup disusun berdasarkan urutan kode domain `orderedCodes = [F...P]`.
+5. Kode di luar rentang dimasukkan ke grup *fallback* (`Unknown` atau kode mentah).
+6. Setiap grup menerapkan pemuatan bertahap (*pagination* via `initialLoad` dan `loadMore`) untuk menjaga efisiensi rendering antarmuka pengguna.
 
 ## Alur Transformasi Teks
 
-### 1) Decompress `nass` (ZSTD)
+### 1) Dekompresi `nass` (ZSTD)
 
-Path baca utama (`BookConnection.getContent`, `getFirstContent`, `getContentByPage`, dll):
+Alur Pembacaan Utama (*Main Read Path*) (`BookConnection.getContent`, `getFirstContent`, `getContentByPage`, dll.):
 
-1. Query kolom `nass` sebagai `Blob`
-2. `Data(blob.bytes)` -> `ReusableFunc.decompressData`
-3. Hasil plain text dipakai sebagai `BookContent.nash`
+1. Menjalankan kueri kolom `nass` sebagai `Blob`.
+2. Mengonversi `Data(blob.bytes)` $\rightarrow$ `ReusableFunc.decompressData`.
+3. Teks hasil dekompresi disimpan ke dalam `BookContent.nash`.
 
-Di path search/tarjamah, jika `nass` terbaca sebagai `String`, kode fallback langsung memakai teks tersebut.
+Pada alur pencarian atau tarjamah, jika `nass` terbaca langsung sebagai `String`, sistem langsung menggunakan teks tersebut sebagai *fallback*.
 
-### 2) `shorts` mapping
+### 2) Pemetaan Singkatan `shorts`
 
-`DatabaseManager.loadShortsForBook(_:)` memuat map `Ramz -> Nass` dari `special.sqlite`.
-`BookConnection.applyShortsMapping` mengganti token dengan urutan key terpanjang dulu.
+`DatabaseManager.loadShortsForBook(_:)` memuat peta `Ramz -> Nass` dari `special.sqlite`.
+`BookConnection.applyShortsMapping` mengganti token singkatan secara berurutan mulai dari kunci (*key*) terpanjang.
 
-Implikasi:
+Implikasi arsitektur:
 
-- Ekspansi singkatan dilakukan setiap fetch konten buku
-- Ada cache `shortsCache` per buku untuk mengurangi query ulang
+- Ekspansi singkatan dieksekusi pada setiap pembacaan konten buku.
+- Terdapat `shortsCache` per buku untuk meminimalkan kueri basis data berulang.
 
-### 3) Kurung `{}` dan rendering teks
+### 3) Kurung Teks Ayat `{}` dan Rendering Tipografi
 
-`StringExt.cleanedText()`/`cleanedTextWithRanges()`:
+Fungsi `StringExt.cleanedText()` dan `cleanedTextWithRanges()`:
 
-- Mengganti literal `\\n` menjadi newline
-- Menghapus karakter tertentu (`¬`, `§`)
-- Mengubah `{` dan `}` menjadi bentuk kurung Arab (`﴿` / `﴾`) sesuai font aktif
-- Pada varian `cleanedTextWithRanges()`, range isi di dalam kurung dicatat untuk pewarnaan UI
+- Mengonversi *literal* `\\n` menjadi karakter baris baru (*newline*).
+- Menghapus karakter pemisah khusus (`¬`, `§`).
+- Mengubah tanda kurung `{` dan `}` menjadi kurung ayat Arab (`﴿` / `﴾`) sesuai *font* aktif.
+- Pada varian `cleanedTextWithRanges()`, rentang teks di dalam kurung dicatat untuk kebutuhan penyorotan warna (*syntax highlighting*) pada UI.
 
-### 4) Mapping `tabaqa` / simbol rawi
+### 4) Pemetaan `tabaqa` dan Simbol Perawi
 
-`RowiModel` + `StringExt` melakukan:
+`RowiModel` dan `StringExt` menangani:
 
-- Ekspansi kode kutub (`mappingRowiKutub`)
-- Ekspansi singkatan tunggal (`C`, `E`, `W`, `#`, dll)
-- Konversi kode tabaqa (`F`..`P`) ke label Arab
-- Normalisasi grouping perawi via `getNormalizedTabaqaCode()`
+- Ekspansi kode kitab hadis (`mappingRowiKutub`).
+- Ekspansi singkatan tunggal (`C`, `E`, `W`, `#`, dll.).
+- Konversi kode tabaqa (`F`..`P`) ke label bahasa Arab.
+- Normalisasi pengelompokan perawi via `getNormalizedTabaqaCode()`.
 
-## Mekanisme Search + FTS
+## Mekanisme Pencarian & FTS
 
-### Search kitab umum
+### Pencarian Kitab Umum
 
 `SearchEngine`:
 
-1. Menyusun FTS query (`phrase` atau `contains`)
-2. Menghitung `COUNT(*)` dari `b{bkid}_fts`
-3. Mengambil data batch dengan join:
-   - FTS table (`b{bkid}_fts`)
-   - Tabel konten asli (`b{bkid}`)
-4. `nass` hasil join didecompress jika berupa `BLOB`
+1. Menyusun kueri FTS (mode `phrase`, `contains`, `or`, atau `near`).
+2. Menghitung `COUNT(*)` dari tabel `b{bkid}_fts`.
+3. Mengambil data dalam *batch* menggunakan operasi *join*:
+    - Tabel FTS (`b{bkid}_fts`)
+    - Tabel konten utama (`b{bkid}`)
+4. Melakukan dekompresi ZSTD pada kolom `nass` hasil *join* jika berupa `BLOB`.
 
-### Search tarjamah
+### Pencarian Tarjamah Perawi
 
 `TarjamahGlobalManager`:
 
-- `men_b` via `men_b_fts`
-- `men_u` via `men_u_fts`
-- Konten referensi diambil dari `b{bkid}` sesuai `id`
+- Mengakses `men_b` melalui indeks `men_b_fts`.
+- Mengakses `men_u` melalui indeks `men_u_fts`.
+- Mengambil konten referensi dari `b{bkid}` berdasarkan `id`.
 
-## Update Buku dan Rebuild Struktur
+## Pembaruan Buku dan Pembangunan Ulang Indeks
 
-`BookUpdateManager` melakukan pipeline:
+`BookUpdateManager` menjalankan alur *pipeline* berikut:
 
-1. Download metadata dan file buku baru
-2. Baca `main_update` untuk dapat metadata (`bkid`, `archive`, `bVer`, `link`, dst)
-3. Konversi tabel `b{bkid}`:
-   - Salin ke temp table
-   - Kolom `nass` dikompres ZSTD (`TEXT` -> `BLOB`)
-   - Rename kembali ke `b{bkid}`
-4. Replace tabel target archive:
-   - `b{bkid}`
-   - `t{bkid}`
-5. Rebuild FTS di `N_fts.sqlite`:
-   - Drop/create `b{bkid}_fts`
-   - Insert `rowid=id`, `nass_clean=normalize_arabic(nass)`
-6. Update/inject metadata `0bok` + update versi (`bVer`)
+1. Mengunduh metadata dan berkas buku baru.
+2. Membaca tabel `main_update` untuk mendapatkan metadata (`bkid`, `archive`, `bVer`, `link`, dll.).
+3. Mengonversi tabel `b{bkid}`:
+    - Menyalin ke tabel sementara.
+    - Mengompresi kolom `nass` menggunakan ZSTD (`TEXT` $\rightarrow$ `BLOB`).
+    - Mengubah nama tabel kembali ke `b{bkid}`.
+4. Mengganti tabel target pada arsip:
+    - `b{bkid}`
+    - `t{bkid}`
+5. Membangun ulang indeks FTS pada `N_fts.sqlite`:
+    - Menghapus dan membuat ulang (*drop/create*) `b{bkid}_fts`.
+    - Memasukkan data dengan `rowid = id` dan `nass_clean = normalize_arabic(nass)`.
+6. Memperbarui metadata `0bok` serta nomor versi (`bVer`).
 
-## Database Pengguna
+## Basis Data Pengguna
 
 ### `Annotations.sqlite`
 
 Tabel `annotations`:
 
-- `id` id unik anotasi
-- `bkId` id buku dari main.sqlite
-- `contentId` id konen buku dari N.sqlite
-- `startIndex`, `length` startIndex dan panjang anotasi
-- `startIndexDiac`, `lengthDiac` startIndex dan panjang anotasi dengan harakat
-- `color` warna
-- `type` tipe: highligh/underline
-- `note` catatan
-- `createdAt` tanggal dibuat
-- `context` konteks (konten kitab yang diberi tanda)
-- `part` bagian
-- `page` halaman
+- `id`: Pengenal unik anotasi (UUID).
+- `bkId`: ID buku dari `main.sqlite`.
+- `contentId`: ID konten buku dari berkas `N.sqlite`.
+- `startIndex`, `length`: Indeks awal dan panjang rentang teks anotasi.
+- `startIndexDiac`, `lengthDiac`: Indeks awal dan panjang rentang teks pada mode berharakat.
+- `color`: Kode warna sorotan (*hex*).
+- `type`: Tipe anotasi (*highlight* / *underline*).
+- `note`: Teks catatan pengguna.
+- `createdAt`: Waktu pembuatan anotasi (UNIX *timestamp*).
+- `context`: Cuplikan teks kitab yang dianotasi.
+- `part`: Nomor jilid/bagian.
+- `page`: Nomor halaman.
 
-Dipetakan ke `Annotation`.
+Data ini dipetakan ke model `Annotation`.
 
 ### `SearchResults.sqlite`
 
-- `folders` untuk struktur folder hasil tersimpan
-- `results` untuk item hasil (query, archive, bkId, daftar contentId)
+- `folders`: Menyimpan struktur hierarki folder untuk hasil pencarian yang disimpan (*bookmarks*).
+- `results`: Menyimpan entitas hasil pencarian (`query`, `archive`, `bkId`, daftar `contentId`).
 
-Dipetakan ke `SavedResultsItem` / node view model hasil.
+Data ini dipetakan ke model `SavedResultsItem` dan node tampilan hasil pencarian.
 
 ## Catatan Implementasi Penting
 
-- Pembacaan konten melakukan decompress per row fetch dan dicache di (`BookPageCache`)  untuk mengurangi dekompresi berulang.
-- Ekspansi `shorts` dilakukan setelah decompress; jadi biaya string processing tetap ada di path baca.
-- Tidak ada fitur bookmark karena sudah bisa tercakup dalam fitur anotasi untuk kestabilan dan kemudahan pengembangan.
+- Pembacaan konten melakukan dekompresi ZSTD pada setiap pengambilan baris dan menyimpannya ke `BookPageCache` untuk meminimalkan beban CPU berulang.
+- Ekspansi singkatan `shorts` dilakukan setelah tahap dekompresi.
+- Fitur markah buku (*bookmarks*) diintegrasikan dengan modul penyimpanan hasil pencarian guna menjaga konsistensi arsitektur dan kemudahan pemeliharaan kode.
 
-## File Referensi
+## Berkas Referensi Terkait
 
-- `Source/Managers/Database/DatabaseManager.swift`
-- `Source/Managers/Database/BookConnection.swift`
-- `Source/Managers/Database/BookUpdateManager.swift`
-- `Source/Managers/Database/AnnotationManager.swift`
-- `Source/Managers/Database/ResultsHandler.swift`
-- `Source/Managers/Engine/SearchEngine.swift`
-- `Source/Managers/String/StringExt.swift`
-- `Source/Managers/Narrathor/RowiDataManager.swift`
-- `Source/Managers/Narrathor/TarjamahDataManager.swift`
-- `Source/Models/DataModel.swift`
-- `Source/Models/RowiModel.swift`
-- `Source/Models/Annotations.swift`
-- `Source/Models/Narrathor.swift`
+- `DatabaseManager.swift`
+- `BookConnection.swift`
+- `BookUpdateManager.swift`
+- `AnnotationManager.swift`
+- `ResultsHandler.swift`
+- `SearchEngine.swift`
+- `StringExt.swift`
+- `RowiDataManager.swift`
+- `TarjamahDataManager.swift`
+- `RowiModel.swift`
+- `Annotations.swift`
+- `Rowi.swift`

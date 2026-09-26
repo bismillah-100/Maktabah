@@ -1,108 +1,108 @@
 # Optimasi Penyimpanan
 
-Catatan ini menjelaskan kenapa penyimpanan buku dipecah menjadi dua optimasi:
+Catatan ini memaparkan alasan pemisahan strategi optimasi penyimpanan buku menjadi dua bagian:
 
-1. `nass` dikompres pakai ZSTD (level 10).
-2. indeks FTS dipisah ke file terpisah dan dibuat `content=''`.
+1. Kolom `nass` dikompresi menggunakan Zstandard (ZSTD level 10).
+2. Indeks FTS dipisahkan ke berkas tersendiri dengan konfigurasi `content=''`.
 
-Tujuannya sederhana: ukuran data tetap masuk akal, tapi alur baca dan search tidak berubah dari sisi fitur.
+Tujuannya adalah menjaga ukuran data tetap ringkas tanpa mengubah perilaku fitur pembacaan maupun pencarian.
 
 ## Tujuan
 
-Data kitab besar. Kalau semua disimpan mentah sebagai teks, ukuran total cepat naik (secara praktis bisa lewat 20 GB).
+Ukuran data kitab sangat besar. Jika seluruh konten disimpan dalam bentuk teks mentah tanpa kompresi, total ukuran basis data dapat melampaui 20 GB.
 
-Karena itu, di proyek ini dipakai pola:
+Oleh karena itu, proyek ini menerapkan pemisahan berkas:
 
-- file konten utama: `N.sqlite`
-- file indeks pencarian: `N_fts.sqlite`
+- Berkas konten utama: `N.sqlite`
+- Berkas indeks pencarian: `N_fts.sqlite`
 
-## Struktur singkat
+## Struktur Berkas
 
-Untuk satu archive:
+Untuk setiap arsip (*archive*):
 
-- `N.sqlite` menyimpan tabel utama `b{bkid}` (konten) dan `t{bkid}` (TOC).
-- `N_fts.sqlite` menyimpan `b{bkid}_fts` untuk full-text search.
+- `N.sqlite` menyimpan tabel utama `b{bkid}` (konten) dan `t{bkid}` (TOC / daftar isi).
+- `N_fts.sqlite` menyimpan `b{bkid}_fts` untuk *full-text search* (FTS5).
 
-Dengan pola ini, konten dan indeks dipisah jelas.
+Dengan pendekatan ini, berkas konten dan indeks terpisah secara tegas.
 
 ## Kompresi `nass` (ZSTD)
 
-### Apa yang disimpan
+### Data yang Disimpan
 
-Kolom `nass` di tabel `b{bkid}`.
+Kolom `nass` pada tabel `b{bkid}`:
 
-- data lama bisa masih `TEXT`
-- data hasil update dikonversi menjadi `BLOB` terkompres
+- Data lama mungkin masih bertipe `TEXT`.
+- Data hasil pembaruan dikonversi menjadi `BLOB` terkompresi ZSTD.
 
-### Kapan kompresi jalan
+### Waktu Pelaksanaan Kompresi
 
-Saat update buku (`BookUpdateManager.convertBookDatabase`):
+Saat pembaruan buku (`BookUpdateManager.convertBookDatabase`):
 
-1. membuat tabel sementara `b{bkid}_zstd`
-2. menyalin semua kolom
-3. khusus `nass`, kolom dikompres dengan `ReusableFunc.compressData`
-4. timpa tabel lama dengan tabel baru
+1. Membuat tabel sementara `b{bkid}_zstd`.
+2. Menyalin seluruh kolom data.
+3. Mengompresi kolom `nass` menggunakan `ReusableFunc.compressData`.
+4. Mengganti tabel lama dengan tabel baru yang telah terkompresi.
 
-Setelah tahap ini, tabel buku langsung dalam format hemat ruang.
+Setelah tahap ini selesai, tabel buku langsung tersimpan dalam format terkompresi yang hemat ruang.
 
-### Kapan dekompresi jalan
+### Waktu Pelaksanaan Dekompresi
 
-Saat baca row konten (`BookConnection.getContent`, `getFirstContent`, `getContentByPage`, dan path sejenis):
+Saat membaca baris konten (`BookConnection.getContent`, `getFirstContent`, `getContentByPage`, dan *path* sejenis):
 
-1. `nass` dibaca sebagai `Blob`
-2. diubah ke `Data`
-3. didekompres via `ReusableFunc.decompressData`
-4. baru masuk pipeline teks lain (mis. mapping `shorts`)
+1. Kolom `nass` dibaca sebagai `Blob`.
+2. Dikonversi ke tipe `Data`.
+3. Didekompresi melalui `ReusableFunc.decompressData`.
+4. Diteruskan ke *pipeline* pemrosesan teks berikutnya (misalnya pemetaan singkatan `shorts`).
 
-### Dampaknya
+### Dampak Performa & Penyimpanan
 
-- ukuran file archive turun cukup besar
-- ada biaya CPU saat read
-- beban baca berulang ditolong cache (`BookPageCache`)
+- Ukuran berkas arsip menyusut secara signifikan.
+- Terdapat beban komputasi CPU tambahan saat proses dekompresi data.
+- Beban pembacaan berulang diringankan oleh mekanisme *cache* (`BookPageCache`).
 
-## FTS hemat ruang (`content=''`)
+## FTS Hemat Ruang (`content=''`)
 
-### Bentuk tabel FTS
+### Bentuk Tabel FTS
 
-Untuk setiap buku dibuat:
+Untuk setiap buku, sistem membuat:
 
 - `b{bkid}_fts`
-- skema: `fts5(nass_clean, content='', tokenize='unicode61')`
+- Skema: `fts5(nass_clean, content='', tokenize='unicode61')`
 
-`content=''` sengaja dipakai supaya FTS tidak menyimpan salinan isi kitab lagi.
+Konfigurasi `content=''` sengaja digunakan agar tabel FTS tidak menduplikasi isi teks kitab.
 
-### Cara isi indeks
+### Alur Pengisian Indeks
 
-Saat update archive (`BookUpdateManager.replaceArchiveDatabase`):
+Saat pembaruan arsip (`BookUpdateManager.replaceArchiveDatabase`):
 
-1. replace dulu tabel utama (`b{bkid}` dan `t{bkid}`)
-2. drop/create ulang `b{bkid}_fts` di `N_fts.sqlite`
-3. insert data FTS dengan:
-   - `rowid = id` dari tabel utama
-   - `nass_clean = normalize_arabic(nass)`
+1. Memperbarui tabel utama (`b{bkid}` dan `t{bkid}`) terlebih dahulu.
+2. Membuat ulang (*drop/create*) tabel `b{bkid}_fts` pada `N_fts.sqlite`.
+3. Memasukkan data ke tabel FTS dengan ketentuan:
+    - `rowid = id` dari tabel utama.
+    - `nass_clean = normalize_arabic(nass)`.
 
-Normalisasi Arab dipakai supaya matching query lebih stabil.
+Normalisasi teks Arab diterapkan agar pencocokan kueri (*query matching*) lebih konsisten dan akurat.
 
-### Cara dipakai saat search
+### Mekanisme Eksekusi saat Pencarian
 
-Pencarian tidak berhenti di FTS saja. Alurnya:
+Proses pencarian tidak hanya mengandalkan FTS, melainkan melalui alur berikut:
 
-1. `MATCH` di `b{bkid}_fts`
-2. join ke `b{bkid}` pakai `rowid = id`
-3. ambil `nass/page/part`, lalu dekompres kalau `nass` adalah `BLOB`
+1. Menjalankan kueri `MATCH` pada tabel `b{bkid}_fts`.
+2. Melakukan operasi *join* ke tabel `b{bkid}` menggunakan kondisi `rowid = id`.
+3. Mengambil kolom `nass`, `page`, dan `part`, kemudian melakukan dekompresi jika `nass` berupa `BLOB`.
 
-Jadi FTS hanya jadi indeks, bukan sumber konten utama.
+Dengan demikian, tabel FTS murni berfungsi sebagai indeks pencarian dan bukan sebagai penyimpan konten utama.
 
-## Hal yang wajib dijaga
+## Ketentuan yang Wajib Dijaga
 
-- `rowid` di FTS harus selalu sama dengan `id` di tabel `b{bkid}`.
-- hasil update baru harus menyimpan `nass` sebagai `BLOB` terkompres.
-- rebuild FTS wajib dilakukan setelah replace tabel buku.
+- Nilai `rowid` pada tabel FTS harus selalu identik dengan `id` pada tabel `b{bkid}`.
+- Data pembaruan baru wajib menyimpan kolom `nass` sebagai `BLOB` terkompresi ZSTD.
+- Proses *rebuild* FTS wajib dijalankan setelah mengganti tabel buku.
 
-Kalau salah satu poin ini meleset, hasil search bisa tidak sinkron dengan konten.
+Apabila salah satu ketentuan ini terlewatkan, hasil pencarian tidak akan sinkron dengan konten buku.
 
 ## Ringkasan
 
-- ZSTD mengurangi ukuran konten utama.
-- FTS `content=''` mengurangi ukuran indeks.
-- Keduanya dipakai bersamaan supaya storage tetap terkontrol untuk koleksi kitab besar.
+- ZSTD mengurangi ukuran penyimpanan konten utama.
+- FTS `content=''` meminimalkan ukuran indeks pencarian.
+- Keduanya diterapkan bersamaan agar penggunaan ruang penyimpanan tetap efisien untuk koleksi kitab berskala besar.
