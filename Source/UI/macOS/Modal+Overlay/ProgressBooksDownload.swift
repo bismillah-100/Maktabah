@@ -71,6 +71,14 @@ final class BundleArchiveDownloadProgressState: Identifiable {
             totalSizeString: sizeString
         )
     }
+
+    func transitionToIntegrating() {
+        mode = .integrating
+        title = String(localized: .Library.integratingBook)
+        message = String(localized: .Library.copyingTablesAndRebuildingFts)
+        detail = String(localized: .Library.pleaseWaitProcessCannotBeCancelled)
+        progress = 0
+    }
 }
 
 struct BundleArchiveDownloadProgressView: View {
@@ -377,11 +385,7 @@ final class BookIntegrateModalCenter {
     /// Progress bar menjadi indeterminate, tombol Cancel hilang.
     func showIntegrating() {
         guard let state = progressState else { return }
-        state.mode = .integrating
-        state.title = String(localized: .Library.integratingBook)
-        state.message = String(localized: .Library.copyingTablesAndRebuildingFts)
-        state.detail = String(localized: .Library.pleaseWaitProcessCannotBeCancelled)
-        state.progress = 0
+        state.transitionToIntegrating()
         updateWindowSize(height: 180, animated: true)
     }
 

@@ -324,11 +324,7 @@ class iOSNavigationManager {
     }
 
     private func showIntegratingState(for state: BundleArchiveDownloadProgressState) {
-        state.mode = .integrating
-        state.title = String(localized: .Library.integratingBook)
-        state.message = String(localized: .Library.copyingTablesAndRebuildingFts)
-        state.detail = String(localized: .Library.pleaseWaitProcessCannotBeCancelled)
-        state.progress = 0
+        state.transitionToIntegrating()
     }
 
     private func presentReader(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) {

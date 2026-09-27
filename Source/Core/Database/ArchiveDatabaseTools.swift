@@ -132,12 +132,7 @@ enum ArchiveDatabaseTools {
         try withTransaction(db: db) {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
-                    guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return }
-                    let preProcessed = rawText
-                        .cleaningLineBreaks()
-                        .stripSpanTags()
-                    let normalized = preProcessed.stemArabicLight10()
-                    guard !normalized.isEmpty else { return }
+                    guard let normalized = extractNormalizedText(from: selectStmt, isNassCompressed: isNassCompressed) else { return }
 
                     let rowId = sqlite3_column_int64(selectStmt, 0)
                     let page = sqlite3_column_int64(selectStmt, 2)
@@ -182,17 +177,21 @@ enum ArchiveDatabaseTools {
         try withTransaction(db: db) {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
-                    guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return }
-                    let preProcessed = rawText
-                        .cleaningLineBreaks()
-                        .stripSpanTags()
-                    let normalized = preProcessed.stemArabicLight10()
-                    guard !normalized.isEmpty else { return }
+                    guard let normalized = extractNormalizedText(from: selectStmt, isNassCompressed: isNassCompressed) else { return }
                     let rowId = sqlite3_column_int64(selectStmt, 0)
                     try insertFtsRow(insertStmt: insertStmt, rowId: rowId, normalized: normalized, ftsTable: ftsTable, db: db)
                 }
             }
         }
+    }
+
+    private static func extractNormalizedText(from selectStmt: OpaquePointer, isNassCompressed: Bool) -> String? {
+        guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return nil }
+        let normalized = rawText
+            .cleaningLineBreaks()
+            .stripSpanTags()
+            .stemArabicLight10()
+        return normalized.isEmpty ? nil : normalized
     }
 
     private static func readRawText(selectStmt: OpaquePointer, isNassCompressed: Bool) -> String? {
