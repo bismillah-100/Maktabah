@@ -35,6 +35,7 @@ extension SearchViewModel {
         isPaused = false
 
         results = []
+        SearchHitResolver.shared.clearCache()
         totalTables = 0
         completedTables = 0
         completedRowsInTable = 0
@@ -79,6 +80,7 @@ extension SearchViewModel {
     func clearResults() {
         stopSearch()
         results.removeAll()
+        SearchHitResolver.shared.clearCache()
     }
 
     func sortResults(by key: SearchSortKey, ascending: Bool) {
@@ -108,7 +110,7 @@ extension SearchViewModel {
             onRowProgress: { [weak self] _, tableName, current, total in
                 self?.emitRowProgress(tableName: tableName, current: current, total: total)
             },
-            completion: { [weak self] item in self?.emitResult(item: item) },
+            completion: { [weak self] items in self?.emitResults(items: items) },
             onComplete: { [weak self] in self?.stopSearch() }
         )
     }
@@ -139,8 +141,9 @@ extension SearchViewModel {
         #endif
     }
 
-    func emitResult(item: SearchResultItem) {
-        results.append(item)
+    func emitResults(items: [SearchResultItem]) {
+        guard isSearching, !items.isEmpty else { return }
+        results.append(contentsOf: items)
         #if os(macOS)
         searchDidReceiveResult.send()
         #endif

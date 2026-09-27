@@ -13,5 +13,4 @@ class SearchCellView: NSTableCellView {
 
         // Drawing code here.
     }
-    
 }

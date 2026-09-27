@@ -288,23 +288,31 @@ final class FtsMigrationManager {
     }
 
     nonisolated private func buildFtsForTables(_ tables: [String], archiveDb: OpaquePointer, archiveId: Int) async throws {
+        try? Self.exec(archiveDb, "DROP TABLE IF EXISTS fts_db.archive_index;")
+        try? Self.exec(archiveDb, "DROP TABLE IF EXISTS fts_db.archive_fts;")
+        try ArchiveDatabaseTools.createUnifiedFTS(db: archiveDb, ftsSchema: "fts_db")
+
         for (index, table) in tables.enumerated() {
             if await isCancelled {
                 throw CancellationError()
             }
 
+            guard let bookId = Int(table.dropFirst()) else { continue }
+
             let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
             await self.updateBookProgress(archiveId: archiveId, statusText: statusText)
 
-            try ArchiveDatabaseTools.buildFTS(
+            try ArchiveDatabaseTools.appendBookToUnifiedFTS(
                 db: archiveDb,
                 ftsSchema: "fts_db",
-                ftsTable: "\(table)_fts",
                 sourceSchema: "main",
                 sourceTable: table,
+                bookId: bookId,
                 isNassCompressed: true
             )
 
+            // Bersihkan tabel FTS lama per-kitab untuk menghemat ruang disk
+            try? Self.exec(archiveDb, "DROP TABLE IF EXISTS fts_db.\(table)_fts;")
             try? Self.exec(archiveDb, SQL.dropFtsTable(table))
 
             await self.updateBookProgress(archiveId: archiveId, incrementCount: true)
@@ -346,6 +354,7 @@ final class FtsMigrationManager {
                 let ftsExists = fileManager.fileExists(atPath: ftsPath)
 
                 if archiveExists || ftsExists {
+                    LibraryDataManager.shared.closeAllArchiveConnections()
                     try await self.migrateSingleArchive(archiveId: archiveId)
                     self.currentArchiveIndex = 1
                     self.progress = 1.0

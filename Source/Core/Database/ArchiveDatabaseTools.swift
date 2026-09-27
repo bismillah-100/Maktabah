@@ -25,8 +25,13 @@ enum ArchiveDatabaseTools {
         static let insertSelect = "INSERT INTO \"%@\" SELECT * FROM %@.\"%@\";"
         static let createTableAsSelect = "CREATE TABLE main.\"%@\" AS SELECT * FROM %@.\"%@\";"
         static let createFTS = "CREATE VIRTUAL TABLE %@.%@ USING fts5(nass_clean, content='', tokenize='unicode61');"
+        static let createUnifiedIndex = "CREATE TABLE IF NOT EXISTS %@.archive_index (rowid INTEGER PRIMARY KEY, book_id INTEGER, page INTEGER, id INTEGER, part INTEGER);"
+        static let createUnifiedFTS = "CREATE VIRTUAL TABLE IF NOT EXISTS %@.archive_fts USING fts5(nass_clean, content='', tokenize='unicode61');"
         static let selectFTS = "SELECT id, nass FROM %@.%@ WHERE nass IS NOT NULL AND nass != '';"
+        static let selectUnifiedSource = "SELECT id, nass, page, part FROM %@.%@ WHERE nass IS NOT NULL AND nass != '';"
         static let insertFTS = "INSERT INTO %@.%@(rowid, nass_clean) VALUES (?, ?);"
+        static let insertUnifiedIndex = "INSERT OR REPLACE INTO %@.archive_index(rowid, book_id, page, id, part) VALUES (?, ?, ?, ?, ?);"
+        static let insertUnifiedFTS = "INSERT INTO %@.archive_fts(rowid, nass_clean) VALUES (?, ?);"
         static let beginTx = "BEGIN TRANSACTION;"
         static let commitTx = "COMMIT;"
         static let rollbackTx = "ROLLBACK;"
@@ -90,6 +95,80 @@ enum ArchiveDatabaseTools {
         defer { sqlite3_finalize(insertStmt) }
 
         try processFtsRows(db: db, selectStmt: selectStmt, insertStmt: insertStmt, ftsTable: ftsTable, isNassCompressed: isNassCompressed)
+        try initializeFtsMetadataIfNeeded(db: db, ftsSchema: ftsSchema)
+    }
+
+    static func createUnifiedFTS(db: OpaquePointer, ftsSchema: String = "fts_db") throws {
+        let sqlIndex = String(format: SQL.createUnifiedIndex, ftsSchema)
+        try exec(db, sqlIndex)
+        let sqlFts = String(format: SQL.createUnifiedFTS, ftsSchema)
+        try exec(db, sqlFts)
+    }
+
+    static func appendBookToUnifiedFTS(
+        db: OpaquePointer,
+        ftsSchema: String = "fts_db",
+        sourceSchema: String = "main",
+        sourceTable: String,
+        bookId: Int,
+        isNassCompressed: Bool = true
+    ) throws {
+        try createUnifiedFTS(db: db, ftsSchema: ftsSchema)
+        try exec(db, "DELETE FROM \(ftsSchema).archive_index WHERE book_id = \(bookId);")
+
+        let selectSQL = String(format: SQL.selectUnifiedSource, sourceSchema, sourceTable)
+        let insertIndexSQL = String(format: SQL.insertUnifiedIndex, ftsSchema)
+        let insertFtsSQL = String(format: SQL.insertUnifiedFTS, ftsSchema)
+
+        let selectStmt = try prepareStatement(db: db, sql: selectSQL, errorMsg: "Error prepare SELECT for unified FTS \(sourceTable).")
+        defer { sqlite3_finalize(selectStmt) }
+
+        let insertIndexStmt = try prepareStatement(db: db, sql: insertIndexSQL, errorMsg: "Error prepare INSERT into unified index.")
+        defer { sqlite3_finalize(insertIndexStmt) }
+
+        let insertFtsStmt = try prepareStatement(db: db, sql: insertFtsSQL, errorMsg: "Error prepare INSERT into unified FTS.")
+        defer { sqlite3_finalize(insertFtsStmt) }
+
+        try withTransaction(db: db) {
+            while sqlite3_step(selectStmt) == SQLITE_ROW {
+                try autoreleasepool {
+                    guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return }
+                    let preProcessed = rawText
+                        .cleaningLineBreaks()
+                        .stripSpanTags()
+                    let normalized = preProcessed.stemArabicLight10()
+                    guard !normalized.isEmpty else { return }
+
+                    let rowId = sqlite3_column_int64(selectStmt, 0)
+                    let page = sqlite3_column_int64(selectStmt, 2)
+                    let part = sqlite3_column_int64(selectStmt, 3)
+                    let packedRowId = (Int64(bookId) << 32) | (rowId & 0xFFFF_FFFF)
+
+                    // 1. Insert ke archive_index (metadata)
+                    sqlite3_reset(insertIndexStmt)
+                    sqlite3_clear_bindings(insertIndexStmt)
+                    sqlite3_bind_int64(insertIndexStmt, 1, packedRowId)
+                    sqlite3_bind_int64(insertIndexStmt, 2, Int64(bookId))
+                    sqlite3_bind_int64(insertIndexStmt, 3, page)
+                    sqlite3_bind_int64(insertIndexStmt, 4, rowId)
+                    sqlite3_bind_int64(insertIndexStmt, 5, part)
+                    if sqlite3_step(insertIndexStmt) != SQLITE_DONE {
+                        throw sqliteError(db, message: "Error insert unified index \(sourceTable).")
+                    }
+
+                    // 2. Insert ke archive_fts (tokens)
+                    sqlite3_reset(insertFtsStmt)
+                    sqlite3_clear_bindings(insertFtsStmt)
+                    sqlite3_bind_int64(insertFtsStmt, 1, packedRowId)
+                    _ = normalized.withCString { ptr in
+                        sqlite3_bind_text(insertFtsStmt, 2, ptr, -1, sqliteTransient)
+                    }
+                    if sqlite3_step(insertFtsStmt) != SQLITE_DONE {
+                        throw sqliteError(db, message: "Error insert unified FTS \(sourceTable).")
+                    }
+                }
+            }
+        }
         try initializeFtsMetadataIfNeeded(db: db, ftsSchema: ftsSchema)
     }
 
@@ -210,6 +289,27 @@ enum ArchiveDatabaseTools {
             code: -5,
             userInfo: [NSLocalizedDescriptionKey: "\(message) (\(detail))"]
         )
+    }
+
+    static func tableExists(db: OpaquePointer, schemaName: String = "main", tableName: String) -> Bool {
+        let sql = "SELECT name FROM \(schemaName).sqlite_master WHERE type='table' AND name=? LIMIT 1;"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            return false
+        }
+        defer { sqlite3_finalize(stmt) }
+
+        _ = tableName.withCString { ptr in
+            sqlite3_bind_text(stmt, 1, ptr, -1, sqliteTransient)
+        }
+
+        return sqlite3_step(stmt) == SQLITE_ROW
+    }
+
+    /// Mengecek apakah database memiliki skema Unified FTS (archive_fts & archive_index).
+    static func hasUnifiedFTS(db: OpaquePointer, schemaName: String = "fts_db") -> Bool {
+        tableExists(db: db, schemaName: schemaName, tableName: "archive_fts") &&
+            tableExists(db: db, schemaName: schemaName, tableName: "archive_index")
     }
 }
 

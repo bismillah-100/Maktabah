@@ -15,7 +15,6 @@ class OptionSearchVC: NSViewController {
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var stackView: NSStackView!
     @IBOutlet weak var progressTable: NSProgressIndicator!
-    @IBOutlet weak var progressRows: NSProgressIndicator!
     @IBOutlet weak var searchField: DSFSearchField!
     @IBOutlet weak var startButton: NSButton!
     @IBOutlet weak var stopButton: NSButton!
@@ -63,8 +62,17 @@ class OptionSearchVC: NSViewController {
 
     var compactConfigured: Bool = false
 
+    private final class CellTaskBox {
+        let task: Task<Void, Never>
+
+        init(_ task: Task<Void, Never>) {
+            self.task = task
+        }
+    }
+
     private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
+    private let cellTasks = NSMapTable<NSTableCellView, CellTaskBox>.weakToStrongObjects()
     private var migrationButton: NSView?
     private var nearDistanceField: NSTextField?
     private var nearDistanceWidthConstraint: NSLayoutConstraint?
@@ -80,7 +88,6 @@ class OptionSearchVC: NSViewController {
         ReusableFunc.setupSearchField(searchField)
         if #available(macOS 26.0, *) {
             progressTable.controlSize = .small
-            progressRows.controlSize = .small
             optionsSegment.borderShape = .capsule
             let btn = [
                 cleanUpButton, startButton, stopButton, insertNewResults,
@@ -91,7 +98,6 @@ class OptionSearchVC: NSViewController {
             }
         } else {
             progressTable.controlSize = .regular
-            progressRows.controlSize = .regular
             // Fallback on earlier versions
         }
 
@@ -101,7 +107,6 @@ class OptionSearchVC: NSViewController {
 
         tableView.allowsMultipleSelection = true
 
-        setupViewModelCallbacks()
         bindViewModelPublishers()
         setupNearDistanceControl()
     }
@@ -115,15 +120,15 @@ class OptionSearchVC: NSViewController {
     private func setupMigrationButtonIfNeeded() {
         FtsMigrationManager.shared.checkNeedsMigration()
 
-        let isHidden = UserDefaults.standard.bool(forKey: "hideFtsMigrationBannerv3")
+        let isHidden = UserDefaults.standard.bool(forKey: "hideFtsMigrationBannerv5")
         guard let stackView = optionsSegment.superview as? NSStackView,
               FtsMigrationManager.shared.needsMigration &&
-                migrationButton == nil && !isHidden
+              migrationButton == nil && !isHidden
         else { return }
 
         let title = bkId.isEmpty
-        ? String(localized: .updateIndex)
-        : String(localized: .ftsMigrationAvailableBook)
+            ? String(localized: .updateIndex)
+            : String(localized: .ftsMigrationAvailableBook)
 
         let segmentedControl = NSSegmentedControl()
         segmentedControl.segmentCount = 2
@@ -168,7 +173,7 @@ class OptionSearchVC: NSViewController {
     }
 
     @objc private func hideMigrationBanner() {
-        UserDefaults.standard.set(true, forKey: "hideFtsMigrationBannerv3")
+        UserDefaults.standard.set(true, forKey: "hideFtsMigrationBannerv5")
         migrationButton?.isHidden = true
         migrationButton?.removeFromSuperview()
         migrationButton = nil
@@ -189,46 +194,6 @@ class OptionSearchVC: NSViewController {
             self?.migrationButton?.isHidden = true
             self?.migrationButton?.removeFromSuperview()
             self?.migrationButton = nil
-        }
-    }
-
-    private func setupViewModelCallbacks() {
-        viewModel.searchDidReceiveResult
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                let newCount = viewModel.results.count
-                if newCount > tableView.numberOfRows {
-                    let indexSet = IndexSet(tableView.numberOfRows ..< newCount)
-                    tableView.insertRows(at: indexSet)
-                }
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchProgressDidUpdate
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] progress in
-                self?.progressTable.doubleValue = Double(progress.completed)
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchDidComplete
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                updateStartButton(state: .off)
-                resetProgressBar()
-            }
-            .store(in: &cancellables)
-
-        viewModel.onStateChanged = { [weak self] state in
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                let loaded = state == .loaded
-                loaded
-                    ? resetIndeterminateProgress(loaded)
-                    : setupUI()
-            }
         }
     }
 
@@ -262,6 +227,16 @@ class OptionSearchVC: NSViewController {
     private func bindViewModelPublishers() {
         bindSearchLifecyclePublishers()
         bindSearchProgressPublishers()
+
+        viewModel.onStateChanged = { [weak self] state in
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                let loaded = state == .loaded
+                loaded
+                    ? resetIndeterminateProgress(loaded)
+                    : setupUI()
+            }
+        }
     }
 
     private func bindSearchLifecyclePublishers() {
@@ -271,13 +246,10 @@ class OptionSearchVC: NSViewController {
                 guard let self else { return }
                 updateStartButton(systemSymbolName: "pause.fill", state: .on)
 
-                progressTable.maxValue = Double(total)
-                resetIndeterminateProgress(!bkId.isEmpty)
-                progressTable.maxValue = 1
+                resetIndeterminateProgress(false)
+                progressTable.maxValue = max(Double(total), 1)
                 progressTable.doubleValue = 0
-                progressRows.isHidden = false
-                progressRows.maxValue = 1
-                progressRows.doubleValue = 0
+                progressTable.isHidden = false
 
                 tableView.reloadData()
                 tableView.sortDescriptors.removeAll()
@@ -289,7 +261,6 @@ class OptionSearchVC: NSViewController {
             .sink { [weak self] in
                 guard let self else { return }
                 progressTable.doubleValue = progressTable.maxValue
-                progressRows.doubleValue = progressRows.maxValue
                 updateStartButton(state: .off)
                 resetProgressBar()
             }
@@ -309,7 +280,6 @@ class OptionSearchVC: NSViewController {
             .sink { [weak self] in
                 guard let self else { return }
                 let prevCount = tableView.numberOfRows
-                progressRows.doubleValue = progressRows.maxValue
                 let newCount = viewModel.results.count
                 if newCount > prevCount {
                     tableView.insertRows(at: IndexSet(prevCount ..< newCount))
@@ -323,15 +293,6 @@ class OptionSearchVC: NSViewController {
                 guard let self else { return }
                 progressTable.maxValue = Double(progress.total)
                 progressTable.doubleValue = Double(progress.completed)
-            }
-            .store(in: &cancellables)
-
-        viewModel.rowProgressDidUpdate
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] progress in
-                guard let self else { return }
-                progressRows.maxValue = Double(progress.total)
-                progressRows.doubleValue = Double(progress.completed)
             }
             .store(in: &cancellables)
     }
@@ -409,10 +370,10 @@ class OptionSearchVC: NSViewController {
     }
 
     func resetProgressBar() {
+        progressTable.stopAnimation(nil)
+        progressTable.isIndeterminate = false
         progressTable.isHidden = true
-        progressRows.isHidden = true
         progressTable.doubleValue = 0
-        progressRows.doubleValue = 0
     }
 
     func setupIndeterminateProgress() {
@@ -534,17 +495,11 @@ class OptionSearchVC: NSViewController {
         ReusableFunc.copyResults(results, tableView: tableView)
     }
 
-    override func viewWillDisappear() {
-        super.viewWillDisappear()
-        cancellables.removeAll()
-        resultsLoadingTask?.cancel()
-        resultsLoadingTask = nil
-    }
-
     deinit {
         Logger.search.debug("deinit OptionSearchVC")
         cancellables.removeAll()
         resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
     }
 }
 
@@ -584,7 +539,11 @@ extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
             cell.textField?.stringValue = item.bookTitle
             return cell
         } else if identifier.rawValue == "Content" {
-            cell.textField?.attributedStringValue = item.attributedText
+            if let snippet = (item.hasResolvedSnippet ? item.attributedText : nil) ?? SearchHitResolver.shared.cachedSnippet(for: item) {
+                cell.textField?.attributedStringValue = snippet
+            } else {
+                scheduleSnippetResolution(for: cell, item: item)
+            }
             return cell
         } else if identifier.rawValue == "Page" {
             cell.textField?.stringValue = "\(item.page)"
@@ -619,6 +578,41 @@ extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
 
     func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
         24
+    }
+
+    @inline(__always)
+    private func scheduleSnippetResolution(for cell: NSTableCellView, item: SearchResultItem) {
+        cell.textField?.stringValue = "..."
+        let itemId = item.id
+
+        cellTasks.object(forKey: cell)?.task.cancel()
+
+        let loadTask = Task { @MainActor [weak self, weak cell] in
+            do {
+                try await Task.sleep(for: .seconds(0.05))
+            } catch {
+                return
+            }
+
+            guard let self, let cell, !Task.isCancelled else { return }
+            let currentRow = tableView.row(for: cell)
+            guard currentRow >= 0, currentRow < results.count, results[currentRow].id == itemId else { return }
+
+            let keywords = FtsQueryParser.extractKeywords(query: viewModel.query, mode: viewModel.searchMode)
+            if let resolved = await SearchHitResolver.shared.resolveSnippet(
+                for: item,
+                keywords: keywords,
+                mode: viewModel.searchMode,
+                nearDistance: viewModel.nearDistance
+            ) {
+                guard !Task.isCancelled else { return }
+                let finalRow = tableView.row(for: cell)
+                if finalRow >= 0, finalRow < results.count, results[finalRow].id == itemId {
+                    cell.textField?.attributedStringValue = resolved
+                }
+            }
+        }
+        cellTasks.setObject(CellTaskBox(loadTask), forKey: cell)
     }
 }
 
@@ -691,7 +685,8 @@ extension OptionSearchVC: ResultsDelegate {
         searchText = searchField.stringValue
 
         if let first = savedResults.first,
-           let mode = SearchMode(rawValue: first.searchMode) {
+           let mode = SearchMode(rawValue: first.searchMode)
+        {
             viewModel.setSearchMode(mode)
             optionsSegment?.selectedSegment = mode.rawValue
             viewModel.nearDistance = first.nearDistance

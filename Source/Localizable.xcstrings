@@ -4,6 +4,9 @@
     "" : {
       "shouldTranslate" : false
     },
+    "..." : {
+      "shouldTranslate" : false
+    },
     ".filterByBooks" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -148,19 +151,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يقوم هذا التحديث بتحسين فهرسة النصوص وتنظيف فواصل الأسطر لضمان دقة البحث في بدايات الفقرات."
+            "value" : "يقوم هذا التحديث بدمج فهارس البحث في مخطط موحد (Unified FTS) لتسريع البحث عبر الكتب وتحسين كفاءة التخزين."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This update optimizes text indexing and cleans line breaks to ensure accurate search results at the beginning of paragraphs."
+            "value" : "This update consolidates search indexes into a unified FTS schema to significantly increase multi-book search speed and storage efficiency."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pembaruan ini mengoptimalkan indeks teks dan membersihkan baris baru agar pencarian di awal paragraf lebih akurat."
+            "value" : "Pembaruan ini menyatukan indeks pencarian ke dalam skema terpadu untuk meningkatkan kecepatan pencarian lintas kitab dan efisiensi penyimpanan."
           }
         }
       }
@@ -171,19 +174,19 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يحسّن دقة البحث عن العبارات وإبراز النتائج عبر فواصل الفقرات."
+            "value" : "البحث عبر آلاف الكتب أصبح أسرع بكثير وأقل استهلاكاً للذاكرة مع عرض مقتطفات النتائج فورياً."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Improves phrase queries and snippet highlighting across paragraph boundaries."
+            "value" : "Searching across thousands of books is now significantly faster, uses less memory, and renders snippets instantly."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meningkatkan akurasi pencarian frasa dan sorotan kata di seluruh batas paragraf."
+            "value" : "Pencarian lintas ribuan kitab kini jauh lebih cepat, hemat memori, dan cuplikan teks ditampilkan secara instan."
           }
         }
       }

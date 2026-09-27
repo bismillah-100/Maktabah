@@ -259,6 +259,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             try exec(archiveDb, SQL.dropTable(name: bookTable))
             try exec(archiveDb, SQL.dropTable(name: tocTable))
             try exec(ftsDb, SQL.dropTable(name: ftsTable))
+            try? exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(bookId);")
         } catch {
             Logger.library.error("Error dropping tables during removal: \(error.localizedDescription, privacy: .public)")
         }
@@ -294,6 +295,8 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     /// Dipanggil secara manual dari menu Settings (iOS).
     func vacuumPendingArchives() {
         guard AppConfig.isUsingBundleMode, !pendingVacuumArchiveIds.isEmpty else { return }
+
+        LibraryDataManager.shared.closeAllArchiveConnections()
 
         for archiveId in pendingVacuumArchiveIds {
             guard let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: archiveId),
@@ -375,8 +378,9 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             sqlite3_close(ftsDb)
         }
 
-        let hasBook = tableExists(db: archiveDb, tableName: bookTable)
-        let hasFts = tableExists(db: ftsDb, tableName: ftsTable)
+        let hasBook = ArchiveDatabaseTools.tableExists(db: archiveDb, tableName: bookTable)
+        let hasFts = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main") ||
+            ArchiveDatabaseTools.tableExists(db: ftsDb, tableName: ftsTable)
         return hasBook && hasFts
     }
 
@@ -452,7 +456,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         let bookTable = "b\(bookId)"
         let tocTable = "t\(bookId)"
 
-        guard tableExists(db: archiveDb, schemaName: "source_db", tableName: bookTable) else {
+        guard ArchiveDatabaseTools.tableExists(db: archiveDb, schemaName: "source_db", tableName: bookTable) else {
             let tables = listTables(db: archiveDb, schemaName: "source_db")
             Logger.library.debug("[BookIntegrate] source_db tables: \(tables.joined(separator: ", "), privacy: .public)")
             throw BookArchiveIntegrateError.sourceTableMissing(bookTable)
@@ -461,13 +465,27 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         // ── Fase FTS ────────────────────────────────────────────────────────
         // nass masih TEXT di source → bisa dibaca langsung untuk FTS
         await onProgress?(.fts)
-        try ArchiveDatabaseTools.buildFTS(
-            db: archiveDb,
-            ftsSchema: "fts_db",
-            ftsTable: "\(bookTable)_fts",
-            sourceSchema: "source_db",
-            sourceTable: bookTable
-        )
+        let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: archiveDb)
+        let hasLegacyFts = ArchiveDatabaseTools.tableExists(db: archiveDb, schemaName: "fts_db", tableName: "\(bookTable)_fts")
+
+        if hasUnified || !hasLegacyFts {
+            try ArchiveDatabaseTools.appendBookToUnifiedFTS(
+                db: archiveDb,
+                ftsSchema: "fts_db",
+                sourceSchema: "source_db",
+                sourceTable: bookTable,
+                bookId: bookId,
+                isNassCompressed: false
+            )
+        } else {
+            try ArchiveDatabaseTools.buildFTS(
+                db: archiveDb,
+                ftsSchema: "fts_db",
+                ftsTable: "\(bookTable)_fts",
+                sourceSchema: "source_db",
+                sourceTable: bookTable
+            )
+        }
 
         // ── Fase Data ────────────────────────────────────────────────────────
         await onProgress?(.data)
@@ -496,7 +514,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             tableName: bookTable
         )
 
-        if tableExists(db: archiveDb, schemaName: "source_db", tableName: tocTable) {
+        if ArchiveDatabaseTools.tableExists(db: archiveDb, schemaName: "source_db", tableName: tocTable) {
             try ArchiveDatabaseTools.copyTable(
                 db: archiveDb,
                 sourceSchema: "source_db",
@@ -649,7 +667,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         guard FileManager.default.isNonEmptyFile(atPath: sourceURL.path) else { return false }
         guard let db = try? openReadOnlyDatabase(path: sourceURL.path) else { return false }
         defer { sqlite3_close(db) }
-        return tableExists(db: db, tableName: "b\(bookId)")
+        return ArchiveDatabaseTools.tableExists(db: db, tableName: "b\(bookId)")
     }
 
     private func listTables(path: String) -> [String] {
@@ -691,10 +709,6 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     }
 
     private enum SQL {
-        static func checkTableExists(schema: String) -> String {
-            "SELECT 1 FROM \(schema).sqlite_master WHERE type='table' AND name=? LIMIT 1;"
-        }
-
         static func dropTable(name: String) -> String {
             "DROP TABLE IF EXISTS \(name);"
         }
@@ -702,21 +716,6 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         static let detachSource = "DETACH DATABASE source_db;"
         static let detachFts = "DETACH DATABASE fts_db;"
         static let vacuum = "VACUUM;"
-    }
-
-    private func tableExists(db: OpaquePointer, schemaName: String = "main", tableName: String) -> Bool {
-        let sql = SQL.checkTableExists(schema: schemaName)
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
-            return false
-        }
-        defer { sqlite3_finalize(stmt) }
-
-        _ = tableName.withCString { ptr in
-            sqlite3_bind_text(stmt, 1, ptr, -1, sqliteTransient)
-        }
-
-        return sqlite3_step(stmt) == SQLITE_ROW
     }
 
     private func listTables(db: OpaquePointer, schemaName: String) -> [String] {

@@ -11,7 +11,7 @@ struct SearchModeView: View {
     @State private var sortAscending: Bool = true
     var ftsManager = FtsMigrationManager.shared
     @State private var showFtsMigrationOverlay = false
-    @AppStorage("hideFtsMigrationBannerv3") private var hideFtsMigrationBanner = false
+    @AppStorage("hideFtsMigrationBannerv5") private var hideFtsMigrationBanner = false
 
     var body: some View {
         @Bindable var viewModel = navigationManager.searchViewModel
@@ -23,14 +23,11 @@ struct SearchModeView: View {
                 }
             }
             .safeAreaInset(edge: .bottom, content: {
-                SearchProgressView(
-                    viewModel: viewModel,
-                    showTablesProgress: true
-                )
-                .transition(.asymmetric(
-                    insertion: .move(edge: .bottom).combined(with: .opacity),
-                    removal: .move(edge: .bottom).combined(with: .opacity)
-                ))
+                SearchProgressView(viewModel: viewModel)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
             })
             .navigationBarTitleDisplayMode(viewModel.results.isEmpty ? .automatic : .inline)
             .toolbar {
@@ -47,6 +44,7 @@ struct SearchModeView: View {
                     onSortChange: { key, ascending in
                         sortKey = key
                         sortAscending = ascending
+                        viewModel.sortResults(by: key, ascending: ascending)
                     },
                     onSaveResults: { showingSaveResults = true },
                     onSavedResults: { showingSavedResults = true }
@@ -68,6 +66,13 @@ struct SearchModeView: View {
                        value: viewModel.isSearching)
             .onAppear {
                 ftsManager.checkNeedsMigration()
+            }
+            .onChange(of: viewModel.isSearching) { _, isSearching in
+                if isSearching {
+                    kitabFilter = ""
+                } else if sortKey != .bookTitle || !sortAscending {
+                    viewModel.sortResults(by: sortKey, ascending: sortAscending)
+                }
             }
             .overlay {
                 if showFtsMigrationOverlay {
@@ -143,19 +148,19 @@ struct SearchModeView: View {
     }
 
     private func searchResultsView(viewModel: SearchViewModel) -> some View {
-        var filtered: [SearchResultItem] = kitabFilter.isEmpty
-            ? viewModel.results
-            : viewModel.results.filter {
+        let items: [SearchResultItem]
+        if kitabFilter.isEmpty {
+            items = viewModel.results
+        } else {
+            let normalizedFilter = kitabFilter.normalizeArabic(false)
+            items = viewModel.results.filter {
                 $0.bookTitle
                     .normalizeArabic(false)
-                    .contains(
-                        kitabFilter.normalizeArabic(false)
-                )
+                    .contains(normalizedFilter)
             }
+        }
 
-        SearchResultsSorter.sort(&filtered, by: sortKey, ascending: sortAscending)
-
-        return SearchResultsListView(results: filtered) { item in
+        return SearchResultsListView(results: items) { item in
             handleSelection(item)
         }
         .searchable(
@@ -163,9 +168,6 @@ struct SearchModeView: View {
             placement: .toolbar,
             prompt: .filterByBooks
         )
-        .onChange(of: viewModel.results) { _, _ in
-            kitabFilter = ""
-        }
     }
 
     private func handleSelection(_ item: SearchResultItem) {
@@ -189,7 +191,7 @@ struct SearchModeView: View {
 
     @ViewBuilder
     private func ftsMigrationBanner() -> some View {
-        if ftsManager.needsMigration && !hideFtsMigrationBanner && !ftsManager.isMigrating {
+        if ftsManager.needsMigration, !hideFtsMigrationBanner, !ftsManager.isMigrating {
             VStack(spacing: 8) {
                 HStack {
                     Image(systemName: "sparkles")

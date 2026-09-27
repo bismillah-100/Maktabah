@@ -81,7 +81,7 @@ final class LibraryDataManager: Sendable {
         let booksById: [Int: BooksData]
     }
 
-    nonisolated private func performDataLoad() async {
+    private nonisolated func performDataLoad() async {
         do {
             let results = try await fetchDatabaseCategoriesAndBooks()
             state.withLock { state in
@@ -104,7 +104,7 @@ final class LibraryDataManager: Sendable {
         }
     }
 
-    nonisolated private func fetchDatabaseCategoriesAndBooks() async throws -> DatabaseCatalogData {
+    private nonisolated func fetchDatabaseCategoriesAndBooks() async throws -> DatabaseCatalogData {
         try await Task.detached(priority: .userInitiated) { [self] in
             let allCategories = try db.fetchAllCategories()
             let (localRootCats, localCategoryMap) = buildCategoryHierarchy(from: allCategories)
@@ -361,6 +361,45 @@ final class LibraryDataManager: Sendable {
         AppConfig.archiveDatabasePath(archiveId: archiveId)
     }
 
+    private let archiveConnections = Mutex<[Int: BookConnection]>([:])
+
+    func getArchiveConnection(archiveId: Int) -> BookConnection? {
+        archiveConnections.withLock { conns in
+            if let existing = conns[archiveId] {
+                return existing
+            }
+            let conn = BookConnection()
+            do {
+                try conn.connect(archive: archiveId)
+                conns[archiveId] = conn
+                return conn
+            } catch {
+                Logger.library.error("⚠️ Gagal membuka koneksi arsip \(archiveId): \(error.localizedDescription, privacy: .public)")
+                return nil
+            }
+        }
+    }
+
+    func closeAllArchiveConnections() {
+        archiveConnections.withLock { conns in
+            conns.removeAll()
+        }
+    }
+
+    func fetchSingleContent(archive: String, table: String, rowId: Int) async -> BookContent? {
+        guard let archiveId = Int(archive) else { return nil }
+
+        let bookId = table.hasPrefix("b") ? String(table.dropFirst()) : table
+        if let bookIdInt = Int(bookId), let cached = BookPageCache.shared.get(bookId: bookIdInt, contentId: rowId) {
+            return cached
+        }
+
+        guard let conn = getArchiveConnection(archiveId: archiveId) else { return nil }
+        return await Task.detached(priority: .userInitiated) {
+            conn.getContent(bkid: bookId, contentId: rowId)
+        }.value
+    }
+
     func getCheckedTables(_ items: [Any]) -> Set<String> {
         var checkedTables = Set<String>()
 
@@ -396,7 +435,7 @@ struct LibrarySearchCallbacks {
     var onInitialize: @MainActor (Int) -> Void
     var onTableProgress: @MainActor (Int) -> Void
     var onRowProgress: @MainActor (String, String, Int, Int) -> Void
-    var completion: @MainActor (SearchResultItem) -> Void
+    var completion: @MainActor ([SearchResultItem]) -> Void
     var onComplete: @MainActor () -> Void
 }
 
@@ -481,6 +520,11 @@ extension LibraryDataManager {
         totalTables: Int
     ) -> SearchEngineCallbacks {
         let completedTablesCounter = SafeCounter()
+        let resultBuffer = SearchResultBuffer { batch in
+            Task { @MainActor in
+                callbacks.completion(batch)
+            }
+        }
 
         return SearchEngineCallbacks(
             onInitialize: { _ in
@@ -499,24 +543,25 @@ extension LibraryDataManager {
                     callbacks.onRowProgress(archiveId, tableName, current, total)
                 }
             },
-            onResult: { [weak self] tableName, archive, content in
+            onResult: { [weak self] tableName, archive, hit in
                 guard let self else { return }
-                let itemParams = SearchResultItemParams(
-                    tableName: tableName,
-                    archive: archive,
-                    searchKeywords: searchKeywords,
-                    mode: params.mode,
-                    nearDistance: params.nearDistance
-                )
-                let item = makeSearchResultItem(
-                    content: content,
-                    params: itemParams
-                )
-                Task { @MainActor in
-                    callbacks.completion(item)
+                let bookId = Int(tableName.dropFirst()) ?? 0
+                let bookTitle = state.withLock { s in
+                    s.booksById[bookId]?.book ?? ""
                 }
+                let item = SearchResultItem(
+                    archive: archive,
+                    tableName: tableName,
+                    bookId: hit.rowId,
+                    bookTitle: bookTitle,
+                    page: hit.page,
+                    part: hit.part,
+                    attributedText: nil
+                )
+                resultBuffer.append(item)
             },
             onComplete: {
+                resultBuffer.flush()
                 Task { @MainActor in
                     callbacks.onComplete()
                 }

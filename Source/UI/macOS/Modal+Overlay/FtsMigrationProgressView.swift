@@ -100,6 +100,11 @@ struct FtsMigrationProgressView: View {
 struct FtsMigrationProgressSection: View {
     var ftsManager: FtsMigrationManager = .shared
 
+    private var statusAreaMinHeight: CGFloat {
+        let maxConcurrentLines = min(4, max(1, ftsManager.totalArchivesToMigrate))
+        return CGFloat(maxConcurrentLines * 18 + 20)
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             ProgressView(value: ftsManager.isMigrating ? ftsManager.progress : 1.0)
@@ -113,6 +118,7 @@ struct FtsMigrationProgressSection: View {
                                 Text(status)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                    .lineLimit(1)
                             }
                         }
                         if ftsManager.totalBooksToMigrate > 0 {
@@ -121,12 +127,17 @@ struct FtsMigrationProgressSection: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .frame(minHeight: statusAreaMinHeight, alignment: .topLeading)
+
                     Spacer()
+
                     Text("\(Int(ftsManager.progress * 100))%")
                         .font(.headline)
+                        .monospacedDigit()
                         .foregroundColor(.primary)
                 }
             }
         }
     }
 }
+
