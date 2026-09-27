@@ -25,11 +25,20 @@ class SQLiteConnectionPool {
         connections[index % connections.count]
     }
 
+    /// Interrupt all connections in pool
+    func interruptAll() {
+        for conn in connections {
+            conn.interrupt()
+        }
+    }
+
     /// Menjalankan read-operation pada koneksi tertentu
-    func read<T>(at index: Int, _ body: @escaping (DBConnectionType) throws -> T) async throws -> T {
-        try await Task.detached(priority: .userInitiated) {
-            let conn = self.getConnection(at: index)
-            return try body(conn)
-        }.value
+    func read<T: Sendable>(at index: Int, _ body: @escaping @Sendable (DBConnectionType) throws -> T) async throws -> T {
+        let conn = getConnection(at: index)
+        return try await withTaskCancellationHandler {
+            try await Task.detached(priority: .userInitiated) { try body(conn) }.value
+        } onCancel: {
+            conn.interrupt()
+        }
     }
 }

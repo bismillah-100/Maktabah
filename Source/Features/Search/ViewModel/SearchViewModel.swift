@@ -521,6 +521,7 @@ final class SearchViewModel: ViewModelBase {
         isPaused = false
 
         results = []
+        SearchHitResolver.shared.clearCache()
         totalTables = 0
         completedTables = 0
         completedRowsInTable = 0
@@ -589,10 +590,11 @@ final class SearchViewModel: ViewModelBase {
                 self?.rowProgressDidUpdate.send((completed: current, total: total))
                 #endif
             },
-            completion: { [weak self] item in
-                self?.results.append(item)
+            completion: { [weak self] items in
+                guard let self, self.isSearching, !items.isEmpty else { return }
+                self.results.append(contentsOf: items)
                 #if os(macOS)
-                self?.searchDidReceiveResult.send()
+                self.searchDidReceiveResult.send()
                 #endif
             },
             onComplete: { [weak self] in
@@ -617,6 +619,7 @@ final class SearchViewModel: ViewModelBase {
     func clearResults() {
         stopSearch()
         results.removeAll()
+        SearchHitResolver.shared.clearCache()
     }
 
     func sortResults(by key: SearchSortKey, ascending: Bool) {

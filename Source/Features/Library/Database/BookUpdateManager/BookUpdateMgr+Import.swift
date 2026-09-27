@@ -143,7 +143,7 @@ extension BookUpdateManager {
             bookId: stagedUpdate.metadata.bkid
         ) { [weak self] in
             guard let self else { return }
-            try self.replaceArchiveDatabase(
+            try replaceArchiveDatabase(
                 with: stagedUpdate.downloadedBookURL,
                 archiveId: stagedUpdate.metadata.archive,
                 bookId: stagedUpdate.metadata.bkid,
@@ -170,6 +170,7 @@ extension BookUpdateManager {
     }
 
     func changeBookId(oldId: Int, newId: Int) throws {
+        LibraryDataManager.shared.closeAllArchiveConnections()
         guard let mainPath = AppConfig.mainDatabasePath else { return }
 
         let db = try openDatabase(path: mainPath)
@@ -235,15 +236,36 @@ extension BookUpdateManager {
         let ftsDb = try openDatabase(path: ftsPath)
         defer { sqlite3_close_v2(ftsDb) }
 
-        _ = sqlite3_exec(ftsDb, "DROP TABLE IF EXISTS \"b\(newId)_fts\";", nil, nil, nil)
+        let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main")
+        if hasUnified {
+            _ = sqlite3_exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(oldId);", nil, nil, nil)
 
-        let sqlFTS = "ALTER TABLE \"b\(oldId)_fts\" RENAME TO \"b\(newId)_fts\";"
-        if sqlite3_exec(ftsDb, sqlFTS, nil, nil, nil) != SQLITE_OK {
-            rollbackBookIdRenames(archivePath: archivePath, ftsPath: nil, oldId: oldId, newId: newId)
-            throw NSError(
-                domain: "BookUpdate", code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel FTS b\(oldId)_fts."]
-            )
+            if let archivePath {
+                let archiveDb = try openDatabase(path: archivePath)
+                defer { sqlite3_close_v2(archiveDb) }
+                try archiveDb.safeAttachDatabase(path: ftsPath, schema: "fts_db")
+                defer { _ = sqlite3_exec(archiveDb, "DETACH DATABASE fts_db;", nil, nil, nil) }
+
+                try ArchiveDatabaseTools.appendBookToUnifiedFTS(
+                    db: archiveDb,
+                    ftsSchema: "fts_db",
+                    sourceSchema: "main",
+                    sourceTable: "b\(newId)",
+                    bookId: newId,
+                    isNassCompressed: true
+                )
+            }
+        } else {
+            _ = sqlite3_exec(ftsDb, "DROP TABLE IF EXISTS \"b\(newId)_fts\";", nil, nil, nil)
+
+            let sqlFTS = "ALTER TABLE \"b\(oldId)_fts\" RENAME TO \"b\(newId)_fts\";"
+            if sqlite3_exec(ftsDb, sqlFTS, nil, nil, nil) != SQLITE_OK {
+                rollbackBookIdRenames(archivePath: archivePath, ftsPath: nil, oldId: oldId, newId: newId)
+                throw NSError(
+                    domain: "BookUpdate", code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Gagal rename tabel FTS b\(oldId)_fts."]
+                )
+            }
         }
     }
 
@@ -300,8 +322,26 @@ extension BookUpdateManager {
         }
         if let ftsPath, let ftsDb = try? openDatabase(path: ftsPath) {
             defer { sqlite3_close_v2(ftsDb) }
-            _ = sqlite3_exec(ftsDb,
-                             "ALTER TABLE \"b\(newId)_fts\" RENAME TO \"b\(oldId)_fts\";", nil, nil, nil)
+            let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main")
+            if hasUnified {
+                _ = sqlite3_exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(newId);", nil, nil, nil)
+                if let archivePath, let archiveDb = try? openDatabase(path: archivePath) {
+                    try? archiveDb.safeAttachDatabase(path: ftsPath, schema: "fts_db")
+                    try? ArchiveDatabaseTools.appendBookToUnifiedFTS(
+                        db: archiveDb,
+                        ftsSchema: "fts_db",
+                        sourceSchema: "main",
+                        sourceTable: "b\(oldId)",
+                        bookId: oldId,
+                        isNassCompressed: true
+                    )
+                    _ = sqlite3_exec(archiveDb, "DETACH DATABASE fts_db;", nil, nil, nil)
+                    sqlite3_close_v2(archiveDb)
+                }
+            } else {
+                _ = sqlite3_exec(ftsDb,
+                                 "ALTER TABLE \"b\(newId)_fts\" RENAME TO \"b\(oldId)_fts\";", nil, nil, nil)
+            }
         }
     }
 
@@ -441,7 +481,6 @@ extension BookUpdateManager {
 
         let tableName = "b\(bookId)"
         let tocTable = "t\(bookId)"
-        let ftsTable = "\(tableName)_fts"
 
         // 1. Copy tabel data dan TOC ke main dalam transaksi atomik
         try ArchiveDatabaseTools.withTransaction(db: db) {
@@ -458,28 +497,38 @@ extension BookUpdateManager {
         }
 
         // 2. Build FTS terpisah di luar transaksi main
-        // (buildFTS memiliki transaksi internal sendiri untuk batch insert)
-        // kolom nass merupakan TEXT, tidak perlu konversi dari blob untuk menjaga performa
-        try ArchiveDatabaseTools.buildFTS(
-            db: db,
-            ftsSchema: "fts_db",
-            ftsTable: ftsTable,
-            sourceSchema: "fts_source_db",
-            sourceTable: tableName
-        )
+        try appendOrBuildFTS(db: db, tableName: tableName, bookId: bookId)
 
         checkpoint(db: db)
         dbPtr = nil
 
-        IntegrationCache.shared.markIntegrated(
-            bookId: bookId,
-            archiveId: archiveId
-        )
-
+        IntegrationCache.shared.markIntegrated(bookId: bookId, archiveId: archiveId)
         DispatchQueue.main.async {
-            NotificationCenter.default.post(
-                name: .bookIntegrated,
-                object: bookId
+            NotificationCenter.default.post(name: .bookIntegrated, object: bookId)
+        }
+    }
+
+    private func appendOrBuildFTS(db: OpaquePointer, tableName: String, bookId: Int) throws {
+        let ftsTable = "\(tableName)_fts"
+        let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: db)
+        let hasLegacyFts = ArchiveDatabaseTools.tableExists(db: db, schemaName: "fts_db", tableName: ftsTable)
+
+        if hasUnified || !hasLegacyFts {
+            try ArchiveDatabaseTools.appendBookToUnifiedFTS(
+                db: db,
+                ftsSchema: "fts_db",
+                sourceSchema: "fts_source_db",
+                sourceTable: tableName,
+                bookId: bookId,
+                isNassCompressed: false
+            )
+        } else {
+            try ArchiveDatabaseTools.buildFTS(
+                db: db,
+                ftsSchema: "fts_db",
+                ftsTable: ftsTable,
+                sourceSchema: "fts_source_db",
+                sourceTable: tableName
             )
         }
     }

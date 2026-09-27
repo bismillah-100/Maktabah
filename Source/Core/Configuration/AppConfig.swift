@@ -23,7 +23,7 @@ struct AppConfig {
     static let appcastURLKey = "appcast_url"
 
     /// Target FTS index version
-    static let currentFtsVersion: Int = 3
+    static let currentFtsVersion: Int = 5
 
     // MARK: - Archive Cache Path (untuk Bundle Mode)
     /// Path untuk archive files saat menggunakan Bundle Mode

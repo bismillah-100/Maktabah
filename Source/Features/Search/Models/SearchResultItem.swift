@@ -5,14 +5,35 @@
 
 import Foundation
 
-struct SearchResultItem: Codable, CopyableResult, Hashable {
+struct SearchHit: Sendable, Identifiable, Hashable {
+    let archive: String
+    let tableName: String
+    let rowId: Int
+    let page: Int
+    let part: Int
+
+    var id: String { "\(archive)_\(tableName)_\(rowId)" }
+}
+
+struct SearchResultItem: Codable, CopyableResult, Hashable, Sendable, Identifiable {
     let archive: String
     let tableName: String
     let bookId: Int
     let bookTitle: String
     let page: Int
     let part: Int
-    let attributedText: NSAttributedString
+    private nonisolated(unsafe) let rawAttributedText: NSAttributedString?
+
+    var attributedText: NSAttributedString {
+        rawAttributedText ?? NSAttributedString(string: "")
+    }
+
+    var hasResolvedSnippet: Bool {
+        rawAttributedText != nil
+    }
+
+    var id: String { "\(archive)_\(tableName)_\(bookId)" }
+    var uniqueId: String { id }
 
     enum CodingKeys: String, CodingKey {
         case archive
@@ -31,7 +52,7 @@ struct SearchResultItem: Codable, CopyableResult, Hashable {
         bookTitle: String,
         page: Int,
         part: Int,
-        attributedText: NSAttributedString
+        attributedText: NSAttributedString? = nil
     ) {
         self.archive = archive
         self.tableName = tableName
@@ -39,7 +60,7 @@ struct SearchResultItem: Codable, CopyableResult, Hashable {
         self.bookTitle = bookTitle
         self.page = page
         self.part = part
-        self.attributedText = attributedText
+        rawAttributedText = attributedText
     }
 
     func encode(to encoder: Encoder) throws {
@@ -51,7 +72,9 @@ struct SearchResultItem: Codable, CopyableResult, Hashable {
         try container.encode(bookTitle, forKey: .bookTitle)
         try container.encode(page, forKey: .page)
         try container.encode(part, forKey: .part)
-        try container.encode(attributedText.archivedData(), forKey: .attributedText)
+        if let rawAttributedText {
+            try container.encode(rawAttributedText.archivedData(), forKey: .attributedText)
+        }
     }
 
     init(from decoder: Decoder) throws {
@@ -64,11 +87,22 @@ struct SearchResultItem: Codable, CopyableResult, Hashable {
         page = try container.decode(Int.self, forKey: .page)
         part = try container.decode(Int.self, forKey: .part)
 
-        let data = try container.decode(Data.self, forKey: .attributedText)
-        attributedText = NSAttributedString.unarchiveSecure(from: data) ?? NSAttributedString(string: "")
+        if let data = try container.decodeIfPresent(Data.self, forKey: .attributedText) {
+            rawAttributedText = NSAttributedString.unarchiveSecure(from: data)
+        } else {
+            rawAttributedText = nil
+        }
     }
 
     func hash(into hasher: inout Hasher) {
+        hasher.combine(archive)
+        hasher.combine(tableName)
         hasher.combine(bookId)
+    }
+
+    static func == (lhs: SearchResultItem, rhs: SearchResultItem) -> Bool {
+        lhs.archive == rhs.archive &&
+            lhs.tableName == rhs.tableName &&
+            lhs.bookId == rhs.bookId
     }
 }

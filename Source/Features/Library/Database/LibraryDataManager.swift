@@ -365,6 +365,47 @@ class LibraryDataManager {
         AppConfig.archiveDatabasePath(archiveId: archiveId)
     }
 
+    private var _archiveConnections: [Int: BookConnection] = [:]
+
+    func getArchiveConnection(archiveId: Int) -> BookConnection? {
+        lock.withLock {
+            if let existing = _archiveConnections[archiveId] {
+                return existing
+            }
+            let conn = BookConnection()
+            do {
+                try conn.connect(archive: archiveId)
+                _archiveConnections[archiveId] = conn
+                return conn
+            } catch {
+                #if DEBUG
+                print("⚠️ Gagal membuka koneksi arsip \(archiveId): \(error.localizedDescription)")
+                #endif
+                return nil
+            }
+        }
+    }
+
+    func closeAllArchiveConnections() {
+        lock.withLock {
+            _archiveConnections.removeAll()
+        }
+    }
+
+    func fetchSingleContent(archive: String, table: String, rowId: Int) async -> BookContent? {
+        guard let archiveId = Int(archive) else { return nil }
+
+        let bookId = table.hasPrefix("b") ? String(table.dropFirst()) : table
+        if let bookIdInt = Int(bookId), let cached = BookPageCache.shared.get(bookId: bookIdInt, contentId: rowId) {
+            return cached
+        }
+
+        guard let conn = getArchiveConnection(archiveId: archiveId) else { return nil }
+        return await Task.detached(priority: .userInitiated) {
+            conn.getContent(bkid: bookId, contentId: rowId)
+        }.value
+    }
+
     func getCheckedTables(_ items: [Any]) -> Set<String> {
         var checkedTables = Set<String>()
 
@@ -400,7 +441,7 @@ struct LibrarySearchCallbacks {
     var onInitialize: @MainActor (Int) -> Void
     var onTableProgress: @MainActor (Int) -> Void
     var onRowProgress: @MainActor (String, String, Int, Int) -> Void
-    var completion: @MainActor (SearchResultItem) -> Void
+    var completion: @MainActor ([SearchResultItem]) -> Void
     var onComplete: @MainActor () -> Void
 }
 
@@ -459,10 +500,12 @@ extension LibraryDataManager {
                 totalTables: totalTables
             )
 
-            params.searchEngine.startSearch(
-                options: options,
-                callbacks: engineCallbacks
-            )
+            Task {
+                await params.searchEngine.startSearch(
+                    options: options,
+                    callbacks: engineCallbacks
+                )
+            }
         }
     }
 
@@ -485,7 +528,13 @@ extension LibraryDataManager {
         searchKeywords: [String],
         totalTables: Int
     ) -> SearchEngineCallbacks {
+        let counterLock = NSLock()
         var completedTablesGlobal = 0
+        let resultBuffer = SearchResultBuffer { batch in
+            Task { @MainActor in
+                callbacks.completion(batch)
+            }
+        }
 
         return SearchEngineCallbacks(
             onInitialize: { _ in
@@ -494,9 +543,12 @@ extension LibraryDataManager {
                 }
             },
             onTableComplete: { _, _ in
+                counterLock.lock()
                 completedTablesGlobal += 1
-                Task { @MainActor [completedTablesGlobal] in
-                    callbacks.onTableProgress(completedTablesGlobal)
+                let completed = completedTablesGlobal
+                counterLock.unlock()
+                Task { @MainActor in
+                    callbacks.onTableProgress(completed)
                 }
             },
             onRowProgress: { archiveId, tableName, current, total in
@@ -504,24 +556,25 @@ extension LibraryDataManager {
                     callbacks.onRowProgress(archiveId, tableName, current, total)
                 }
             },
-            onResult: { [weak self] tableName, archive, content in
+            onResult: { [weak self] tableName, archive, hit in
                 guard let self else { return }
-                let itemParams = SearchResultItemParams(
-                    tableName: tableName,
-                    archive: archive,
-                    searchKeywords: searchKeywords,
-                    mode: params.mode,
-                    nearDistance: params.nearDistance
-                )
-                let item = makeSearchResultItem(
-                    content: content,
-                    params: itemParams
-                )
-                Task { @MainActor in
-                    callbacks.completion(item)
+                let bookId = Int(tableName.dropFirst()) ?? 0
+                let bookTitle = self.lock.withLock {
+                    self._booksById[bookId]?.book ?? ""
                 }
+                let item = SearchResultItem(
+                    archive: archive,
+                    tableName: tableName,
+                    bookId: hit.rowId,
+                    bookTitle: bookTitle,
+                    page: hit.page,
+                    part: hit.part,
+                    attributedText: nil
+                )
+                resultBuffer.append(item)
             },
             onComplete: {
+                resultBuffer.flush()
                 Task { @MainActor in
                     callbacks.onComplete()
                 }

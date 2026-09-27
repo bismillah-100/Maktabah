@@ -418,6 +418,12 @@
 		F31111972FC00F060024B638 /* iOSSavedResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31111932FC00F060024B638 /* iOSSavedResultsView.swift */; };
 		F31111992FC0A9C00024B638 /* iOSFolderSelectionGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31111982FC0A9C00024B638 /* iOSFolderSelectionGroup.swift */; };
 		F311119B2FC0A9D60024B638 /* iOSMoveItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F311119A2FC0A9D60024B638 /* iOSMoveItemView.swift */; };
+		F319965B3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F319965A3068C5D0005013F8 /* SearchResultBuffer.swift */; };
+		F319965C3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F319965A3068C5D0005013F8 /* SearchResultBuffer.swift */; };
+		F319965D3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F319965A3068C5D0005013F8 /* SearchResultBuffer.swift */; };
+		F319965F3068C643005013F8 /* SearchHitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F319965E3068C643005013F8 /* SearchHitResolver.swift */; };
+		F31996603068C643005013F8 /* SearchHitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F319965E3068C643005013F8 /* SearchHitResolver.swift */; };
+		F31996613068C643005013F8 /* SearchHitResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = F319965E3068C643005013F8 /* SearchHitResolver.swift */; };
 		F32167292FBAA39F00601DB3 /* BookImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0000012F3612D50018D902 /* BookImportView.swift */; };
 		F321672A2FBAA39F00601DB3 /* BookImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0000012F3612D50018D902 /* BookImportView.swift */; };
 		F321672B2FBAA39F00601DB3 /* BookImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0000012F3612D50018D902 /* BookImportView.swift */; };
@@ -1028,6 +1034,8 @@
 		F31111932FC00F060024B638 /* iOSSavedResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSSavedResultsView.swift; sourceTree = "<group>"; };
 		F31111982FC0A9C00024B638 /* iOSFolderSelectionGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSFolderSelectionGroup.swift; sourceTree = "<group>"; };
 		F311119A2FC0A9D60024B638 /* iOSMoveItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSMoveItemView.swift; sourceTree = "<group>"; };
+		F319965A3068C5D0005013F8 /* SearchResultBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultBuffer.swift; sourceTree = "<group>"; };
+		F319965E3068C643005013F8 /* SearchHitResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHitResolver.swift; sourceTree = "<group>"; };
 		F321672C2FBB2C0D00601DB3 /* SQLiteDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDatabase.swift; sourceTree = "<group>"; };
 		F321E01B2FC7050F00CB37DD /* AnnotationSyncHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationSyncHandler.swift; sourceTree = "<group>"; };
 		F321E01C2FC7050F00CB37DD /* CloudKitCoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitCoreManager.swift; sourceTree = "<group>"; };
@@ -2078,6 +2086,7 @@
 				FE5000010000000000000001 /* SearchResultItem.swift */,
 				FE5100010000000000000001 /* SearchSortKey.swift */,
 				FE5200010000000000000001 /* SearchResultsSorter.swift */,
+				F319965A3068C5D0005013F8 /* SearchResultBuffer.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -2108,6 +2117,7 @@
 		FE5001000000000000000010 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				F319965E3068C643005013F8 /* SearchHitResolver.swift */,
 				F3D02D582FE0522E0054807F /* SearchViewModel.swift */,
 			);
 			path = ViewModel;
@@ -2712,6 +2722,7 @@
 				4BD728232EE44C5500ACEB7C /* IbarotTextView.swift in Sources */,
 				4BAB8A4C2F286C8A00732FC9 /* AnnotationCoordinator.swift in Sources */,
 				4B540F472EDF25A4001D8C0B /* BookConnection.swift in Sources */,
+				F31996603068C643005013F8 /* SearchHitResolver.swift in Sources */,
 				4B63E1E02EE9412900D58F3B /* RowiSidebarVC.swift in Sources */,
 				F32D440D303CFB3500429664 /* DBConnectionType.swift in Sources */,
 				4B96D3532F3675290018D902 /* BookUpdateModels.swift in Sources */,
@@ -2772,6 +2783,7 @@
 				4B6AF2362EE58394002EBFFC /* IbarotTextVC.swift in Sources */,
 				F37F1C46300268E3002B5618 /* AnnotationManager.swift in Sources */,
 				F37F1C47300268E3002B5618 /* AnnMgr+Cache.swift in Sources */,
+				F319965D3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */,
 				F3F3FEA83035E85B00507E9A /* RTLScrollView.swift in Sources */,
 				F37F1C48300268E3002B5618 /* AnnMgr+TagTree.swift in Sources */,
 				F37F1C49300268E3002B5618 /* AnnMgr+DB.swift in Sources */,
@@ -3043,6 +3055,7 @@
 				4B7C90EB2F83494200454BE1 /* DSFSearchField.swift in Sources */,
 				4B7C90EC2F83494200454BE1 /* Navigation.swift in Sources */,
 				F3F3FEAE30360EC700507E9A /* DonationManager.swift in Sources */,
+				F319965B3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */,
 				4B7C90ED2F83494200454BE1 /* ResultsViewModel.swift in Sources */,
 				4B7C90EE2F83494200454BE1 /* ViewerSplitVC.swift in Sources */,
 				F334EB34303F382C001121BE /* ReaderSplitView.swift in Sources */,
@@ -3068,6 +3081,7 @@
 				4B7C91022F83494200454BE1 /* ViewOptions.swift in Sources */,
 				4B7C91032F83494200454BE1 /* ArabicFont.swift in Sources */,
 				4B7C91042F83494200454BE1 /* TarjamahDataManager.swift in Sources */,
+				F31996613068C643005013F8 /* SearchHitResolver.swift in Sources */,
 				F32BA47C300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
 				F3FBF234303F1C6F00A7EB6C /* OptionSearchPopover.swift in Sources */,
 				4B7C91052F83494200454BE1 /* BookInfo.swift in Sources */,
@@ -3135,6 +3149,7 @@
 				B58B9D1D23F95091BA2F5E2A /* ResultsFolders.swift in Sources */,
 				2782B44B51D55ECFBFC055F4 /* ResultsCRUD.swift in Sources */,
 				E1EEAB7921BC5F17865787D6 /* String+Arabic.swift in Sources */,
+				F319965F3068C643005013F8 /* SearchHitResolver.swift in Sources */,
 				FC8D8810939C50568834FB3D /* String+Search.swift in Sources */,
 				79D930819C9D5E36A1D33521 /* String+TextCleaning.swift in Sources */,
 				F3DD69E42FA4F77A00BFEA0F /* CoreDatabaseDownloader.swift in Sources */,
@@ -3296,6 +3311,7 @@
 				17475414BB0B621BFDC173ED /* FtsMigrationProgressView.swift in Sources */,
 				8D89CB51C34020356482F955 /* HistorySnapshot.swift in Sources */,
 				41A8C21F07AC8789C560C8C7 /* AnnotationSnapshot.swift in Sources */,
+				F319965C3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */,
 				8929444A1AD0BCA77A8D89C7 /* WidgetSnapshotRecord.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

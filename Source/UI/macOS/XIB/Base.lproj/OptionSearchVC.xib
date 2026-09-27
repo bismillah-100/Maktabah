@@ -17,7 +17,6 @@
                 <outlet property="insertNewResults" destination="HNN-je-3Fd" id="kSN-Ll-5Tq"/>
                 <outlet property="ismKitabColumn" destination="yAh-Nk-gGL" id="4K0-sM-I3A"/>
                 <outlet property="optionsSegment" destination="b4O-5C-lQb" id="F6R-VW-Xs5"/>
-                <outlet property="progressRows" destination="T5c-dz-aW8" id="3GO-re-lPN"/>
                 <outlet property="progressTable" destination="UoD-Rt-MFF" id="WQZ-db-1JH"/>
                 <outlet property="searchField" destination="5sC-g4-qLn" id="KAV-u6-1eh"/>
                 <outlet property="stackView" destination="IBO-iw-tvQ" id="aP2-1A-KN7"/>
@@ -213,20 +212,12 @@
                         <progressIndicator hidden="YES" wantsLayer="YES" maxValue="100" displayedWhenStopped="NO" controlSize="small" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="UoD-Rt-MFF">
                             <rect key="frame" x="0.0" y="41" width="732" height="12"/>
                         </progressIndicator>
-                        <progressIndicator hidden="YES" wantsLayer="YES" maxValue="100" displayedWhenStopped="NO" controlSize="small" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="T5c-dz-aW8">
-                            <rect key="frame" x="0.0" y="41" width="732" height="12"/>
-                            <constraints>
-                                <constraint firstAttribute="height" constant="12" id="p2C-vO-5mJ"/>
-                            </constraints>
-                        </progressIndicator>
                     </subviews>
                     <edgeInsets key="edgeInsets" left="0.0" right="0.0" top="0.0" bottom="4"/>
                     <visibilityPriorities>
                         <integer value="1000"/>
-                        <integer value="1000"/>
                     </visibilityPriorities>
                     <customSpacing>
-                        <real value="3.4028234663852886e+38"/>
                         <real value="3.4028234663852886e+38"/>
                     </customSpacing>
                 </stackView>

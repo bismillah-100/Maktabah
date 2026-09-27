@@ -145,6 +145,25 @@ final class SQLiteConnection: DBConnectionType {
         }
     }
 
+    func querySearchHits(archive: String, tableName: String, sql: String, params: [SQLValue]) throws -> [SearchHit] {
+        try queryMapped(sql: sql, params: params) { stmt in
+            let page = Int(sqlite3_column_int64(stmt, 0))
+            let id = Int(sqlite3_column_int64(stmt, 1))
+            let part = Int(sqlite3_column_int64(stmt, 2))
+            return SearchHit(archive: archive, tableName: tableName, rowId: id, page: page, part: part)
+        }
+    }
+
+    func queryUnifiedHits(archive: String, sql: String, params: [SQLValue]) throws -> [SearchHit] {
+        try queryMapped(sql: sql, params: params) { stmt in
+            let bookId = Int(sqlite3_column_int64(stmt, 0))
+            let page = Int(sqlite3_column_int64(stmt, 1))
+            let id = Int(sqlite3_column_int64(stmt, 2))
+            let part = Int(sqlite3_column_int64(stmt, 3))
+            return SearchHit(archive: archive, tableName: "b\(bookId)", rowId: id, page: page, part: part)
+        }
+    }
+
     func queryTarjamah(sql: String, params: [SQLValue], isIsoName: Bool) throws -> [TarjamahMen] {
         let nameIndex: Int32 = isIsoName ? 1 : 0
         return try queryMapped(sql: sql, params: params) { stmt in
@@ -203,6 +222,12 @@ final class SQLiteConnection: DBConnectionType {
 
         if let db {
             sqlite3_close(db)
+        }
+    }
+
+    func interrupt() {
+        if let db {
+            sqlite3_interrupt(db)
         }
     }
 }

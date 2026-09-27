@@ -7,7 +7,7 @@ struct SearchResultsListView: View {
 
     var body: some View {
         ThemeList(isGrouped: false) {
-            ForEach(results, id: \.bookId) { item in
+            ForEach(results) { item in
                 Button(action: { onSelect(item) }) {
                     SearchResultRow(item: item, showsBookTitle: showsBookTitle)
                 }
@@ -20,6 +20,8 @@ struct SearchResultsListView: View {
 struct SearchResultRow: View {
     let item: SearchResultItem
     var showsBookTitle: Bool = true
+    @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager?
+    @State private var resolvedSnippet: NSAttributedString?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -42,12 +44,35 @@ struct SearchResultRow: View {
                 .foregroundColor(.secondary)
             }
 
-            Text(AttributedString(item.attributedText))
-                .font(ReaderViewModel.kfgqpc)
-                .lineLimit(3)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if let snippet = (item.hasResolvedSnippet ? item.attributedText : nil) ?? resolvedSnippet ?? SearchHitResolver.shared.cachedSnippet(for: item) {
+                Text(AttributedString(snippet))
+                    .font(ReaderViewModel.kfgqpc)
+                    .lineLimit(3)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Text("...")
+                    .font(ReaderViewModel.kfgqpc)
+                    .foregroundColor(.secondary)
+                    .task(id: item.id) {
+                        do {
+                            try await Task.sleep(for: .seconds(0.05))
+                        } catch {
+                            return
+                        }
+                        guard let vm = navigationManager?.searchViewModel else { return }
+                        let keywords = FtsQueryParser.extractKeywords(query: vm.query, mode: vm.searchMode)
+                        if let resolved = await SearchHitResolver.shared.resolveSnippet(
+                            for: item,
+                            keywords: keywords,
+                            mode: vm.searchMode,
+                            nearDistance: vm.nearDistance
+                        ) {
+                            resolvedSnippet = resolved
+                        }
+                    }
+            }
         }
         .environment(\.layoutDirection, .rightToLeft)
         .padding(.vertical, 4)
@@ -85,7 +110,6 @@ struct SearchResultRow: View {
             attributedText: NSAttributedString(string: "النص الثالث والأخير في المعاينة لتأكيد جودة التصميم والترتيب.")
         )
     ]
-    
+
     return SearchResultsListView(results: items, onSelect: { _ in })
 }
-

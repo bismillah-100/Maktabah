@@ -1,7 +1,6 @@
 import Cocoa
 
 enum OptionSearchPopover {
-
     @discardableResult
     static func instantiatePopoverIfNeeded(_ currentPopover: inout NSPopover?) -> NSPopover {
         if let currentPopover {
