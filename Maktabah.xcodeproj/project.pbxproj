@@ -741,6 +741,9 @@
 		F3D46E9B2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
 		F3D46E9C2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
 		F3D46E9D2FD1D45900079FF9 /* CoreUpdateAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */; };
+		F3D5DBFF30696B8000DC4EEE /* BookDownloadIndexCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D5DBFE30696B8000DC4EEE /* BookDownloadIndexCache.swift */; };
+		F3D5DC0030696B8000DC4EEE /* BookDownloadIndexCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D5DBFE30696B8000DC4EEE /* BookDownloadIndexCache.swift */; };
+		F3D5DC0130696B8000DC4EEE /* BookDownloadIndexCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D5DBFE30696B8000DC4EEE /* BookDownloadIndexCache.swift */; };
 		F3D66913303215990030510C /* RightAlignedClipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D66912303215530030510C /* RightAlignedClipView.swift */; };
 		F3D66914303215990030510C /* RightAlignedClipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D66912303215530030510C /* RightAlignedClipView.swift */; };
 		F3D9CB1F3009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */; };
@@ -1287,6 +1290,7 @@
 		F3D38A912FD47C3200387BA4 /* HistoryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryComponents.swift; sourceTree = "<group>"; };
 		F3D38A932FD4B2F200387BA4 /* HistoryFavoriteSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFavoriteSections.swift; sourceTree = "<group>"; };
 		F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreUpdateAlert.swift; sourceTree = "<group>"; };
+		F3D5DBFE30696B8000DC4EEE /* BookDownloadIndexCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDownloadIndexCache.swift; sourceTree = "<group>"; };
 		F3D66912303215530030510C /* RightAlignedClipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightAlignedClipView.swift; sourceTree = "<group>"; };
 		F3D9CB1E3009BF7B00076C43 /* ZSTDContextWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZSTDContextWrapper.swift; sourceTree = "<group>"; };
 		F3DD0CEB3048964D00C0227C /* LibraryView+Diffing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LibraryView+Diffing.swift"; sourceTree = "<group>"; };
@@ -1939,6 +1943,7 @@
 			isa = PBXGroup;
 			children = (
 				F3DE7C7A306809EE00E0FBBF /* BookDownloadDelegate.swift */,
+				F3D5DBFE30696B8000DC4EEE /* BookDownloadIndexCache.swift */,
 				F3DE7C7E30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift */,
 			);
 			path = Downloader;
@@ -2956,6 +2961,7 @@
 				F3AE62EA304C5C43002569BB /* Reader+Content.swift in Sources */,
 				F3AE630D304C5E7C002569BB /* Search+macOS.swift in Sources */,
 				F3AE630E304C5E7C002569BB /* Search+Observers.swift in Sources */,
+				F3D5DC0130696B8000DC4EEE /* BookDownloadIndexCache.swift in Sources */,
 				F3AE6310304C5E7C002569BB /* Search+Library.swift in Sources */,
 				F3AE6311304C5E7C002569BB /* Search+SavedResults.swift in Sources */,
 				F3AE6312304C5E7C002569BB /* Search+Execution.swift in Sources */,
@@ -3344,6 +3350,7 @@
 				F3AE631B304CFBC4002569BB /* History+Core.swift in Sources */,
 				F3AE631C304CFBC4002569BB /* History+CloudKit.swift in Sources */,
 				FF34047318724E38BF0C64DD /* AnVC+TagPopover.swift in Sources */,
+				F3D5DBFF30696B8000DC4EEE /* BookDownloadIndexCache.swift in Sources */,
 				1878A376483C464F9B105C5F /* AnVC+Share.swift in Sources */,
 				9651F1789A8046C0AAFDCD0C /* AnVC+TagFilter.swift in Sources */,
 				99C284B099C445D9B6E3F948 /* AnVC+Panel.swift in Sources */,
@@ -3514,6 +3521,7 @@
 				F30577882FA463B1005732C6 /* AuthorModeView.swift in Sources */,
 				F305778B2FA463B1005732C6 /* iOSReaderView.swift in Sources */,
 				F305778C2FA463B1005732C6 /* AnnotationListView.swift in Sources */,
+				F3D5DC0030696B8000DC4EEE /* BookDownloadIndexCache.swift in Sources */,
 				F305778D2FA463B1005732C6 /* iOSLibraryView.swift in Sources */,
 				F37F1C4F30026976002B5618 /* AnnotationChangeTypes.swift in Sources */,
 				F32D4410303CFB6200429664 /* PauseController.swift in Sources */,

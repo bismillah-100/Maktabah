@@ -61,13 +61,6 @@ enum CoreDownloadError: LocalizedError {
     }
 }
 
-// MARK: - Download Event
-
-enum DownloadEvent {
-    case progress(bytesWritten: Int64, totalBytes: Int64, fraction: Double)
-    case success(tempURL: URL)
-}
-
 // MARK: - CoreDatabaseDownloader
 
 final class CoreDatabaseDownloader: NSObject, Sendable {
@@ -226,27 +219,6 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
         }
     }
 
-    // MARK: - AsyncStream Bridge for URLSession
-
-    private func downloadStream(for url: URL) -> AsyncThrowingStream<DownloadEvent, Error> {
-        AsyncThrowingStream { continuation in
-            let delegate = CoreDownloadDelegate(continuation: continuation)
-            let config = URLSessionConfiguration.default
-            config.timeoutIntervalForRequest = 120
-            config.timeoutIntervalForResource = 3600
-            config.waitsForConnectivity = false
-
-            let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
-            let task = session.downloadTask(with: url)
-
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
-                session.invalidateAndCancel()
-            }
-            task.resume()
-        }
-    }
-
     private func downloadSingleFile(
         _ coreFile: CoreFile,
         from url: URL,
@@ -256,11 +228,21 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
         let destURL = URL(fileURLWithPath: destDir).appendingPathComponent(coreFile.filename)
         var downloadedTempURL: URL?
 
-        for try await event in downloadStream(for: url) {
+        let stream = URLSession.downloadStream(
+            from: url,
+            filePrefix: "core_\(coreFile.filename)",
+            waitsForConnectivity: false,
+            customHttpError: { http in
+                CoreDownloadError.httpStatus(file: coreFile.filename, statusCode: http.statusCode)
+            }
+        )
+
+        for try await event in stream {
             switch event {
-            case let .progress(bytesWritten, totalBytes, progress):
+            case let .progress(bytesWritten, totalBytes):
+                let progress = totalBytes > 0 ? Double(bytesWritten) / Double(totalBytes) : 0
                 onProgress(bytesWritten, totalBytes, progress)
-            case let .success(tempURL):
+            case let .success(tempURL, _):
                 downloadedTempURL = tempURL
             }
         }
@@ -340,46 +322,6 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
         guard let dirPath else { return false }
         let filePath = URL(fileURLWithPath: dirPath).appendingPathComponent(coreFile.filename).path
         return fileManager.isNonEmptyFile(atPath: filePath)
-    }
-}
-
-// MARK: - URLSession Delegate Stream Bridge
-
-private final class CoreDownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
-    private let continuation: AsyncThrowingStream<DownloadEvent, Error>.Continuation
-    private var httpError: Error?
-
-    init(continuation: AsyncThrowingStream<DownloadEvent, Error>.Continuation) {
-        self.continuation = continuation
-    }
-
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData _: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        let progress = totalBytesExpectedToWrite > 0 ? Double(totalBytesWritten) / Double(totalBytesExpectedToWrite) : 0
-        continuation.yield(.progress(bytesWritten: totalBytesWritten, totalBytes: totalBytesExpectedToWrite, fraction: progress))
-    }
-
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        if let http = downloadTask.response as? HTTPURLResponse, !(200 ..< 300).contains(http.statusCode) {
-            let filename = downloadTask.originalRequest?.url?.lastPathComponent ?? "?"
-            httpError = CoreDownloadError.httpStatus(file: filename, statusCode: http.statusCode)
-            continuation.finish(throwing: httpError)
-            return
-        }
-
-        let tempDest = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        do {
-            try FileManager.default.moveItem(at: location, to: tempDest)
-            continuation.yield(.success(tempURL: tempDest))
-            continuation.finish()
-        } catch {
-            continuation.finish(throwing: error)
-        }
-    }
-
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        if let error, httpError == nil {
-            continuation.finish(throwing: error)
-        }
     }
 }
 

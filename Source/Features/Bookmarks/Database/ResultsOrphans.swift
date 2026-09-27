@@ -56,26 +56,25 @@ extension ResultsHandler {
     func resolveOrphanResults() {
         do {
             try transaction {
-                let updateSql = """
-                UPDATE OR IGNORE \(resultsTable)
-                SET \(colFolderId) = (SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId))
+                let whereClause = """
                 WHERE \(colFolderCkRecordId) IS NOT NULL
                   AND EXISTS (
                       SELECT 1 FROM \(foldersTable) f
                       WHERE f.\(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId)
                       AND COALESCE(\(resultsTable).\(colFolderId), -1) != COALESCE(f.\(colId), -1)
-                  );
+                  )
+                """
+
+                let updateSql = """
+                UPDATE OR IGNORE \(resultsTable)
+                SET \(colFolderId) = (SELECT \(colId) FROM \(foldersTable) WHERE \(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId))
+                \(whereClause);
                 """
                 try exec(updateSql)
 
                 let deleteSql = """
                 DELETE FROM \(resultsTable)
-                WHERE \(colFolderCkRecordId) IS NOT NULL
-                  AND EXISTS (
-                      SELECT 1 FROM \(foldersTable) f
-                      WHERE f.\(colCkRecordId) = \(resultsTable).\(colFolderCkRecordId)
-                      AND COALESCE(\(resultsTable).\(colFolderId), -1) != COALESCE(f.\(colId), -1)
-                  );
+                \(whereClause);
                 """
                 try exec(deleteSql)
             }
