@@ -16,8 +16,8 @@ struct SearchHistoryOverlay: View {
 
     private var shouldShow: Bool {
         showingHelp || isVisible == true || isDistanceFocused ||
-        (isSearching && isVisible == nil &&
-         !viewModel.isSearching && viewModel.results.isEmpty)
+            (isSearching && isVisible == nil &&
+                !viewModel.isSearching && viewModel.results.isEmpty)
     }
 
     var body: some View {
@@ -106,7 +106,7 @@ struct SearchHistoryOverlay: View {
                         }
                         Divider()
                     }
-                    .transition(.move(edge: .trailing).combined(with: .opacity))  // ← di dalam
+                    .transition(.move(edge: .trailing).combined(with: .opacity)) // ← di dalam
                     .animation(
                         .easeOut(duration: 0.2).delay(Double(index) * 0.04),
                         value: viewModel.searchHistory
@@ -163,7 +163,7 @@ struct SearchHistoryOverlay: View {
         }
         .animation(
             .easeInOut(duration: 0.25)
-            .delay(0.25),
+                .delay(0.25),
             value: viewModel.searchMode
         )
         .prominentButtonStyleIfAvailable()
@@ -184,9 +184,7 @@ struct SearchInputBar: View {
         TextField(
             "", text: $viewModel.query,
             prompt: Text(.searchInSelectedBooks)
-                .foregroundStyle(Color(useDefaultTheme
-                                       ? .secondaryLabel
-                                       : .iosTint))
+                .foregroundStyle(Color(useDefaultTheme ? .secondaryLabel : .iosTint))
         )
         .focused($isFocused)
         .submitLabel(.go)
@@ -203,9 +201,7 @@ struct SearchInputBar: View {
         .overlay(alignment: .trailing) {
             Button(action: onSubmit) {
                 Image(systemName: "play.fill")
-                    .foregroundStyle(Color(useDefaultTheme
-                                           ? .secondaryLabel
-                                           : .iosTint))
+                    .foregroundStyle(Color(useDefaultTheme ? .secondaryLabel : .iosTint))
                     .padding(.trailing, 20)
             }
             .accessibilityLabel("Start Search")
@@ -348,13 +344,14 @@ struct SearchToolbar: ToolbarContent {
 
     var body: some ToolbarContent {
         // Leading
-        if (!conditionalLeadingButton) ||
-            (!viewModel.results.isEmpty && conditionalLeadingButton) {
+        if !conditionalLeadingButton ||
+            (!viewModel.results.isEmpty && conditionalLeadingButton)
+        {
             ToolbarItem(placement: .cancellationAction) {
                 Button(action: { onLeadingAction?() }) {
                     Label(.close, systemImage: conditionalLeadingButton
-                          ? "xmark.circle"
-                          : "")
+                        ? "xmark.circle"
+                        : "")
                 }
                 .accessibilityLabel(.close)
                 .help(.close)
@@ -411,7 +408,6 @@ struct SearchToolbar: ToolbarContent {
         }
     }
 
-    @ViewBuilder
     private var sortMenu: some View {
         Menu {
             ForEach(SearchSortKey.allCases, id: \.self) { key in
@@ -440,7 +436,7 @@ struct SearchToolbar: ToolbarContent {
 
 struct SearchProgressView: View {
     @Bindable var viewModel: SearchViewModel
-    var showTablesProgress: Bool = false
+    var showTablesProgress: Bool = true
     var showIntegrationState: Bool = true
     @Environment(iOSNavigationManager.self) var navigationManager: iOSNavigationManager
 
@@ -450,23 +446,15 @@ struct SearchProgressView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if viewModel.isSearching {
                     VStack(alignment: .leading) {
-                        if showTablesProgress {
+                        if viewModel.totalTables > 0 {
                             ProgressView(
                                 value: Double(min(viewModel.completedTables, viewModel.totalTables)),
                                 total: Double(max(viewModel.totalTables, 1))
                             )
                             .progressViewStyle(.linear)
-                        }
-
-                        if viewModel.totalRowsInTable > 0 {
-                            ProgressView(
-                                value: Double(viewModel.completedRowsInTable),
-                                total: Double(viewModel.totalRowsInTable)
-                            )
-                            .progressViewStyle(.linear)
-                            .padding(.top, showTablesProgress ? 4 : 0)
-                        } else if !showTablesProgress {
+                        } else {
                             ProgressView()
+                                .progressViewStyle(.linear)
                         }
                     }
                     .padding(.horizontal)
@@ -478,8 +466,8 @@ struct SearchProgressView: View {
                 }
             }
             .animation(
-                .easeIn(duration: 0.5),
-                value: [viewModel.completedRowsInTable, viewModel.completedTables]
+                .easeIn(duration: 0.3),
+                value: viewModel.completedTables
             )
         }
     }

@@ -22,7 +22,7 @@ struct SearchEngineCallbacks: Sendable {
     var onInitialize: @Sendable (Int) -> Void
     var onTableComplete: @Sendable (String, Int) -> Void
     var onRowProgress: @Sendable (String, String, Int, Int) -> Void
-    var onResult: @Sendable (String, String, BookContent) -> Void
+    var onResult: @Sendable (String, String, SearchHit) -> Void
     var onComplete: @Sendable () -> Void
 }
 
@@ -43,15 +43,18 @@ actor SearchEngine {
     func startSearch(
         options: SearchQueryOptions,
         callbacks: SearchEngineCallbacks
-    ) {
+    ) async {
         searchTask?.cancel()
         searchTask = nil
         isStopped = false
 
         let currentWorkers = workers
+        for worker in currentWorkers {
+            await worker.interrupt()
+        }
 
         // Kirim total workers ke UI
-        Task { @MainActor in
+        await MainActor.run {
             callbacks.onInitialize(currentWorkers.count)
         }
 
@@ -74,8 +77,8 @@ actor SearchEngine {
                     onRowProgress: { tableName, current, total in
                         callbacks.onRowProgress(worker.archiveId, tableName, current, total)
                     },
-                    onResult: { tableName, content in
-                        callbacks.onResult(tableName, worker.archiveId, content)
+                    onResult: { tableName, hit in
+                        callbacks.onResult(tableName, worker.archiveId, hit)
                     },
                     onTableComplete: {
                         let currentCount = counter.increment()
@@ -126,6 +129,9 @@ actor SearchEngine {
         await pauseController.stopAndResumeAll()
         searchTask?.cancel()
         searchTask = nil
+        for worker in workers {
+            await worker.interrupt()
+        }
         cleanup()
     }
 
