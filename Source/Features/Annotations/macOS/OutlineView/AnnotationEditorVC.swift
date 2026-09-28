@@ -26,10 +26,14 @@ class AnnotationEditorVC: NSViewController {
 
     lazy var currentFont: NSFont = .init(
         name: UserDefaults.standard.textViewFontName,
-        size: CGFloat(UserDefaults.standard.textViewFontSize - 4)
+        size: CGFloat(UserDefaults.standard.textViewFontSize - 4),
     ) ?? .systemFont(ofSize: NSFont.systemFontSize)
 
     var annotation: Annotation!
+
+    var onSave: ((Annotation) -> Void)?
+    var onDelete: ((Int64) -> Void)?
+    var onCancel: (() -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,14 +43,17 @@ class AnnotationEditorVC: NSViewController {
         saveButton.action = #selector(saveTapped)
         deleteButton.action = #selector(deleteTapped)
 
+        saveButton.keyEquivalent = "\r"
+        saveButton.keyEquivalentModifierMask = .command
+
         underLine.state = annotation.type == .underline ? .on : .off
-        colorWell.isHidden = underLine.state == .on
 
         if #available(macOS 26, *) {
             saveButton.borderShape = .capsule
             deleteButton.borderShape = .capsule
         }
 
+        tagsField.delegate = self
         tagsField.completionDelay = 0.5
     }
 
@@ -70,6 +77,23 @@ class AnnotationEditorVC: NSViewController {
         noteField.selectedRanges = selectedRanges
     }
 
+    // MARK: - Key Handling
+
+    override func cancelOperation(_ sender: Any?) {
+        cancelTapped()
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags == .command {
+            if event.charactersIgnoringModifiers == "s" {
+                saveTapped()
+                return true
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
     // MARK: - Actions
 
     @objc func saveTapped() {
@@ -82,38 +106,56 @@ class AnnotationEditorVC: NSViewController {
         updated.note = newNote.isEmpty ? nil : newNote
         updated.tags = normalizedTags()
 
-        do {
-            if updated.id == nil {
-                try AnnotationStore.shared.addAnnotation(updated)
-            } else {
-                try AnnotationStore.shared.updateAnnotation(updated)
+        if let onSave {
+            onSave(updated)
+        } else {
+            do {
+                if updated.id == nil {
+                    try AnnotationStore.shared.addAnnotation(updated)
+                } else {
+                    try AnnotationStore.shared.updateAnnotation(updated)
+                }
+            } catch {
+                print("Gagal menyimpan/update anotasi:", error)
             }
-        } catch {
-            print("Gagal menyimpan/update anotasi:", error)
         }
 
-        cancelTapped()
+        dismissEditor()
     }
 
     @objc func deleteTapped() {
         guard let id = annotation.id else { return }
 
-        do {
-            // Hapus di DB + cache
-            try AnnotationStore.shared.deleteAnnotation(id: id)
-            cancelTapped()
-        } catch {
-            print("Gagal menghapus anotasi:", error)
+        if let onDelete {
+            onDelete(id)
+        } else {
+            do {
+                try AnnotationStore.shared.deleteAnnotation(id: id)
+            } catch {
+                print("Gagal menghapus anotasi:", error)
+            }
         }
+
+        dismissEditor()
     }
 
     @objc func cancelTapped() {
-        view.window?.performClose(nil)
+        onCancel?()
+        dismissEditor()
+    }
+
+    private func dismissEditor() {
+        if let presentingViewController {
+            presentingViewController.dismiss(self)
+        } else if let sheetParent = view.window?.sheetParent {
+            sheetParent.endSheet(view.window!)
+        } else {
+            view.window?.performClose(nil)
+        }
     }
 
     @IBAction func underLineTapped(_ sender: NSButton) {
         annotation.type = underLine.state == .on ? .underline : .highlight
-        colorWell.isHidden = underLine.state == .on
     }
 
     // MARK: - Tag Suggestions
@@ -122,9 +164,16 @@ class AnnotationEditorVC: NSViewController {
     private func existingTagSuggestions(matching substring: String) -> [String] {
         let allTags = AnnotationStore.shared.allTagNames()
         let currentTokens = (tagsField.objectValue as? [String] ?? [])
+        let cleanSub = substring.trimmingCharacters(in: .whitespacesAndNewlines)
+
         return allTags.filter { tag in
-            !currentTokens.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) &&
-                tag.range(of: substring, options: [.caseInsensitive, .anchored]) != nil
+            let notAlreadyAdded = !currentTokens.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame })
+            guard notAlreadyAdded else { return false }
+
+            if cleanSub.isEmpty {
+                return true
+            }
+            return tag.localizedCaseInsensitiveContains(cleanSub)
         }
     }
 
@@ -134,9 +183,37 @@ class AnnotationEditorVC: NSViewController {
         }
 
         return tagsField.stringValue
+            .replacingOccurrences(of: "،", with: ",")
             .split(separator: ",")
             .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+}
+
+// MARK: - NSTokenFieldDelegate
+
+extension AnnotationEditorVC: NSTokenFieldDelegate {
+    func tokenField(
+        _ tokenField: NSTokenField,
+        completionsForSubstring substring: String,
+        indexOfToken tokenIndex: Int,
+        indexOfSelectedItem selectedIndex: UnsafeMutablePointer<Int>?,
+    ) -> [Any]? {
+        existingTagSuggestions(matching: substring)
+    }
+
+    func tokenField(
+        _ tokenField: NSTokenField,
+        displayStringForRepresentedObject representedObject: Any,
+    ) -> String? {
+        representedObject as? String
+    }
+
+    func tokenField(
+        _ tokenField: NSTokenField,
+        representedObjectForEditing editingString: String,
+    ) -> Any? {
+        editingString
     }
 }
 

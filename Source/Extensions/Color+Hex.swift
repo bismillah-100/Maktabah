@@ -17,4 +17,22 @@ extension Color {
 
         self.init(red: r, green: g, blue: b)
     }
+
+    static func effectiveAnnotationColor(
+        hex: String,
+        isUnderline: Bool = false,
+        defaultHighlight: Color = .orange
+    ) -> Color {
+        let cleanHex = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        if isUnderline && (cleanHex == "#000000" || cleanHex == "000000" || cleanHex.isEmpty) {
+            return .primary
+        }
+        guard let color = Color(hex: hex) else {
+            return isUnderline ? .primary : defaultHighlight
+        }
+        if isUnderline && color == .black {
+            return .primary
+        }
+        return color
+    }
 }

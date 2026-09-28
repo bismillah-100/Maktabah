@@ -671,7 +671,8 @@ class IbarotTextView: NSTextView {
         let sel = selectedRange()
 
         do {
-            try applyAnnotations(in: sel, with: .black, mode: .underline)
+            let color = UserDefaults.standard.recentHighlightColors.first ?? .labelColor
+            try applyAnnotations(in: sel, with: color, mode: .underline)
         } catch {
             #if DEBUG
             print("Failed to save highlight: \(error)")
@@ -758,6 +759,32 @@ class IbarotTextView: NSTextView {
         let pop = NSPopover()
         pop.contentViewController = editor
         pop.behavior = .transient
+
+        editor.onSave = { [weak pop] updated in
+            do {
+                if updated.id == nil {
+                    try AnnotationStore.shared.addAnnotation(updated)
+                } else {
+                    try AnnotationStore.shared.updateAnnotation(updated)
+                }
+            } catch {
+                print("Gagal menyimpan/update anotasi:", error)
+            }
+            pop?.performClose(nil)
+        }
+
+        editor.onDelete = { [weak pop] id in
+            do {
+                try AnnotationStore.shared.deleteAnnotation(id: id)
+            } catch {
+                print("Gagal menghapus anotasi:", error)
+            }
+            pop?.performClose(nil)
+        }
+
+        editor.onCancel = { [weak pop] in
+            pop?.performClose(nil)
+        }
 
         // firstRect(forCharacterRange:) returns a rect in screen coordinates —
         // the same API used by the system for autocomplete/tooltip, guaranteed precision.

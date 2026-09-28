@@ -156,7 +156,11 @@ struct ArabicRangeCalculator {
             // Saat ini tampil tanpa harakat
             let rangeWithoutDiacritics = selection
 
-            if let diacText = diacriticsText?.cleanedText() {
+            if let diacText = diacriticsText?
+                .convertToArabicDigits()
+                .stripSpanTags()
+                .cleanedText()
+            {
                 let rangeWithDiacritics = diacText.findRangeInOriginal(
                     selectedText: selectedText,
                     approximateRange: selection

@@ -12,8 +12,9 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         guard let outlineView else { return }
 
         let nodes = effectiveNodes(for: outlineView)
-        let annotationIDs = prepareContextMenuSelection()
+        if hideMenuOnGroupRow(nodes: nodes) { return }
 
+        let annotationIDs = prepareContextMenuSelection()
         let hasAnnotations = nodes.contains { $0.annotation != nil }
         let hasTagRoots = nodes.contains { $0.kind == .tag }
         let hasBookRoots = nodes.contains { $0.kind == .book }
@@ -55,6 +56,19 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         } else {
             deleteMenuItem.title = String(localized: "Delete")
         }
+    }
+
+    private func hideMenuOnGroupRow(nodes: [AnnotationNode]) -> Bool {
+        let isDateBucketClick = nodes.count == 1 && nodes.first?.kind == .dateBucket
+        if isDateBucketClick {
+            deleteMenuItem.isHidden = true
+            copyMenuItem.isHidden = true
+            addTagMenuItem.isHidden = true
+            removeTagMenuItem.isHidden = true
+            renameTagMenuItem.isHidden = true
+        }
+
+        return isDateBucketClick
     }
 
     func setupOutlineMenu() {

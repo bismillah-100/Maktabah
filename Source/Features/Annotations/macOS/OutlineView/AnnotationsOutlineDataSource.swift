@@ -14,6 +14,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         didSet {
             outlineView?.target = self
             outlineView?.doubleAction = #selector(onDoubleClick(_:))
+            applyOutlineViewConfiguration()
         }
     }
 
@@ -80,7 +81,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         viewModel.onTreeUpdate = { [weak self] _, _ in
             guard let self, let outlineView else { return }
             outlineView.reloadData()
-            if !viewModel.searchText.isEmpty {
+            if groupingMode == .timeline || !viewModel.searchText.isEmpty {
                 outlineView.expandItem(nil, expandChildren: true)
             }
         }
@@ -203,6 +204,9 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             if entry.tagNodeIsNew {
                 if let rootIdx = root?.children.firstIndex(where: { $0 === entry.tagNode }) {
                     outlineView.insertItems(at: IndexSet(integer: rootIdx), inParent: nil, withAnimation: .slideDown)
+                    if groupingMode == .timeline {
+                        outlineView.expandItem(entry.tagNode, expandChildren: true)
+                    }
                 }
             } else if outlineView.isItemExpanded(entry.tagNode) {
                 if let annIdx = entry.tagNode.children.firstIndex(where: { $0 === entry.annotationNode }) {
@@ -277,6 +281,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     // MARK: - Public Methods
 
     func reload() {
+        applyOutlineViewConfiguration()
         treeBuilder.buildAnnotationTree()
     }
 
@@ -288,7 +293,15 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     func updateGrouping(mode: AnnotationGroupingMode) {
         viewModel.groupingMode = mode
+        applyOutlineViewConfiguration()
         treeBuilder.updateGroupingMode(mode)
+    }
+
+    private func applyOutlineViewConfiguration() {
+        let isTimeline = (groupingMode == .timeline)
+        outlineView?.floatsGroupRows = isTimeline
+        outlineView?.indentationPerLevel = isTimeline ? 0 : 13
+        outlineView?.intercellSpacing = isTimeline ? .zero : NSSize(width: 17, height: 0)
     }
 
     // MARK: - NSOutlineViewDataSource
@@ -324,6 +337,9 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         guard let outlineView else { return }
         let clickedRow = outlineView.clickedRow
         guard clickedRow != -1, let item = outlineView.item(atRow: clickedRow) as? AnnotationNode else { return }
+        if groupingMode == .timeline, item.kind == .dateBucket {
+            return
+        }
         if !item.children.isEmpty {
             if outlineView.isItemExpanded(item) {
                 outlineView.collapseItem(item)

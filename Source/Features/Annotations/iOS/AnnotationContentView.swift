@@ -129,7 +129,11 @@ class AnnotationContentView: UIView, UIContentView {
             attributes: [.font: font, .foregroundColor: UIColor.label]
         )
         let fullRg = NSRange(location: 0, length: attrContext.length)
-        let color = UIColor(hex: ann.colorHex) ?? .systemYellow
+        let color = PlatformColor.effectiveAnnotationColor(
+            hex: ann.colorHex,
+            isUnderline: ann.type == .underline,
+            defaultHighlight: .systemYellow
+        )
 
         if ann.type == .highlight {
             attrContext.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.3), range: fullRg)

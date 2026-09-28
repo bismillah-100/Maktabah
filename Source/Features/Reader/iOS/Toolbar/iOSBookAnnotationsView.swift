@@ -52,7 +52,7 @@ struct iOSBookAnnotationsView: View {
 
                         HStack {
                             Circle()
-                                .fill(Color(hex: ann.colorHex) ?? .yellow)
+                                .fill(Color.effectiveAnnotationColor(hex: ann.colorHex, isUnderline: ann.type == .underline, defaultHighlight: .yellow))
                                 .frame(width: 12, height: 12)
 
                             Text(
