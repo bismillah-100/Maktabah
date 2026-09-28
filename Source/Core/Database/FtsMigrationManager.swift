@@ -3,12 +3,12 @@
 //  Maktabah
 //
 
+import Combine
 import Foundation
 import SQLite3
 #if canImport(UIKit)
 import UIKit
 #endif
-import Combine
 
 #if os(macOS)
 extension FtsMigrationManager: ObservableObject {}
@@ -57,21 +57,6 @@ final class FtsMigrationManager {
         }
     }
 
-    private func getArchiveFtsVersion(ftsPath: String) -> Int {
-        guard FileManager.default.fileExists(atPath: ftsPath) else { return 0 }
-        guard let db = try? openDatabase(path: ftsPath) else { return 0 }
-        defer { sqlite3_close(db) }
-
-        var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, SQL.getFtsVersion, -1, &stmt, nil) == SQLITE_OK else { return 0 }
-        defer { sqlite3_finalize(stmt) }
-
-        if sqlite3_step(stmt) == SQLITE_ROW {
-            return Int(sqlite3_column_int64(stmt, 0))
-        }
-        return 0
-    }
-
     private init() {}
 
     func checkNeedsMigration() {
@@ -114,6 +99,23 @@ final class FtsMigrationManager {
         needsMigration = totalArchivesToMigrate > 0
     }
 
+    private func getArchiveFtsVersion(ftsPath: String) -> Int {
+        guard FileManager.default.fileExists(atPath: ftsPath) else { return 0 }
+        guard let db = try? openDatabase(path: ftsPath) else { return 0 }
+        defer { sqlite3_close(db) }
+
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, SQL.getFtsVersion, -1, &stmt, nil) == SQLITE_OK else { return 0 }
+        defer { sqlite3_finalize(stmt) }
+
+        if sqlite3_step(stmt) == SQLITE_ROW {
+            return Int(sqlite3_column_int64(stmt, 0))
+        }
+        return 0
+    }
+
+    // MARK: - Actions
+
     func cancelMigration() {
         isCancelled = true
     }
@@ -138,30 +140,27 @@ final class FtsMigrationManager {
         isCancelled = false
     }
 
-    private func processMigrationTasks(archives: [Int], maxConcurrent: Int) async throws {
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            var iterator = archives.makeIterator()
+    @MainActor
+    func updateBookProgress(
+        archiveId: Int,
+        statusText: String? = nil,
+        incrementBy: Int = 0
+    ) {
+        if let statusText {
+            activeArchiveStatuses[archiveId] = statusText
+        } else {
+            activeArchiveStatuses.removeValue(forKey: archiveId)
+        }
 
-            for _ in 0 ..< maxConcurrent {
-                if let nextId = iterator.next() {
-                    group.addTask {
-                        try await self.migrateSingleArchive(archiveId: nextId)
-                    }
-                }
-            }
-
-            while try await group.next() != nil {
-                if self.isCancelled {
-                    break
-                }
-                if let nextId = iterator.next() {
-                    group.addTask {
-                        try await self.migrateSingleArchive(archiveId: nextId)
-                    }
-                }
+        if incrementBy > 0 {
+            completedBooksCount += incrementBy
+            if totalBooksToMigrate > 0 {
+                progress = min(1.0, Double(completedBooksCount) / Double(totalBooksToMigrate))
             }
         }
     }
+
+    // MARK: - Execution
 
     @MainActor
     func performMigration() async throws {
@@ -183,6 +182,31 @@ final class FtsMigrationManager {
                     self.finalizeMigration(error: error)
                 }
                 throw error
+            }
+        }
+    }
+
+    private func processMigrationTasks(archives: [Int], maxConcurrent: Int) async throws {
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            var iterator = archives.makeIterator()
+
+            for _ in 0 ..< maxConcurrent {
+                if let nextId = iterator.next() {
+                    group.addTask {
+                        try await self.migrateSingleArchive(archiveId: nextId)
+                    }
+                }
+            }
+
+            while try await group.next() != nil {
+                if self.isCancelled {
+                    break
+                }
+                if let nextId = iterator.next() {
+                    group.addTask {
+                        try await self.migrateSingleArchive(archiveId: nextId)
+                    }
+                }
             }
         }
     }
@@ -232,7 +256,6 @@ final class FtsMigrationManager {
     private func executeMigrationSteps(db: OpaquePointer, ftsWritePath: String, archiveId: Int) async throws {
         // Detach if already attached from previous run
         try? exec(db, SQL.detachFtsDb)
-
         try attachDatabase(db, path: ftsWritePath, schema: "fts_db")
 
         // PRAGMA optimizations for fast bulk writing
@@ -282,9 +305,7 @@ final class FtsMigrationManager {
         sqlite3_close(db)
         archiveDb = nil
 
-        await MainActor.run {
-            _ = activeArchiveStatuses.removeValue(forKey: archiveId)
-        }
+        await updateBookProgress(archiveId: archiveId, statusText: nil)
 
         // Atomic Replace
         try replaceDatabaseIfNeeded(tempPath: paths.archiveWrite, originalPath: paths.archiveOrig)
@@ -298,17 +319,22 @@ final class FtsMigrationManager {
         try? exec(archiveDb, "DROP TABLE IF EXISTS fts_db.archive_fts;")
         try ArchiveDatabaseTools.createUnifiedFTS(db: archiveDb, ftsSchema: "fts_db")
 
+        if !tables.isEmpty {
+            await updateBookProgress(
+                archiveId: archiveId,
+                statusText: "Arsip \(archiveId): Buku 1/\(tables.count)"
+            )
+        }
+
+        var pendingCompletedBooks = 0
+        var lastUpdateTime = ContinuousClock.now
+
         for (index, table) in tables.enumerated() {
             if isCancelled {
                 throw CancellationError()
             }
 
             guard let bookId = Int(table.dropFirst()) else { continue }
-
-            let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
-            await MainActor.run {
-                self.activeArchiveStatuses[archiveId] = statusText
-            }
 
             try ArchiveDatabaseTools.appendBookToUnifiedFTS(
                 db: archiveDb,
@@ -323,11 +349,24 @@ final class FtsMigrationManager {
             try? exec(archiveDb, "DROP TABLE IF EXISTS fts_db.\(table)_fts;")
             try? exec(archiveDb, SQL.dropFtsTable(table))
 
-            await MainActor.run {
-                self.completedBooksCount += 1
-                if self.totalBooksToMigrate > 0 {
-                    self.progress = min(1.0, Double(self.completedBooksCount) / Double(self.totalBooksToMigrate))
+            pendingCompletedBooks += 1
+
+            let now = ContinuousClock.now
+            let isLast = (index == tables.count - 1)
+
+            if isLast || now - lastUpdateTime >= .milliseconds(250) || pendingCompletedBooks >= 10 {
+                if isCancelled {
+                    throw CancellationError()
                 }
+
+                let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
+                await updateBookProgress(
+                    archiveId: archiveId,
+                    statusText: statusText,
+                    incrementBy: pendingCompletedBooks
+                )
+                pendingCompletedBooks = 0
+                lastUpdateTime = now
             }
         }
     }
