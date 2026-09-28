@@ -201,27 +201,19 @@ class ViewOptions: NSViewController {
         hStack.orientation = .horizontal
         hStack.distribution = .equalCentering // Menggunakan .equalCentering
 
-        let colors: [NSColor] = [
-            .white,
-            .bgSepia,
-            .bgGray,
-            .bgSepiaDark,
-            .black          // 3: Hitam Pekat
-        ]
-
         // Ukuran untuk setiap lingkaran
         let itemSize = NSRect(x: 0, y: 0, width: 28, height: 28)
 
-        for (idx, color) in colors.enumerated() {
-            let borderOpt: BorderOptions = idx > 2 ? .brighter : .darken
-            let optionView = BackgroundOptions(color, frame: itemSize, border: borderOpt)
+        for item in BackgroundColor.allCases {
+            let borderOpt: BorderOptions = item.isDark ? .brighter : .darken
+            let optionView = BackgroundOptions(item.nsColor, frame: itemSize, border: borderOpt)
 
             // MENAMBAHKAN TAG
-            if idx == savedTag {
+            if item.rawValue == savedTag {
                 optionView.isSelected = true
             }
 
-            optionView.tag = idx
+            optionView.tag = item.rawValue
 
             // Tambahkan constraint ukuran agar lingkaran tidak gepeng di stackview
             optionView.translatesAutoresizingMaskIntoConstraints = false

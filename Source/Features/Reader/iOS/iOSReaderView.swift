@@ -3,13 +3,14 @@ import SwiftUI
 struct iOSReaderView: View {
     let book: BooksData
     let initialContentId: Int?
-    var ipad: Bool {
-        MaktabahApp.isIpad
-    }
-
     var viewModel: ReaderViewModel
     var textViewState = TextViewState.shared
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(iOSNavigationManager.self) var bManager
+
+    var isRegularLayout: Bool {
+        horizontalSizeClass == .regular
+    }
 
     @State private var showingTOC = false
     @State private var showingOptions = false
@@ -34,23 +35,15 @@ struct iOSReaderView: View {
     }
 
     var backgroundColor: Color {
-        let colors: [Color] = [
-            .white,
-            .bgSepia,
-            .bgGray,
-            .bgSepiaDark,
-            .black,
-        ]
-        let index = textViewState.backgroundColorIndex
-
-        if index >= 0, index < colors.count {
-            return colors[index]
-        }
-        return Color(UIColor.systemBackground)
+        textViewState.backgroundColor.color
     }
 
     var isDarkMode: Bool {
         textViewState.isDarkMode
+    }
+
+    private var resolvedNavigationTitle: String {
+        bManager.openTabs.count > 1 ? "" : book.book
     }
 
     var body: some View {
@@ -85,31 +78,38 @@ struct iOSReaderView: View {
         .legacyVisibleToolbarBackgrounds()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .preferredColorScheme(isDarkMode ? .dark : .light)
-        .navigationTitle(bManager.openTabs.count > 1 ? "" : book.book)
+        .navigationTitle(resolvedNavigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .if(!MaktabahApp.isIpad) { view in
-            view.toolbarVisibility(
-                isReading ? .hidden : .visible,
-                for: .navigationBar, .bottomBar
-            )
-        }
-        .onTapGesture {
-            guard !viewModel.isPopoverPresented else { return }
-            withAnimation(.easeInOut) {
-                isReading.toggle()
-            }
+        .if(!isRegularLayout) { view in
+            view
+                .toolbarVisibility(
+                    isReading ? .hidden : .visible,
+                    for: .navigationBar, .bottomBar
+                )
+                .simultaneousGesture(
+                    TapGesture()
+                        .onEnded {
+                            guard !viewModel.isPopoverPresented else { return }
+                            withAnimation(.easeInOut) {
+                                isReading.toggle()
+                            }
+                        }
+                )
         }
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if !ipad, bManager.openTabs.count > 1 {
+            if !isRegularLayout, bManager.openTabs.count > 1 {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingTabsList.toggle()
                     } label: {
                         Text(book.book)
+                            .lineLimit(1)
                             .frame(maxWidth: 190)
                             .contentShape(Rectangle())
                     }
+                    .accessibilityLabel(String(localized: "Opened Books"))
+                    .help(String(localized: "Opened Books"))
                 }
             }
 
@@ -148,7 +148,6 @@ struct iOSReaderView: View {
         }
         .sheet(isPresented: $showingTabsList) {
             iOSReaderTabsPopoverView(isPresented: $showingTabsList)
-
         }
         .sheet(isPresented: $showingBookInfo) {
             iOSBookInfoView(book: book)
@@ -207,8 +206,7 @@ private extension View {
     @ViewBuilder
     func legacyVisibleToolbarBackgrounds() -> some View {
         if #unavailable(iOS 26) {
-            self
-                .toolbarBackground(.visible, for: .navigationBar)
+            toolbarBackground(.visible, for: .navigationBar)
                 .toolbarBackground(.visible, for: .bottomBar)
         } else {
             self
@@ -217,6 +215,10 @@ private extension View {
 
     @ViewBuilder
     func `if`(_ condition: Bool, transform: (Self) -> some View) -> some View {
-        if condition { transform(self) } else { self }
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }

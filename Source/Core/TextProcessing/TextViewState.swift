@@ -79,8 +79,12 @@ class TextViewState: @unchecked Sendable {
     }
 
     // MARK: - Computed Properties
+    var backgroundColor: BackgroundColor {
+        BackgroundColor(rawValue: backgroundColorIndex) ?? .white
+    }
+
     var isDarkMode: Bool {
-        backgroundColorIndex > 1
+        backgroundColor.isDark
     }
 
     var currentFont: PlatformFont {
@@ -137,6 +141,10 @@ class TextViewState: @unchecked Sendable {
 
     func setBackgroundColorIndex(_ index: Int) {
         backgroundColorIndex = index
+    }
+
+    func setBackgroundColor(_ color: BackgroundColor) {
+        backgroundColorIndex = color.rawValue
     }
 
     func changeFontSize(by delta: CGFloat) {
