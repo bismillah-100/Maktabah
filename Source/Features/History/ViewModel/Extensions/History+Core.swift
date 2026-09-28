@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 import SwiftUI
 
 extension HistoryViewModel {
@@ -21,8 +22,8 @@ extension HistoryViewModel {
         HistoryDatabaseManager.shared.upsertEntry(entry)
         if reloadUI {
             loadBooksData()
+            notifyHistoryChanged()
         }
-        notifyHistoryChanged()
         CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
     }
 
@@ -102,9 +103,7 @@ extension HistoryViewModel {
                 }
                 CloudKitSyncManager.shared.uploadHistory(entries: upserted, trackPending: false)
             } catch {
-                #if DEBUG
-                print("Failed to save removeHistory: \(error)")
-                #endif
+                Logger.history.error("Failed to save removeHistory: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -136,9 +135,7 @@ extension HistoryViewModel {
                     }
                 }
             } catch {
-                #if DEBUG
-                print("Failed to save removeHistory: \(error)")
-                #endif
+                Logger.history.error("Failed to save removeHistory: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

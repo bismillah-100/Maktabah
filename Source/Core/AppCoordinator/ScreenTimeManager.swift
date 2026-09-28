@@ -7,6 +7,7 @@
 
 import Foundation
 import IOKit.pwr_mgt
+import OSLog
 import Synchronization
 
 final class ScreenTimeManager: Sendable {
@@ -47,9 +48,7 @@ final class ScreenTimeManager: Sendable {
 
         guard result == kIOReturnSuccess else { return }
 
-        #if DEBUG
-        print("Screen time extended untuk \(minutes) menit")
-        #endif
+        Logger.app.debug("Screen time extended untuk \(minutes) menit")
 
         let task = Task { [weak self] in
             try? await Task.sleep(for: .seconds(minutes * 60))
@@ -89,9 +88,7 @@ final class ScreenTimeManager: Sendable {
 
         if assertionToRelease != 0 {
             IOPMAssertionRelease(assertionToRelease)
-            #if DEBUG
-            print("Screen time extension dibatalkan")
-            #endif
+            Logger.app.debug("Screen time extension dibatalkan")
         }
     }
 

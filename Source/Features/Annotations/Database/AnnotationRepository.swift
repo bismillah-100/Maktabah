@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -86,9 +87,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
 
         let isNewDatabase = !fm.fileExists(atPath: url.path)
 
-        #if DEBUG
-        print("AnnotationRepository: setupAnnotationsDatabase at \(url.path), isNewDatabase: \(isNewDatabase)")
-        #endif
+        Logger.annotations.debug("AnnotationRepository: setupAnnotationsDatabase at \(url.path, privacy: .public), isNewDatabase: \(isNewDatabase)")
 
         connect()
         try createAnnotationsTableAndSchemaIfNeeded()
@@ -503,18 +502,20 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         let sanitized = sanitizeTagNames(tags)
         guard !sanitized.isEmpty else { return }
 
-        for tag in sanitized {
-            let normalized = normalizedTagName(tag)
-            let insertTagSql = "INSERT OR IGNORE INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES (?, ?);"
-            try exec(insertTagSql, parameters: [tag, normalized])
+        for chunk in sanitized.chunked(into: 400) {
+            let normalizedNames = chunk.map { normalizedTagName($0) }
+            let insertParams = chunk.flatMap { [$0, normalizedTagName($0)] }
+            let insertPlaceholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
+            try exec("INSERT OR IGNORE INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(insertPlaceholders);", parameters: insertParams)
 
-            let selectTagIdSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) = ? LIMIT 1;"
-            guard let tagId = try _db.fetch(query: selectTagIdSql, parameters: [normalized], mapping: { $0.int64(at: 0) }).first else {
-                continue
-            }
+            let selectPlaceholders = String(repeating: "?,", count: normalizedNames.count).dropLast()
+            let selectTagIdSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders));"
+            let tagIds = try _db.fetch(query: selectTagIdSql, parameters: normalizedNames, mapping: { $0.int64(at: 0) })
 
-            let linkSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES (?, ?);"
-            try exec(linkSql, parameters: [annotationId, tagId])
+            guard !tagIds.isEmpty else { continue }
+            let linkParams = tagIds.flatMap { [annotationId, $0] }
+            let linkPlaceholders = String(repeating: "(?, ?),", count: tagIds.count).dropLast()
+            try exec("INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(linkPlaceholders);", parameters: linkParams)
         }
     }
 

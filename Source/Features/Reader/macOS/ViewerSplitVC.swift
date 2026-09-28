@@ -6,6 +6,7 @@
 //
 
 @preconcurrency import Cocoa
+import OSLog
 
 @MainActor
 class ViewerSplitVC: ReaderSplitVC {
@@ -240,9 +241,7 @@ class ViewerSplitVC: ReaderSplitVC {
             ? NSAppearance(named: .darkAqua)!
             : NSAppearance(named: .aqua)!
 
-        #if DEBUG
-        print("DEBUG: Applying bg=\(bg), rawValue=\(bg.rawValue), appearance=\(appearance)")
-        #endif
+        Logger.reader.debug("Applying bg=\(String(describing: bg), privacy: .public), rawValue=\(bg.rawValue), appearance=\(String(describing: appearance), privacy: .public)")
 
         sv.appearance = appearance
         sv.subviews.forEach { $0.appearance = appearance }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 
 extension ResultsHandler {
@@ -132,7 +133,7 @@ extension ResultsHandler {
                 NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
             }
         } catch {
-            print("ResultsHandler: Failed to apply folder changes - \(error)")
+            Logger.sync.error("ResultsHandler: Failed to apply folder changes: \(error.localizedDescription, privacy: .public)")
             return false
         }
         return true
@@ -363,7 +364,7 @@ extension ResultsHandler {
                 NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
             }
         } catch {
-            print("ResultsHandler: Failed to apply result changes - \(error)")
+            Logger.sync.error("ResultsHandler: Failed to apply result changes: \(error.localizedDescription, privacy: .public)")
             return false
         }
         return true

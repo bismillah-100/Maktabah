@@ -19,8 +19,8 @@ struct ViewOptionsView: View {
     let backgroundColors: [Color] = [
         .white,
         .bgSepia,
-        .bgSepiaDark,
         .bgGray,
+        .bgSepiaDark,
         .bgDark,
     ]
 

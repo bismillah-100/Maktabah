@@ -7,6 +7,7 @@
 //
 
 @preconcurrency import CloudKit
+import OSLog
 import SwiftUI
 import UniformTypeIdentifiers
 #if DIRECT_DISTRIBUTION
@@ -279,27 +280,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func restorePersistedState(_ window: MainWindow?) {
         guard let window else {
-            #if DEBUG
-            print("mainWindowController window nil")
-            #endif
+            Logger.app.debug("mainWindowController window nil")
             return
         }
 
         window.setupContentView()
 
         guard let splitVC = window.contentViewController as? SplitVC else {
-            #if DEBUG
-            print("Cannot restore state: SplitVC not found")
-            #endif
+            Logger.app.debug("Cannot restore state: SplitVC not found")
             return
         }
 
         // Get last active mode
         let lastMode = window.currentMode
 
-        #if DEBUG
-        print("Restoring app to last mode: \(lastMode)")
-        #endif
+        Logger.app.debug("Restoring app to last mode: \(lastMode.rawValue, privacy: .public)")
 
         splitVC.setupForMode(lastMode)
         splitVC.setupAutoSave()
@@ -434,9 +429,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 message: error.localizedDescription
             )
 
-            #if DEBUG
-            print("[Offline Import] Failed to import book from \(url.lastPathComponent): \(error)")
-            #endif
+            Logger.library.error("[Offline Import] Failed to import book from \(url.lastPathComponent, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -724,9 +717,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 try await ibarotVC.openAnnotation(annotation)
             } catch {
-                #if DEBUG
-                print("Failed to open annotation from deep link: \(error)")
-                #endif
+                Logger.annotations.error("Failed to open annotation from deep link: \(error.localizedDescription, privacy: .public)")
             }
 
         case let .history(bkId, contentId):
@@ -734,9 +725,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 try await ibarotVC.openHistory(book: book, contentId: contentId)
             } catch {
-                #if DEBUG
-                print("Failed to open history book from deep link: \(error)")
-                #endif
+                Logger.history.error("Failed to open history book from deep link: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

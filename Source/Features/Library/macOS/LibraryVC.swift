@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class LibraryVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
@@ -65,9 +66,7 @@ class LibraryVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("deinit LibraryVC")
-        #endif
+        Logger.library.debug("deinit LibraryVC")
         NotificationCenter.default.removeObserver(self)
     }
 

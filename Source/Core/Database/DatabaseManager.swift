@@ -11,6 +11,7 @@ import AppKit
 import UIKit
 #endif
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -85,7 +86,7 @@ final class DatabaseManager: Sendable {
         guard let mainPath = AppConfig.mainDatabasePath,
               let specialPath = AppConfig.specialDatabasePath
         else {
-            print("databaseFilesPath is nil - database will not be initialized")
+            Logger.db.error("databaseFilesPath is nil - database will not be initialized")
             return
         }
 
@@ -98,7 +99,7 @@ final class DatabaseManager: Sendable {
             """
             try tempWriteDb.execute(query: sqlIndex)
         } catch {
-            print("\(error). Continue to ReadOnly Mode...")
+            Logger.db.error("\(error.localizedDescription, privacy: .public). Continue to ReadOnly Mode...")
         }
 
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX
@@ -287,6 +288,28 @@ final class DatabaseManager: Sendable {
         } else {
             throw NSError(domain: "Book not found", code: 1)
         }
+    }
+
+    func fetchBooks(byIds bookIds: [Int]) throws -> [BooksData] {
+        guard let db else {
+            throw NSError(domain: "No database connection", code: 1)
+        }
+
+        guard !bookIds.isEmpty else { return [] }
+
+        var allBooks: [BooksData] = []
+        let chunkSize = 900
+
+        for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
+            let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
+            let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ", ")
+            let sql = "SELECT \(bookSelectColumns) FROM \(booksTableName) WHERE \(colBokId) IN (\(placeholders))"
+
+            let chunkBooks = try db.fetch(query: sql, parameters: chunk, mapping: parseBookData(from:))
+            allBooks.append(contentsOf: chunkBooks)
+        }
+
+        return allBooks
     }
 
     func bookExists(id: Int) -> Bool {

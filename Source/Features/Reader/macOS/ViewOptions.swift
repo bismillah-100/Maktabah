@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 @MainActor
 class ViewOptions: NSViewController {
@@ -152,9 +153,7 @@ class ViewOptions: NSViewController {
             lineHeightOptions.insertItem(withTitle: double, at: count)
         }
         
-        #if DEBUG
-        print("lineHeight", UserDefaults.standard.lineHeight)
-        #endif
+        Logger.reader.debug("lineHeight: \(UserDefaults.standard.lineHeight)")
 
         lineHeightOptions.selectItem(withTitle: String(UserDefaults.standard.lineHeight))
         lineHeightOptions.selectedItem?.state = .on

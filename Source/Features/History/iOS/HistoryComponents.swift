@@ -226,6 +226,7 @@ struct BookCard: View {
     let action: () -> Void
 
     @State private var showPopover = false
+    @State private var isDeleted = false
 
     var body: some View {
         Button(action: action) {
@@ -261,10 +262,8 @@ struct BookCard: View {
             }
             .popover(isPresented: $showPopover, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
                 Button(role: .destructive) {
+                    isDeleted = true
                     showPopover = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        viewModel.removeHistory(for: book.id)
-                    }
                 } label: {
                     Label("Remove from History", systemImage: "clock.badge.xmark")
                         .foregroundColor(.red)
@@ -273,6 +272,11 @@ struct BookCard: View {
                 }
                 .buttonStyle(.plain)
                 .presentationCompactAdaptation(.popover)
+                .onDisappear {
+                    if isDeleted {
+                        viewModel.removeHistory(for: book.id)
+                    }
+                }
             }
             .background(
                 RoundedRectangle(cornerRadius: 30)

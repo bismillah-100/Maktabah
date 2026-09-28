@@ -36,6 +36,10 @@
 		4B0139E92EEB3CB000424CFA /* InitProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0139E72EEB3CB000424CFA /* InitProgress.swift */; };
 		4B01CA0E2EFCD7B2002A66FA /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B01CA102EFCD7B2002A66FA /* MainMenu.xib */; };
 		4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B01CA2F2EFD366E002A66FA /* AppConfig.swift */; };
+		F3A000022FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
+		F3A000032FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
+		F3A000042FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
+		F3A000052FA46222005732C6 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A000012FA46222005732C6 /* AppLogger.swift */; };
 		4B03185F2F41E7BD00CB1677 /* SplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03185E2F41E7BC00CB1677 /* SplitVC.swift */; };
 		4B03D9D12F42DB5B004E0FDB /* ReaderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */; };
 		4B03D9D72F42DD6D004E0FDB /* ReaderStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */; };
@@ -936,6 +940,7 @@
 		4B01CA0F2EFCD7B2002A66FA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4B01CA112EFCD7B2002A66FA /* mul */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = mul; path = mul.lproj/MainMenu.xcstrings; sourceTree = "<group>"; };
 		4B01CA2F2EFD366E002A66FA /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		F3A000012FA46222005732C6 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		4B03185E2F41E7BC00CB1677 /* SplitVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitVC.swift; sourceTree = "<group>"; };
 		4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderState.swift; sourceTree = "<group>"; };
 		4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderStateManager.swift; sourceTree = "<group>"; };
@@ -1360,6 +1365,7 @@
 			children = (
 				4B5DF93C2EDC495C0082DE7F /* Typhography */,
 				4B01CA2F2EFD366E002A66FA /* AppConfig.swift */,
+				F3A000012FA46222005732C6 /* AppLogger.swift */,
 				4B68AE2B2F20576700CB3ED9 /* AppUpdate.swift */,
 				F3F3FEAC30360EC700507E9A /* DonationManager.swift */,
 				F3A000012FBB000100000001 /* FileManager+Size.swift */,
@@ -2830,6 +2836,7 @@
 				CE5C2CDD068A41701EE1E182 /* HistorySnapshot.swift in Sources */,
 				CF9F3C0982984CC8BD89C27F /* AnnotationSnapshot.swift in Sources */,
 				5CF35837DDB9D9548518C526 /* WidgetSnapshotRecord.swift in Sources */,
+				F3A000052FA46222005732C6 /* AppLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2894,6 +2901,7 @@
 				4BD6C33C2EE6AA7F008684E3 /* MainWindow.swift in Sources */,
 				4BDAB98C2F69E860007D0945 /* SettingsView.swift in Sources */,
 				4B01CA302EFD366E002A66FA /* AppConfig.swift in Sources */,
+				F3A000022FA46222005732C6 /* AppLogger.swift in Sources */,
 				F3AE62E9304C5C43002569BB /* Reader+Observers.swift in Sources */,
 				F3AE62EA304C5C43002569BB /* Reader+Content.swift in Sources */,
 				F3AE630D304C5E7C002569BB /* Search+macOS.swift in Sources */,
@@ -3157,6 +3165,7 @@
 				4B7C90A62F83494200454BE1 /* MainWindow.swift in Sources */,
 				4B7C90A72F83494200454BE1 /* SettingsView.swift in Sources */,
 				4B7C90A82F83494200454BE1 /* AppConfig.swift in Sources */,
+				F3A000032FA46222005732C6 /* AppLogger.swift in Sources */,
 				4B7C90A92F83494200454BE1 /* AnnotationCellView.swift in Sources */,
 				4B7C90AA2F83494200454BE1 /* LibraryVC.swift in Sources */,
 				4B7C90AC2F83494200454BE1 /* SavedResults.swift in Sources */,
@@ -3428,6 +3437,7 @@
 				F36382642FA760FF0006636C /* iOSHierarchicalCollectionViewController.swift in Sources */,
 				F34047CE303680D0003B4B57 /* DonationSheetView.swift in Sources */,
 				F30576E52FA46222005732C6 /* AppConfig.swift in Sources */,
+				F3A000042FA46222005732C6 /* AppLogger.swift in Sources */,
 				F30576EC2FA46222005732C6 /* SettingsActions.swift in Sources */,
 				F3AE6321304CFBC4002569BB /* History+Database.swift in Sources */,
 				F3AE6322304CFBC4002569BB /* History+Migration.swift in Sources */,

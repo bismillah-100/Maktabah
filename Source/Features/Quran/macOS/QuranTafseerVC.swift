@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 class QuranTafseerVC: NSViewController {
 
@@ -81,9 +82,7 @@ class QuranTafseerVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("deinit QuranTafseerVC")
-        #endif
+        Logger.quran.debug("deinit QuranTafseerVC")
     }
 
 }

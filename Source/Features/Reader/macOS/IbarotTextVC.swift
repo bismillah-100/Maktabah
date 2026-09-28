@@ -7,6 +7,7 @@
 
 import Cocoa
 import Observation
+import OSLog
 
 @MainActor
 class IbarotTextVC: NSViewController {
@@ -55,9 +56,7 @@ class IbarotTextVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("IbarotTextVC deinit")
-        #endif
+        Logger.reader.debug("IbarotTextVC deinit")
     }
 
     // MARK: - Setup
@@ -108,7 +107,7 @@ class IbarotTextVC: NSViewController {
             do {
                 try self?.viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
             } catch {
-                print("Failed to add annotation: \(error)")
+                Logger.annotations.error("Failed to add annotation: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -116,7 +115,7 @@ class IbarotTextVC: NSViewController {
             do {
                 try self?.viewModel.updateAnnotation(annotation)
             } catch {
-                print("Failed to update annotation: \(error)")
+                Logger.annotations.error("Failed to update annotation: \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -124,7 +123,7 @@ class IbarotTextVC: NSViewController {
             do {
                 try self?.viewModel.deleteAnnotation(id: id)
             } catch {
-                print("Failed to delete annotation: \(error)")
+                Logger.annotations.error("Failed to delete annotation: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -263,7 +262,13 @@ class IbarotTextVC: NSViewController {
             book: book, page: currentPage, part: currentPart
         )
 
-        libraryVC?.dataVM.viewModel.selectedBookName = book.book
+        if viewModel.recordHistory {
+            // upload history to cloudkit and update library sidebar
+            libraryVC?.dataVM.viewModel.handleBookSelection(book: book)
+        } else {
+            libraryVC?.dataVM.viewModel.selectedBookName = book.book
+        }
+
         libraryVC?.dataVM.restoreSelection(byBookName: book.book)
     }
 
@@ -556,9 +561,7 @@ extension IbarotTextVC {
             $0.currentRowi = rowi
             $0.authorDisplayMode = .rowiInfo
         }
-        #if DEBUG
-        print("Author mode: display mode (\(String(describing: state.authorDisplayMode)))")
-        #endif
+        Logger.reader.debug("Author mode: display mode (\(String(describing: state.authorDisplayMode), privacy: .public))")
     }
 }
 
@@ -583,9 +586,7 @@ extension IbarotTextVC: TarjamahBDelegate {
             bkId: tarjamahB.bk,
             contentId: tarjamahB.id
         ) else {
-            #if DEBUG
-            print("unable to get content from tarjamahB")
-            #endif
+            Logger.reader.debug("unable to get content from tarjamahB")
             return
         }
 
@@ -617,6 +618,21 @@ extension IbarotTextVC: ReaderStateComponent {
         viewModel.updateState(&state)
     }
 
+    private func waitForSearchLayoutSettle() async {
+        guard let splitVC, splitVC.currentMode == .search,
+              let optionSearchVC = splitVC.optionSearchVC
+        else { return }
+
+        while optionSearchVC.viewModel.state != .loaded {
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+        }
+
+        // Tambahkan sedikit delay agar layout split view benar-benar settle
+        // setelah progress indicator disembunyikan di `OptionSearchVC`.
+        await Task.yield()
+    }
+
     func restore(from state: ReaderState) {
         guard state.hasContent, let book = state.currentBook
         else { clearUI(); return }
@@ -630,18 +646,21 @@ extension IbarotTextVC: ReaderStateComponent {
             return
         }
 
-        viewModel.restore(from: state)
-
-        if let range = state.selectedRange {
-            textView.setSelectedRange(range)
-            view.window?.makeFirstResponder(textView)
-        }
-
         libraryVC?.dataVM.viewModel.selectedBookName = book.book
 
         pendingRestoreTask?.cancel()
         pendingRestoreTask = Task { @MainActor [weak self] in
             guard let self, !Task.isCancelled else { return }
+
+            await waitForSearchLayoutSettle()
+            guard !Task.isCancelled else { return }
+
+            viewModel.restore(from: state)
+
+            if let range = state.selectedRange {
+                textView.setSelectedRange(range)
+                view.window?.makeFirstResponder(textView)
+            }
 
             if let query = state.searchQuery {
                 let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }

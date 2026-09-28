@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import Synchronization
 
 final class LibraryDataManager: Sendable {
@@ -99,9 +100,7 @@ final class LibraryDataManager: Sendable {
                 IntegrationCache.shared.buildAllIfNeeded()
             }
         } catch {
-            #if DEBUG
-            print("Error loading data: \(error)")
-            #endif
+            Logger.library.error("Error loading data: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -188,9 +187,7 @@ final class LibraryDataManager: Sendable {
                 }
             }
         } catch {
-            #if DEBUG
-            print("Failed to apply bundle download metadata:", error)
-            #endif
+            Logger.library.error("Failed to apply bundle download metadata: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -253,35 +250,29 @@ final class LibraryDataManager: Sendable {
     }
 
     func getBook(_ ids: [Int]) -> [BooksData] {
-        var books = [BooksData]()
-        var idsToFetch = [Int]()
+        guard !ids.isEmpty else { return [] }
 
-        state.withLock { state in
-            for id in ids {
-                if let book = state.booksById[id] {
-                    books.append(book)
-                } else {
-                    idsToFetch.append(id)
-                }
-            }
+        let idsToFetch: [Int] = state.withLock { state in
+            let missing = ids.filter { state.booksById[$0] == nil }
+            return Array(Set(missing))
         }
 
-        for id in idsToFetch {
+        if !idsToFetch.isEmpty {
             do {
-                if let book = try db.fetchBook(byId: id) {
-                    state.withLock { state in
-                        state.booksById[id] = book
+                let fetchedBooks = try db.fetchBooks(byIds: idsToFetch)
+                state.withLock { state in
+                    for book in fetchedBooks {
+                        state.booksById[book.id] = book
                     }
-                    books.append(book)
                 }
             } catch {
-                #if DEBUG
-                print(error.localizedDescription)
-                #endif
+                Logger.library.error("Failed to fetch books: \(error.localizedDescription, privacy: .public)")
             }
         }
 
-        return books
+        return state.withLock { state in
+            ids.compactMap { state.booksById[$0] }
+        }
     }
 
     func categoryLevel(for book: BooksData) -> Int? {
@@ -350,7 +341,7 @@ final class LibraryDataManager: Sendable {
         var connections: [DBConnectionType] = []
 
         guard FileManager.default.fileExists(atPath: dbPath) else {
-            print("⚠️ File tidak ditemukan: \(dbPath)")
+            Logger.library.error("⚠️ File tidak ditemukan: \(dbPath, privacy: .public)")
             return []
         }
 
@@ -359,7 +350,7 @@ final class LibraryDataManager: Sendable {
                 let conn = try SQLiteConnection(dbPath: dbPath)
                 connections.append(conn)
             } catch {
-                print("⚠️ Connection \(i + 1) gagal untuk \(dbPath): \(error)")
+                Logger.library.error("⚠️ Connection \(i + 1) gagal untuk \(dbPath, privacy: .public): \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -552,7 +543,7 @@ extension LibraryDataManager {
             let connections = createConnections(dbPath: dbPath, count: 4)
 
             if connections.isEmpty {
-                print("⚠️ Skip archive \(archiveId): Tidak ada koneksi")
+                Logger.library.error("⚠️ Skip archive \(archiveId): Tidak ada koneksi")
                 continue
             }
 
@@ -571,9 +562,7 @@ extension LibraryDataManager {
                 batchSize: 200
             )
 
-            #if DEBUG
-            print("Worker archive \(archiveId): \(relevantTablesForArchive.count) tables")
-            #endif
+            Logger.library.debug("Worker archive \(archiveId): \(relevantTablesForArchive.count) tables")
         }
 
         return totalTables

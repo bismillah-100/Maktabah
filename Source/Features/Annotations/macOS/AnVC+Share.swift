@@ -4,6 +4,7 @@
 //
 
 import Cocoa
+import OSLog
 
 extension AnnotationsVC {
     func setupShareMenu() {
@@ -70,9 +71,7 @@ extension AnnotationsVC {
             guard let data = dataSource.exportToRTF() else { return }
             do {
                 try data.write(to: url)
-                #if DEBUG
-                print("Berhasil ekspor ke: \(url.path)")
-                #endif
+                Logger.annotations.debug("Berhasil ekspor ke: \(url.path, privacy: .public)")
             } catch {
                 ReusableFunc.showAlert(title: "Error", message: error.localizedDescription)
             }
@@ -110,9 +109,7 @@ extension AnnotationsVC {
                 }
                 do {
                     try jsonData.write(to: url)
-                    #if DEBUG
-                    print("Exported \(annotations.count) annotations to: \(url.path)")
-                    #endif
+                    Logger.annotations.debug("Exported \(annotations.count) annotations to: \(url.path, privacy: .public)")
                 } catch {
                     await MainActor.run {
                         ReusableFunc.showAlert(title: "Error".localized, message: error.localizedDescription)

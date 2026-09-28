@@ -15,7 +15,7 @@ struct SearchHistoryOverlay: View {
     @ScaledMetric(relativeTo: .body) private var distanceFieldHeight: CGFloat = 28
 
     private var shouldShow: Bool {
-        isVisible == true || isDistanceFocused ||
+        showingHelp || isVisible == true || isDistanceFocused ||
         (isSearching && isVisible == nil &&
          !viewModel.isSearching && viewModel.results.isEmpty)
     }

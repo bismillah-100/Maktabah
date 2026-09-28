@@ -7,6 +7,7 @@
 
 import Cocoa
 @preconcurrency import Combine
+import OSLog
 import SwiftUI
 
 @MainActor
@@ -543,9 +544,8 @@ class OptionSearchVC: NSViewController {
     }
 
     deinit {
-        #if DEBUG
-        print("deinit OptionSearchVC")
-        #endif
+        Logger.search.debug("deinit OptionSearchVC")
+        cancellables.removeAll()
         resultsLoadingTask?.cancel()
     }
 }
@@ -609,9 +609,7 @@ extension OptionSearchVC: NSTableViewDataSource, NSTableViewDelegate {
     func tableViewSelectionDidChange(_ notification: Notification) {
         let row = tableView.selectedRow
         guard row >= 0, row < results.count else {
-            #if DEBUG
-            print("result out of range")
-            #endif
+            Logger.search.debug("result out of range")
             return
         }
         // didSelectItem sekarang adalah fungsi async di LibraryViewDelegate
@@ -647,9 +645,7 @@ extension OptionSearchVC: LibraryViewDelegate {
         let book = results[row]
 
         guard let bookData = viewModel.resolveBook(from: book) else {
-            #if DEBUG
-            print("bookData not cached")
-            #endif
+            Logger.search.debug("bookData not cached")
             return
         }
 

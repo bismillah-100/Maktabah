@@ -101,13 +101,7 @@ extension LibraryViewModel {
             return
         }
         selectedBookName = book.book
-
-        historySelectionTask?.cancel()
-        historySelectionTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(3))
-            guard !Task.isCancelled else { return }
-            self?.historyManager.addBookToHistory(book.id)
-        }
+        historyManager.addBookToHistory(book.id)
     }
 
     func startBulkDeletion(onFinished: @escaping @Sendable () -> Void) {

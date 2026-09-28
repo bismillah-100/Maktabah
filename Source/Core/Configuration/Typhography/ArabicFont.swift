@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -47,18 +48,19 @@ enum ArabicFont: String, CaseIterable {
                                    withExtension: fileExtension)
 
             guard let fontURL else {
-                print("Font file tidak ditemukan: \(fontFile)")
+                Logger.app.error("Font file tidak ditemukan: \(fontFile, privacy: .public)")
                 continue
             }
 
             var error: Unmanaged<CFError>?
             if !CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, &error) {
-                print("Error registering font: \(fontFile)")
                 if let error = error?.takeRetainedValue() {
-                    print("Error detail: \(error)")
+                    Logger.app.error("Error registering font \(fontFile, privacy: .public): \(String(describing: error), privacy: .public)")
+                } else {
+                    Logger.app.error("Error registering font: \(fontFile, privacy: .public)")
                 }
             } else {
-                print("Font berhasil diregister: \(fontFile)")
+                Logger.app.debug("Font berhasil diregister: \(fontFile, privacy: .public)")
             }
         }
     }

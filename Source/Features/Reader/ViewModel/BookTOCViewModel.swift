@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import OSLog
 import SwiftUI
 
 struct TOCRange {
@@ -79,7 +80,7 @@ class BookTOCViewModel {
                 self.onTOCLoadingStateChanged?(false)
             } catch {
                 self.onTOCLoadingStateChanged?(false)
-                print("Failed to load TOC: \(error)")
+                Logger.reader.error("Failed to load TOC: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

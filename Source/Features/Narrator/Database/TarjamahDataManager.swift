@@ -7,6 +7,7 @@
 //  Refactored: Unified Manager + Pause/Resume + Streaming Results
 
 import Foundation
+import OSLog
 import SQLite3
 
 actor TarjamahDatabaseActor {
@@ -73,12 +74,12 @@ class TarjamahGlobalManager: @unchecked Sendable {
         ensureSpecialIndices(mainDbPath: mainDbPath)
         guard shouldOptimizeSpecialDb(ftsPath: ftsPath) else { return }
 
-        print("Memulai optimasi special.sqlite (FTS & ZSTD Compression)...")
+        Logger.narrator.debug("Memulai optimasi special.sqlite (FTS & ZSTD Compression)...")
         try? FileManager.default.removeItem(atPath: ftsPath)
 
         var db: OpaquePointer?
         guard sqlite3_open(mainDbPath, &db) == SQLITE_OK else {
-            print("❌ Gagal buka db")
+            Logger.narrator.error("❌ Gagal buka db")
             return
         }
         defer { sqlite3_close(db) }
@@ -128,7 +129,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
         sqlite3_exec(db, "BEGIN", nil, nil, nil)
         guard sqlite3_exec(db, "ALTER TABLE men_u RENAME TO old_men_u", nil, nil, nil) == SQLITE_OK else {
             sqlite3_exec(db, "ROLLBACK", nil, nil, nil)
-            print("Tabel men_u mungkin sudah dikompres atau gagal rename.")
+            Logger.narrator.debug("Tabel men_u mungkin sudah dikompres atau gagal rename.")
             return
         }
 
@@ -146,13 +147,13 @@ class TarjamahGlobalManager: @unchecked Sendable {
         var readStmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, "SELECT Name, IsoName, Bk, Id, uId FROM old_men_u", -1, &readStmt, nil) == SQLITE_OK else {
             sqlite3_exec(db, "ROLLBACK", nil, nil, nil)
-            print("Gagal prepare readStmt old_men_u")
+            Logger.narrator.error("Gagal prepare readStmt old_men_u")
             return
         }
         var insertStmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, "INSERT INTO men_u (Name, IsoName, Bk, Id, uId) VALUES (?, ?, ?, ?, ?)", -1, &insertStmt, nil) == SQLITE_OK else {
             finalizeAndRollback(db: db, readStmt: readStmt)
-            print("Gagal prepare insertStmt men_u")
+            Logger.narrator.error("Gagal prepare insertStmt men_u")
             return
         }
 
@@ -171,7 +172,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
 
         sqlite3_exec(db, "DROP TABLE old_men_u", nil, nil, nil)
         sqlite3_exec(db, "COMMIT", nil, nil, nil)
-        print("men_u selesai dikompres")
+        Logger.narrator.debug("men_u selesai dikompres")
     }
 
     private func createFtsTables(db: OpaquePointer?, ftsPath: String) {
@@ -253,11 +254,11 @@ class TarjamahGlobalManager: @unchecked Sendable {
     }
 
     private func vacuumAndDetachFts(db: OpaquePointer?) {
-        print("VACUUM...")
+        Logger.narrator.debug("VACUUM...")
         sqlite3_exec(db, "VACUUM main", nil, nil, nil)
         sqlite3_exec(db, "VACUUM fts_db", nil, nil, nil)
         sqlite3_exec(db, "DETACH DATABASE fts_db", nil, nil, nil)
-        print("DONE: FTS created and optimized")
+        Logger.narrator.debug("DONE: FTS created and optimized")
     }
     #endif
 
@@ -277,13 +278,13 @@ class TarjamahGlobalManager: @unchecked Sendable {
         guard let sanitizedQuery = sanitize(query: query) else { return }
 
         if let cached = searchStringCache[sanitizedQuery] {
-            print("📦 Cache Hit for query: \(sanitizedQuery)")
+            Logger.narrator.debug("📦 Cache Hit for query: \(sanitizedQuery, privacy: .public)")
             await onBatchResult(cached)
             return
         }
 
         guard dbActor != nil else {
-            print("❌ Connection error")
+            Logger.narrator.error("❌ Connection error")
             return
         }
 
@@ -356,7 +357,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
                 onBatchResult: onBatchResult
             )
         } catch {
-            print("❌ Error Tarjamah FTS:", error)
+            Logger.narrator.error("❌ Error Tarjamah FTS: \(error.localizedDescription, privacy: .public)")
             return []
         }
     }
@@ -495,7 +496,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
                 rowaCache[rowaId] = results
             }
         } catch {
-            print("❌ Error loadTarjamahList: \(error)")
+            Logger.narrator.error("❌ Error loadTarjamahList: \(error.localizedDescription, privacy: .public)")
         }
 
         return results
@@ -518,7 +519,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
 
         for (index, tarjamah) in tarjamahList.enumerated() {
             if stopFlag() || Task.isCancelled {
-                print("🛑 Loading stopped at index \(index)")
+                Logger.narrator.debug("🛑 Loading stopped at index \(index)")
                 break
             }
 
@@ -535,7 +536,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
                     onProgress(index + 1, tarjamahList.count)
                 }
             } catch {
-                print("⚠️ Error loading '\(tarjamah.name)': \(error.localizedDescription)")
+                Logger.narrator.error("⚠️ Error loading '\(tarjamah.name, privacy: .public)': \(error.localizedDescription, privacy: .public)")
             }
         }
 
@@ -588,7 +589,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
         let tarjamahList = await loadTarjamahList(forRowa: rowaId)
 
         guard !tarjamahList.isEmpty else {
-            print("⚠️ Tidak ada tarjamah untuk rowa \(rowaId)")
+            Logger.narrator.debug("⚠️ Tidak ada tarjamah untuk rowa \(rowaId)")
             return []
         }
 
@@ -603,11 +604,11 @@ class TarjamahGlobalManager: @unchecked Sendable {
                     onProgress(index + 1, tarjamahList.count)
                 }
             } catch {
-                print("❌ Error loading content for \(tarjamah.name): \(error)")
+                Logger.narrator.error("❌ Error loading content for \(tarjamah.name, privacy: .public): \(error.localizedDescription, privacy: .public)")
             }
         }
 
-        print("✅ Loaded \(results.count)/\(tarjamahList.count) tarjamah content")
+        Logger.narrator.debug("✅ Loaded \(results.count)/\(tarjamahList.count) tarjamah content")
         return results
     }
 
