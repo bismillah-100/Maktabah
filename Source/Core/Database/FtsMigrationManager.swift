@@ -44,13 +44,13 @@ final class FtsMigrationManager {
 
     func checkNeedsMigration() {
         let (outdated, totalBooks) = Self.scanDatabasesForMigration()
-        self.archivesToMigrate = outdated
-        self.totalArchivesToMigrate = outdated.count
-        self.totalBooksToMigrate = totalBooks
-        self.needsMigration = outdated.count > 0
+        archivesToMigrate = outdated
+        totalArchivesToMigrate = outdated.count
+        totalBooksToMigrate = totalBooks
+        needsMigration = outdated.count > 0
     }
 
-    nonisolated private static func scanDatabasesForMigration() -> (outdated: [Int], totalBooks: Int) {
+    private nonisolated static func scanDatabasesForMigration() -> (outdated: [Int], totalBooks: Int) {
         var outdated: [Int] = []
         for i in 1 ... 20 {
             if let path = AppConfig.archiveDatabasePath(archiveId: i),
@@ -87,7 +87,7 @@ final class FtsMigrationManager {
         return (outdated, totalBooks)
     }
 
-    nonisolated private static func getArchiveFtsVersion(ftsPath: String) -> Int {
+    private nonisolated static func getArchiveFtsVersion(ftsPath: String) -> Int {
         guard FileManager.default.fileExists(atPath: ftsPath) else { return 0 }
         guard let db = try? openDatabase(path: ftsPath) else { return 0 }
         defer { sqlite3_close(db) }
@@ -126,15 +126,15 @@ final class FtsMigrationManager {
         isCancelled = false
     }
 
-    func updateBookProgress(archiveId: Int, statusText: String? = nil, incrementCount: Bool = false) {
+    func updateBookProgress(archiveId: Int, statusText: String? = nil, incrementBy: Int = 0) {
         if let statusText {
             activeArchiveStatuses[archiveId] = statusText
         } else {
             activeArchiveStatuses.removeValue(forKey: archiveId)
         }
 
-        if incrementCount {
-            completedBooksCount += 1
+        if incrementBy > 0 {
+            completedBooksCount += incrementBy
             if totalBooksToMigrate > 0 {
                 progress = min(1.0, Double(completedBooksCount) / Double(totalBooksToMigrate))
             }
@@ -162,7 +162,7 @@ final class FtsMigrationManager {
         }
     }
 
-    nonisolated private func processMigrationTasks(archives: [Int], maxConcurrent: Int) async throws {
+    private nonisolated func processMigrationTasks(archives: [Int], maxConcurrent: Int) async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             var iterator = archives.makeIterator()
 
@@ -213,7 +213,7 @@ final class FtsMigrationManager {
         let ftsWrite: String
     }
 
-    nonisolated private static func getMigrationPaths(archiveId: Int) -> MigrationPaths? {
+    private nonisolated static func getMigrationPaths(archiveId: Int) -> MigrationPaths? {
         guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
               let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
         else { return nil }
@@ -229,7 +229,7 @@ final class FtsMigrationManager {
         )
     }
 
-    nonisolated private func executeMigrationSteps(db: OpaquePointer, ftsWritePath: String, archiveId: Int) async throws {
+    private nonisolated func executeMigrationSteps(db: OpaquePointer, ftsWritePath: String, archiveId: Int) async throws {
         try? Self.exec(db, SQL.detachFtsDb)
         try Self.attachDatabase(db, path: ftsWritePath, schema: "fts_db")
 
@@ -248,7 +248,7 @@ final class FtsMigrationManager {
         try? Self.exec(db, SQL.insertFtsVersion)
     }
 
-    nonisolated private func migrateSingleArchive(archiveId: Int) async throws {
+    private nonisolated func migrateSingleArchive(archiveId: Int) async throws {
         guard let paths = Self.getMigrationPaths(archiveId: archiveId) else { return }
 
         var isSuccess = false
@@ -279,7 +279,7 @@ final class FtsMigrationManager {
         sqlite3_close(db)
         archiveDb = nil
 
-        await self.updateBookProgress(archiveId: archiveId, statusText: nil)
+        await updateBookProgress(archiveId: archiveId, statusText: nil)
 
         try Self.replaceDatabaseIfNeeded(tempPath: paths.archiveWrite, originalPath: paths.archiveOrig)
         try Self.replaceDatabaseIfNeeded(tempPath: paths.ftsWrite, originalPath: paths.ftsOrig)
@@ -287,20 +287,27 @@ final class FtsMigrationManager {
         isSuccess = true
     }
 
-    nonisolated private func buildFtsForTables(_ tables: [String], archiveDb: OpaquePointer, archiveId: Int) async throws {
+    private nonisolated func buildFtsForTables(_ tables: [String], archiveDb: OpaquePointer, archiveId: Int) async throws {
         try? Self.exec(archiveDb, "DROP TABLE IF EXISTS fts_db.archive_index;")
         try? Self.exec(archiveDb, "DROP TABLE IF EXISTS fts_db.archive_fts;")
         try ArchiveDatabaseTools.createUnifiedFTS(db: archiveDb, ftsSchema: "fts_db")
 
+        if !tables.isEmpty {
+            await updateBookProgress(
+                archiveId: archiveId,
+                statusText: "Arsip \(archiveId): Buku 1/\(tables.count)"
+            )
+        }
+
+        var pendingCompletedBooks = 0
+        var lastUpdateTime = ContinuousClock.now
+
         for (index, table) in tables.enumerated() {
-            if await isCancelled {
+            if Task.isCancelled {
                 throw CancellationError()
             }
 
             guard let bookId = Int(table.dropFirst()) else { continue }
-
-            let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
-            await self.updateBookProgress(archiveId: archiveId, statusText: statusText)
 
             try ArchiveDatabaseTools.appendBookToUnifiedFTS(
                 db: archiveDb,
@@ -315,11 +322,29 @@ final class FtsMigrationManager {
             try? Self.exec(archiveDb, "DROP TABLE IF EXISTS fts_db.\(table)_fts;")
             try? Self.exec(archiveDb, SQL.dropFtsTable(table))
 
-            await self.updateBookProgress(archiveId: archiveId, incrementCount: true)
+            pendingCompletedBooks += 1
+
+            let now = ContinuousClock.now
+            let isLast = (index == tables.count - 1)
+
+            if isLast || now - lastUpdateTime >= .milliseconds(250) || pendingCompletedBooks >= 10 {
+                if await isCancelled {
+                    throw CancellationError()
+                }
+
+                let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
+                await updateBookProgress(
+                    archiveId: archiveId,
+                    statusText: statusText,
+                    incrementBy: pendingCompletedBooks
+                )
+                pendingCompletedBooks = 0
+                lastUpdateTime = now
+            }
         }
     }
 
-    nonisolated private static func cleanupTempDatabases(archiveWritePath: String, originalArchivePath: String, ftsWritePath: String, originalFtsPath: String) {
+    private nonisolated static func cleanupTempDatabases(archiveWritePath: String, originalArchivePath: String, ftsWritePath: String, originalFtsPath: String) {
         let fm = FileManager.default
         if archiveWritePath != originalArchivePath, fm.fileExists(atPath: archiveWritePath) {
             try? fm.removeItem(atPath: archiveWritePath)
@@ -370,7 +395,7 @@ final class FtsMigrationManager {
 
     // MARK: - SQLite Helpers
 
-    nonisolated private static func openDatabase(path: String) throws -> OpaquePointer {
+    private nonisolated static func openDatabase(path: String) throws -> OpaquePointer {
         var db: OpaquePointer?
         guard sqlite3_open_v2(
             path, &db,
@@ -388,11 +413,11 @@ final class FtsMigrationManager {
         return validDb
     }
 
-    nonisolated private static func attachDatabase(_ db: OpaquePointer, path: String, schema: String) throws {
+    private nonisolated static func attachDatabase(_ db: OpaquePointer, path: String, schema: String) throws {
         try db.safeAttachDatabase(path: path, schema: schema)
     }
 
-    nonisolated private static func exec(_ db: OpaquePointer, _ sql: String) throws {
+    private nonisolated static func exec(_ db: OpaquePointer, _ sql: String) throws {
         var stmt: OpaquePointer?
         if sqlite3_prepare_v2(db, sql, -1, &stmt, nil) != SQLITE_OK {
             let errorString = String(cString: sqlite3_errmsg(db))
@@ -405,11 +430,11 @@ final class FtsMigrationManager {
         }
     }
 
-    nonisolated private static func listTables(db: OpaquePointer, schemaName: String) -> [String] {
+    private nonisolated static func listTables(db: OpaquePointer, schemaName: String) -> [String] {
         db.listTableNames(schemaName: schemaName)
     }
 
-    nonisolated private static func prepareWritableDatabasePath(_ dbPath: String) -> String {
+    private nonisolated static func prepareWritableDatabasePath(_ dbPath: String) -> String {
         let fm = FileManager.default
         let attrs = try? fm.attributesOfItem(atPath: dbPath)
         let isReadonly = (attrs?[.posixPermissions] as? NSNumber)?.int16Value == 0o444
@@ -427,7 +452,7 @@ final class FtsMigrationManager {
         return dbPath
     }
 
-    nonisolated private static func replaceDatabaseIfNeeded(tempPath: String, originalPath: String) throws {
+    private nonisolated static func replaceDatabaseIfNeeded(tempPath: String, originalPath: String) throws {
         let fm = FileManager.default
         if tempPath != originalPath, fm.fileExists(atPath: tempPath) {
             let tempURL = URL(fileURLWithPath: tempPath)
