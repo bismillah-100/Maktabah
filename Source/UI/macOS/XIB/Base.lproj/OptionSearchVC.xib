@@ -248,7 +248,6 @@
                                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         </textFieldCell>
-                                        <sortDescriptor key="sortDescriptorPrototype" selector="compare:" sortKey="content"/>
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                     </tableColumn>
                                     <tableColumn identifier="Part" width="14" minWidth="10" maxWidth="20" id="VQ2-Lr-gF6">
