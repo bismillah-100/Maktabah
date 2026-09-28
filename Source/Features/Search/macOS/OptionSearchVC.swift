@@ -298,6 +298,7 @@ class OptionSearchVC: NSViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.target = self
+        tableView.tableColumn(withIdentifier: NSUserInterfaceItemIdentifier("Content"))?.sortDescriptorPrototype = nil
         ReusableFunc.registerNib(
             tableView: tableView,
             nibName: .resultNib, // CellIViewIdentifier.resultNib
