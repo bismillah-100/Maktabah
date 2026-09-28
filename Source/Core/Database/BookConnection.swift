@@ -14,7 +14,7 @@ import Foundation
 import SQLite3
 import Synchronization
 
-class BookConnection: @unchecked Sendable {
+final class BookConnection: Sendable {
     private let _db = Mutex<SQLiteDatabase?>(nil)
 
     var db: SQLiteDatabase? {

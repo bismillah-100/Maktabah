@@ -6,18 +6,16 @@
 //
 
 import Foundation
+import Synchronization
 
 /// StringInterner untuk berbagi instance string yang sama.
 /// Thread-safe, ringan, dan mendukung multi-thread access.
-public final class StringInterner {
+public final class StringInterner: Sendable {
     /// Pool untuk menyimpan string interned.
-    private var pool: [String: String] = [:]
-
-    /// Lock agar thread-safe.
-    private let lock: NSLock = .init()
+    private let pool: Mutex<[String: String]> = .init([:])
 
     /// Shared singleton instance.
-    public nonisolated(unsafe) static let shared: StringInterner = .init()
+    public static let shared: StringInterner = .init()
 
     /// Private init untuk mencegah instance di luar.
     private init() {}
@@ -27,13 +25,11 @@ public final class StringInterner {
     /// - Returns: String yang telah diintern.
     public func intern(_ value: String) -> String {
         guard !value.isEmpty else { return value }
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let existing = pool[value] {
-            return existing
-        } else {
-            pool[value] = value
+        return pool.withLock { dict in
+            if let existing = dict[value] {
+                return existing
+            }
+            dict[value] = value
             return value
         }
     }

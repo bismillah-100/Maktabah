@@ -24,6 +24,7 @@ class IbarotTextVC: NSViewController {
     let viewModel: ReaderViewModel = .init()
 
     private let defaultFontSize: CGFloat = 18.0
+    private var pendingRestoreTask: Task<Void, Never>?
 
     // MARK: - Window Title Properties
 
@@ -53,12 +54,10 @@ class IbarotTextVC: NSViewController {
         textDelegate = textView
     }
 
-    override func viewWillDisappear() {
-        super.viewWillDisappear()
-        for token in observerTokens {
-            NotificationCenter.default.removeObserver(token)
-        }
-        observerTokens.removeAll()
+    deinit {
+        #if DEBUG
+        print("IbarotTextVC deinit")
+        #endif
     }
 
     // MARK: - Setup
@@ -149,27 +148,27 @@ class IbarotTextVC: NSViewController {
         }
     }
 
-    private var observerTokens: [NSObjectProtocol] = []
+    private var observerTokens: [NotificationToken] = []
 
     private func setupNotificationObservers() {
-        observerTokens.append(NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .libraryFolderChanged,
             object: nil,
             queue: .main
-        ) { _ in
+        ) { [weak self] _ in
             MainActor.assumeIsolated { [weak self] in
                 guard let self else { return }
                 cleanUpState()
                 viewModel.cleanUpState()
                 viewModel.tocViewModel.cleanUp()
             }
-        })
+        }))
 
-        observerTokens.append(NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .bookIntegrated,
             object: nil,
             queue: .main
-        ) { notification in
+        ) { [weak self] notification in
             guard let bookId = notification.object as? Int else { return }
             MainActor.assumeIsolated { [weak self] in
                 guard let self else { return }
@@ -179,20 +178,20 @@ class IbarotTextVC: NSViewController {
                     }
                 }
             }
-        })
+        }))
 
-        observerTokens.append(NotificationCenter.default.addObserver(
+        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
             forName: .bookIdMigrated,
             object: nil,
             queue: .main
-        ) { notification in
+        ) { [weak self] notification in
             guard let userInfo = notification.userInfo,
                   let oldId = userInfo["oldId"] as? Int,
                   let newId = userInfo["newId"] as? Int
             else { return }
 
             MainActor.assumeIsolated { [weak self] in
-                guard let self else { return}
+                guard let self else { return }
 
                 if viewModel.currentBook?.id == oldId {
                     // ReaderViewModel handleBookIdMigrated will update its currentBook.
@@ -203,7 +202,7 @@ class IbarotTextVC: NSViewController {
                     }
                 }
             }
-        })
+        }))
     }
 
     // MARK: - State Accessors
@@ -454,6 +453,7 @@ extension IbarotTextVC {
                     style: .critical
                 )
             }
+            throw error
         }
     }
 
@@ -466,6 +466,51 @@ extension IbarotTextVC {
         }
 
         viewModel.fetchContentById(contentId)
+    }
+
+    func openAnnotation(_ annotation: Annotation) async throws {
+        let bkId = annotation.bkId
+        let contentId = annotation.contentId
+        guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
+            ReusableFunc.showAlert(
+                title: String(localized: .bookNotFound(bookID: bkId)),
+                message: String(localized: .bookMissingOnAnnotationClick)
+            )
+            return
+        }
+
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
+
+        do {
+            if currentBook?.id != bkId {
+                try await displayBook(book, loadContent: false)
+            }
+        } catch {
+            ReusableFunc.showAlert(
+                title: DatabaseError.bookNotFound(bkId).localizedDescription,
+                message: DatabaseError.noConnection.localizedDescription
+            )
+            return
+        }
+
+        if contentId != viewModel.currentContentId {
+            handleDelegate(contentId)
+        }
+
+        await textDelegate?.highlightAndScrollToAnns(annotation)
+    }
+
+    func openHistory(book: BooksData, contentId: Int?) async throws {
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
+
+        if currentBook?.id != book.id {
+            try await displayBook(book, loadContent: contentId == nil)
+        }
+        if let contentId {
+            handleDelegate(contentId)
+        }
     }
 }
 
@@ -594,14 +639,17 @@ extension IbarotTextVC: ReaderStateComponent {
 
         libraryVC?.dataVM.viewModel.selectedBookName = book.book
 
-        Task { @MainActor [weak self] in
-            guard let self else { return }
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled else { return }
 
             if let query = state.searchQuery {
                 let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
                 let nearDistance = state.searchNearDistance ?? 10
                 await textDelegate?.highlightAndScrollToText(query, mode: mode, nearDistance: nearDistance)
             }
+
+            guard !Task.isCancelled else { return }
 
             if let scrollPos = state.scrollPosition {
                 await textDelegate?.scrollTo(scrollPos)
@@ -610,6 +658,8 @@ extension IbarotTextVC: ReaderStateComponent {
     }
 
     func cleanUpState() {
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
         clearUI()
         var newState = ReaderState()
         newState.isSidebarCollapsed = splitVC?.sidebarItem.isCollapsed ?? false

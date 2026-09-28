@@ -5,8 +5,9 @@
 
 import Foundation
 import SQLite3
+import Synchronization
 
-final class AnnotationRepository: SyncPendingManaging, @unchecked Sendable {
+final class AnnotationRepository: SyncPendingManaging, Sendable {
     // MARK: - Table & Column Names
 
     let annotationsTable = "annotations"
@@ -40,13 +41,29 @@ final class AnnotationRepository: SyncPendingManaging, @unchecked Sendable {
 
     static let shared = AnnotationRepository()
 
-    var _db: SQLiteDatabase?
+    private struct State: Sendable {
+        var db: SQLiteDatabase?
+        var syncPendingStore: SyncPendingStore?
+        var dbURL: URL?
+    }
+
+    private let state = Mutex(State())
+
+    var _db: SQLiteDatabase? {
+        state.withLock { $0.db }
+    }
+
     var db: SQLiteDatabase? {
         _db
     }
 
-    var syncPendingStore: SyncPendingStore?
-    var dbURL: URL?
+    var syncPendingStore: SyncPendingStore? {
+        state.withLock { $0.syncPendingStore }
+    }
+
+    var dbURL: URL? {
+        state.withLock { $0.dbURL }
+    }
 
     var now: Int64 {
         Int64(Date().timeIntervalSince1970)
@@ -65,7 +82,7 @@ final class AnnotationRepository: SyncPendingManaging, @unchecked Sendable {
         }
 
         let url = folderURL.appendingPathComponent("Annotations.sqlite")
-        dbURL = url
+        state.withLock { $0.dbURL = url }
 
         let isNewDatabase = !fm.fileExists(atPath: url.path)
 
@@ -86,8 +103,11 @@ final class AnnotationRepository: SyncPendingManaging, @unchecked Sendable {
             do {
                 let db = try SQLiteDatabase(path: dbURL.path)
                 db.enableWALMode()
-                _db = db
-                syncPendingStore = SyncPendingStore(database: db)
+                let store = SyncPendingStore(database: db)
+                state.withLock { s in
+                    s.db = db
+                    s.syncPendingStore = store
+                }
             } catch {
                 ReusableFunc.showAlert(title: "Error", message: "Failed to open annotations database: \(error.localizedDescription)")
             }
@@ -95,9 +115,11 @@ final class AnnotationRepository: SyncPendingManaging, @unchecked Sendable {
     }
 
     func disconnect() {
-        _db?.checkpoint()
-        _db = nil
-        syncPendingStore = nil
+        state.withLock { s in
+            s.db?.checkpoint()
+            s.db = nil
+            s.syncPendingStore = nil
+        }
     }
 
     func checkpoint() {

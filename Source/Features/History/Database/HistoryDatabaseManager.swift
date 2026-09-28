@@ -6,19 +6,31 @@
 //
 
 import Foundation
+import Synchronization
 
-class HistoryDatabaseManager: SyncPendingManaging, @unchecked Sendable {
+final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
     static let shared = HistoryDatabaseManager()
 
-    private var _db: SQLiteDatabase?
+    private struct State: Sendable {
+        var db: SQLiteDatabase?
+        var syncPendingStore: SyncPendingStore?
+    }
+
+    private let state = Mutex(State())
+
+    private var _db: SQLiteDatabase? {
+        state.withLock { $0.db }
+    }
+
+    var syncPendingStore: SyncPendingStore? {
+        state.withLock { $0.syncPendingStore }
+    }
 
     /// Legacy UserDefaults keys — used only for migration
     private let legacyStorageKey = "CloudReadingEntries"
     private let legacyPendingUploadsKey = "HistoryPendingUploads"
     private let legacyPendingDeletesKey = "HistoryPendingDeletes"
     private let migrationFlag = "HistoryVM_SQLiteMigrated"
-
-    var syncPendingStore: SyncPendingStore?
 
     private init() {
         setupDatabase()
@@ -43,8 +55,11 @@ class HistoryDatabaseManager: SyncPendingManaging, @unchecked Sendable {
             let db = try SQLiteDatabase(path: url.path)
             db.enableWALMode()
             db.checkpoint() // Ensure WAL is committed and truncated
-            _db = db
-            syncPendingStore = SyncPendingStore(database: db)
+            let store = SyncPendingStore(database: db)
+            state.withLock { s in
+                s.db = db
+                s.syncPendingStore = store
+            }
             try createTables()
         } catch {
             #if DEBUG

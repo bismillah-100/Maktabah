@@ -306,15 +306,9 @@ struct iOSBookDownloadProgressView: View {
 }
 
 extension View {
-    /// Memberikan bentuk lingkaran pada border tombol jika tersedia di sistem operasi.
-    /// Jika tidak tersedia, maka tidak akan menerapkan perubahan bentuk (fallback ke default).
-    @ViewBuilder
+    /// Memberikan bentuk lingkaran pada border tombol.
     func buttonBorderShapeCircle() -> some View {
-        if #available(macOS 14.0, iOS 17.0, tvOS 17.0, watchOS 10.0, *) {
-            buttonBorderShape(.circle)
-        } else {
-            self
-        }
+        buttonBorderShape(.circle)
     }
 }
 

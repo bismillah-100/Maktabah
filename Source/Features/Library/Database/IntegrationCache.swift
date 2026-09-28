@@ -31,7 +31,7 @@ final class IntegrationCache: Sendable {
     }
 
     private let state = Mutex(IntegrationState())
-    nonisolated(unsafe) private let fm = FileManager.default
+    private var fm: FileManager { .default }
 
     private init() {}
 
