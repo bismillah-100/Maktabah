@@ -503,33 +503,19 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         guard !sanitized.isEmpty else { return }
 
         for chunk in sanitized.chunked(into: 400) {
+            let normalizedNames = chunk.map { normalizedTagName($0) }
+            let insertParams = chunk.flatMap { [$0, normalizedTagName($0)] }
             let insertPlaceholders = String(repeating: "(?, ?),", count: chunk.count).dropLast()
-            let insertTagSql = "INSERT OR IGNORE INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(insertPlaceholders);"
-
-            var insertParams: [Any] = []
-            var normalizedNames: [String] = []
-            for tag in chunk {
-                let normalized = normalizedTagName(tag)
-                insertParams.append(tag)
-                insertParams.append(normalized)
-                normalizedNames.append(normalized)
-            }
-            try exec(insertTagSql, parameters: insertParams)
+            try exec("INSERT OR IGNORE INTO \(tagsTable) (\(colTagName), \(colTagNormalizedName)) VALUES \(insertPlaceholders);", parameters: insertParams)
 
             let selectPlaceholders = String(repeating: "?,", count: normalizedNames.count).dropLast()
             let selectTagIdSql = "SELECT \(colTagId) FROM \(tagsTable) WHERE \(colTagNormalizedName) IN (\(selectPlaceholders));"
             let tagIds = try _db.fetch(query: selectTagIdSql, parameters: normalizedNames, mapping: { $0.int64(at: 0) })
 
             guard !tagIds.isEmpty else { continue }
+            let linkParams = tagIds.flatMap { [annotationId, $0] }
             let linkPlaceholders = String(repeating: "(?, ?),", count: tagIds.count).dropLast()
-            let linkSql = "INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(linkPlaceholders);"
-
-            var linkParams: [Any] = []
-            for tagId in tagIds {
-                linkParams.append(annotationId)
-                linkParams.append(tagId)
-            }
-            try exec(linkSql, parameters: linkParams)
+            try exec("INSERT OR IGNORE INTO \(annotationTagsTable) (\(colAnnotationTagAnnotationId), \(colAnnotationTagTagId)) VALUES \(linkPlaceholders);", parameters: linkParams)
         }
     }
 
