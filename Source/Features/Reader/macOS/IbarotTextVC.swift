@@ -58,7 +58,6 @@ class IbarotTextVC: NSViewController {
         #if DEBUG
         print("IbarotTextVC deinit")
         #endif
-        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - Setup
