@@ -31,12 +31,6 @@ enum SearchResultsSorter {
                 if $0.part != $1.part { return asc ? $0.part < $1.part : $0.part > $1.part }
                 return $0.page < $1.page
             }
-
-        case .content:
-            results.sort {
-                let cmp = $0.attributedText.contentSortKey.localizedStandardCompare($1.attributedText.contentSortKey)
-                return asc ? cmp == .orderedAscending : cmp == .orderedDescending
-            }
         }
     }
 }
