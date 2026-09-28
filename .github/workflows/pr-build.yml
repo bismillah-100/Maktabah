@@ -1,0 +1,63 @@
+name: "PR Build Check"
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.scheme }})
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scheme: Maktabah
+            destination: 'generic/platform=macOS'
+          - scheme: Maktabah-Direct
+            destination: 'generic/platform=macOS'
+          - scheme: Maktabah-iOS
+            destination: 'generic/platform=iOS Simulator'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest
+
+      - name: Cache SPM dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      - name: Build Debug (${{ matrix.scheme }})
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+        shell: bash
+        run: |
+          xcodebuild build \
+            -project Maktabah.xcodeproj \
+            -scheme "${{ matrix.scheme }}" \
+            -destination "${{ matrix.destination }}" \
+            -configuration Debug \
+            -skipPackagePluginValidation \
+            -derivedDataPath build \
+            ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ENABLE_TESTABILITY=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            WORKER_URL="$WORKER_URL"
