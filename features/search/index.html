@@ -2922,10 +2922,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-pipeline" class="md-nav__link">
+  <a href="#arsitektur-alur-pemrosesan-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur &amp; Pipeline
+        Arsitektur &amp; Alur Pemrosesan (Pipeline)
       
     </span>
   </a>
@@ -3534,10 +3534,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#arsitektur-pipeline" class="md-nav__link">
+  <a href="#arsitektur-alur-pemrosesan-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Arsitektur &amp; Pipeline
+        Arsitektur &amp; Alur Pemrosesan (Pipeline)
       
     </span>
   </a>
@@ -3573,8 +3573,8 @@
 
 
 <h1 id="search">Search</h1>
-<p>Modul <strong>Search</strong> menangani pencarian <em>Full-Text Search</em> (FTS) dalam pustaka kitab yang tersedia. Modul ini terintegrasi erat dengan <code>SearchEngine</code> dari <em>Core</em> dan mengelola pencarian di ribuan tabel secara konkuren dengan kapabilitas jeda/lanjutkan (<em>pause/resume</em>), serta filter kriteria pencarian yang komprehensif (Frasa, Mengandung, OR, dan Jarak Kedekatan / <em>Near</em>).</p>
-<h2 id="arsitektur-pipeline">Arsitektur &amp; Pipeline</h2>
+<p>Modul <strong>Search</strong> menangani pencarian <em>Full-Text Search</em> (FTS) dalam pustaka kitab yang tersedia. Modul ini terintegrasi erat dengan <code>SearchEngine</code> dari <em>Core</em> dan mengelola pencarian berskala besar melintasi arsip basis data berkecepatan tinggi menggunakan skema <strong>Unified FTS5</strong>, pengindeksan <em>bitwise packed rowid</em>, <em>adaptive result buffering</em>, dan <em>lazy snippet resolution</em>.</p>
+<h2 id="arsitektur-alur-pemrosesan-pipeline">Arsitektur &amp; Alur Pemrosesan (<em>Pipeline</em>)</h2>
 <p>Modul ini dibangun menggunakan pola arsitektur MVVM (<em>Model-View-ViewModel</em>) dengan <code>SearchViewModel</code> sebagai pengendali <em>state</em> dan konduktor pencarian lintas platform.</p>
 <pre class="mermaid"><code>flowchart TD
     MAC["OptionSearchVC &amp; SearchSidebarVC (macOS)"] --&gt; SVM["SearchViewModel (@Observable)"]
@@ -3584,15 +3584,25 @@
 
     subgraph Core ["Core Engine &amp; Database"]
         SE["SearchEngine (FTS Engine)"]
-        LDM["LibraryDataManager (Book Tracking)"]
-        BC[("BookConnection (SQLite Archives)")]
+        SW["SearchWorker (Per Archive)"]
+        UFTS[("Unified FTS5 (archive_fts + archive_index)")]
+        SRB["SearchResultBuffer (Adaptive Flush)"]
     end
 
-    SVM --&gt;|"Kirim Params Scope"| LDM
-    SVM --&gt;|"Eksekusi Kueri FTS"| SE
-    SVM --&gt;|"Ambil Konten Detail"| BC
+    subgraph Resolvers ["Presentation &amp; Viewport Resolution"]
+        SHR["SearchHitResolver (1000 LRU Cache)"]
+        BC[("BookConnection (Content Archives)")]
+    end
 
-    SE --&gt;|"Streaming Hasil"| SVM
+    SVM --&gt;|"Eksekusi Kueri FTS"| SE
+    SE --&gt; SW
+    SW --&gt;|"Multi-Tier Query (Bitwise Seek)"| UFTS
+    SW --&gt;|"Stream Results"| SRB
+    SRB --&gt;|"Batched Dispatch"| SVM
+
+    MAC -.-&gt;|"Lazy Resolve on Scroll"| SHR
+    IOS -.-&gt;|"Lazy Resolve on Scroll"| SHR
+    SHR --&gt;|"Fetch Line Text"| BC
 
     classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
@@ -3602,14 +3612,16 @@
 
     class MAC,IOS ui;
     class SVM vm;
-    class SE,LDM store;
-    class BC db;</code></pre>
+    class SE,SW,SRB,SHR store;
+    class UFTS,BC db;</code></pre>
 <h2 id="fitur-utama">Fitur Utama</h2>
 <ul>
-<li><strong>Pencarian Konkuren:</strong> Memanfaatkan <code>SearchEngine</code> dengan <em>multithreading</em> dan <code>Task.detached</code>.</li>
-<li><strong>Mode Pencarian:</strong> Frasa utuh (<em>Exact Phrase</em>), Semua Kata (<em>AND / All Words</em>), Salah Satu Kata (<em>OR / Any Word</em>), dan Kedekatan (<em>Near Distance</em>).</li>
-<li><strong>Bookmarks (Saved Results):</strong> Memulihkan dan menampilkan kembali hasil pencarian yang disimpan.</li>
-<li><strong>State Restoration:</strong> Kemampuan memulihkan sesi pencarian terakhir secara otomatis.</li>
+<li><strong>Pencarian Terpadu (Unified FTS5):</strong> Menggabungkan ribuan indeks per-kitab ke dalam satu tabel virtual <code>archive_fts</code> per arsip dengan teknik <em>bitwise range seek</em> (<code>packedRowId</code>), memotong drastis fragmentasi <em>disk</em> dan waktu pencarian.</li>
+<li><strong>Strategi Multi-Tier Kueri:</strong> Optimasi berlapis (Tier 1 untuk 1 buku, Tier 2 via <code>UNION ALL</code> untuk 2–5 buku, Tier 3 untuk &gt;5 buku) serta <em>early short-circuit</em> lintas arsip.</li>
+<li><strong>Penyangga Aliran Adaptif (<code>SearchResultBuffer</code>):</strong> Mencegah <em>stuttering</em> pada antarmuka pengguna dengan mekanisme <em>throttling</em> (50 item atau 100 ms).</li>
+<li><strong>Resolusi Cuplikan Malas (<code>SearchHitResolver</code>):</strong> Mengeliminasi dekompresi teks di muka dengan mengurai cuplikan teks berformat (<code>NSAttributedString</code>) hanya saat baris memasuki <em>viewport</em> layar pengguna.</li>
+<li><strong>Mode Pencarian Fleksibel:</strong> Frasa utuh (<em>Exact Phrase</em>), Semua Kata (<em>AND / All Words</em>), Salah Satu Kata (<em>OR / Any Word</em>), dan Kedekatan (<em>Near Distance</em>).</li>
+<li><strong>Bookmarks (Saved Results) &amp; State Restoration:</strong> Memulihkan dan menampilkan kembali hasil pencarian yang disimpan serta sesi pencarian terakhir secara otomatis.</li>
 </ul>
 
 

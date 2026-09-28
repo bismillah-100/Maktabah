@@ -3632,6 +3632,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="4) N_fts.sqlite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-format-modern-unified-fts5-standar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Format Modern: Unified FTS5 (Standar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-format-warisan-per-kitab-fts5-legacy-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Format Warisan: Per-Kitab FTS5 (Legacy Fallback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -4102,6 +4130,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="4) N_fts.sqlite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-format-modern-unified-fts5-standar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Format Modern: Unified FTS5 (Standar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-format-warisan-per-kitab-fts5-legacy-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Format Warisan: Per-Kitab FTS5 (Legacy Fallback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -4401,7 +4457,7 @@
 <p>Selain itu, aplikasi menggunakan berkas basis data arsip per nomor:</p>
 <ul>
 <li><code>N.sqlite</code> (misalnya <code>1.sqlite</code>, <code>2.sqlite</code>) berisi konten kitab (<code>b{bkid}</code>) dan daftar isi / TOC (<code>t{bkid}</code>).</li>
-<li><code>N_fts.sqlite</code> berisi indeks FTS5 per tabel kitab (<code>b{bkid}_fts</code>).</li>
+<li><code>N_fts.sqlite</code> berisi indeks FTS5 terpadu (<code>archive_fts</code> dan <code>archive_index</code>) atau skema warisan per-kitab (<code>b{bkid}_fts</code>).</li>
 </ul>
 <p>Basis data pengguna:</p>
 <ul>
@@ -4470,10 +4526,36 @@
 <li>Data versi lama mungkin masih bertipe <code>TEXT</code>; alur pembacaan telah menyediakan mekanisme <em>fallback</em>.</li>
 </ul>
 <h3 id="4-n_ftssqlite">4) <code>N_fts.sqlite</code></h3>
-<p>Setiap buku memiliki tabel virtual (<em>virtual table</em>):</p>
+<p>Mendukung dua format skema:</p>
+<h4 id="a-format-modern-unified-fts5-standar">A. Format Modern: Unified FTS5 (Standar)</h4>
+<p>Seluruh buku di dalam satu berkas arsip disatukan ke dalam satu pasang tabel indeks terpadu:</p>
 <ul>
-<li><code>b{bkid}_fts</code> dengan kolom <code>nass_clean</code> (<code>fts5</code>, <code>tokenize='unicode61'</code>).</li>
-<li><code>rowid</code> ditetapkan sama dengan <code>id</code> baris asli agar operasi <em>join</em> ke <code>b{bkid}</code> konsisten.</li>
+<li><strong><code>archive_fts</code></strong>: Tabel virtual FTS5 tanpa duplikasi konten teks:
+  <div class="language-sql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="n">VIRTUAL</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">archive_fts</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">fts5</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">nass_clean</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">content</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="n">tokenize</span><span class="o">=</span><span class="s1">'unicode61'</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">);</span>
+</span></code></pre></div></li>
+<li><strong><code>archive_index</code></strong>: Tabel pemetaan metadata fisik ke <code>rowid</code> bitwise:
+  <div class="language-sql highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">archive_index</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">rowid</span><span class="w"> </span><span class="nb">INTEGER</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">book_id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="n">page</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="n">part</span><span class="w"> </span><span class="nb">INTEGER</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">);</span>
+</span></code></pre></div></li>
+<li><strong><code>archive_metadata</code></strong>: Tabel pelacak versi skema (<code>fts_version = 2</code>).</li>
+<li><strong>Bitwise Packed RowID</strong>:
+  $$\text{packedRowId} = (\text{bookId} \ll 32) \mid (\text{rowId} \ \&amp; \ \text{0xFFFFFFFF})$$
+  Memungkinkan pencarian rentang kitab tunggal maupun multi-kitab memanfaatkan <em>binary seek &amp; early pruning</em> SQLite FTS5 tanpa pemborosan ukuran berkas indeks.</li>
+</ul>
+<h4 id="b-format-warisan-per-kitab-fts5-legacy-fallback">B. Format Warisan: Per-Kitab FTS5 (Legacy Fallback)</h4>
+<p>Digunakan pada arsip versi lama yang belum dimigrasikan:</p>
+<ul>
+<li>Tabel virtual terpisah untuk setiap buku: <code>b{bkid}_fts</code> dengan kolom <code>nass_clean</code> (<code>fts5</code>, <code>tokenize='unicode61'</code>).</li>
+<li><code>rowid</code> ditetapkan sama dengan <code>id</code> baris asli pada tabel <code>b{bkid}</code>.</li>
 </ul>
 <h2 id="pemetaan-basis-data-ke-model">Pemetaan Basis Data ke Model</h2>
 <h3 id="perpustakaan-library">Perpustakaan (<em>Library</em>)</h3>

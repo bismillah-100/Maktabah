@@ -3631,9 +3631,9 @@
 <h1 id="database-persistensi-katalog">Database &amp; Persistensi Katalog</h1>
 <p>Modul Library mengandalkan <strong><code>LibraryDataManager</code></strong> sebagai lapisan akses data utama (<em>Data Access Layer</em>) untuk mengambil struktur katalog (kategori, pengarang, dan kitab). Namun, <code>LibraryDataManager</code> memiliki ketergantungan erat dengan <strong><code>DatabaseManager</code></strong> pada level <em>Core</em>.</p>
 <hr />
-<h2 id="ketergantungan-erat-librarydatamanager-dan-databasemanager">Ketergantungan Erat <code>LibraryDataManager</code> dan <code>DatabaseManager</code></h2>
+<h2 id="ketergantungan-erat-librarydatamanager-dan-databasemanager">Ketergantungan Erat LibraryDataManager dan DatabaseManager</h2>
 <p><code>LibraryDataManager</code> bertindak sebagai <em>repository</em> yang menyediakan fungsi pembacaan data (<em>read-only</em>) untuk UI dan ViewModel, sedangkan eksekusi kuerinya didelegasikan secara penuh ke koneksi yang dikelola oleh <code>DatabaseManager.shared</code>.</p>
-<h3 id="peran-databasemanager">Peran <code>DatabaseManager</code></h3>
+<h3 id="peran-databasemanager">Peran DatabaseManager</h3>
 <p><code>DatabaseManager</code> merupakan komponen inti (<em>Core</em>) yang mengelola siklus hidup koneksi SQLite terhadap basis data korpus utama:</p>
 <ul>
 <li><code>main.sqlite</code>: Menyimpan katalog buku, kategori, dan metadata inti.</li>
@@ -3641,7 +3641,7 @@
 </ul>
 <p>Koneksi-koneksi ini dilindungi di dalam <code>DatabaseManager</code> untuk menjamin keamanan konkurensi (<em>thread-safe</em>) dan mencegah akses bersamaan yang berpotensi memicu <em>database lock</em>.</p>
 <h3 id="alur-eksekusi">Alur Eksekusi</h3>
-<p>Setiap kali <code>LibraryDataManager</code> perlu memuat atau menyegarkan (<em>refresh</em>) data katalog dari disk, komponen ini menggunakan instans <code>SQLiteDatabase</code> aktif dari <code>DatabaseManager</code>:</p>
+<p>Setiap kali <code>LibraryDataManager</code> perlu memuat atau menyegarkan (<em>refresh</em>) data katalog dari disk, komponen ini menggunakan <em>instance</em> <code>SQLiteDatabase</code> aktif dari <code>DatabaseManager</code>:</p>
 <pre class="mermaid"><code>flowchart TD
     VM["LibraryViewModel"] --&gt;|"Panggil loadData()"| LDM["LibraryDataManager"]
 
@@ -3664,7 +3664,7 @@
     class VM vm;
     class LDM,DBM store;
     class SQL_Main,SQL_Special db;</code></pre>
-<h3 id="mutex-thread-safety-di-librarydatamanager">Mutex &amp; Thread-Safety di <code>LibraryDataManager</code></h3>
+<h3 id="mutex-thread-safety-di-librarydatamanager">Mutex &amp; Thread-Safety di LibraryDataManager</h3>
 <p>Karena data katalog sering diakses dari berbagai <em>thread</em> (misalnya dari UI saat <em>scrolling</em>, dari <em>Search Engine</em> untuk pencarian judul buku, atau saat sinkronisasi data), <code>LibraryDataManager</code> menyembunyikan <em>state cache in-memory</em> internalnya di balik proteksi <code>Mutex</code> untuk pencarian $O(1)$ yang <em>thread-safe</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">LibraryDataState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">rawCategories</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">CategoryData</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
@@ -3681,7 +3681,7 @@
 <li><strong><code>DatabaseManager</code></strong> bertanggung jawab penuh atas manajemen I/O disk (pembacaan berkas SQLite yang <em>thread-safe</em>).</li>
 <li><strong><code>LibraryDataManager</code></strong> bertanggung jawab atas struktur data dan I/O memori (<em>caching</em> model data di RAM yang <em>thread-safe</em> via Mutex).</li>
 </ol>
-<p>Integrasi dan pemisahan tugas ini memastikan Maktabah dapat me-<em>render</em> ribuan buku, memfilter katalog, dan mencari metadata secara cepat tanpa membebani memori maupun operasi I/O disk secara repetitif.</p>
+<p>Integrasi dan pemisahan tanggung jawab ini memastikan Maktabah dapat me-<em>render</em> ribuan buku, memfilter katalog, dan mencari metadata secara cepat tanpa membebani memori maupun operasi I/O disk secara repetitif.</p>
 
 
 

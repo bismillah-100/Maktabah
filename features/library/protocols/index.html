@@ -3665,7 +3665,7 @@
 <h1 id="library-protocols-inter-module-contracts">Library Protocols &amp; Inter-Module Contracts</h1>
 <p>Sumber kode: <code>Source/Features/Library/Protocols/</code></p>
 <hr />
-<h2 id="1-librarydelegate-protocol-navigasi-pembacaan">1. <code>LibraryDelegate</code> (Protocol) - Navigasi Pembacaan</h2>
+<h2 id="1-librarydelegate-protocol-navigasi-pembacaan">1. LibraryDelegate (Protocol) - Navigasi Pembacaan</h2>
 <p><em>Protocol</em> <code>LibraryDelegate</code> adalah kontrak utama yang menghubungkan modul <strong>Library</strong> ke modul <strong>Reader</strong> (<code>IbarotTextVC</code> di macOS atau <code>iOSReaderView</code> di iOS). </p>
 <p>Ketika pengguna memilih salah satu kitab dari katalog, Library tidak memanipulasi <em>reader</em> secara langsung, melainkan mendelegasikannya melalui <em>protocol</em> ini:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
@@ -3679,7 +3679,7 @@
 <li><code>loadContent</code>: Nilai <em>boolean</em> penentu apakah konten teks halaman pertama harus langsung dimuat ke <em>Text Engine</em> atau hanya menyiapkan metadata koneksi basis data buku.</li>
 </ul>
 <hr />
-<h2 id="2-libraryviewdelegate-protocol-seleksi-item-baris">2. <code>LibraryViewDelegate</code> (Protocol) - Seleksi Item Baris</h2>
+<h2 id="2-libraryviewdelegate-protocol-seleksi-item-baris">2. LibraryViewDelegate (Protocol) - Seleksi Item Baris</h2>
 <p><em>Protocol</em> <code>LibraryViewDelegate</code> digunakan untuk komunikasi antara komponen presentasi <em>sub-view</em> (misalnya baris <em>outline</em> atau sel tabel katalog) dengan manajer data katalog:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">LibraryViewDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
@@ -3687,7 +3687,7 @@
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <hr />
-<h2 id="3-searchablelibrarysidebar-protocol-integrasi-kolom-pencarian-macos">3. <code>SearchableLibrarySidebar</code> (Protocol) - Integrasi Kolom Pencarian macOS</h2>
+<h2 id="3-searchablelibrarysidebar-protocol-integrasi-kolom-pencarian-macos">3. SearchableLibrarySidebar (Protocol) - Integrasi Kolom Pencarian macOS</h2>
 <p>Pada platform macOS, komponen pencarian <em>sidebar</em> menggunakan <code>DSFSearchField</code>. <em>Protocol</em> <code>SearchableLibrarySidebar</code> menyediakan implementasi default untuk menghubungkan input pencarian <em>toolbar</em> atau <em>split view</em> ke <code>LibraryViewManager</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="cp">#if</span><span class="w"> </span><span class="cp">os</span><span class="p">(</span><span class="cp">macOS</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">@</span><span class="n">MainActor</span>

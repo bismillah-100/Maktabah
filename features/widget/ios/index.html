@@ -3595,7 +3595,7 @@
 
 
 <h1 id="ios-integration">iOS Integration</h1>
-<p>Pada iOS (iOS 17.0+), modul Widget terintegrasi penuh ke dalam sistem operasi melalui widget di Home Screen, Lock Screen, maupun StandBy Mode. Antarmuka dan alur navigasi deep link dibangun sepenuhnya menggunakan SwiftUI modern.</p>
+<p>Pada iOS (iOS 18+), modul Widget terintegrasi penuh ke dalam sistem operasi melalui widget di Home Screen, Lock Screen, maupun StandBy Mode. Antarmuka dan alur navigasi deep link dibangun sepenuhnya menggunakan SwiftUI modern.</p>
 <hr />
 <h2 id="1-alur-penanganan-deep-link">1. Alur Penanganan Deep Link</h2>
 <p>Ketika pengguna mengetuk widget di Home Screen atau Lock Screen iOS, aplikasi Maktabah diaktifkan dan menangkap tautan melalui modifier <code>.onOpenURL</code>. Alur diproses dalam diagram sekuens modular dengan 4 partisipan:</p>
@@ -3617,7 +3617,7 @@
         Note over Reader: Render teks &amp; scroll ke target
     end</code></pre>
 <hr />
-<h2 id="2-pemrosesan-url-di-swiftui-iosmainview">2. Pemrosesan URL di SwiftUI (<code>iOSMainView</code>)</h2>
+<h2 id="2-pemrosesan-url-di-swiftui-iosmainview">2. Pemrosesan URL di SwiftUI (iOSMainView)</h2>
 <p>Penanganan skema URL diintegrasikan pada root view aplikasi:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">handleOpenURL</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">url</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span><span class="p">,</span><span class="w"> </span><span class="n">bManager</span><span class="p">:</span><span class="w"> </span><span class="n">iOSNavigationManager</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="k">guard</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">deepLink</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">WidgetDeepLink</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="n">from</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">)</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">}</span>

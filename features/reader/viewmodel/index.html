@@ -3708,7 +3708,7 @@
 <h2 id="2-manajemen-konkurensi-task-cancellation">2. Manajemen Konkurensi &amp; <em>Task Cancellation</em></h2>
 <p>Saat memuat halaman (terutama ketika pengguna melakukan <em>fast-scrolling</em> dengan cepat), Maktabah wajib mencegah lonjakan memori (<em>memory spike</em>) atau tumpukan (<em>backlog</em>) operasi disk.</p>
 <ul>
-<li><strong>Task Cancellation</strong>: <code>ReaderViewModel</code> menyimpan referensi tugas pemuatan dalam <code>currentLoadTask</code>. Jika pengguna berpindah halaman sebelum halaman saat ini selesai dimuat, tugas sebelumnya langsung dibatalkan (<code>currentLoadTask?.cancel()</code>).</li>
+<li><strong>Task Cancellation</strong>: <code>ReaderViewModel</code> menyimpan referensi <em>task</em> pemuatan dalam <code>currentLoadTask</code>. Jika pengguna berpindah halaman sebelum halaman saat ini selesai dimuat, <em>task</em> sebelumnya langsung dibatalkan (<code>currentLoadTask?.cancel()</code>).</li>
 <li><strong>Debouncing Pagination</strong>: Perpindahan halaman melalui <em>slider</em> di-<em>debounce</em> selama beberapa milidetik. Pemuatan basis data FTS atau dekompresi <em>Zstandard</em> (zstd) tidak akan terpicu hingga pengguna berhenti menggeser tuas <em>slider</em>.</li>
 </ul>
 <pre class="mermaid"><code>stateDiagram-v2

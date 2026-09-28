@@ -3152,10 +3152,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-searchmodeview-root-view" class="md-nav__link">
+  <a href="#1-searchmodeview-struct-root-view" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. SearchModeView (Root View)
+        1. SearchModeView (Struct) - Root View
       
     </span>
   </a>
@@ -3174,10 +3174,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-searchresultslistview-rendering-teks-tersorot" class="md-nav__link">
+  <a href="#3-searchresultslistview-struct-rendering-teks-tersorot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. SearchResultsListView &amp; Rendering Teks Tersorot
+        3. SearchResultsListView (Struct) &amp; Rendering Teks Tersorot
       
     </span>
   </a>
@@ -3185,10 +3185,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-iossearchfilterviewcontroller-penyaring-cakupan-scope" class="md-nav__link">
+  <a href="#4-iossearchfilterviewcontroller-class-penyaring-cakupan-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. iOSSearchFilterViewController (Penyaring Cakupan / Scope)
+        4. iOSSearchFilterViewController (Class) - Penyaring Cakupan / Scope
       
     </span>
   </a>
@@ -3685,10 +3685,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-searchmodeview-root-view" class="md-nav__link">
+  <a href="#1-searchmodeview-struct-root-view" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. SearchModeView (Root View)
+        1. SearchModeView (Struct) - Root View
       
     </span>
   </a>
@@ -3707,10 +3707,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-searchresultslistview-rendering-teks-tersorot" class="md-nav__link">
+  <a href="#3-searchresultslistview-struct-rendering-teks-tersorot" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. SearchResultsListView &amp; Rendering Teks Tersorot
+        3. SearchResultsListView (Struct) &amp; Rendering Teks Tersorot
       
     </span>
   </a>
@@ -3718,10 +3718,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-iossearchfilterviewcontroller-penyaring-cakupan-scope" class="md-nav__link">
+  <a href="#4-iossearchfilterviewcontroller-class-penyaring-cakupan-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. iOSSearchFilterViewController (Penyaring Cakupan / Scope)
+        4. iOSSearchFilterViewController (Class) - Penyaring Cakupan / Scope
       
     </span>
   </a>
@@ -3851,7 +3851,7 @@
     deactivate Rdr</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-antarmuka-utama">3. Bedah Komponen Antarmuka Utama</h2>
-<h3 id="1-searchmodeview-root-view">1. <code>SearchModeView</code> (Root View)</h3>
+<h3 id="1-searchmodeview-struct-root-view">1. SearchModeView (Struct) - Root View</h3>
 <ul>
 <li>Menjadi kontainer utama antarmuka pencarian yang mengelola lapisan <code>ZStack</code> dan <code>Overlay</code>.</li>
 <li>Mengatur <em>toolbar</em> pengurutan dinamis, penyajian lembar modal (<em>sheets</em>) menuju histori pencarian tersimpan (<em>Saved Results</em>), dan pemberitahuan migrasi basis data FTS bila diperlukan.</li>
@@ -3863,12 +3863,12 @@
 <li><strong><code>SearchProgressView</code></strong>: Bilah kemajuan yang menampilkan rasio pencarian secara riil (jumlah arsip/halaman yang telah dipindai dari total koleksi).</li>
 <li><strong><code>SearchToolbar</code></strong>: Bilah tombol aksi untuk menyaring cakupan pustaka, mengubah mode pencarian (Frasa, Dan/Atau, Dekat), serta mengatur urutan hasil pencarian.</li>
 </ul>
-<h3 id="3-searchresultslistview-rendering-teks-tersorot">3. <code>SearchResultsListView</code> &amp; Rendering Teks Tersorot</h3>
+<h3 id="3-searchresultslistview-struct-rendering-teks-tersorot">3. SearchResultsListView (Struct) &amp; Rendering Teks Tersorot</h3>
 <ul>
 <li>Menyajikan baris hasil pencarian dengan tata letak teks Arab Kanan-ke-Kiri (RTL).</li>
-<li><strong>Kompatibilitas AttributedString</strong>: Mengonversi <code>NSAttributedString</code> (<em>Foundation</em>) dari hasil pencarian FTS menjadi struktur nilai SwiftUI <code>AttributedString</code>, memungkinkan <em>rendering</em> sorotan warna kuning pada suku kata yang cocok secara <em>native</em> tanpa hambatan performa tata letak.</li>
+<li><strong>Kompatibilitas AttributedString</strong>: Mengonversi <code>NSAttributedString</code> (<em>Foundation</em>) dari hasil pencarian FTS menjadi tipe nilai SwiftUI <code>AttributedString</code>, memungkinkan <em>rendering</em> sorotan warna kuning pada suku kata yang cocok secara <em>native</em> tanpa hambatan performa tata letak.</li>
 </ul>
-<h3 id="4-iossearchfilterviewcontroller-penyaring-cakupan-scope">4. <code>iOSSearchFilterViewController</code> (Penyaring Cakupan / Scope)</h3>
+<h3 id="4-iossearchfilterviewcontroller-class-penyaring-cakupan-scope">4. iOSSearchFilterViewController (Class) - Penyaring Cakupan / Scope</h3>
 <ul>
 <li>Menggunakan <code>UIViewControllerRepresentable</code> untuk memuat struktur hierarki pustaka UIKit (<em>hierarchical outline</em>).</li>
 <li>Menangani seleksi multi-pilihan kategori atau kitab dengan performa tinggi saat menyaring ratusan kategori secara bersamaan.</li>

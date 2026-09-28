@@ -2789,6 +2789,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#d-arsitektur-navigasi-multi-tab-ios-readertabsview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Arsitektur Navigasi Multi-Tab iOS (ReaderTabsView)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3706,6 +3717,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#d-arsitektur-navigasi-multi-tab-ios-readertabsview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Arsitektur Navigasi Multi-Tab iOS (ReaderTabsView)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3736,27 +3758,19 @@
 <p>Arsitektur antarmuka pembaca iOS mengombinasikan orkestrasi modal deklaratif SwiftUI dengan <em>rendering engine</em> UIKit:</p>
 <h3 id="a-hierarki-kontainer-pembaca">A. Hierarki Kontainer Pembaca</h3>
 <pre class="mermaid"><code>flowchart TD
-    IRV["iOSReaderView (SwiftUI Root)"]
-    TOP_BAR["Top Navigation Bar"]
-    BOT_TB["iOSReaderBottomToolbarView"]
+    TAB["iOSReaderTabView (Tabs Host Container)"]
+    TOP_BAR["Top Navigation Bar&lt;br/&gt;(ReaderTabsView / Title)"]
+    IRV["iOSReaderView (Active Page Reader)"]
 
-    IRV --&gt; TOP_BAR
-    IRV --&gt; BOT_TB
+    TAB --&gt; TOP_BAR
+    TAB --&gt; IRV
 
-    BOT_TB ~~~ ITVR
+    IRV --&gt; BOT_TB["iOSReaderBottomToolbarView"]
+    IRV --&gt; ITVR["iOSIbarotTextView (UIViewRepresentable)"]
+    IRV &lt;--&gt;|"State Binding"| RVM["ReaderViewModel (@Observable)"]
 
-    ITVR["iOSIbarotTextView (UIViewRepresentable)"]
-    COORD["Coordinator (UITextViewDelegate)"]
-    UTV["UITextView (Native Text Container)"]
-
-    IRV --&gt; ITVR
-    ITVR --&gt; COORD
-    COORD --&gt; UTV
-
-    UTV ~~~ RVM
-
-    RVM["ReaderViewModel (@Observable)"]
-    IRV &lt;--&gt;|"State Binding"| RVM
+    ITVR --&gt; COORD["Coordinator (UITextViewDelegate)"]
+    COORD --&gt; UTV["UITextView (Native Text Container)"]
 
     classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
@@ -3764,7 +3778,7 @@
     classDef db fill:#f9731626,stroke:#ea580c,stroke-width:2px;
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
-    class IRV,TOP_BAR,BOT_TB,ITVR,COORD,UTV ui;
+    class TAB,IRV,TOP_BAR,BOT_TB,ITVR,COORD,UTV ui;
     class RVM vm;</code></pre>
 <h3 id="b-taksonomi-lembaran-modal-toolbar-sheets">B. Taksonomi Lembaran Modal (<em>Toolbar Sheets</em>)</h3>
 <pre class="mermaid"><code>mindmap
@@ -3772,13 +3786,13 @@
     Navigasi &amp; Konten
       TOCView["showingTOC (Daftar Isi Bab)"]
       PageJumpSheet["showingNavigation (Lompat Halaman &amp; Juz)"]
-      TabsSheet["showingTabsList (Penjelajah Multi-Tab)"]
+      TabsPopover["showingTabsList (iOSReaderTabsPopoverView)"]
     Pencarian &amp; Catatan
       SearchInBookSheet["showingSearch (Cari Dalam Kitab)"]
       AnnotationListView["showingAnnotationsList (Daftar Anotasi Kitab)"]
       AnnotationEditorSheet["showingAnnotationActionSheet (Editor Catatan)"]
     Preferensi &amp; Informasi
-      AppearanceSheet["showingOptions (Font, Tema, Harakat)"]
+      AppearanceSheet["showingOptions (ViewOptionsView)"]
       BookInfoSheet["showingBookInfo (Informasi Bibliografi Kitab)"]</code></pre>
 <hr />
 <h2 id="2-alur-interaksi-dari-aksi-klik-toolbar-sheet-ke-textview">2. Alur Interaksi: Dari Aksi Klik Toolbar / Sheet ke TextView</h2>
@@ -3827,27 +3841,27 @@
 <tbody>
 <tr>
 <td style="text-align: left;"><code>showingTOC</code></td>
-<td style="text-align: left;"><code>TOCView</code></td>
+<td style="text-align: left;"><code>iOSTOCView</code></td>
 <td style="text-align: left;">Menampilkan struktur hierarki bab (<em>outline</em>) kitab.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>showingOptions</code></td>
-<td style="text-align: left;"><code>iOSReaderAppearanceSheet</code></td>
-<td style="text-align: left;">Mengonfigurasi ukuran font Arab, famili font, visibilitas harakat, dan tema latar belakang (Sepia, Dark, Black, White).</td>
+<td style="text-align: left;"><code>ViewOptionsView</code></td>
+<td style="text-align: left;">Mengonfigurasi ukuran font Arab, famili font, visibilitas harakat, dan tema latar belakang (<code>BackgroundColor</code>: Sepia, Dark Sepia, Gray, Black, White).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>showingSearch</code></td>
-<td style="text-align: left;"><code>SearchInBookSheet</code></td>
+<td style="text-align: left;"><code>iOSBookSearchView</code></td>
 <td style="text-align: left;">Pencarian teks cepat khusus di dalam halaman-halaman kitab aktif.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>showingAnnotationsList</code></td>
-<td style="text-align: left;"><code>AnnotationListView</code></td>
+<td style="text-align: left;"><code>iOSBookAnnotationsView</code></td>
 <td style="text-align: left;">Menampilkan seluruh penanda dan catatan teks yang tersimpan untuk kitab ini.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>showingBookInfo</code></td>
-<td style="text-align: left;"><code>BookInfoSheet</code></td>
+<td style="text-align: left;"><code>iOSBookInfoView</code></td>
 <td style="text-align: left;">Kartu informasi bibliografi, penerbit, nomor cetakan, dan tahun wafat pengarang.</td>
 </tr>
 <tr>
@@ -3862,12 +3876,12 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>showingTabsList</code></td>
-<td style="text-align: left;"><code>TabsSheet</code></td>
-<td style="text-align: left;">Menampilkan daftar kitab yang sedang dibuka secara bersamaan (<em>multi-tab reader</em>).</td>
+<td style="text-align: left;"><code>iOSReaderTabsPopoverView</code></td>
+<td style="text-align: left;">Menampilkan daftar kitab yang sedang dibuka secara bersamaan (<em>multi-tab reader</em> popover) pada tata letak kompak.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="b-jembatan-iosibarottextview-uiviewrepresentable">B. Jembatan <code>iOSIbarotTextView</code> (<code>UIViewRepresentable</code>)</h3>
+<h3 id="b-jembatan-iosibarottextview-uiviewrepresentable">B. Jembatan iOSIbarotTextView (UIViewRepresentable)</h3>
 <p>Mengintegrasikan <code>UITextView</code> UIKit ke dalam arsitektur deklaratif SwiftUI:</p>
 <ul>
 <li><strong><code>makeUIView</code></strong>: Menginisialisasi <code>UITextView</code> kustom dengan properti <em>non-editable</em>, <em>selectable</em>, serta mendukung perpindahan per halaman (<em>paging mode</em>) maupun pengguliran kontinu (<em>continuous scrolling</em>).</li>
@@ -3876,8 +3890,17 @@
 </ul>
 <h3 id="c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen">C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (<em>Fullscreen</em>)</h3>
 <ul>
-<li><strong>Toggle Fullscreen Mode</strong>: Pengguna dapat mengetuk bagian tengah teks untuk menyembunyikan bilah navigasi atas dan <em>toolbar</em> bawah (<code>isReading.toggle()</code>), memberikan ruang baca penuh yang imersif.</li>
+<li><strong>Toggle Fullscreen Mode</strong>: Pada tata letak kompak (<code>!isRegularLayout</code>), pengguna dapat mengetuk teks untuk menyembunyikan bilah navigasi atas dan <em>toolbar</em> bawah (<code>isReading.toggle()</code>), memberikan ruang baca penuh yang imersif.</li>
 <li><strong>Geometri Layar &amp; Rotasi</strong>: Saat <em>toolbar</em> disembunyikan atau orientasi perangkat diputar (<em>Portrait</em> $\leftrightarrow$ <em>Landscape</em>), tata letak UIKit menyesuaikan <em>safe area insets</em> dan melakukan pemulihan posisi gulir (<em>scroll position restoration</em>) agar paragraf yang sedang dibaca tidak bergeser.</li>
+</ul>
+<h3 id="d-arsitektur-navigasi-multi-tab-ios-readertabsview">D. Arsitektur Navigasi Multi-Tab iOS (<code>ReaderTabsView</code>)</h3>
+<p>Navigasi multi-tab pada <code>iOSReaderTabView</code> dirancang untuk mengelola banyak kitab sekaligus dengan efisiensi tata letak tinggi:</p>
+<ul>
+<li><strong>Pengguliran Horizontal &amp; Auto-Scroll (<code>ScrollViewReader</code>)</strong>: Komponen <code>ReaderTabsView</code> menggunakan <code>ScrollView(.horizontal)</code> yang dibungkus <code>ScrollViewReader</code>. Ketika tab aktif berganti, sistem secara otomatis menganimasikan pengguliran ke tab tersebut (<code>proxy.scrollTo(id, anchor: .center)</code>).</li>
+<li><strong>Pembatasan Lebar &amp; Truncation</strong>: Setiap item tab (<code>ReaderTabItemView</code>) dibatasi lebarnya maksimal 250pt dengan pemotongan teks berekor (<em>tail truncation</em>) agar judul kitab yang panjang tidak mendominasi layar. Ketinggian tombol beradaptasi otomatis saat kelas ukuran vertikal kompak (<code>verticalSizeClass == .compact</code>).</li>
+<li><strong>Responsif Multi-Tasking Berbasis Size Class</strong>: Menggunakan <code>@Environment(\.horizontalSizeClass)</code> (<code>isRegularLayout</code>) menggantikan deteksi perangkat kaku (<code>MaktabahApp.isIpad</code>). Pada layout reguler (iPad layar penuh), deretan tab ditampilkan langsung di bilah atas (<code>.principal</code>). Pada layout kompak (iPhone atau iPad dalam Split View / Slide Over), tombol judul kitab aktif disematkan di sisi <em>trailing</em> untuk memunculkan lembar <code>iOSReaderTabsPopoverView</code>.</li>
+<li><strong>Preservasi Scroll Offset Antar-Tab</strong>: Deklarasi <code>.toolbar</code> diposisikan di luar modifier <code>.id(activeTab.id)</code> pada <code>iOSReaderTabView</code>, sehingga pergantian tab tidak menghancurkan struktur toolbar dan menjaga posisi gulir teks pembaca.</li>
+<li><strong>Snapshot State Popover</strong>: <code>iOSReaderTabsPopoverView</code> memanfaatkan snapshot lokal (<code>highlightedTabId</code>) saat <code>.onAppear</code> untuk mengeliminasi kedipan indikator seleksi visual (<em>selection flicker</em>) saat pengguna memilih tab baru.</li>
 </ul>
 
 

@@ -1081,6 +1081,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#thread-safety-sendable-conformance-annotationrepository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thread-Safety &amp; Sendable Conformance (AnnotationRepository)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#operasi-reset-database-impor" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3752,6 +3763,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#thread-safety-sendable-conformance-annotationrepository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thread-Safety &amp; Sendable Conformance (AnnotationRepository)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#operasi-reset-database-impor" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4031,6 +4053,29 @@
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Jika modifikasi lokal gagal terunggah (misalnya saat perangkat luring), perubahan tersimpan dengan aman pada <code>SyncPendingStore</code>. <code>CloudKitSyncManager</code> akan melakukan <em>flush</em> pada antrean tersebut secara asinkron setelah konektivitas internet kembali pulih.</p>
+<h3 id="thread-safety-sendable-conformance-annotationrepository">Thread-Safety &amp; Sendable Conformance (<code>AnnotationRepository</code>)</h3>
+<p><code>AnnotationRepository</code> mengadopsi protokol <code>Sendable</code> secara langsung tanpa membutuhkan penanda <code>@unchecked</code>. Komponen ini membungkus <em>pointer</em> basis data, URL, dan <em>instance</em> <code>SyncPendingStore</code> ke dalam kontainer <em>state</em> terisolasi:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationRepository</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingManaging</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">State</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">db</span><span class="p">:</span><span class="w"> </span><span class="n">SQLiteDatabase</span><span class="p">?</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">syncPendingStore</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingStore</span><span class="p">?</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">dbURL</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span><span class="p">?</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">(</span><span class="n">State</span><span class="p">())</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">_db</span><span class="p">:</span><span class="w"> </span><span class="n">SQLiteDatabase</span><span class="p">?</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">$0</span><span class="p">.</span><span class="n">db</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">syncPendingStore</span><span class="p">:</span><span class="w"> </span><span class="n">SyncPendingStore</span><span class="p">?</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">$0</span><span class="p">.</span><span class="n">syncPendingStore</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">dbURL</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span><span class="p">?</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nv">$0</span><span class="p">.</span><span class="n">dbURL</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Setiap operasi pembukaan koneksi, penutupan (<code>disconnect</code>), atau pengambilan <em>pointer</em> basis data dieksekusi di dalam blok <code>state.withLock</code>, menjamin keamanan thread tanpa resiko data race pada Swift 6.</p>
 <h3 id="operasi-reset-database-impor">Operasi Reset Database &amp; Impor</h3>
 <p>Sebagai fitur pemulihan, <code>AnnotationStore</code> menyediakan fungsi <code>nukeDatabase()</code> (yang mengosongkan tabel secara menyeluruh) dan <code>importAnnotations()</code> yang mengeksekusi strategi penggantian massal saat pengguna merestorasi berkas arsip anotasi lokal.</p>
 

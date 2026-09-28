@@ -2252,10 +2252,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fts-full-text-search-pipeline" class="md-nav__link">
+  <a href="#alur-pencarian-fts-full-text-search-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FTS (Full-Text Search) Pipeline
+        Alur Pencarian FTS (Full-Text Search Pipeline)
       
     </span>
   </a>
@@ -3556,10 +3556,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fts-full-text-search-pipeline" class="md-nav__link">
+  <a href="#alur-pencarian-fts-full-text-search-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FTS (Full-Text Search) Pipeline
+        Alur Pencarian FTS (Full-Text Search Pipeline)
       
     </span>
   </a>
@@ -3607,7 +3607,7 @@
 <li><code>sidebarTarjamahList</code>: Daftar biografi dari kitab-kitab khusus untuk perawi yang sedang dipilih.</li>
 <li><code>searchTarjamahList</code>: Daftar biografi hasil dari pencarian teks penuh (FTS) secara global.</li>
 </ul>
-<h2 id="fts-full-text-search-pipeline">FTS (Full-Text Search) Pipeline</h2>
+<h2 id="alur-pencarian-fts-full-text-search-pipeline">Alur Pencarian FTS (<em>Full-Text Search Pipeline</em>)</h2>
 <p>ViewModel ini mendukung pencarian teks penuh (FTS) lintas arsip (lintas kitab) yang berjumlah ribuan secara asinkron.</p>
 <ol>
 <li><strong>Pencarian</strong>: Metode <code>startSearch(query:)</code> akan dipanggil.</li>
@@ -3616,7 +3616,7 @@
 </ol>
 <div class="admonition tip">
 <p class="admonition-title">Pause &amp; Resume</p>
-<p>Pencarian global mendukung fitur <strong>Pause &amp; Resume</strong>. <code>NarratorViewModel</code> menggunakan instance <code>PauseController</code> untuk memberhentikan sejenak alur asinkron pencarian database jika pengguna ingin berhenti melihat hasil sementara, dan melanjutkannya kembali.</p>
+<p>Pencarian global mendukung fitur <strong>Pause &amp; Resume</strong>. <code>NarratorViewModel</code> menggunakan <em>instance</em> <code>PauseController</code> untuk memberhentikan sejenak alur asinkron pencarian database jika pengguna ingin berhenti melihat hasil sementara, dan melanjutkannya kembali.</p>
 </div>
 <h2 id="callback-appkit-macos">Callback AppKit (macOS)</h2>
 <p>Karena macOS Maktabah menggunakan arsitektur AppKit/MVC yang diikat dengan ViewModel, ViewModel mengekspos banyak <em>closure</em> yang dipanggil di <em>Main Actor</em>:</p>

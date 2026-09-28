@@ -815,10 +815,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#d-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+  <a href="#d-alur-peluncuran-aplikasi-via-widget-deep-link-cold-start-from-widget" class="md-nav__link">
     <span class="md-ellipsis">
       
-        D. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
+        D. Alur Peluncuran Aplikasi via Widget Deep Link (Cold Start from Widget)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
       
     </span>
   </a>
@@ -3851,10 +3862,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#d-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+  <a href="#d-alur-peluncuran-aplikasi-via-widget-deep-link-cold-start-from-widget" class="md-nav__link">
     <span class="md-ellipsis">
       
-        D. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
+        D. Alur Peluncuran Aplikasi via Widget Deep Link (Cold Start from Widget)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
       
     </span>
   </a>
@@ -4130,21 +4152,24 @@
     participant State as ReaderStateManager
     participant View as IbarotTextView / UI
 
-    Note over User,State: 1. Pemicu &amp; Penyimpanan State Mode Lama
+    Note over Win,State: 1. Pemicu &amp; Penyimpanan State Mode Lama
     Action-&gt;&gt;Win: NSToolbarItem.Identifier.modeSelector - func modeSelectorChanged(_:)
-    Win-&gt;&gt;Split: switchToMode(newMode)
-    Split-&gt;&gt;State: saveState(for: currentMode)
-    State--&gt;&gt;View: updateState inout ReaderState
+    Win-&gt;&gt;Split: switchToMode(newMode, restoreState: true)
+    Split-&gt;&gt;State: persistCurrentStateToDisk(persistToDisk:)
+    Note over State: saveState(for: currentMode)&lt;br/&gt;persistToDisk() tulis atomik ke disk
 
     Note over Split,View: 2. Teardown &amp; Reset
-    View-&gt;&gt;View: IbarotTextView.string.removeAll()
-    Split-&gt;&gt;Split: Hapus dan ganti item sidebar yang persisten
+    Split-&gt;&gt;View: IbarotTextView.string.removeAll()
+    Split-&gt;&gt;Split: Hapus split items non-sidebar
 
     Note over Split,State: 3. Konfigurasi Mode Baru &amp; Restorasi
     Split-&gt;&gt;Split: setupForMode(newMode)
-    Split-&gt;&gt;State: restoreState(for: newMode)
-    State--&gt;&gt;View: Restore UI from ReaderState
-    Split-&gt;&gt;Split: Pulihkan sidebarItem.isCollapsed</code></pre>
+    Split-&gt;&gt;Split: Pulihkan sidebarItem.isCollapsed
+    opt restoreState == true
+        Split-&gt;&gt;State: restoreState(for: newMode, components(for: newMode))
+        State--&gt;&gt;View: Pulihkan UI &amp; ReaderState komponen target
+    end
+    Split-&gt;&gt;Split: setAnnotationsPanelDelegate()</code></pre>
 <h3 id="c-alur-restorasi-state-saat-peluncuran-aplikasi-cold-launch-restoration">C. Alur Restorasi State saat Peluncuran Aplikasi (<em>Cold Launch Restoration</em>)</h3>
 <pre class="mermaid"><code>sequenceDiagram
     autonumber
@@ -4166,14 +4191,35 @@
     participant Comp as Komponen UI
     participant Win as MainWindow
 
-    Split-&gt;&gt;+State: restoreState(for: lastMode)
+    Split-&gt;&gt;+State: restoreState(for: lastMode, components(for: lastMode))
     State-&gt;&gt;State: Baca &amp; decode JSON dari Disk&lt;br/&gt;({mode}_state.json)
     State-&gt;&gt;+Comp: component.restore(from: state)&lt;br/&gt;(Ibarot, Option, Rowi)
     Comp--&gt;&gt;-State: Komponen pulih
     State--&gt;&gt;-Split: State siap
     Split-&gt;&gt;+Win: setupView() &amp; displayIfNeeded()
     Win--&gt;&gt;-Split: Jendela &amp; UI pulih</code></pre>
-<h3 id="d-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence">D. Alur Persistensi State ke Disk saat Jendela Ditutup (<em>Window Close &amp; Disk Persistence</em>)</h3>
+<h3 id="d-alur-peluncuran-aplikasi-via-widget-deep-link-cold-start-from-widget">D. Alur Peluncuran Aplikasi via Widget Deep Link (<em>Cold Start from Widget</em>)</h3>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant App as AppDelegate
+    participant Win as MainWindow
+    participant Split as SplitVC
+    participant Reader as IbarotTextVC
+
+    App-&gt;&gt;App: applicationDidFinishLaunching()
+    Note over App: pendingDeepLink != nil (Cold Start Widget)
+    App-&gt;&gt;Win: window.setupContentView(mode: .viewer, restoreState: false)
+    Win-&gt;&gt;Split: switchToMode(.viewer, restoreState: false)
+    Note over Split: Setup mode .viewer tanpa memulihkan state disk lama
+
+    App-&gt;&gt;+Reader: activeDeepLinkTask = Task { handleDeepLink(deepLink) }
+    alt Deep Link: .annotation(id)
+        Reader-&gt;&gt;Reader: openAnnotation(annotation)
+    else Deep Link: .history(bkId, contentId)
+        Reader-&gt;&gt;Reader: openHistory(book, contentId)
+    end
+    deactivate Reader</code></pre>
+<h3 id="e-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence">E. Alur Persistensi State ke Disk saat Jendela Ditutup (<em>Window Close &amp; Disk Persistence</em>)</h3>
 <pre class="mermaid"><code>sequenceDiagram
     autonumber
 
@@ -4191,7 +4237,7 @@
     Note over Comp: Simpan Book, Page, Scroll, Selection, Query
     Comp--&gt;&gt;-State: State terbarui
 
-    State-&gt;&gt;State: persisToDisk(for: currentMode)&lt;br/&gt;(JSONEncoder &amp; Tulis Atomik ke Disk)
+    State-&gt;&gt;State: persistToDisk()&lt;br/&gt;(JSONEncoder &amp; Tulis Atomik ke Disk)
     State--&gt;&gt;-Split: Selesai simpan ke disk
     Split--&gt;&gt;-App: Persist selesai
 
@@ -4213,14 +4259,15 @@
 <p>Setiap komponen yang mengadopsi <em>protocol</em> <code>ReaderStateComponent</code> (<code>IbarotTextVC</code>, <code>OptionSearchVC</code>, atau <code>RowiResultsVC</code>) memulihkan kondisi UI mereka secara sinkron.</p>
 </li>
 <li>
-<p><strong>Penyimpanan &amp; Restorasi saat Beralih Mode (<code>switchToMode</code>)</strong></p>
+<p><strong>Penyimpanan &amp; Restorasi saat Beralih Mode (<code>switchToMode(_:restoreState:)</code>)</strong></p>
 </li>
-<li>Dipicu ketika pengguna memilih mode pada <em>segmented control</em> di <em>toolbar</em> atau menu bar.</li>
-<li><strong>Langkah 1 (Simpan Mode Lama)</strong>: <code>stateManager.saveState(for: currentMode, components: components(for: currentMode))</code> mengumpulkan data UI mutakhir ke memori RAM (<code>ReaderState</code>).</li>
-<li><strong>Langkah 2 (Teardown Tampilan)</strong>: Mengosongkan teks bacaan (<code>ibarotTextVC.textView.string.removeAll()</code>) dan menghapus seluruh item split kecuali kontainer <em>sidebar</em> persisten.</li>
-<li><strong>Langkah 3 (Setup Mode Baru)</strong>: Memasang <em>child controllers</em> mode baru via <code>setupForMode(newMode)</code> dan memulihkan status <em>collapsed</em> pada <em>sidebar</em> (<code>sidebarItem.isCollapsed</code>).</li>
+<li>Dipicu ketika pengguna memilih mode pada <em>segmented control</em> di <em>toolbar</em>, menu bar, atau melalui navigasi URL deep link widget.</li>
+<li><strong>Langkah 1 (Simpan Mode Lama)</strong>: <code>stateManager.saveState(for: currentMode, title: ..., components: components(for: currentMode))</code> mengumpulkan data UI mutakhir ke memori RAM (<code>ReaderState</code>).</li>
+<li><strong>Langkah 2 (Persistensi Instan ke Disk)</strong>: Mengeksekusi <code>stateManager.persistState()</code> langsung saat pergantian mode agar data tidak hilang apabila aplikasi ditutup mendadak.</li>
+<li><strong>Langkah 3 (Teardown Tampilan)</strong>: Mengosongkan teks bacaan (<code>ibarotTextVC.textView.string.removeAll()</code>) dan menghapus seluruh item split kecuali kontainer <em>sidebar</em> persisten.</li>
+<li><strong>Langkah 4 (Setup Mode Baru)</strong>: Memasang <em>child controllers</em> mode baru via <code>setupForMode(newMode)</code> dan memulihkan status <em>collapsed</em> pada <em>sidebar</em> (<code>sidebarItem.isCollapsed</code>).</li>
 <li>
-<p><strong>Langkah 4 (Restorasi Mode Baru)</strong>: <code>stateManager.restoreState(for: newMode, components: components(for: currentMode))</code> memulihkan <em>state</em> mode baru dari <em>cache</em> memori (atau memuat dari <em>disk</em> jika mode tersebut belum pernah dibuka pada sesi aktif).</p>
+<p><strong>Langkah 5 (Restorasi Mode Baru Bersyarat)</strong>: Jika parameter <code>restoreState</code> bernilai <code>true</code> (default), <code>stateManager.restoreState(for: mode, components: components(for: mode))</code> dipanggil untuk memulihkan state komponen target. Jika dipicu dari deep link widget (<code>restoreState: false</code>), restorasi diabaikan agar konten deep link dimuat tanpa tertimpa state persisten lama.</p>
 </li>
 <li>
 <p><strong>Persistensi ke Disk saat Jendela Ditutup (<code>persistCurrentStateToDisk</code>)</strong></p>

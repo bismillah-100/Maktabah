@@ -1734,15 +1734,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture-pipeline" class="md-nav__link">
+  <a href="#alur-arsitektur-architecture-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture Pipeline
+        Alur Arsitektur (Architecture Pipeline)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Architecture Pipeline">
+    <nav class="md-nav" aria-label="Alur Arsitektur (Architecture Pipeline)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1841,10 +1841,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#offlineimportformview" class="md-nav__link">
+  <a href="#offlineimportformview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OfflineImportFormView
+        OfflineImportFormView (Struct)
       
     </span>
   </a>
@@ -1869,10 +1869,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bookimportviewmodel" class="md-nav__link">
+  <a href="#bookimportviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BookImportViewModel
+        BookImportViewModel (Class)
       
     </span>
   </a>
@@ -3740,15 +3740,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture-pipeline" class="md-nav__link">
+  <a href="#alur-arsitektur-architecture-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture Pipeline
+        Alur Arsitektur (Architecture Pipeline)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Architecture Pipeline">
+    <nav class="md-nav" aria-label="Alur Arsitektur (Architecture Pipeline)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3847,10 +3847,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#offlineimportformview" class="md-nav__link">
+  <a href="#offlineimportformview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OfflineImportFormView
+        OfflineImportFormView (Struct)
       
     </span>
   </a>
@@ -3875,10 +3875,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bookimportviewmodel" class="md-nav__link">
+  <a href="#bookimportviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BookImportViewModel
+        BookImportViewModel (Class)
       
     </span>
   </a>
@@ -3986,7 +3986,7 @@
 
 <h1 id="dokumentasi-proses-book-import-offline-import">Dokumentasi Proses Book Import &amp; Offline Import</h1>
 <p>Proses ini menangani mekanisme impor kitab secara luring (<em>offline</em>), penggantian (<em>replace</em>) kitab, serta pengubahan identitas kitab (<em>change book ID</em>) secara aman tanpa menghilangkan data pengguna yang berharga (seperti anotasi dan <em>bookmark</em>). Dokumentasi ini membedah arsitektur secara mendalam (<em>deep-dive</em>) untuk memastikan pengembang dapat memahami <em>pipeline</em> secara utuh.</p>
-<h2 id="architecture-pipeline">Architecture Pipeline</h2>
+<h2 id="alur-arsitektur-architecture-pipeline">Alur Arsitektur (<em>Architecture Pipeline</em>)</h2>
 <p>Alur kerja untuk memproses buku baru maupun pembaruan melibatkan antarmuka pengguna, lapisan <em>ViewModel</em>, dan subsistem sinkronisasi sebelum dieksekusi oleh mesin basis data SQLite.</p>
 <h3 id="diagram-interaksi-komponen">Diagram Interaksi Komponen</h3>
 <h3 id="1-data-pipeline-persistence">1. Data Pipeline &amp; Persistence</h3>
@@ -4010,10 +4010,10 @@
     end
 
     Archive --&gt;|"Commit Atomik"| ArchDB
-    Archive --&gt;|"Commit FTS5"| FtsDB
+    Archive --&gt;|"appendBookToUnifiedFTS"| FtsDB
     BUM_Change --&gt;|"Update Metadata"| MainDB
     BUM_Change --&gt;|"Rename b{id}"| ArchDB
-    BUM_Change --&gt;|"Rename b{id}_fts"| FtsDB
+    BUM_Change --&gt;|"Update archive_index / Rename b{id}_fts"| FtsDB
 
     classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
@@ -4091,7 +4091,7 @@
 <ul>
 <li>Menjalankan <code>ATTACH DATABASE</code> untuk <code>source_db</code> (asal), <code>fts_source_db</code> (teks belum dikompresi), dan <code>fts_db</code> (tabel pencarian target).</li>
 <li>Tabel data utama (<code>b{id}</code>) dan TOC (<code>t{id}</code>) disalin dalam satu sesi transaksi (<em>transaction</em>).</li>
-<li>Tabel <code>b{id}_fts</code> dibangun dari <code>fts_source_db</code> dan dimasukkan ke <code>fts_db</code> terpisah agar performa pencarian FTS5 tetap optimal.</li>
+<li>Teks diindeks ke dalam skema Unified FTS (<code>archive_fts</code> dan <code>archive_index</code>) menggunakan <code>ArchiveDatabaseTools.appendBookToUnifiedFTS</code> (atau tabel <em>fallback</em> <code>b{id}_fts</code> pada arsip versi lama).</li>
 </ul>
 </li>
 <li>
@@ -4113,7 +4113,11 @@
 <li>Tahapan dimulai dengan mengambil lokasi berkas arsip (misalnya <code>20.sqlite</code>) di dalam basis data utama.</li>
 <li>Mengeksekusi <code>ALTER TABLE "b{oldId}" RENAME TO "b{newId}";</code> serta hal yang sama untuk tabel TOC (<code>t{oldId}</code>).</li>
 <li>Jika gagal di tengah proses, perubahan pada tabel akan dikembalikan ke nama semula (<em>rollback</em>).</li>
-<li>Jika berhasil, tabel FTS di dalam berkas independen FTS akan diubah namanya: <code>ALTER TABLE "b{oldId}_fts" RENAME TO "b{newId}_fts";</code>.</li>
+<li>Jika berhasil, perlakuan FTS disesuaikan dengan skema arsip:<ul>
+<li><strong>Unified FTS</strong>: Menghapus entri lama <code>DELETE FROM archive_index WHERE book_id = \(oldId)</code> lalu memanggil <code>appendBookToUnifiedFTS</code> untuk ID kitab yang baru.</li>
+<li><strong>Legacy FTS</strong>: Mengubah nama tabel virtual: <code>ALTER TABLE "b{oldId}_fts" RENAME TO "b{newId}_fts";</code>.</li>
+</ul>
+</li>
 <li>Terakhir, rekaman sinkronisasi anotasi dan riwayat membaca diperbarui ke ID baru lalu dikirim ke CloudKit.</li>
 </ul>
 </li>
@@ -4125,7 +4129,7 @@
 <h2 id="bedah-komponen-dan-struktur-data">Bedah Komponen dan Struktur Data</h2>
 <p>Bagian ini mendokumentasikan tipe objek utama secara rinci.</p>
 <h3 id="1-view-layer">1. View Layer</h3>
-<h4 id="offlineimportformview"><code>OfflineImportFormView</code></h4>
+<h4 id="offlineimportformview-struct">OfflineImportFormView (Struct)</h4>
 <p>Tampilan utama berbasis form yang kompatibel di macOS dan iOS. Memanfaatkan <code>@State</code> untuk membungkus <code>BookImportViewModel</code>.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">iOS</label></div>
 <div class="tabbed-content">
@@ -4155,7 +4159,7 @@
 </div>
 <p>Fitur utama tampilan ini adalah <em>file picker</em> (<code>fileImporter</code>), pengecekan validasi ID interaktif, dan pembaruan antarmuka secara adaptif berdasarkan nilai <code>importMode</code>.</p>
 <h3 id="2-viewmodel-layer">2. ViewModel Layer</h3>
-<h4 id="bookimportviewmodel"><code>BookImportViewModel</code></h4>
+<h4 id="bookimportviewmodel-class">BookImportViewModel (Class)</h4>
 <p>ViewModel berbasis <code>Observation</code> (menggunakan makro <code>@Observable</code> dan anotasi <code>@unchecked Sendable</code>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">@</span><span class="n">Observable</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BookImportViewModel</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -4189,9 +4193,9 @@
 <li><code>ResultsHandler.shared.migrateBookId</code></li>
 </ol>
 <h3 id="3-manager-database-engine">3. Manager &amp; Database Engine</h3>
-<h4 id="bookupdatemanager-class"><code>BookUpdateManager</code> (Class)</h4>
+<h4 id="bookupdatemanager-class">BookUpdateManager (Class)</h4>
 <p>Manajer tunggal (<em>singleton</em>) yang bertanggung jawab atas proses SQL level rendah.</p>
-<h4 id="stagedbookupdate-struct"><code>StagedBookUpdate</code> (Struct)</h4>
+<h4 id="stagedbookupdate-struct">StagedBookUpdate (Struct)</h4>
 <p><em>Struct</em> perantara yang menyatukan artefak pembaruan buku sebelum operasi <em>replace</em> atau ekspor dijalankan.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">StagedBookUpdate</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">entry</span><span class="p">:</span><span class="w"> </span><span class="n">BookIndexEntry</span><span class="w"> </span><span class="c1">// (1)!</span>
@@ -4209,7 +4213,7 @@
 <li>URL berkas sekunder untuk indeks FTS teks mentah.</li>
 <li>Konteks pengarang terkait (bisa bernilai <code>nil</code> jika data pengarang sudah ada atau tidak didefinisikan).</li>
 </ol>
-<h4 id="authorcontext-struct"><code>AuthorContext</code> (Struct)</h4>
+<h4 id="authorcontext-struct">AuthorContext (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">AuthorContext</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">authId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">versionName</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span>
@@ -4217,7 +4221,7 @@
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <p><em>Struct</em> pembantu untuk mengambil, mengunduh, atau mengonfirmasi keberadaan data pengarang di <code>special.sqlite</code> guna mencegah <em>orphan records</em>.</p>
-<h4 id="bookversionstate-enum"><code>BookVersionState</code> (Enum)</h4>
+<h4 id="bookversionstate-enum">BookVersionState (Enum)</h4>
 <p>Representasi status versi buku di basis data lokal:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookVersionState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">notInLibrary</span><span class="w"> </span><span class="c1">// (1)!</span>

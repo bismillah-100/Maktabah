@@ -3744,7 +3744,7 @@
     class WSR,WSD,AITP,TE store;
     class WS db;</code></pre>
 <hr />
-<h2 id="2-widgetsnapshotrecord-protocol">2. <code>WidgetSnapshotRecord</code> (Protocol)</h2>
+<h2 id="2-widgetsnapshotrecord-protocol">2. WidgetSnapshotRecord (Protocol)</h2>
 <p><em>Protocol</em> utama yang mendefinisikan struktur data snapshot yang dapat disimpan ke sistem berkas lokal maupun disinkronkan ke CloudKit.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">protocol</span><span class="w"> </span><span class="nc">WidgetSnapshotRecord</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">associatedtype</span><span class="w"> </span><span class="n">Item</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span>
@@ -3776,7 +3776,7 @@
 <li><code>lastUpdated</code> lebih baru jika nomor generasi sama.</li>
 </ul>
 <hr />
-<h2 id="3-widgetsnapshotdescriptor-protocol">3. <code>WidgetSnapshotDescriptor</code> (Protocol)</h2>
+<h2 id="3-widgetsnapshotdescriptor-protocol">3. WidgetSnapshotDescriptor (Protocol)</h2>
 <p><em>Protocol</em> metadata murni yang memisahkan konfigurasi statis dari data dinamis snapshot:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">protocol</span><span class="w"> </span><span class="nc">WidgetSnapshotDescriptor</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">associatedtype</span><span class="w"> </span><span class="n">Item</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span>
@@ -3790,7 +3790,7 @@
 <hr />
 <h2 id="4-kontrak-timeline-widgetkit">4. Kontrak Timeline WidgetKit</h2>
 <p>Komponen di dalam Widget Extension mematuhi kontrak resmi dari Apple:</p>
-<h3 id="appintenttimelineprovider-protocol"><code>AppIntentTimelineProvider</code> (Protocol)</h3>
+<h3 id="appintenttimelineprovider-protocol">AppIntentTimelineProvider (Protocol)</h3>
 <p><em>Protocol</em> penyedia timeline berbasis AppIntents yang wajib menyediakan:
 1. <code>placeholder(in:) -&gt; Entry</code>: Data representatif instan untuk tata letak pratinjau.
 2. <code>snapshot(for:in:) async -&gt; Entry</code>: Data aktual terkini untuk galeri widget.

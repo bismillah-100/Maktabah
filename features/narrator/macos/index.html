@@ -2202,10 +2202,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-rowisidebarvc-sidebar-hierarki-tabaqah" class="md-nav__link">
+  <a href="#1-rowisidebarvc-class-sidebar-hierarki-tabaqah" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. RowiSidebarVC (Sidebar Hierarki &amp; Tabaqah)
+        1. RowiSidebarVC (Class) - Sidebar Hierarki &amp; Tabaqah
       
     </span>
   </a>
@@ -2213,10 +2213,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-rowiresultsvc-kontroler-biografi-hasil" class="md-nav__link">
+  <a href="#2-rowiresultsvc-class-kontroler-biografi-hasil" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. RowiResultsVC (Kontroler Biografi &amp; Hasil)
+        2. RowiResultsVC (Class) - Kontroler Biografi &amp; Hasil
       
     </span>
   </a>
@@ -3696,10 +3696,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-rowisidebarvc-sidebar-hierarki-tabaqah" class="md-nav__link">
+  <a href="#1-rowisidebarvc-class-sidebar-hierarki-tabaqah" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. RowiSidebarVC (Sidebar Hierarki &amp; Tabaqah)
+        1. RowiSidebarVC (Class) - Sidebar Hierarki &amp; Tabaqah
       
     </span>
   </a>
@@ -3707,10 +3707,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-rowiresultsvc-kontroler-biografi-hasil" class="md-nav__link">
+  <a href="#2-rowiresultsvc-class-kontroler-biografi-hasil" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. RowiResultsVC (Kontroler Biografi &amp; Hasil)
+        2. RowiResultsVC (Class) - Kontroler Biografi &amp; Hasil
       
     </span>
   </a>
@@ -3863,13 +3863,13 @@
     deactivate TV</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-antarmuka-utama">3. Bedah Komponen Antarmuka Utama</h2>
-<h3 id="1-rowisidebarvc-sidebar-hierarki-tabaqah">1. <code>RowiSidebarVC</code> (Sidebar Hierarki &amp; Tabaqah)</h3>
+<h3 id="1-rowisidebarvc-class-sidebar-hierarki-tabaqah">1. RowiSidebarVC (Class) - Sidebar Hierarki &amp; Tabaqah</h3>
 <ul>
 <li><strong>Penyajian Struktur Pohon</strong>: Menggunakan <code>NSOutlineView</code> untuk merender pembagian generasi perawi (<em>Tabaqah</em>) sebagai node induk dan nama perawi sebagai node anak.</li>
 <li><strong>Mekanisme Paginasi (<code>LoadMoreCell</code>)</strong>: Jika suatu tabaqah memiliki perawi dalam jumlah besar, node terakhir menampilkan sel tombol "Load More" (<code>group.hasMore</code>) yang memicu pembacaan batch berikutnya secara asinkron dari basis data <code>special.sqlite</code>.</li>
 <li><strong>Pencarian Cepat</strong>: Menggunakan <code>DSFSearchField</code> dengan penundaan <em>debounce</em> 300 ms untuk menyaring perawi berdasarkan nama atau laqab secara instan.</li>
 </ul>
-<h3 id="2-rowiresultsvc-kontroler-biografi-hasil">2. <code>RowiResultsVC</code> (Kontroler Biografi &amp; Hasil)</h3>
+<h3 id="2-rowiresultsvc-class-kontroler-biografi-hasil">2. RowiResultsVC (Class) - Kontroler Biografi &amp; Hasil</h3>
 <p>Memiliki dua mode presentasi dinamis:</p>
 <ul>
 <li><strong>Mode Profil Perawi (Sidebar Mode)</strong>:</li>
@@ -3879,7 +3879,7 @@
 <li>Jika kueri pencarian teks penuh diaktifkan, tabel beralih menampilkan daftar kutipan hadits/biografi dengan bilah kendali <em>Start/Pause/Stop</em>.</li>
 <li>Baris baru disisipkan secara inkremental (<code>insertRows</code>) dengan animasi <em>fade</em> saat notifikasi <code>onSearchBatchAppended</code> diterima.</li>
 </ul>
-<h3 id="3-restorasi-state-readerstatecomponent">3. Restorasi State (<code>ReaderStateComponent</code>)</h3>
+<h3 id="3-restorasi-state-readerstatecomponent">3. Restorasi State (ReaderStateComponent)</h3>
 <ul>
 <li>Navigasi antar-perawi dan riwayat klik kitab tarjamah disimpan secara persisten. Ketika jendela ditutup atau mode berpindah, state terakhir perawi yang sedang diteliti dapat direstorasi seketika.</li>
 </ul>

@@ -3650,7 +3650,7 @@
 <p>Sistem Reader memisahkan logika antarmuka dan presentasi menggunakan <em>protocol</em> komunikasi. Alih-alih antarmuka langsung memanggil fungsi ke dalam komponen <em>Text Engine</em> milik UIKit atau AppKit, UI dan ViewModel dijembatani oleh abstraksi formal. </p>
 <h2 id="spesifikasi-teknis-parameter-technical-specifications">Spesifikasi Teknis &amp; Parameter (Technical Specifications)</h2>
 <p><em>Protocol</em> utama yang aktif digunakan dalam sistem pembacaan Maktabah adalah <code>TextViewRenderable</code>.</p>
-<h3 id="textviewrenderable-protocol"><code>TextViewRenderable</code> (Protocol)</h3>
+<h3 id="textviewrenderable-protocol">TextViewRenderable (Protocol)</h3>
 <p><em>Protocol</em> ini diadopsi (<em>conformed</em>) oleh komponen Text View (seperti <code>IbarotTextView</code> di macOS atau representasi koordinasi pada iOS). <em>Protocol</em> beroperasi di bawah isolasi <code>@MainActor</code> untuk menjamin bahwa seluruh mutasi visual dieksekusi secara aman pada <em>Main Thread</em>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">#if</span><span class="w"> </span><span class="cp">canImport</span><span class="p">(</span><span class="cp">AppKit</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">import</span><span class="w"> </span><span class="nc">AppKit</span>

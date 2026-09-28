@@ -3883,7 +3883,7 @@
 <p>Tanggung jawab utama <code>iOSMainView</code>:</p>
 <ul>
 <li><strong>Routing Berbasis Lingkungan</strong>: Memeriksa <code>horizontalSizeClass</code>. Jika bernilai <code>.regular</code> (iPad / Mac Catalyst), sistem merender <code>iPadLayout</code>. Jika bernilai <code>.compact</code> (iPhone), sistem merender <code>iPhoneLayout</code>.</li>
-<li><strong>Manajemen State Global</strong>: Mengelola <code>@State</code> untuk navigasi (<code>iOSNavigationManager</code>), tab yang dipilih (<code>selectedTab</code>), visibilitas kolom iPad, serta status tampilan <em>sheet</em> (Pengaturan / Donasi).</li>
+<li><strong>Manajemen State Global</strong>: Mengelola <code>@State</code> untuk navigasi (<code>iOSNavigationManager</code>), tab yang dipilih (<code>selectedTab</code>), visibilitas kolom iPad, serta status tampilan <em>sheet</em> (Pengaturan / Donasi). Observer pada <code>iOSNavigationManager</code> (<code>.bookIntegrated</code> dan <code>.libraryFolderChanged</code>) menggunakan referensi <code>[weak self]</code> guna mencegah siklus retensi (<em>retain cycle</em>) memori saat navigasi tab berpindah.</li>
 <li><strong>Deep Linking</strong>: Menangani <code>.onOpenURL</code> untuk membuka anotasi tertentu atau riwayat bacaan berdasarkan URL WidgetKit.</li>
 <li><strong>Siklus Hidup (<em>Lifecycle</em>)</strong>: Memantau perubahan <code>scenePhase</code>. Saat bernilai <code>.active</code>, sistem memicu sinkronisasi <code>CloudKitSyncManager</code> dan mencatat aktivasi aplikasi pada <code>DonationManager</code>.</li>
 </ul>

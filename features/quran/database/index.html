@@ -2440,15 +2440,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#qurandatamanager" class="md-nav__link">
+  <a href="#qurandatamanager-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        QuranDataManager
+        QuranDataManager (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="QuranDataManager">
+    <nav class="md-nav" aria-label="QuranDataManager (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3551,15 +3551,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#qurandatamanager" class="md-nav__link">
+  <a href="#qurandatamanager-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        QuranDataManager
+        QuranDataManager (Class)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="QuranDataManager">
+    <nav class="md-nav" aria-label="QuranDataManager (Class)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3608,8 +3608,8 @@
 
 <h1 id="persistence-database">Persistence &amp; Database</h1>
 <p>Pengelolaan data Al-Qur'an dan Tafsir berpusat pada <code>QuranDataManager</code>.</p>
-<h2 id="qurandatamanager"><code>QuranDataManager</code></h2>
-<p>Sebuah <em>singleton</em> yang mengelola koneksi basis data khusus (<code>special.sqlite</code>) dan mengoordinasikan pembacaan teks ayat Al-Qur'an serta kitab-kitab tafsir.</p>
+<h2 id="qurandatamanager-class">QuranDataManager (Class)</h2>
+<p>Sebuah <em>singleton</em> beranotasi <code>@MainActor final class</code> yang mengelola koneksi basis data khusus (<code>special.sqlite</code>) dan mengoordinasikan pembacaan teks ayat Al-Qur'an serta kitab-kitab tafsir. Isolasi <code>@MainActor</code> menjamin seluruh manipulasi state pencarian, seleksi surah, dan navigasi ayat terikat aman pada antarmuka pengguna tanpa risiko <em>data race</em>.</p>
 <h3 id="tanggung-jawab-utama">Tanggung Jawab Utama</h3>
 <ul>
 <li><strong>Memuat Surah &amp; Ayat</strong>: Mengambil data dari tabel <code>Qr</code> dan <code>Sora</code> di basis data <code>special.sqlite</code>.</li>

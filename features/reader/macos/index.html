@@ -2745,10 +2745,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-pipeline-pemuatan-halaman-dari-aksi-navigasi-ke-textview" class="md-nav__link">
+  <a href="#3-alur-pemuatan-halaman-page-loading-pipeline-dari-aksi-navigasi-ke-textview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Pipeline Pemuatan Halaman: Dari Aksi Navigasi ke TextView
+        3. Alur Pemuatan Halaman (Page Loading Pipeline): Dari Aksi Navigasi ke TextView
       
     </span>
   </a>
@@ -2790,10 +2790,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-ibarottextview-class-subkelas-nstextview" class="md-nav__link">
+  <a href="#b-ibarottextview-class-subclass-nstextview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. IbarotTextView (Class) - Subkelas NSTextView
+        B. IbarotTextView (Class) - Subclass NSTextView
       
     </span>
   </a>
@@ -2816,6 +2816,28 @@
     <span class="md-ellipsis">
       
         D. Menu Kontekstual Lengkap (menu(for event:))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-navigasi-terisolasi-perekaman-histori-bersyarat-ibarottextvc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Navigasi Terisolasi &amp; Perekaman Histori Bersyarat (IbarotTextVC)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-pencegahan-retain-cycle-siklus-hidup-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. Pencegahan Retain Cycle &amp; Siklus Hidup Observer
       
     </span>
   </a>
@@ -3639,10 +3661,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-pipeline-pemuatan-halaman-dari-aksi-navigasi-ke-textview" class="md-nav__link">
+  <a href="#3-alur-pemuatan-halaman-page-loading-pipeline-dari-aksi-navigasi-ke-textview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Pipeline Pemuatan Halaman: Dari Aksi Navigasi ke TextView
+        3. Alur Pemuatan Halaman (Page Loading Pipeline): Dari Aksi Navigasi ke TextView
       
     </span>
   </a>
@@ -3684,10 +3706,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-ibarottextview-class-subkelas-nstextview" class="md-nav__link">
+  <a href="#b-ibarottextview-class-subclass-nstextview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. IbarotTextView (Class) - Subkelas NSTextView
+        B. IbarotTextView (Class) - Subclass NSTextView
       
     </span>
   </a>
@@ -3710,6 +3732,28 @@
     <span class="md-ellipsis">
       
         D. Menu Kontekstual Lengkap (menu(for event:))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-navigasi-terisolasi-perekaman-histori-bersyarat-ibarottextvc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Navigasi Terisolasi &amp; Perekaman Histori Bersyarat (IbarotTextVC)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-pencegahan-retain-cycle-siklus-hidup-observer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. Pencegahan Retain Cycle &amp; Siklus Hidup Observer
       
     </span>
   </a>
@@ -3781,7 +3825,7 @@
       Ukuran Font Dinamis
       Tema Latar Belakang</code></pre>
 <hr />
-<h2 id="3-pipeline-pemuatan-halaman-dari-aksi-navigasi-ke-textview">3. Pipeline Pemuatan Halaman: Dari Aksi Navigasi ke TextView</h2>
+<h2 id="3-alur-pemuatan-halaman-page-loading-pipeline-dari-aksi-navigasi-ke-textview">3. Alur Pemuatan Halaman (<em>Page Loading Pipeline</em>): Dari Aksi Navigasi ke TextView</h2>
 <p>Alur linier pemrosesan data ketika pengguna berpindah halaman hingga teks tampil di layar:</p>
 <pre class="mermaid"><code>flowchart TD
     NAV_EVENT["Aksi Navigasi (Next / Prev / Slider / TOC)"] --&gt; RVM_CALL["ReaderViewModel.loadPage(contentId)"]
@@ -3816,7 +3860,7 @@
     SynchronousMainThreadExecution --&gt; Idle : Tampilan Stabil (Tanpa Content Jump)</code></pre>
 <hr />
 <h2 id="5-bedah-komponen-logika-antarmuka">5. Bedah Komponen &amp; Logika Antarmuka</h2>
-<h3 id="a-orkestrasi-sinkron-dengan-ibarottextvc">A. Orkestrasi Sinkron dengan <code>IbarotTextVC</code></h3>
+<h3 id="a-orkestrasi-sinkron-dengan-ibarottextvc">A. Orkestrasi Sinkron dengan IbarotTextVC</h3>
 <p><code>IbarotTextVC</code> mengontrol alur presentasi tanpa bergantung pada observer asinkron:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">bindViewModel</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">viewModel</span><span class="p">.</span><span class="n">onContentReady</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="kr">weak</span><span class="w"> </span><span class="kc">self</span><span class="p">]</span><span class="w"> </span><span class="n">attributedText</span><span class="w"> </span><span class="k">in</span>
@@ -3830,7 +3874,7 @@
 <ul>
 <li><strong>Mencegah Content Jumping</strong>: Karena <code>textStorage</code> diperbarui secara sinkron pada siklus <em>RunLoop</em> yang sama, posisi gulir <code>NSScrollView</code> tidak terdistorsi saat berganti halaman.</li>
 </ul>
-<h3 id="b-ibarottextview-class-subkelas-nstextview">B. <code>IbarotTextView</code> (Class) - Subkelas <code>NSTextView</code></h3>
+<h3 id="b-ibarottextview-class-subclass-nstextview">B. IbarotTextView (Class) - <em>Subclass</em> NSTextView</h3>
 <p>Mengoptimalkan <em>rendering</em> teks Arab berukuran besar:</p>
 <table>
 <thead>
@@ -3850,7 +3894,7 @@
 </tr>
 </tbody>
 </table>
-<h3 id="c-pencegatan-event-klik-anotasi-mousedown">C. Pencegatan Event Klik &amp; Anotasi (<code>mouseDown</code>)</h3>
+<h3 id="c-pencegatan-event-klik-anotasi-mousedown">C. Pencegatan Event Klik &amp; Anotasi (mouseDown)</h3>
 <p><code>IbarotTextView</code> menangkap <em>event</em> klik untuk memeriksa apakah pengguna mengetuk anotasi yang sudah ada (apabila pengaturan <code>UserDefaults.enableAnnotationClick</code> aktif):</p>
 <pre class="mermaid"><code>flowchart TD
     CLICK["User Klik pada IbarotTextView (mouseDown)"] --&gt; COORD["Konversi Titik: characterIndexForInsertion(at: point)"]
@@ -3882,6 +3926,36 @@
 <li><em>Copy without Tashkil</em>: Menghapus tanda harakat secara instan melalui <code>ArabicTextRenderer.stripHarakat()</code> sebelum dimasukkan ke <em>clipboard</em>.</li>
 <li><strong>Pencarian Kontekstual</strong>: Opsi mencari frasa yang diseleksi di dalam kitab aktif (<em>In-Book Search</em>) atau di seluruh katalog perpustakaan (<em>Global FTS</em>).</li>
 <li><strong>Menu Penampilan Teks</strong>: Menyesuaikan ukuran font, famili font Arab (<em>Traditional Arabic</em>, <em>Scheherazade</em>, <em>Amiri</em>), dan tema latar belakang (<em>Sepia</em>, <em>Dark Sepia</em>, <em>White</em>, <em>Black</em>).</li>
+</ul>
+<h3 id="e-navigasi-terisolasi-perekaman-histori-bersyarat-ibarottextvc">E. Navigasi Terisolasi &amp; Perekaman Histori Bersyarat (IbarotTextVC)</h3>
+<p><code>IbarotTextVC</code> menyediakan API navigasi asinkron tingkat tinggi yang aman dari <em>race condition</em> untuk membuka anotasi dan riwayat:</p>
+<ul>
+<li><strong><code>openAnnotation(_ annotation: Annotation) async throws</code></strong>: Membatalkan <code>pendingRestoreTask</code>, memastikan kitab terkait terbuka, berpindah ke <code>contentId</code>, dan menginstruksikan perender teks untuk menggulir serta menyorot anotasi.</li>
+<li><strong><code>openHistory(book: BooksData, contentId: Int?) async throws</code></strong>: Membuka buku dan melompat ke posisi bacaan terakhir.</li>
+<li><strong>Perekaman Histori Bersyarat</strong>: Pembaruan seleksi buku ke <code>LibraryViewModel</code> membedakan antara aksi navigasi aktif dan pemuatan pratinjau:
+  <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">if</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">recordHistory</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">viewModel</span><span class="p">.</span><span class="n">handleBookSelection</span><span class="p">(</span><span class="n">book</span><span class="p">:</span><span class="w"> </span><span class="n">book</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">viewModel</span><span class="p">.</span><span class="n">selectedBookName</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">book</span><span class="p">.</span><span class="n">book</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">restoreSelection</span><span class="p">(</span><span class="n">byBookName</span><span class="p">:</span><span class="w"> </span><span class="n">book</span><span class="p">.</span><span class="n">book</span><span class="p">)</span>
+</span></code></pre></div>
+  <code>handleBookSelection</code> (yang mengunggah riwayat ke CloudKit) hanya dipanggil jika <code>recordHistory == true</code>, mencegah pencatatan histori palsu saat sekadar memulihkan state jendela.</li>
+</ul>
+<h3 id="f-pencegahan-retain-cycle-siklus-hidup-observer">F. Pencegahan Retain Cycle &amp; Siklus Hidup Observer</h3>
+<p>Untuk mencegah kebocoran memori (<em>memory leaks</em>) pada controller tampilan:</p>
+<ul>
+<li><strong>Tangkapan <code>[weak self]</code></strong>: Seluruh <em>closure</em> <code>NotificationCenter</code> dan KVO pada <code>ViewerSplitVC</code> (pengamat tinggi baris, penampilan, warna latar, harakat, dan font), <code>SidebarVC</code> (pengamat tab bar dan jendela), serta <code>IbarotTextVC</code> wajib menggunakan <code>[weak self]</code>.</li>
+<li><strong>Pembersihan Independen di <code>deinit</code></strong>: Pada <code>ViewerSplitVC</code>, observer dihapus secara individual tanpa bergantung pada keberadaan seluruh token sekaligus:
+  <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">deinit</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">bgObserver</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">NotificationCenter</span><span class="p">.</span><span class="k">default</span><span class="p">.</span><span class="n">removeObserver</span><span class="p">(</span><span class="n">bgObserver</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">fontObserver</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">NotificationCenter</span><span class="p">.</span><span class="k">default</span><span class="p">.</span><span class="n">removeObserver</span><span class="p">(</span><span class="n">fontObserver</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">tasykilObserver</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">NotificationCenter</span><span class="p">.</span><span class="k">default</span><span class="p">.</span><span class="n">removeObserver</span><span class="p">(</span><span class="n">tasykilObserver</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">lineHeightObservation</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">NotificationCenter</span><span class="p">.</span><span class="k">default</span><span class="p">.</span><span class="n">removeObserver</span><span class="p">(</span><span class="n">lineHeightObservation</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</span></code></pre></div></li>
+<li><strong>Otomasi <code>NotificationToken</code></strong>: <code>IbarotTextVC</code> memanfaatkan koleksi <code>observerTokens: [NotificationToken]</code> yang secara otomatis mencabut registrasi observer dari <code>NotificationCenter</code> saat <em>controller</em> di-dealokasi.</li>
 </ul>
 
 

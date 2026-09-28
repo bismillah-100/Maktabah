@@ -3575,14 +3575,14 @@
 <h1 id="protocols-contracts">Protocols &amp; Contracts</h1>
 <p>Fitur Narrator mendefinisikan beberapa <em>protocol</em> untuk mendelegasikan <em>event</em> dari tampilan daftar ke tampilan utama (terutama di macOS saat membagi <em>Sidebar</em> dan <em>Results</em> ke dalam beberapa <em>ViewController</em>).</p>
 <p>Berkas definisi <em>protocol</em> berada di <code>RowiProtocols.swift</code>.</p>
-<h2 id="rowisidebardelegate-protocol"><code>RowiSidebarDelegate</code> (Protocol)</h2>
+<h2 id="rowisidebardelegate-protocol">RowiSidebarDelegate (Protocol)</h2>
 <p>Dijalankan ketika pengguna memilih profil perawi dari <em>sidebar</em> hierarki <code>Tabaqah</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">RowiSidebarDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelect</span><span class="p">(</span><span class="n">rowi</span><span class="p">:</span><span class="w"> </span><span class="n">Rowi</span><span class="p">)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="tarjamahbdelegate-protocol"><code>TarjamahBDelegate</code> (Protocol)</h2>
+<h2 id="tarjamahbdelegate-protocol">TarjamahBDelegate (Protocol)</h2>
 <p>Dijalankan ketika berinteraksi dengan daftar hasil pencarian Tarjamah (biografi) atau menekan tombol filter kategori biografi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">TarjamahBDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>

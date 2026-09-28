@@ -1986,10 +1986,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-ioslibraryview-swiftui-root-container" class="md-nav__link">
+  <a href="#b-ioslibraryview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. iOSLibraryView (SwiftUI Root Container)
+        B. iOSLibraryView (Struct)
       
     </span>
   </a>
@@ -2008,10 +2008,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#d-authormodeview" class="md-nav__link">
+  <a href="#d-authormodeview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        D. AuthorModeView
+        D. AuthorModeView (Struct)
       
     </span>
   </a>
@@ -3718,10 +3718,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-ioslibraryview-swiftui-root-container" class="md-nav__link">
+  <a href="#b-ioslibraryview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. iOSLibraryView (SwiftUI Root Container)
+        B. iOSLibraryView (Struct)
       
     </span>
   </a>
@@ -3740,10 +3740,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#d-authormodeview" class="md-nav__link">
+  <a href="#d-authormodeview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        D. AuthorModeView
+        D. AuthorModeView (Struct)
       
     </span>
   </a>
@@ -3814,7 +3814,7 @@
     class ILV,WRAPPER,LVC,COLL,RV,ITV ui;
     class LVM vm;
     class NM store;</code></pre>
-<h3 id="b-arsitektur-sel-kustom-dwiarah-listcontentview">B. Arsitektur Sel Kustom Dwiarah (<code>ListContentView</code>)</h3>
+<h3 id="b-arsitektur-sel-kustom-dwiarah-listcontentview">B. Arsitektur Sel Kustom Dwiarah (ListContentView)</h3>
 <pre class="mermaid"><code>flowchart TD
     LCV["ListContentView (Cell Container)"]
     M_STACK["mainStack (.forceLeftToRight)"]
@@ -3878,7 +3878,7 @@
     Rdr-&gt;&gt;+VM: loadBook(book) &amp; loadContent(firstPage)
     VM-&gt;&gt;VM: BookConnection.getContent()
     VM-&gt;&gt;VM: ArabicTextRenderer.render()
-    VM--&gt;&gt;-Rdr: State terbarui (@Observable contentText)
+    VM--&gt;&gt;-Rdr: State diperbarui (@Observable contentText)
 
     Rdr-&gt;&gt;+TV: updateUIView(attributedText)
     TV-&gt;&gt;TV: UITextView.attributedText = renderedText
@@ -3887,7 +3887,7 @@
     deactivate Rdr</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-logika-antarmuka">3. Bedah Komponen &amp; Logika Antarmuka</h2>
-<h3 id="a-tata-letak-sel-force-ltr-stackview-listcontentview">A. Tata Letak Sel: Force LTR StackView (<code>ListContentView</code>)</h3>
+<h3 id="a-tata-letak-sel-force-ltr-stackview-listcontentview">A. Tata Letak Sel: Force LTR StackView (ListContentView)</h3>
 <p>Aplikasi Maktabah secara global mendukung tipografi Arab (RTL). Namun, pada sel daftar kitab (<code>ListContentView</code>), elemen antarmuka dikonfigurasi secara terarah:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kr">override</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">effectiveUserInterfaceLayoutDirection</span><span class="p">:</span><span class="w"> </span><span class="n">UIUserInterfaceLayoutDirection</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="p">.</span><span class="n">leftToRight</span>
@@ -3907,7 +3907,7 @@
 <li>Dengan menerapkan <code>semanticContentAttribute = .forceLeftToRight</code> pada <code>mainStack</code> dan <code>leadingStack</code>, posisi struktural elemen tetap konsisten: <em>Leading Stack</em> (<em>Checkbox</em> &amp; Ikon Status) selalu di sisi kiri, dan <em>Chevron</em> di sisi kanan.</li>
 <li>Teks Arab judul kitab (<code>UILabel</code>) diberi atribut <code>textAlignment = .right</code> dengan <code>contentHuggingPriority(.defaultLow, for: .horizontal)</code> sehingga teks mengisi ruang kosong dan rata ke kanan secara alami di dalam <em>stack</em> LTR tanpa merusak susunan tombol kontrol.</li>
 </ul>
-<h3 id="b-ioslibraryview-swiftui-root-container">B. <code>iOSLibraryView</code> (SwiftUI Root Container)</h3>
+<h3 id="b-ioslibraryview-struct">B. iOSLibraryView (Struct)</h3>
 <ul>
 <li>Mengikat <em>state</em> secara deklaratif ke <code>@Bindable var viewModel = navigationManager.libraryViewModel</code>.</li>
 <li>Mengelola presentasi modal (<em>sheets</em>):</li>
@@ -3915,12 +3915,12 @@
 <li><strong>Update Sheet (<code>UpdateView</code>)</strong>: Memeriksa dan mengunduh pembaruan isi kitab dari GitHub Releases.</li>
 <li><strong>Bulk Delete Dialog</strong>: Dialog konfirmasi penghapusan arsip lokal kitab.</li>
 </ul>
-<h3 id="c-libraryviewcontrollerwrapper-uiviewcontrollerrepresentable">C. <code>LibraryViewControllerWrapper</code> (<code>UIViewControllerRepresentable</code>)</h3>
+<h3 id="c-libraryviewcontrollerwrapper-uiviewcontrollerrepresentable">C. LibraryViewControllerWrapper (UIViewControllerRepresentable)</h3>
 <ul>
 <li>Menjembatani <code>iOSLibraryViewController</code> ke SwiftUI untuk menjamin kestabilan <em>frame rate</em> 60–120 FPS saat pengguliran ribuan baris buku.</li>
 <li>Mengisolasi delegasi seleksi buku dan memperbarui status filter pencarian tanpa membuat ulang hierarki <em>view</em>.</li>
 </ul>
-<h3 id="d-authormodeview">D. <code>AuthorModeView</code></h3>
+<h3 id="d-authormodeview-struct">D. AuthorModeView (Struct)</h3>
 <ul>
 <li>Mode penyajian katalog khusus berdasarkan daftar pengarang (<em>muallif</em>) secara kronologis tahun wafat atau abjad.</li>
 <li>Mengadopsi sistem <em>lazy loading</em> untuk memuat karya pengarang secara bertahap saat baris digulir.</li>

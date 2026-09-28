@@ -2359,10 +2359,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-iosrowihierarchicalcollectionviewcontroller" class="md-nav__link">
+  <a href="#1-iosrowihierarchicalcollectionviewcontroller-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. iOSRowiHierarchicalCollectionViewController
+        1. iOSRowiHierarchicalCollectionViewController (Class)
       
     </span>
   </a>
@@ -2370,10 +2370,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-iosrowisidebarview-jembatan-swiftui" class="md-nav__link">
+  <a href="#2-iosrowisidebarview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. iOSRowiSidebarView (Jembatan SwiftUI)
+        2. iOSRowiSidebarView (Struct)
       
     </span>
   </a>
@@ -2381,10 +2381,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-narratordetailview-tarjamah-source-navigation" class="md-nav__link">
+  <a href="#3-narratordetailview-struct-tarjamah-source-navigation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. NarratorDetailView &amp; Tarjamah Source Navigation
+        3. NarratorDetailView (Struct) &amp; Tarjamah Source Navigation
       
     </span>
   </a>
@@ -3730,10 +3730,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-iosrowihierarchicalcollectionviewcontroller" class="md-nav__link">
+  <a href="#1-iosrowihierarchicalcollectionviewcontroller-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. iOSRowiHierarchicalCollectionViewController
+        1. iOSRowiHierarchicalCollectionViewController (Class)
       
     </span>
   </a>
@@ -3741,10 +3741,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-iosrowisidebarview-jembatan-swiftui" class="md-nav__link">
+  <a href="#2-iosrowisidebarview-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. iOSRowiSidebarView (Jembatan SwiftUI)
+        2. iOSRowiSidebarView (Struct)
       
     </span>
   </a>
@@ -3752,10 +3752,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-narratordetailview-tarjamah-source-navigation" class="md-nav__link">
+  <a href="#3-narratordetailview-struct-tarjamah-source-navigation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. NarratorDetailView &amp; Tarjamah Source Navigation
+        3. NarratorDetailView (Struct) &amp; Tarjamah Source Navigation
       
     </span>
   </a>
@@ -3892,7 +3892,7 @@
     VM-&gt;&gt;+DB: getContent(contentId)
     DB--&gt;&gt;-VM: sourceText biografi
     VM-&gt;&gt;VM: ArabicTextRenderer.render() &amp; hitung sorotan perawi
-    VM--&gt;&gt;-Rdr: State terbarui (@Observable contentText)
+    VM--&gt;&gt;-Rdr: State diperbarui (@Observable contentText)
 
     Rdr-&gt;&gt;+TV: updateUIView(attributedText)
     TV-&gt;&gt;TV: UITextView.attributedText = renderedBiographyText
@@ -3900,7 +3900,7 @@
     deactivate TV</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-logika-antarmuka">3. Bedah Komponen &amp; Logika Antarmuka</h2>
-<h3 id="1-iosrowihierarchicalcollectionviewcontroller">1. <code>iOSRowiHierarchicalCollectionViewController</code></h3>
+<h3 id="1-iosrowihierarchicalcollectionviewcontroller-class">1. iOSRowiHierarchicalCollectionViewController (Class)</h3>
 <p><em>Class</em> turunan dari <code>BaseHierarchicalListViewController</code> yang bertugas menampilkan struktur hierarki generasi perawi:</p>
 <ul>
 <li><strong>Diffable Section Snapshot</strong>: Menggunakan <code>NSDiffableDataSourceSectionSnapshot</code> untuk mengelola hubungan bertingkat antara Tabaqah (Induk) dan Perawi (Anak).</li>
@@ -3910,13 +3910,13 @@
 <li>Ketika sel ini diketuk, kontroler meminta batch berikutnya ke <code>special.sqlite</code>, lalu menyisipkan elemen-elemen baru tepat sebelum tombol "Load More".</li>
 <li><strong>Indentation Level Visual</strong>: Mengatur <code>indentationLevel</code> bawaan UIKit untuk menghasilkan indentasi visual yang presisi tanpa peretasan margin (<em>margin hack</em>).</li>
 </ul>
-<h3 id="2-iosrowisidebarview-jembatan-swiftui">2. <code>iOSRowiSidebarView</code> (Jembatan SwiftUI)</h3>
+<h3 id="2-iosrowisidebarview-struct">2. iOSRowiSidebarView (Struct)</h3>
 <p>Komponen pembungkus bertipe <code>UIViewControllerRepresentable</code>:</p>
 <ul>
 <li><strong>Pengikatan Coordinator</strong>: Menjembatani delegasi ketukan seleksi perawi di <code>UICollectionView</code> menuju ekosistem SwiftUI <code>NarratorDetailView</code>.</li>
 <li><strong>Integrasi <code>.searchable()</code></strong>: Mendeteksi status <code>.isSearching</code> dan mengirim kueri pencarian teks secara langsung ke <code>NarratorViewModel</code> untuk penyaringan instan (<em>instant filtering</em>).</li>
 </ul>
-<h3 id="3-narratordetailview-tarjamah-source-navigation">3. <code>NarratorDetailView</code> &amp; Tarjamah Source Navigation</h3>
+<h3 id="3-narratordetailview-struct-tarjamah-source-navigation">3. NarratorDetailView (Struct) &amp; Tarjamah Source Navigation</h3>
 <ul>
 <li>Menampilkan kartu biografi komprehensif: nama lengkap, nasab, laqab, tahun wafat, serta derajat jarh wa ta'dil.</li>
 <li>Menyediakan daftar kitab tarjamah yang memuat biografi perawi tersebut. Setiap baris kitab memuat nomor juz dan halaman, yang saat diketuk akan langsung memanggil <code>navigationManager.openBook</code> untuk membuka halaman primer kitab biografi terkait.</li>

@@ -2777,6 +2777,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-backgroundcolor-enum-backgroundoptions-tema-latar-belakang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. BackgroundColor (Enum) &amp; BackgroundOptions - Tema Latar Belakang
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. BackgroundColor (Enum) &amp; BackgroundOptions - Tema Latar Belakang">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-backgroundcolor-enum-backgroundcolorswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. BackgroundColor (Enum) - BackgroundColor.swift
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-backgroundoptions-class-backgroundoptionsswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. BackgroundOptions (Class) - BackgroundOptions.swift
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3733,6 +3772,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-backgroundcolor-enum-backgroundoptions-tema-latar-belakang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. BackgroundColor (Enum) &amp; BackgroundOptions - Tema Latar Belakang
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. BackgroundColor (Enum) &amp; BackgroundOptions - Tema Latar Belakang">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-backgroundcolor-enum-backgroundcolorswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. BackgroundColor (Enum) - BackgroundColor.swift
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-backgroundoptions-class-backgroundoptionsswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. BackgroundOptions (Class) - BackgroundOptions.swift
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3754,7 +3832,7 @@
 <p>Sumber kode: <code>Source/Features/Reader/Models/</code></p>
 <hr />
 <h2 id="1-model-konten-kitab-cache">1. Model Konten Kitab &amp; Cache</h2>
-<h3 id="a-bookcontent-struct-bookcontentswift">A. <code>BookContent</code> (Struct) - <code>BookContent.swift</code></h3>
+<h3 id="a-bookcontent-struct-bookcontentswift">A. BookContent (Struct) - BookContent.swift</h3>
 <p>Entitas data mentah halaman kitab yang diambil dari tabel arsip <code>b{id}</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">BookContent</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w">           </span><span class="c1">// ID baris primer tabel b{id}</span>
@@ -3770,7 +3848,7 @@
 <li>Properti <code>surah</code> dan <code>aya</code> diisi secara kontekstual untuk mendukung sinkronisasi navigasi mushaf pada kitab-kitab tafsir.</li>
 </ul>
 <hr />
-<h3 id="b-processedarabiccontent-class-processedarabiccontentswift">B. <code>ProcessedArabicContent</code> (Class) - <code>ProcessedArabicContent.swift</code></h3>
+<h3 id="b-processedarabiccontent-class-processedarabiccontentswift">B. ProcessedArabicContent (Class) - ProcessedArabicContent.swift</h3>
 <p>Objek teks hasil pemrosesan tipografi yang siap dikonsumsi oleh <em>Text View</em> (<code>NSTextView</code> / <code>UITextView</code>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">ProcessedArabicContent</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">sourceText</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -3789,7 +3867,7 @@
 <li><strong><code>replacementEvents</code></strong>: Riwayat penggantian frasa honorifik Islam (misalnya <em>Shallallahu 'alaihi wa sallam</em>, <em>Radhiyallahu 'anhu</em>) dengan glif font ligatur terpadu.</li>
 </ul>
 <hr />
-<h3 id="c-cleanedtextkey-struct-cleanedtextkeyswift">C. <code>CleanedTextKey</code> (Struct) - <code>CleanedTextKey.swift</code></h3>
+<h3 id="c-cleanedtextkey-struct-cleanedtextkeyswift">C. CleanedTextKey (Struct) - CleanedTextKey.swift</h3>
 <p>Kunci <em>in-memory cache</em> untuk membedakan varian <em>rendering</em> dari halaman yang sama:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">CleanedTextKey</span><span class="p">:</span><span class="w"> </span><span class="nb">Hashable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">showHarakat</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span>
@@ -3799,7 +3877,7 @@
 </span></code></pre></div>
 <p>Dengan menjadikan kombinasi <em>boolean</em> ini sebagai kunci <em>hash</em>, <code>BookPageCache</code> dapat menyimpan dan mengambil teks terformat tanpa perlu menghitung ulang (<em>re-parsing</em>) saat pengguna mengubah preferensi tampilan harakat.</p>
 <hr />
-<h2 id="2-ibarottextoptions-struct-opsi-perenderan-teks">2. <code>IbarotTextOptions</code> (Struct) - Opsi Perenderan Teks</h2>
+<h2 id="2-ibarottextoptions-struct-opsi-perenderan-teks">2. IbarotTextOptions (Struct) - Opsi Perenderan Teks</h2>
 <p><em>Struct</em> parameter yang diteruskan ke <em>protocol</em> <code>TextViewRenderable</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">IbarotTextOptions</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">content</span><span class="p">:</span><span class="w"> </span><span class="n">BookContent</span><span class="p">?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span>
@@ -3814,7 +3892,7 @@
 </ul>
 <hr />
 <h2 id="3-daftar-isi-table-of-contents-toc">3. Daftar Isi / Table of Contents (TOC)</h2>
-<h3 id="a-toc-struct-tocswift">A. <code>TOC</code> (Struct) - <code>TOC.swift</code></h3>
+<h3 id="a-toc-struct-tocswift">A. TOC (Struct) - TOC.swift</h3>
 <p>Representasi baris data mentah dari tabel daftar isi <code>t{id}</code> pada berkas arsip SQLite:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">TOC</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bab</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w">    </span><span class="c1">// Judul bab / sub-bab (kolom 'tit')</span>
@@ -3824,7 +3902,7 @@
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
 </span></code></pre></div>
 <hr />
-<h3 id="b-tocnode-class-tocnodeswift">B. <code>TOCNode</code> (Class) - <code>TOCNode.swift</code></h3>
+<h3 id="b-tocnode-class-tocnodeswift">B. TOCNode (Class) - TOCNode.swift</h3>
 <p>Transformasi hierarkis <em>node</em> daftar isi untuk disajikan ke <code>NSOutlineView</code> atau SwiftUI <code>OutlineGroup</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">TOCNode</span><span class="p">:</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bab</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
@@ -3840,7 +3918,7 @@
 <li><strong>Konversi Angka Arab</strong>: Nilai <code>bab</code> otomatis dinormalisasi angka Latin-nya menjadi angka Arab (<code>convertToArabicDigits()</code>).</li>
 </ul>
 <hr />
-<h2 id="4-readerstate-struct-state-navigasi-pemulihan-sesi">4. <code>ReaderState</code> (Struct) - State Navigasi &amp; Pemulihan Sesi</h2>
+<h2 id="4-readerstate-struct-state-navigasi-pemulihan-sesi">4. ReaderState (Struct) - State Navigasi &amp; Pemulihan Sesi</h2>
 <p><code>ReaderState</code> merangkum seluruh status tampilan pembaca aktif, memungkinkan pemulihan posisi sesi (<em>session restoration</em>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ReaderState</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">currentBook</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span><span class="p">?</span>
@@ -3871,6 +3949,34 @@
 </li>
 <li><strong><code>hasContent</code></strong>: Properti terhitung untuk memvalidasi apakah layar pembaca sedang memuat naskah aktif atau dalam status kosong (<em>placeholder</em>).</li>
 </ul>
+<hr />
+<h2 id="5-backgroundcolor-enum-backgroundoptions-tema-latar-belakang">5. BackgroundColor (Enum) &amp; BackgroundOptions - Tema Latar Belakang</h2>
+<p>Model tema visual pembaca yang diseragamkan untuk platform macOS (AppKit) dan iOS (SwiftUI):</p>
+<h3 id="a-backgroundcolor-enum-backgroundcolorswift">A. BackgroundColor (Enum) - BackgroundColor.swift</h3>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BackgroundColor</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">CaseIterable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">white</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">sepia</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">gray</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">darkSepia</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">black</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">rawValue</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">isDark</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">rawValue</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span><span class="c1">/// PlatformColor (NSColor / UIColor) yang otomatis menyesuaikan mode terang/gelap sistem</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">nsColor</span><span class="p">:</span><span class="w"> </span><span class="n">PlatformColor</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="c1">/// SwiftUI Color yang otomatis menyesuaikan mode terang/gelap sistem</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">color</span><span class="p">:</span><span class="w"> </span><span class="n">Color</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong><code>isDark</code></strong>: Penanda boolean terhitung (<code>rawValue &gt; 1</code>) untuk menentukan apakah tema latar belakang tergolong gelap (<code>gray</code>, <code>darkSepia</code>, <code>black</code>), digunakan oleh komponen navigasi dan teks untuk membalik warna kontras.</li>
+<li><strong><code>nsColor</code> &amp; <code>color</code></strong>: Properti terhitung yang mengembalikan warna lintas platform (<code>PlatformColor</code> untuk AppKit/UIKit dan <code>Color</code> untuk SwiftUI) menggunakan palet warna terpusat dari aset aplikasi (<code>Assets.xcassets</code>).</li>
+</ul>
+<h3 id="b-backgroundoptions-class-backgroundoptionsswift">B. BackgroundOptions (Class) - BackgroundOptions.swift</h3>
+<p>Komponen kontrol kustom (<code>NSControl</code>) untuk rendering pilihan tema warna latar belakang lingkaran pada macOS. Sebelumnya berada pada modul Annotations dan kini dipindahkan ke <code>Source/Features/Reader/Models/BackgroundOptions.swift</code>.</p>
 
 
 

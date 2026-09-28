@@ -3787,7 +3787,7 @@
 <p><code>WidgetUpdateCoordinator</code> adalah singleton berstatus <code>@unchecked Sendable</code> yang bertindak sebagai orkestrator sentral pembaruan data widget dari aplikasi utama.</p>
 <h3 id="observasi-dan-thread-safety">Observasi dan Thread Safety</h3>
 <p>Koordinator memantau perubahan data domain secara otomatis:
-- <strong>Anotasi</strong>: Mendengarkan <code>AnnotationStore.shared.events</code> melalui Combine pipeline (<code>sink</code> di <code>DispatchQueue.main</code>).
+- <strong>Anotasi</strong>: Mendengarkan <code>AnnotationStore.shared.events</code> melalui <em>pipeline</em> Combine (<code>sink</code> di <code>DispatchQueue.main</code>).
 - <strong>Riwayat</strong>: Mendengarkan notifikasi <code>.historyDidChange</code> dari <code>NotificationCenter</code>.</p>
 <p>Status kotor (<em>dirty state</em>) disimpan dalam flag boolean privat dan dilindungi oleh <code>NSLock</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isHistoryDirty</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>

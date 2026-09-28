@@ -3788,7 +3788,7 @@
 <p>Sumber kode: <code>Source/Features/Library/Models/</code></p>
 <hr />
 <h2 id="1-model-katalog-inti">1. Model Katalog Inti</h2>
-<h3 id="a-booksdata-class-booksdataswift">A. <code>BooksData</code> (Class) - <code>BooksData.swift</code></h3>
+<h3 id="a-booksdata-class-booksdataswift">A. BooksData (Class) - BooksData.swift</h3>
 <p>Entitas data representasi kitab di dalam katalog:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BooksData</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3817,7 +3817,7 @@
 <li><strong>Konversi Angka Arab</strong>: Properti <code>bithoqoh</code> (kartu identitas kitab) dan <code>info</code> secara otomatis mengonversi angka Latin ke angka Arab (<code>convertToArabicDigits()</code>).</li>
 </ul>
 <hr />
-<h3 id="b-categorydata-class-categorydataswift">B. <code>CategoryData</code> (Class) - <code>CategoryData.swift</code></h3>
+<h3 id="b-categorydata-class-categorydataswift">B. CategoryData (Class) - CategoryData.swift</h3>
 <p>Representasi hierarki kategori bertingkat (<em>nested category tree</em>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">class</span><span class="w"> </span><span class="nc">CategoryData</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3834,7 +3834,7 @@
 <li><strong>Pengumpulan Rekursif</strong>: Menyediakan fungsi <code>allBooks</code> dan <code>allSubcategories</code> yang menjelajahi seluruh turunan hierarki secara rekursif.</li>
 </ul>
 <hr />
-<h3 id="c-muallif-struct-muallifswift">C. <code>Muallif</code> (Struct) - <code>Muallif.swift</code></h3>
+<h3 id="c-muallif-struct-muallifswift">C. Muallif (Struct) - Muallif.swift</h3>
 <p>Model pengarang kitab yang diambil dari <code>special.sqlite</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">Muallif</span><span class="p">:</span><span class="w"> </span><span class="n">Decodable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">nama</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w">        </span><span class="c1">// Kolom DB: "auth"</span>
@@ -3851,7 +3851,7 @@
 <li><strong><code>AuthIndexEntry</code></strong>: Metadata entri pembaruan data pengarang (<code>authId</code>, versi pengarang <code>oVer</code>, URL unduhan).</li>
 <li><strong><code>BookMetadata</code></strong>: Kapsulasi skema internal kitab untuk kebutuhan verifikasi sebelum integrasi ke arsip.</li>
 </ul>
-<h3 id="b-updatestatus-enum-status-pembaruan">B. <code>UpdateStatus</code> (Enum) - Status Pembaruan</h3>
+<h3 id="b-updatestatus-enum-status-pembaruan">B. UpdateStatus (Enum) - Status Pembaruan</h3>
 <p>Enum penanda alur hidup proses pembaruan kitab:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">UpdateStatus</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">pending</span><span class="w">         </span><span class="c1">// Menunggu giliran</span>
@@ -3869,7 +3869,7 @@
 </span></code></pre></div>
 <hr />
 <h2 id="3-ui-state-filter-enums">3. UI State &amp; Filter Enums</h2>
-<h3 id="a-libraryfiltermode-enum-libraryfiltermodeswift">A. <code>LibraryFilterMode</code> (Enum) - <code>LibraryFilterMode.swift</code></h3>
+<h3 id="a-libraryfiltermode-enum-libraryfiltermodeswift">A. LibraryFilterMode (Enum) - LibraryFilterMode.swift</h3>
 <p>Segmented filter untuk antarmuka katalog:</p>
 <ul>
 <li><code>.all</code> (0): Seluruh kitab di perpustakaan.</li>
@@ -3877,7 +3877,7 @@
 <li><code>.history</code> (2): Kitab yang pernah dibuka di riwayat bacaan.</li>
 <li><code>.downloaded</code> (3): Kitab yang berkas arsipnya sudah tersedia secara luring di perangkat.</li>
 </ul>
-<h3 id="b-libraryupdate-enum-libraryupdateswift">B. <code>LibraryUpdate</code> (Enum) - <code>LibraryUpdate.swift</code></h3>
+<h3 id="b-libraryupdate-enum-libraryupdateswift">B. LibraryUpdate (Enum) - LibraryUpdate.swift</h3>
 <p>Instruksi mutasi delta untuk <code>NSOutlineView</code> di macOS:</p>
 <ul>
 <li><code>.reloadData</code>: <em>Refresh</em> total <em>outline</em>.</li>

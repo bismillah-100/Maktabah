@@ -2990,6 +2990,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#searchhit-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SearchHit (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#searchresultitem-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3602,6 +3613,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#searchhit-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SearchHit (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#searchresultitem-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3685,44 +3707,75 @@
 
 
 <h1 id="data-models-state-types">Data Models &amp; State Types</h1>
-<p>Modul Search menggunakan beberapa model data untuk merepresentasikan item hasil pencarian dan mengelola fitur utilitas seperti penyalinan (<em>copy</em>) ke <em>clipboard</em> serta pengurutan data.</p>
+<p>Modul Search menggunakan beberapa model data untuk merepresentasikan item hasil pencarian, penampung kecocokan indeks mentah (<em>hits</em>), dan utilitas penyalinan (<em>copy</em>) maupun pengurutan data.</p>
 <h2 id="model-struktur-data">Model Struktur Data</h2>
-<h3 id="searchresultitem-struct"><code>SearchResultItem</code> (Struct)</h3>
-<p><em>Struct</em> data utama yang mewakili satu baris hasil pencarian tunggal. Mendukung <code>Codable</code>, <code>Hashable</code>, dan <code>Sendable</code> untuk memastikan <em>thread-safety</em> saat dieksekusi secara asinkron.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchResultItem</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="n">CopyableResult</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+<h3 id="searchhit-struct">SearchHit (Struct)</h3>
+<p><em>Struct</em> ringan yang merepresentasikan satu baris hasil kecocokan indeks FTS mentah sebelum diuraikan konten teksnya:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchHit</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archive</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">tableName</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">page</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">part</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="n">nonisolated</span><span class="p">(</span><span class="n">unsafe</span><span class="p">)</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">attributedText</span><span class="p">:</span><span class="w"> </span><span class="bp">NSAttributedString</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">rowId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">page</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">part</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">"</span><span class="si">\(</span><span class="n">archive</span><span class="si">)</span><span class="s">_</span><span class="si">\(</span><span class="n">tableName</span><span class="si">)</span><span class="s">_</span><span class="si">\(</span><span class="n">rowId</span><span class="si">)</span><span class="s">"</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">}</span>
 </span></code></pre></div>
+<ul>
+<li><strong><code>archive</code></strong>: ID berkas arsip (misalnya <code>"1"</code>).</li>
+<li><strong><code>tableName</code></strong>: Nama tabel kitab (misalnya <code>"b1442"</code>).</li>
+<li><strong><code>rowId</code></strong>: ID baris halaman di dalam tabel kitab (32-bit bawah dari <code>packedRowId</code>).</li>
+<li><strong><code>page</code> &amp; <code>part</code></strong>: Metadata posisi halaman dan juz.</li>
+</ul>
+<hr />
+<h3 id="searchresultitem-struct">SearchResultItem (Struct)</h3>
+<p><em>Struct</em> data utama hasil pencarian yang dikonsumsi oleh lapisan presentasi (UI). Mengadopsi arsitektur resolusi <em>lazy snippet</em> untuk menghemat memori saat ribuan hasil pencarian ditemukan:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchResultItem</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="n">CopyableResult</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archive</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">tableName</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">page</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">part</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">nonisolated</span><span class="p">(</span><span class="n">unsafe</span><span class="p">)</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">rawAttributedText</span><span class="p">:</span><span class="w"> </span><span class="bp">NSAttributedString</span><span class="p">?</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">attributedText</span><span class="p">:</span><span class="w"> </span><span class="bp">NSAttributedString</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">        </span><span class="n">rawAttributedText</span><span class="w"> </span><span class="p">??</span><span class="w"> </span><span class="bp">NSAttributedString</span><span class="p">(</span><span class="n">string</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="p">)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">hasResolvedSnippet</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="n">rawAttributedText</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">"</span><span class="si">\(</span><span class="n">archive</span><span class="si">)</span><span class="s">_</span><span class="si">\(</span><span class="n">tableName</span><span class="si">)</span><span class="s">_</span><span class="si">\(</span><span class="n">bookId</span><span class="si">)</span><span class="s">"</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">uniqueId</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">}</span>
+</span></code></pre></div>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Properti <code>attributedText</code> ditandai dengan <code>nonisolated(unsafe)</code> karena bertipe <code>NSAttributedString</code> (tipe referensi Foundation) yang tidak mengadopsi <code>Sendable</code> secara murni, namun dipastikan aman dikonsumsi dari lapisan presentasi.</p>
+<p class="admonition-title">Lazy Snippet &amp; Deep Immutability</p>
+<p>Properti <code>rawAttributedText</code> bersifat <em>immutable</em> (<code>let</code>) dan bernilai <code>nil</code> secara bawaan ketika hasil pencarian dipancarkan dari mesin FTS. Teks berformat <code>NSAttributedString</code> baru diurai dan disorot warnanya secara <em>on-demand</em> melalui <code>SearchHitResolver</code> ketika sel antarmuka pengguna memasuki <em>viewport</em> layar. Hal ini menjamin <em>deep immutability</em> pada <code>SearchResultItem</code> sehingga bebas dari potensi <em>data race</em> saat dibagikan lintas aktor/thread.</p>
 </div>
-<h3 id="searchsortkey-enum"><code>SearchSortKey</code> (Enum)</h3>
+<hr />
+<h3 id="searchsortkey-enum">SearchSortKey (Enum)</h3>
 <p><em>Enum</em> yang merepresentasikan kunci parameter saat melakukan pengurutan hasil pencarian.</p>
 <ul>
 <li><code>bookTitle</code>: Urut berdasarkan abjad nama kitab.</li>
 <li><code>page</code>: Urut berdasarkan nomor halaman.</li>
 <li><code>part</code>: Urut berdasarkan nomor juz/bagian.</li>
-<li><code>content</code>: Urut berdasarkan urutan teks (<em>content</em>).</li>
 </ul>
+<hr />
 <h2 id="utilitas-protocol-helper">Utilitas (Protocol &amp; Helper)</h2>
-<h3 id="copyableresult-protocol"><code>CopyableResult</code> (Protocol)</h3>
+<h3 id="copyableresult-protocol">CopyableResult (Protocol)</h3>
 <p><em>Protocol</em> yang menetapkan standar pemformatan <em>string</em> ketika pengguna menyalin (<em>copy</em>) hasil pencarian ke dalam <em>clipboard</em>. <em>Protocol</em> ini secara otomatis merangkai teks kutipan beserta judul kitab, juz, dan nomor halaman dalam format angka Arab.</p>
 <p>Terdapat ekstensi pembantu (<em>helper</em>) khusus di macOS:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">extension</span><span class="w"> </span><span class="nc">ReusableFunc</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">copyResults</span><span class="p">(</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">        </span><span class="kc">_</span><span class="w"> </span><span class="n">items</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">some</span><span class="w"> </span><span class="n">CopyableResult</span><span class="p">],</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">        </span><span class="n">tableView</span><span class="p">:</span><span class="w"> </span><span class="n">NSTableView</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">extension</span><span class="w"> </span><span class="nc">ReusableFunc</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">copyResults</span><span class="p">(</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="kc">_</span><span class="w"> </span><span class="n">items</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">some</span><span class="w"> </span><span class="n">CopyableResult</span><span class="p">],</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="n">tableView</span><span class="p">:</span><span class="w"> </span><span class="n">NSTableView</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="searchresultssorter-struct"><code>SearchResultsSorter</code> (Struct)</h3>
+<h3 id="searchresultssorter-struct">SearchResultsSorter (Struct)</h3>
 <p>Modul utilitas dengan metode statis <code>sort(_:by:ascending:)</code> untuk menyortir <em>array</em> <code>SearchResultItem</code> secara dinamis menyesuaikan kriteria yang diteruskan melalui <code>SearchSortKey</code>.</p>
 
 

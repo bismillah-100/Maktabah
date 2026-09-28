@@ -2025,10 +2025,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-libraryviewmanager-render-baris-kustom" class="md-nav__link">
+  <a href="#c-libraryviewmanager-class-render-baris-kustom" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C. LibraryViewManager &amp; Render Baris Kustom
+        C. LibraryViewManager (Class) &amp; Render Baris Kustom
       
     </span>
   </a>
@@ -2036,10 +2036,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#d-animasi-batch-inkremental-libraryviewdiffing" class="md-nav__link">
+  <a href="#d-animasi-batch-inkremental-debouncing-histori-libraryviewdiffing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        D. Animasi Batch Inkremental (LibraryView+Diffing)
+        D. Animasi Batch Inkremental &amp; Debouncing Histori (LibraryView+Diffing)
       
     </span>
   </a>
@@ -2047,10 +2047,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-bulkdownloadvc" class="md-nav__link">
+  <a href="#e-bulkdownloadvc-nsviewcontroller" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. BulkDownloadVC
+        E. BulkDownloadVC (NSViewController)
       
     </span>
   </a>
@@ -3740,10 +3740,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-libraryviewmanager-render-baris-kustom" class="md-nav__link">
+  <a href="#c-libraryviewmanager-class-render-baris-kustom" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C. LibraryViewManager &amp; Render Baris Kustom
+        C. LibraryViewManager (Class) &amp; Render Baris Kustom
       
     </span>
   </a>
@@ -3751,10 +3751,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#d-animasi-batch-inkremental-libraryviewdiffing" class="md-nav__link">
+  <a href="#d-animasi-batch-inkremental-debouncing-histori-libraryviewdiffing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        D. Animasi Batch Inkremental (LibraryView+Diffing)
+        D. Animasi Batch Inkremental &amp; Debouncing Histori (LibraryView+Diffing)
       
     </span>
   </a>
@@ -3762,10 +3762,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-bulkdownloadvc" class="md-nav__link">
+  <a href="#e-bulkdownloadvc-nsviewcontroller" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. BulkDownloadVC
+        E. BulkDownloadVC (NSViewController)
       
     </span>
   </a>
@@ -3887,16 +3887,20 @@ autonumber
 
 actor User as Pengguna
 participant Lib as LibraryViewManager
-participant Split as LibraryVC
 participant VC as IbarotTextVC
+participant Hist as HistoryManager
 
 User-&gt;&gt;+Lib: Klik baris kitab (NSOutlineView)
-Lib-&gt;&gt;Lib: outlineViewSelectionDidChange()
-Lib-&gt;&gt;+Split: didSelectBook(book, loadContent: true)
-Split-&gt;&gt;+VC: displayBook(book)
-VC-&gt;&gt;VC: ReaderViewModel.loadInitialContent(book)
+Note over Lib: outlineViewSelectionDidChange()&lt;br/&gt;guard !isUpdatingOutline
+Lib-&gt;&gt;+VC: didSelectBook -&gt; displayBook(book)
+VC-&gt;&gt;VC: didChangeBook()
+
+opt if viewModel.recordHistory
+    VC-&gt;&gt;+Hist: addBookToHistory(book.id) (Instan)
+    Hist--&gt;&gt;-VC: Perekaman selesai
+    Note over Lib,Hist: .historyDidChange diterima Lib dengan debounce 3 detik
+end
 deactivate VC
-deactivate Split
 deactivate Lib</code></pre>
 <pre class="mermaid"><code>sequenceDiagram
 autonumber
@@ -3924,7 +3928,7 @@ TV-&gt;&gt;TV: restoreScrollPosition()
 deactivate TV</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-logika-antarmuka">3. Bedah Komponen &amp; Logika Antarmuka</h2>
-<h3 id="a-kontainer-segmentasi-bawah-4-mode-setupfiltersegment">A. Kontainer Segmentasi Bawah 4-Mode (<code>setupFilterSegment</code>)</h3>
+<h3 id="a-kontainer-segmentasi-bawah-4-mode-setupfiltersegment">A. Kontainer Segmentasi Bawah 4-Mode (setupFilterSegment)</h3>
 <p>Di bagian bawah <em>sidebar</em>, <code>LibraryVC</code> menyematkan bilah segmentasi mengambang berpenampilan kapsul (<code>NSGlassEffectView</code> di macOS 26+):</p>
 <ul>
 <li><strong>Segment 0 (<code>list.bullet</code>)</strong>: Menampilkan seluruh katalog pustaka (<em>All Categories &amp; Books</em>).</li>
@@ -3933,24 +3937,27 @@ deactivate TV</code></pre>
 <li><strong>Segment 3 (<code>arrow.down.circle.fill</code>)</strong>: Mode khusus unduhan (tersedia saat <code>AppConfig.isUsingBundleMode</code> aktif) untuk menyaring hanya kitab yang berkas arsip SQLite-nya telah diunduh secara lokal.</li>
 <li><strong>Manajemen Inset ScrollView (<code>updateScrollViewConstraint</code>)</strong>: Ketinggian kontainer kapsul dihitung secara otomatis untuk menyesuaikan <code>scrollView.contentInsets.bottom</code> (atau <code>scrollViewBottomConstraint</code>), mencegah baris terbawah tabel tertutup oleh tombol segmentasi.</li>
 </ul>
-<h3 id="b-libraryvc-nsviewcontroller">B. <code>LibraryVC</code> (<code>NSViewController</code>)</h3>
+<h3 id="b-libraryvc-nsviewcontroller">B. LibraryVC (NSViewController)</h3>
 <ul>
 <li>Mengelola siklus hidup tampilan <em>sidebar</em>, kaitan <em>constraint</em> pencarian, dan inisialisasi awal dataset secara asinkron (<code>dataVM.prepareData</code>).</li>
 <li>Mengamati notifikasi <code>.libraryFolderChanged</code> untuk mereset seleksi dan memuat ulang struktur direktori saat folder basis data beralih.</li>
 </ul>
-<h3 id="c-libraryviewmanager-render-baris-kustom">C. <code>LibraryViewManager</code> &amp; Render Baris Kustom</h3>
+<h3 id="c-libraryviewmanager-class-render-baris-kustom">C. LibraryViewManager (Class) &amp; Render Baris Kustom</h3>
 <ul>
 <li>Mengimplementasikan <code>NSOutlineViewDataSource</code> dan <code>NSOutlineViewDelegate</code>.</li>
 <li>Membedakan <em>rendering</em> sel induk (kategori kitab yang dapat diekspansi) dengan <em>child cell</em> (judul kitab dengan tipografi Arab, nama pengarang, indikator ketersediaan berkas, dan kapasitas MB).</li>
 <li>Menyediakan <em>context menu</em> klik kanan: Hapus unduhan arsip lokal, Buka detail informasi kitab (<code>BookInfoPopoverVC</code>), dan Tambah/Hapus dari Favorit.</li>
+<li><strong>Pencegahan Rekursi Seleksi (<code>isUpdatingOutline</code>)</strong>: Menjaga agar pembaruan programatis pada outline view (<code>beginUpdates</code>, <code>selectRowIndexes</code>, <code>endUpdates</code>) tidak memicu <em>event</em> ganda pada <code>outlineViewSelectionDidChange</code>.</li>
+<li><strong>Preservasi Seleksi Flat List (<code>restoreFlatSelection</code>)</strong>: Pada mode daftar datar (seperti hasil filter pencarian dan riwayat), seleksi dipulihkan menggunakan indeks baris langsung (<code>selectFlatRow</code>) untuk mencegah hilangnya fokus item yang aktif.</li>
 </ul>
-<h3 id="d-animasi-batch-inkremental-libraryviewdiffing">D. Animasi Batch Inkremental (<code>LibraryView+Diffing</code>)</h3>
-<p>Untuk mencegah <em>flickering</em> visual dan hilangnya posisi <em>scroll</em> saat pengunduhan kitab selesai:</p>
+<h3 id="d-animasi-batch-inkremental-debouncing-histori-libraryviewdiffing">D. Animasi Batch Inkremental &amp; Debouncing Histori (<code>LibraryView+Diffing</code>)</h3>
+<p>Untuk mencegah <em>flickering</em> visual dan lonjakan tampilan (<em>content jumping</em>):</p>
 <ul>
-<li>Menghitung delta perubahan baris (<em>structural tree diffing</em>).</li>
-<li>Menjalankan mutasi <em>native</em> AppKit secara terarah: <code>outlineView.insertItems(at:inParent:withAnimation:)</code> dan <code>outlineView.removeItems(at:inParent:withAnimation:)</code>.</li>
+<li><strong>Sinkronisasi Filter Pencarian</strong>: Pembaruan daftar datar memvalidasi <code>searchQuery</code> aktif dan sinkronisasi <code>baseCategories = displayedCategories</code>, menjamin hasil filter tetap utuh saat dataset dimutasi.</li>
+<li><strong>Debounce Pembaruan Histori (3 Detik)</strong>: Notifikasi <code>.historyDidChange</code> di-<em>debounce</em> selama 3 detik pada <code>RunLoop.main</code> sebelum memicu penataan ulang baris. Hal ini mencegah outline view melompat-lompat (<em>jitter</em>) ketika pengguna menavigasi beberapa kitab secara cepat, sementara ID kitab tetap tercatat ke basis data histori secara instan.</li>
+<li><strong>Mutasi Terarah</strong>: Menjalankan mutasi <em>native</em> AppKit secara presisi: <code>outlineView.insertItems(at:inParent:withAnimation:)</code> dan <code>outlineView.removeItems(at:inParent:withAnimation:)</code>.</li>
 </ul>
-<h3 id="e-bulkdownloadvc">E. <code>BulkDownloadVC</code></h3>
+<h3 id="e-bulkdownloadvc-nsviewcontroller">E. BulkDownloadVC (NSViewController)</h3>
 <ul>
 <li>Panel <em>sheet</em> modal yang menampilkan status antrean unduhan kitab massal.</li>
 <li>Memuat bilah progres menyeluruh (<em>aggregate progress bar</em>), kecepatan jaringan aktual, dan kontrol jeda/batalkan.</li>

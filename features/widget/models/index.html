@@ -3826,7 +3826,7 @@
 <hr />
 <h2 id="2-snapshot-records">2. Snapshot Records</h2>
 <p>Snapshot dibangun di atas tipe generik <code>WidgetSnapshot&lt;Descriptor&gt;</code> yang memenuhi <em>protocol</em> <code>WidgetSnapshotRecord</code>.</p>
-<h3 id="widgetsnapshotdescriptor-protocol-metadata-descriptor"><code>WidgetSnapshotDescriptor</code> (Protocol) - Metadata Descriptor</h3>
+<h3 id="widgetsnapshotdescriptor-protocol-metadata-descriptor">WidgetSnapshotDescriptor (Protocol) - Metadata Descriptor</h3>
 <p>Setiap jenis snapshot memiliki <em>descriptor</em> unik:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">protocol</span><span class="w"> </span><span class="nc">WidgetSnapshotDescriptor</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">associatedtype</span><span class="w"> </span><span class="n">Item</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span>
@@ -3845,7 +3845,7 @@
 <li><code>ckRecordName</code>: <code>"SharedHistorySnapshot"</code></li>
 <li><code>ckRecordType</code>: <code>"WidgetHistorySnapshot"</code></li>
 </ul>
-<h3 id="widgetsnapshot-struct-snapshot-generik"><code>WidgetSnapshot</code> (Struct) - Snapshot Generik</h3>
+<h3 id="widgetsnapshot-struct-snapshot-generik">WidgetSnapshot (Struct) - Snapshot Generik</h3>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">WidgetSnapshot</span><span class="p">&lt;</span><span class="n">Descriptor</span><span class="p">:</span><span class="w"> </span><span class="n">WidgetSnapshotDescriptor</span><span class="p">&gt;:</span><span class="w"> </span><span class="n">WidgetSnapshotRecord</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">typealias</span><span class="w"> </span><span class="n">Item</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Descriptor</span><span class="p">.</span><span class="n">Item</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
@@ -3860,7 +3860,7 @@
 <li><strong><code>recordChangeTag</code></strong>: Tag integritas bawaan <code>CKRecord</code> dari CloudKit untuk sinkronisasi mutasi remote.</li>
 </ul>
 <h3 id="item-snapshot">Item Snapshot</h3>
-<h4 id="annotationsnapshotitem-struct"><code>AnnotationSnapshot.Item</code> (Struct)</h4>
+<h4 id="annotationsnapshotitem-struct">AnnotationSnapshot.Item (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">Item</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3871,7 +3871,7 @@
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">date</span><span class="p">:</span><span class="w"> </span><span class="n">Date</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
 </span></code></pre></div>
-<h4 id="historysnapshotitem-struct"><code>HistorySnapshot.Item</code> (Struct)</h4>
+<h4 id="historysnapshotitem-struct">HistorySnapshot.Item (Struct)</h4>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">Item</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3904,7 +3904,7 @@
 </li>
 </ul>
 <hr />
-<h2 id="4-widgetdeeplink-enum-deep-link-model">4. <code>WidgetDeepLink</code> (Enum) - Deep Link Model</h2>
+<h2 id="4-widgetdeeplink-enum-deep-link-model">4. WidgetDeepLink (Enum) - Deep Link Model</h2>
 <p>Ketika pengguna mengetuk salah satu kartu pada widget, interaksi diarahkan kembali ke aplikasi Maktabah melalui skema URL kustom <code>maktabah://</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">WidgetDeepLink</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">annotation</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">)</span>

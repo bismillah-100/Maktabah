@@ -636,6 +636,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-string-interning-pool-stringinternerswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. String Interning Pool (StringInterner.swift)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3699,6 +3710,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#5-string-interning-pool-stringinternerswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. String Interning Pool (StringInterner.swift)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3815,6 +3837,32 @@
 <li><code>normalizeArabic(_ removeDiacritics:)</code>: Standardisasi konversi Unicode karakter Arab.</li>
 <li><code>convertToArabicDigits()</code>: Mengonversi digit desimal ("123") ke digit Arab ("١٢٣").</li>
 <li><strong>Stemmer Light10 (<code>stemArabicLight10</code>)</strong>: Implementasi algoritma morfologi (<em>stemming</em>) <em>Light10</em> yang dioptimalkan untuk membuang awalan (<em>prefixes</em>) seperti "ال", "وال", "بال", dan akhiran (<em>suffixes</em>) dari kata Arab, meningkatkan relevansi pencarian FTS5 dan normalisasi kueri.</li>
+</ul>
+<hr />
+<h2 id="5-string-interning-pool-stringinternerswift">5. String Interning Pool (<code>StringInterner.swift</code>)</h2>
+<p>Untuk menghemat konsumsi memori saat ribuan baris teks dan nama kitab dimuat berulang kali, <code>StringInterner</code> menyediakan mekanisme deduplikasi <em>string</em> global (<em>string interning</em>).</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">import</span><span class="w"> </span><span class="nc">Foundation</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">import</span><span class="w"> </span><span class="nc">Synchronization</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kd">public</span><span class="w"> </span><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">StringInterner</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">pool</span><span class="p">:</span><span class="w"> </span><span class="n">Mutex</span><span class="o">&lt;</span><span class="p">[</span><span class="nb">String</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">]</span><span class="o">&gt;</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="kd">init</span><span class="p">([:])</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="p">:</span><span class="w"> </span><span class="n">StringInterner</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="kd">init</span><span class="p">()</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">intern</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">value</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">        </span><span class="k">guard</span><span class="w"> </span><span class="o">!</span><span class="n">value</span><span class="p">.</span><span class="bp">isEmpty</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">pool</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">dict</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">existing</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">dict</span><span class="p">[</span><span class="n">value</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">existing</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">            </span><span class="n">dict</span><span class="p">[</span><span class="n">value</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">value</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">value</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Sinkronisasi via Mutex</strong>: Menggunakan <code>Synchronization.Mutex</code> untuk menjamin operasi <code>intern</code> sepenuhnya <em>thread-safe</em> di lingkungan konkurensi Swift 6.</li>
+<li><strong>Protokol <code>Sendable</code> Penuh</strong>: Memungkinkan <code>StringInterner.shared</code> dibagikan lintas <em>actor</em> dan <em>thread pool</em> tanpa menggunakan <code>nonisolated(unsafe)</code>.</li>
 </ul>
 
 

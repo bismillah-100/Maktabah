@@ -3012,10 +3012,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-optionsearchvc-search-controller" class="md-nav__link">
+  <a href="#1-optionsearchvc-class-search-controller" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. OptionSearchVC (Search Controller)
+        1. OptionSearchVC (Class) - Search Controller
       
     </span>
   </a>
@@ -3023,10 +3023,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-searchsidebarvc-penyaring-cakupan-scope" class="md-nav__link">
+  <a href="#2-searchsidebarvc-class-penyaring-cakupan-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. SearchSidebarVC (Penyaring Cakupan / Scope)
+        2. SearchSidebarVC (Class) - Penyaring Cakupan / Scope
       
     </span>
   </a>
@@ -3034,10 +3034,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-searchcellview-render-cuplikan-highlight" class="md-nav__link">
+  <a href="#3-searchcellview-class-render-cuplikan-highlight" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. SearchCellView (Render Cuplikan &amp; Highlight)
+        3. SearchCellView (Class) - Render Cuplikan &amp; Highlight
       
     </span>
   </a>
@@ -3045,10 +3045,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-optionsearchpopover" class="md-nav__link">
+  <a href="#4-optionsearchpopover-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. OptionSearchPopover
+        4. OptionSearchPopover (Class)
       
     </span>
   </a>
@@ -3685,10 +3685,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-optionsearchvc-search-controller" class="md-nav__link">
+  <a href="#1-optionsearchvc-class-search-controller" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. OptionSearchVC (Search Controller)
+        1. OptionSearchVC (Class) - Search Controller
       
     </span>
   </a>
@@ -3696,10 +3696,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-searchsidebarvc-penyaring-cakupan-scope" class="md-nav__link">
+  <a href="#2-searchsidebarvc-class-penyaring-cakupan-scope" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. SearchSidebarVC (Penyaring Cakupan / Scope)
+        2. SearchSidebarVC (Class) - Penyaring Cakupan / Scope
       
     </span>
   </a>
@@ -3707,10 +3707,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-searchcellview-render-cuplikan-highlight" class="md-nav__link">
+  <a href="#3-searchcellview-class-render-cuplikan-highlight" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. SearchCellView (Render Cuplikan &amp; Highlight)
+        3. SearchCellView (Class) - Render Cuplikan &amp; Highlight
       
     </span>
   </a>
@@ -3718,10 +3718,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-optionsearchpopover" class="md-nav__link">
+  <a href="#4-optionsearchpopover-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. OptionSearchPopover
+        4. OptionSearchPopover (Class)
       
     </span>
   </a>
@@ -3845,24 +3845,24 @@
     deactivate TV</code></pre>
 <hr />
 <h2 id="3-bedah-komponen-antarmuka-utama">3. Bedah Komponen Antarmuka Utama</h2>
-<h3 id="1-optionsearchvc-search-controller">1. <code>OptionSearchVC</code> (Search Controller)</h3>
+<h3 id="1-optionsearchvc-class-search-controller">1. OptionSearchVC (Class) - Search Controller</h3>
 <ul>
 <li>Berperan sebagai kontroler pusat pencarian yang dapat ditempatkan di panel bawah <code>SplitVC</code> atau di dalam <code>OptionSearchPopover</code>.</li>
 <li><strong>Pemantauan Combine Asinkron</strong>: Mengamati sinyal <code>searchDidReceiveResult</code> dan <code>searchProgressDidUpdate</code> dari <code>SearchViewModel</code> untuk memperbarui baris tabel secara bertahap tanpa memblokir antarmuka utama.</li>
 <li><strong>Kendali Eksekusi</strong>: Tombol jeda/lanjutkan (<em>Pause/Resume</em>) dan pembatalan (<em>Cancel</em>) pencarian FTS <em>multithread</em>.</li>
 <li><strong>Menu Konteks Hasil</strong>: Menyediakan <em>context menu</em> klik kanan "Salin" (<em>Copy</em>) yang mematuhi <em>protocol</em> <code>CopyableResult</code> untuk menyusun kutipan teks Arab beserta referensi juz dan halaman.</li>
 </ul>
-<h3 id="2-searchsidebarvc-penyaring-cakupan-scope">2. <code>SearchSidebarVC</code> (Penyaring Cakupan / Scope)</h3>
+<h3 id="2-searchsidebarvc-class-penyaring-cakupan-scope">2. SearchSidebarVC (Class) - Penyaring Cakupan / Scope</h3>
 <ul>
 <li>Menampilkan hierarki kategori dan kitab menggunakan <code>NSOutlineView</code> yang ditenagai oleh <code>LibraryViewManager</code>.</li>
 <li>Pengguna dapat memilih satu kitab, sekumpulan kategori, atau seluruh perpustakaan sebagai batasan cakupan (<em>scope</em>) kueri pencarian FTS.</li>
 </ul>
-<h3 id="3-searchcellview-render-cuplikan-highlight">3. <code>SearchCellView</code> (Render Cuplikan &amp; Highlight)</h3>
+<h3 id="3-searchcellview-class-render-cuplikan-highlight">3. SearchCellView (Class) - Render Cuplikan &amp; Highlight</h3>
 <ul>
-<li>Subkelas <code>NSTableCellView</code> yang dirancang untuk me-<em>render</em> teks hasil dengan tipografi Arab RTL.</li>
+<li><em>Subclass</em> <code>NSTableCellView</code> yang dirancang untuk me-<em>render</em> teks hasil dengan tipografi Arab RTL.</li>
 <li>Menggunakan <code>NSAttributedString</code> untuk memberikan latar belakang sorotan kuning pada setiap kata kunci yang cocok dengan kueri pengguna.</li>
 </ul>
-<h3 id="4-optionsearchpopover">4. <code>OptionSearchPopover</code></h3>
+<h3 id="4-optionsearchpopover-class">4. OptionSearchPopover (Class)</h3>
 <ul>
 <li>Abstraksi pembungkus berbasis <code>NSPopover</code> yang memungkinkan fungsionalitas pencarian <code>OptionSearchVC</code> dipanggil secara instan dari bilah menu atau tombol <em>toolbar</em> jendela.</li>
 </ul>

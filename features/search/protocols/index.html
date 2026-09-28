@@ -3803,7 +3803,7 @@
     class ENGINE db;</code></pre>
 <hr />
 <h2 id="2-antarmuka-presentasi">2. Antarmuka Presentasi</h2>
-<h3 id="optionsearchdelegate-protocol-macos"><code>OptionSearchDelegate</code> (Protocol) - macOS</h3>
+<h3 id="optionsearchdelegate-protocol-macos">OptionSearchDelegate (Protocol) - macOS</h3>
 <p><em>Protocol</em> ini diisolasi ke dalam <em>Main Thread</em> (<code>@MainActor</code>) dan diimplementasikan oleh <em>controller</em> pengelola jendela (seperti <code>SplitVC</code> atau <code>SearchSidebarVC</code>):</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">OptionSearchDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
@@ -3826,17 +3826,17 @@
 <hr />
 <h2 id="3-kontrak-eksekusi-engine-sendable">3. Kontrak Eksekusi Engine (<code>Sendable</code>)</h2>
 <p>Komunikasi antara <code>SearchEngine</code> dan <em>thread</em> latar belakang diatur melalui <em>struct</em> kontrak yang mematuhi batasan model konkurensi Swift:</p>
-<h3 id="searchcontrol-struct"><code>SearchControl</code> (Struct)</h3>
+<h3 id="searchcontrol-struct">SearchControl (Struct)</h3>
 <p>Mengontrol jalannya pencarian secara asinkron tanpa <em>race condition</em>:
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchControl</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">pauseController</span><span class="p">:</span><span class="w"> </span><span class="n">PauseController</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">stopFlag</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Bool</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </span></code></pre></div>
-- <strong><code>pauseController</code></strong>: Mengelola status jeda/lanjutkan saat pengguna beralih tugas atau membatasi penggunaan CPU.
+- <strong><code>pauseController</code></strong>: Mengelola status jeda/lanjutkan saat pengguna beralih aktivitas atau membatasi penggunaan CPU.
 - <strong><code>stopFlag</code></strong>: Predikat <em>thread-safe</em> untuk menghentikan putaran <em>worker loop</em> secara instan ketika pengguna membatalkan pencarian atau mengetik kueri baru.</p>
-<h3 id="searchworkercallbacks-struct"><code>SearchWorkerCallbacks</code> (Struct)</h3>
-<p>Pipeline penerima hasil (<em>streaming pipeline</em>) dari <em>worker</em> FTS:
+<h3 id="searchworkercallbacks-struct">SearchWorkerCallbacks (Struct)</h3>
+<p>Alur penerima hasil (<em>streaming pipeline</em>) dari <em>worker</em> FTS:
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchWorkerCallbacks</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">start</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">(</span><span class="nb">Int</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Void</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">progress</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">(</span><span class="nb">Int</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Void</span>
@@ -3849,7 +3849,7 @@
 - <strong><code>onResult</code></strong>: Dipanggil setiap kali sebaris konten kitab yang cocok selesai didekompresi, memungkinkan UI memperbarui daftar hasil secara progresif tanpa menunggu seluruh basis data selesai dipindai.</p>
 <hr />
 <h2 id="4-abstraksi-data-utilitas">4. Abstraksi Data &amp; Utilitas</h2>
-<h3 id="copyableresult-protocol"><code>CopyableResult</code> (Protocol)</h3>
+<h3 id="copyableresult-protocol">CopyableResult (Protocol)</h3>
 <p><em>Protocol</em> yang menyeragamkan fungsionalitas penyalinan teks (<em>clipboard copy</em>) dari berbagai bentuk hasil:
 - Memastikan item dapat menghasilkan format sitasi rujukan lengkap (berisi nama kitab, juz, nomor halaman, dan kutipan teks Arab).
 - Diadopsi oleh hasil pencarian reguler, hasil pencarian perawi/hadis, maupun riwayat pencarian yang disimpan.</p>

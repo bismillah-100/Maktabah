@@ -619,6 +619,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="SearchWorker (Class)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strategi-kueri-multi-tier-unified-fts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategi Kueri Multi-Tier (Unified FTS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -3871,6 +3888,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="SearchWorker (Class)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strategi-kueri-multi-tier-unified-fts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategi Kueri Multi-Tier (Unified FTS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -4052,18 +4086,24 @@
     SE --&gt;|"spawn"| SW["SearchWorker (Per Archive)"]
     SW --&gt;|"waitIfPaused"| PC
 
-    SW ~~~ POOL
+    SW --&gt;|"supportsUnifiedFts?"| Mode{Skema FTS}
 
-    POOL["SQLiteConnectionPool"]
-    SC["SQLiteConnection"]
-    DB[("SQLite FTS Tables (*_fts)")]
+    subgraph Unified ["Unified FTS5 Pipeline (Modern)"]
+        Mode --&gt;|"Ya"| UQ["Multi-Tier Unified Query"]
+        UQ --&gt;|"f.rowid BETWEEN min AND max"| UDB[("archive_fts JOIN archive_index")]
+    end
 
-    SW --&gt;|"read chunk"| POOL
-    POOL --&gt;|"getConnection"| SC
-    SC --&gt;|"execute FTS SQL"| DB
+    subgraph Legacy ["Per-Kitab Pipeline (Fallback)"]
+        Mode --&gt;|"Tidak"| POOL["SQLiteConnectionPool"]
+        POOL --&gt;|"executeParallelChunks"| SC["SQLiteConnection"]
+        SC --&gt;|"b{id}_fts MATCH"| LDB[("b{id}_fts Tables")]
+    end
 
-    SW --&gt;|"callbacks.onResult"| SE
-    SE --&gt;|"onResult callback"| UI
+    UDB --&gt;|"emit packedRowId"| SRB["SearchResultBuffer (Adaptive Throttling)"]
+    LDB --&gt;|"emit SearchResultItem"| SRB
+
+    SRB --&gt;|"onResult (Batched)"| UI
+    UI -.-&gt;|"Lazy Render &amp; Snippet"| SHR["SearchHitResolver (1000 LRU Cache)"]
 
     classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
@@ -4072,16 +4112,21 @@
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class UI ui;
-    class SE,FQP,PC,SW,POOL,SC store;
-    class DB db;</code></pre>
+    class SE,FQP,PC,SW,POOL,SC,SRB,SHR store;
+    class Mode vm;
+    class UDB,LDB db;</code></pre>
 <h3 id="konkurensi-pekerja-worker-concurrency">Konkurensi Pekerja (<em>Worker Concurrency</em>)</h3>
-<p>Pencarian dirancang agar berjalan secara paralel, baik pada level berkas basis data maupun pecahan tabel (<em>chunks</em>). Maktabah menginisialisasi beberapa <em>instance</em> <code>SearchWorker</code>, umumnya satu per berkas arsip (<code>1.sqlite</code> s.d. <code>20.sqlite</code>). Setiap <em>worker</em> memiliki <code>SQLiteConnectionPool</code> tersendiri.</p>
+<p>Pencarian dirancang agar berjalan secara paralel di tingkat berkas arsip basis data (<code>1.sqlite</code> s.d. <code>20.sqlite</code>). Setiap <code>SearchWorker</code> mengelola pencarian untuk satu arsip secara terisolasi:</p>
 <ol>
-<li><code>SearchEngine.startSearch</code> menjalankan proses pencarian di latar belakang menggunakan <code>Task.detached</code>.</li>
-<li>Setiap <code>SearchWorker</code> mengumpulkan ID baris yang cocok (<em>matched row IDs</em>) dari tabel FTS <code>*_fts</code>.</li>
-<li>Setelah seluruh ID terkumpul, <em>worker</em> membagi kumpulan ID tersebut (<em>chunk</em>) ke dalam <em>Task Group</em> paralel (<code>executeParallelChunks</code>).</li>
-<li>Jumlah koneksi paralel diatur oleh kapasitas <code>SQLiteConnectionPool</code>. Setiap koneksi menangani pecahan ID tertentu (<code>searchChunkByIDs</code>) dan mengeksekusi kueri ke tabel utama.</li>
-<li>Hasil dari setiap <em>chunk</em> dikumpulkan dan diproses secara asinkron dalam <em>stream</em>, kemudian dikirimkan ke UI melalui fungsi <em>callback</em>.</li>
+<li><code>SearchEngine.startSearch</code> memicu proses pencarian di latar belakang menggunakan <code>Task.detached</code>.</li>
+<li>Setiap <code>SearchWorker</code> melakukan verifikasi skema melalui <code>supportsUnifiedFts(pool)</code> untuk mendeteksi apakah tabel <code>archive_fts</code> dan <code>archive_index</code> tersedia.</li>
+<li><strong>Jalur Unified FTS (Modern)</strong>:</li>
+<li>Jika <code>allowedTables</code> ditentukan dan tidak ada satupun tabel yang beririsan dengan arsip ini, <em>worker</em> langsung keluar (<em>short-circuit</em>) tanpa menyentuh <em>disk</em>.</li>
+<li>Kueri dieksekusi secara terpadu melalui <em>multi-tier query strategy</em> yang memanfaatkan <em>bitwise binary range seek</em> pada <em>posting list</em> FTS5.</li>
+<li>Hasil pencarian dikirimkan langsung ke <code>SearchResultBuffer</code> tanpa pemuatan teks berat di awal.</li>
+<li><strong>Jalur Per-Kitab (Legacy Fallback)</strong>:</li>
+<li>Jika arsip belum dimigrasikan ke Unified FTS, <em>worker</em> mengumpulkan ID baris per tabel kitab (<code>b{id}_fts</code>) lalu memecahnya ke dalam <em>chunk</em> paralel (<code>executeParallelChunks</code>) melalui <code>SQLiteConnectionPool</code>.</li>
+<li>Hasil dari seluruh <em>worker</em> disangga dan distabilkan alirannya oleh <code>SearchResultBuffer</code> sebelum dipancarkan ke antarmuka pengguna, menjamin UI tetap responsif pada 60/120 fps.</li>
 </ol>
 <h3 id="metode-pause-resume-dan-stop">Metode Pause, Resume, dan Stop</h3>
 <p>Pengontrolan siklus hidup pencarian (Jeda, Lanjutkan, Hentikan) dikoordinasikan secara terpusat oleh <code>PauseController</code>, sebuah <em>actor</em> yang mengelola status <code>isPaused</code> dan daftar <code>CheckedContinuation</code>.</p>
@@ -4130,7 +4175,7 @@
 <p><code>SearchEngine</code> mengelola penugasan tugas utamanya dalam properti <code>searchTask</code>, yang dapat dibatalkan melalui <code>.cancel()</code> saat operasi diinterupsi oleh pengguna.</p>
 </div>
 <h4 id="searchworker-class"><code>SearchWorker</code> (Class)</h4>
-<p><em>Class</em> <em>worker</em> yang bertugas menjalankan kueri FTS pada serangkaian tabel kitab di dalam satu berkas arsip. Mengadopsi <em>protocol</em> <code>@unchecked Sendable</code> dengan menjaga status tak berubah (<em>immutable state</em>).</p>
+<p><em>Class</em> <em>worker</em> yang bertugas menjalankan kueri FTS pada satu berkas arsip basis data. Mengadopsi <em>protocol</em> <code>@unchecked Sendable</code> dengan menjaga status tak berubah (<em>immutable state</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SearchWorker</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archiveId</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">tables</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span>
@@ -4140,19 +4185,34 @@
 </span></code></pre></div>
 <ul>
 <li><strong><code>archiveId</code></strong>: Pengenal arsip basis data (misalnya <code>"1"</code>).</li>
-<li><strong><code>tables</code></strong>: Daftar nama tabel kitab yang dicari di dalam arsip ini.</li>
-<li><strong><code>pool</code></strong>: <em>Connection Pool</em> untuk eksekusi kueri konkuren (<code>executeParallelChunks</code>).</li>
-<li><strong><code>batchSize</code></strong>: Jumlah maksimum baris (ID) yang diambil dalam satu klausa SQL <code>IN</code> (nilai bawaan: 200).</li>
+<li><strong><code>tables</code></strong>: Daftar nama tabel kitab yang berada di dalam arsip ini.</li>
+<li><strong><code>pool</code></strong>: <em>Connection Pool</em> untuk eksekusi kueri konkuren.</li>
+<li><strong><code>batchSize</code></strong>: Batas <em>batch</em> pengambilan konten baris kitab (nilai bawaan: 200).</li>
 </ul>
+<h5 id="strategi-kueri-multi-tier-unified-fts">Strategi Kueri Multi-Tier (Unified FTS)</h5>
+<p>Pada arsip yang mendukung Unified FTS (<code>supportsUnifiedFts</code>), <code>SearchWorker</code> mengelompokkan kueri ke dalam strategi berlapis (<em>multi-tier</em>) untuk memotong <em>overhead</em> I/O dan memaksimalkan antarmuka <code>xFilter</code> pada SQLite FTS5:</p>
+<ol>
+<li><strong>Short-Circuit Evaluasi</strong>: Jika parameter <code>allowedTables</code> diberikan namun tidak memuat satupun tabel dari arsip ini, <em>worker</em> langsung keluar tanpa menyentuh <em>disk</em>.</li>
+<li><strong>Tier 1 (Single Book Seek)</strong>: Ketika pencarian ditargetkan hanya pada 1 buku, kueri FTS menggunakan batasan langsung <code>f.rowid BETWEEN minRowId AND maxRowId</code> pada <em>bitwise packed rowid</em>:
+   <div class="language-sql highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">rowid</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">book_id</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">page</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">part</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">FROM</span><span class="w"> </span><span class="n">archive_fts</span><span class="w"> </span><span class="n">f</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">JOIN</span><span class="w"> </span><span class="n">archive_index</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">rowid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">.</span><span class="n">rowid</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">archive_fts</span><span class="w"> </span><span class="k">MATCH</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">rowid</span><span class="w"> </span><span class="k">BETWEEN</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="o">?</span><span class="p">;</span>
+</span></code></pre></div>
+   <em>SQLite FTS5 langsung melompat (binary seek) ke rentang rowid buku tersebut dan berhenti segera setelah mencapai batas akhir.</em></li>
+<li><strong>Tier 2 (2–5 Books Seek)</strong>: Menggabungkan pencarian 2 s.d. 5 buku menggunakan <code>UNION ALL</code> di mana setiap buku memiliki klausa <code>BETWEEN ? AND ?</code> tersendiri. Ini membypass keterbatasan mesin FTS5 yang hanya mendukung satu batas rentang <code>xFilter</code> per <em>query term</em>.</li>
+<li><strong>Tier 3 (&gt;5 Books / Bounding Box)</strong>: Jika rentang ID buku berdekatan (<code>(maxBook - minBook) &lt; 350</code>), kueri menerapkan <em>bounding-box range</em> <code>BETWEEN minGlobal AND maxGlobal</code> ditambah filter <code>AND i.book_id IN (...)</code>.</li>
+<li><strong>Global Archive Query</strong>: Jika <code>allowedTables == nil</code> (pencarian di seluruh perpustakaan), satu kueri FTS global dijalankan langsung melintasi tabel <code>archive_fts</code> dan <code>archive_index</code>.</li>
+</ol>
 <h4 id="sqliteconnection-class"><code>SQLiteConnection</code> (Class)</h4>
 <p>Membungkus interaksi tingkat rendah C API dari <code>libsqlite3</code>. <em>Class</em> ini menyimpan <em>opaque pointer</em> koneksi basis data dan mengimplementasikan mekanisme <em>statement cache</em>.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SQLiteConnection</span><span class="p">:</span><span class="w"> </span><span class="n">DBConnectionType</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">db</span><span class="p">:</span><span class="w"> </span><span class="n">OpaquePointer</span><span class="p">?</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">statementCache</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">:</span><span class="w"> </span><span class="n">OpaquePointer</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">cacheKeys</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">maxCacheSize</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">50</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">executionLock</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSLock</span><span class="p">()</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SQLiteConnection</span><span class="p">:</span><span class="w"> </span><span class="n">DBConnectionType</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">db</span><span class="p">:</span><span class="w"> </span><span class="n">OpaquePointer</span><span class="p">?</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">statementCache</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">:</span><span class="w"> </span><span class="n">OpaquePointer</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">cacheKeys</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">maxCacheSize</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">50</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">executionLock</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSLock</span><span class="p">()</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>db</code></strong>: <em>Pointer</em> koneksi SQLite (bertipe <code>OpaquePointer</code>).</li>
@@ -4162,21 +4222,21 @@
 </ul>
 <h4 id="sqliteconnectionpool-actor"><code>SQLiteConnectionPool</code> (Actor)</h4>
 <p>Menyediakan kumpulan koneksi SQLite yang terisolasi untuk mendukung operasi <em>chunking</em> paralel pada <em>worker</em>.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">SQLiteConnectionPool</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">connections</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">DBConnectionType</span><span class="p">]</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">SQLiteConnectionPool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">connections</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">DBConnectionType</span><span class="p">]</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>connections</code></strong>: Kumpulan koneksi basis data (<code>DBConnectionType</code>). Saat <em>worker</em> memanggil fungsi <code>read(at:)</code>, <em>pool</em> memilih koneksi menggunakan operasi modulo indeks (<code>index % connections.count</code>), menjamin rotasi penggunaan koneksi secara merata.</li>
 </ul>
 <h4 id="pausecontroller-actor"><code>PauseController</code> (Actor)</h4>
 <p>Mengelola status jeda (<em>pause</em>) dan lanjut (<em>resume</em>) secara <em>thread-safe</em>.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">PauseController</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isPaused</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">continuations</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">CheckedContinuation</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">PauseController</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">isPaused</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">continuations</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">CheckedContinuation</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>isPaused</code></strong>: Penanda status apakah proses pencarian sedang dijeda.</li>
@@ -4184,13 +4244,13 @@
 </ul>
 <h4 id="searchqueryoptions-struct"><code>SearchQueryOptions</code> (Struct)</h4>
 <p>Membawa parameter kueri dari lapisan UI / ViewModel menuju <code>SearchEngine</code>.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchQueryOptions</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">""</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">keywords</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">allowedTables</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">mode</span><span class="p">:</span><span class="w"> </span><span class="n">SearchMode</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">SearchQueryOptions</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">""</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">keywords</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">allowedTables</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">mode</span><span class="p">:</span><span class="w"> </span><span class="n">SearchMode</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>query</code></strong>: Teks kueri pencarian dari pengguna.</li>
@@ -4201,35 +4261,35 @@
 </ul>
 <h4 id="safecounter-class"><code>SafeCounter</code> (Class)</h4>
 <p>Penghitung (<em>counter</em>) <em>thread-safe</em> menggunakan <code>Synchronization.Mutex</code>. Digunakan saat menghitung progres penyelesaian tabel lintas tugas konkuren.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SafeCounter</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">&lt;</span><span class="nb">Int</span><span class="p">&gt;(</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">increment</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="bp">count</span><span class="w"> </span><span class="k">in</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">            </span><span class="bp">count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="bp">count</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SafeCounter</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">&lt;</span><span class="nb">Int</span><span class="p">&gt;(</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">increment</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="n">withLock</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="bp">count</span><span class="w"> </span><span class="k">in</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">            </span><span class="bp">count</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="bp">count</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="p">}</span>
 </span></code></pre></div>
 <h4 id="serialtaskqueue-class"><code>SerialTaskQueue</code> (Class)</h4>
 <p>Antrean asinkron untuk memastikan tugas-tugas dieksekusi secara sekuensial (satu per satu). Membantu menertibkan urutan mutasi <em>state</em> atau proses penulisan ke antarmuka dan <em>disk</em>.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SerialTaskQueue</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">tailState</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">&lt;</span><span class="n">Task</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;?</span><span class="o">&gt;</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SerialTaskQueue</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">tailState</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">&lt;</span><span class="n">Task</span><span class="p">&lt;</span><span class="nb">Void</span><span class="p">,</span><span class="w"> </span><span class="n">Never</span><span class="p">&gt;?</span><span class="o">&gt;</span><span class="p">(</span><span class="kc">nil</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <h4 id="tocloaderrefcount-actor"><code>TOCLoaderRefCount</code> (Actor)</h4>
 <p>Pengelola siklus hidup pemuatan daftar isi (<em>Table of Contents</em> / TOC). Dilengkapi mekanisme penyimpanan sementara (<em>cache</em>), eliminasi permintaan ganda (<em>request deduplication</em>), serta penghitungan referensi (<em>reference counting</em>).</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">TOCLoaderRefCount</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="kd">struct</span><span class="w"> </span><span class="nc">Entry</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">task</span><span class="p">:</span><span class="w"> </span><span class="n">Task</span><span class="o">&lt;</span><span class="p">[</span><span class="n">TOCNode</span><span class="p">],</span><span class="w"> </span><span class="n">Error</span><span class="p">&gt;</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">consumers</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">inFlight</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">Int</span><span class="p">:</span><span class="w"> </span><span class="n">Entry</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">connFactory</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">BookConnection</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">treeCache</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">BookConnection</span><span class="p">.</span><span class="n">tocTreeCache</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">TOCLoaderRefCount</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="kd">struct</span><span class="w"> </span><span class="nc">Entry</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">task</span><span class="p">:</span><span class="w"> </span><span class="n">Task</span><span class="o">&lt;</span><span class="p">[</span><span class="n">TOCNode</span><span class="p">],</span><span class="w"> </span><span class="n">Error</span><span class="p">&gt;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="nv">consumers</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">inFlight</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">Int</span><span class="p">:</span><span class="w"> </span><span class="n">Entry</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">connFactory</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="n">BookConnection</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">treeCache</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">BookConnection</span><span class="p">.</span><span class="n">tocTreeCache</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>Entry</code></strong>: Menyimpan status <code>Task</code> aktif dan jumlah pemanggil (<code>consumers</code>).</li>
@@ -4238,12 +4298,12 @@
 <h3 id="enums-event-types">Enums &amp; Event Types</h3>
 <h4 id="searchmode-enum"><code>SearchMode</code> (Enum)</h4>
 <p>Menentukan operator logika pencarian yang diterapkan oleh <code>FtsQueryParser</code>:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SearchMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">CaseIterable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">phrase</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="bp">contains</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">or</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">near</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SearchMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">CaseIterable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">phrase</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="bp">contains</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">or</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">near</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>phrase</code></strong>: Teks pencarian dibungkus tanda kutip ganda (contoh: <code>"kata satu dua"</code>), mencocokkan frasa secara persis.</li>
@@ -4253,11 +4313,11 @@
 </ul>
 <h4 id="sqlvalue-enum"><code>SQLValue</code> (Enum)</h4>
 <p>Abstraksi tipe data aman untuk pengikatan parameter (<em>parameter binding</em>) pada SQLite:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SQLValue</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="nb">String</span><span class="p">)</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">int</span><span class="p">(</span><span class="nb">Int</span><span class="p">)</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">null</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SQLValue</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">text</span><span class="p">(</span><span class="nb">String</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">int</span><span class="p">(</span><span class="nb">Int</span><span class="p">)</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">null</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <h4 id="tipe-callback">Tipe Callback</h4>
 <p>Berbagai struktur <em>callback</em> digunakan sebagai antarmuka komunikasi:</p>
@@ -4272,7 +4332,7 @@
 </div>
 <h3 id="ftsqueryparser-logika-kueri-lanjutan">FtsQueryParser: Logika Kueri Lanjutan</h3>
 <p><code>FtsQueryParser</code> memiliki logika khusus untuk mendeteksi perintah kueri manual pengguna yang memanfaatkan sintaks <code>NEAR</code>:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">#</span><span class="s">"(?i)(?:NEAR\s*</span><span class="si">\(</span><span class="err">\</span><span class="n">s</span><span class="o">*</span><span class="p">[</span><span class="o">^</span><span class="p">,</span><span class="err">\</span><span class="si">)</span><span class="s">]+(?:,\s*(\d+))?\s*\)|[^\s]+\s+NEAR(?:/(\d+))?\s+[^\s]+)"</span><span class="p">#</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">#</span><span class="s">"(?i)(?:NEAR\s*</span><span class="si">\(</span><span class="err">\</span><span class="n">s</span><span class="o">*</span><span class="p">[</span><span class="o">^</span><span class="p">,</span><span class="err">\</span><span class="si">)</span><span class="s">]+(?:,\s*(\d+))?\s*\)|[^\s]+\s+NEAR(?:/(\d+))?\s+[^\s]+)"</span><span class="p">#</span>
 </span></code></pre></div>
 <p>Jika pengguna menulis kueri secara eksplisit seperti <code>kata NEAR/5 lain</code>, parser langsung menerapkan operator tersebut dengan jarak spesifik <code>5</code>.</p>
 <p>Kueri teks disanitasi secara berantai:

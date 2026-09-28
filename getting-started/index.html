@@ -3698,7 +3698,7 @@
 <p>Panduan untuk menyiapkan lingkungan pengembangan (<em>development environment</em>) dan memahami struktur dasar proyek Maktabah.</p>
 <h2 id="prasyarat-lingkungan">Prasyarat Lingkungan</h2>
 <ul>
-<li><strong>OS</strong>: macOS 15+</li>
+<li><strong>OS / Target Deployment</strong>: macOS 15+ (Sequoia) / iOS 18+</li>
 <li><strong>IDE</strong>: Xcode 26+</li>
 <li><strong>Code Style</strong>: Menggunakan <code>SwiftFormat</code> dengan konfigurasi <code>.swiftFormat</code> pada direktori <em>root</em>.</li>
 </ul>
@@ -3719,7 +3719,7 @@
 <p>Proyek terbagi ke dalam empat lapisan utama pada direktori <code>Source/</code>:</p>
 <ol>
 <li><strong><code>Source/Core/</code></strong>: Logika bisnis yang bersifat lintas platform (<em>platform-agnostic</em>). Mencakup pengelolaan SQLite, sinkronisasi CloudKit, mesin pencari FTS5 konkuren, pemrosesan teks Arab, serta App Coordinator.</li>
-<li><strong><code>Source/Features/</code></strong>: Modul berbasis <em>Domain-Driven Design</em> menggunakan pola arsitektur MVVM (Model-View-ViewModel). Meliputi modul Reader, Library, Annotations, Bookmarks, History, Search, Narrator, Quran, dan Widget.</li>
+<li><strong><code>Source/Features/</code></strong>: Modul berbasis <em>Domain-Driven Design</em> menggunakan pola arsitektur MVVM (Model-View-ViewModel). Meliputi modul Reader, Library, Annotations, Bookmarks, History, Search, Narrator, Quran, Setting, dan Widget.</li>
 <li><strong><code>Source/UI/</code></strong>: Lapisan tampilan spesifik platform. Terdiri dari AppKit untuk macOS (<code>SplitVC</code>, <code>IbarotTextView</code>) serta jembatan antarmuka SwiftUI/UIKit untuk iOS (<code>MaktabahApp</code>, <code>iOSIbarotTextView</code>).</li>
 <li><strong><code>Source/Extensions/</code></strong>: Ekstensi lintas platform (<em>cross-platform</em>) untuk Foundation, AppKit, dan UIKit.</li>
 </ol>

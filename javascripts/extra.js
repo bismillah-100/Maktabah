@@ -4,6 +4,7 @@ function setupReadingProgress() {
   if (!progressBar) {
     progressBar = document.createElement("div");
     progressBar.id = "reading-progress-bar";
+    progressBar.className = "reading-progress-bar";
     document.body.appendChild(progressBar);
   }
 
@@ -27,8 +28,8 @@ function initInteractiveFeatures() {
   setupReadingProgress();
 }
 
-if (typeof document$ !== "undefined") {
-  document$.subscribe(() => {
+if (typeof window !== "undefined" && typeof window.document$ !== "undefined") {
+  window.document$.subscribe(() => {
     initInteractiveFeatures();
   });
 } else {

@@ -3958,20 +3958,21 @@
 <p>Aplikasi Maktabah sangat menekankan <em>thread-safety</em> untuk menghindari <em>race condition</em> saat membaca dan menulis basis data dari berbagai antrean (<em>queues</em>).</p>
 <pre class="mermaid"><code>mindmap
   root((Sinkronisasi &amp; Kunci))
-    NSLock
-      DatabaseManager["Akses thread-safe ke singleton db &amp; dbSpecial"]
-      ZSTDContextPool["Isolasi inisialisasi context dekompresi"]
+    Mutex
+      DatabaseManager["Proteksi thread-safe singleton db, dbSpecial &amp; cache (Sendable)"]
+      BookConnection["Proteksi isolasi memori instance SQLiteDatabase (Sendable)"]
+      FeatureRepositories["AnnotationRepository, ResultsHandler, HistoryDatabaseManager"]
+      CoreDatabaseDownloader["Sinkronisasi state respons versi unduhan"]
     NSRecursiveLock
       SQLiteDatabase["Dukungan transaksi bersarang (nested transactions)"]
-    Mutex
-      BookConnection["Proteksi isolasi memori instance SQLiteDatabase"]
-      CoreDatabaseDownloader["Sinkronisasi state respons versi unduhan"]
+    NSLock
+      ZSTDContextPool["Isolasi inisialisasi context dekompresi"]
     Actor
       SingleFlight["Isolasi otomatis kumpulan task konkurensi"]</code></pre>
 <ul>
-<li><code>NSLock</code>: Digunakan di dalam <code>DatabaseManager</code> dan <code>ZSTDContextPool</code> untuk mengamankan akses ke properti <em>singleton</em> (seperti <code>db</code> dan <code>dbSpecial</code>) serta operasi inisialisasi folder/koneksi agar hanya satu <em>thread</em> yang dapat memodifikasi <em>state</em> dalam satu waktu.</li>
+<li><code>Mutex&lt;T&gt;</code> (dari <em>Synchronization framework</em> macOS 15+ / iOS 18+): Menjadi mekanisme penguncian standar modern di lapisan persistensi Maktabah. Digunakan pada <code>DatabaseManager</code> (mengenkapsulasi <em>state</em> koneksi <code>db</code>, <code>dbSpecial</code>, <code>shortsCache</code>, dan <code>archiveAvailabilityCache</code> ke dalam struktur <code>Sendable</code>), <code>BookConnection</code>, serta repositori fitur (<code>AnnotationRepository</code>, <code>ResultsHandler</code>, <code>HistoryDatabaseManager</code>). Hal ini memungkinkan seluruh <em>manager</em> dan <em>repository</em> mengadopsi protokol <code>Sendable</code> secara langsung dan aman tanpa anotasi <code>@unchecked</code> atau <code>nonisolated(unsafe)</code>.</li>
 <li><code>NSRecursiveLock</code>: Digunakan pada <code>class</code> <code>SQLiteDatabase</code>. <code>NSRecursiveLock</code> memungkinkan satu <em>thread</em> untuk mengunci (<em>lock</em>) <em>resource</em> secara berulang tanpa menyebabkan <em>deadlock</em> pada <em>thread</em> yang sama. Hal ini sangat penting untuk <em>nested transactions</em> SQLite ketika metode pembungkus (<em>wrapper</em>) memanggil metode lain yang juga meminta kunci <em>lock</em>.</li>
-<li><code>Mutex&lt;T&gt;</code> (dari <em>Synchronization framework</em> iOS/macOS 15+): Digunakan pada <code>BookConnection</code> (untuk membungkus <em>instance</em> <code>SQLiteDatabase</code>) dan <code>CoreDatabaseDownloader</code> (untuk membungkus respons versi) agar modifikasi referensi terjamin aman dan terisolasi secara <em>memory-safe</em>.</li>
+<li><code>NSLock</code>: Digunakan pada utilitas tingkat rendah seperti <code>ZSTDContextPool</code> untuk mengamankan inisialisasi <em>context</em> dekompresi.</li>
 <li><code>actor</code>: Digunakan pada <code>SingleFlight</code> untuk secara otomatis mengisolasi <em>state</em> (kumpulan <em>running tasks</em>), menghindari <em>data race</em> pada level konkurensi tugas (<em>task concurrency</em>).</li>
 </ul>
 <h3 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (<em>Separation of Concerns</em>)</h3>
@@ -4112,7 +4113,7 @@
 </div>
 </div>
 <h3 id="7-ftsmigrationmanager-class-archivedatabasetools">7. <code>FtsMigrationManager</code> (Class) &amp; <code>ArchiveDatabaseTools</code></h3>
-<p>Modul internal untuk memigrasikan skema basis data lama atau tabel pencarian (<em>Full-Text Search</em>).</p>
+<p>Modul internal untuk memigrasikan skema basis data lama atau tabel pencarian (<em>Full-Text Search</em>) dari skema per-kitab (<code>b{id}_fts</code>) menuju skema <strong>Unified FTS5</strong> (<code>archive_fts</code> + <code>archive_index</code>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">@</span><span class="n">Observable</span><span class="w"> </span><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">FtsMigrationManager</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">isMigrating</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
@@ -4121,8 +4122,18 @@
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li>Bekerja menggunakan mekanisme tugas latar belakang tingkat OS (<code>UIBackgroundTaskIdentifier</code> pada iOS).</li>
-<li>Menggunakan <code>ArchiveDatabaseTools</code> untuk mengeksekusi kueri modifikasi tabel (seperti <code>DROP TABLE</code>, <code>CREATE VIRTUAL TABLE USING fts5</code>, serta pembersihan tag HTML dan harakat teks Arab melalui <code>stemArabicLight10()</code>).</li>
+<li><strong>Mekanisme Latar Belakang</strong>: Memanfaatkan tugas latar belakang tingkat OS (<code>UIBackgroundTaskIdentifier</code> pada iOS dan <code>withBackgroundTask</code> yang menonaktifkan sleep sementara).</li>
+<li><strong>Throttling &amp; Concurrency MainActor</strong>: Pengecekan pembatalan dievaluasi secara <em>nonisolated</em> di setiap buku via <code>Task.isCancelled</code> (0 <em>context switch</em>). Pembaruan status teks dan akumulasi jumlah buku selesai dibatasi (<em>throttled</em>) ke <code>@MainActor</code> dengan batas interval waktu $\ge 250$ms atau akumulasi $\ge 10$ buku guna mencegah stutter pada antarmuka pengguna.</li>
+<li><strong>ArchiveDatabaseTools</strong>:</li>
+<li><code>createUnifiedFTS(db:ftsSchema:)</code>: Menginisialisasi tabel B-Tree <code>archive_index(rowid, book_id, page, id, part)</code> dan tabel virtual FTS5 <code>archive_fts(nass_clean, content='', tokenize='unicode61')</code>.</li>
+<li><code>appendBookToUnifiedFTS(...)</code>: Menghapus entri buku lama di <code>archive_index</code>, lalu menyisipkan baris buku baru dengan <em>bitwise packed rowid</em> <code>(bookId &lt;&lt; 32) | pageRowId</code> dan teks yang dinormalisasi (<code>stemArabicLight10()</code>).</li>
+<li><strong>Pelacakan Versi Skema</strong>: Skema FTS dipantau melalui tabel <code>archive_metadata(fts_version INTEGER)</code>. Versi 2 menandakan arsip telah sepenuhnya menggunakan Unified FTS.</li>
+<li><strong>Standalone High-Speed CLI Migration Tool</strong>:
+  Untuk migrasi massal di luar aplikasi tanpa beban antarmuka pengguna, disediakan skrip terkompilasi <code>Scripts/migrate_unified_fts.swift</code>:</li>
+<li>Dikompilasi dengan <code>swiftc -O -lzstd -lsqlite3</code>.</li>
+<li>Menggunakan 1 transaksi atomik (<code>BEGIN TRANSACTION</code> ... <code>COMMIT</code>) per arsip untuk menghindari <em>segment merge thrashing</em> pada SQLite FTS5.</li>
+<li>Alokasi <em>cache</em> memori tinggi (<code>PRAGMA cache_size = -1048576</code> / 1GB RAM dan <code>PRAGMA mmap_size = 1GB</code>).</li>
+<li>Dilengkapi <em>dashboard</em> terminal multi-baris berbasis ANSI tanpa efek <em>flickering</em> atau teks bertumpuk.</li>
 </ul>
 <hr />
 <h2 id="enum-dan-error-types">Enum dan Error Types</h2>

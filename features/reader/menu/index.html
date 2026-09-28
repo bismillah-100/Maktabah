@@ -2779,10 +2779,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-arsitektur-pencegatan-interception-pipeline" class="md-nav__link">
+  <a href="#1-alur-arsitektur-pencegatan-interception-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Arsitektur Pencegatan (Interception Pipeline)
+        1. Alur Arsitektur Pencegatan (Interception Pipeline)
       
     </span>
   </a>
@@ -3634,10 +3634,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-arsitektur-pencegatan-interception-pipeline" class="md-nav__link">
+  <a href="#1-alur-arsitektur-pencegatan-interception-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Arsitektur Pencegatan (Interception Pipeline)
+        1. Alur Arsitektur Pencegatan (Interception Pipeline)
       
     </span>
   </a>
@@ -3776,19 +3776,19 @@
 <p>Menu seleksi teks dan klik kanan (<em>context menu</em>) pada Reader mengimplementasikan mekanisme <strong>pencegatan pembuatan anotasi (<em>annotation creation interception</em>)</strong>. Logika ini menjamin bahwa pemilihan warna atau gaya garis bawah (<em>underline</em>) pada teks yang telah memiliki anotasi tidak akan membuat entri duplikat baru, melainkan mencegat aksi tersebut untuk memperbarui (<em>mutate/update</em>) anotasi yang sudah ada.</p>
 <p>Mekanisme pencegatan ini memiliki paritas logika yang identik di macOS (<code>IbarotTextView</code>) dan iOS (<code>iOSIbarotTextView</code>).</p>
 <hr />
-<h2 id="1-arsitektur-pencegatan-interception-pipeline">1. Arsitektur Pencegatan (Interception Pipeline)</h2>
+<h2 id="1-alur-arsitektur-pencegatan-interception-pipeline">1. Alur Arsitektur Pencegatan (<em>Interception Pipeline</em>)</h2>
 <p>Berikut adalah diagram alur keputusan saat pengguna melakukan seleksi teks dan berinteraksi dengan menu:</p>
 <pre class="mermaid"><code>graph TD
     SEL["Seleksi Teks Pengguna (Displayed Range)"] --&gt; MAP["Remap Range Display &amp;rarr; Source"]
     MAP --&gt; OVERLAP{"Cek Overlapping Anotasi&lt;br/&gt;(findBestAnnotation / NSIntersectionRange)"}
 
-    OVERLAP --&gt;|"Ada Anotasi Eksis"| INTERCEPT["Pencegatan (Interception)"]
+    OVERLAP --&gt;|"Ada Anotasi yang Sudah Ada"| INTERCEPT["Pencegatan (Interception)"]
     OVERLAP --&gt;|"Rentang Kosong"| CREATE["Pembuatan Baru (Creation)"]
 
     subgraph EditBranch ["Jalur Edit / Mutasi"]
         INTERCEPT --&gt;|"Klik Warna / Underline"| MUTATE["Update existing.colorHex / type"]
-        INTERCEPT --&gt;|"Klik Note / Edit"| OPENEDIT["Buka Editor Catatan Eksis"]
-        INTERCEPT --&gt;|"Klik Hapus"| DEL["Hapus Anotasi Eksis"]
+        INTERCEPT --&gt;|"Klik Note / Edit"| OPENEDIT["Buka Editor Catatan yang Sudah Ada"]
+        INTERCEPT --&gt;|"Klik Hapus"| DEL["Hapus Anotasi yang Sudah Ada"]
         MUTATE --&gt; SAVEUPDATE["onUpdateAnnotation / updateAnnotation"]
     end
 
@@ -3808,7 +3808,7 @@
     class MUTATE,NEWANN vm;
     class SAVEUPDATE,SAVENEW,DEL store;</code></pre>
 <hr />
-<h2 id="2-implementasi-macos-ibarottextview">2. Implementasi macOS (<code>IbarotTextView</code>)</h2>
+<h2 id="2-implementasi-macos-ibarottextview">2. Implementasi macOS (IbarotTextView)</h2>
 <p>Pada macOS, interaksi menu terjadi melalui <code>override func menu(for event: NSEvent) -&gt; NSMenu?</code> dan selektor aksi tombol warna.</p>
 <h3 id="penyusunan-menu-kontekstual">Penyusunan Menu Kontekstual</h3>
 <p>Ketika pengguna memilih teks dan membuka <em>context menu</em>:</p>
@@ -3819,7 +3819,7 @@
 <li>Jika seleksi bertumpukan dengan anotasi lama: Menampilkan menu <strong>"Edit Note"</strong> dan <strong>"Delete Highlight"</strong> / <strong>"Delete Highlight &amp; Note"</strong>.</li>
 <li>Menambahkan opsi <strong>"Share with Reference"</strong> untuk membagikan teks beserta rujukan kitab.</li>
 </ol>
-<h3 id="pencegatan-aksi-warna-underline-applyannotations">Pencegatan Aksi Warna &amp; Underline (<code>applyAnnotations</code>)</h3>
+<h3 id="pencegatan-aksi-warna-underline-applyannotations">Pencegatan Aksi Warna &amp; Underline (applyAnnotations)</h3>
 <p>Saat tombol warna atau tombol <em>underline</em> ditekan di menu:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">applyAnnotations</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="k">in</span><span class="w"> </span><span class="n">selectedRange</span><span class="p">:</span><span class="w"> </span><span class="n">NSRange</span><span class="p">,</span>
@@ -3853,7 +3853,7 @@
 </span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="pencegatan-editor-catatan-annotateselection">Pencegatan Editor Catatan (<code>annotateSelection</code>)</h3>
+<h3 id="pencegatan-editor-catatan-annotateselection">Pencegatan Editor Catatan (annotateSelection)</h3>
 <p>Hal serupa diterapkan ketika pengguna memicu dialog catatan:
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">overlapping</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">annotations</span><span class="p">.</span><span class="bp">first</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">r</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">state</span><span class="p">.</span><span class="n">showHarakat</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="nv">$0</span><span class="p">.</span><span class="n">rangeDiacritics</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nv">$0</span><span class="p">.</span><span class="n">range</span>
@@ -3867,7 +3867,7 @@
 </span></code></pre></div>
 Jika rentang seleksi bersinggungan dengan anotasi lama, modal editor dibuka untuk menyunting anotasi yang sudah ada alih-alih membuat catatan baru.</p>
 <hr />
-<h2 id="3-implementasi-ios-iosibarottextview">3. Implementasi iOS (<code>iOSIbarotTextView</code>)</h2>
+<h2 id="3-implementasi-ios-iosibarottextview">3. Implementasi iOS (iOSIbarotTextView)</h2>
 <p>Pada iOS, menu seleksi teks menggunakan API <code>UIEditMenuInteraction</code> melalui delegasi <code>UITextViewDelegate</code>.</p>
 <h3 id="pembentukan-menu-adaptif">Pembentukan Menu Adaptif</h3>
 <p>Saat pengguna memilih teks, sistem memanggil delegasi <code>textView(_:editMenuForTextIn:suggestedActions:)</code>:</p>
@@ -3898,7 +3898,7 @@ Jika rentang seleksi bersinggungan dengan anotasi lama, modal editor dibuka untu
 </span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="bp">UIMenu</span><span class="p">(</span><span class="n">children</span><span class="p">:</span><span class="w"> </span><span class="n">actions</span><span class="p">)</span>
 </span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="deteksi-overlap-terbaik-findbestannotation">Deteksi Overlap Terbaik (<code>findBestAnnotation</code>)</h3>
+<h3 id="deteksi-overlap-terbaik-findbestannotation">Deteksi Overlap Terbaik (findBestAnnotation)</h3>
 <p>Pencarian anotasi yang sudah ada dijalankan oleh <code>AnnotationCoordinator.findBestAnnotation</code>:</p>
 <ol>
 <li><strong>Fully Contain</strong>: Mencari anotasi yang mencakup seluruh rentang seleksi (<code>range.contains(selectionRange)</code>). Jika terdapat lebih dari satu, dipilih anotasi dengan rentang terpendek (<em>paling spesifik</em>).</li>
@@ -3906,7 +3906,7 @@ Jika rentang seleksi bersinggungan dengan anotasi lama, modal editor dibuka untu
 </ol>
 <h3 id="diferensiasi-aksi-menu-ios">Diferensiasi Aksi Menu iOS</h3>
 <ul>
-<li><strong>Kasus Anotasi Eksis</strong>:
+<li><strong>Kasus Anotasi yang Sudah Ada</strong>:
   Menu menyajikan tombol <strong>"Edit Note"</strong> (membuka lembar sunting anotasi via <code>onTapAnnotation</code>) dan <strong>"Delete Highlight"</strong> (menghapus anotasi via <code>viewModel.deleteAnnotation</code>).</li>
 <li><strong>Kasus Belum Ada Anotasi</strong>:
   Menu menampilkan sub-menu palet warna sorotan (<em>highlight</em>) dan tombol <strong>"Underline"</strong> yang memicu <code>onAddAnnotation</code>.</li>

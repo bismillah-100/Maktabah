@@ -3084,7 +3084,51 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#komponen-penyangga-resolusi-viewport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Komponen Penyangga &amp; Resolusi Viewport
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Komponen Penyangga &amp; Resolusi Viewport">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
+  <a href="#1-searchresultbuffer-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. SearchResultBuffer (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-searchhitresolver-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SearchHitResolver (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sub-komponen-ekstensi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3159,11 +3203,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -3645,7 +3684,51 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#komponen-penyangga-resolusi-viewport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Komponen Penyangga &amp; Resolusi Viewport
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Komponen Penyangga &amp; Resolusi Viewport">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
+  <a href="#1-searchresultbuffer-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. SearchResultBuffer (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-searchhitresolver-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. SearchHitResolver (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sub-komponen-ekstensi" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3727,11 +3810,6 @@
     </nav>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
     </ul>
   
@@ -3753,7 +3831,7 @@
 <h1 id="state-management">State Management</h1>
 <p>Manajemen <em>state</em> di modul Search ditangani oleh <code>SearchViewModel</code>, yang dioptimalkan dengan makro <code>@Observable</code> (Swift 5.9+) untuk integrasi reaktif dengan antarmuka SwiftUI maupun <em>binding</em> data ke UIKit dan AppKit (melalui Combine atau Observation).</p>
 <h2 id="komponen-searchviewmodel">Komponen <code>SearchViewModel</code></h2>
-<p>ViewModel ini mengoordinasikan antrean <em>multithread</em> dari <code>SearchEngine</code> dan menyiapkannya untuk dikonsumsi oleh lapisan presentasi (UI).</p>
+<p>ViewModel ini mengoordinasikan antrean <em>multithread</em> dari <code>SearchEngine</code>, menyangga hasil melalui <code>SearchResultBuffer</code>, dan menyiapkannya untuk dikonsumsi oleh lapisan presentasi (UI) secara <em>lazy</em> menggunakan <code>SearchHitResolver</code>.</p>
 <h3 id="state-utama">State Utama</h3>
 <ul>
 <li><code>query</code>: Teks atau kata kunci yang dicari.</li>
@@ -3763,20 +3841,61 @@
 <li><code>isSearching</code> &amp; <code>isPaused</code>: Indikator status siklus hidup (<em>lifecycle</em>) pencarian yang sedang aktif.</li>
 <li><strong>Indikator Progress:</strong> Properti <code>totalTables</code>, <code>completedTables</code>, <code>totalRowsInTable</code>, dan <code>completedRowsInTable</code> digunakan khusus untuk memandu bilah kemajuan (<em>progress bar</em>).</li>
 </ul>
-<h3 id="sub-komponen-ekstensi">Sub-Komponen (Ekstensi)</h3>
+<hr />
+<h2 id="komponen-penyangga-resolusi-viewport">Komponen Penyangga &amp; Resolusi Viewport</h2>
+<h3 id="1-searchresultbuffer-class">1. SearchResultBuffer (Class)</h3>
+<p>Untuk mencegah <em>freezing</em> antarmuka pengguna saat kueri FTS menghasilkan ribuan hingga ratusan ribu kecocokan dalam hitungan milidetik, <code>SearchResultBuffer</code> bertindak sebagai penyangga (<em>buffer</em>) adaptif dengan perlindungan <code>Mutex</code>:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SearchResultBuffer</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">Mutex</span><span class="p">(</span><span class="n">BufferState</span><span class="p">())</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">batchSize</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="c1">// Nilai bawaan: 50 item</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">flushInterval</span><span class="p">:</span><span class="w"> </span><span class="n">Duration</span><span class="w"> </span><span class="c1">// Nilai bawaan: 100ms</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">onFlush</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">Sendable</span><span class="w"> </span><span class="p">([</span><span class="n">SearchResultItem</span><span class="p">])</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Void</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Mekanisme Adaptive Flush</strong>:
+  Item hasil pencarian ditampung di dalam memori penyangga. Pengiriman hasil ke <code>SearchViewModel</code> (<code>onFlush</code>) dipicu ketika salah satu dari dua kondisi terpenuhi:</li>
+<li>Jumlah item yang tertampung mencapai ambang batas <code>batchSize</code> (50 item).</li>
+<li>Interval waktu <code>flushInterval</code> (100 ms) berakhir.</li>
+<li>Pendekatan ini meratakan beban <em>main-thread render</em> sehingga antarmuka tetap berjalan mulus pada 60/120 fps.</li>
+</ul>
+<h3 id="2-searchhitresolver-class">2. SearchHitResolver (Class)</h3>
+<p>Merupakan <em>singleton</em> berstatus <code>@MainActor</code> yang bertugas menyelesaikan cuplikan teks berformat (<code>NSAttributedString</code>) secara <em>lazy</em> (sesuai kebutuhan sel tabel yang sedang terlihat di layar):</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SearchHitResolver</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SearchHitResolver</span><span class="p">()</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">cache</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="bp">NSCache</span><span class="p">&lt;</span><span class="bp">NSString</span><span class="p">,</span><span class="w"> </span><span class="bp">NSAttributedString</span><span class="p">&gt;()</span><span class="w"> </span><span class="c1">// Batas kapasitas: 1000 entri</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">resolveSnippet</span><span class="p">(</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="n">item</span><span class="p">:</span><span class="w"> </span><span class="n">SearchResultItem</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="n">keywords</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">],</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">        </span><span class="n">mode</span><span class="p">:</span><span class="w"> </span><span class="n">SearchMode</span><span class="p">,</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="n">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="bp">NSAttributedString</span><span class="p">?</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Alur Resolusi</strong>:</li>
+<li>Memeriksa <em>cache</em> <code>NSCache</code> menggunakan kunci unik <code>item.id</code>.</li>
+<li>Jika belum tersedia, membaca baris teks spesifik secara langsung dari basis data arsip melalui <code>LibraryDataManager.shared.fetchSingleContent</code>.</li>
+<li>Membersihkan teks Arab (<code>cleaningLineBreaks</code>, <code>stripSpanTags</code>), menormalisasi angka (<code>convertToArabicDigits</code>), dan mencari rentang kata kunci.</li>
+<li>Menyimpan hasil <code>NSAttributedString</code> yang telah disorot warnanya ke dalam <em>cache</em> 1000 item.</li>
+</ul>
+<hr />
+<h2 id="sub-komponen-ekstensi">Sub-Komponen (Ekstensi)</h2>
 <p>Fungsionalitas <code>SearchViewModel</code> didistribusikan ke dalam beberapa berkas ekstensi untuk memelihara prinsip <em>Separation of Concerns</em>:</p>
-<h4 id="1-execution-searchexecutionswift">1. Execution (<code>Search+Execution.swift</code>)</h4>
-<p>Menangani siklus pencarian seperti eksekusi awal (<code>startSearch</code>), jeda/lanjutkan (<em>pause/resume</em>), dan penghentian tugas (<code>stopSearch</code>). Eksekusi dialihkan ke <em>background thread</em> melalui <code>Task.detached</code> dengan penguncian <code>Mutex</code> pada referensi <code>Task</code> untuk mencegah akses konkuren ganda.
+<h3 id="1-execution-searchexecutionswift">1. Execution (<code>Search+Execution.swift</code>)</h3>
+<p>Menangani siklus pencarian seperti eksekusi awal (<code>startSearch</code>), jeda/lanjutkan (<em>pause/resume</em>), dan penghentian <em>task</em> (<code>stopSearch</code>). Eksekusi dialihkan ke <em>background thread</em> melalui <code>Task.detached</code> dengan penguncian <code>Mutex</code> pada referensi <code>Task</code> untuk mencegah akses konkuren ganda.
 Di AppKit (macOS), ekstensi ini memanfaatkan <em>Combine Publishers</em> seperti <code>searchDidInitialize</code> atau <code>searchProgressDidUpdate</code>.</p>
-<h4 id="2-library-searchlibraryswift">2. Library (<code>Search+Library.swift</code>)</h4>
+<h3 id="2-library-searchlibraryswift">2. Library (<code>Search+Library.swift</code>)</h3>
 <p>Bertindak sebagai adapter dan delegator menuju <code>LibraryDataManager</code> untuk melacak tabel SQLite (<em>resolve</em>) terhadap pustaka kitab terkait.</p>
-<h4 id="3-observers-searchobserversswift">3. Observers (<code>Search+Observers.swift</code>)</h4>
+<h3 id="3-observers-searchobserversswift">3. Observers (<code>Search+Observers.swift</code>)</h3>
 <p>Memantau siaran internal (<em>NotificationCenter</em>). Jika direktori penyimpanan basis data perpustakaan diubah, modul ini mereset dan memuat ulang instrumen pencarian secara mandiri.</p>
-<h4 id="4-restoration-searchrestorationswift">4. Restoration (<code>Search+Restoration.swift</code>)</h4>
+<h3 id="4-restoration-searchrestorationswift">4. Restoration (<code>Search+Restoration.swift</code>)</h3>
 <p>Membaca dan menyimpan cadangan sesi pencarian (<code>ReaderState</code>). Mekanisme ini memulihkan hasil pencarian terakhir ketika pengguna membuka kembali kotak dialog tanpa harus melakukan komputasi ulang.</p>
-<h4 id="5-saved-results-searchsavedresultsswift">5. Saved Results (<code>Search+SavedResults.swift</code>)</h4>
+<h3 id="5-saved-results-searchsavedresultsswift">5. Saved Results (<code>Search+SavedResults.swift</code>)</h3>
 <p>Menyediakan utilitas pemrosesan teks sorotan (cuplikan rentang kata kunci <code>NSAttributedString</code>). Ketika riwayat hasil tersimpan (<em>Saved Results</em>) diakses, modul memanfaatkan <code>ResultBuffer</code> (<em>batching</em>) untuk memuat fragmen secara efisien.</p>
-<h4 id="6-ekstensi-spesifik-platform">6. Ekstensi Spesifik Platform</h4>
+<h3 id="6-ekstensi-spesifik-platform">6. Ekstensi Spesifik Platform</h3>
 <p>Memuat abstraksi terisolasi bagi masing-masing platform:</p>
 <ul>
 <li><strong>iOS (<code>Search+iOS.swift</code>)</strong>: Penerapan <em>debounce filter</em> (melalui Combine), pencatatan histori pencarian (<em>search history</em>), serta penyesuaian hierarki kategori perpustakaan.</li>

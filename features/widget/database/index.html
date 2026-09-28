@@ -3261,10 +3261,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-pipeline-persistensi-snapshot" class="md-nav__link">
+  <a href="#1-alur-persistensi-snapshot-snapshot-persistence-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Pipeline Persistensi Snapshot
+        1. Alur Persistensi Snapshot (Snapshot Persistence Pipeline)
       
     </span>
   </a>
@@ -3545,10 +3545,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-pipeline-persistensi-snapshot" class="md-nav__link">
+  <a href="#1-alur-persistensi-snapshot-snapshot-persistence-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Pipeline Persistensi Snapshot
+        1. Alur Persistensi Snapshot (Snapshot Persistence Pipeline)
       
     </span>
   </a>
@@ -3600,7 +3600,7 @@
 2. <strong>Pencegahan Kunci Basis Data (<em>Database Lock</em>)</strong>: Akses bersamaan antara aplikasi utama yang sedang menulis dan widget yang sedang membaca berpotensi memicu kondisi <code>database is locked</code>.</p>
 <p>Sebagai gantinya, widget beroperasi menggunakan mekanisme <strong>Snapshot JSON</strong> terisolasi yang disimpan ke dalam <em>App Group Shared Container</em> dan dikoordinasikan secara asinkron menggunakan <em>actor</em> <code>FileCoordinator</code>.</p>
 <hr />
-<h2 id="1-pipeline-persistensi-snapshot">1. Pipeline Persistensi Snapshot</h2>
+<h2 id="1-alur-persistensi-snapshot-snapshot-persistence-pipeline">1. Alur Persistensi Snapshot (<em>Snapshot Persistence Pipeline</em>)</h2>
 <pre class="mermaid"><code>graph TD
     subgraph Host_App ["Aplikasi Utama (macOS / iOS)"]
         STORE["AnnotationStore / HistoryDatabaseManager"] --&gt;|"Mutasi Data"| COORD["WidgetUpdateCoordinator.shared"]
@@ -3661,7 +3661,7 @@
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong>Thread-Safety &amp; Multiprocess</strong>: Menghindari kondisi pacu (<em>race condition</em>) saat aplikasi utama menulis snapshot baru persis ketika widget sedang me-refresh timeline.</li>
+<li><strong>Thread-Safety &amp; Multiprocess</strong>: Menghindari <em>race condition</em> saat aplikasi utama menulis snapshot baru persis ketika widget sedang me-refresh timeline.</li>
 <li><strong>Direktori Isolasi</strong>: Snapshot diletakkan di dalam folder terproteksi <code>Library/Application Support/</code> di dalam App Group <code>group.com.Drn.maktabah</code>.</li>
 </ul>
 <hr />

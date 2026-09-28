@@ -1869,10 +1869,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#a-pola-singleflightkey-value" class="md-nav__link">
+  <a href="#a-pola-singleflight" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A. Pola SingleFlight&lt;Key, Value&gt;
+        A. Pola SingleFlight
       
     </span>
   </a>
@@ -1884,6 +1884,17 @@
     <span class="md-ellipsis">
       
         B. Ketahanan Jaringan (NetworkMonitor)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pelaporan-ukuran-progress-terdownload-byte-level-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Pelaporan Ukuran &amp; Progress Terdownload (Byte-Level Progress)
       
     </span>
   </a>
@@ -3674,10 +3685,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#a-pola-singleflightkey-value" class="md-nav__link">
+  <a href="#a-pola-singleflight" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A. Pola SingleFlight&lt;Key, Value&gt;
+        A. Pola SingleFlight
       
     </span>
   </a>
@@ -3689,6 +3700,17 @@
     <span class="md-ellipsis">
       
         B. Ketahanan Jaringan (NetworkMonitor)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pelaporan-ukuran-progress-terdownload-byte-level-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Pelaporan Ukuran &amp; Progress Terdownload (Byte-Level Progress)
       
     </span>
   </a>
@@ -3809,14 +3831,22 @@
 <h1 id="database-download-archive-integration-book-update-engine">Database Download, Archive Integration &amp; Book Update Engine</h1>
 <p>Sumber kode:</p>
 <ul>
-<li><code>Source/Features/Library/Database/BookDownloadManager.swift</code></li>
-<li><code>Source/Features/Library/Database/BookArchiveIntegrator.swift</code></li>
-<li><code>Source/Features/Library/Database/BookUpdateManager/</code><ul>
+<li><code>Source/Features/Library/Database/</code><ul>
+<li><code>BookDownloadManager.swift</code></li>
+<li><code>BookArchiveIntegrator.swift</code></li>
+<li><code>Downloader/</code><ul>
+<li><code>BookDownloadDelegate.swift</code></li>
+<li><code>BulkDownloadProgressTracker.swift</code></li>
+</ul>
+</li>
+<li><code>Updater/</code><ul>
 <li><code>BookUpdateManager.swift</code></li>
 <li><code>BookUpdateMgr+Fetch.swift</code></li>
 <li><code>BookUpdateMgr+Import.swift</code></li>
 <li><code>BookUpdateMgr+Metadata.swift</code></li>
 <li><code>BookUpdateMgr+SQLite.swift</code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -3849,7 +3879,7 @@
 <hr />
 <h2 id="2-bookdownloadmanager-unduhan-asinkron-deduplikasi">2. BookDownloadManager: Unduhan Asinkron &amp; Deduplikasi</h2>
 <p><code>BookDownloadManager</code> bertindak sebagai gerbang pengambilan berkas per-buku secara mandiri:</p>
-<h3 id="a-pola-singleflightkey-value">A. Pola <code>SingleFlight&lt;Key, Value&gt;</code></h3>
+<h3 id="a-pola-singleflight">A. Pola SingleFlight<Key, Value></h3>
 <p>Untuk mencegah duplikasi permintaan (<em>request coalescing</em>) atau pemanggilan paralel dari beberapa subsistem secara bersamaan ke buku yang sama:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BookDownloadManager</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">singleFlight</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SingleFlight</span><span class="p">&lt;</span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">URL</span><span class="p">&gt;()</span>
@@ -3867,12 +3897,43 @@
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="b-ketahanan-jaringan-networkmonitor">B. Ketahanan Jaringan (<code>NetworkMonitor</code>)</h3>
+<h3 id="b-ketahanan-jaringan-networkmonitor">B. Ketahanan Jaringan (NetworkMonitor)</h3>
 <p><code>BookDownloadManager</code> terhubung langsung ke <code>NetworkMonitor.shared</code>. Jika sambungan internet terputus saat proses pengunduhan, seluruh koneksi aktif dibatalkan secara tertib (<code>cancelAllDownloads()</code>), dan status parsial dibersihkan agar tidak meninggalkan berkas korup pada penyimpanan lokal.</p>
+<h3 id="c-pelaporan-ukuran-progress-terdownload-byte-level-progress">C. Pelaporan Ukuran &amp; Progress Terdownload (Byte-Level Progress)</h3>
+<p>Sistem pengunduhan kitab dilengkapi pelacakan byte berbasis <code>URLSessionDownloadDelegate</code> yang mengalirkan progres ukuran nyata (baik untuk satu kitab maupun pengunduhan massal / <em>bulk download</em>):</p>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Metadata ["1. Sumber Metadata"]
+        IDX["index.json (size_zst)"] --&gt; CACHE["BookDownloadIndexCache"]
+        CACHE --&gt; BD["BooksData.compressedDownloadSize"]
+    end</code></pre>
+<pre class="mermaid"><code>flowchart TD
+    subgraph Engine ["2. Download Engine"]
+        BDM["BookDownloadManager\n(URLSessionDownloadDelegate)"]
+        BDM --&gt;|bytesWritten, totalExpectedBytes| STREAM["AsyncThrowingStream / Callback"]
+    end
+
+    subgraph SingleFlow ["3. Single Book Flow (On-Demand)"]
+        BAI["BookArchiveIntegrator\n.ensureBookIntegrated"] --&gt; BDM
+        STREAM --&gt;|onDownloadProgress| BAI
+        BAI --&gt;|Update State| PBD["ProgressBooksDownload\n(state.detail: '4.2 MB / 12.5 MB'\nstate.progress: 0.34)"]
+    end
+
+    subgraph BulkFlow ["4. Bulk Download Flow (Concurrent)"]
+        BDMC["BulkDownloadModalCenter / BulkActionLibrary\n(BulkDownloadProgressTracker)"] --&gt; BDM
+        STREAM --&gt;|Update Book Progress| BDMC
+        BDMC --&gt;|Update Agregat Ukuran| BVC["BulkDownloadVC / iOS State\n('Mengunduh 3 dari 10 kitab (15 MB / 60 MB)')\nprogressBar = bytesDownloaded / totalBytes"]
+    end</code></pre>
+<ul>
+<li><strong>Prioritas Penentuan Total Ukuran</strong>:</li>
+<li><code>HTTPURLResponse.expectedContentLength</code> dari server (jika &gt; 0).</li>
+<li>Fallback ke <code>expectedSize</code> pemanggil (<code>BooksData.compressedDownloadSize</code>).</li>
+<li>Fallback ke <code>entry.sizeZst</code> dari <code>BookDownloadIndexCache</code>.</li>
+<li><strong>BulkDownloadProgressTracker</strong>: Aktor pengelola agregat akumulasi byte dan jumlah kitab secara <em>thread-safe</em> saat unduhan berlangsung paralel melalui <code>withTaskGroup</code>.</li>
+</ul>
 <hr />
 <h2 id="3-bookarchiveintegrator-integrasi-tabel-pembentukan-fts5">3. BookArchiveIntegrator: Integrasi Tabel &amp; Pembentukan FTS5</h2>
 <p>Setelah berkas sementara <code>.sqlite</code> kitab selesai diunduh, berkas tersebut diintegrasikan ke dalam salah satu dari 20 berkas arsip induk (<code>1.sqlite</code> s.d. <code>20.sqlite</code>).</p>
-<h3 id="a-bookarchivesingleflight-actor-koordinasi-konkurensi">A. <code>BookArchiveSingleFlight</code> (Actor) - Koordinasi Konkurensi</h3>
+<h3 id="a-bookarchivesingleflight-actor-koordinasi-konkurensi">A. BookArchiveSingleFlight (Actor) - Koordinasi Konkurensi</h3>
 <p>Menulis ke satu basis data SQLite secara paralel dari banyak <em>thread</em> dapat memicu galat <code>SQLITE_BUSY</code> (<em>database is locked</em>). Modul ini menggunakan <em>Actor</em> dengan antrean <em>predecessor</em>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">BookArchiveSingleFlight</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">shared</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">BookArchiveSingleFlight</span><span class="p">()</span>
@@ -3900,7 +3961,7 @@
 </span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="b-integratephase-enum-dua-fase-integrasi">B. <code>IntegratePhase</code> (Enum) - Dua Fase Integrasi</h3>
+<h3 id="b-integratephase-enum-dua-fase-integrasi">B. IntegratePhase (Enum) - Dua Fase Integrasi</h3>
 <p>Operasi integrasi dibagi menjadi dua fase independen:</p>
 <ol>
 <li><strong>Fase Data (<code>IntegratePhase.data</code>)</strong>:<ul>
@@ -3919,7 +3980,7 @@
 <hr />
 <h2 id="4-bookupdatemanager-staging-pembaruan-atomik">4. BookUpdateManager: Staging &amp; Pembaruan Atomik</h2>
 <p>Ketika naskah kitab direvisi, dikoreksi salah ketiknya, atau bertambah jilidnya di server, <code>BookUpdateManager</code> menangani proses pembaruan secara mulus (<em>seamless</em>).</p>
-<h3 id="a-deteksi-status-versi-bookversionstate">A. Deteksi Status Versi (<code>BookVersionState</code>)</h3>
+<h3 id="a-deteksi-status-versi-bookversionstate">A. Deteksi Status Versi (BookVersionState)</h3>
 <p>Sistem memeriksa kolom versi (<code>bver</code> atau <code>bVer</code>) di <code>main.sqlite</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookVersionState</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">notInLibrary</span>

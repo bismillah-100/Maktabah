@@ -1762,15 +1762,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-pipeline-arsitektur" class="md-nav__link">
+  <a href="#1-alur-arsitektur-architecture-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Pipeline Arsitektur
+        1. Alur Arsitektur (Architecture Pipeline)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Pipeline Arsitektur">
+    <nav class="md-nav" aria-label="1. Alur Arsitektur (Architecture Pipeline)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1868,10 +1868,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#32-bookupdateviewmodel" class="md-nav__link">
+  <a href="#32-bookupdateviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.2 BookUpdateViewModel
+        3.2 BookUpdateViewModel (Class)
       
     </span>
   </a>
@@ -3728,15 +3728,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-pipeline-arsitektur" class="md-nav__link">
+  <a href="#1-alur-arsitektur-architecture-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Pipeline Arsitektur
+        1. Alur Arsitektur (Architecture Pipeline)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Pipeline Arsitektur">
+    <nav class="md-nav" aria-label="1. Alur Arsitektur (Architecture Pipeline)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3834,10 +3834,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#32-bookupdateviewmodel" class="md-nav__link">
+  <a href="#32-bookupdateviewmodel-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3.2 BookUpdateViewModel
+        3.2 BookUpdateViewModel (Class)
       
     </span>
   </a>
@@ -3963,8 +3963,8 @@
 <h1 id="dokumentasi-teknis-sistem-pembaruan-buku-book-update">Dokumentasi Teknis: Sistem Pembaruan Buku (Book Update)</h1>
 <p>Dokumen ini membedah arsitektur dan implementasi teknis dari proses pembaruan buku pada aplikasi Maktabah, mulai dari antarmuka pengguna (<code>BookUpdateView</code>), logika bisnis (<code>BookUpdateViewModel</code>), hingga lapisan mesin basis data (<code>BookUpdateManager</code>).</p>
 <hr />
-<h2 id="1-pipeline-arsitektur">1. Pipeline Arsitektur</h2>
-<p>Pipeline sistem pembaruan buku dirancang dengan pemisahan tanggung jawab yang jelas. Lapisan antarmuka (View) berkomunikasi dengan ViewModel untuk manajemen <em>state</em> dan eksekusi paralel. ViewModel kemudian menyerahkan pekerjaan berat (I/O, basis data, jaringan) kepada komponen terdedikasi, yaitu <code>BookUpdateManager</code>. Setelah selesai, Manager mengirimkan notifikasi ke sistem agar subsistem lain (misalnya Reader atau Library) dapat merespons pembaruan data.</p>
+<h2 id="1-alur-arsitektur-architecture-pipeline">1. Alur Arsitektur (<em>Architecture Pipeline</em>)</h2>
+<p>Alur arsitektur sistem pembaruan buku dirancang dengan pemisahan tanggung jawab yang jelas. Lapisan antarmuka (View) berkomunikasi dengan ViewModel untuk manajemen <em>state</em> dan eksekusi paralel. ViewModel kemudian menyerahkan pekerjaan berat (I/O, basis data, jaringan) kepada komponen terdedikasi, yaitu <code>BookUpdateManager</code>. Setelah selesai, Manager mengirimkan notifikasi ke sistem agar subsistem lain (misalnya Reader atau Library) dapat merespons pembaruan data.</p>
 <h3 id="11-diagram-interaksi-komponen">1.1 Diagram Interaksi Komponen</h3>
 <pre class="mermaid"><code>flowchart TD
     subgraph UI_VM ["Presentation Layer"]
@@ -4072,7 +4072,7 @@
 <p>Maktabah mematuhi arsitektur berbasis fitur dengan batasan domain yang ketat:</p>
 <ul>
 <li><strong>View Layer (<code>BookUpdateView.swift</code>)</strong>: Murni bertanggung jawab atas tampilan UI. Komponen ini merefleksikan perubahan properti dari <code>viewModel</code> dan menggunakan instruksi pra-kompilasi <code>#if os(macOS)</code> dan antarmuka khusus iOS untuk diferensiasi antarmuka <em>native</em>.</li>
-<li><strong>ViewModel Layer (<code>BookUpdateVM.swift</code>)</strong>: Menampung status presentasi (<code>isUpdating</code>, <code>progressMessage</code>) dan mengendalikan orkestrasi tugas. ViewModel memanfaatkan <code>TaskGroup</code> untuk unduhan paralel, namun tidak menulis langsung ke disk atau basis data.</li>
+<li><strong>ViewModel Layer (<code>BookUpdateVM.swift</code>)</strong>: Menampung status presentasi (<code>isUpdating</code>, <code>progressMessage</code>) dan mengendalikan orkestrasi <em>task</em>. ViewModel memanfaatkan <code>TaskGroup</code> untuk unduhan paralel, namun tidak menulis langsung ke disk atau basis data.</li>
 <li><strong>Manager Layer (<code>BookUpdateManager</code>)</strong>: Berperan sebagai <em>engine</em> I/O dan basis data. Terbagi ke dalam ekstensi-ekstensi:<ul>
 <li><code>+Fetch.swift</code>: Pengambilan CSV dan pemeriksaan versi.</li>
 <li><code>+Metadata.swift</code>: Pembacaan dan penulisan metadata utama ke <code>main.sqlite</code>.</li>
@@ -4083,7 +4083,7 @@
 </ul>
 <hr />
 <h2 id="3-bedah-komponen-struct-class-dan-enum">3. Bedah Komponen (Struct, Class, dan Enum)</h2>
-<h3 id="31-layer-tampilan-updateview-bookupdaterow">3.1 Layer Tampilan (<code>UpdateView</code> &amp; <code>BookUpdateRow</code>)</h3>
+<h3 id="31-layer-tampilan-updateview-bookupdaterow">3.1 Layer Tampilan (UpdateView &amp; BookUpdateRow)</h3>
 <p>Implementasi antarmuka utama terbagi berdasarkan sistem operasi:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS</label><label for="__tabbed_1_2">iOS</label></div>
 <div class="tabbed-content">
@@ -4112,7 +4112,7 @@
 </div>
 </div>
 <p>Daftar <code>BookUpdateRow</code> merupakan baris UI yang menampilkan status pembaruan dan ukuran berkas. Komponen ini memuat <em>checkbox</em> untuk memilih buku yang membutuhkan pembaruan.</p>
-<h3 id="32-bookupdateviewmodel">3.2 BookUpdateViewModel</h3>
+<h3 id="32-bookupdateviewmodel-class">3.2 BookUpdateViewModel (Class)</h3>
 <ul>
 <li><strong>Tipe</strong>: <code>@Observable final class</code> yang memastikan keamanan pengiriman antar-<em>thread</em> (<code>@unchecked Sendable</code>).</li>
 <li><strong>Fungsi Utama</strong>:<ul>
@@ -4139,7 +4139,7 @@
 <li>Logika <em>concurrency</em> di dalam ViewModel membatasi eksekusi asinkron agar tidak membebani I/O jaringan maupun disk.</li>
 </ol>
 <h3 id="33-struktur-data-di-lapisan-model">3.3 Struktur Data di Lapisan Model</h3>
-<h4 id="bookindexentry-struct"><code>BookIndexEntry</code> (Struct)</h4>
+<h4 id="bookindexentry-struct">BookIndexEntry (Struct)</h4>
 <p>Entitas yang merepresentasikan satu baris dalam berkas CSV indeks utama.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">BookIndexEntry</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkid</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -4158,7 +4158,7 @@
 <li><code>downloadURL</code>: URL unduhan berkas.</li>
 <li><code>fileSize</code>: Estimasi ukuran berkas dalam byte.</li>
 </ul>
-<h4 id="authindexentry-struct"><code>AuthIndexEntry</code> (Struct)</h4>
+<h4 id="authindexentry-struct">AuthIndexEntry (Struct)</h4>
 <p>Entitas indeks untuk data pengarang (<em>muallif</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">AuthIndexEntry</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">authId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -4166,7 +4166,7 @@
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">downloadURL</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<h4 id="bookmetadata-struct"><code>BookMetadata</code> (Struct)</h4>
+<h4 id="bookmetadata-struct">BookMetadata (Struct)</h4>
 <p><em>Struct</em> yang merepresentasikan skema tabel <code>main_update</code> dari basis data per-kitab.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">BookMetadata</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkid</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -4182,7 +4182,7 @@
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">pdfCs</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">?</span>
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="p">}</span>
 </span></code></pre></div>
-<h4 id="stagedbookupdate-struct"><code>StagedBookUpdate</code> (Struct)</h4>
+<h4 id="stagedbookupdate-struct">StagedBookUpdate (Struct)</h4>
 <p><em>Struct</em> yang merangkum seluruh dependensi dari satu pembaruan yang siap diterapkan (<em>applied</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">StagedBookUpdate</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">entry</span><span class="p">:</span><span class="w"> </span><span class="n">BookIndexEntry</span>
@@ -4198,7 +4198,7 @@
 <li><code>ftsSourceURL</code>: Lokasi berkas duplikat teks mentah untuk FTS.</li>
 <li><code>authorContext</code>: Informasi pengarang terkait.</li>
 </ul>
-<h4 id="authorcontext-struct"><code>AuthorContext</code> (Struct)</h4>
+<h4 id="authorcontext-struct">AuthorContext (Struct)</h4>
 <p>Konteks pengarang terkait yang dipasangkan dengan buku.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">AuthorContext</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">authId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -4206,7 +4206,7 @@
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">downloadURL</span><span class="p">:</span><span class="w"> </span><span class="n">URL</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="34-bookupdatestatus-enum-status-event">3.4 <code>BookUpdateStatus</code> (Enum) - Status Event</h3>
+<h3 id="34-bookupdatestatus-enum-status-event">3.4 BookUpdateStatus (Enum) - Status Event</h3>
 <p>Sistem pembaruan dipandu oleh status-status yang didefinisikan dalam <code>BookUpdateStatus</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">BookUpdateStatus</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">pending</span>
@@ -4261,7 +4261,7 @@
 <li><code>.version(Int64)</code>: Versi numerik tersedia.</li>
 </ul>
 </div>
-<h3 id="35-bookupdatemanager-class-singleton">3.5 <code>BookUpdateManager</code> (Class) - Singleton</h3>
+<h3 id="35-bookupdatemanager-class-singleton">3.5 BookUpdateManager (Class) - Singleton</h3>
 <p>Manajer I/O dan pembaruan data utama (<code>final class BookUpdateManager: Sendable</code>).</p>
 <ul>
 <li><strong>Konkurensi</strong>: Memenuhi <em>protocol</em> <code>Sendable</code> untuk pemanggilan lintas <em>Tasks</em>, dengan perlindungan <code>Mutex</code> pada <em>cache</em> kolom versi internal.</li>
