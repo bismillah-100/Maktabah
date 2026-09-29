@@ -807,7 +807,11 @@ final class LibraryViewModel: ViewModelBase {
         let oldIds = oldBooks.map(\.id)
         let newIds = newBooks.map(\.id)
 
-        if oldIds == newIds { return } // Tidak ada perubahan urutan atau penambahan/pengurangan
+        if oldIds == newIds {
+            firstCat.children = newBooks
+            updateSubject.send(.reloadData)
+            return
+        }
 
         var currentBooks = oldBooks
         updateSubject.send(.beginUpdates)
@@ -821,25 +825,54 @@ final class LibraryViewModel: ViewModelBase {
 
         firstCat.children = currentBooks
 
+        var needsReload = false
         for (newIndex, newBook) in newBooks.enumerated() {
             if let oldIndex = currentBooks.firstIndex(where: { $0.id == newBook.id }) {
                 if oldIndex != newIndex {
                     updateSubject.send(.moveItem(from: oldIndex, to: newIndex, parent: nil))
                     let movedBook = currentBooks.remove(at: oldIndex)
                     currentBooks.insert(movedBook, at: newIndex)
-                    firstCat.children = currentBooks
+                }
+                if currentBooks[newIndex] !== newBook {
+                    currentBooks[newIndex] = newBook
+                    needsReload = true
                 }
             } else {
                 currentBooks.insert(newBook, at: newIndex)
-                firstCat.children = currentBooks
                 updateSubject.send(.insertItems(IndexSet(integer: newIndex), parent: nil))
             }
         }
+        firstCat.children = currentBooks
         updateSubject.send(.endUpdates)
+
+        if needsReload {
+            updateSubject.send(.reloadData)
+        }
     }
 
     private func handleBooksChanged(_ notification: Notification) {
         guard let payload = notification.object as? BooksChangedNotification else { return }
+
+        if isFlatMode {
+            historyManager.loadBooksData()
+            if filterMode == .history {
+                updateFlatList(
+                    for: .history,
+                    newBooks: historyManager.historyBooks,
+                    categoryId: -2,
+                    categoryName: String(localized: "History")
+                )
+            } else if filterMode == .favorites {
+                updateFlatList(
+                    for: .favorites,
+                    newBooks: historyManager.favoriteBooks,
+                    categoryId: -1,
+                    categoryName: String(localized: "Favorites")
+                )
+            }
+            return
+        }
+
         for (categoryId, book) in payload.insertedBooks {
             if let category = findCategoryInDisplayed(categoryId) {
                 bookLookup[book.book] = (category, book)
