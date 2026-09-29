@@ -2015,10 +2015,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#optimasi-thread" class="md-nav__link">
+  <a href="#optimasi-thread-sqlite" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optimasi Thread
+        Optimasi Thread &amp; SQLite
       
     </span>
   </a>
@@ -3854,10 +3854,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#optimasi-thread" class="md-nav__link">
+  <a href="#optimasi-thread-sqlite" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optimasi Thread
+        Optimasi Thread &amp; SQLite
       
     </span>
   </a>
@@ -4034,8 +4034,12 @@
 <p>Konstanta ini digunakan saat melakukan <code>sqlite3_bind_text</code>. Dibandingkan membuat salinan <em>string</em> baru yang memakan memori RAM, sistem menggunakan pointer <code>SQLITE_TRANSIENT</code> agar lebih efisien.</p>
 </li>
 <li>
+<p><strong>Penyisipan Cepat Skala Besar (<code>appendBookFast</code>)</strong>:
+    Digunakan saat migrasi massal (<code>FtsMigrationManager</code>). Menerima <em>pre-compiled prepared statements</em> (<code>insertIndexStmt</code>, <code>insertFtsStmt</code>) yang dipakai berulang kali lintas kitab tanpa DDL check redundan ataupun <em>delete scan</em>, dieksekusi di bawah 1 transaksi tunggal.</p>
+</li>
+<li>
 <p><strong>Penyisipan Terpadu (<code>appendBookToUnifiedFTS</code>)</strong>:
-    Digunakan saat kitab baru selesai diunduh atau diimpor. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada <code>archive_index</code> berdasarkan <code>book_id</code>, lalu menyisipkan baris halaman baru ke <code>archive_index</code> dan <code>archive_fts</code> menggunakan <em>bitwise packed rowid</em> <code>(bookId &lt;&lt; 32) | (rowId &amp; 0xFFFFFFFF)</code>.</p>
+    Digunakan saat kitab baru selesai diunduh atau diimpor secara individual. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada <code>archive_index</code> berdasarkan <code>book_id</code>, lalu menyisipkan baris halaman baru ke <code>archive_index</code> dan <code>archive_fts</code> menggunakan <em>bitwise packed rowid</em> <code>(bookId &lt;&lt; 32) | (rowId &amp; 0xFFFFFFFF)</code>.</p>
 </li>
 <li>
 <p><strong>Normalisasi Teks Arab Simetris</strong>:
@@ -4048,25 +4052,26 @@
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">MigrationPaths</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archiveOrig</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">ftsOrig</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">archiveWrite</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">ftsWrite</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="p">}</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">ftsWrite</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li>Menyimpan jalur awal dan sementara untuk penulisan basis data. Tipe <code>Sendable</code> memastikan data ini aman dikirim ke konkurensi di <code>TaskGroup</code>.</li>
+<li>Menyimpan jalur awal arsip (dibuka secara langsung sebagai <em>read-only</em>) dan jalur target berkas FTS (<code>ftsWrite</code>). Tipe <code>Sendable</code> memastikan data ini aman dikirim ke konkurensi di <code>TaskGroup</code>.</li>
 </ul>
-<h4 id="optimasi-thread">Optimasi <em>Thread</em></h4>
+<h4 id="optimasi-thread-sqlite">Optimasi <em>Thread</em> &amp; SQLite</h4>
 <ul>
 <li>
 <p><strong>Concurrency Limits</strong>:
     Migrasi massal dibatasi lewat kalkulasi adaptif <code>maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))</code> agar tidak memicu peringatan keterbatasan memori (<em>Memory Warning</em>).</p>
 </li>
 <li>
-<p><strong>Pragma Tuning</strong>:
-    Memberikan instruksi sementara ke SQLite untuk menonaktifkan sinkronisasi disk I/O yang berat selama migrasi:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">synchronous</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">OFF</span><span class="p">;</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">journal_mode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MEMORY</span><span class="p">;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">temp_store</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MEMORY</span><span class="p">;</span>
+<p><strong>Pragma Tuning &amp; Zero-Copy Reading</strong>:
+    Arsip sumber dibuka langsung dalam mode <em>read-only</em> dengan pemetaan memori (<code>PRAGMA main.mmap_size</code>), sedangkan skema <code>fts_db</code> yang di-<em>attach</em> dikonfigurasi secara spesifik:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">fts_db</span><span class="p">.</span><span class="n">synchronous</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">OFF</span><span class="p">;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">fts_db</span><span class="p">.</span><span class="n">journal_mode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MEMORY</span><span class="p">;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">fts_db</span><span class="p">.</span><span class="n">temp_store</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">MEMORY</span><span class="p">;</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">fts_db</span><span class="p">.</span><span class="n">cache_size</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="o">-</span><span class="mi">32000</span><span class="p">;</span><span class="w"> </span><span class="c1">// iOS (32 MB) / -64000 (macOS)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">PRAGMA</span><span class="w"> </span><span class="n">main</span><span class="p">.</span><span class="n">mmap_size</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">67108864</span><span class="p">;</span><span class="w">  </span><span class="c1">// iOS (64 MB) / 268435456 (macOS)</span>
 </span></code></pre></div>
 </li>
 </ul>

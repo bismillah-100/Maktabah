@@ -3978,10 +3978,10 @@
 <h2 id="5-optimasi-sqlite-pragma-caching">5. Optimasi SQLite Pragma &amp; Caching</h2>
 <p>Mesin pencarian mengaplikasikan sejumlah penyetelan <em>pragma</em> dan teknik <em>caching</em> untuk memastikan latensi minimal:</p>
 <h3 id="penyetelan-pragma-performa-tinggi">Penyetelan Pragma Performa Tinggi</h3>
-<p>Pada proses migrasi dan pembacaan indeks FTS (<code>FtsMigrationManager</code> &amp; <code>SQLiteDatabase</code>):
-- <strong><code>PRAGMA synchronous = OFF;</code></strong>: Menghindari operasi <em>flush disk</em> sinkron pada saat pembentukan indeks kueri sementara.
-- <strong><code>PRAGMA journal_mode = MEMORY;</code></strong>: Mengalihkan penulisan <em>rollback journal</em> ke RAM untuk kecepatan maksimum.
-- <strong><code>PRAGMA temp_store = MEMORY;</code></strong>: Menyimpan tabel sementara (<em>temp tables</em>) dan hasil <em>sorting</em> di memori utama.
+<p>Pada proses migrasi (<code>FtsMigrationManager</code>) dan pembacaan indeks FTS (<code>SQLiteDatabase</code>):
+- <strong><code>PRAGMA fts_db.synchronous = OFF;</code></strong>: Diterapkan spesifik pada skema target FTS untuk menonaktifkan <em>flush disk</em> fisik (<code>fsync</code>) selama pembentukan indeks.
+- <strong><code>PRAGMA fts_db.journal_mode = MEMORY;</code></strong>: Mengalihkan penulisan <em>rollback journal</em> ke RAM untuk kecepatan mutasi maksimum.
+- <strong><code>PRAGMA fts_db.temp_store = MEMORY;</code></strong>: Menyimpan tabel sementara (<em>temp tables</em>) dan struktur kerja di memori utama.
 - <strong><code>PRAGMA query_only = ON;</code></strong>: Menandai koneksi <em>pool</em> murni sebagai <em>read-only</em> untuk mencegah modifikasi tidak disengaja dan memfasilitasi penguncian memori (<em>shared cache lock</em>).</p>
 <h3 id="statement-caching-lru-sqliteconnection">Statement Caching LRU (<code>SQLiteConnection</code>)</h3>
 <p>Setiap objek <code>SQLiteConnection</code> mengelola <em>cache prepared statement</em> (<code>sqlite3_prepare_v2</code>) hingga 50 <em>statement</em> (<code>maxCacheSize = 50</code>) dengan algoritma pergantian <em>LRU</em> (<em>Least Recently Used</em>):
