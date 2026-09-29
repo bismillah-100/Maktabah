@@ -2421,6 +2421,23 @@
         }
       }
     },
+    "FTS Migration Process" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عملية ترحيل FTS"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proses Migrasi FTS"
+          }
+        }
+      }
+    },
     "ftsIsMigratingAlert" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3509,6 +3526,18 @@
         }
       }
     },
+    "percent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%(Int)lld %"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
     "personalFolder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3589,6 +3618,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mohon pilih baris"
+          }
+        }
+      }
+    },
+    "Preparing Migration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعداد عملية الترحيل..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing Migration…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menyiapkan Migrasi..."
           }
         }
       }
