@@ -211,8 +211,8 @@ struct SearchModeView: View {
                         ))
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color(uiColor: .tintColor))
+                    .tint(.green)
+                    .prominentButtonStyleIfAvailable()
 
                     Button {
                         hideFtsMigrationBanner = true
@@ -232,10 +232,12 @@ struct SearchModeView: View {
             }
             .padding()
             .background(Color.appBackground)
-            .cornerRadius(10)
+            .clipShape(RoundedRectangle(cornerRadius: 32))
+            #if os(iOS)
+            .roundedBorder()
+            #endif
             .padding(.horizontal)
             .padding(.bottom, 8)
-            .shadow(radius: 2)
             .transition(.move(edge: .top).combined(with: .opacity))
             .animation(.easeInOut, value: ftsManager.isMigrating)
             .animation(.easeInOut, value: ftsManager.needsMigration)
