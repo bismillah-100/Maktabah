@@ -36,7 +36,7 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundColor(.primary)
 
-                    if !ftsManager.isMigrating {
+                    if !ftsManager.isMigrating || ftsManager.isCancelled {
                         Button {
                             #if os(macOS)
                             SettingsActions.showFtsMigrationModal()

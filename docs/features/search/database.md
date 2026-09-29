@@ -160,10 +160,10 @@ Untuk mencegah *freezing* antarmuka pengguna saat kueri menghasilkan ratusan rib
 Mesin pencarian mengaplikasikan sejumlah penyetelan *pragma* dan teknik *caching* untuk memastikan latensi minimal:
 
 ### Penyetelan Pragma Performa Tinggi
-Pada proses migrasi dan pembacaan indeks FTS (`FtsMigrationManager` & `SQLiteDatabase`):
-- **`PRAGMA synchronous = OFF;`**: Menghindari operasi *flush disk* sinkron pada saat pembentukan indeks kueri sementara.
-- **`PRAGMA journal_mode = MEMORY;`**: Mengalihkan penulisan *rollback journal* ke RAM untuk kecepatan maksimum.
-- **`PRAGMA temp_store = MEMORY;`**: Menyimpan tabel sementara (*temp tables*) dan hasil *sorting* di memori utama.
+Pada proses migrasi (`FtsMigrationManager`) dan pembacaan indeks FTS (`SQLiteDatabase`):
+- **`PRAGMA fts_db.synchronous = OFF;`**: Diterapkan spesifik pada skema target FTS untuk menonaktifkan *flush disk* fisik (`fsync`) selama pembentukan indeks.
+- **`PRAGMA fts_db.journal_mode = MEMORY;`**: Mengalihkan penulisan *rollback journal* ke RAM untuk kecepatan mutasi maksimum.
+- **`PRAGMA fts_db.temp_store = MEMORY;`**: Menyimpan tabel sementara (*temp tables*) dan struktur kerja di memori utama.
 - **`PRAGMA query_only = ON;`**: Menandai koneksi *pool* murni sebagai *read-only* untuk mencegah modifikasi tidak disengaja dan memfasilitasi penguncian memori (*shared cache lock*).
 
 ### Statement Caching LRU (`SQLiteConnection`)

@@ -123,8 +123,11 @@ struct TableColumnInfo {
 
     Konstanta ini digunakan saat melakukan `sqlite3_bind_text`. Dibandingkan membuat salinan *string* baru yang memakan memori RAM, sistem menggunakan pointer `SQLITE_TRANSIENT` agar lebih efisien.
 
+*   **Penyisipan Cepat Skala Besar (`appendBookFast`)**:
+    Digunakan saat migrasi massal (`FtsMigrationManager`). Menerima *pre-compiled prepared statements* (`insertIndexStmt`, `insertFtsStmt`) yang dipakai berulang kali lintas kitab tanpa DDL check redundan ataupun *delete scan*, dieksekusi di bawah 1 transaksi tunggal.
+
 *   **Penyisipan Terpadu (`appendBookToUnifiedFTS`)**:
-    Digunakan saat kitab baru selesai diunduh atau diimpor. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada `archive_index` berdasarkan `book_id`, lalu menyisipkan baris halaman baru ke `archive_index` dan `archive_fts` menggunakan *bitwise packed rowid* `(bookId << 32) | (rowId & 0xFFFFFFFF)`.
+    Digunakan saat kitab baru selesai diunduh atau diimpor secara individual. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada `archive_index` berdasarkan `book_id`, lalu menyisipkan baris halaman baru ke `archive_index` dan `archive_fts` menggunakan *bitwise packed rowid* `(bookId << 32) | (rowId & 0xFFFFFFFF)`.
 
 *   **Normalisasi Teks Arab Simetris**:
     Teks dibersihkan menggunakan metode berantai `replacing("\n", with: " ").stripSpanTags()`, lalu diproses oleh algoritma `stemArabicLight10()`. Algoritma ini menghapus harakat, tasydid, tatweel (`ـ`), serta menormalisasi alif/hamzah (`أ/إ/آ/ٱ` $\rightarrow$ `ا`), ta' marbutah (`ة` $\rightarrow$ `ه`), dan alif maqsurah (`ى` $\rightarrow$ `ي`) agar simetris dengan kueri pengguna di `FtsQueryParser`.
@@ -139,25 +142,26 @@ Berperan ketika pengguna memutakhirkan aplikasi dan terdeteksi format FTS versi 
 private struct MigrationPaths: Sendable {
     let archiveOrig: String
     let ftsOrig: String
-    let archiveWrite: String
     let ftsWrite: String
 }
 ```
 
-*   Menyimpan jalur awal dan sementara untuk penulisan basis data. Tipe `Sendable` memastikan data ini aman dikirim ke konkurensi di `TaskGroup`.
+*   Menyimpan jalur awal arsip (dibuka secara langsung sebagai *read-only*) dan jalur target berkas FTS (`ftsWrite`). Tipe `Sendable` memastikan data ini aman dikirim ke konkurensi di `TaskGroup`.
 
-#### Optimasi *Thread*
+#### Optimasi *Thread* & SQLite
 
 *   **Concurrency Limits**:
     Migrasi massal dibatasi lewat kalkulasi adaptif `maxConcurrent = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))` agar tidak memicu peringatan keterbatasan memori (*Memory Warning*).
 
-*   **Pragma Tuning**:
-    Memberikan instruksi sementara ke SQLite untuk menonaktifkan sinkronisasi disk I/O yang berat selama migrasi:
+*   **Pragma Tuning & Zero-Copy Reading**:
+    Arsip sumber dibuka langsung dalam mode *read-only* dengan pemetaan memori (`PRAGMA main.mmap_size`), sedangkan skema `fts_db` yang di-*attach* dikonfigurasi secara spesifik:
 
     ```swift
-    PRAGMA synchronous = OFF;
-    PRAGMA journal_mode = MEMORY;
-    PRAGMA temp_store = MEMORY;
+    PRAGMA fts_db.synchronous = OFF;
+    PRAGMA fts_db.journal_mode = MEMORY;
+    PRAGMA fts_db.temp_store = MEMORY;
+    PRAGMA fts_db.cache_size = -32000; // iOS (32 MB) / -64000 (macOS)
+    PRAGMA main.mmap_size = 67108864;  // iOS (64 MB) / 268435456 (macOS)
     ```
 
 ### 4. BookDownloadManager (Class)
