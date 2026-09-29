@@ -20,6 +20,7 @@ struct FtsMigrationProgressView: View {
                 Image(systemName: "sparkles")
                     .foregroundColor(.yellow)
                     .font(.title2)
+                    .accessibilityHidden(true)
                 Text(.ftsMigrationTitle)
                     .font(.headline)
                 Spacer()
@@ -44,16 +45,16 @@ struct FtsMigrationProgressView: View {
                 FtsMigrationProgressSection(ftsManager: ftsManager)
                     .padding(.vertical, 8)
 
-                if ftsManager.isMigrating {
-                    Button(role: .cancel) {
-                        ftsManager.cancelMigration()
-                        onCancel?()
-                    } label: {
-                        Text(.ftsMigrationCancelBtn)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
+                Button(role: .cancel) {
+                    ftsManager.cancelMigration()
+                    isFinishing = false
+                    onCancel?()
+                } label: {
+                    Text(.ftsMigrationCancelBtn)
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .controlSize(.large)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(.ftsMigrationDesc)
@@ -80,7 +81,8 @@ struct FtsMigrationProgressView: View {
                     } label: {
                         Text(.ftsMigrationCancelBtn)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
                     .controlSize(.large)
 
                     Button {
@@ -104,7 +106,7 @@ struct FtsMigrationProgressView: View {
                         Text(.ftsMigrationUpdateBtn)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(.blue)
+                    .tint(.green)
                     .controlSize(.large)
                 }
                 .padding(.top, 8)
@@ -113,11 +115,13 @@ struct FtsMigrationProgressView: View {
         .padding(20)
         #if os(iOS)
         .background(Color.appBackground)
+        .roundedBorder()
         #else
         .background(Color(NSColor.windowBackgroundColor))
         #endif
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 32))
         .frame(minWidth: 360, idealWidth: 420, maxWidth: 450)
+        .padding(16)
     }
 }
 
@@ -173,3 +177,16 @@ struct FtsMigrationProgressSection: View {
     }
 }
 
+extension View {
+    func roundedBorder(
+        _ color: Color = .secondary,
+        cornerRadius: CGFloat = 32,
+        lineWidth: CGFloat = 0.3
+    ) -> some View {
+        clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(color, lineWidth: lineWidth)
+            )
+    }
+}
