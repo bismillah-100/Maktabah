@@ -116,12 +116,8 @@ enum ArchiveDatabaseTools {
         try createUnifiedFTS(db: db, ftsSchema: ftsSchema)
         try exec(db, "DELETE FROM \(ftsSchema).archive_index WHERE book_id = \(bookId);")
 
-        let selectSQL = String(format: SQL.selectUnifiedSource, sourceSchema, sourceTable)
         let insertIndexSQL = String(format: SQL.insertUnifiedIndex, ftsSchema)
         let insertFtsSQL = String(format: SQL.insertUnifiedFTS, ftsSchema)
-
-        let selectStmt = try prepareStatement(db: db, sql: selectSQL, errorMsg: "Error prepare SELECT for unified FTS \(sourceTable).")
-        defer { sqlite3_finalize(selectStmt) }
 
         let insertIndexStmt = try prepareStatement(db: db, sql: insertIndexSQL, errorMsg: "Error prepare INSERT into unified index.")
         defer { sqlite3_finalize(insertIndexStmt) }
@@ -130,46 +126,66 @@ enum ArchiveDatabaseTools {
         defer { sqlite3_finalize(insertFtsStmt) }
 
         try withTransaction(db: db) {
-            while sqlite3_step(selectStmt) == SQLITE_ROW {
-                try autoreleasepool {
-                    guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return }
-                    let preProcessed = rawText
-                        .cleaningLineBreaks()
-                        .stripSpanTags()
-                    let normalized = preProcessed.stemArabicLight10()
-                    guard !normalized.isEmpty else { return }
+            try appendBookFast(
+                db: db,
+                sourceSchema: sourceSchema,
+                sourceTable: sourceTable,
+                bookId: bookId,
+                insertIndexStmt: insertIndexStmt,
+                insertFtsStmt: insertFtsStmt,
+                isNassCompressed: isNassCompressed
+            )
+        }
+        try initializeFtsMetadataIfNeeded(db: db, ftsSchema: ftsSchema)
+    }
 
-                    let rowId = sqlite3_column_int64(selectStmt, 0)
-                    let page = sqlite3_column_int64(selectStmt, 2)
-                    let part = sqlite3_column_int64(selectStmt, 3)
-                    let packedRowId = (Int64(bookId) << 32) | (rowId & 0xFFFF_FFFF)
+    /// Versi berperforma tinggi untuk migrasi massal menggunakan reusable prepared statements.
+    static func appendBookFast(
+        db: OpaquePointer,
+        sourceSchema: String = "main",
+        sourceTable: String,
+        bookId: Int,
+        insertIndexStmt: OpaquePointer,
+        insertFtsStmt: OpaquePointer,
+        isNassCompressed: Bool = true
+    ) throws {
+        let selectSQL = String(format: SQL.selectUnifiedSource, sourceSchema, sourceTable)
+        let selectStmt = try prepareStatement(db: db, sql: selectSQL, errorMsg: "Error prepare SELECT for unified FTS \(sourceTable).")
+        defer { sqlite3_finalize(selectStmt) }
 
-                    // 1. Insert ke archive_index (metadata)
-                    sqlite3_reset(insertIndexStmt)
-                    sqlite3_clear_bindings(insertIndexStmt)
-                    sqlite3_bind_int64(insertIndexStmt, 1, packedRowId)
-                    sqlite3_bind_int64(insertIndexStmt, 2, Int64(bookId))
-                    sqlite3_bind_int64(insertIndexStmt, 3, page)
-                    sqlite3_bind_int64(insertIndexStmt, 4, rowId)
-                    sqlite3_bind_int64(insertIndexStmt, 5, part)
-                    if sqlite3_step(insertIndexStmt) != SQLITE_DONE {
-                        throw sqliteError(db, message: "Error insert unified index \(sourceTable).")
-                    }
+        while sqlite3_step(selectStmt) == SQLITE_ROW {
+            try autoreleasepool {
+                guard let normalized = extractNormalizedText(from: selectStmt, isNassCompressed: isNassCompressed) else { return }
 
-                    // 2. Insert ke archive_fts (tokens)
-                    sqlite3_reset(insertFtsStmt)
-                    sqlite3_clear_bindings(insertFtsStmt)
-                    sqlite3_bind_int64(insertFtsStmt, 1, packedRowId)
-                    _ = normalized.withCString { ptr in
-                        sqlite3_bind_text(insertFtsStmt, 2, ptr, -1, sqliteTransient)
-                    }
-                    if sqlite3_step(insertFtsStmt) != SQLITE_DONE {
-                        throw sqliteError(db, message: "Error insert unified FTS \(sourceTable).")
-                    }
+                let rowId = sqlite3_column_int64(selectStmt, 0)
+                let page = sqlite3_column_int64(selectStmt, 2)
+                let part = sqlite3_column_int64(selectStmt, 3)
+                let packedRowId = (Int64(bookId) << 32) | (rowId & 0xFFFF_FFFF)
+
+                // 1. Insert ke archive_index (metadata)
+                sqlite3_reset(insertIndexStmt)
+                sqlite3_clear_bindings(insertIndexStmt)
+                sqlite3_bind_int64(insertIndexStmt, 1, packedRowId)
+                sqlite3_bind_int64(insertIndexStmt, 2, Int64(bookId))
+                sqlite3_bind_int64(insertIndexStmt, 3, page)
+                sqlite3_bind_int64(insertIndexStmt, 4, rowId)
+                sqlite3_bind_int64(insertIndexStmt, 5, part)
+                if sqlite3_step(insertIndexStmt) != SQLITE_DONE {
+                    throw sqliteError(db, message: "Error insert unified index \(sourceTable).")
+                }
+
+                // 2. Insert ke archive_fts (tokens)
+                sqlite3_reset(insertFtsStmt)
+                sqlite3_clear_bindings(insertFtsStmt)
+                sqlite3_bind_int64(insertFtsStmt, 1, packedRowId)
+                _ = normalized.withCString { ptr in
+                    sqlite3_bind_text(insertFtsStmt, 2, ptr, -1, sqliteTransient)
+                }
+                if sqlite3_step(insertFtsStmt) != SQLITE_DONE {
+                    throw sqliteError(db, message: "Error insert unified FTS \(sourceTable).")
                 }
             }
         }
-        try initializeFtsMetadataIfNeeded(db: db, ftsSchema: ftsSchema)
     }
 
     private static func processFtsRows(
@@ -182,17 +198,21 @@ enum ArchiveDatabaseTools {
         try withTransaction(db: db) {
             while sqlite3_step(selectStmt) == SQLITE_ROW {
                 try autoreleasepool {
-                    guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return }
-                    let preProcessed = rawText
-                        .cleaningLineBreaks()
-                        .stripSpanTags()
-                    let normalized = preProcessed.stemArabicLight10()
-                    guard !normalized.isEmpty else { return }
+                    guard let normalized = extractNormalizedText(from: selectStmt, isNassCompressed: isNassCompressed) else { return }
                     let rowId = sqlite3_column_int64(selectStmt, 0)
                     try insertFtsRow(insertStmt: insertStmt, rowId: rowId, normalized: normalized, ftsTable: ftsTable, db: db)
                 }
             }
         }
+    }
+
+    private static func extractNormalizedText(from selectStmt: OpaquePointer, isNassCompressed: Bool) -> String? {
+        guard let rawText = readRawText(selectStmt: selectStmt, isNassCompressed: isNassCompressed) else { return nil }
+        let normalized = rawText
+            .cleaningLineBreaks()
+            .stripSpanTags()
+            .stemArabicLight10()
+        return normalized.isEmpty ? nil : normalized
     }
 
     private static func readRawText(selectStmt: OpaquePointer, isNassCompressed: Bool) -> String? {
