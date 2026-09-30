@@ -866,26 +866,9 @@ final class LibraryViewModel: ViewModelBase {
             }
         }
 
-        for (categoryId, book) in payload.insertedBooks {
-            if let category = findCategoryInDisplayed(categoryId) {
-                bookLookup[book.book] = (category, book)
-
-                if searchQuery.isEmpty {
-                    updateSubject.send(.expandItem(category))
-                    updateSubject.send(.reloadItem(category, reloadChildren: true))
-                    updateSubject.send(.scrollRowToVisible(book))
-                } else {
-                    let currentQuery = searchQuery
-                    let base = baseCategories.isEmpty ? displayedCategories : baseCategories
-                    var filtered: [CategoryData] = []
-                    _ = dataManager.filterContent(
-                        with: currentQuery,
-                        displayedCategories: &filtered,
-                        baseCategories: base
-                    )
-                    displayedCategories = filtered
-                    updateSubject.send(.reloadData)
-                }
+        if showOnlyDownloaded {
+            for (_, book) in payload.insertedBooks {
+                reloadParentCategory(ofBookId: book.id)
             }
         }
         if !payload.updatedBookIds.isEmpty {

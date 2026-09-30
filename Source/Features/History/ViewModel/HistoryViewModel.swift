@@ -372,7 +372,7 @@ class HistoryViewModel: ViewModelBase, ObservableObject {
         return removedIds
     }
 
-    private func loadBooksData() {
+    func loadBooksData() {
         let hIds = historyOrder
         let fIds = favoriteBookIds
         let allNeededIds = Set(hIds).union(Set(fIds))
