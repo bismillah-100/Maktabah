@@ -18,18 +18,14 @@ struct MaktabahApp: App {
         TextViewState.shared.isDarkMode
     }
 
-    /*
-     @AppStorage("lastVersionPrompted") var lastVersionPrompted = ""
-     @State private var showWelcomeScreen = false
-      */
+    @AppStorage("lastVersionPrompted") var lastVersionPrompted = ""
+    @State private var showWelcomeScreen = false
 
     @AppStorage("useDefaultTheme") private var useDefaultTheme: Bool = false
 
-    /*
-     var currentVersion: String {
-         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-     }
-      */
+    var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
 
     init() {
         AppConfig.initializeMode()
@@ -74,20 +70,18 @@ struct MaktabahApp: App {
                 .applyIpadColorScheme(isIpad: Self.isIpad, isDarkMode: isDarkMode)
                 .id(useDefaultTheme)
                 .toggleStyle(SwitchToggleStyle(tint: .green))
-                /*
-                 .onAppear {
-                     if lastVersionPrompted != currentVersion {
-                         showWelcomeScreen = true
-                     }
-                 }
-                 .sheet(isPresented: $showWelcomeScreen) {
-                     WelcomeScreenView(onDismiss: {
-                         lastVersionPrompted = currentVersion
-                         showWelcomeScreen = false
-                     })
-                     .interactiveDismissDisabled()
-                 }
-                  */
+                .onAppear {
+                    if lastVersionPrompted != currentVersion {
+                        showWelcomeScreen = true
+                    }
+                }
+                .sheet(isPresented: $showWelcomeScreen) {
+                    WelcomeScreenView(onDismiss: {
+                        lastVersionPrompted = currentVersion
+                        showWelcomeScreen = false
+                    })
+                    .interactiveDismissDisabled()
+                }
                 .onChange(of: scenePhase) { _, newPhase in
                     switch newPhase {
                     case .active:
