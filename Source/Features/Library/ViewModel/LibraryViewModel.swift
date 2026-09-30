@@ -711,7 +711,7 @@ final class LibraryViewModel: ViewModelBase {
                     reloadParentCategory(ofBookId: bookId)
                 }
                 #else
-                refreshSubject.send(())
+                updateDisplayedCategories()
                 #endif
             }
         }
@@ -724,7 +724,7 @@ final class LibraryViewModel: ViewModelBase {
                 #if os(macOS)
                 handleBooksChanged(notification)
                 #else
-                refreshSubject.send(())
+                updateDisplayedCategories()
                 #endif
                 checkBookUpdatesPeriodically(force: true)
             }
