@@ -94,17 +94,7 @@ extension LibraryViewManager {
         }
 
         let oldBooks = firstCat.children.compactMap { $0 as? BooksData }
-        let oldIds = oldBooks.map(\.id)
         let newIds = newBooks.map(\.id)
-
-        if oldIds == newIds {
-            firstCat.children = newBooks
-            outlineView.reloadData()
-            if viewModel.isFlatMode, let selectedBook = viewModel.selectedBookName {
-                restoreFlatSelection(byBookName: selectedBook)
-            }
-            return
-        }
 
         var currentBooks = oldBooks
         isUpdatingOutline = true
@@ -118,31 +108,30 @@ extension LibraryViewManager {
 
         firstCat.children = currentBooks
 
-        var needsReload = false
         for (newIndex, newBook) in newBooks.enumerated() {
             if let oldIndex = currentBooks.firstIndex(where: { $0.id == newBook.id }) {
                 if oldIndex != newIndex {
                     outlineView.moveItem(at: oldIndex, inParent: nil, to: newIndex, inParent: nil)
                     let movedBook = currentBooks.remove(at: oldIndex)
                     currentBooks.insert(movedBook, at: newIndex)
+                    firstCat.children = currentBooks
                 }
+
                 if currentBooks[newIndex] !== newBook {
+                    outlineView.removeItems(at: IndexSet(integer: newIndex), inParent: nil, withAnimation: [])
                     currentBooks[newIndex] = newBook
-                    needsReload = true
+                    firstCat.children = currentBooks
+                    outlineView.insertItems(at: IndexSet(integer: newIndex), inParent: nil, withAnimation: [])
                 }
             } else {
                 currentBooks.insert(newBook, at: newIndex)
+                firstCat.children = currentBooks
                 outlineView.insertItems(at: IndexSet(integer: newIndex), inParent: nil, withAnimation: [.slideDown])
             }
         }
 
-        firstCat.children = currentBooks
         outlineView.endUpdates()
         isUpdatingOutline = false
-
-        if needsReload {
-            outlineView.reloadData()
-        }
 
         if viewModel.isFlatMode, let selectedBook = viewModel.selectedBookName {
             restoreFlatSelection(byBookName: selectedBook)
@@ -169,7 +158,6 @@ extension LibraryViewManager {
                     categoryName: String(localized: .Library.favorites)
                 )
             }
-            return
         }
 
         for (categoryId, book) in payload.insertedBooks {
