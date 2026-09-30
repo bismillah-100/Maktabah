@@ -221,8 +221,8 @@ struct iOSLibraryView: View {
             } label: {
                 Label(
                     viewModel.availableUpdateCount > 0
-                        ? "\("Update Books".localized) (\(viewModel.availableUpdateCount))"
-                        : "Update Books".localized,
+                        ? "\("Books Updates".localized) (\(viewModel.availableUpdateCount))"
+                        : "Books Updates".localized,
                     systemImage: "arrow.triangle.2.circlepath"
                 )
             }

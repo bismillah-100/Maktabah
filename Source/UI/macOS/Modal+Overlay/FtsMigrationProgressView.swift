@@ -152,7 +152,7 @@ struct FtsMigrationProgressSection: View {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     if ftsManager.activeArchiveStatuses.isEmpty {
-                        Text(ftsManager.progress >= 1.0 ? "Done" : String(localized: "preparingMigration", defaultValue: "Menyiapkan migrasi..."))
+                        Text(ftsManager.progress >= 1.0 ? "Done" : String(localized: "preparingMigration"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(1)

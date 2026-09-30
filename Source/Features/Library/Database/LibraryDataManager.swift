@@ -528,8 +528,7 @@ extension LibraryDataManager {
         searchKeywords: [String],
         totalTables: Int
     ) -> SearchEngineCallbacks {
-        let counterLock = NSLock()
-        var completedTablesGlobal = 0
+        let completedTablesGlobal = SafeCounter(initialValue: 0)
         let resultBuffer = SearchResultBuffer { batch in
             Task { @MainActor in
                 callbacks.completion(batch)
@@ -543,10 +542,7 @@ extension LibraryDataManager {
                 }
             },
             onTableComplete: { _, _ in
-                counterLock.lock()
-                completedTablesGlobal += 1
-                let completed = completedTablesGlobal
-                counterLock.unlock()
+                let completed = completedTablesGlobal.increment()
                 Task { @MainActor in
                     callbacks.onTableProgress(completed)
                 }

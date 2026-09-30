@@ -194,13 +194,11 @@ struct UpdateView: View {
 
     @ViewBuilder
     private var updateBookButton: some View {
-        let buttonTitle = "Update selected (\(viewModel.selectedCount))".localized
+        let buttonTitle = String(localized: "Update selected (\(viewModel.selectedCount))") + " - \(viewModel.totalSelectedSizeFormatted)"
         Button {
             viewModel.performSelectedUpdates()
         } label: {
-            Text(
-                verbatim: "\(buttonTitle) - \(viewModel.totalSelectedSizeFormatted)"
-            )
+            Text(buttonTitle)
             #if os(iOS)
             .frame(maxWidth: .infinity)
             #else
@@ -220,11 +218,9 @@ struct UpdateView: View {
 
     @ViewBuilder
     private var bookUpdateInfo: some View {
+        let info = "\(viewModel.needsUpdateCount) " + String(localized: .booksNeedsUpdates)
         if viewModel.needsUpdateCount > 0 {
-            statusBadge(
-                text: "\(viewModel.needsUpdateCount) books needs updates",
-                color: .orange
-            )
+            statusBadge(text: info, color: .orange)
         }
     }
 

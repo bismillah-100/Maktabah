@@ -50,9 +50,7 @@ final class SearchEngine {
         searchTask = nil
         isStopped = false
 
-        workersLock.lock()
         let currentWorkers = workers
-        workersLock.unlock()
         for worker in currentWorkers {
             worker.interrupt()
         }
@@ -75,7 +73,7 @@ final class SearchEngine {
             for worker in currentWorkers {
                 if isStopped { break }
 
-                var completedTables = 0
+                let completedTables = SafeCounter(initialValue: 0)
 
                 let workerCallbacks = SearchWorkerCallbacks(
                     start: { _ in },
@@ -87,8 +85,8 @@ final class SearchEngine {
                         callbacks.onResult(tableName, worker.archiveId, hit)
                     },
                     onTableComplete: {
-                        completedTables += 1
-                        callbacks.onTableComplete(worker.archiveId, completedTables)
+                        let count = completedTables.increment()
+                        callbacks.onTableComplete(worker.archiveId, count)
                     },
                     onComplete: {}
                 )
@@ -171,3 +169,18 @@ final class SearchEngine {
     }
 }
 
+final class SafeCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: Int
+
+    init(initialValue: Int = 0) {
+        self.value = initialValue
+    }
+
+    func increment() -> Int {
+        lock.withLock {
+            value += 1
+            return value
+        }
+    }
+}
