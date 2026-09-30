@@ -160,31 +160,12 @@ extension LibraryViewManager {
             }
         }
 
-        for (categoryId, book) in payload.insertedBooks {
-            if let category = findCategoryInDisplayed(categoryId) {
-                viewModel.bookLookup[book.book] = (category, book)
-
-                if viewModel.searchQuery.isEmpty {
-                    outlineView.expandItem(category, expandChildren: true)
-                    outlineView.reloadItem(category, reloadChildren: true)
-                    let row = outlineView.row(forItem: book)
-                    if row >= 0 {
-                        outlineView.scrollRowToVisible(row)
-                    }
-                } else {
-                    let currentQuery = viewModel.searchQuery
-                    let base = viewModel.baseCategories.isEmpty ? viewModel.displayedCategories : viewModel.baseCategories
-                    var filtered: [CategoryData] = []
-                    _ = dataManager.filterContent(
-                        with: currentQuery,
-                        displayedCategories: &filtered,
-                        baseCategories: base
-                    )
-                    viewModel.displayedCategories = filtered
-                    outlineView.reloadData()
-                }
+        if viewModel.showOnlyDownloaded {
+            for (_, book) in payload.insertedBooks {
+                reloadParentCategory(ofBookId: book.id)
             }
         }
+
         if !payload.updatedBookIds.isEmpty {
             reloadUpdatedBooks(payload.updatedBookIds)
         }
