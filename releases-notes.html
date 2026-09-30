@@ -36,6 +36,34 @@
 </head>
 <body>
 
+<h2>Version 3.6</h2>
+<p class="version">September 30, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Last version for macOS Ventura & Sonoma</li>
+  <li>Unified FTS search engine with multi-tier query strategies and binary seek</li>
+  <li>In-app FTS database migration tool with optimized batch processing</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Fix flat list outline view not updating when importing or updating books</li>
+  <li>Prevent active selection drop during library list item replacement</li>
+  <li>Prevent unnecessary full library reload on iOS during book update or integration</li>
+  <li>Fix search snippet token boundary issues at the start of paragraphs</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Significantly faster multi-book search with instant snippet viewport caching</li>
+  <li>Incremental flat list and outline view diffing for smooth, flicker-free updates</li>
+  <li>Seamless book imports and metadata updates in Downloaded Only and Favorites lists</li>
+  <li>Improved Arabic search stemming accuracy by stripping newlines before tokenization</li>
+  <li>Throttled UI progress updates during archive migration to eliminate main thread contention</li>
+  <li>Modernized FTS migration dialog and search banner appearance</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.5.1</h2>
 <p class="version">September 22, 2026</p>
 <h3>Fixes</h3>
