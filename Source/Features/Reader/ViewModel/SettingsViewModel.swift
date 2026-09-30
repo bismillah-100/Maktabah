@@ -8,7 +8,6 @@
 import SQLite3
 import SwiftUI
 
-@MainActor
 final class SettingsViewModel: ObservableObject {
     static var shared: SettingsViewModel = .init()
     @Published var isBundleMode: Bool = AppConfig.isUsingBundleMode

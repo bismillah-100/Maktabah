@@ -458,7 +458,7 @@ extension LibraryDataManager {
         params: LibrarySearchParams,
         callbacks: LibrarySearchCallbacks
     ) async {
-        if await FtsMigrationManager.shared.isMigrating {
+        if FtsMigrationManager.shared.isMigrating {
             await MainActor.run {
                 ReusableFunc.showAlert(
                     title: String(localized: .ftsIsMigratingAlert), message: ""

@@ -534,7 +534,6 @@ private final class CoreDownloadDelegate: NSObject, URLSessionDownloadDelegate {
 /// Entry point yang dipanggil sinkron dari AppDelegate.applicationDidFinishLaunching
 /// (pada main thread). Menampilkan modal blocking jika core files belum tersedia,
 /// lalu memanggil DatabaseManager.shared.setupFolders() setelah siap.
-@MainActor
 enum CoreDatabaseBootstrap {
     static func run() {
         // Custom mode: folder dipilih user, DatabaseManager langsung setup.
@@ -577,7 +576,6 @@ enum CoreDownloadModalResult {
 
 /// Modal sinkron-blocking untuk download core files.
 /// Berjalan di main thread; download di-dispatch ke background.
-@MainActor
 final class CoreDownloadModalCenter {
     private let downloader: CoreDatabaseDownloader
     private var window: NSWindow?

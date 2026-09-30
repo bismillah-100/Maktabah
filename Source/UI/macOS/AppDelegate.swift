@@ -14,7 +14,6 @@ import Sparkle
 #endif
 
 @main
-@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet var menu: NSMenu!
     @IBOutlet weak var viewMenu: NSMenu!

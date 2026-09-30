@@ -17,7 +17,6 @@ extension FtsMigrationManager: ObservableObject {}
 #if os(iOS)
 @Observable
 #endif
-@MainActor
 final class FtsMigrationManager {
     static let shared = FtsMigrationManager()
 
@@ -132,11 +131,13 @@ final class FtsMigrationManager {
 
     // MARK: - Actions
 
+    @MainActor
     func cancelMigration() {
         isCancelled = true
         isMigrating = false
     }
 
+    @MainActor
     private func resetMigrationState() {
         isMigrating = true
         isCancelled = false
@@ -145,6 +146,7 @@ final class FtsMigrationManager {
         activeArchiveStatuses.removeAll()
     }
 
+    @MainActor
     private func finalizeMigration(error: Error? = nil) {
         activeArchiveStatuses.removeAll()
         isMigrating = false
@@ -155,6 +157,7 @@ final class FtsMigrationManager {
         }
     }
 
+    @MainActor
     func updateBookProgress(
         archiveId: Int,
         statusText: String? = nil,
@@ -176,6 +179,7 @@ final class FtsMigrationManager {
 
     // MARK: - Execution
 
+    @MainActor
     func performMigration() async throws {
         guard !isMigrating else { return }
 
@@ -223,6 +227,7 @@ final class FtsMigrationManager {
         }
     }
 
+    @MainActor
     private func withBackgroundTask<T>(_ work: () async throws -> T) async throws -> T {
         #if canImport(UIKit)
         UIApplication.shared.isIdleTimerDisabled = true
@@ -291,7 +296,7 @@ final class FtsMigrationManager {
         if Task.isCancelled {
             throw CancellationError()
         }
-        if await isCancelled {
+        if isCancelled {
             throw CancellationError()
         }
 
@@ -360,7 +365,7 @@ final class FtsMigrationManager {
             if Task.isCancelled {
                 throw CancellationError()
             }
-            if await isCancelled {
+            if isCancelled {
                 throw CancellationError()
             }
 
@@ -385,7 +390,7 @@ final class FtsMigrationManager {
                 if Task.isCancelled {
                     throw CancellationError()
                 }
-                if await isCancelled {
+                if isCancelled {
                     throw CancellationError()
                 }
 
@@ -428,6 +433,7 @@ final class FtsMigrationManager {
         }
     }
 
+    @MainActor
     func migrateArchive(archiveId: Int) async throws {
         guard !isMigrating else { return }
 
@@ -477,6 +483,7 @@ final class FtsMigrationManager {
             .count
     }
 
+    @MainActor
     private func resetStateForArchive(archiveBookCount: Int) {
         isMigrating = true
         isCancelled = false
