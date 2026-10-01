@@ -12,14 +12,35 @@ struct iOSAnnotationEditorSheet: View {
     @State private var isUnderline: Bool = false
     @State private var tagsText: String = ""
 
-    let defaultColors: [UIColor] = [
-        UIColor(named: "HighlightText") ?? .yellow,
-        UIColor.magenta,
-        UIColor.systemPink,
-        UIColor.systemPurple,
-        UIColor.systemIndigo,
-        UIColor.systemGreen,
-    ]
+    private var availableColors: [UIColor] {
+        if isUnderline {
+            var colors = UserDefaults.standard.recentUnderlineColors
+            if selectedColorHex != "#000000",
+               let current = UIColor(hex: selectedColorHex),
+               !colors.contains(where: { $0.hexString() == current.hexString() }) {
+                colors.append(current)
+            }
+            return colors
+        } else {
+            var colors = UserDefaults.standard.recentHighlightColors
+            if let current = UIColor(hex: selectedColorHex),
+               !colors.contains(where: { $0.hexString() == current.hexString() }) {
+                colors.append(current)
+            }
+            return colors
+        }
+    }
+
+    private func isColorSelected(_ color: UIColor) -> Bool {
+        if isUnderline {
+            if color == .label {
+                return selectedColorHex.isEmpty || selectedColorHex == "#000000" || selectedColorHex.caseInsensitiveCompare(UIColor.label.hexString()) == .orderedSame
+            }
+            return selectedColorHex.caseInsensitiveCompare(color.hexString()) == .orderedSame
+        } else {
+            return selectedColorHex.caseInsensitiveCompare(color.hexString()) == .orderedSame
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -31,24 +52,42 @@ struct iOSAnnotationEditorSheet: View {
 
                 ThemeSection("Style") {
                     Toggle("Underline", isOn: $isUnderline)
+                        .onChange(of: isUnderline) { _, newValue in
+                            if newValue {
+                                let underlineColor = UserDefaults.standard.recentUnderlineColors.first ?? .label
+                                selectedColorHex = (underlineColor == .label) ? "#000000" : underlineColor.hexString()
+                            } else {
+                                let highlightColor = UserDefaults.standard.recentHighlightColors.first ?? .yellow
+                                selectedColorHex = highlightColor.hexString()
+                            }
+                        }
 
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(defaultColors, id: \.self) { color in
-                                let hex = color.hexString()
+                        HStack(spacing: 8) {
+                            ForEach(availableColors, id: \.self) { color in
+                                let isSelected = isColorSelected(color)
                                 Circle()
-                                    .fill(Color(color))
-                                    .frame(width: 30, height: 30)
+                                    .fill(Color(uiColor: color))
+                                    .frame(width: 28, height: 28)
                                     .overlay(
                                         Circle()
-                                            .stroke(Color.primary, lineWidth: selectedColorHex == hex ? 2 : 0)
+                                            .stroke(Color.secondary.opacity(0.4), lineWidth: 1)
+                                    )
+                                    .padding(2)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
                                     )
                                     .onTapGesture {
-                                        selectedColorHex = hex
+                                        if isUnderline && color == .label {
+                                            selectedColorHex = "#000000"
+                                        } else {
+                                            selectedColorHex = color.hexString()
+                                        }
                                     }
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(4)
                     }
                 }
 
@@ -90,8 +129,11 @@ struct iOSAnnotationEditorSheet: View {
             }
             .onAppear {
                 noteText = annotation.note ?? ""
-                selectedColorHex = annotation.colorHex
                 isUnderline = annotation.type == .underline
+                selectedColorHex = annotation.colorHex
+                if isUnderline && (selectedColorHex.isEmpty || selectedColorHex == "#000000") {
+                    selectedColorHex = "#000000"
+                }
                 tagsText = annotation.tags.joined(separator: ", ")
             }
         }
@@ -100,7 +142,13 @@ struct iOSAnnotationEditorSheet: View {
     private func saveAnnotation() {
         var updated = annotation
         updated.note = noteText.isEmpty ? nil : noteText
-        updated.colorHex = selectedColorHex
+        let finalHex: String
+        if isUnderline && (selectedColorHex.isEmpty || selectedColorHex == "#000000" || selectedColorHex.caseInsensitiveCompare(UIColor.label.hexString()) == .orderedSame) {
+            finalHex = "#000000"
+        } else {
+            finalHex = selectedColorHex
+        }
+        updated.colorHex = finalHex
         updated.type = isUnderline ? .underline : .highlight
 
         updated.tags = tagsText
