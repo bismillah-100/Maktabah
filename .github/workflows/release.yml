@@ -311,6 +311,21 @@ jobs:
           cp "build/${PRODUCT_NAME}-${TAG_NAME}.zip" \
              build/sparkle_staging/
 
+          # Ambil appcast.xml yang sudah ada dari gh-pages untuk merge feed
+          git fetch origin gh-pages 2>/dev/null || true
+          if git cat-file -e origin/gh-pages:appcast.xml 2>/dev/null; then
+            git show origin/gh-pages:appcast.xml > build/sparkle_staging/appcast.xml
+          elif git cat-file -e FETCH_HEAD:appcast.xml 2>/dev/null; then
+            git show FETCH_HEAD:appcast.xml > build/sparkle_staging/appcast.xml
+          fi
+
+          if [[ -s build/sparkle_staging/appcast.xml ]]; then
+            echo "Existing appcast.xml found on gh-pages, copied to staging for merging."
+          else
+            rm -f build/sparkle_staging/appcast.xml
+            echo "No existing appcast.xml found on gh-pages, generating fresh feed."
+          fi
+
           # Generate appcast.xml
           DOWNLOAD_PREFIX="https://github.com/bismillah-100/Maktabah/releases/download/$TAG_NAME/"
           echo "$SPARKLE_PRIVATE_KEY" | base64 --decode | "$SPARKLE_BIN" \
@@ -330,8 +345,8 @@ jobs:
 
           tag = '<sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>'
 
-          # Sisipkan setelah <enclosure ... /> di setiap <item>
-          xml = re.sub(r'(<enclosure[^>]*/\s*>)', '\\1\n            ' + tag, xml, flags=re.DOTALL)
+          # Sisipkan setelah <enclosure ... /> di setiap <item> yang belum memilikinya
+          xml = re.sub(r'(<enclosure[^>]*/\s*>)(?!\s*<sparkle:releaseNotesLink>)', r'\1\n            ' + tag, xml, flags=re.DOTALL)
 
           with open('appcast.xml', 'w') as f:
               f.write(xml)
