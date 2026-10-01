@@ -433,16 +433,19 @@ final class AnnotationStore: Sendable {
     }
 
     func pushRecentColor(_ annotation: Annotation) {
-        if annotation.type == .highlight,
-           let color = PlatformColor(hex: annotation.colorHex)
-        {
-            if Thread.isMainThread {
-                TextViewState.shared.pushRecentHighlightColor(color)
+        let isUnderline = annotation.type == .underline
+        let effectiveColor = PlatformColor.effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: isUnderline)
+        let action = {
+            if isUnderline {
+                TextViewState.shared.pushRecentUnderlineColor(effectiveColor)
             } else {
-                DispatchQueue.main.async {
-                    TextViewState.shared.pushRecentHighlightColor(color)
-                }
+                TextViewState.shared.pushRecentHighlightColor(effectiveColor)
             }
+        }
+        if Thread.isMainThread {
+            action()
+        } else {
+            DispatchQueue.main.async(execute: action)
         }
     }
 }

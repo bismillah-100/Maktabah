@@ -143,9 +143,27 @@ macOS menyediakan interaksi langsung dari *sidebar*:
 *   **Menu Konteks Baris (`AnnotationMenu`)**:
     Menyediakan aksi klik kanan: Salin teks (`copyMenuItem`), Tambah/Hapus Tag, Ubah Tipe (*Highlight* vs. *Underline*), serta opsi hapus.
 *   **Menu Palet Warna Cepat (`AnnotationColorMenuView`)**:
-    Menampilkan deretan titik warna di dalam menu konteks, memungkinkan pengguna mengganti warna sorotan tanpa membuka editor penuh.
+    Menampilkan deretan titik warna di dalam menu konteks untuk *highlight* serta tombol *underline* terdedikasi. Ikon *underline* dikonfigurasi menggunakan SF Symbol dengan `NSImage.SymbolConfiguration(paletteColors:)` yang mencerminkan warna terakhir dari `recentUnderlineColors` (fallback ke `.labelColor`).
 *   **Panel Editor Anotasi (`AnnotationEditorVC`)**:
-    Panel *popover* untuk mengedit catatan teks lengkap, mengubah tipe garis bawah, memilih warna dari `NSColorWell`, serta mengatur tag melalui `NSTokenField`.
+    Panel *popover* untuk mengedit catatan teks lengkap, mengubah tipe (*highlight* vs. *underline*), memilih warna dari `NSColorWell`, serta mengatur tag melalui `NSTokenField`. Nilai warna disinkronkan secara otomatis: jika tipe *underline* aktif, warna disimpan dan dipush ke `UserDefaults.standard.recentUnderlineColors`, sehingga pembuatan *underline* berikutnya secara konsisten memakai warna tersebut.
+
+### Alur Persistensi Warna Anotasi (Highlight & Underline)
+
+```mermaid
+flowchart TD
+    UI_Menu["AnnotationColorMenuView<br>(underlineBtn dengan palette symbol)"] -->|"underlineSelection"| Reader["IbarotTextView"]
+    UI_Editor["AnnotationEditorVC<br>(NSColorWell & underLine toggle)"] -->|"saveTapped"| Store["AnnotationStore"]
+    
+    Reader -->|"recentUnderlineColors.first"| Coord["AnnotationCoordinator.saveHighlight"]
+    Coord --> Store
+    
+    Store --> Push["pushRecentColor()"]
+    Push -->|"type == .highlight"| TVS_H["TextViewState.pushRecentHighlightColor"]
+    Push -->|"type == .underline"| TVS_U["TextViewState.pushRecentUnderlineColor"]
+    
+    TVS_H --> UD_H[("UserDefaults: recentHighlightColors")]
+    TVS_U --> UD_U[("UserDefaults: recentUnderlineColors")]
+```
 
 ## Pencarian & Scope Panel Melayang
 

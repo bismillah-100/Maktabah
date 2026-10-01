@@ -662,7 +662,7 @@ class IbarotTextView: NSTextView {
         let sel = selectedRange()
 
         do {
-            let color = UserDefaults.standard.recentHighlightColors.first ?? .labelColor
+            let color = UserDefaults.standard.recentUnderlineColors.first ?? .labelColor
             try applyAnnotations(in: sel, with: color, mode: .underline)
         } catch {
             Logger.annotations.error("Failed to save highlight: \(error.localizedDescription, privacy: .public)")
@@ -1035,9 +1035,6 @@ extension IbarotTextView {
     /// Dipanggil saat tombol underline ditekan di menu.
     @objc func menuDidSelectUnderline(_ sender: NSButton) {
         dismissMenu(sender)
-        let colors = UserDefaults.standard.recentHighlightColors
-        guard sender.tag < colors.count else { return }
-
         underlineSelection(sender)
     }
 

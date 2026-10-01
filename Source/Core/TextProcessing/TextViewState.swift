@@ -162,12 +162,20 @@ class TextViewState: @unchecked Sendable {
         clickableAnnotation = enable
     }
 
-    /// Masukkan warna baru ke indeks 0. Duplikat dipindah ke depan. Maks 5.
+    /// Masukkan warna highlight baru ke indeks 0. Duplikat dipindah ke depan. Maks 5.
     func pushRecentHighlightColor(_ color: PlatformColor) {
         var list = defaults.recentHighlightColors
         list.removeAll { colorApproxEqual($0, color) }
         list.insert(color, at: 0)
         defaults.recentHighlightColors = Array(list.prefix(UserDefaults.maxRecentColors))
+    }
+
+    /// Masukkan warna underline baru ke indeks 0. Duplikat dipindah ke depan. Maks 5.
+    func pushRecentUnderlineColor(_ color: PlatformColor) {
+        var list = defaults.recentUnderlineColors
+        list.removeAll { colorApproxEqual($0, color) }
+        list.insert(color, at: 0)
+        defaults.recentUnderlineColors = Array(list.prefix(UserDefaults.maxRecentColors))
     }
 
     private func colorApproxEqual(_ a: PlatformColor, _ b: PlatformColor) -> Bool {
@@ -189,9 +197,20 @@ class TextViewState: @unchecked Sendable {
         #endif
     }
 
-    func lastUsedColor() -> String {
-        let color = defaults.recentHighlightColors.first
-        return color?.hexString() ?? "#FF9300"
+    func lastUsedColor(for mode: AnnotationMode = .highlight) -> String {
+        switch mode {
+        case .highlight:
+            let color = defaults.recentHighlightColors.first
+            return color?.hexString() ?? "#FF9300"
+        case .underline:
+            let color = defaults.recentUnderlineColors.first
+            #if os(macOS)
+            let isDefault = color == nil || color == .labelColor
+            #else
+            let isDefault = color == nil || color == .label
+            #endif
+            return isDefault ? "#000000" : (color?.hexString() ?? "#000000")
+        }
     }
 
     // MARK: - Helpers

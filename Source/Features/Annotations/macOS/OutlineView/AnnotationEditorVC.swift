@@ -60,11 +60,10 @@ class AnnotationEditorVC: NSViewController {
 
     private func populateFields() {
         noteField.string = annotation.note ?? ""
-        if let color = NSColor(hex: annotation.colorHex) {
-            colorWell.color = color
-        } else {
-            colorWell.color = NSColor.yellow
-        }
+        colorWell.color = NSColor.effectiveAnnotationColor(
+            hex: annotation.colorHex,
+            isUnderline: annotation.type == .underline
+        )
         tagsField.objectValue = annotation.tags
         updateParagraphAlignments()
     }
@@ -99,10 +98,12 @@ class AnnotationEditorVC: NSViewController {
 
     @objc func saveTapped() {
         let newNote = noteField.string
-        let newColorHex = colorWell.color.hexString()
+        let isUnderline = underLine.state == .on
+        let newColorHex = (isUnderline && (colorWell.color == .labelColor || colorWell.color == .black)) ? "#000000" : colorWell.color.hexString()
 
         var updated = annotation!
 
+        updated.type = isUnderline ? .underline : .highlight
         updated.colorHex = newColorHex
         updated.note = newNote.isEmpty ? nil : newNote
         updated.tags = normalizedTags()
@@ -156,7 +157,13 @@ class AnnotationEditorVC: NSViewController {
     }
 
     @IBAction func underLineTapped(_ sender: NSButton) {
-        annotation.type = underLine.state == .on ? .underline : .highlight
+        let isUnderline = underLine.state == .on
+        annotation.type = isUnderline ? .underline : .highlight
+        if isUnderline {
+            colorWell.color = UserDefaults.standard.recentUnderlineColors.first ?? .labelColor
+        } else {
+            colorWell.color = UserDefaults.standard.recentHighlightColors.first ?? .systemYellow
+        }
     }
 
     // MARK: - Tag Suggestions

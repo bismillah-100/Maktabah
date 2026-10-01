@@ -202,20 +202,31 @@ extension UserDefaults {
         }
     }
 
-    // MARK: - COLOR HIGHLIGHTS
+    // MARK: - COLOR HIGHLIGHTS & UNDERLINES
 
     static let recentColorsKey = "recentHighlightColors"
+    static let recentUnderlineColorsKey = "recentUnderlineColors"
     static let maxRecentColors = 5
 
     static let defaultHighlightColors: [PlatformColor] = [
         .systemYellow, .systemGreen, .highlightBlue, .systemPink, .systemPurple,
     ]
 
-    private static func normalizedRecentHighlightColors(_ colors: [PlatformColor]) -> [PlatformColor] {
+    #if canImport(AppKit)
+    static let defaultUnderlineColors: [PlatformColor] = [
+        .labelColor, .systemRed, .systemBlue, .systemGreen, .systemOrange,
+    ]
+    #else
+    static let defaultUnderlineColors: [PlatformColor] = [
+        .label, .systemRed, .systemBlue, .systemGreen, .systemOrange,
+    ]
+    #endif
+
+    private static func normalizedRecentColors(_ colors: [PlatformColor], defaultColors: [PlatformColor]) -> [PlatformColor] {
         var normalized: [PlatformColor] = []
 
         for color in colors {
-            if normalized.contains(where: { recentHighlightColorsEqual($0, color) }) {
+            if normalized.contains(where: { recentColorsEqual($0, color) }) {
                 continue
             }
             normalized.append(color)
@@ -224,10 +235,10 @@ extension UserDefaults {
             }
         }
 
-        return normalized.isEmpty ? defaultHighlightColors : normalized
+        return normalized.isEmpty ? defaultColors : normalized
     }
 
-    private static func recentHighlightColorsEqual(_ lhs: PlatformColor, _ rhs: PlatformColor) -> Bool {
+    private static func recentColorsEqual(_ lhs: PlatformColor, _ rhs: PlatformColor) -> Bool {
         #if canImport(AppKit)
         guard let l = lhs.usingColorSpace(.deviceRGB),
               let r = rhs.usingColorSpace(.deviceRGB) else { return false }
@@ -263,16 +274,45 @@ extension UserDefaults {
                     from: $0
                 )
             }
-            return Self.normalizedRecentHighlightColors(colors)
+            return Self.normalizedRecentColors(colors, defaultColors: Self.defaultHighlightColors)
         }
         set {
-            let data = Self.normalizedRecentHighlightColors(newValue).compactMap {
+            let data = Self.normalizedRecentColors(newValue, defaultColors: Self.defaultHighlightColors).compactMap {
                 try? NSKeyedArchiver.archivedData(
                     withRootObject: $0,
                     requiringSecureCoding: true
                 )
             }
             set(data, forKey: Self.recentColorsKey)
+        }
+    }
+
+    /// Warna underline terbaru. Index 0 = paling baru. Maks 5.
+    /// Fallback ke warna default (.label/.labelColor, dll.) jika belum pernah diisi.
+    var recentUnderlineColors: [PlatformColor] {
+        get {
+            guard
+                let dataArray = array(forKey: Self.recentUnderlineColorsKey) as? [Data],
+                !dataArray.isEmpty
+            else {
+                return Self.defaultUnderlineColors
+            }
+            let colors = dataArray.compactMap {
+                try? NSKeyedUnarchiver.unarchivedObject(
+                    ofClass: PlatformColor.self,
+                    from: $0
+                )
+            }
+            return Self.normalizedRecentColors(colors, defaultColors: Self.defaultUnderlineColors)
+        }
+        set {
+            let data = Self.normalizedRecentColors(newValue, defaultColors: Self.defaultUnderlineColors).compactMap {
+                try? NSKeyedArchiver.archivedData(
+                    withRootObject: $0,
+                    requiringSecureCoding: true
+                )
+            }
+            set(data, forKey: Self.recentUnderlineColorsKey)
         }
     }
 

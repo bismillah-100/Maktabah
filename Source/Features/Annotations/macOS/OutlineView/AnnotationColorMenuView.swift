@@ -8,7 +8,6 @@ import Cocoa
 // MARK: - AnnotationColorMenuView
 
 final class AnnotationColorMenuView: NSView {
-
     weak var target: AnyObject?
     var colorAction: Selector = #selector(
         IbarotTextViewMenuTarget.menuDidSelectColor(_:)
@@ -18,6 +17,7 @@ final class AnnotationColorMenuView: NSView {
     )
 
     // MARK: Layout constants
+
     private let circleSize: CGFloat = 22
     private let hPad: CGFloat = 16
     private let vPad: CGFloat = 6
@@ -28,6 +28,8 @@ final class AnnotationColorMenuView: NSView {
     private(set) var colorButtons: [CircleColorButton] = []
     private var separatorView: NSView?
     private var underlineBtn: NSButton?
+
+    private let userDefaults: UserDefaults = .standard
 
     // MARK: - Init
 
@@ -54,7 +56,7 @@ final class AnnotationColorMenuView: NSView {
         separatorView = nil
         underlineBtn = nil
 
-        let colors = UserDefaults.standard.recentHighlightColors
+        let colors = userDefaults.recentHighlightColors
 
         for (i, color) in colors.enumerated() {
             let highlight = color.highlight(withLevel: 0.3) ?? color
@@ -80,16 +82,22 @@ final class AnnotationColorMenuView: NSView {
         uBtn.target = target
         uBtn.action = underlineAction
         uBtn.toolTip = "Underline"
+        let underlineColor = userDefaults
+            .recentUnderlineColors.first ?? .labelColor
         let conf = NSImage.SymbolConfiguration(
             pointSize: 13,
             weight: .semibold,
             scale: .large
         )
+        let paletteConf = NSImage.SymbolConfiguration(
+            paletteColors: [underlineColor, .labelColor]
+        )
+        let finalConf = conf.applying(paletteConf)
         uBtn.image = NSImage(
             systemSymbolName: "underline",
             accessibilityDescription: nil
         )?
-        .withSymbolConfiguration(conf)
+            .withSymbolConfiguration(finalConf)
         uBtn.imagePosition = .imageOnly
         underlineBtn = uBtn
         addSubview(uBtn)
@@ -146,21 +154,21 @@ final class AnnotationColorMenuView: NSView {
     // MARK: - Sizing
 
     private func computedSize() -> NSSize {
-        let count = UserDefaults.standard.recentHighlightColors.count
+        let count = userDefaults.recentHighlightColors.count
         let w =
             hPad
-            + CGFloat(count) * circleSize
-            + CGFloat(count) * gap  // gap setelah tiap lingkaran
-            + sepWidth
-            + uBtnWidth
-            + hPad
+                + CGFloat(count) * circleSize
+                + CGFloat(count) * gap // gap setelah tiap lingkaran
+                + sepWidth
+                + uBtnWidth
+                + hPad
         return NSSize(width: w, height: circleSize + vPad)
     }
 
     override var intrinsicContentSize: NSSize { computedSize() }
 
-    // NSMenu menggunakan frame.size untuk menentukan lebar item
-    // override ini memastikan item tidak di-resize paksa oleh menu
+    /// NSMenu menggunakan frame.size untuk menentukan lebar item
+    /// override ini memastikan item tidak di-resize paksa oleh menu
     override var fittingSize: NSSize { computedSize() }
 }
 
@@ -187,12 +195,16 @@ final class CircleColorButton: NSButton {
         )
     }
 
-    required init?(coder: NSCoder) { fatalError() }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
 
     override func mouseEntered(with event: NSEvent) {
         isHovered = true
         needsDisplay = true
     }
+
     override func mouseExited(with event: NSEvent) {
         isHovered = false
         needsDisplay = true

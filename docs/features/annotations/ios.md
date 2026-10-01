@@ -178,7 +178,28 @@ listConfig.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath i
 *   **Pemisahan Aksi Hapus vs. Pengeditan**:
     Pengguna dapat menghapus anotasi secara cepat dari daftar melalui aksi geser (*swipe action*), namun form pengeditan isi tidak disematkan di dalam daftar.
 *   **Pengeditan Berpusat di Reader (`iOSAnnotationEditorSheet`)**:
-    Pengubahan catatan (*note*), warna sorotan, tipe garis bawah (*underline*), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (`iOSReaderView`) melalui lembar modal `iOSAnnotationEditorSheet` saat teks beranotasi diketuk.
+    Pengubahan catatan (*note*), warna sorotan, tipe garis bawah (*underline*), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (`iOSReaderView`) melalui lembar modal `iOSAnnotationEditorSheet` saat teks beranotasi diketuk. Pemilihan warna beradaptasi secara dinamis dengan status toggle *underline*: menyajikan palet warna teks (`.label` / dynamic text color) dan warna garis bawah terdedikasi saat *underline* aktif. Penyimpanan otomatis memperbarui `recentUnderlineColors` di `UserDefaults`.
+*   **Menu Seleksi Teks & Palette SF Symbol**:
+    Aksi *underline* pada menu seleksi teks (`UIAction` di `iOSIbarotTextView`) dikonfigurasi menggunakan SF Symbol dengan `UIImage.SymbolConfiguration(paletteColors:)` sesuai warna terakhir dari `recentUnderlineColors` (fallback ke `.label`).
+
+### Alur Persistensi Warna Anotasi iOS (Highlight & Underline)
+
+```mermaid
+flowchart TD
+    UI_Menu["iOSIbarotTextView<br>(UIMenu Underline Action dengan palette symbol)"] -->|"onAddAnnotation(.underline)"| ReaderVM["ReaderViewModel"]
+    UI_Sheet["iOSAnnotationEditorSheet<br>(Palet Warna Adaptif & Toggle)"] -->|"saveAnnotation"| ReaderVM
+    
+    ReaderVM -->|"recentUnderlineColors.first"| Coord["AnnotationCoordinator.saveHighlight"]
+    Coord --> Store["AnnotationStore"]
+    ReaderVM -->|"updateAnnotation"| Store
+    
+    Store --> Push["pushRecentColor()"]
+    Push -->|"type == .highlight"| TVS_H["TextViewState.pushRecentHighlightColor"]
+    Push -->|"type == .underline"| TVS_U["TextViewState.pushRecentUnderlineColor"]
+    
+    TVS_H --> UD_H[("UserDefaults: recentHighlightColors")]
+    TVS_U --> UD_U[("UserDefaults: recentUnderlineColors")]
+```
 
 ## Modal Sheet Filter Tag (TagFilterSelectionView)
 
