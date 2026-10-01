@@ -87,15 +87,12 @@ struct iOSReaderView: View {
                     isReading ? .hidden : .visible,
                     for: .navigationBar, .bottomBar
                 )
-                .simultaneousGesture(
-                    TapGesture()
-                        .onEnded {
-                            guard !viewModel.isPopoverPresented else { return }
-                            withAnimation(.easeInOut) {
-                                isReading.toggle()
-                            }
-                        }
-                )
+                .onTapGesture {
+                    guard !viewModel.isPopoverPresented else { return }
+                    withAnimation(.easeInOut) {
+                        isReading.toggle()
+                    }
+                }
         }
         .toolbar {
             if !isRegularLayout, bManager.openTabs.count > 1 {
