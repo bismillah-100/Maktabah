@@ -338,12 +338,21 @@ jobs:
 
           # Inject <sparkle:releaseNotesLink> yang dihapus generate_appcast
           python3 - <<'PYEOF2'
-          import re
+          import os, re
 
           with open('appcast.xml', 'r') as f:
               xml = f.read()
 
-          tag = '<sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>'
+          tag_name = os.environ.get('TAG_NAME', '')
+          version_clean = tag_name.lstrip('vV')
+
+          # Rilis v3.x diarahkan ke legacy release notes agar tidak bercampur dengan Sequoia+
+          if version_clean.startswith('3.'):
+              notes_url = 'https://bismillah-100.github.io/Maktabah/releases-notes-legacy.html'
+          else:
+              notes_url = 'https://bismillah-100.github.io/Maktabah/releases-notes.html'
+
+          tag = f'<sparkle:releaseNotesLink>{notes_url}</sparkle:releaseNotesLink>'
 
           # Sisipkan setelah <enclosure ... /> di setiap <item> yang belum memilikinya
           xml = re.sub(r'(<enclosure[^>]*/\s*>)(?!\s*<sparkle:releaseNotesLink>)', r'\1\n            ' + tag, xml, flags=re.DOTALL)
@@ -351,7 +360,7 @@ jobs:
           with open('appcast.xml', 'w') as f:
               f.write(xml)
 
-          print('releaseNotesLink berhasil di-inject.')
+          print(f'releaseNotesLink ({notes_url}) berhasil di-inject.')
           PYEOF2
 
           echo "appcast.xml berhasil dibuat:"
@@ -376,14 +385,15 @@ jobs:
           git fetch origin gh-pages
           git worktree add /tmp/maktabah-gh-pages origin/gh-pages
 
-          # Update releases-notes.html: sisipkan section baru setelah <body>
+          # Update releases-notes.html (atau releases-notes-legacy.html untuk v3.x): sisipkan section baru setelah <body>
           python3 - <<PYEOF3
           import re, os, sys
 
           version = "$VERSION"
           release_date = "$RELEASE_DATE"
           tag_message = """$TAG_MESSAGE"""
-          notes_file = "/tmp/maktabah-gh-pages/releases-notes.html"
+          notes_filename = "releases-notes-legacy.html" if version.startswith('3.') else "releases-notes.html"
+          notes_file = f"/tmp/maktabah-gh-pages/{notes_filename}"
 
           # Hapus blok signature yang ikut tersimpan di annotated tag
           tag_message = re.sub(
@@ -436,13 +446,13 @@ jobs:
               flags=re.IGNORECASE,
           )
           if existing_version_pattern.search(content):
-              print(f"Version {version} sudah ada di releases-notes.html, skip insert.")
+              print(f"Version {version} sudah ada di {notes_filename}, skip insert.")
               sys.exit(0)
 
           marker = '<body>'
           idx = content.find(marker)
           if idx == -1:
-              print("ERROR: <body> tidak ditemukan")
+              print(f"ERROR: <body> tidak ditemukan di {notes_filename}")
               sys.exit(1)
 
           insert_at = idx + len(marker)
@@ -451,15 +461,15 @@ jobs:
           with open(notes_file, 'w') as f:
               f.write(new_content)
 
-          print(f"releases-notes.html updated untuk versi {version}")
+          print(f"{notes_filename} updated untuk versi {version}")
           PYEOF3
 
           # Copy appcast.xml
           cp appcast.xml /tmp/maktabah-gh-pages/appcast.xml
 
-          # Commit keduanya sekaligus — satu push, tidak ada double trigger
+          # Commit sekaligus — satu push, tidak ada double trigger
           cd /tmp/maktabah-gh-pages
-          git add appcast.xml releases-notes.html
+          git add appcast.xml releases-notes.html releases-notes-legacy.html
 
           if git diff --cached --quiet; then
             echo "No changes to publish."
