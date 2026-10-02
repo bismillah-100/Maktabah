@@ -998,6 +998,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Aksi Baris, Menu Konteks &amp; Pengeditan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alur-persistensi-warna-anotasi-highlight-underline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Persistensi Warna Anotasi (Highlight &amp; Underline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3718,6 +3735,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Aksi Baris, Menu Konteks &amp; Pengeditan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alur-persistensi-warna-anotasi-highlight-underline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Persistensi Warna Anotasi (Highlight &amp; Underline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3919,10 +3953,24 @@
 <li><strong>Menu Konteks Baris (<code>AnnotationMenu</code>)</strong>:
     Menyediakan aksi klik kanan: Salin teks (<code>copyMenuItem</code>), Tambah/Hapus Tag, Ubah Tipe (<em>Highlight</em> vs. <em>Underline</em>), serta opsi hapus.</li>
 <li><strong>Menu Palet Warna Cepat (<code>AnnotationColorMenuView</code>)</strong>:
-    Menampilkan deretan titik warna di dalam menu konteks, memungkinkan pengguna mengganti warna sorotan tanpa membuka editor penuh.</li>
+    Menampilkan deretan titik warna di dalam menu konteks untuk <em>highlight</em> serta tombol <em>underline</em> terdedikasi. Ikon <em>underline</em> dikonfigurasi menggunakan SF Symbol dengan <code>NSImage.SymbolConfiguration(paletteColors:)</code> yang mencerminkan warna terakhir dari <code>recentUnderlineColors</code> (fallback ke <code>.labelColor</code>).</li>
 <li><strong>Panel Editor Anotasi (<code>AnnotationEditorVC</code>)</strong>:
-    Panel <em>popover</em> untuk mengedit catatan teks lengkap, mengubah tipe garis bawah, memilih warna dari <code>NSColorWell</code>, serta mengatur tag melalui <code>NSTokenField</code>.</li>
+    Panel <em>popover</em> untuk mengedit catatan teks lengkap, mengubah tipe (<em>highlight</em> vs. <em>underline</em>), memilih warna dari <code>NSColorWell</code>, serta mengatur tag melalui <code>NSTokenField</code>. Nilai warna disinkronkan secara otomatis: jika tipe <em>underline</em> aktif, warna disimpan dan dipush ke <code>UserDefaults.standard.recentUnderlineColors</code>, sehingga pembuatan <em>underline</em> berikutnya secara konsisten memakai warna tersebut.</li>
 </ul>
+<h3 id="alur-persistensi-warna-anotasi-highlight-underline">Alur Persistensi Warna Anotasi (Highlight &amp; Underline)</h3>
+<pre class="mermaid"><code>flowchart TD
+    UI_Menu["AnnotationColorMenuView&lt;br&gt;(underlineBtn dengan palette symbol)"] --&gt;|"underlineSelection"| Reader["IbarotTextView"]
+    UI_Editor["AnnotationEditorVC&lt;br&gt;(NSColorWell &amp; underLine toggle)"] --&gt;|"saveTapped"| Store["AnnotationStore"]
+
+    Reader --&gt;|"recentUnderlineColors.first"| Coord["AnnotationCoordinator.saveHighlight"]
+    Coord --&gt; Store
+
+    Store --&gt; Push["pushRecentColor()"]
+    Push --&gt;|"type == .highlight"| TVS_H["TextViewState.pushRecentHighlightColor"]
+    Push --&gt;|"type == .underline"| TVS_U["TextViewState.pushRecentUnderlineColor"]
+
+    TVS_H --&gt; UD_H[("UserDefaults: recentHighlightColors")]
+    TVS_U --&gt; UD_U[("UserDefaults: recentUnderlineColors")]</code></pre>
 <h2 id="pencarian-scope-panel-melayang">Pencarian &amp; Scope Panel Melayang</h2>
 <ul>
 <li><strong>Kolom Pencarian (<code>DSFSearchField</code>)</strong>:

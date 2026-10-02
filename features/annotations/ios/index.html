@@ -1183,6 +1183,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Mekanisme Pengeditan Anotasi di iOS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alur-persistensi-warna-anotasi-ios-highlight-underline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Persistensi Warna Anotasi iOS (Highlight &amp; Underline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3741,6 +3758,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Mekanisme Pengeditan Anotasi di iOS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alur-persistensi-warna-anotasi-ios-highlight-underline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alur Persistensi Warna Anotasi iOS (Highlight &amp; Underline)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3967,8 +4001,25 @@
 <li><strong>Pemisahan Aksi Hapus vs. Pengeditan</strong>:
     Pengguna dapat menghapus anotasi secara cepat dari daftar melalui aksi geser (<em>swipe action</em>), namun form pengeditan isi tidak disematkan di dalam daftar.</li>
 <li><strong>Pengeditan Berpusat di Reader (<code>iOSAnnotationEditorSheet</code>)</strong>:
-    Pengubahan catatan (<em>note</em>), warna sorotan, tipe garis bawah (<em>underline</em>), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (<code>iOSReaderView</code>) melalui lembar modal <code>iOSAnnotationEditorSheet</code> saat teks beranotasi diketuk.</li>
+    Pengubahan catatan (<em>note</em>), warna sorotan, tipe garis bawah (<em>underline</em>), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (<code>iOSReaderView</code>) melalui lembar modal <code>iOSAnnotationEditorSheet</code> saat teks beranotasi diketuk. Pemilihan warna beradaptasi secara dinamis dengan status toggle <em>underline</em>: menyajikan palet warna teks (<code>.label</code> / dynamic text color) dan warna garis bawah terdedikasi saat <em>underline</em> aktif. Penyimpanan otomatis memperbarui <code>recentUnderlineColors</code> di <code>UserDefaults</code>.</li>
+<li><strong>Menu Seleksi Teks &amp; Palette SF Symbol</strong>:
+    Aksi <em>underline</em> pada menu seleksi teks (<code>UIAction</code> di <code>iOSIbarotTextView</code>) dikonfigurasi menggunakan SF Symbol dengan <code>UIImage.SymbolConfiguration(paletteColors:)</code> sesuai warna terakhir dari <code>recentUnderlineColors</code> (fallback ke <code>.label</code>).</li>
 </ul>
+<h3 id="alur-persistensi-warna-anotasi-ios-highlight-underline">Alur Persistensi Warna Anotasi iOS (Highlight &amp; Underline)</h3>
+<pre class="mermaid"><code>flowchart TD
+    UI_Menu["iOSIbarotTextView&lt;br&gt;(UIMenu Underline Action dengan palette symbol)"] --&gt;|"onAddAnnotation(.underline)"| ReaderVM["ReaderViewModel"]
+    UI_Sheet["iOSAnnotationEditorSheet&lt;br&gt;(Palet Warna Adaptif &amp; Toggle)"] --&gt;|"saveAnnotation"| ReaderVM
+
+    ReaderVM --&gt;|"recentUnderlineColors.first"| Coord["AnnotationCoordinator.saveHighlight"]
+    Coord --&gt; Store["AnnotationStore"]
+    ReaderVM --&gt;|"updateAnnotation"| Store
+
+    Store --&gt; Push["pushRecentColor()"]
+    Push --&gt;|"type == .highlight"| TVS_H["TextViewState.pushRecentHighlightColor"]
+    Push --&gt;|"type == .underline"| TVS_U["TextViewState.pushRecentUnderlineColor"]
+
+    TVS_H --&gt; UD_H[("UserDefaults: recentHighlightColors")]
+    TVS_U --&gt; UD_U[("UserDefaults: recentUnderlineColors")]</code></pre>
 <h2 id="modal-sheet-filter-tag-tagfilterselectionview">Modal Sheet Filter Tag (TagFilterSelectionView)</h2>
 <p>Saat tombol filter pada <code>iOSTagFilterHeaderView</code> diketuk:</p>
 <ol>
