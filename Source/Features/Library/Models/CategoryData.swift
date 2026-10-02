@@ -61,4 +61,18 @@ class CategoryData: @unchecked Sendable {
             }
         }
     }
+
+    @discardableResult
+    func insertBookSorted(_ book: BooksData) -> Int {
+        if let existingIndex = children.firstIndex(where: { ($0 as? BooksData)?.id == book.id }) {
+            children[existingIndex] = book
+            return existingIndex
+        }
+        let firstBookIndex = children.firstIndex { $0 is BooksData } ?? children.count
+        let existingBooks = children[firstBookIndex...].compactMap { $0 as? BooksData }
+        let relativeIndex = existingBooks.insertionIndex(for: book) { $0.book < $1.book }
+        let insertIndex = firstBookIndex + relativeIndex
+        children.insert(book, at: insertIndex)
+        return insertIndex
+    }
 }

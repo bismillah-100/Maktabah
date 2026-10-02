@@ -1028,7 +1028,7 @@ extension LibraryDataManager {
             state.booksById[result.bookId] = book
             let categoryId = result.catId
             if let category = state.categoryMap[categoryId] {
-                category.children.append(book)
+                category.insertBookSorted(book)
                 inserted = (categoryId, book)
             }
         }
