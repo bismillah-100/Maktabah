@@ -255,6 +255,7 @@ final class BookArchiveIntegrator {
             try exec(archiveDb, SQL.dropTable(name: bookTable))
             try exec(archiveDb, SQL.dropTable(name: tocTable))
             try exec(ftsDb, SQL.dropTable(name: ftsTable))
+            try? exec(ftsDb, "DELETE FROM archive_fts WHERE rowid IN (SELECT rowid FROM archive_index WHERE book_id = \(bookId));")
             try? exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(bookId);")
         } catch {
             #if DEBUG
