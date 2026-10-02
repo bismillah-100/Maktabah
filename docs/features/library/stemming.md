@@ -127,7 +127,7 @@ struct TableColumnInfo {
     Digunakan saat migrasi massal (`FtsMigrationManager`). Menerima *pre-compiled prepared statements* (`insertIndexStmt`, `insertFtsStmt`) yang dipakai berulang kali lintas kitab tanpa DDL check redundan ataupun *delete scan*, dieksekusi di bawah 1 transaksi tunggal.
 
 *   **Penyisipan Terpadu (`appendBookToUnifiedFTS`)**:
-    Digunakan saat kitab baru selesai diunduh atau diimpor secara individual. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada `archive_index` berdasarkan `book_id`, lalu menyisipkan baris halaman baru ke `archive_index` dan `archive_fts` menggunakan *bitwise packed rowid* `(bookId << 32) | (rowId & 0xFFFFFFFF)`.
+    Digunakan saat kitab baru selesai diunduh atau diimpor secara individual. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada `archive_fts` dan `archive_index` berdasarkan `book_id`, lalu menyisipkan baris halaman baru ke `archive_index` dan `archive_fts` menggunakan *bitwise packed rowid* `(bookId << 32) | (rowId & 0xFFFFFFFF)`.
 
 *   **Normalisasi Teks Arab Simetris**:
     Teks dibersihkan menggunakan metode berantai `replacing("\n", with: " ").stripSpanTags()`, lalu diproses oleh algoritma `stemArabicLight10()`. Algoritma ini menghapus harakat, tasydid, tatweel (`ـ`), serta menormalisasi alif/hamzah (`أ/إ/آ/ٱ` $\rightarrow$ `ا`), ta' marbutah (`ة` $\rightarrow$ `ه`), dan alif maqsurah (`ى` $\rightarrow$ `ي`) agar simetris dengan kueri pengguna di `FtsQueryParser`.

@@ -243,9 +243,9 @@ final class FtsMigrationManager {
 - **Mekanisme Latar Belakang**: Memanfaatkan tugas latar belakang tingkat OS (`UIBackgroundTaskIdentifier` pada iOS dan `withBackgroundTask` yang menonaktifkan sleep sementara).
 - **Throttling & Concurrency MainActor**: Pengecekan pembatalan dievaluasi secara *nonisolated* di setiap buku via `Task.isCancelled` (0 *context switch*). Pembaruan status teks dan akumulasi jumlah buku selesai dibatasi (*throttled*) ke `@MainActor` dengan batas interval waktu $\ge 250$ms atau akumulasi $\ge 10$ buku guna mencegah stutter pada antarmuka pengguna.
 - **ArchiveDatabaseTools**:
-  - `createUnifiedFTS(db:ftsSchema:)`: Menginisialisasi tabel B-Tree `archive_index(rowid, book_id, page, id, part)` dan tabel virtual FTS5 `archive_fts(nass_clean, content='', tokenize='unicode61')`.
+  - `createUnifiedFTS(db:ftsSchema:)`: Menginisialisasi tabel B-Tree `archive_index(rowid, book_id, page, id, part)` dan tabel virtual FTS5 `archive_fts(nass_clean, content='', contentless_delete=1, tokenize='unicode61')`.
   - `appendBookFast(...)`: Metode performa tinggi untuk migrasi massal menggunakan *prepared statement* yang dapat digunakan kembali (`insertIndexStmt`, `insertFtsStmt`), tanpa pengecekan DDL redundan ataupun pemindaian `DELETE` per-buku.
-  - `appendBookToUnifiedFTS(...)`: Digunakan untuk penambahan/pemutakhiran buku tunggal secara mandiri, membersihkan entri buku lama di `archive_index`, lalu menyisipkan baris buku baru dengan *bitwise packed rowid* `(bookId << 32) | pageRowId` dan teks yang dinormalisasi (`stemArabicLight10()`).
+  - `appendBookToUnifiedFTS(...)`: Digunakan untuk penambahan/pemutakhiran buku tunggal secara mandiri, membersihkan entri buku lama di `archive_fts` dan `archive_index`, lalu menyisipkan baris buku baru dengan *bitwise packed rowid* `(bookId << 32) | pageRowId` dan teks yang dinormalisasi (`stemArabicLight10()`).
 - **Penyetelan Pragma & Transaksi Atomik**:
   - Arsip utama (`main`) dibuka secara langsung dalam mode *read-only* dengan `PRAGMA main.mmap_size` (64 MB di iOS, 256 MB di macOS) tanpa overhead duplikasi berkas sementara.
   - Basis data indeks yang di-*attach* (`fts_db`) dikonfigurasi dengan *schema-scoped pragmas*: `synchronous = OFF`, `journal_mode = MEMORY`, `temp_store = MEMORY`, dan `cache_size = -32000` (iOS / 32 MB) atau `-64000` (macOS / 64 MB).

@@ -63,6 +63,7 @@ Di dalam berkas `{archiveId}_fts.sqlite`:
    CREATE VIRTUAL TABLE archive_fts USING fts5(
        nass_clean,
        content='',
+       contentless_delete=1,
        tokenize='unicode61'
    );
    ```
