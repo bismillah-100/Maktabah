@@ -142,33 +142,85 @@ extension LibraryViewManager {
         guard let payload = notification.object as? BooksChangedNotification else { return }
 
         if viewModel.isFlatMode {
-            historyManager.loadBooksData()
-            if viewModel.filterMode == .history {
-                updateFlatList(
-                    for: .history,
-                    newBooks: historyManager.historyBooks,
-                    categoryId: -2,
-                    categoryName: String(localized: .Library.history)
-                )
-            } else if viewModel.filterMode == .favorites {
-                updateFlatList(
-                    for: .favorites,
-                    newBooks: historyManager.favoriteBooks,
-                    categoryId: -1,
-                    categoryName: String(localized: .Library.favorites)
-                )
-            }
+            updateFlatModeForBooksChanged()
         }
 
-        if viewModel.showOnlyDownloaded {
-            for (_, book) in payload.insertedBooks {
-                reloadParentCategory(ofBookId: book.id)
-            }
+        if !payload.insertedBooks.isEmpty {
+            handleInsertedBooks(payload.insertedBooks)
         }
 
         if !payload.updatedBookIds.isEmpty {
             reloadUpdatedBooks(payload.updatedBookIds)
         }
+    }
+
+    private func updateFlatModeForBooksChanged() {
+        historyManager.loadBooksData()
+        if viewModel.filterMode == .history {
+            updateFlatList(
+                for: .history,
+                newBooks: historyManager.historyBooks,
+                categoryId: -2,
+                categoryName: String(localized: .Library.history)
+            )
+        } else if viewModel.filterMode == .favorites {
+            updateFlatList(
+                for: .favorites,
+                newBooks: historyManager.favoriteBooks,
+                categoryId: -1,
+                categoryName: String(localized: .Library.favorites)
+            )
+        }
+    }
+
+    private func handleInsertedBooks(_ insertedBooks: [(Int, BooksData)]) {
+        if viewModel.showOnlyDownloaded {
+            for (_, book) in insertedBooks {
+                reloadParentCategory(ofBookId: book.id)
+            }
+            return
+        }
+
+        for (categoryId, book) in insertedBooks {
+            insertHierarchicalBook(book, inCategory: categoryId)
+        }
+    }
+
+    private func insertHierarchicalBook(_ book: BooksData, inCategory categoryId: Int) {
+        guard let category = findCategoryInDisplayed(categoryId) else { return }
+        viewModel.bookLookup[book.book] = (category, book)
+
+        guard viewModel.searchQuery.isEmpty else {
+            refreshSearchFilterAfterInsertion()
+            return
+        }
+
+        let isExpanded = outlineView.isItemExpanded(category)
+        if isExpanded, let insertIndex = category.children.firstIndex(where: { ($0 as? BooksData)?.id == book.id }) {
+            isUpdatingOutline = true
+            outlineView.insertItems(at: IndexSet(integer: insertIndex), inParent: category, withAnimation: [.slideDown])
+            isUpdatingOutline = false
+        } else {
+            outlineView.expandItem(category, expandChildren: false)
+        }
+
+        let row = outlineView.row(forItem: book)
+        if row >= 0 {
+            outlineView.scrollRowToVisible(row)
+        }
+    }
+
+    private func refreshSearchFilterAfterInsertion() {
+        let currentQuery = viewModel.searchQuery
+        let base = viewModel.baseCategories.isEmpty ? viewModel.displayedCategories : viewModel.baseCategories
+        var filtered: [CategoryData] = []
+        _ = dataManager.filterContent(
+            with: currentQuery,
+            displayedCategories: &filtered,
+            baseCategories: base
+        )
+        viewModel.displayedCategories = filtered
+        outlineView.reloadData()
     }
 
     private func reloadUpdatedBooks(_ bookIds: Set<Int>) {
@@ -318,17 +370,7 @@ extension LibraryViewManager {
         if targetCategory.children.contains(where: { ($0 as? BooksData)?.id == book.id }) {
             return nil
         }
-        let existingBooks = targetCategory.children.compactMap { $0 as? BooksData }
-        let originalIndex = originalCategory.children.firstIndex { ($0 as? BooksData)?.id == book.id } ?? originalCategory.children.count
-        var insertBookIndex = 0
-        for existingBook in existingBooks {
-            let existingIndex = originalCategory.children.firstIndex { ($0 as? BooksData)?.id == existingBook.id } ?? originalCategory.children.count
-            if existingIndex > originalIndex { break }
-            insertBookIndex += 1
-        }
-        let firstBookIndex = targetCategory.children.firstIndex { $0 is BooksData } ?? targetCategory.children.count
-        targetCategory.children.insert(book, at: firstBookIndex + insertBookIndex)
-        return firstBookIndex + insertBookIndex
+        return targetCategory.insertBookSorted(book)
     }
 
     @discardableResult
@@ -386,8 +428,12 @@ extension LibraryViewManager {
         let insertIndex = insertBook(book, originalCategory: originalLeaf, targetCategory: leaf)
 
         if let insertIndex {
+            isUpdatingOutline = true
             outlineView.insertItems(at: IndexSet(integer: insertIndex), inParent: leaf, withAnimation: [.slideDown])
+            isUpdatingOutline = false
         }
+
+        viewModel.bookLookup[book.book] = (leaf, book)
 
         if viewModel.searchQuery.isEmpty {
             viewModel.baseCategories = viewModel.displayedCategories
