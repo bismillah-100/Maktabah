@@ -26,7 +26,7 @@ enum ArchiveDatabaseTools {
         static let createTableAsSelect = "CREATE TABLE main.\"%@\" AS SELECT * FROM %@.\"%@\";"
         static let createFTS = "CREATE VIRTUAL TABLE %@.%@ USING fts5(nass_clean, content='', tokenize='unicode61');"
         static let createUnifiedIndex = "CREATE TABLE IF NOT EXISTS %@.archive_index (rowid INTEGER PRIMARY KEY, book_id INTEGER, page INTEGER, id INTEGER, part INTEGER);"
-        static let createUnifiedFTS = "CREATE VIRTUAL TABLE IF NOT EXISTS %@.archive_fts USING fts5(nass_clean, content='', tokenize='unicode61');"
+        static let createUnifiedFTS = "CREATE VIRTUAL TABLE IF NOT EXISTS %@.archive_fts USING fts5(nass_clean, content='', contentless_delete=1, tokenize='unicode61');"
         static let selectFTS = "SELECT id, nass FROM %@.%@ WHERE nass IS NOT NULL AND nass != '';"
         static let selectUnifiedSource = "SELECT id, nass, page, part FROM %@.%@ WHERE nass IS NOT NULL AND nass != '';"
         static let insertFTS = "INSERT INTO %@.%@(rowid, nass_clean) VALUES (?, ?);"
@@ -114,6 +114,7 @@ enum ArchiveDatabaseTools {
         isNassCompressed: Bool = true
     ) throws {
         try createUnifiedFTS(db: db, ftsSchema: ftsSchema)
+        try? exec(db, "DELETE FROM \(ftsSchema).archive_fts WHERE rowid IN (SELECT rowid FROM \(ftsSchema).archive_index WHERE book_id = \(bookId));")
         try exec(db, "DELETE FROM \(ftsSchema).archive_index WHERE book_id = \(bookId);")
 
         let insertIndexSQL = String(format: SQL.insertUnifiedIndex, ftsSchema)

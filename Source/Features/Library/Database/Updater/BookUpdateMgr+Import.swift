@@ -242,6 +242,7 @@ extension BookUpdateManager {
 
         let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main")
         if hasUnified {
+            _ = sqlite3_exec(ftsDb, "DELETE FROM archive_fts WHERE rowid IN (SELECT rowid FROM archive_index WHERE book_id = \(oldId));", nil, nil, nil)
             _ = sqlite3_exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(oldId);", nil, nil, nil)
 
             if let archivePath {
@@ -328,6 +329,7 @@ extension BookUpdateManager {
             defer { sqlite3_close_v2(ftsDb) }
             let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main")
             if hasUnified {
+                _ = sqlite3_exec(ftsDb, "DELETE FROM archive_fts WHERE rowid IN (SELECT rowid FROM archive_index WHERE book_id = \(newId));", nil, nil, nil)
                 _ = sqlite3_exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(newId);", nil, nil, nil)
                 if let archivePath, let archiveDb = try? openDatabase(path: archivePath) {
                     try? archiveDb.safeAttachDatabase(path: ftsPath, schema: "fts_db")

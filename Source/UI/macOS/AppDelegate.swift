@@ -222,7 +222,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
         ScreenTimeManager.shared.cancel()
-        BookArchiveIntegrator.shared.vacuumPendingArchives()
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
