@@ -12,19 +12,7 @@ extension LibraryViewManager {
         NotificationCenter.default.publisher(for: .historyDidChange)
             .debounce(for: .seconds(3), scheduler: RunLoop.main)
             .sink { [weak self] _ in
-                guard let self else { return }
-                updateFlatList(
-                    for: .history,
-                    newBooks: historyManager.historyBooks,
-                    categoryId: -2,
-                    categoryName: String(localized: .Library.history)
-                )
-                updateFlatList(
-                    for: .favorites,
-                    newBooks: historyManager.favoriteBooks,
-                    categoryId: -1,
-                    categoryName: String(localized: .Library.favorites)
-                )
+                self?.refreshActiveFlatList()
             }
             .store(in: &cancellables)
 
@@ -142,7 +130,7 @@ extension LibraryViewManager {
         guard let payload = notification.object as? BooksChangedNotification else { return }
 
         if viewModel.isFlatMode {
-            updateFlatModeForBooksChanged()
+            refreshActiveFlatList()
         }
 
         if !payload.insertedBooks.isEmpty {
@@ -154,22 +142,26 @@ extension LibraryViewManager {
         }
     }
 
-    private func updateFlatModeForBooksChanged() {
+    private func refreshActiveFlatList() {
+        guard viewModel.isFlatMode else { return }
         historyManager.loadBooksData()
-        if viewModel.filterMode == .history {
+        switch viewModel.filterMode {
+        case .history:
             updateFlatList(
                 for: .history,
                 newBooks: historyManager.historyBooks,
                 categoryId: -2,
                 categoryName: String(localized: .Library.history)
             )
-        } else if viewModel.filterMode == .favorites {
+        case .favorites:
             updateFlatList(
                 for: .favorites,
                 newBooks: historyManager.favoriteBooks,
                 categoryId: -1,
                 categoryName: String(localized: .Library.favorites)
             )
+        default:
+            break
         }
     }
 
@@ -243,23 +235,8 @@ extension LibraryViewManager {
         guard let parent = findParentCategory(ofBookId: bookId, in: viewModel.displayedCategories) else { return }
 
         if downloadView || viewModel.isDownloadModal {
-            if let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
-                outlineView.beginUpdates()
-
-                if parent.children.count == 1 {
-                    parent.children.remove(at: childIndex)
-                    viewModel.selectedBookIds.remove(bookId)
-                    if let index = viewModel.displayedCategories.firstIndex(where: { $0 === parent }) {
-                        viewModel.displayedCategories.remove(at: index)
-                        outlineView.removeItems(at: IndexSet(integer: index), inParent: nil, withAnimation: [.slideUp])
-                    }
-                    viewModel.baseCategories = viewModel.displayedCategories
-                } else {
-                    parent.children.remove(at: childIndex)
-                    outlineView.removeItems(at: IndexSet(integer: childIndex), inParent: parent, withAnimation: [.slideUp])
-                }
-
-                outlineView.endUpdates()
+            removeBookFromDisplayed(bookId: bookId)
+            if !parent.children.isEmpty {
                 outlineView.reloadItem(parent, reloadChildren: false)
             }
         } else {
@@ -286,68 +263,91 @@ extension LibraryViewManager {
         }
     }
 
-    private func removeBookFromDisplayed(bookId: Int) {
-        func findAndRemove(in list: inout [CategoryData], parent: CategoryData?) -> Bool {
-            var anyChanged = false
-            for i in (0 ..< list.count).reversed() {
-                let category = list[i]
+    private func cleanEmptyCategory(_ category: CategoryData) {
+        guard category.children.isEmpty else { return }
 
-                if let bookIndex = category.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
-                    outlineView.removeItems(at: IndexSet(integer: bookIndex), inParent: category, withAnimation: [.slideUp])
-                    category.children.remove(at: bookIndex)
-                    anyChanged = true
-                }
-
-                var subChanged = false
-                for j in (0 ..< category.children.count).reversed() {
-                    if let sub = category.children[j] as? CategoryData {
-                        var subList = [sub]
-                        if findAndRemove(in: &subList, parent: category) {
-                            if subList.isEmpty {
-                                outlineView.removeItems(at: IndexSet(integer: j), inParent: category, withAnimation: [.slideUp])
-                                category.children.remove(at: j)
-                            }
-                            subChanged = true
-                        }
-                    }
-                }
-
-                if subChanged || anyChanged {
-                    return true
-                }
+        if let parent = outlineView.parent(forItem: category) as? CategoryData {
+            if let index = parent.children.firstIndex(where: { ($0 as? CategoryData) === category }) {
+                parent.children.remove(at: index)
+                outlineView.removeItems(at: IndexSet(integer: index), inParent: parent, withAnimation: [.slideUp])
+                cleanEmptyCategory(parent)
             }
-            return false
+        } else if let index = viewModel.displayedCategories.firstIndex(where: { $0 === category }) {
+            viewModel.displayedCategories.remove(at: index)
+            if viewModel.searchQuery.isEmpty {
+                viewModel.baseCategories.removeAll { $0 === category || $0.id == category.id }
+            }
+            outlineView.removeItems(at: IndexSet(integer: index), inParent: nil, withAnimation: [.slideUp])
+        }
+    }
+
+    func removeBookFromDisplayed(bookId: Int) {
+        viewModel.selectedBookIds.remove(bookId)
+
+        let parent: CategoryData?
+        let parentItem: Any?
+
+        if viewModel.isFlatMode {
+            parent = viewModel.displayedCategories.first
+            parentItem = nil
+        } else {
+            let foundParent = viewModel.bookLookup.values.first(where: { $0.book.id == bookId })?.category
+                ?? findParentCategory(ofBookId: bookId, in: viewModel.displayedCategories)
+            parent = foundParent
+            parentItem = foundParent
         }
 
-        var list = viewModel.displayedCategories
-        if findAndRemove(in: &list, parent: nil) {
-            var rootChanged = false
-            for i in (0 ..< list.count).reversed() where list[i].children.isEmpty {
-                outlineView.removeItems(at: IndexSet(integer: i), inParent: nil, withAnimation: [.slideUp])
-                list.remove(at: i)
-                rootChanged = true
-            }
+        guard let parent,
+              let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId })
+        else {
+            return
+        }
 
-            if rootChanged {
-                viewModel.displayedCategories = list
-                if viewModel.searchQuery.isEmpty {
-                    viewModel.baseCategories = viewModel.displayedCategories
-                }
-            } else if viewModel.searchQuery.isEmpty {
-                viewModel.baseCategories = list
+        let book = parent.children[childIndex] as? BooksData
+        let bookName = book?.book
+
+        isUpdatingOutline = true
+        outlineView.beginUpdates()
+
+        parent.children.remove(at: childIndex)
+        outlineView.removeItems(at: IndexSet(integer: childIndex), inParent: parentItem, withAnimation: [.slideUp])
+
+        if !viewModel.isFlatMode {
+            cleanEmptyCategory(parent)
+        }
+
+        outlineView.endUpdates()
+        isUpdatingOutline = false
+
+        if let bookName {
+            viewModel.bookLookup.removeValue(forKey: bookName)
+            if viewModel.selectedBookName == bookName {
+                viewModel.selectedBookName = nil
+            }
+        }
+
+        if viewModel.searchQuery.isEmpty {
+            viewModel.baseCategories = viewModel.displayedCategories
+        } else if let baseParent = findParentCategory(ofBookId: bookId, in: viewModel.baseCategories),
+                  let baseIndex = baseParent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId })
+        {
+            baseParent.children.remove(at: baseIndex)
+            if baseParent.children.isEmpty {
+                viewModel.baseCategories.removeAll { $0 === baseParent || $0.id == baseParent.id }
+            }
+        }
+    }
+
+    func removeDeletedBooksRows(_ deletedBooks: [BooksData]) {
+        for book in deletedBooks {
+            if viewModel.showOnlyDownloaded || LibraryDataManager.shouldRemoveBook(id: book.id) {
+                removeBookFromDisplayed(bookId: book.id)
             }
         }
     }
 
     private func findParentCategory(ofBookId bookId: Int, in categories: [CategoryData]) -> CategoryData? {
-        for category in categories {
-            for child in category.children {
-                if let b = child as? BooksData, b.id == bookId { return category }
-                if let sub = child as? CategoryData,
-                   let found = findParentCategory(ofBookId: bookId, in: [sub]) { return found }
-            }
-        }
-        return nil
+        findPathToBook(bookId: bookId, in: categories)?.last
     }
 
     private func findPathToBook(bookId: Int, in categories: [CategoryData]) -> [CategoryData]? {
