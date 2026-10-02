@@ -131,7 +131,7 @@ Terdapat tiga mode operasi utama yang dijalankan tergantung pada nilai `importMo
     *   Mengeksekusi `ALTER TABLE "b{oldId}" RENAME TO "b{newId}";` serta hal yang sama untuk tabel TOC (`t{oldId}`).
     *   Jika gagal di tengah proses, perubahan pada tabel akan dikembalikan ke nama semula (*rollback*).
     *   Jika berhasil, perlakuan FTS disesuaikan dengan skema arsip:
-        - **Unified FTS**: Menghapus entri lama `DELETE FROM archive_index WHERE book_id = \(oldId)` lalu memanggil `appendBookToUnifiedFTS` untuk ID kitab yang baru.
+        - **Unified FTS**: Menghapus entri lama `DELETE FROM archive_fts WHERE rowid IN (SELECT rowid FROM archive_index WHERE book_id = \(oldId))` dan `DELETE FROM archive_index WHERE book_id = \(oldId)` lalu memanggil `appendBookToUnifiedFTS` untuk ID kitab yang baru.
         - **Legacy FTS**: Mengubah nama tabel virtual: `ALTER TABLE "b{oldId}_fts" RENAME TO "b{newId}_fts";`.
     *   Terakhir, rekaman sinkronisasi anotasi dan riwayat membaca diperbarui ke ID baru lalu dikirim ke CloudKit.
 
