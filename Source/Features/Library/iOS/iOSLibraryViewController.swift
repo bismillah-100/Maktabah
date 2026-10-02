@@ -146,7 +146,21 @@ extension iOSLibraryViewController {
                 self?.onSelectionChanged?()
             }
 
-            let mainAction = if isDownloaded {
+            let mainAction: UIAction? = if AppConfig.isUsingBundleMode {
+                if isDownloaded {
+                    UIAction(
+                        title: String(localized: .Library.deleteDownload),
+                        image: UIImage(systemName: "trash"),
+                        attributes: .destructive
+                    ) { _ in
+                        self?.onDeleteBook?(book)
+                    }
+                } else {
+                    UIAction(title: String(localized: "Download"), image: UIImage(systemName: "icloud.and.arrow.down")) { _ in
+                        self?.onDownloadBook?(book)
+                    }
+                }
+            } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
                 UIAction(
                     title: String(localized: .Library.deleteDownload),
                     image: UIImage(systemName: "trash"),
@@ -155,12 +169,11 @@ extension iOSLibraryViewController {
                     self?.onDeleteBook?(book)
                 }
             } else {
-                UIAction(title: String(localized: "Download"), image: UIImage(systemName: "icloud.and.arrow.down")) { _ in
-                    self?.onDownloadBook?(book)
-                }
+                nil
             }
 
-            return UIMenu(title: "", children: [mainAction, selectAction])
+            let children = [mainAction, selectAction].compactMap(\.self)
+            return UIMenu(title: "", children: children)
         }
     }
 }

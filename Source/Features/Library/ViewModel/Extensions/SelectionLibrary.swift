@@ -75,7 +75,13 @@ extension LibraryViewModel {
     }
 
     var selectedDeleteBooks: [BooksData] {
-        booksForSelectedIds(in: displayedCategories).filter { isBookDownloaded($0) }
+        booksForSelectedIds(in: displayedCategories).filter { book in
+            if AppConfig.isUsingBundleMode {
+                isBookDownloaded(book)
+            } else {
+                LibraryDataManager.shouldRemoveBook(id: book.id)
+            }
+        }
     }
 
     var selectedDeleteCount: Int {
