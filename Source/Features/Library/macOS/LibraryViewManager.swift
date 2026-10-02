@@ -130,9 +130,7 @@ class LibraryViewManager: NSObject {
     // MARK: - Passthrough to ViewModel
 
     nonisolated func prepareData(completion: (@MainActor () -> Void)? = nil) async {
-        if await isSetupComplete {
-            return
-        }
+        if await isSetupComplete { return }
 
         await viewModel.loadLibrary()
         await completion?()
@@ -217,14 +215,13 @@ class LibraryViewManager: NSObject {
         for child in category.children {
             if let book = child as? BooksData, book.book == targetBookName {
                 return (path, book)
-            } else if let subCategory = child as? CategoryData {
-                if let found = searchCategoryHierarchy(
-                    category: subCategory,
-                    path: path + [subCategory],
-                    targetBookName: targetBookName
-                ) {
-                    return found
-                }
+            } else if let subCategory = child as? CategoryData,
+                      let found = searchCategoryHierarchy(
+                          category: subCategory,
+                          path: path + [subCategory],
+                          targetBookName: targetBookName
+                      ) {
+                return found
             }
         }
         return nil
@@ -234,9 +231,7 @@ class LibraryViewManager: NSObject {
         guard let bookName,
               let firstCat = viewModel.displayedCategories.first,
               let index = firstCat.children.firstIndex(where: { ($0 as? BooksData)?.book == bookName })
-        else {
-            return
-        }
+        else { return }
 
         selectFlatRow(index)
     }
@@ -405,9 +400,7 @@ extension LibraryViewManager: NSOutlineViewDelegate {
         }
     }
 
-    func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
-        26
-    }
+    func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat { 26 }
 
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
@@ -432,44 +425,6 @@ extension LibraryViewManager: NSOutlineViewDelegate {
             }
         }
     }
-
-    private func removeDeletedBooksRows(_ deletedBooks: [BooksData]) {
-        for book in deletedBooks where LibraryDataManager.shouldRemoveBook(id: book.id) {
-            let parent = viewModel.isFlatMode
-                ? viewModel.displayedCategories.first
-                : (outlineView.parent(forItem: book) as? CategoryData ?? viewModel.bookLookup[book.book]?.category)
-            let parentItem: Any? = viewModel.isFlatMode ? nil : parent
-
-            if let parent, let index = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == book.id }) {
-                isUpdatingOutline = true
-                outlineView.beginUpdates()
-                parent.children.remove(at: index)
-                outlineView.removeItems(
-                    at: IndexSet(integer: index), inParent: parentItem, withAnimation: [.slideUp]
-                )
-
-                if !viewModel.isFlatMode,
-                   parent.children.isEmpty,
-                   let rootIndex = viewModel.displayedCategories.firstIndex(where: { $0 === parent })
-                {
-                    viewModel.displayedCategories.remove(at: rootIndex)
-                    viewModel.baseCategories.removeAll { $0 === parent }
-                    outlineView.removeItems(
-                        at: IndexSet(integer: rootIndex), inParent: nil, withAnimation: [.slideUp]
-                    )
-                }
-                outlineView.endUpdates()
-                isUpdatingOutline = false
-            } else {
-                outlineView.reloadData()
-            }
-
-            viewModel.bookLookup.removeValue(forKey: book.book)
-            if viewModel.selectedBookName == book.book {
-                viewModel.selectedBookName = nil
-            }
-        }
-    }
 }
 
 // MARK: - NSMenuDelegate
@@ -487,10 +442,9 @@ extension LibraryViewManager: NSMenuDelegate {
         var deletableBooks: [BooksData] = []
         for row in rowsToProcess {
             guard let book = outlineView.item(atRow: row) as? BooksData else { continue }
-            if AppConfig.isUsingBundleMode {
-                if BookArchiveIntegrator.shared.isBookIntegrated(book) {
-                    deletableBooks.append(book)
-                }
+            if AppConfig.isUsingBundleMode,
+               BookArchiveIntegrator.shared.isBookIntegrated(book) {
+                deletableBooks.append(book)
             } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
                 deletableBooks.append(book)
             }
@@ -514,9 +468,7 @@ extension LibraryViewManager: NSMenuDelegate {
 
     private func addFavoriteContextMenu(menu: NSMenu, clickedRow: Int) {
         if clickedRow >= 0, let book = outlineView.item(atRow: clickedRow) as? BooksData {
-            if !menu.items.isEmpty {
-                menu.addItem(NSMenuItem.separator())
-            }
+            if !menu.items.isEmpty { menu.addItem(NSMenuItem.separator()) }
             let isFav = HistoryViewModel.shared.isFavorite(book.id)
             let title = isFav ? String(localized: "Remove Favorite") : String(localized: "Add Favorite")
             let favItem = NSMenuItem(title: title, action: #selector(toggleFavoriteAction(_:)), keyEquivalent: "")
@@ -526,7 +478,8 @@ extension LibraryViewManager: NSMenuDelegate {
 
             let isHistory = HistoryViewModel.shared.historyBookIds.contains(book.id)
             if isHistory {
-                let historyItem = NSMenuItem(title: String(localized: "Remove from History"), action: #selector(removeHistoryAction(_:)), keyEquivalent: "")
+                let historyItem = NSMenuItem(
+                    title: String(localized: "Remove from History"), action: #selector(removeHistoryAction(_:)), keyEquivalent: "")
                 historyItem.target = self
                 historyItem.representedObject = book
                 menu.addItem(historyItem)
