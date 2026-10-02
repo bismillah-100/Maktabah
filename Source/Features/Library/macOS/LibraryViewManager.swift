@@ -188,11 +188,11 @@ class LibraryViewManager: NSObject {
             }
             guard !Task.isCancelled else { return }
             await MainActor.run { [weak self] in
-                guard let self, self.viewModel.selectedBookName == bookName else { return }
+                guard let self, viewModel.selectedBookName == bookName else { return }
                 for cat in result.categoryPath {
-                    self.outlineView.expandItem(cat)
+                    outlineView.expandItem(cat)
                 }
-                self.safelySelectOutlineRow(for: result.book)
+                safelySelectOutlineRow(for: result.book)
             }
         }
     }
@@ -412,20 +412,61 @@ extension LibraryViewManager: NSOutlineViewDelegate {
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
         let alert = NSAlert()
+        let alertInfo: LocalizedStringResource = books.count == 1
+            ? .Library.deleteDownloadedSingleConfirmation(books[0].book)
+            : .Library.deleteDownloadedMultipleConfirmation(books.count)
+
         alert.messageText = String(localized: .Library.deleteDownload)
-        if books.count == 1 {
-            alert.informativeText = String(localized: .Library.deleteDownloadedSingleConfirmation(books[0].book))
-        } else {
-            alert.informativeText = String(localized: .Library.deleteDownloadedMultipleConfirmation(books.count))
-        }
-        alert.addButton(withTitle: NSLocalizedString("Delete", comment: ""))
-        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+        alert.informativeText = String(localized: alertInfo)
+        alert.addButton(withTitle: String(localized: "Delete"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         alert.alertStyle = .warning
-        if alert.runModal() == .alertFirstButtonReturn {
-            Task {
-                for book in books {
-                    try? await BookArchiveIntegrator.shared.removeBookFromArchive(book)
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        removeDeletedBooksRows(books)
+
+        Task {
+            for book in books {
+                try? await BookArchiveIntegrator.shared.removeBookFromArchive(book)
+            }
+        }
+    }
+
+    private func removeDeletedBooksRows(_ deletedBooks: [BooksData]) {
+        for book in deletedBooks where LibraryDataManager.shouldRemoveBook(id: book.id) {
+            let parent = viewModel.isFlatMode
+                ? viewModel.displayedCategories.first
+                : (outlineView.parent(forItem: book) as? CategoryData ?? viewModel.bookLookup[book.book]?.category)
+            let parentItem: Any? = viewModel.isFlatMode ? nil : parent
+
+            if let parent, let index = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == book.id }) {
+                isUpdatingOutline = true
+                outlineView.beginUpdates()
+                parent.children.remove(at: index)
+                outlineView.removeItems(
+                    at: IndexSet(integer: index), inParent: parentItem, withAnimation: [.slideUp]
+                )
+
+                if !viewModel.isFlatMode,
+                   parent.children.isEmpty,
+                   let rootIndex = viewModel.displayedCategories.firstIndex(where: { $0 === parent })
+                {
+                    viewModel.displayedCategories.remove(at: rootIndex)
+                    viewModel.baseCategories.removeAll { $0 === parent }
+                    outlineView.removeItems(
+                        at: IndexSet(integer: rootIndex), inParent: nil, withAnimation: [.slideUp]
+                    )
                 }
+                outlineView.endUpdates()
+                isUpdatingOutline = false
+            } else {
+                outlineView.reloadData()
+            }
+
+            viewModel.bookLookup.removeValue(forKey: book.book)
+            if viewModel.selectedBookName == book.book {
+                viewModel.selectedBookName = nil
             }
         }
     }
@@ -443,16 +484,19 @@ extension LibraryViewManager: NSMenuDelegate {
             clickedRow: clickedRow
         )
 
-        var integratedBooks: [BooksData] = []
+        var deletableBooks: [BooksData] = []
         for row in rowsToProcess {
-            if let book = outlineView.item(atRow: row) as? BooksData,
-               BookArchiveIntegrator.shared.isBookIntegrated(book)
-            {
-                integratedBooks.append(book)
+            guard let book = outlineView.item(atRow: row) as? BooksData else { continue }
+            if AppConfig.isUsingBundleMode {
+                if BookArchiveIntegrator.shared.isBookIntegrated(book) {
+                    deletableBooks.append(book)
+                }
+            } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
+                deletableBooks.append(book)
             }
         }
 
-        guard !integratedBooks.isEmpty, AppConfig.isUsingBundleMode else {
+        guard !deletableBooks.isEmpty else {
             addFavoriteContextMenu(menu: menu, clickedRow: clickedRow)
             return
         }
@@ -463,7 +507,7 @@ extension LibraryViewManager: NSMenuDelegate {
             keyEquivalent: ""
         )
         deleteItem.target = self
-        deleteItem.representedObject = integratedBooks
+        deleteItem.representedObject = deletableBooks
         menu.addItem(deleteItem)
         addFavoriteContextMenu(menu: menu, clickedRow: clickedRow)
     }

@@ -183,7 +183,8 @@ final class BookArchiveIntegrator: @unchecked Sendable {
 
     /// Menghapus kitab dari archive dan FTS.
     nonisolated func removeBookFromArchive(_ book: BooksData) async throws {
-        guard AppConfig.isUsingBundleMode, book.archive > 0,
+        guard AppConfig.isUsingBundleMode || LibraryDataManager.shouldRemoveBook(id: book.id),
+              book.archive > 0,
               let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: book.archive),
               let ftsDbPath = AppConfig.archiveFtsDatabasePath(archiveId: book.archive)
         else {
@@ -294,7 +295,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     /// Menjalankan VACUUM pada semua archive yang tertunda.
     /// Dipanggil secara manual dari menu Settings (iOS).
     func vacuumPendingArchives() {
-        guard AppConfig.isUsingBundleMode, !pendingVacuumArchiveIds.isEmpty else { return }
+        guard !pendingVacuumArchiveIds.isEmpty else { return }
 
         LibraryDataManager.shared.closeAllArchiveConnections()
 
