@@ -2837,6 +2837,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Penjelasan Detail Mengenai CachedArabicLayoutFragment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhanced-underline-skip-ink-enhancedunderlinerenderer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhanced Underline &amp; Skip-Ink (EnhancedUnderlineRenderer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3680,6 +3697,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Penjelasan Detail Mengenai CachedArabicLayoutFragment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhanced-underline-skip-ink-enhancedunderlinerenderer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhanced Underline &amp; Skip-Ink (EnhancedUnderlineRenderer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3877,6 +3911,25 @@
 <li>Untuk setiap <em>frame</em> berulang di lokasi layar yang sama (misalnya saat <em>scrolling</em> di paragraf sebelahnya tanpa mengubah paragraf bersangkutan), <em>fragment</em> hanya akan melakukan operasi <em>draw</em> berkecepatan tinggi dari <code>CGLayer</code> yang disimpan tanpa memicu ulang perenderan font/ligatur kompleks (seperti font KFGQPC Uthman Taha).</li>
 <li>Begitu terjadi seleksi (<em>highlight</em>), penyuntingan teks, atau perubahan warna, metode <code>invalidateLayout()</code> otomatis dipanggil untuk menyetel nilai <code>cachedLayer = nil</code>, memaksa siklus pembuatan <em>cache</em> diulang.</li>
 </ul>
+<h3 id="enhanced-underline-skip-ink-enhancedunderlinerenderer">Enhanced Underline &amp; Skip-Ink (EnhancedUnderlineRenderer)</h3>
+<p>Pada beberapa font kaligrafi Arab (khususnya <strong>Lateef</strong> dan <strong>Arabic Typesetting</strong>), tabel metrik OpenType (<code>post</code> table) memiliki nilai <code>underlineThickness</code> yang sangat tipis sehingga garis bawah bawaan CoreText/TextKit 2 nyaris transparan (<em>hairline</em>). </p>
+<p>Untuk mengatasi hal ini tanpa merusak <em>rendering</em> font standar (seperti <em>Scheherazade New</em> atau <em>KFGQPC</em>), Maktabah mengimplementasikan <code>EnhancedUnderlineRenderer</code>:</p>
+<pre class="mermaid"><code>flowchart TD
+    A["CachedArabicLayoutFragment&lt;br/&gt;(TextKit 2 &amp; CGLayer Buffer)"] --&gt;|"Delegates drawing"| B["EnhancedUnderlineRenderer&lt;br/&gt;(CoreText Vector Pipeline)"]
+    B --&gt; C["1. Scan &amp; Filter&lt;br/&gt;(Bypass font standar jika bukan isThinUnderlineFont)"]
+    B --&gt; D["2. Line Geometry&lt;br/&gt;(Envelope minX..maxX, baseline + 0.32 em, trim spasi)"]
+    B --&gt; E["3. Vector Bézier Skip-Ink&lt;br/&gt;(CTFontCreatePathForGlyph + clip + clear cutout)"]</code></pre>
+<ol>
+<li><strong>Zero-Cost Bypass</strong>:
+   Sebelum memproses paragraf, sistem memeriksa <code>TextViewState.shared.isThinUnderlineFont</code> (<code>thickness / pointSize &lt; 0.025</code>). Font standar akan 100% menggunakan <em>rendering</em> garis bawah native AppKit/UIKit.</li>
+<li><strong>Geometri Stabil &amp; Berkelanjutan</strong>:</li>
+<li>Garis ditempatkan secara linier pada jarak <code>0.32 em</code> di bawah baseline (<code>UnderlineMetrics.offsetEm = 0.32</code>), menjaga garis tetap berada di bawah harakat kasrah/kasratain pada seluruh ukuran font.</li>
+<li>Menghitung rentang visual horizontal <code>minX...maxX</code> dari seluruh karakter anotasi, sehingga garis bawah berjalan mulus dan solid melintasi spasi antarkata.</li>
+<li><strong>Bézier Vector Path Skip-Ink</strong>:</li>
+<li>Mengekstrak kurva garis luar glyph menggunakan <code>CTFontCreatePathForGlyph</code>.</li>
+<li>Hanya glyph yang ujung tintanya menembus pita garis bawah (<code>descent &gt; bandTopBelowBaseline - gap</code>) yang diproses.</li>
+<li>Memotong kurva tinta pada pita garis bawah dengan mode <code>.clear</code> dan batas <em>clipping</em> ketat. Hal ini mempertahankan garis bawah pada rongga/sela huruf (seperti huruf <code>ع</code> atau <code>ح</code>) persis seperti perilaku native CoreText.</li>
+</ol>
 <hr />
 <h2 id="manipulasi-anotasi">Manipulasi Anotasi</h2>
 <p>Manipulasi anotasi membutuhkan konversi indeks rentang (<em>range mapping</em>) yang tepat antara <em>string</em> sumber asli (basis data) dan <em>string</em> yang dimodifikasi oleh <code>ArabicTextRenderer</code> (yang menghapus tag HTML, membersihkan tasykil, atau merender ligatur).</p>
