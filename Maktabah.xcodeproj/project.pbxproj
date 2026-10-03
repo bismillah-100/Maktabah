@@ -523,6 +523,9 @@
 		F36D684C2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F36D684D2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
 		F36D684E2FC5C76D0028F298 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */; };
+		F36E80AF307154FD00AF8179 /* EnhancedUnderlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36E80AE307154FD00AF8179 /* EnhancedUnderlineRenderer.swift */; };
+		F36E80B0307154FD00AF8179 /* EnhancedUnderlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36E80AE307154FD00AF8179 /* EnhancedUnderlineRenderer.swift */; };
+		F36E80B1307154FD00AF8179 /* EnhancedUnderlineRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36E80AE307154FD00AF8179 /* EnhancedUnderlineRenderer.swift */; };
 		F374C00C2FDD69A2009D6807 /* SearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F374C00B2FDD69A2009D6807 /* SearchComponents.swift */; };
 		F37B683C303924A5008C7545 /* TagFilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F347296D3031D5EB0094BF0A /* TagFilterSelectionView.swift */; };
 		F37C05A63050066A009DFDF7 /* Annotation.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F37C05A53050066A009DFDF7 /* Annotation.xcstrings */; };
@@ -1193,6 +1196,7 @@
 		F365E708304F6513009FF69C /* AnnotationTreeBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationTreeBuilder.swift; sourceTree = "<group>"; };
 		F365E712304F65CD009FF69C /* AnnotationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationEvent.swift; sourceTree = "<group>"; };
 		F36D684B2FC5C76D0028F298 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		F36E80AE307154FD00AF8179 /* EnhancedUnderlineRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedUnderlineRenderer.swift; sourceTree = "<group>"; };
 		F374C00B2FDD69A2009D6807 /* SearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchComponents.swift; sourceTree = "<group>"; };
 		F37C05A53050066A009DFDF7 /* Annotation.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Annotation.xcstrings; sourceTree = "<group>"; };
 		F37F1C4E30026976002B5618 /* AnnotationChangeTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationChangeTypes.swift; sourceTree = "<group>"; };
@@ -2604,6 +2608,7 @@
 			isa = PBXGroup;
 			children = (
 				F3D122662FF5459900F44E89 /* CachedArabicLayoutFragment.swift */,
+				F36E80AE307154FD00AF8179 /* EnhancedUnderlineRenderer.swift */,
 				4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */,
 			);
 			path = TextView;
@@ -2975,6 +2980,7 @@
 				4B5DF9342EDC2FE60082DE7F /* LibraryVC.swift in Sources */,
 				F32167292FBAA39F00601DB3 /* BookImportView.swift in Sources */,
 				4B5EC2962EE331D500991F39 /* SavedResults.swift in Sources */,
+				F36E80B1307154FD00AF8179 /* EnhancedUnderlineRenderer.swift in Sources */,
 				4B58EDCB2EE3DBE800073495 /* ResultsViewManager.swift in Sources */,
 				4B0139E92EEB3CB000424CFA /* InitProgress.swift in Sources */,
 				4BDAB98E2F69E957007D0945 /* SettingsActions.swift in Sources */,
@@ -3298,6 +3304,7 @@
 				F3AE62E7304C5C43002569BB /* Reader+Navigation.swift in Sources */,
 				4B7C90C82F83494200454BE1 /* ReaderState.swift in Sources */,
 				4B7C90C92F83494200454BE1 /* UserDefaults.swift in Sources */,
+				F36E80AF307154FD00AF8179 /* EnhancedUnderlineRenderer.swift in Sources */,
 				F3DE7C7F30680A5E00E0FBBF /* BulkDownloadProgressTracker.swift in Sources */,
 				F32D4415303CFB7400429664 /* SQLiteConnectionPool.swift in Sources */,
 				4B7C90CA2F83494200454BE1 /* AppMode.swift in Sources */,
@@ -3657,6 +3664,7 @@
 				F30577432FA46222005732C6 /* ArabicFont.swift in Sources */,
 				F32BA47B300EDD14002EA1F6 /* SettingsViewModel.swift in Sources */,
 				F30577442FA46222005732C6 /* TarjamahDataManager.swift in Sources */,
+				F36E80B0307154FD00AF8179 /* EnhancedUnderlineRenderer.swift in Sources */,
 				CFAA7B20E067D5BB75E4EB23 /* MaktabahApp.swift in Sources */,
 				F3F625683040356800887FD7 /* BookListViewController.swift in Sources */,
 				F363825D2FA702D10006636C /* iPadLayout.swift in Sources */,
