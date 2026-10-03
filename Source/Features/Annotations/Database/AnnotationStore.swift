@@ -451,7 +451,7 @@ final class AnnotationStore: Sendable {
     func pushRecentColor(_ annotation: Annotation) {
         let isUnderline = annotation.type == .underline
         let effectiveColor = PlatformColor.effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: isUnderline)
-        let action = {
+        let action: @Sendable @MainActor () -> Void = {
             if isUnderline {
                 TextViewState.shared.pushRecentUnderlineColor(effectiveColor)
             } else {
@@ -459,7 +459,9 @@ final class AnnotationStore: Sendable {
             }
         }
         if Thread.isMainThread {
-            action()
+            MainActor.assumeIsolated {
+                action()
+            }
         } else {
             Task { @MainActor in
                 action()
