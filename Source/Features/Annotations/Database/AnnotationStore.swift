@@ -164,21 +164,37 @@ final class AnnotationStore: Sendable {
     }
 
     func loadAnnotationById(_ id: Int64) -> Annotation? {
-        let cached = cache.withLock { $0.cacheById[id] }
-        if let cached {
-            return cached
+        loadAnnotationsByIds([id]).first
+    }
+
+    func loadAnnotationsByIds(_ ids: [Int64]) -> [Annotation] {
+        if ids.isEmpty { return [] }
+
+        var byId = cache.withLock { state in
+            ids.reduce(into: [Int64: Annotation]()) { acc, id in
+                if let ann = state.cacheById[id] {
+                    acc[id] = ann
+                }
+            }
         }
 
-        guard let loaded = try? repository.loadAnnotationById(id) else {
-            return nil
+        let missingIds = ids.filter { byId[$0] == nil }
+        if !missingIds.isEmpty {
+            let uniqueMissing = Array(Set(missingIds))
+            let loaded = (try? repository.loadAnnotationsByIds(uniqueMissing)) ?? []
+
+            cache.withLock { state in
+                for ann in loaded {
+                    if let id = ann.id {
+                        state.cacheById[id] = ann
+                        state.cacheTagsByAnnotationId[id] = ann.tags
+                        byId[id] = ann
+                    }
+                }
+            }
         }
 
-        cache.withLock { state in
-            state.cacheById[id] = loaded
-            state.cacheTagsByAnnotationId[id] = loaded.tags
-        }
-
-        return loaded
+        return ids.compactMap { byId[$0] }
     }
 
     // MARK: - Mutation Operations
@@ -249,13 +265,13 @@ final class AnnotationStore: Sendable {
         return loaded
     }
 
-    func addTag(_ tag: String, toAnnotationIDs: [Int64]) throws {
-        let updated = try repository.addTag(tag, toAnnotationIDs: toAnnotationIDs)
+    func addTags(_ tags: [String], toAnnotationIDs: [Int64]) throws {
+        let updated = try repository.addTags(tags, toAnnotationIDs: toAnnotationIDs)
         applyBatchTagUpdates(updated)
     }
 
-    func removeTag(_ tag: String, fromAnnotationIDs: [Int64]) throws {
-        let updated = try repository.removeTag(tag, fromAnnotationIDs: fromAnnotationIDs)
+    func removeTags(_ tags: [String], fromAnnotationIDs: [Int64]) throws {
+        let updated = try repository.removeTags(tags, fromAnnotationIDs: fromAnnotationIDs)
         applyBatchTagUpdates(updated)
     }
 
@@ -435,7 +451,7 @@ final class AnnotationStore: Sendable {
     func pushRecentColor(_ annotation: Annotation) {
         let isUnderline = annotation.type == .underline
         let effectiveColor = PlatformColor.effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: isUnderline)
-        let action = {
+        let action: @Sendable @MainActor () -> Void = {
             if isUnderline {
                 TextViewState.shared.pushRecentUnderlineColor(effectiveColor)
             } else {
@@ -443,9 +459,13 @@ final class AnnotationStore: Sendable {
             }
         }
         if Thread.isMainThread {
-            action()
+            MainActor.assumeIsolated {
+                action()
+            }
         } else {
-            DispatchQueue.main.async(execute: action)
+            Task { @MainActor in
+                action()
+            }
         }
     }
 }

@@ -47,13 +47,12 @@ enum DateBucket: Hashable, Comparable {
         let date = Calendar.current.date(from: components) ?? Date()
 
         let currentYear = Calendar.current.component(.year, from: Date())
-        let formatter = DateFormatter()
+
         if year == currentYear {
-            formatter.dateFormat = "MMMM"
+            return date.formatted(.dateTime.month(.wide))
         } else {
-            formatter.dateFormat = "MMMM yyyy"
+            return date.formatted(.dateTime.month(.wide).year())
         }
-        return formatter.string(from: date)
     }
 
     static func bucket(

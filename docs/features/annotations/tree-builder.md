@@ -84,3 +84,14 @@ let diffPublisher = PassthroughSubject<AnnotationTreeDiff?, Never>()
 
 * **Penyortiran Dinamis (`AnnotationSortOption`)**: Mengurutkan *child nodes* berdasarkan tanggal pembuatan (`createdAt`), posisi kitab (`page`/`part`), atau judul secara *ascending* maupun *descending*.
 * **Observasi Kitab yang Belum Terunduh (`hideMissingBookAnnotations`)**: Memantau `UserDefaults`. Jika opsi ini aktif, anotasi yang berkas kitabnya belum diunduh di perangkat pengguna akan otomatis disaring keluar dari hierarki tampilan secara reaktif.
+
+### Optimasi Kinerja Penyortiran (Transient Cache `maxCreatedAt`)
+
+Pada mode linimasa (`.timeline`) atau pengurutan berdasarkan waktu pembuatan (`.createdAt`), pembandingan dua grup node (misalnya `dateBucket` atau `book`) memerlukan evaluasi waktu pembuatan terbaru dari seluruh node anak (`node.children.compactMap { $0.annotation?.createdAt }.max()`).
+
+Jika dihitung secara langsung di setiap perbandingan algoritma pengurutan ($O(N \log N)$), komputasi ini menyebabkan pemindaian anak berulang-ulang ($O(N \cdot M)$). Sistem mengoptimalkannya dengan:
+
+1. **Transient Execution Cache**: Menggunakan kamus sementara `var cache = [ObjectIdentifier: Int64]()` berbasis alamat memori instans node.
+2. **Pengurutan Anak (`sortNodeChildren`)**: Cache dibuat saat fungsi pengurutan dipanggil dan dibagikan secara `inout` selama proses sorting berlangsung.
+3. **Penyisipan Linimasa (`addAnnotationToTimelineTree`)**: Pada saat mencari indeks penyisipan bucket baru via `insertionIndex(for:)`, evaluasi waktu maksimum bucket yang dibandingkan disimpan ke dalam cache lokal, sehingga setiap bucket yang diperiksa dalam *binary search* hanya dihitung tepat satu kali.
+4. **Bebas Resiko Cache Usang**: Variabel cache bersifat *ephemeral* (berlingkup lokal pada fungsi), langsung dibuang dari memori saat operasi selesai, dan seluruh node bersifat *read-only* selama perbandingan berlangsung.
