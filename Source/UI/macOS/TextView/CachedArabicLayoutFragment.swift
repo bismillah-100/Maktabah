@@ -11,6 +11,8 @@ import UIKit
 import Cocoa
 #endif
 
+// MARK: - Cached Layout Fragment
+
 class CachedArabicLayoutFragment: NSTextLayoutFragment {
     /// Cache level grafis
     private var cachedLayer: CGLayer?
@@ -27,6 +29,17 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
 
             if let layerContext = cachedLayer?.context {
                 let drawPoint = CGPoint(x: -bounds.minX, y: -bounds.minY)
+
+                if TextViewState.shared.enhancedUnderline, TextViewState.shared.isThinUnderlineFont,
+                   let element = textElement
+                {
+                    EnhancedUnderlineRenderer.drawUnderlines(
+                        for: element,
+                        lineFragments: textLineFragments,
+                        drawPoint: drawPoint,
+                        in: layerContext
+                    )
+                }
 
                 super.draw(at: drawPoint, in: layerContext)
             }
@@ -45,19 +58,20 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
     }
 }
 
+// MARK: - TextKit 2 Delegates
+
 #if os(macOS)
 extension IbarotTextView: @MainActor NSTextLayoutManagerDelegate {
     /// Fungsi ini akan dipanggil otomatis oleh TextKit 2 setiap kali ia butuh merender paragraf baru
     func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, textLayoutFragmentFor location: NSTextLocation, in textElement: NSTextElement) -> NSTextLayoutFragment {
-        return CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
+        CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
     }
 }
 #else
 extension iOSCustomIbarotTextView: @MainActor NSTextLayoutManagerDelegate {
     /// Fungsi ini akan dipanggil otomatis oleh TextKit 2 setiap kali ia butuh merender paragraf baru
     func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, textLayoutFragmentFor location: NSTextLocation, in textElement: NSTextElement) -> NSTextLayoutFragment {
-        return CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
+        CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
     }
 }
 #endif
-

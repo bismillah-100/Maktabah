@@ -72,6 +72,30 @@
           }
         }
       }
+    },
+    "cE2-eU-xyz.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Enhanced Underline\"; ObjectID = \"cE2-eU-xyz\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خط سفلي بارز"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enhanced Underline"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertegas Garis Bawah"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

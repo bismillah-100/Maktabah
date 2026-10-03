@@ -57,6 +57,7 @@ struct iOSReaderView: View {
             targetAnnotation: viewModel.targetAnnotation,
             isMultiLanguage: book.isMultiLanguage,
             isImported: book.isImported,
+            enhancedUnderline: textViewState.enhancedUnderline,
             viewModel: viewModel,
             onAddAnnotation: { range, mode, sourceText, color in
                 do {
