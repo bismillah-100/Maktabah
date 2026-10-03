@@ -36,6 +36,57 @@
 </head>
 <body>
 
+<h2>Version 4.0</h2>
+<p class="version">October 03, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Colored underline annotations across macOS, iOS, and widgets</li>
+  <li>Recent underline colors are remembered and shown in the color palette</li>
+  <li>Enhanced underline rendering with skip-ink for Arabic fonts with thin underline metrics (e.g. Lateef, Arabic Typesetting), toggleable in View Options</li>
+  <li>Timeline grouping mode for annotations (Today, Yesterday, This Week, This Month, Last Month, Older)</li>
+  <li>Byte-level progress tracking for single and bulk book downloads</li>
+  <li>Delete imported books when using a custom database location</li>
+  <li>Keyboard shortcuts in the macOS annotation editor: Cmd+Enter or Cmd+S to save, Esc to cancel</li>
+  <li>Redesigned welcome screen</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Requires macOS 15 Sequoia or later</li>
+  <li>Migrate view models to Swift Observation and adopt Swift 6 strict concurrency</li>
+  <li>Migrate search engine and sync queues to actors, and core managers and caches to Mutex</li>
+  <li>Split monolithic view models (Reader, Library, Search, History, Results) and AnnotationManager into modular components</li>
+  <li>Split localization into per-feature string catalogs</li>
+  <li>Add project documentation with MkDocs</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Fix iOS crash when dismissing popovers from history, search, import, and reader</li>
+  <li>Fix iOS reader mode toggle interfering with annotation and link taps</li>
+  <li>Preserve library selection while searching in flat list mode</li>
+  <li>Restore selected book when switching library filter modes</li>
+  <li>Record rapid book selections to history without losing entries</li>
+  <li>Insert imported books at the correct sorted position in the library</li>
+  <li>Remove empty categories after deleting books</li>
+  <li>Search view now only lists downloaded books</li>
+  <li>Prevent book download alert from appearing after library changes</li>
+  <li>Smooth state restoration and find indicator in macOS search mode</li>
+  <li>Restore tag autocomplete in the macOS annotation editor</li>
+  <li>Reader no longer records history when history recording is disabled</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>iOS reader tabs scroll horizontally, auto-scroll to the active tab, and support iPad multitasking layouts</li>
+  <li>Unified reader background colors between iOS and macOS</li>
+  <li>Faster annotation tree sorting, batched tag operations, and bulk loading</li>
+  <li>Resolve N+1 queries in library, annotations, and saved results</li>
+  <li>Snappier search sidebar opening by moving heavy loading off the main thread</li>
+  <li>Annotation list rows now wrap multiline text with timeline-aware layout</li>
+  <li>Reduced memory usage from leaking observers and closures</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 3.6</h2>
 <p class="version">September 30, 2026</p>
 <h3>New</h3>
