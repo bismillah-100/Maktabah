@@ -3,6 +3,14 @@ name: Jules PR Review
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'Source/**'
+      - 'Maktabah.xcodeproj/**'
+      - 'ci_scripts/**'
+      - '.github/**'
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'Package.swift'
 
 concurrency:
   group: jules-review-${{ github.event.pull_request.number }}
@@ -25,6 +33,7 @@ jobs:
           rules_file: .github/jules-review-rules.md
           ignored_paths: "*.lock, Packages/**"
           extra_instructions: |
-            [PROJECT CONTEXT]
+            [PROJECT CONTEXT & AUDIT SCOPE]
             - macOS/iOS hybrid app using AppKit, UIKit, and SwiftUI.
             - AppKit (e.g. NSOutlineView) is deliberately used over SwiftUI in high-performance UI components.
+            - For documentation changes (docs/**, mkdocs.yml, *.md), enforce Swift terminology standards, Indonesian EYD technical consistency, component headings, and Mermaid integrity as defined in PART II of rules_file.
