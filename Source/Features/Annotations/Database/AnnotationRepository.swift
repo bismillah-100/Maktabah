@@ -738,10 +738,8 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
             for ann in annotations where ann.id != nil {
                 var tags = ann.tags
                 var changed = false
-                for pair in tagPairs {
-                    if mutation(&tags, pair.trimmed, pair.normalized) {
-                        changed = true
-                    }
+                for pair in tagPairs where mutation(&tags, pair.trimmed, pair.normalized) {
+                    changed = true
                 }
                 if changed {
                     let updatedAnn = try self.saveAndQueueAnnotationChanges(ann, updatedTags: tags, modifiedTimestamp: currentNow)
