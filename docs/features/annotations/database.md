@@ -123,6 +123,32 @@ func loadAnnotations(bkId: Int, contentId: Int) -> [Annotation] {
 
 Penggunaan `Mutex.withLock` berbasis operasi *lock* atomik tingkat OS memastikan tidak ada kondisi *data race* saat membaca ataupun memperbarui data anotasi secara konkuren oleh *search worker* dan Main Thread.
 
+### Pemuatan Massal & Preservasi Urutan (`loadAnnotationsByIds`)
+
+Untuk menghindari query individual secara berulang (N+1) saat antarmuka membutuhkan sekumpulan anotasi berdasarkan ID (misalnya pada penentuan *common tags* di popover tag), `AnnotationStore` menyediakan `loadAnnotationsByIds(_ ids: [Int64])`:
+
+1. **Pemeriksaan Cache Terkonsolidasi**: Memeriksa seluruh `ids` di dalam `cacheById` di bawah satu kunci `Mutex`.
+2. **Pengambilan Missing IDs**: Anotasi yang belum ada di memori diambil dari SQLite dalam satu query menggunakan klausa `IN` yang di-*chunk* per 500 ID (`repository.loadAnnotationsByIds`).
+3. **Preservasi Urutan Asli**: Hasil akhir dipetakan kembali mengikuti urutan array `ids` input (`ids.compactMap { byId[$0] }`) guna menjamin determinisme saat menentukan tag pertama atau irisan metadata.
+4. **DRY Delegation**: `loadAnnotationById(_ id: Int64)` mendelegasikan langsung ke `loadAnnotationsByIds([id]).first`.
+
+### Mutasi Tag Massal Atomik (`addTags` & `removeTags`)
+
+Sebelumnya, penambahan atau penghapusan beberapa tag sekaligus mengeksekusi operasi per-tag secara terpisah (menghasilkan $N$ transaksi basis data, $N$ kali pembaruan cache, $N$ kali antrean CloudKit, dan $N$ kali pemicu notifikasi UI). 
+
+Sistem mengonsolidasikan mutasi tersebut melalui API batch:
+
+* **Satu Transaksi Atomik**: Seluruh perubahan tag untuk sekumpulan anotasi dieksekusi di dalam 1 blok transaksi SQLite tunggal (`transaction { ... }`).
+* **Sanitasi Terpusat**: Tag dibersihkan dari spasi (*trimmed*) dan dideduplikasi berdasarkan nama normalisasi (*case-insensitive*) sebelum diproses.
+* **Pembersihan Otomatis**: Pada operasi penghapusan tag (`removeTags`), fungsi `deleteUnusedTags()` langsung dieksekusi di dalam transaksi yang sama.
+* **Efisiensi Sinkronisasi & UI**: `applyBatchTagUpdates` memperbarui cache memori sekaligus, mengunggah satu batch perubahan ke CloudKit, dan hanya memancarkan satu *event* `.batchUpdated(annotations)` ke antarmuka pengguna.
+
+### Batch Query Tag pada Pembaruan Kitab (`updateAnnotationsBookId`)
+
+Ketika ID kitab berubah (misalnya pada proses *import* atau restrukturisasi arsip), pembaruan relasi tag pada seluruh anotasi terkait dilakukan tanpa query individual berulang:
+* Tag diambil secara massal melalui `fetchTagsForAnnotations(ids:)` menggunakan klausa `IN` (`SELECT at.annotation_id, t.name FROM tags t INNER JOIN annotation_tags at ... WHERE at.annotation_id IN (...)`).
+* Seluruh anotasi yang terdampak diperbarui dan dicatat ke antrean sinkronisasi CloudKit dalam satu transaksi.
+
 ## Alur Sinkronisasi Offline & CloudKit (`AnnotationSyncHandler.swift`)
 
 Untuk mendukung kesinambungan baca lintas perangkat, modul Anotasi terhubung ke `CloudKitSyncManager` melalui zona kustom (*Custom Zone*) di *Private Database* CloudKit pengguna.

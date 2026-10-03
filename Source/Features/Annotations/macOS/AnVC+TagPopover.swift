@@ -63,13 +63,9 @@ extension AnnotationsVC {
         do {
             switch mode {
             case .add:
-                for tag in tags {
-                    try AnnotationStore.shared.addTag(tag, toAnnotationIDs: annotationIDs)
-                }
+                try AnnotationStore.shared.addTags(tags, toAnnotationIDs: annotationIDs)
             case .remove:
-                for tag in tags {
-                    try AnnotationStore.shared.removeTag(tag, fromAnnotationIDs: annotationIDs)
-                }
+                try AnnotationStore.shared.removeTags(tags, fromAnnotationIDs: annotationIDs)
             }
             tagPopover?.performClose(nil)
             updateChips(allTags: dataSource.viewModel.availableTags)
@@ -79,7 +75,7 @@ extension AnnotationsVC {
     }
 
     func commonTags(for annotationIDs: [Int64]) -> [String] {
-        let annotations = annotationIDs.compactMap { AnnotationStore.shared.loadAnnotationById($0) }
+        let annotations = AnnotationStore.shared.loadAnnotationsByIds(annotationIDs)
         guard let firstAnnotation = annotations.first else { return [] }
 
         let commonNormalized = annotations.dropFirst().reduce(
