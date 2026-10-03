@@ -431,13 +431,15 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
             let updateSql = "UPDATE \(annotationsTable) SET \(colAnnBkId) = ?, \(colAnnLastModified) = ? WHERE \(colAnnBkId) = ?;"
             try _db.execute(query: updateSql, parameters: [newId, self.now, oldId])
 
+            let ids = affectedAnnotations.compactMap(\.id)
+            let tagsMap = try self.fetchTagsForAnnotations(ids: ids)
+
             for i in 0 ..< affectedAnnotations.count {
                 var ann = affectedAnnotations[i]
                 if let ckId = ann.ckRecordId {
                     try self.addPendingSync(ckRecordId: ckId, operation: "upload")
                 }
-                let tags = try self.fetchTags(for: ann.id ?? -1)
-                ann.tags = tags
+                ann.tags = tagsMap[ann.id ?? -1] ?? []
                 ann.lastModified = self.now
                 affectedAnnotations[i] = ann
             }
