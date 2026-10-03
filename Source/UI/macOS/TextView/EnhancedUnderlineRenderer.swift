@@ -100,7 +100,7 @@ enum EnhancedUnderlineRenderer {
 
             attrString.enumerateAttribute(.font, in: underRange) { fontVal, fontRange, _ in
                 guard let font = (fontVal as? PlatformFont) ??
-                        (attrString.attribute(.font, at: fontRange.location, effectiveRange: nil) as? PlatformFont)
+                    (attrString.attribute(.font, at: fontRange.location, effectiveRange: nil) as? PlatformFont)
                 else { return }
 
                 if let span = createSpan(
@@ -151,7 +151,7 @@ enum EnhancedUnderlineRenderer {
 
         var minX = CGFloat.greatestFiniteMagnitude
         var maxX = -CGFloat.greatestFiniteMagnitude
-        for i in start...end {
+        for i in start ... end {
             let pt = line.locationForCharacter(at: i)
             minX = min(minX, pt.x)
             maxX = max(maxX, pt.x)
@@ -204,13 +204,15 @@ enum EnhancedUnderlineRenderer {
             CTRunGetPositions(run, CFRange(location: 0, length: 0), &positions)
             CTFontGetBoundingRectsForGlyphs(ctFont, .horizontal, glyphs, &rects, count)
 
-            for i in 0..<count {
+            for i in 0 ..< count {
                 let r = rects[i]
                 guard r.width > 0, r.height > 0 else { continue }
 
                 let glyphMinX = baseX + positions[i].x + r.minX
                 let glyphMaxX = baseX + positions[i].x + r.maxX
-                guard glyphMaxX > span.rect.minX - span.gap && glyphMinX < span.rect.maxX + span.gap else { continue }
+                guard glyphMaxX > span.rect.minX - span.gap,
+                      glyphMinX < span.rect.maxX + span.gap
+                else { continue }
 
                 let descent = -(positions[i].y + r.minY)
                 guard descent > bandTopBelowBaseline - span.gap else { continue }

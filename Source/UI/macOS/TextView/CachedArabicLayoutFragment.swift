@@ -30,8 +30,9 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
             if let layerContext = cachedLayer?.context {
                 let drawPoint = CGPoint(x: -bounds.minX, y: -bounds.minY)
 
-                if TextViewState.shared.enhancedUnderline && TextViewState.shared.isThinUnderlineFont,
-                   let element = textElement {
+                if TextViewState.shared.enhancedUnderline, TextViewState.shared.isThinUnderlineFont,
+                   let element = textElement
+                {
                     EnhancedUnderlineRenderer.drawUnderlines(
                         for: element,
                         lineFragments: textLineFragments,
@@ -63,14 +64,14 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
 extension IbarotTextView: @MainActor NSTextLayoutManagerDelegate {
     /// Fungsi ini akan dipanggil otomatis oleh TextKit 2 setiap kali ia butuh merender paragraf baru
     func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, textLayoutFragmentFor location: NSTextLocation, in textElement: NSTextElement) -> NSTextLayoutFragment {
-        return CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
+        CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
     }
 }
 #else
 extension iOSCustomIbarotTextView: @MainActor NSTextLayoutManagerDelegate {
     /// Fungsi ini akan dipanggil otomatis oleh TextKit 2 setiap kali ia butuh merender paragraf baru
     func textLayoutManager(_ textLayoutManager: NSTextLayoutManager, textLayoutFragmentFor location: NSTextLocation, in textElement: NSTextElement) -> NSTextLayoutFragment {
-        return CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
+        CachedArabicLayoutFragment(textElement: textElement, range: textElement.elementRange)
     }
 }
 #endif
