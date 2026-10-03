@@ -4039,7 +4039,7 @@
 </li>
 <li>
 <p><strong>Penyisipan Terpadu (<code>appendBookToUnifiedFTS</code>)</strong>:
-    Digunakan saat kitab baru selesai diunduh atau diimpor secara individual. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada <code>archive_index</code> berdasarkan <code>book_id</code>, lalu menyisipkan baris halaman baru ke <code>archive_index</code> dan <code>archive_fts</code> menggunakan <em>bitwise packed rowid</em> <code>(bookId &lt;&lt; 32) | (rowId &amp; 0xFFFFFFFF)</code>.</p>
+    Digunakan saat kitab baru selesai diunduh atau diimpor secara individual. Metode ini menginisialisasi skema Unified FTS bila belum ada, membersihkan entri kitab lama pada <code>archive_fts</code> dan <code>archive_index</code> berdasarkan <code>book_id</code>, lalu menyisipkan baris halaman baru ke <code>archive_index</code> dan <code>archive_fts</code> menggunakan <em>bitwise packed rowid</em> <code>(bookId &lt;&lt; 32) | (rowId &amp; 0xFFFFFFFF)</code>.</p>
 </li>
 <li>
 <p><strong>Normalisasi Teks Arab Simetris</strong>:

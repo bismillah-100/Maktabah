@@ -4114,7 +4114,7 @@
 <li>Mengeksekusi <code>ALTER TABLE "b{oldId}" RENAME TO "b{newId}";</code> serta hal yang sama untuk tabel TOC (<code>t{oldId}</code>).</li>
 <li>Jika gagal di tengah proses, perubahan pada tabel akan dikembalikan ke nama semula (<em>rollback</em>).</li>
 <li>Jika berhasil, perlakuan FTS disesuaikan dengan skema arsip:<ul>
-<li><strong>Unified FTS</strong>: Menghapus entri lama <code>DELETE FROM archive_index WHERE book_id = \(oldId)</code> lalu memanggil <code>appendBookToUnifiedFTS</code> untuk ID kitab yang baru.</li>
+<li><strong>Unified FTS</strong>: Menghapus entri lama <code>DELETE FROM archive_fts WHERE rowid IN (SELECT rowid FROM archive_index WHERE book_id = \(oldId))</code> dan <code>DELETE FROM archive_index WHERE book_id = \(oldId)</code> lalu memanggil <code>appendBookToUnifiedFTS</code> untuk ID kitab yang baru.</li>
 <li><strong>Legacy FTS</strong>: Mengubah nama tabel virtual: <code>ALTER TABLE "b{oldId}_fts" RENAME TO "b{newId}_fts";</code>.</li>
 </ul>
 </li>
