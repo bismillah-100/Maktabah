@@ -82,6 +82,30 @@ Alur Kerja Utama:
 - Untuk setiap *frame* berulang di lokasi layar yang sama (misalnya saat *scrolling* di paragraf sebelahnya tanpa mengubah paragraf bersangkutan), *fragment* hanya akan melakukan operasi *draw* berkecepatan tinggi dari `CGLayer` yang disimpan tanpa memicu ulang perenderan font/ligatur kompleks (seperti font KFGQPC Uthman Taha).
 - Begitu terjadi seleksi (*highlight*), penyuntingan teks, atau perubahan warna, metode `invalidateLayout()` otomatis dipanggil untuk menyetel nilai `cachedLayer = nil`, memaksa siklus pembuatan *cache* diulang.
 
+### Enhanced Underline & Skip-Ink (EnhancedUnderlineRenderer)
+
+Pada beberapa font kaligrafi Arab (khususnya **Lateef** dan **Arabic Typesetting**), tabel metrik OpenType (`post` table) memiliki nilai `underlineThickness` yang sangat tipis sehingga garis bawah bawaan CoreText/TextKit 2 nyaris transparan (*hairline*). 
+
+Untuk mengatasi hal ini tanpa merusak *rendering* font standar (seperti *Scheherazade New* atau *KFGQPC*), Maktabah mengimplementasikan `EnhancedUnderlineRenderer`:
+
+```mermaid
+flowchart TD
+    A["CachedArabicLayoutFragment<br/>(TextKit 2 & CGLayer Buffer)"] -->|"Delegates drawing"| B["EnhancedUnderlineRenderer<br/>(CoreText Vector Pipeline)"]
+    B --> C["1. Scan & Filter<br/>(Bypass font standar jika bukan isThinUnderlineFont)"]
+    B --> D["2. Line Geometry<br/>(Envelope minX..maxX, baseline + 0.32 em, trim spasi)"]
+    B --> E["3. Vector Bézier Skip-Ink<br/>(CTFontCreatePathForGlyph + clip + clear cutout)"]
+```
+
+1. **Zero-Cost Bypass**:
+   Sebelum memproses paragraf, sistem memeriksa `TextViewState.shared.isThinUnderlineFont` (`thickness / pointSize < 0.025`). Font standar akan 100% menggunakan *rendering* garis bawah native AppKit/UIKit.
+2. **Geometri Stabil & Berkelanjutan**:
+   - Garis ditempatkan secara linier pada jarak `0.32 em` di bawah baseline (`UnderlineMetrics.offsetEm = 0.32`), menjaga garis tetap berada di bawah harakat kasrah/kasratain pada seluruh ukuran font.
+   - Menghitung rentang visual horizontal `minX...maxX` dari seluruh karakter anotasi, sehingga garis bawah berjalan mulus dan solid melintasi spasi antarkata.
+3. **Bézier Vector Path Skip-Ink**:
+   - Mengekstrak kurva garis luar glyph menggunakan `CTFontCreatePathForGlyph`.
+   - Hanya glyph yang ujung tintanya menembus pita garis bawah (`descent > bandTopBelowBaseline - gap`) yang diproses.
+   - Memotong kurva tinta pada pita garis bawah dengan mode `.clear` dan batas *clipping* ketat. Hal ini mempertahankan garis bawah pada rongga/sela huruf (seperti huruf `ع` atau `ح`) persis seperti perilaku native CoreText.
+
 ---
 
 ## Manipulasi Anotasi

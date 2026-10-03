@@ -20,6 +20,7 @@ class ViewOptions: NSViewController {
     @IBOutlet weak var xBtn: NSButton!
     @IBOutlet weak var lineHeightOptions: NSPopUpButton!
     @IBOutlet weak var annSetButton: NSButton!
+    @IBOutlet weak var enhancedUnderlineCheckbox: NSButton!
     
     // State
     private let state = TextViewState.shared
@@ -45,6 +46,7 @@ class ViewOptions: NSViewController {
         loadHarakatSetting()
         screenTimeCheckbox.state = screenTimeManager.isExtended() ? .on : .off
         loadAnnotationSetting()
+        loadEnhancedUnderlineSetting()
         fontOptions.userInterfaceLayoutDirection = .leftToRight
         fontOptions.menu?.userInterfaceLayoutDirection = .leftToRight
     }
@@ -71,6 +73,15 @@ class ViewOptions: NSViewController {
         let enable = UserDefaults.standard.enableAnnotationClick
         
         annSetButton.state = enable ? .on : .off
+    }
+
+    private func loadEnhancedUnderlineSetting() {
+        enhancedUnderlineCheckbox?.state = state.enhancedUnderline ? .on : .off
+    }
+
+    @IBAction func enhancedUnderlineCheckboxClicked(_ sender: NSButton) {
+        let enable = sender.state == .on
+        state.setEnhancedUnderline(enable)
     }
 
     @IBAction func displayTasykil(_ sender: NSButton) {

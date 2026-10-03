@@ -39,6 +39,20 @@ class iOSCustomIbarotTextView: UITextView {
 
         // Font setup defaults
         font = state.currentFont
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleEnhancedUnderlineChanged),
+            name: .didChangeEnhancedUnderline,
+            object: nil
+        )
+    }
+
+    @objc private func handleEnhancedUnderlineChanged() {
+        if let tlm = textLayoutManager {
+            tlm.invalidateLayout(for: tlm.documentRange)
+            setNeedsDisplay()
+        }
     }
 
     // MARK: - Actions for UIMenuController (Pre-iOS 16)
@@ -276,6 +290,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
     var targetAnnotation: Annotation?
     var isMultiLanguage: Bool = false
     var isImported: Bool = false
+    var enhancedUnderline: Bool = false
 
     var viewModel: ReaderViewModel
 

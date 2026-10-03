@@ -14,6 +14,7 @@ extension Notification.Name {
     static let didChangeBackground = Notification.Name("didChangeBackground")
     static let didChangeFont = Notification.Name("didChangeFont")
     static let didChangeLineHeight = Notification.Name("didChangeLineHeight")
+    static let didChangeEnhancedUnderline = Notification.Name("didChangeEnhancedUnderline")
 
     // MARK: - WINDOW OBSERVATIONS
     static let windowTabBarDidChange = Notification.Name("windowTabBarDidChange")

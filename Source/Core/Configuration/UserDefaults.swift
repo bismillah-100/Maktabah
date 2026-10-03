@@ -83,6 +83,16 @@ extension UserDefaults {
             set(newValue, forKey: TextViewKeys.annotationClick)
         }
     }
+
+    // MARK: - enhancedUnderline (Bool)
+    var textViewEnhancedUnderline: Bool {
+        get {
+            bool(forKey: TextViewKeys.enhancedUnderline)
+        }
+        set {
+            set(newValue, forKey: TextViewKeys.enhancedUnderline)
+        }
+    }
     
     // MARK: - AnnotationsState
 
@@ -386,6 +396,7 @@ extension UserDefaults {
         static let annotationClick = "enableAnnotationClick"
         static let annotationFloatWindow = "annotationsFloatWindow"
         static let annotationHideWindow = "annotationsHideWindow"
+        static let enhancedUnderline = "textViewEnhancedUnderline"
     }
 
     enum AnnotationsKeys {

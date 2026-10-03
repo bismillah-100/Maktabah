@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import CoreText
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -78,6 +79,14 @@ class TextViewState: @unchecked Sendable {
         }
     }
 
+    private(set) var enhancedUnderline: Bool {
+        didSet {
+            defaults.textViewEnhancedUnderline = enhancedUnderline
+            NotificationCenter.default.post(name: .didChangeEnhancedUnderline, object: nil,
+                                            userInfo: ["enable": enhancedUnderline])
+        }
+    }
+
     // MARK: - Computed Properties
     var backgroundColor: BackgroundColor {
         BackgroundColor(rawValue: backgroundColorIndex) ?? .white
@@ -89,6 +98,23 @@ class TextViewState: @unchecked Sendable {
 
     var currentFont: PlatformFont {
         PlatformFont(name: fontName, size: fontSize) ?? PlatformFont.systemFont(ofSize: fontSize)
+    }
+
+    var isThinUnderlineFont: Bool {
+        Self.isThinUnderlineFont(font: currentFont)
+    }
+
+    static func isThinUnderlineFont(font: PlatformFont) -> Bool {
+        guard font.pointSize > 0 else { return false }
+        let ctFont = font as CTFont
+        let thickness = CTFontGetUnderlineThickness(ctFont)
+        let ratio = thickness / font.pointSize
+        return ratio < 0.025
+    }
+
+    static func isThinUnderlineFont(fontName: String, fontSize: CGFloat) -> Bool {
+        let font = PlatformFont(name: fontName, size: fontSize) ?? PlatformFont.systemFont(ofSize: fontSize)
+        return isThinUnderlineFont(font: font)
     }
 
     var paragraphStyle: NSParagraphStyle {
@@ -128,11 +154,16 @@ class TextViewState: @unchecked Sendable {
         self.fontName = defaults.textViewFontName
         self.backgroundColorIndex = defaults.textViewBackgroundColorLight
         self.clickableAnnotation = defaults.enableAnnotationClick
+        self.enhancedUnderline = defaults.textViewEnhancedUnderline
     }
 
     // MARK: - Public Methods
     func toggleHarakat() {
         showHarakat.toggle()
+    }
+
+    func setEnhancedUnderline(_ enable: Bool) {
+        enhancedUnderline = enable
     }
 
     func setLineHeight(_ newHeight: Double) {
@@ -217,6 +248,10 @@ class TextViewState: @unchecked Sendable {
     private func needsRedraw(oldFont: String, newFont: String) -> Bool {
         let isOldSpecial = oldFont == ArabicFont.alBayan.rawValue
         let isNewSpecial = newFont == ArabicFont.alBayan.rawValue
-        return isOldSpecial != isNewSpecial
+        if isOldSpecial != isNewSpecial { return true }
+
+        let oldIsThin = Self.isThinUnderlineFont(fontName: oldFont, fontSize: fontSize)
+        let newIsThin = Self.isThinUnderlineFont(fontName: newFont, fontSize: fontSize)
+        return oldIsThin != newIsThin
     }
 }

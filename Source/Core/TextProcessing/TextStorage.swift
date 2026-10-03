@@ -85,6 +85,10 @@ extension NSMutableAttributedString {
     #endif
 }
 
+extension NSAttributedString.Key {
+    static let enhancedUnderline = NSAttributedString.Key("enhancedUnderline")
+}
+
 extension NSTextStorage {
     private static let annotationAttributeKeys: [NSAttributedString.Key] = [
         .backgroundColor,
@@ -93,6 +97,7 @@ extension NSTextStorage {
         .link,
         NSAttributedString.Key("annotationID"),
         NSAttributedString.Key("annotationNote"),
+        .enhancedUnderline,
     ]
 
     func removeAnnotationAttributes(in ranges: [NSRange]) {

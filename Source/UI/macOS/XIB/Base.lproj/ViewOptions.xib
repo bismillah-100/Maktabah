@@ -10,6 +10,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="ViewOptions" customModule="Maktabah" customModuleProvider="target">
             <connections>
                 <outlet property="annSetButton" destination="lbB-rs-2ca" id="pmq-7l-O6Q"/>
+                <outlet property="enhancedUnderlineCheckbox" destination="uL8-9D-abc" id="xyz-12-345"/>
                 <outlet property="fontLarger" destination="VTW-dH-D1R" id="cvF-xx-gTR"/>
                 <outlet property="fontOptions" destination="8wy-Dw-TR6" id="qer-Zq-TQx"/>
                 <outlet property="fontSmaller" destination="Viu-Zi-IEk" id="U16-hJ-sjq"/>
@@ -24,7 +25,7 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView id="Hz6-mo-xeY">
-            <rect key="frame" x="0.0" y="0.0" width="228" height="236"/>
+            <rect key="frame" x="0.0" y="0.0" width="228" height="258"/>
             <autoresizingMask key="autoresizingMask"/>
             <subviews>
                 <stackView distribution="fillEqually" orientation="horizontal" alignment="centerY" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eVg-KJ-wNL" userLabel="FontSizeStack">
@@ -210,8 +211,21 @@
                         <action selector="annSetBtnDidClick:" target="-2" id="Igb-Wp-oes"/>
                     </connections>
                 </button>
+                <button mirrorLayoutDirectionWhenInternationalizing="always" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="uL8-9D-abc">
+                    <rect key="frame" x="20" y="14" width="188" height="16"/>
+                    <buttonCell key="cell" type="check" title="Enhanced Underline" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cE2-eU-xyz">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <constraints>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="160" id="wth-uL-89d"/>
+                    </constraints>
+                    <connections>
+                        <action selector="enhancedUnderlineCheckboxClicked:" target="-2" id="act-uL-89d"/>
+                    </connections>
+                </button>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="HLQ-1j-H6o">
-                    <rect key="frame" x="8" y="216" width="15" height="15"/>
+                    <rect key="frame" x="8" y="238" width="15" height="15"/>
                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="xmark.circle.fill" catalog="system" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="QzC-Mc-CNR">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
@@ -236,12 +250,15 @@ Gw
                 <constraint firstItem="JUV-vE-Znh" firstAttribute="top" secondItem="hEk-QY-Ax5" secondAttribute="bottom" constant="6" symbolic="YES" id="CyM-Dr-6bC"/>
                 <constraint firstItem="HLQ-1j-H6o" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" constant="8" id="GAK-ad-PIE"/>
                 <constraint firstItem="lbB-rs-2ca" firstAttribute="top" secondItem="JUV-vE-Znh" secondAttribute="bottom" constant="6" symbolic="YES" id="HGZ-kL-YUS"/>
+                <constraint firstItem="uL8-9D-abc" firstAttribute="top" secondItem="lbB-rs-2ca" secondAttribute="bottom" constant="6" symbolic="YES" id="top-uL-89d"/>
+                <constraint firstItem="uL8-9D-abc" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" constant="20" symbolic="YES" id="lea-uL-89d"/>
+                <constraint firstAttribute="trailing" secondItem="uL8-9D-abc" secondAttribute="trailing" constant="20" symbolic="YES" id="tra-uL-89d"/>
+                <constraint firstAttribute="bottom" secondItem="uL8-9D-abc" secondAttribute="bottom" constant="14" id="axK-Qg-MUZ"/>
                 <constraint firstItem="ubV-Fv-BGN" firstAttribute="top" secondItem="BnJ-NZ-xXO" secondAttribute="top" constant="8" id="Wgi-tK-Xsp"/>
                 <constraint firstItem="eVg-KJ-wNL" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="Wwl-kC-axN"/>
                 <constraint firstItem="eVg-KJ-wNL" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" constant="8" id="XeW-oN-Lqf"/>
                 <constraint firstAttribute="trailing" secondItem="hEk-QY-Ax5" secondAttribute="trailing" constant="20" symbolic="YES" id="XvC-cb-EuC"/>
                 <constraint firstItem="BnJ-NZ-xXO" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="aC7-gd-rQV"/>
-                <constraint firstAttribute="bottom" secondItem="lbB-rs-2ca" secondAttribute="bottom" constant="14" id="axK-Qg-MUZ"/>
                 <constraint firstAttribute="trailing" secondItem="lbB-rs-2ca" secondAttribute="trailing" constant="20" symbolic="YES" id="f5i-wZ-3Oc"/>
                 <constraint firstAttribute="trailing" secondItem="ubV-Fv-BGN" secondAttribute="trailing" id="gSe-wD-RJ5"/>
                 <constraint firstAttribute="trailing" secondItem="BnJ-NZ-xXO" secondAttribute="trailing" id="hDS-xj-bmp"/>

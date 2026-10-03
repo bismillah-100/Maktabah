@@ -23,6 +23,7 @@ class ViewerSplitVC: ReaderSplitVC {
     var bgObserver: NSObjectProtocol?
     var tasykilObserver: NSObjectProtocol?
     var fontObserver: NSObjectProtocol?
+    var enhancedUnderlineObserver: NSObjectProtocol?
 
     var workItemAppereance: DispatchWorkItem?
 
@@ -51,6 +52,7 @@ class ViewerSplitVC: ReaderSplitVC {
         startObservingTasykil()
         startObservingFont()
         startObservingLineHeight()
+        startObservingEnhancedUnderline()
     }
 
     private func createSplitViewItems(ltr: Bool) -> (ibarot: NSSplitViewItem, sidebar: NSSplitViewItem) {
@@ -157,6 +159,22 @@ class ViewerSplitVC: ReaderSplitVC {
                 MainActor.assumeIsolated { [weak self] in
                     guard let self else { return }
                     ibarotVC.applyFont(redraw)
+                }
+            }
+        )
+    }
+
+    private func startObservingEnhancedUnderline() {
+        enhancedUnderlineObserver = NotificationCenter.default.addObserver(
+            forName: .didChangeEnhancedUnderline, object: nil,
+            queue: .main, using: { [weak self] _ in
+                MainActor.assumeIsolated { [weak self] in
+                    guard let self else { return }
+                    ibarotVC.textView.refreshAnnotations()
+                    if let tlm = ibarotVC.textView.textLayoutManager {
+                        tlm.invalidateLayout(for: tlm.documentRange)
+                    }
+                    ibarotVC.textView.needsDisplay = true
                 }
             }
         )
@@ -274,10 +292,14 @@ class ViewerSplitVC: ReaderSplitVC {
         if let lineHeightObservation {
             NotificationCenter.default.removeObserver(lineHeightObservation)
         }
+        if let enhancedUnderlineObserver {
+            NotificationCenter.default.removeObserver(enhancedUnderlineObserver)
+        }
         bgObserver = nil
         appearanceObservation = nil
         fontObserver = nil
         tasykilObserver = nil
         lineHeightObservation = nil
+        enhancedUnderlineObserver = nil
     }
 }

@@ -53,6 +53,13 @@ struct ViewOptionsView: View {
         )
     }
 
+    private var enhancedUnderlineBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { state.enhancedUnderline },
+            set: { state.setEnhancedUnderline($0) }
+        )
+    }
+
     var body: some View {
         NavigationStack {
             ThemeForm {
@@ -112,6 +119,7 @@ struct ViewOptionsView: View {
                 ThemeSection("Display") {
                     Toggle("Show Harakat", isOn: showHarakatBinding)
                     Toggle("Clickable Annotations", isOn: clickableAnnotationBinding)
+                    Toggle("Enhanced Underline", isOn: enhancedUnderlineBinding)
                 }
 
                 ThemeSection("Background") {
