@@ -65,7 +65,7 @@ final class BookDownloadManager: Sendable {
 
     private nonisolated func startNetworkMonitor() async {
         await networkMonitor.registerConnectivityCallbacks(
-            onLost: {
+            onLost: { [weak self] in
                 Task { [weak self] in
                     await self?.cancelAllDownloads()
                 }
