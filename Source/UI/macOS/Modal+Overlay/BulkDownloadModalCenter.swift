@@ -175,11 +175,11 @@ final class BulkDownloadModalCenter {
         tracker: BulkDownloadProgressTracker,
         vc: BulkDownloadVC
     ) {
-        group.addTask {
+        group.addTask { [weak vc] in
             await BookDownloadManager.shared.downloadBookResult(
                 bookId: book.id,
                 expectedSize: book.compressedDownloadSize,
-                onProgress: { written, bookTotal in
+                onProgress: { [weak vc] written, bookTotal in
                     Task { @MainActor [weak vc] in
                         let progress = await tracker.updateProgress(
                             bookId: book.id,
