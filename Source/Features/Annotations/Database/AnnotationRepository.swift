@@ -716,34 +716,48 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
 
     private func mutateTags(
         forAnnotationIDs annotationIDs: [Int64],
-        tag: String,
-        mutation: (inout [String], String, String) -> Bool
+        tags inputTags: [String],
+        mutation: (inout [String], String, String) -> Bool,
+        afterMutation: (() throws -> Void)? = nil
     ) throws -> [Annotation] {
         guard !annotationIDs.isEmpty else { return [] }
-        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return [] }
+        var seen = Set<String>()
+        let tagPairs: [(trimmed: String, normalized: String)] = inputTags.compactMap {
+            let trimmed = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            let normalized = normalizedTagName(trimmed)
+            guard !trimmed.isEmpty, seen.insert(normalized).inserted else { return nil }
+            return (trimmed, normalized)
+        }
+        guard !tagPairs.isEmpty else { return [] }
 
         var updated: [Annotation] = []
         let annotations = try loadAnnotationsByIds(annotationIDs)
-        let normalized = normalizedTagName(trimmed)
         let currentNow = now
 
         try transaction {
-            for ann in annotations {
-                guard ann.id != nil else { continue }
+            for ann in annotations where ann.id != nil {
                 var tags = ann.tags
-                if mutation(&tags, trimmed, normalized) {
+                var changed = false
+                for pair in tagPairs {
+                    if mutation(&tags, pair.trimmed, pair.normalized) {
+                        changed = true
+                    }
+                }
+                if changed {
                     let updatedAnn = try self.saveAndQueueAnnotationChanges(ann, updatedTags: tags, modifiedTimestamp: currentNow)
                     updated.append(updatedAnn)
                 }
+            }
+            if !updated.isEmpty {
+                try afterMutation?()
             }
         }
 
         return updated
     }
 
-    func addTag(_ tag: String, toAnnotationIDs annotationIDs: [Int64]) throws -> [Annotation] {
-        try mutateTags(forAnnotationIDs: annotationIDs, tag: tag) { tags, trimmed, normalized in
+    func addTags(_ tags: [String], toAnnotationIDs annotationIDs: [Int64]) throws -> [Annotation] {
+        try mutateTags(forAnnotationIDs: annotationIDs, tags: tags) { tags, trimmed, normalized in
             if !tags.contains(where: { self.normalizedTagName($0) == normalized }) {
                 tags.append(trimmed)
                 return true
@@ -752,20 +766,21 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         }
     }
 
-    func removeTag(_ tag: String, fromAnnotationIDs annotationIDs: [Int64]) throws -> [Annotation] {
-        let updated = try mutateTags(forAnnotationIDs: annotationIDs, tag: tag) { tags, _, normalized in
-            if tags.contains(where: { self.normalizedTagName($0) == normalized }) {
-                tags.removeAll { self.normalizedTagName($0) == normalized }
-                return true
-            }
-            return false
-        }
-        if !updated.isEmpty {
-            try transaction {
+    func removeTags(_ tags: [String], fromAnnotationIDs annotationIDs: [Int64]) throws -> [Annotation] {
+        try mutateTags(
+            forAnnotationIDs: annotationIDs,
+            tags: tags,
+            mutation: { tags, _, normalized in
+                if tags.contains(where: { self.normalizedTagName($0) == normalized }) {
+                    tags.removeAll { self.normalizedTagName($0) == normalized }
+                    return true
+                }
+                return false
+            },
+            afterMutation: {
                 try self.deleteUnusedTags()
             }
-        }
-        return updated
+        )
     }
 
     // MARK: - CloudKit Sync DB Operations
