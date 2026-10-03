@@ -430,21 +430,31 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     // MARK: - Sorting
 
     private func sortNodeChildren(_ node: AnnotationNode) {
+        var maxCreatedAtCache = [ObjectIdentifier: Int64]()
+        sortNodeChildrenInternal(node, cache: &maxCreatedAtCache)
+    }
+
+    private func sortNodeChildrenInternal(_ node: AnnotationNode, cache: inout [ObjectIdentifier: Int64]) {
         if !node.children.isEmpty {
-            node.children.sort(by: compareNodes)
+            node.children.sort { compareNodes($0, $1, cache: &cache) }
         }
         for child in node.children {
-            sortNodeChildren(child)
+            sortNodeChildrenInternal(child, cache: &cache)
         }
     }
 
     private func compareNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode) -> Bool {
+        var cache = [ObjectIdentifier: Int64]()
+        return compareNodes(lhs, rhs, cache: &cache)
+    }
+
+    private func compareNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode, cache: inout [ObjectIdentifier: Int64]) -> Bool {
         if let left = lhs.annotation, let right = rhs.annotation {
             return compareAnnotationProperties(left, right)
         }
 
         if lhs.annotation == nil, rhs.annotation == nil {
-            return compareGroupNodes(lhs, rhs)
+            return compareGroupNodes(lhs, rhs, cache: &cache)
         }
 
         return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
@@ -478,18 +488,26 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         return sortOption.isAscending ? orderedAscending : !orderedAscending
     }
 
-    private func compareGroupNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode) -> Bool {
+    private func maxCreatedAt(for node: AnnotationNode, cache: inout [ObjectIdentifier: Int64]) -> Int64 {
+        let id = ObjectIdentifier(node)
+        if let cached = cache[id] { return cached }
+        let maxTime = node.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+        cache[id] = maxTime
+        return maxTime
+    }
+
+    private func compareGroupNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode, cache: inout [ObjectIdentifier: Int64]) -> Bool {
         if lhs.kind == .dateBucket, rhs.kind == .dateBucket {
-            let leftTime = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-            let rightTime = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+            let leftTime = maxCreatedAt(for: lhs, cache: &cache)
+            let rightTime = maxCreatedAt(for: rhs, cache: &cache)
             if leftTime != rightTime {
                 let orderedAscending = leftTime < rightTime
                 return sortOption.isAscending ? orderedAscending : !orderedAscending
             }
         }
         if sortOption.field == .createdAt {
-            let leftLatest = lhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-            let rightLatest = rhs.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+            let leftLatest = maxCreatedAt(for: lhs, cache: &cache)
+            let rightLatest = maxCreatedAt(for: rhs, cache: &cache)
             if leftLatest != rightLatest {
                 let orderedAscending = leftLatest < rightLatest
                 return sortOption.isAscending ? orderedAscending : !orderedAscending
@@ -859,9 +877,10 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             let newNode = AnnotationNode(title: title, kind: .annotation, annotation: annotation)
             newBucketNode.children.append(newNode)
 
+            var cache = [ObjectIdentifier: Int64]()
             let insertIdx = root.children.insertionIndex(for: newBucketNode) { left, right in
-                let leftTime = left.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
-                let rightTime = right.children.compactMap { $0.annotation?.createdAt }.max() ?? 0
+                let leftTime = self.maxCreatedAt(for: left, cache: &cache)
+                let rightTime = self.maxCreatedAt(for: right, cache: &cache)
                 let orderedAscending = leftTime < rightTime
                 return self.sortOption.isAscending ? orderedAscending : !orderedAscending
             }
