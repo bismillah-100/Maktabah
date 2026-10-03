@@ -1206,6 +1206,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="4. Manipulasi Hierarki &amp; Filter Kitab yang Belum Terunduh">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optimasi-kinerja-penyortiran-transient-cache-maxcreatedat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimasi Kinerja Penyortiran (Transient Cache maxCreatedAt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -3709,6 +3726,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="4. Manipulasi Hierarki &amp; Filter Kitab yang Belum Terunduh">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#optimasi-kinerja-penyortiran-transient-cache-maxcreatedat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimasi Kinerja Penyortiran (Transient Cache maxCreatedAt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -3793,6 +3827,15 @@
 <li><strong>Penyortiran Dinamis (<code>AnnotationSortOption</code>)</strong>: Mengurutkan <em>child nodes</em> berdasarkan tanggal pembuatan (<code>createdAt</code>), posisi kitab (<code>page</code>/<code>part</code>), atau judul secara <em>ascending</em> maupun <em>descending</em>.</li>
 <li><strong>Observasi Kitab yang Belum Terunduh (<code>hideMissingBookAnnotations</code>)</strong>: Memantau <code>UserDefaults</code>. Jika opsi ini aktif, anotasi yang berkas kitabnya belum diunduh di perangkat pengguna akan otomatis disaring keluar dari hierarki tampilan secara reaktif.</li>
 </ul>
+<h3 id="optimasi-kinerja-penyortiran-transient-cache-maxcreatedat">Optimasi Kinerja Penyortiran (Transient Cache <code>maxCreatedAt</code>)</h3>
+<p>Pada mode linimasa (<code>.timeline</code>) atau pengurutan berdasarkan waktu pembuatan (<code>.createdAt</code>), pembandingan dua grup node (misalnya <code>dateBucket</code> atau <code>book</code>) memerlukan evaluasi waktu pembuatan terbaru dari seluruh node anak (<code>node.children.compactMap { $0.annotation?.createdAt }.max()</code>).</p>
+<p>Jika dihitung secara langsung di setiap perbandingan algoritma pengurutan ($O(N \log N)$), komputasi ini menyebabkan pemindaian anak berulang-ulang ($O(N \cdot M)$). Sistem mengoptimalkannya dengan:</p>
+<ol>
+<li><strong>Transient Execution Cache</strong>: Menggunakan kamus sementara <code>var cache = [ObjectIdentifier: Int64]()</code> berbasis alamat memori instans node.</li>
+<li><strong>Pengurutan Anak (<code>sortNodeChildren</code>)</strong>: Cache dibuat saat fungsi pengurutan dipanggil dan dibagikan secara <code>inout</code> selama proses sorting berlangsung.</li>
+<li><strong>Penyisipan Linimasa (<code>addAnnotationToTimelineTree</code>)</strong>: Pada saat mencari indeks penyisipan bucket baru via <code>insertionIndex(for:)</code>, evaluasi waktu maksimum bucket yang dibandingkan disimpan ke dalam cache lokal, sehingga setiap bucket yang diperiksa dalam <em>binary search</em> hanya dihitung tepat satu kali.</li>
+<li><strong>Bebas Resiko Cache Usang</strong>: Variabel cache bersifat <em>ephemeral</em> (berlingkup lokal pada fungsi), langsung dibuang dari memori saat operasi selesai, dan seluruh node bersifat <em>read-only</em> selama perbandingan berlangsung.</li>
+</ol>
 
 
 

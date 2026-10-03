@@ -1030,6 +1030,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#pemuatan-massal-preservasi-urutan-loadannotationsbyids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pemuatan Massal &amp; Preservasi Urutan (loadAnnotationsByIds)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutasi-tag-massal-atomik-addtags-removetags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mutasi Tag Massal Atomik (addTags &amp; removeTags)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-query-tag-pada-pembaruan-kitab-updateannotationsbookid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Query Tag pada Pembaruan Kitab (updateAnnotationsBookId)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3712,6 +3745,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#pemuatan-massal-preservasi-urutan-loadannotationsbyids" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pemuatan Massal &amp; Preservasi Urutan (loadAnnotationsByIds)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutasi-tag-massal-atomik-addtags-removetags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mutasi Tag Massal Atomik (addTags &amp; removeTags)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-query-tag-pada-pembaruan-kitab-updateannotationsbookid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch Query Tag pada Pembaruan Kitab (updateAnnotationsBookId)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3984,6 +4050,27 @@
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Penggunaan <code>Mutex.withLock</code> berbasis operasi <em>lock</em> atomik tingkat OS memastikan tidak ada kondisi <em>data race</em> saat membaca ataupun memperbarui data anotasi secara konkuren oleh <em>search worker</em> dan Main Thread.</p>
+<h3 id="pemuatan-massal-preservasi-urutan-loadannotationsbyids">Pemuatan Massal &amp; Preservasi Urutan (<code>loadAnnotationsByIds</code>)</h3>
+<p>Untuk menghindari query individual secara berulang (N+1) saat antarmuka membutuhkan sekumpulan anotasi berdasarkan ID (misalnya pada penentuan <em>common tags</em> di popover tag), <code>AnnotationStore</code> menyediakan <code>loadAnnotationsByIds(_ ids: [Int64])</code>:</p>
+<ol>
+<li><strong>Pemeriksaan Cache Terkonsolidasi</strong>: Memeriksa seluruh <code>ids</code> di dalam <code>cacheById</code> di bawah satu kunci <code>Mutex</code>.</li>
+<li><strong>Pengambilan Missing IDs</strong>: Anotasi yang belum ada di memori diambil dari SQLite dalam satu query menggunakan klausa <code>IN</code> yang di-<em>chunk</em> per 500 ID (<code>repository.loadAnnotationsByIds</code>).</li>
+<li><strong>Preservasi Urutan Asli</strong>: Hasil akhir dipetakan kembali mengikuti urutan array <code>ids</code> input (<code>ids.compactMap { byId[$0] }</code>) guna menjamin determinisme saat menentukan tag pertama atau irisan metadata.</li>
+<li><strong>DRY Delegation</strong>: <code>loadAnnotationById(_ id: Int64)</code> mendelegasikan langsung ke <code>loadAnnotationsByIds([id]).first</code>.</li>
+</ol>
+<h3 id="mutasi-tag-massal-atomik-addtags-removetags">Mutasi Tag Massal Atomik (<code>addTags</code> &amp; <code>removeTags</code>)</h3>
+<p>Sebelumnya, penambahan atau penghapusan beberapa tag sekaligus mengeksekusi operasi per-tag secara terpisah (menghasilkan $N$ transaksi basis data, $N$ kali pembaruan cache, $N$ kali antrean CloudKit, dan $N$ kali pemicu notifikasi UI). </p>
+<p>Sistem mengonsolidasikan mutasi tersebut melalui API batch:</p>
+<ul>
+<li><strong>Satu Transaksi Atomik</strong>: Seluruh perubahan tag untuk sekumpulan anotasi dieksekusi di dalam 1 blok transaksi SQLite tunggal (<code>transaction { ... }</code>).</li>
+<li><strong>Sanitasi Terpusat</strong>: Tag dibersihkan dari spasi (<em>trimmed</em>) dan dideduplikasi berdasarkan nama normalisasi (<em>case-insensitive</em>) sebelum diproses.</li>
+<li><strong>Pembersihan Otomatis</strong>: Pada operasi penghapusan tag (<code>removeTags</code>), fungsi <code>deleteUnusedTags()</code> langsung dieksekusi di dalam transaksi yang sama.</li>
+<li><strong>Efisiensi Sinkronisasi &amp; UI</strong>: <code>applyBatchTagUpdates</code> memperbarui cache memori sekaligus, mengunggah satu batch perubahan ke CloudKit, dan hanya memancarkan satu <em>event</em> <code>.batchUpdated(annotations)</code> ke antarmuka pengguna.</li>
+</ul>
+<h3 id="batch-query-tag-pada-pembaruan-kitab-updateannotationsbookid">Batch Query Tag pada Pembaruan Kitab (<code>updateAnnotationsBookId</code>)</h3>
+<p>Ketika ID kitab berubah (misalnya pada proses <em>import</em> atau restrukturisasi arsip), pembaruan relasi tag pada seluruh anotasi terkait dilakukan tanpa query individual berulang:
+* Tag diambil secara massal melalui <code>fetchTagsForAnnotations(ids:)</code> menggunakan klausa <code>IN</code> (<code>SELECT at.annotation_id, t.name FROM tags t INNER JOIN annotation_tags at ... WHERE at.annotation_id IN (...)</code>).
+* Seluruh anotasi yang terdampak diperbarui dan dicatat ke antrean sinkronisasi CloudKit dalam satu transaksi.</p>
 <h2 id="alur-sinkronisasi-offline-cloudkit-annotationsynchandlerswift">Alur Sinkronisasi Offline &amp; CloudKit (<code>AnnotationSyncHandler.swift</code>)</h2>
 <p>Untuk mendukung kesinambungan baca lintas perangkat, modul Anotasi terhubung ke <code>CloudKitSyncManager</code> melalui zona kustom (<em>Custom Zone</em>) di <em>Private Database</em> CloudKit pengguna.</p>
 <h3 id="alur-sinkronisasi-keluar-upload-delete">Alur Sinkronisasi Keluar (Upload &amp; Delete)</h3>
