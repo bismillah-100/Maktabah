@@ -286,7 +286,37 @@ class IbarotTextView: NSTextView {
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {
-        guard let menu = super.menu(for: event) else { return nil }
+        let isClickable = state.clickableAnnotation
+        var removedLinks: [(range: NSRange, url: URL)] = []
+
+        if isClickable, let ts = textStorage {
+            let fullRange = NSRange(location: 0, length: ts.length)
+            ts.enumerateAttribute(.link, in: fullRange, options: []) { value, range, _ in
+                if let url = value as? URL {
+                    removedLinks.append((range, url))
+                }
+            }
+
+            if !removedLinks.isEmpty {
+                ts.beginEditing()
+                for linkInfo in removedLinks {
+                    ts.removeAttribute(.link, range: linkInfo.range)
+                }
+                ts.endEditing()
+            }
+        }
+
+        let menu = super.menu(for: event)
+
+        if isClickable, let ts = textStorage, !removedLinks.isEmpty {
+            ts.beginEditing()
+            for linkInfo in removedLinks {
+                ts.addAttribute(.link, value: linkInfo.url, range: linkInfo.range)
+            }
+            ts.endEditing()
+        }
+
+        guard let menu else { return nil }
         guard contentKey() != nil, selectedRange().length > 0 else {
             return menu
         }
@@ -408,7 +438,7 @@ class IbarotTextView: NSTextView {
             }
             extraItems.append(buildDeleteItem(found.existing))
         } else {
-            let noteItem = NSMenuItem(title: "Add Note".localized, action: #selector(annotateSelection(_:)), keyEquivalent: "")
+            let noteItem = NSMenuItem(title: String(localized: .Annotation.addNote), action: #selector(annotateSelection(_:)), keyEquivalent: "")
             noteItem.image = quoteImage
             noteItem.target = self
             extraItems.append(noteItem)
@@ -484,7 +514,7 @@ class IbarotTextView: NSTextView {
         annotation: Annotation
     ) -> NSMenuItem {
         let item = NSMenuItem(
-            title: "Edit Note".localized,
+            title: String(localized: .Annotation.editNote),
             action: #selector(showNoteFromMenu(_:)),
             keyEquivalent: ""
         )
@@ -500,7 +530,7 @@ class IbarotTextView: NSTextView {
     private func buildDeleteItem(_ annotation: Annotation) -> NSMenuItem {
         let title =
             annotation.note == nil
-                ? "Delete Highlight".localized : "Delete Highlight & Note".localized
+                ? String(localized: .Annotation.deleteHighlight) : String(localized: .Annotation.deleteHighlightNote)
 
         let item = NSMenuItem(
             title: title,
