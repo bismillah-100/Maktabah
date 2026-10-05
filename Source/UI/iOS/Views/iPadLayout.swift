@@ -119,7 +119,6 @@ struct iPadLayout: View {
         }
     }
 
-    @ViewBuilder
     private func destinationView(for tab: iOSTab) -> some View {
         Group {
             switch tab {
@@ -178,19 +177,7 @@ struct iPadLayout: View {
             )
     }
 
-    @ViewBuilder
     private var annotationsDestination: some View {
-        @Bindable var annotationVM = bManager.annotationViewModel
         AnnotationListView()
-            .searchable(
-                text: $annotationVM.searchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: searchPrompt(for: .annotations).localized
-            )
-            .searchScopes($annotationVM.searchScope) {
-                ForEach(AnnotationSearchScope.allCases) { scope in
-                    Text(scope.title).tag(scope)
-                }
-            }
     }
 }

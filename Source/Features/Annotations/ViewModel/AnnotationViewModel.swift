@@ -347,13 +347,36 @@ class AnnotationViewModel: ViewModelBase {
         return result
     }
 
+    private func collectBookIds(from nodes: [AnnotationNode], into set: inout Set<Int>) {
+        for node in nodes {
+            if let ann = node.annotation {
+                set.insert(ann.bkId)
+            }
+            if !node.children.isEmpty {
+                collectBookIds(from: node.children, into: &set)
+            }
+        }
+    }
+
     private func filterNodes(_ nodes: [AnnotationNode], with query: String) -> [AnnotationNode] {
-        var result: [AnnotationNode] = []
+        var bookIds = Set<Int>()
+        collectBookIds(from: nodes, into: &bookIds)
+        let books = LibraryDataManager.shared.getBook(Array(bookIds))
+        var bookTitleMap: [Int: String] = [:]
+        for book in books {
+            bookTitleMap[book.id] = book.normalizedBook
+        }
+
         let normalizedQuery = query.normalizeArabic(false)
+        return filterNodesRecursive(nodes, with: normalizedQuery, bookTitleMap: bookTitleMap)
+    }
+
+    private func filterNodesRecursive(_ nodes: [AnnotationNode], with normalizedQuery: String, bookTitleMap: [Int: String]) -> [AnnotationNode] {
+        var result: [AnnotationNode] = []
 
         for node in nodes {
-            let matchingChildren = node.children.isEmpty ? [] : filterNodes(node.children, with: normalizedQuery)
-            let matchesSelf = nodeMatchesQuery(node, query: normalizedQuery)
+            let matchingChildren = node.children.isEmpty ? [] : filterNodesRecursive(node.children, with: normalizedQuery, bookTitleMap: bookTitleMap)
+            let matchesSelf = nodeMatchesQuery(node, query: normalizedQuery, bookTitleMap: bookTitleMap)
 
             if matchesSelf {
                 let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: node.annotation)
@@ -368,27 +391,45 @@ class AnnotationViewModel: ViewModelBase {
         return result
     }
 
-    private func nodeMatchesQuery(_ node: AnnotationNode, query: String) -> Bool {
-        if searchScope == .all || searchScope == .book {
-            if node.title.normalizeArabic(false).localizedStandardContains(query) {
-                return true
+    private func nodeMatchesQuery(_ node: AnnotationNode, query: String, bookTitleMap: [Int: String]) -> Bool {
+        if node.kind == .annotation {
+            guard let ann = node.annotation else { return false }
+            let bookTitle = bookTitleMap[ann.bkId] ?? ""
+
+            switch searchScope {
+            case .all:
+                if !bookTitle.isEmpty, bookTitle.localizedStandardContains(query) { return true }
+                if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }
+                if let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) { return true }
+                if ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) { return true }
+                return false
+
+            case .book:
+                return !bookTitle.isEmpty && bookTitle.localizedStandardContains(query)
+
+            case .context:
+                return ann.context.normalizeArabic(false).localizedStandardContains(query)
+
+            case .note:
+                guard let note = ann.note else { return false }
+                return note.normalizeArabic(false).localizedStandardContains(query)
+
+            case .tag:
+                return ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) })
+            }
+        } else {
+            let normalizedTitle = node.title.normalizeArabic(false)
+            switch searchScope {
+            case .all:
+                return normalizedTitle.localizedStandardContains(query)
+            case .book:
+                return node.kind == .book && normalizedTitle.localizedStandardContains(query)
+            case .tag:
+                return (node.kind == .tag || node.kind == .untagged) && normalizedTitle.localizedStandardContains(query)
+            case .context, .note:
+                return false
             }
         }
-
-        guard let ann = node.annotation else { return false }
-
-        if searchScope == .all || searchScope == .context,
-           ann.context.normalizeArabic(false).localizedStandardContains(query)
-        {
-            return true
-        }
-        if searchScope == .all || searchScope == .note, let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) {
-            return true
-        }
-        if searchScope == .all || searchScope == .tag, ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) {
-            return true
-        }
-        return false
     }
 
     func deleteAnnotation(id: Int64) {
