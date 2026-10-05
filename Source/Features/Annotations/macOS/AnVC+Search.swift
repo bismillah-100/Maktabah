@@ -8,6 +8,7 @@ import Cocoa
 extension AnnotationsVC: NSSearchFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         guard let obj = obj.object as? DSFSearchField, obj === searchField else { return }
+        dataSource.viewModel.searchText = searchField.stringValue
         searchField.stringValue.isEmpty
             ? removeScopePanelFromWindow()
             : updateAndShowScopePanel()
@@ -35,6 +36,7 @@ extension AnnotationsVC: NSSearchFieldDelegate {
 
     @objc func searchScopeChanged(_ sender: NSSegmentedControl) {
         guard let scope = AnnotationSearchScope(rawValue: sender.selectedSegment) else { return }
+        dataSource.viewModel.searchText = searchField.stringValue
         dataSource.viewModel.searchScope = scope
     }
 

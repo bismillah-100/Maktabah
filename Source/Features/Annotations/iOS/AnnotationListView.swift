@@ -42,6 +42,16 @@ struct AnnotationListView: View {
         )
         .themeTint()
         .ignoresSafeArea(edges: .vertical)
+        .searchable(
+            text: $viewModel.searchText,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: Text(.Annotation.searchAnnotations)
+        )
+        .searchScopes($viewModel.searchScope) {
+            ForEach(AnnotationSearchScope.allCases) { scope in
+                Text(scope.title).tag(scope)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook)) { notification in
             if let bookId = notification.object as? Int {
                 missingBookId = bookId
@@ -216,23 +226,22 @@ private extension View {
         handleImportResult: @escaping (Result<[URL], Error>) -> Void,
         onExportFailed: @escaping (Error) -> Void
     ) -> some View {
-        self
-            .fileExporter(
-                isPresented: isExporting,
-                document: exportDocument,
-                contentType: .json,
-                defaultFilename: "maktabah_annotations.json"
-            ) { result in
-                if case let .failure(error) = result {
-                    onExportFailed(error)
-                }
+        fileExporter(
+            isPresented: isExporting,
+            document: exportDocument,
+            contentType: .json,
+            defaultFilename: "maktabah_annotations.json"
+        ) { result in
+            if case let .failure(error) = result {
+                onExportFailed(error)
             }
-            .fileImporter(
-                isPresented: isImporting,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false,
-                onCompletion: handleImportResult
-            )
+        }
+        .fileImporter(
+            isPresented: isImporting,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false,
+            onCompletion: handleImportResult
+        )
     }
 
     func importOverwriteConfirmation(
@@ -240,29 +249,28 @@ private extension View {
         pendingAnnotations: Binding<[Annotation]>,
         onPerformImport: @escaping (Bool) -> Void
     ) -> some View {
-        self
-            .confirmationDialog(
-                String(localized: .Annotation.importAnnotations),
-                isPresented: showDialog,
-                titleVisibility: .visible
-            ) {
-                Button("Overwrite Existing".localized) {
-                    onPerformImport(true)
-                }
-                Button("Skip Duplicates".localized) {
-                    onPerformImport(false)
-                }
-                Button("Cancel".localized, role: .cancel) {
-                    pendingAnnotations.wrappedValue = []
-                }
-            } message: {
-                Text(.Annotation.duplicateAnnotationsPrompt)
+        confirmationDialog(
+            String(localized: .Annotation.importAnnotations),
+            isPresented: showDialog,
+            titleVisibility: .visible
+        ) {
+            Button("Overwrite Existing".localized) {
+                onPerformImport(true)
             }
-            .onChange(of: showDialog.wrappedValue) { _, isPresented in
-                if !isPresented {
-                    pendingAnnotations.wrappedValue = []
-                }
+            Button("Skip Duplicates".localized) {
+                onPerformImport(false)
             }
+            Button("Cancel".localized, role: .cancel) {
+                pendingAnnotations.wrappedValue = []
+            }
+        } message: {
+            Text(.Annotation.duplicateAnnotationsPrompt)
+        }
+        .onChange(of: showDialog.wrappedValue) { _, isPresented in
+            if !isPresented {
+                pendingAnnotations.wrappedValue = []
+            }
+        }
     }
 
     func importResultAlert(
@@ -270,14 +278,12 @@ private extension View {
         message: String?,
         isPresented: Binding<Bool>
     ) -> some View {
-        self
-            .alert(title, isPresented: isPresented) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                if let msg = message {
-                    Text(msg)
-                }
+        alert(title, isPresented: isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let msg = message {
+                Text(msg)
             }
+        }
     }
 }
-

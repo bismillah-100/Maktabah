@@ -114,16 +114,6 @@ struct iPhoneLayout: View {
                 )
                 .toolbarGeneral(showSettings: $showSettings)
         }
-        .searchable(
-            text: Bindable(bManager.annotationViewModel).searchText,
-            placement: .toolbar,
-            prompt: .Annotation.searchAnnotations
-        )
-        .searchScopes(Bindable(bManager.annotationViewModel).searchScope) {
-            ForEach(AnnotationSearchScope.allCases) { scope in
-                Text(scope.title).tag(scope)
-            }
-        }
     }
 
     private var historyTabContent: some View {

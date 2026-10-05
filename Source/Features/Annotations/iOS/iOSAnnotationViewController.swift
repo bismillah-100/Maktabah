@@ -443,7 +443,8 @@ class iOSAnnotationViewController: UIViewController {
             let groupItem = AnnotationItem.group(node)
             sectionSnapshot.append([groupItem])
 
-            let isExpanded = expandedGroups.contains(sectionID)
+            let isSearching = !(viewModel?.searchText.isEmpty ?? true)
+            let isExpanded = isSearching || expandedGroups.contains(sectionID)
 
             if let children = node.children, !children.isEmpty {
                 let childItems = children.map { AnnotationItem.annotation($0) }
@@ -454,7 +455,7 @@ class iOSAnnotationViewController: UIViewController {
             }
 
             // Ambil expanded state dari existing snapshot agar tidak konflik
-            if !existing.items.isEmpty {
+            if !isSearching, !existing.items.isEmpty {
                 let existingExpanded = existing.isExpanded(groupItem)
                 if existingExpanded != isExpanded {
                     if existingExpanded {
