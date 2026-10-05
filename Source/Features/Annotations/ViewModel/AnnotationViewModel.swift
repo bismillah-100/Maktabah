@@ -23,11 +23,11 @@ enum AnnotationSearchScope: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: "All".localized
-        case .book: "Book".localized
-        case .context: "Context".localized
-        case .note: "Note".localized
-        case .tag: "Tag".localized
+        case .all: String(localized: .Annotation.searchScopeAll)
+        case .book: String(localized: .Annotation.searchScopeBook)
+        case .context: String(localized: .Annotation.searchScopeContext)
+        case .note: String(localized: .Annotation.searchScopeNote)
+        case .tag: String(localized: .Annotation.searchScopeTag)
         }
     }
 }
@@ -37,6 +37,7 @@ struct SwiftUIAnnotationNode: Identifiable {
     let title: String
     let kind: AnnotationNodeKind
     let annotation: Annotation?
+    let bookTitle: String?
     var children: [SwiftUIAnnotationNode]?
 
     init(
@@ -44,12 +45,14 @@ struct SwiftUIAnnotationNode: Identifiable {
         title: String,
         kind: AnnotationNodeKind,
         annotation: Annotation?,
+        bookTitle: String? = nil,
         children: [SwiftUIAnnotationNode]? = nil
     ) {
         self.id = id
         self.title = title
         self.kind = kind
         self.annotation = annotation
+        self.bookTitle = bookTitle
         self.children = children
     }
 
@@ -67,6 +70,7 @@ struct SwiftUIAnnotationNode: Identifiable {
         title = node.title
         kind = node.kind
         annotation = node.annotation
+        bookTitle = node.bookTitle
         let currentId = id
         children = node.children.isEmpty ? nil : node.children.map { SwiftUIAnnotationNode(from: $0, parentId: currentId) }
     }
@@ -171,16 +175,15 @@ class AnnotationViewModel: ViewModelBase {
     }
 
     func availableTags(for tags: Set<String>) -> [String] {
-        guard tagFilterMode == .and, !tags.isEmpty,
-              let root = AnnotationTreeBuilder.shared.currentRootNode()
-        else {
+        guard let root = AnnotationTreeBuilder.shared.currentRootNode() else {
             return allTags
         }
-
-        var coOccurringTags = Set(tags)
-        let matchingNodes = filterNodesByTags(root.children, tags: tags)
-        gatherTags(from: matchingNodes, into: &coOccurringTags)
-        return coOccurringTags.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        return AnnotationTreeFilter.availableTags(
+            for: tags,
+            in: root.children,
+            allTags: allTags,
+            mode: tagFilterMode
+        )
     }
 
     var onTagsChanged: (@MainActor ([String]) -> Void)?
@@ -299,137 +302,21 @@ class AnnotationViewModel: ViewModelBase {
             return
         }
 
-        var isFiltered = false
-        var nodes = coreNodes
-
-        if !selectedTags.isEmpty {
-            nodes = filterNodesByTags(nodes)
-            isFiltered = true
-        }
-
-        if !searchText.isEmpty {
-            nodes = filterNodes(nodes, with: searchText)
-            isFiltered = true
-        }
-
+        let isFiltered = !selectedTags.isEmpty || !searchText.isEmpty
         if isFiltered {
-            cachedFilteredNodes = nodes
+            cachedFilteredNodes = AnnotationTreeFilter.filter(
+                nodes: coreNodes,
+                selectedTags: selectedTags,
+                tagFilterMode: tagFilterMode,
+                searchText: searchText,
+                searchScope: searchScope
+            )
         } else {
             cachedFilteredNodes = nil
         }
 
         let currentTags = availableTags
         onTagsChanged?(currentTags)
-    }
-
-    private func filterNodesByTags(_ nodes: [AnnotationNode], tags: Set<String>? = nil) -> [AnnotationNode] {
-        let activeTags = tags ?? selectedTags
-        guard !activeTags.isEmpty else { return nodes }
-        var result: [AnnotationNode] = []
-        for node in nodes {
-            if node.kind == .annotation, let ann = node.annotation {
-                let annTags = Set(ann.tags.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
-                let matches = tagFilterMode == .and
-                    ? activeTags.allSatisfy { annTags.contains($0) }
-                    : !activeTags.isDisjoint(with: annTags)
-                if matches {
-                    result.append(node)
-                }
-            } else {
-                let filteredChildren = filterNodesByTags(node.children, tags: tags)
-                if !filteredChildren.isEmpty {
-                    let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: nil)
-                    copy.children = filteredChildren
-                    result.append(copy)
-                }
-            }
-        }
-        return result
-    }
-
-    private func collectBookIds(from nodes: [AnnotationNode], into set: inout Set<Int>) {
-        for node in nodes {
-            if let ann = node.annotation {
-                set.insert(ann.bkId)
-            }
-            if !node.children.isEmpty {
-                collectBookIds(from: node.children, into: &set)
-            }
-        }
-    }
-
-    private func filterNodes(_ nodes: [AnnotationNode], with query: String) -> [AnnotationNode] {
-        var bookIds = Set<Int>()
-        collectBookIds(from: nodes, into: &bookIds)
-        let books = LibraryDataManager.shared.getBook(Array(bookIds))
-        var bookTitleMap: [Int: String] = [:]
-        for book in books {
-            bookTitleMap[book.id] = book.normalizedBook
-        }
-
-        let normalizedQuery = query.normalizeArabic(false)
-        return filterNodesRecursive(nodes, with: normalizedQuery, bookTitleMap: bookTitleMap)
-    }
-
-    private func filterNodesRecursive(_ nodes: [AnnotationNode], with normalizedQuery: String, bookTitleMap: [Int: String]) -> [AnnotationNode] {
-        var result: [AnnotationNode] = []
-
-        for node in nodes {
-            let matchingChildren = node.children.isEmpty ? [] : filterNodesRecursive(node.children, with: normalizedQuery, bookTitleMap: bookTitleMap)
-            let matchesSelf = nodeMatchesQuery(node, query: normalizedQuery, bookTitleMap: bookTitleMap)
-
-            if matchesSelf {
-                let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: node.annotation)
-                copy.children = node.children
-                result.append(copy)
-            } else if !matchingChildren.isEmpty {
-                let copy = AnnotationNode(title: node.title, kind: node.kind, annotation: node.annotation)
-                copy.children = matchingChildren
-                result.append(copy)
-            }
-        }
-        return result
-    }
-
-    private func nodeMatchesQuery(_ node: AnnotationNode, query: String, bookTitleMap: [Int: String]) -> Bool {
-        if node.kind == .annotation {
-            guard let ann = node.annotation else { return false }
-            let bookTitle = bookTitleMap[ann.bkId] ?? ""
-
-            switch searchScope {
-            case .all:
-                if !bookTitle.isEmpty, bookTitle.localizedStandardContains(query) { return true }
-                if ann.context.normalizeArabic(false).localizedStandardContains(query) { return true }
-                if let note = ann.note, note.normalizeArabic(false).localizedStandardContains(query) { return true }
-                if ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) }) { return true }
-                return false
-
-            case .book:
-                return !bookTitle.isEmpty && bookTitle.localizedStandardContains(query)
-
-            case .context:
-                return ann.context.normalizeArabic(false).localizedStandardContains(query)
-
-            case .note:
-                guard let note = ann.note else { return false }
-                return note.normalizeArabic(false).localizedStandardContains(query)
-
-            case .tag:
-                return ann.tags.contains(where: { $0.normalizeArabic(false).localizedStandardContains(query) })
-            }
-        } else {
-            let normalizedTitle = node.title.normalizeArabic(false)
-            switch searchScope {
-            case .all:
-                return normalizedTitle.localizedStandardContains(query)
-            case .book:
-                return node.kind == .book && normalizedTitle.localizedStandardContains(query)
-            case .tag:
-                return (node.kind == .tag || node.kind == .untagged) && normalizedTitle.localizedStandardContains(query)
-            case .context, .note:
-                return false
-            }
-        }
     }
 
     func deleteAnnotation(id: Int64) {
@@ -450,22 +337,6 @@ class AnnotationViewModel: ViewModelBase {
 
     func toggleTagFilterMode() {
         tagFilterMode = tagFilterMode == .or ? .and : .or
-    }
-
-    private func gatherTags(from nodes: [AnnotationNode], into set: inout Set<String>) {
-        for node in nodes {
-            if let ann = node.annotation {
-                for tag in ann.tags {
-                    let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !trimmed.isEmpty {
-                        set.insert(trimmed)
-                    }
-                }
-            }
-            if !node.children.isEmpty {
-                gatherTags(from: node.children, into: &set)
-            }
-        }
     }
 }
 

@@ -44,3 +44,12 @@ struct ContentKey: Hashable, Sendable {
     let bkId: Int
     let contentId: Int
 }
+
+extension Annotation {
+    var displayTitle: String {
+        if let note, !note.isEmpty {
+            return note
+        }
+        return context
+    }
+}

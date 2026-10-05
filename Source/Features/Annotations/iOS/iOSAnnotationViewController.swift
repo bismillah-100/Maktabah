@@ -405,6 +405,7 @@ class iOSAnnotationViewController: UIViewController {
             guard let self else { return }
             let config = AnnotationContentConfiguration(
                 annotation: node.annotation,
+                bookTitle: node.bookTitle,
                 groupingMode: currentGroupingMode
             )
             cell.contentConfiguration = config

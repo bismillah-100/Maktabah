@@ -774,6 +774,9 @@
 		F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
 		F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */; };
+		F3F2D5942FE6B2DE006943DC /* AnnotationTreeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D5932FE6B2DE006943DC /* AnnotationTreeFilter.swift */; };
+		F3F2D5952FE6B2DE006943DC /* AnnotationTreeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D5932FE6B2DE006943DC /* AnnotationTreeFilter.swift */; };
+		F3F2D5962FE6B2DE006943DC /* AnnotationTreeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F2D5932FE6B2DE006943DC /* AnnotationTreeFilter.swift */; };
 		F3F3FEA73035E85B00507E9A /* RTLScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */; };
 		F3F3FEA83035E85B00507E9A /* RTLScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */; };
 		F3F3FEAD30360EC700507E9A /* DonationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F3FEAC30360EC700507E9A /* DonationManager.swift */; };
@@ -1304,6 +1307,7 @@
 		F3E900012FC0000100000001 /* AnnotationJsonSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnnotationJsonSerializer.swift; sourceTree = "<group>"; };
 		F3EB89682FAF72AE00ED75F0 /* SearchResultsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsListView.swift; sourceTree = "<group>"; };
 		F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationViewModel.swift; sourceTree = "<group>"; };
+		F3F2D5932FE6B2DE006943DC /* AnnotationTreeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationTreeFilter.swift; sourceTree = "<group>"; };
 		F3F3FEA63035E85B00507E9A /* RTLScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTLScrollView.swift; sourceTree = "<group>"; };
 		F3F3FEAC30360EC700507E9A /* DonationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationManager.swift; sourceTree = "<group>"; };
 		F3F625673040356800887FD7 /* BookListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookListViewController.swift; sourceTree = "<group>"; };
@@ -2050,6 +2054,7 @@
 			isa = PBXGroup;
 			children = (
 				F3F2D58F2FE6B2DE006943DC /* AnnotationViewModel.swift */,
+				F3F2D5932FE6B2DE006943DC /* AnnotationTreeFilter.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -3032,6 +3037,7 @@
 				4B6AF22F2EE5692A002EBFFC /* AppMode.swift in Sources */,
 				F3D330022FA4987B005732C2 /* WidgetUpdateCoordinator.swift in Sources */,
 				F3F2D5902FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
+				F3F2D5942FE6B2DE006943DC /* AnnotationTreeFilter.swift in Sources */,
 				F34047CC30367EBC003B4B57 /* DonationSheetView.swift in Sources */,
 				F3D66913303215990030510C /* RightAlignedClipView.swift in Sources */,
 				4B18185E2F45377200AFFAEE /* AnnotationColorMenuView.swift in Sources */,
@@ -3270,6 +3276,7 @@
 				F34D9FC5303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */,
 				4B7C90BA2F83494200454BE1 /* ReusableFunc.swift in Sources */,
 				F3F2D5922FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
+				F3F2D5962FE6B2DE006943DC /* AnnotationTreeFilter.swift in Sources */,
 				4B7C90BB2F83494200454BE1 /* BookUpdateManager.swift in Sources */,
 				F30C509A303FA12200627AF8 /* ResultsViewTextField.swift in Sources */,
 				F321672A2FBAA39F00601DB3 /* BookImportView.swift in Sources */,
@@ -3576,6 +3583,7 @@
 				F30576FE2FA46222005732C6 /* BookUpdateModels.swift in Sources */,
 				F3EB89702FAF94EF00ED75F0 /* SearchResultsListView.swift in Sources */,
 				F3F2D5912FE6B2DE006943DC /* AnnotationViewModel.swift in Sources */,
+				F3F2D5952FE6B2DE006943DC /* AnnotationTreeFilter.swift in Sources */,
 				F32D4424303CFC0800429664 /* ArchiveInfo.swift in Sources */,
 				F30577012FA46222005732C6 /* StorageError.swift in Sources */,
 				F30577032FA46222005732C6 /* LibraryDataManager.swift in Sources */,

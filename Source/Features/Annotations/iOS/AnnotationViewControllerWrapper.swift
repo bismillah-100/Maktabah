@@ -75,7 +75,7 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
         @MainActor
         func handleSelection(_ node: SwiftUIAnnotationNode) {
             guard node.kind == .annotation, let ann = node.annotation else { return }
-            if let book = LibraryDataManager.shared.getBook([ann.bkId]).first {
+            if let book = LibraryDataManager.shared.booksById[ann.bkId] ?? LibraryDataManager.shared.getBook([ann.bkId]).first {
                 navigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)
             } else {
                 NotificationCenter.default.post(

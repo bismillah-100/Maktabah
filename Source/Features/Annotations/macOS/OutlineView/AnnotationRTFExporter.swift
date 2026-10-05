@@ -112,7 +112,7 @@ enum AnnotationRTFExporter {
             ? RelativeDateTimeFormatter.shared.localizedString(for: targetDate, relativeTo: Date())
             : DateFormatter.mediumDateShortTime.string(from: targetDate)
 
-        let kitab = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book ?? "<Unknown Book>"
+        let kitab = LibraryDataManager.shared.booksById[annotation.bkId]?.book ?? "<Unknown Book>"
         let metaText = "\(kitab) • الجزء: \(annotation.partArb ?? "-") • الصفحة: \(annotation.pageArb ?? "-") \(annotation.tags.map { " -- \($0)" }.joined(separator: " "))\n\(dateString)\n"
 
         return NSAttributedString(

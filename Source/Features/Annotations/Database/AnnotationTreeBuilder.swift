@@ -137,7 +137,9 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         let annotationNode = AnnotationNode(
             title: displayTitle(for: annotation),
             kind: .annotation,
-            annotation: annotation
+            annotation: annotation,
+            bookTitle: bookNode.title,
+            normalizedBookTitle: bookNode.title.normalizeArabic(false)
         )
 
         let index = bookNode.children.insertionIndex(for: annotationNode, using: compareNodes)
@@ -347,32 +349,45 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             anns = anns.filter { existingBkIds.contains($0.bkId) }
         }
 
+        var bookTitles: [Int: String] = [:]
+        let uniqueBkIds = Array(Set(anns.map(\.bkId)))
+        for book in LibraryDataManager.shared.getBook(uniqueBkIds) {
+            bookTitles[book.id] = book.book
+        }
+
         switch groupingMode {
         case .book:
-            populateBookTree(root: root, annotations: anns)
+            populateBookTree(root: root, annotations: anns, bookTitles: bookTitles)
         case .tag:
-            populateTagTree(root: root, annotations: anns)
+            populateTagTree(root: root, annotations: anns, bookTitles: bookTitles)
         case .timeline:
-            populateTimelineTree(root: root, annotations: anns)
+            populateTimelineTree(root: root, annotations: anns, bookTitles: bookTitles)
         }
 
         sortNodeChildren(root)
         rootNode = root
     }
 
-    private func populateBookTree(root: AnnotationNode, annotations: [Annotation]) {
+    private func populateBookTree(root: AnnotationNode, annotations: [Annotation], bookTitles: [Int: String]) {
         let grouped = Dictionary(grouping: annotations, by: { $0.bkId })
 
         for bkId in grouped.keys {
             let annsForBook = grouped[bkId] ?? []
-            let bookTitle = LibraryDataManager.shared.getBook([bkId]).first?.book ?? "Unknown Book (\(bkId))"
-            let bookNode = AnnotationNode(title: bookTitle, kind: .book)
+            let bookTitle = bookTitles[bkId] ?? "Unknown Book (\(bkId))"
+            let bookNode = AnnotationNode(
+                title: bookTitle,
+                kind: .book,
+                bookTitle: bookTitle,
+                normalizedBookTitle: bookTitle.normalizeArabic(false)
+            )
 
             for ann in annsForBook {
                 let child = AnnotationNode(
                     title: displayTitle(for: ann),
                     kind: .annotation,
-                    annotation: ann
+                    annotation: ann,
+                    bookTitle: bookTitle,
+                    normalizedBookTitle: bookTitle.normalizeArabic(false)
                 )
                 bookNode.children.append(child)
             }
@@ -381,7 +396,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         }
     }
 
-    private func populateTagTree(root: AnnotationNode, annotations: [Annotation]) {
+    private func populateTagTree(root: AnnotationNode, annotations: [Annotation], bookTitles: [Int: String]) {
         var grouped: [String: [Annotation]] = [:]
         var untagged: [Annotation] = []
 
@@ -400,11 +415,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         for tag in grouped.keys.sorted(by: { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }) {
             let tagNode = AnnotationNode(title: tag, kind: .tag)
             for annotation in grouped[tag] ?? [] {
+                let bookTitle = bookTitles[annotation.bkId]
                 tagNode.children.append(
                     AnnotationNode(
                         title: displayTitle(for: annotation),
                         kind: .annotation,
-                        annotation: annotation
+                        annotation: annotation,
+                        bookTitle: bookTitle,
+                        normalizedBookTitle: bookTitle?.normalizeArabic(false)
                     )
                 )
             }
@@ -415,11 +433,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             let untaggedNode = AnnotationNode(title: String(localized: .Annotation.untagged),
                                               kind: .untagged)
             for annotation in untagged {
+                let bookTitle = bookTitles[annotation.bkId]
                 untaggedNode.children.append(
                     AnnotationNode(
                         title: displayTitle(for: annotation),
                         kind: .annotation,
-                        annotation: annotation
+                        annotation: annotation,
+                        bookTitle: bookTitle,
+                        normalizedBookTitle: bookTitle?.normalizeArabic(false)
                     )
                 )
             }
@@ -518,6 +539,10 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
     // MARK: - Book Mode Helpers
 
+    private func resolveBookTitle(for bkId: Int) -> String? {
+        LibraryDataManager.shared.getBook([bkId]).first?.book
+    }
+
     private func findOrCreateBookNode(for bkId: Int, in root: AnnotationNode) -> AnnotationNode {
         if let existing = root.children.first(where: { node in
             guard let firstChild = node.children.first,
@@ -534,7 +559,12 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             return fallbackNode
         }
 
-        let bookNode = AnnotationNode(title: book.book, kind: .book)
+        let bookNode = AnnotationNode(
+            title: book.book,
+            kind: .book,
+            bookTitle: book.book,
+            normalizedBookTitle: book.normalizedBook
+        )
         let idx = root.children.insertionIndex(for: bookNode, using: compareNodes)
         root.children.insert(bookNode, at: idx)
 
@@ -663,7 +693,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         container: AnnotationNode,
         isContainerNew: Bool
     ) -> TagUpdateDiff.AddedEntry {
-        let newNode = AnnotationNode(title: title, kind: .annotation, annotation: annotation)
+        let bTitle = resolveBookTitle(for: annotation.bkId)
+        let newNode = AnnotationNode(
+            title: title,
+            kind: .annotation,
+            annotation: annotation,
+            bookTitle: bTitle,
+            normalizedBookTitle: bTitle?.normalizeArabic(false)
+        )
         if isContainerNew {
             container.children.append(newNode)
         } else {
@@ -836,7 +873,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
     // MARK: - Timeline Mode Operations
 
-    private func populateTimelineTree(root: AnnotationNode, annotations: [Annotation]) {
+    private func populateTimelineTree(root: AnnotationNode, annotations: [Annotation], bookTitles: [Int: String]) {
         let now = Date()
         let calendar = Calendar.current
 
@@ -853,11 +890,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         for bucket in sortedBuckets {
             let bucketNode = AnnotationNode(title: bucket.localizedTitle, kind: .dateBucket)
             for annotation in grouped[bucket] ?? [] {
+                let bookTitle = bookTitles[annotation.bkId]
                 bucketNode.children.append(
                     AnnotationNode(
                         title: displayTitle(for: annotation),
                         kind: .annotation,
-                        annotation: annotation
+                        annotation: annotation,
+                        bookTitle: bookTitle,
+                        normalizedBookTitle: bookTitle?.normalizeArabic(false)
                     )
                 )
             }
@@ -874,7 +914,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             return TagUpdateDiff(removed: [], added: [entry], updated: [])
         } else {
             let newBucketNode = AnnotationNode(title: bucket.localizedTitle, kind: .dateBucket)
-            let newNode = AnnotationNode(title: title, kind: .annotation, annotation: annotation)
+            let bTitle = resolveBookTitle(for: annotation.bkId)
+            let newNode = AnnotationNode(
+                title: title,
+                kind: .annotation,
+                annotation: annotation,
+                bookTitle: bTitle,
+                normalizedBookTitle: bTitle?.normalizeArabic(false)
+            )
             newBucketNode.children.append(newNode)
 
             var cache = [ObjectIdentifier: Int64]()
@@ -892,9 +939,6 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     }
 
     private func displayTitle(for annotation: Annotation) -> String {
-        if let note = annotation.note, !note.isEmpty {
-            return note
-        }
-        return annotation.context
+        annotation.displayTitle
     }
 }
