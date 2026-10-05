@@ -33,25 +33,14 @@ struct AnnotationListView: View {
             }
     }
 
-    @ViewBuilder
     private func annotationContent(_ viewModel: AnnotationViewModel) -> some View {
-        @Bindable var viewModel = viewModel
         AnnotationViewControllerWrapper(
             navigationManager: navigationManager,
             viewModel: viewModel
         )
         .themeTint()
         .ignoresSafeArea(edges: .vertical)
-        .searchable(
-            text: $viewModel.searchText,
-            placement: .navigationBarDrawer(displayMode: .always),
-            prompt: Text(.Annotation.searchAnnotations)
-        )
-        .searchScopes($viewModel.searchScope) {
-            ForEach(AnnotationSearchScope.allCases) { scope in
-                Text(scope.title).tag(scope)
-            }
-        }
+        .annotationSearch(viewModel: viewModel)
         .onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook)) { notification in
             if let bookId = notification.object as? Int {
                 missingBookId = bookId
@@ -219,6 +208,20 @@ struct AnnotationListView: View {
 }
 
 private extension View {
+    func annotationSearch(viewModel: AnnotationViewModel) -> some View {
+        @Bindable var viewModel = viewModel
+        return searchable(
+            text: $viewModel.searchText,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: Text(.Annotation.searchAnnotations)
+        )
+        .searchScopes($viewModel.searchScope) {
+            ForEach(AnnotationSearchScope.allCases) { scope in
+                Text(scope.title).tag(scope)
+            }
+        }
+    }
+
     func fileExportImportModifiers(
         isExporting: Binding<Bool>,
         exportDocument: AnnotationJsonDocument?,

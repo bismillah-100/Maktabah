@@ -104,7 +104,7 @@ class AnnotationContentView: UIView, UIContentView {
             noteLabel.isHidden = true
         }
 
-        let secondaryInfo = resolveSecondaryInfo(for: ann, groupingMode: config.groupingMode)
+        let secondaryInfo = resolveSecondaryInfo(for: ann, bookTitle: config.bookTitle, groupingMode: config.groupingMode)
         secondaryLabel.text = secondaryInfo.text
         secondaryLabel.textColor = secondaryInfo.color
         secondaryLabel.isHidden = secondaryInfo.isHidden
@@ -146,11 +146,12 @@ class AnnotationContentView: UIView, UIContentView {
 
     private func resolveSecondaryInfo(
         for ann: Annotation,
+        bookTitle: String?,
         groupingMode: AnnotationGroupingMode
     ) -> SecondaryInfo {
         if groupingMode == .tag || groupingMode == .timeline {
-            if let book = LibraryDataManager.shared.getBook([ann.bkId]).first {
-                SecondaryInfo(text: book.book, color: .secondaryLabel, isHidden: false)
+            if let bookTitle, !bookTitle.isEmpty {
+                SecondaryInfo(text: bookTitle, color: .secondaryLabel, isHidden: false)
             } else {
                 SecondaryInfo(text: "Book #\(ann.bkId) not found", color: .systemRed, isHidden: false)
             }
@@ -166,6 +167,7 @@ class AnnotationContentView: UIView, UIContentView {
 
 struct AnnotationContentConfiguration: UIContentConfiguration {
     var annotation: Annotation?
+    var bookTitle: String?
     var groupingMode: AnnotationGroupingMode = .book
 
     func makeContentView() -> UIView & UIContentView {

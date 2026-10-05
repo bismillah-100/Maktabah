@@ -88,7 +88,7 @@ enum AnnotationRowHeightCalculator {
         case .book:
             return page + tags
         case .tag, .timeline:
-            let bookTitle = LibraryDataManager.shared.getBook([annotation.bkId]).first?.book ?? String(localized: .Library.bookNotFound(annotation.bkId))
+            let bookTitle = LibraryDataManager.shared.booksById[annotation.bkId]?.book ?? String(localized: .Library.bookNotFound(annotation.bkId))
             return page + tags + "\n" + bookTitle
         }
     }

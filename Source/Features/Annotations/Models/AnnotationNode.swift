@@ -119,23 +119,25 @@ final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
     var children: [AnnotationNode] = []
     var annotation: Annotation? // optional, kalau node ini representasi annotation
     var kind: AnnotationNodeKind
+    var bookTitle: String?
+    var normalizedBookTitle: String?
 
     init(
         title: String,
         kind: AnnotationNodeKind = .book,
-        annotation: Annotation? = nil
+        annotation: Annotation? = nil,
+        bookTitle: String? = nil,
+        normalizedBookTitle: String? = nil
     ) {
         self.title = title
         self.kind = kind
         self.annotation = annotation
+        self.bookTitle = bookTitle
+        self.normalizedBookTitle = normalizedBookTitle
     }
 
     func update(with annotation: Annotation) {
-        if let note = annotation.note, !note.isEmpty {
-            title = note
-        } else {
-            title = annotation.context
-        }
+        title = annotation.displayTitle
         self.annotation = annotation
     }
 
