@@ -8,7 +8,7 @@ Alur reaktivitas anotasi dirancang satu arah (*unidirectional*) untuk memastikan
 
 1. **Mutasi Data**: Terjadi di `AnnotationStore` secara sinkron (dengan proteksi `Mutex`) dan memancarkan `AnnotationEvent` via `PassthroughSubject`.
 2. **Konstruksi Hierarki**: `AnnotationTreeBuilder` menangkap *event* tersebut di antrean latar belakang (*background queue*), lalu membangun ulang struktur hierarki (Book / Tag / Timeline) dan mengkalkulasi *tree diffing*.
-3. **Transformasi ViewModel**: `AnnotationViewModel` berlangganan (*subscribe*) pada hasil dari `AnnotationTreeBuilder`. Apabila pencarian atau filter aktif, ViewModel melakukan pemfilteran tambahan.
+3. **Transformasi ViewModel**: `AnnotationViewModel` berlangganan (*subscribe*) pada hasil dari `AnnotationTreeBuilder`. Apabila pencarian atau filter aktif, ViewModel mendelegasikan pemfilteran hierarki ke `AnnotationTreeFilter`.
 4. **Binding Antarmuka Pengguna**: UI (SwiftUI atau AppKit) dirender ulang secara otomatis melalui makro `@Observable` atau pembaruan inkremental via `onIncrementalUpdate`.
 
 ## AnnotationViewModel (Class)
@@ -56,25 +56,62 @@ var searchText: String = "" {
 
 1. **Debounce**: Penundaan 0,3 detik diterapkan sebelum eksekusi `applyFilter()` untuk mencegah *thrashing* CPU saat pengguna mengetik dengan cepat. Mekanisme ini menggunakan fitur bawaan Swift Concurrency (`Task` dan `Task.sleep`).
 
-### Logika Pemfilteran Tag
+### AnnotationTreeFilter (Struct)
 
-ViewModel mendukung dua mode filter tag (`OR` dan `AND`):
-
-- Mode **OR**: Menampilkan anotasi yang memuat *minimal satu* dari tag yang dipilih.
-- Mode **AND**: Menampilkan anotasi yang memuat *seluruh* tag yang dipilih.
+Merupakan utilitas *stateless* dengan *pure functions* yang memisahkan seluruh algoritma penyaringan teks, cakupan (*scope*), dan label/tag dari `AnnotationViewModel`.
 
 ```swift
-private func filterNodesByTags(_ nodes: [AnnotationNode], tags: Set<String>? = nil) -> [AnnotationNode] {
-    let activeTags = tags ?? selectedTags
-    // ... iterasi node
-    let matches = tagFilterMode == .and
-        ? activeTags.allSatisfy { annTags.contains($0) }
-        : !activeTags.isDisjoint(with: annTags)
-    // ...
+struct AnnotationTreeFilter {
+    static func filter(
+        nodes: [AnnotationNode],
+        withQuery query: String,
+        scope: AnnotationSearchScope,
+        selectedTags: Set<String>,
+        filterMode: TagFilterMode
+    ) -> [AnnotationNode]
+
+    static func filterNodesByTags(
+        _ nodes: [AnnotationNode],
+        tags: Set<String>?,
+        mode: TagFilterMode
+    ) -> [AnnotationNode]
+
+    static func filterNodesByQuery(
+        _ nodes: [AnnotationNode],
+        query: String,
+        scope: AnnotationSearchScope,
+        bookTitleMap: [Int: (raw: String, normalized: String)] = [:]
+    ) -> [AnnotationNode]
+
+    static func availableTags(
+        for nodes: [AnnotationNode],
+        in allTags: [String],
+        selectedTags: Set<String>,
+        filterMode: TagFilterMode
+    ) -> [String]
 }
 ```
 
-Jika dalam mode `AND`, properti `availableTags` difilter sedemikian rupa sehingga hanya menampilkan tag yang muncul bersamaan (*co-occurring*) dalam sisa anotasi yang cocok.
+### Pemfilteran Berdasarkan Scope (Search Scope)
+
+`AnnotationTreeFilter` mengevaluasi teks pencarian terhadap `AnnotationSearchScope` yang dipilih:
+
+- **`.all`**: Memeriksa kecocokan pada judul buku, teks kutipan (`context`), catatan (`note`), atau tag.
+- **`.book`**: Menggunakan kamus *lookup* metadata buku (`bookTitleMap`) untuk menyaring kecocokan judul buku asli maupun versi ternormalisasi.
+- **`.context`**: Membandingkan teks kutipan.
+- **`.note`**: Memeriksa catatan pribadi pengguna.
+- **`.tag`**: Memeriksa seluruh label/tag pada anotasi.
+
+Cabang grup (`book`, `tag`, `dateBucket`) akan dipertahankan apabila node grup itu sendiri cocok atau memiliki minimal satu node anak anotasi yang lolos kriteria pencarian.
+
+### Logika Pemfilteran Tag
+
+Mendukung dua mode kombinasi filter:
+
+- Mode **OR**: Menampilkan anotasi yang memuat *minimal satu* dari tag yang dipilih (`!activeTags.isDisjoint(with: annTags)`).
+- Mode **AND**: Menampilkan anotasi yang memuat *seluruh* tag yang dipilih (`activeTags.allSatisfy { annTags.contains($0) }`).
+
+Dalam mode `AND`, metode `availableTags(for:in:selectedTags:filterMode:)` menyaring tag agar hanya menampilkan tag yang muncul bersamaan (*co-occurring*) dalam anotasi yang sedang lolos seleksi.
 
 ## AnnotationTreeBuilder (Class)
 

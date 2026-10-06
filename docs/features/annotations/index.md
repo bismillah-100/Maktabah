@@ -13,7 +13,7 @@ Modul Annotations dirancang dengan pemisahan lapisan yang ketat untuk memastikan
     Mengelola persistensi data menggunakan SQLite (`AnnotationRepository`) dengan *caching in-memory* (`AnnotationStore`) yang *thread-safe* menggunakan `Synchronization.Mutex`. Lapisan ini juga mengoordinasikan sinkronisasi luring dan CloudKit.
 
 3. **ViewModel Layer (`ViewModel/`)**
-    Bertindak sebagai jembatan reaktif antara Storage dan UI. Menggunakan *framework* `Combine` dan `@Observable` (di `AnnotationViewModel`) untuk menyajikan *state* tampilan, serta menangani *debounce* dan operasi pencarian asinkron.
+    Bertindak sebagai jembatan reaktif antara Storage dan UI. Menggunakan *framework* `Combine` dan `@Observable` (di `AnnotationViewModel`) untuk menyajikan *state* tampilan, menangani *debounce*, serta mendelegasikan algoritma pemfilteran teks dan tag ke mesin murni `AnnotationTreeFilter`.
 
 4. **Coordinator Layer (`Coordinator/`)**
     `AnnotationCoordinator` merangkum logika kalkulasi rentang (*range*) teks Arab (dengan dan tanpa harakat) antara UI Text View dan Core Engine.
@@ -31,6 +31,7 @@ flowchart TD
     UI_iOS[SwiftUI & UIKit UI<br>iOSAnnotationViewController] --> VM
 
     VM --> Tree[AnnotationTreeBuilder<br>Mutasi Hierarki & Diffing]
+    VM --> Filter[AnnotationTreeFilter<br>Query & Tag Filtering Engine]
     Tree -.-> Publish([Publish Annotation Event])
     VM --> Store[AnnotationStore<br>In-Memory Cache & Mutex]
 
@@ -52,7 +53,7 @@ flowchart TD
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class UI_Mac,UI_iOS ui;
-    class VM vm;
+    class VM,Filter vm;
     class Store,Tree,Coord store;
     class Repo,SQLite db;
     class Publish event;
