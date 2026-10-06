@@ -48,8 +48,4 @@ extension AnnotationsVC: NSWindowDelegate {
         outlineView.deselectAll(nil)
         removeScopePanelFromWindow()
     }
-
-    func windowDidBecomeKey(_ notification: Notification) {
-        if !searchField.stringValue.isEmpty { updateAndShowScopePanel() }
-    }
 }
