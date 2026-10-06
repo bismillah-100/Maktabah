@@ -34,22 +34,23 @@ import AppKit
 ///
 /// Fully definable through Interface Builder (set Autosave in the Attributes Inspector)
 @objc public class DSFSearchField: NSSearchField {
-
     /// The search text convenience
     ///
     /// * Bindable (using addObserver) for search text changes
     /// * Settable to change the name of the search text
     @objc public dynamic var searchTerm: String = "" {
         didSet {
-            self.searchTermChangeCallback?(self.searchTerm)
+            searchTermChangeCallback?(searchTerm)
         }
     }
 
     /// An (optional) block-based interface for receiving search field changes
-    @objc public var searchTermChangeCallback: ((String) -> Void)? = nil
+    @objc public var searchTermChangeCallback: ((String) -> Void)?
 
     /// Called when the user 'submits' the search (eg. presses return in the control)
-    @objc public var searchSubmitCallback: ((String) -> Void)? = nil
+    @objc public var searchSubmitCallback: ((String) -> Void)?
+
+    public var onBecomeFirstResponder: (() -> Void)?
 
     /// Create a search field
     /// - Parameters:
@@ -58,21 +59,21 @@ import AppKit
     @objc public init(frame frameRect: NSRect, recentsAutosaveName: NSSearchField.RecentsAutosaveName?) {
         super.init(frame: frameRect)
         self.recentsAutosaveName = recentsAutosaveName
-        self.setup()
+        setup()
     }
 
     /// Creates a search field
     @objc public required init?(coder: NSCoder) {
         super.init(coder: coder)
-        self.setup()
+        setup()
     }
 
     var rtl: Bool {
         MainWindow.rtl
     }
 
-    // Show custom menu on mouse down and make field first responder
-    public override func mouseDown(with event: NSEvent) {
+    /// Show custom menu on mouse down and make field first responder
+    override public func mouseDown(with event: NSEvent) {
         guard let cell = cell as? NSSearchFieldCell else {
             super.mouseDown(with: event)
             return
@@ -82,7 +83,7 @@ import AppKit
         let point = convert(event.locationInWindow, from: nil)
 
         // Jika klik di tombol clear (✕), serahkan ke AppKit
-        if cell.cancelButtonRect(forBounds: self.bounds).contains(point) {
+        if cell.cancelButtonRect(forBounds: bounds).contains(point) {
             super.mouseDown(with: event)
             return
         }
@@ -100,10 +101,18 @@ import AppKit
         window?.makeFirstResponder(self)
     }
 
+    @discardableResult
+    override public func becomeFirstResponder() -> Bool {
+        let didBecome = super.becomeFirstResponder()
+        if didBecome { onBecomeFirstResponder?() }
+
+        return didBecome
+    }
+
     deinit {
         MainActor.assumeIsolated {
-            self.delegate = nil
-            self.unbind(.value)
+            delegate = nil
+            unbind(.value)
         }
     }
 }
@@ -113,8 +122,8 @@ import AppKit
 extension DSFSearchField: NSSearchFieldDelegate {
     public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-            if let callback = self.searchSubmitCallback {
-                callback(self.searchTerm)
+            if let callback = searchSubmitCallback {
+                callback(searchTerm)
             }
         }
         return false
@@ -124,16 +133,15 @@ extension DSFSearchField: NSSearchFieldDelegate {
 // MARK: - Private
 
 private extension DSFSearchField {
-
-    // Setup from init
+    /// Setup from init
     func setup() {
         // Do NOT use searchMenuTemplate (AppKit clones template and ignores delegate)
         // We will build and show our own RTL menu when needed.
-        self.bind(.value, to: self, withKeyPath: #keyPath(searchTerm), options: nil)
-        self.delegate = self
+        bind(.value, to: self, withKeyPath: #keyPath(searchTerm), options: nil)
+        delegate = self
     }
 
-    // Build a fully controlled RTL menu from recentSearches and show it manually
+    /// Build a fully controlled RTL menu from recentSearches and show it manually
     private func buildRTLSearchMenu() -> NSMenu {
         let menu = NSMenu(title: "")
         menu.userInterfaceLayoutDirection = rtl ? .rightToLeft : .leftToRight
@@ -143,7 +151,7 @@ private extension DSFSearchField {
         titleItem.isEnabled = false
         menu.addItem(titleItem)
 
-        let recents = self.recentSearches
+        let recents = recentSearches
 
         if recents.isEmpty {
             let emptyItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
@@ -173,28 +181,28 @@ private extension DSFSearchField {
         return menu
     }
 
-    // Action when a recent is selected
+    /// Action when a recent is selected
     @objc private func didSelectRecent(_ sender: NSMenuItem) {
         guard let text = sender.representedObject as? String else { return }
-        self.stringValue = text
+        stringValue = text
         // Move selected item to front, preserve uniqueness
         var newRecents = [text]
-        for r in self.recentSearches where r != text {
+        for r in recentSearches where r != text {
             newRecents.append(r)
         }
-        self.recentSearches = newRecents
+        recentSearches = newRecents
         // Trigger search submit callback if present
-        self.searchSubmitCallback?(text)
+        searchSubmitCallback?(text)
         // Also send action to target
-        self.sendAction(self.action, to: self.target)
+        sendAction(action, to: target)
     }
 
-    // Clear all recents
+    /// Clear all recents
     @objc private func clearRecents() {
-        self.recentSearches = []
+        recentSearches = []
     }
 
-    // Helper RTL attributed string
+    /// Helper RTL attributed string
     private func createRTLAttributedTitle(for text: String) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.baseWritingDirection = .rightToLeft
@@ -211,7 +219,6 @@ private extension DSFSearchField {
         _ text: String,
         maxWidth: CGFloat
     ) -> NSAttributedString {
-
         let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         let ellipsis = "…"
 
@@ -227,15 +234,15 @@ private extension DSFSearchField {
         var truncated = text
 
         // Potong dari AWAL (RTL)
-        while !truncated.isEmpty &&
-              width(ellipsis + truncated) > maxWidth {
+        while !truncated.isEmpty,
+              width(ellipsis + truncated) > maxWidth
+        {
             truncated.removeLast()
         }
 
         return createRTLAttributedTitle(for: truncated + ellipsis)
     }
 }
-
 
 class ClearSearchFieldCell: NSSearchFieldCell {
     override func drawInterior(withFrame cellFrame: NSRect, in controlView: NSView) {

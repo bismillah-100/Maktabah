@@ -9,9 +9,23 @@ extension AnnotationsVC: NSSearchFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         guard let obj = obj.object as? DSFSearchField, obj === searchField else { return }
         dataSource.viewModel.searchText = searchField.stringValue
-        searchField.stringValue.isEmpty
-            ? removeScopePanelFromWindow()
-            : updateAndShowScopePanel()
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        if scopePanel.isVisible, scopePanel.frame.contains(NSEvent.mouseLocation) {
+            return
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            if !searchFieldIsFirstResponder(view.window?.firstResponder) {
+                removeScopePanelFromWindow()
+            }
+        }
+    }
+
+    func searchFieldIsFirstResponder(_ firstResponder: NSResponder?) -> Bool {
+        firstResponder === searchField || firstResponder === searchField.currentEditor()
     }
 
     func updateAndShowScopePanel() {

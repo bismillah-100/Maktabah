@@ -3,14 +3,13 @@
 //  maktab
 //
 //  Created by MacBook on 15/12/25.
-//  Granular UI Update
+//  hide scopePanel on deactivate searchfield
 //
 
 import Cocoa
 import OSLog
 import SwiftUI
 
-@MainActor
 class AnnotationsVC: NSViewController {
     @IBOutlet weak var outlineView: NSOutlineView!
     @IBOutlet weak var shareBtn: NSPopUpButton!
@@ -132,7 +131,7 @@ class AnnotationsVC: NSViewController {
             target: self,
             action: #selector(searchScopeChanged(_:))
         )
-        segment.segmentStyle = .roundRect
+        segment.segmentStyle = .texturedRounded
         segment.controlSize = .small
         segment.refusesFirstResponder = true
         return segment
@@ -149,6 +148,9 @@ class AnnotationsVC: NSViewController {
         ReusableFunc.setupSearchField(searchField)
         outlineView.allowsMultipleSelection = true
         searchField.delegate = self
+        searchField.onBecomeFirstResponder = { [weak self] in
+            self?.updateAndShowScopePanel()
+        }
         dataSource.onAddTagsRequested = { [weak self] annotationIDs, anchorRect in
             self?.presentTagPopover(mode: .add, annotationIDs: annotationIDs, anchorRect: anchorRect)
         }
