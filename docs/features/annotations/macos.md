@@ -170,7 +170,7 @@ flowchart TD
 *   **Kolom Pencarian (`DSFSearchField`)**:
     Terintegrasi dengan *debounce* di `AnnotationViewModel.searchText`. Perubahan teks secara asinkron menyaring struktur hierarki anotasi.
 *   **Scope Panel Melayang (`scopePanel`)**:
-    Ketika kolom pencarian aktif, sebuah `NSPanel` melayang tak berbingkai (`level = .popUpMenu`) muncul tepat di bawah kolom pencarian. Panel ini memuat kontrol segmen (`NSSegmentedControl`) yang membatasi cakupan pencarian: Semua (*All*), Teks Konteks (*Text*), Catatan (*Notes*), atau Tag (*Tags*).
+    Ketika kolom pencarian aktif, sebuah `NSPanel` melayang tak berbingkai (`level = .popUpMenu`) muncul tepat di bawah kolom pencarian. Panel ini memuat kontrol segmen (`NSSegmentedControl`) yang membatasi cakupan pencarian berdasarkan `AnnotationSearchScope`: Semua (*All*), Kitab (*Book*), Konteks (*Context*), Catatan (*Notes*), atau Tag (*Tags*). Ketika kueri atau cakupan berganti, hierarki disaring secara seketika (*real-time*) dan item induk diperluas (*expanded*) agar hasil yang cocok langsung terlihat.
 
 ## Manajemen Filter Tag & Penggabungan Tag
 

@@ -76,6 +76,7 @@ flowchart TD
 
 1.  **`AnnotationListView` (SwiftUI Root Container)**:
     *   Mengatur *toolbar* atas: Menu pengelompokan (*Group By: Book, Tag, Timeline*) dan pengurutan (*Sort By & Order*).
+    *   Mengintegrasikan pencarian bawaan via modifier `.searchable` dengan *placement* `.navigationBarDrawer(displayMode: .always)` serta pemilih cakupan `.searchScopes($viewModel.searchScope)` untuk seluruh kasus `AnnotationSearchScope` (`all`, `book`, `context`, `note`, `tag`).
     *   Menangani ekspor dan impor JSON melalui modifier `.fileExporter` dan `.fileImporter` (`AnnotationJsonDocument`).
     *   Menampilkan dialog konfirmasi penggantian saat impor (*overwrite duplicate confirmation dialog*).
     *   Menangkap notifikasi `.annotationMissingBook` untuk memunculkan modal peringatan jika buku belum terunduh di perangkat.
@@ -97,6 +98,14 @@ Untuk menyajikan daftar anotasi yang dinamis, aplikasi memanfaatkan `UICollectio
     Untuk pembaruan seperti penambahan, pengubahan, atau penghapusan tunggal, sistem tidak memuat ulang seluruh data:
     *   Jika anotasi dihapus, elemen tersebut dicari di seluruh *section snapshot*, lalu dihapus secara terarah.
     *   Jika pembaruan menyebabkan sebuah grup menjadi kosong, grup tersebut akan dihapus dari tingkat *root* secara otomatis.
+
+## Pencarian Scope & Pembaruan Snapshot
+
+Pada iOS, pencarian anotasi terhubung secara reaktif antara SwiftUI dan UIKit:
+
+1. **Integrasi SwiftUI Searchable**: `AnnotationListView` memasang modifier `.searchable` dan `.searchScopes` yang terikat (*two-way binding*) ke `viewModel.searchText` dan `viewModel.searchScope`.
+2. **Auto-Expand Hasil Pencarian**: Ketika teks pencarian aktif, `iOSAnnotationViewController` secara otomatis membuka seluruh grup (*section snapshot*) dengan memanggil `snapshot.expand(snapshot.rootItems)` sebelum menerapkan data ke `dataSource`. Hal ini menjamin seluruh item anotasi yang cocok langsung terlihat tanpa mengharuskan pengguna membuka grup satu per satu.
+3. **Penyaringan Reaktif**: Setiap pergantian cakupan (*scope*) atau kata kunci memicu `AnnotationTreeFilter` melalui `viewModel.applyFilter()`, yang kemudian memancarkan pembaruan pohon hierarki melalui *closure* `onTreeUpdate`.
 
 ## Mode Pengelompokan & Filter Tag Chip
 

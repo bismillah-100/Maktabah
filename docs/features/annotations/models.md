@@ -42,6 +42,15 @@ struct Annotation: Sendable {
 - *Protocol* `Sendable`: `Annotation` dijamin aman untuk diteruskan antar-*thread* (Task/Actor) secara konkuren tanpa risiko *data race*.
 - Teks Konteks (`context`): Menyimpan salinan denormalisasi potongan teks agar saat pencarian/filter tidak perlu membaca basis data buku utama secara berulang.
 
+### Helper & Computed Properties
+
+Untuk menjaga modularitas dan prinsip DRY, `Annotation` menyediakan *computed property* pembantu:
+
+- `displayTitle: String`: Mengembalikan teks catatan (`note`) jika tidak kosong, atau *fallback* ke teks kutipan (`context`).
+
+!!! note "Metadata Buku Diinjeksi ke Node"
+    Properti metadata buku (`bookTitle`, `normalizedBookTitle`) tidak lagi berada pada model `Annotation` untuk mencegah *query* SQLite yang memblokir *main thread*. Metadata tersebut di-*resolve* di *background queue* (misalnya via `AnnotationTreeBuilder`) dan diinjeksikan langsung ke `AnnotationNode`.
+
 ## ContentKey (Struct)
 
 Kunci untuk *in-memory cache map* (`AnnotationStore`).
@@ -65,6 +74,8 @@ final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
     var children: [AnnotationNode] = []
     var annotation: Annotation? 
     var kind: AnnotationNodeKind
+    var bookTitle: String?
+    var normalizedBookTitle: String?
     
     // ...
 }
@@ -139,6 +150,37 @@ enum TagFilterMode {
     case and
 }
 ```
+
+### AnnotationSearchScope (Enum)
+
+Mengatur cakupan pencarian teks pada hierarki anotasi:
+
+```swift
+enum AnnotationSearchScope: Int, CaseIterable, Sendable {
+    case all
+    case book
+    case context
+    case note
+    case tag
+
+    var title: String {
+        switch self {
+        case .all: String(localized: .Annotation.searchScopeAll)
+        case .book: String(localized: .Annotation.searchScopeBook)
+        case .context: String(localized: .Annotation.searchScopeContext)
+        case .note: String(localized: .Annotation.searchScopeNote)
+        case .tag: String(localized: .Annotation.searchScopeTag)
+        }
+    }
+}
+```
+
+- `.all`: Mencari kecocokan pada judul buku, teks konteks, catatan, atau tag.
+- `.book`: Membatasi pencarian hanya pada judul buku.
+- `.context`: Membatasi pencarian hanya pada teks konteks kutipan.
+- `.note`: Membatasi pencarian hanya pada teks catatan pengguna.
+- `.tag`: Membatasi pencarian hanya pada label/tag yang terpasang pada anotasi.
+- **Lokalisasi**: String antarmuka dimuat secara dinamis dari String Catalog `Annotation.xcstrings` (mendukung lokalisasi EN, AR, ID).
 
 ## AnnotationEvent (Enum)
 

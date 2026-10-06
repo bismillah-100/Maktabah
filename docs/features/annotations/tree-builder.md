@@ -15,6 +15,9 @@ Komponen ini bertanggung jawab untuk:
 3. Menghitung perubahan struktural melalui *tree diffing* secara presisi agar UI dapat melakukan animasi baris secara efisien tanpa *full reload*.
 4. Mengelola pengurutan dan penyaringan kitab yang belum terunduh.
 
+!!! note "Pemisahan Peran: Konstruksi Hierarki vs. Pemfilteran"
+    `AnnotationTreeBuilder` hanya bertanggung jawab atas pembentukan struktur hierarki dasar (*tree hierarchy*) dan kalkulasi *tree diffing*. Pemfilteran berbasis teks pencarian, cakupan (*search scope*), serta kombinasi tag aktif didelegasikan ke komponen terpisah `AnnotationTreeFilter` pada lapisan ViewModel.
+
 ---
 
 ## 2. Mode Pengelompokan (AnnotationGroupingMode)
