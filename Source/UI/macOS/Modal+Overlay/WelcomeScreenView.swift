@@ -1,5 +1,40 @@
 import SwiftUI
 
+// MARK: - Welcome Screen Manager
+
+enum WelcomeScreenManager {
+    static let userDefaultsKey = "lastVersionPrompted"
+    static let minimumPromptVersion = "4.0"
+
+    static var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+
+    static var lastVersionPrompted: String {
+        get { UserDefaults.standard.string(forKey: userDefaultsKey) ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: userDefaultsKey) }
+    }
+
+    /// Menentukan apakah welcome screen harus ditampilkan:
+    /// Versi aktif >= 4.0 DAN versi prompt terakhir < 4.0.
+    static var shouldShow: Bool {
+        guard currentVersion.compare(minimumPromptVersion, options: .numeric) != .orderedAscending else {
+            return false
+        }
+        return lastVersionPrompted.compare(minimumPromptVersion, options: .numeric) == .orderedAscending
+    }
+
+    /// Menandai bahwa welcome screen telah ditampilkan pada versi saat ini.
+    static func markAsPrompted() {
+        lastVersionPrompted = currentVersion
+    }
+
+    /// Menandai versi saat ini untuk fresh install agar welcome screen dilewati.
+    static func suppressForFreshInstall() {
+        markAsPrompted()
+    }
+}
+
 // MARK: - Localization Helper
 
 private enum Lang {

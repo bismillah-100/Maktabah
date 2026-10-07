@@ -350,6 +350,7 @@ enum CoreDatabaseBootstrap {
             let modal = CoreDownloadModalCenter(downloader: downloader)
             modal.runBlocking()
             DatabaseManager.shared.setupFolders()
+            WelcomeScreenManager.suppressForFreshInstall()
         }
     }
 }

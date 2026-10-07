@@ -52,13 +52,7 @@ struct iOSMainView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showSettings = false
     @Bindable var donationManager = DonationManager.shared
-
-    @AppStorage("lastVersionPrompted") private var lastVersionPrompted = ""
     @State private var showWelcomeScreen = false
-
-    private var currentVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
 
     var body: some View {
         @Bindable var bManager = navigationManager
@@ -106,7 +100,7 @@ struct iOSMainView: View {
         }
         .sheet(isPresented: $showWelcomeScreen) {
             WelcomeScreenView(onDismiss: {
-                lastVersionPrompted = currentVersion
+                WelcomeScreenManager.markAsPrompted()
                 showWelcomeScreen = false
             })
             .interactiveDismissDisabled()
@@ -119,7 +113,9 @@ struct iOSMainView: View {
             )
         }
         .onAppear {
-            checkWelcomeScreen()
+            if WelcomeScreenManager.shouldShow {
+                showWelcomeScreen = true
+            }
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
@@ -127,14 +123,6 @@ struct iOSMainView: View {
                 DonationManager.shared.recordActivation()
                 DonationManager.shared.checkAndPromptIOSSheet()
             }
-        }
-    }
-
-    private func checkWelcomeScreen() {
-        if currentVersion.compare("4.0", options: .numeric) != .orderedAscending,
-           lastVersionPrompted.compare("4.0", options: .numeric) == .orderedAscending
-        {
-            showWelcomeScreen = true
         }
     }
 
