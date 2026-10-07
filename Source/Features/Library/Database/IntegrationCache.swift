@@ -17,6 +17,7 @@
 //
 
 import Foundation
+import OSLog
 import SQLite3
 import Synchronization
 
@@ -31,13 +32,26 @@ final class IntegrationCache: Sendable {
     }
 
     private let state = Mutex(IntegrationState())
+    private let ioLock = Mutex(())
     private var fm: FileManager { .default }
 
-    private init() {}
+    private init() {
+        cleanLegacyCacheIfNeeded()
+    }
+
+    private func cleanLegacyCacheIfNeeded() {
+        guard let legacy = legacyCacheDir, fm.fileExists(atPath: legacy.path) else { return }
+        try? fm.removeItem(at: legacy)
+    }
 
     // MARK: - Cache directory
 
     private var cacheDir: URL? {
+        guard let base = AppConfig.archiveFilesPath else { return nil }
+        return URL(fileURLWithPath: base).appendingPathComponent("integration_cache_v2")
+    }
+
+    private var legacyCacheDir: URL? {
         guard let base = AppConfig.archiveFilesPath else { return nil }
         return URL(fileURLWithPath: base).appendingPathComponent("integration_cache")
     }
@@ -207,15 +221,25 @@ final class IntegrationCache: Sendable {
         guard AppConfig.isUsingBundleMode else { return }
         guard let dir = cacheDir else { return }
 
-        // Pastikan direktori ada
-        if !fm.fileExists(atPath: dir.path) {
-            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
+        ioLock.withLock { _ in
+            // Pastikan direktori ada
+            if !fm.fileExists(atPath: dir.path) {
+                do {
+                    try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+                } catch {
+                    Logger.library.error("[IntegrationCache] Failed to create directory: \(error.localizedDescription, privacy: .public)")
+                    return
+                }
+            }
 
-        guard let file = cacheFile(for: archiveId) else { return }
-        let payload = CacheFile(bookIds: bookIds)
-        if let data = try? JSONEncoder().encode(payload) {
-            try? data.write(to: file, options: [.atomic])
+            guard let file = cacheFile(for: archiveId) else { return }
+            let payload = CacheFile(bookIds: bookIds)
+            do {
+                let data = try JSONEncoder().encode(payload)
+                try data.write(to: file, options: [.atomic])
+            } catch {
+                Logger.library.error("[IntegrationCache] Failed to write cache for archive \(archiveId): \(error.localizedDescription, privacy: .public)")
+            }
         }
     }
 
@@ -230,18 +254,41 @@ final class IntegrationCache: Sendable {
         defer { sqlite3_close(ftsDb) }
 
         let archiveTables = Set(listTables(db: archiveDb))
+        let unifiedIndexedIds = fetchUnifiedIndexedBookIds(db: ftsDb)
         let ftsTables = Set(listTables(db: ftsDb))
 
         var result: [Int] = []
         for table in archiveTables {
-            // Tabel kitab di archive: "bN", pasangannya di FTS: "bN_fts"
             guard table.hasPrefix("b"),
-                  let id = Int(table.dropFirst()),
-                  ftsTables.contains("\(table)_fts")
+                  let id = Int(table.dropFirst())
             else { continue }
-            result.append(id)
+
+            let inUnified = unifiedIndexedIds?.contains(id) ?? false
+            let inLegacy = ftsTables.contains("\(table)_fts")
+            if inUnified || inLegacy {
+                result.append(id)
+            }
         }
         return result
+    }
+
+    private func fetchUnifiedIndexedBookIds(db: OpaquePointer) -> Set<Int>? {
+        guard ArchiveDatabaseTools.hasUnifiedFTS(db: db, schemaName: "main") else {
+            return nil
+        }
+        var stmt: OpaquePointer?
+        let sql = "SELECT DISTINCT book_id FROM archive_index WHERE book_id IS NOT NULL;"
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            return nil
+        }
+        defer { sqlite3_finalize(stmt) }
+
+        var ids = Set<Int>()
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            let bookId = Int(sqlite3_column_int64(stmt, 0))
+            ids.insert(bookId)
+        }
+        return ids
     }
 
     private func openReadOnly(path: String) -> OpaquePointer? {
