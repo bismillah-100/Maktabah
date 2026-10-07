@@ -488,6 +488,7 @@ class IbarotTextView: NSTextView {
 
     private func categorizeMenuItems(_ filtered: [NSMenuItem]) -> CategorizedMenuItems {
         var result = CategorizedMenuItems()
+        var hasAddedCopyWithReference = false
 
         for item in filtered {
             let title = item.title
@@ -499,8 +500,11 @@ class IbarotTextView: NSTextView {
             {
                 item.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
                 result.standard.append(item)
-                result.standard.append(.separator())
-                result.standard.append(buildCopyWithReferenceItem())
+                if !hasAddedCopyWithReference {
+                    hasAddedCopyWithReference = true
+                    result.standard.append(.separator())
+                    result.standard.append(buildCopyWithReferenceItem())
+                }
             } else if title.localizedStandardContains("Look") ||
                 title.localizedStandardContains("Cari") ||
                 title.localizedStandardContains("بحث")
