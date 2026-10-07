@@ -4016,6 +4016,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.debug;
 				PRODUCT_NAME = "Maktabah Debug";
 				INFOPLIST_KEY_CFBundleDisplayName = "Maktabah (Debug)";
+				APP_URL_SCHEME = "maktabah-debug";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
@@ -4073,6 +4074,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
+				APP_URL_SCHEME = maktabah;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
@@ -4128,6 +4130,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.debug;
 				PRODUCT_NAME = "Maktabah Debug";
 				INFOPLIST_KEY_CFBundleDisplayName = "Maktabah (Debug)";
+				APP_URL_SCHEME = "maktabah-debug";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
@@ -4184,6 +4187,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;
 				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
+				APP_URL_SCHEME = maktabah;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
 				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
@@ -4307,6 +4311,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah.debug;
 				PRODUCT_NAME = Maktabah;
 				INFOPLIST_KEY_CFBundleDisplayName = "Maktabah (Debug)";
+				APP_URL_SCHEME = "maktabah-debug";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -4347,6 +4352,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.maktabah;
 				PRODUCT_NAME = Maktabah;
 				INFOPLIST_KEY_CFBundleDisplayName = Maktabah;
+				APP_URL_SCHEME = maktabah;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

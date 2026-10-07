@@ -27,7 +27,11 @@ enum WidgetDeepLink: Equatable {
     }
 
     static func parse(from url: URL) -> WidgetDeepLink? {
-        guard url.scheme == "maktabah" || url.scheme == "maktabah-debug" else { return nil }
+        #if DEBUG
+        guard url.scheme == "maktabah-debug" else { return nil }
+        #else
+        guard url.scheme == "maktabah" else { return nil }
+        #endif
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
         let host = url.host ?? components.host
 
