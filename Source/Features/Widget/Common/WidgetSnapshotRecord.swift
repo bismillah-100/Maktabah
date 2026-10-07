@@ -121,7 +121,12 @@ public extension WidgetSnapshotRecord {
 
         // Use Application Support directory for isolation
         let appSupportURL = groupURL.appendingPathComponent("Library/Application Support", isDirectory: true)
-        return appSupportURL.appendingPathComponent(fileName)
+        #if DEBUG
+        let targetFileName = "debug_\(fileName)"
+        #else
+        let targetFileName = fileName
+        #endif
+        return appSupportURL.appendingPathComponent(targetFileName)
     }
 
     /// Membaca snapshot lokal dari App Group container
