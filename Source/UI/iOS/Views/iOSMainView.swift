@@ -53,6 +53,13 @@ struct iOSMainView: View {
     @State private var showSettings = false
     @Bindable var donationManager = DonationManager.shared
 
+    @AppStorage("lastVersionPrompted") private var lastVersionPrompted = ""
+    @State private var showWelcomeScreen = false
+
+    private var currentVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+
     var body: some View {
         @Bindable var bManager = navigationManager
 
@@ -97,6 +104,13 @@ struct iOSMainView: View {
                 donationManager.showDonationSheet = false
             })
         }
+        .sheet(isPresented: $showWelcomeScreen) {
+            WelcomeScreenView(onDismiss: {
+                lastVersionPrompted = currentVersion
+                showWelcomeScreen = false
+            })
+            .interactiveDismissDisabled()
+        }
         .alert(item: $navigationManager.alertMessage) { item in
             Alert(
                 title: Text(item.title),
@@ -104,12 +118,23 @@ struct iOSMainView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .onAppear {
+            checkWelcomeScreen()
+        }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
                 CloudKitSyncManager.shared.fetchChanges()
                 DonationManager.shared.recordActivation()
                 DonationManager.shared.checkAndPromptIOSSheet()
             }
+        }
+    }
+
+    private func checkWelcomeScreen() {
+        if currentVersion.compare("4.0", options: .numeric) != .orderedAscending,
+           lastVersionPrompted.compare("4.0", options: .numeric) == .orderedAscending
+        {
+            showWelcomeScreen = true
         }
     }
 

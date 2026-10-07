@@ -994,9 +994,9 @@ final class CloudKitSyncManager: Sendable {
         case .zoneNotFound:
             initializeOnLaunch()
         case .notAuthenticated:
-            Task { @MainActor in
-                ReusableFunc.showAlert(title: "iCloud Error", message: ckError.localizedDescription)
-            }
+            Logger.sync.error(
+                "iCloud Account Not Logged In, Description: \(ckError.localizedDescription)"
+            )
         default:
             break
         }
