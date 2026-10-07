@@ -110,6 +110,20 @@ final class BookDownloadManager: Sendable {
         }
     }
 
+    static func isNetworkFailure(_ error: Error) -> Bool {
+        if let bookError = error as? BookDownloadError, case .networkUnavailable = bookError {
+            return true
+        }
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost, .cannotConnectToHost, .timedOut:
+                return true
+            default: return false
+            }
+        }
+        return false
+    }
+
     private nonisolated func resolveExpectedSize(for bookId: Int, explicit: Int64?) async -> Int64 {
         if let explicit, explicit > 0 {
             return explicit

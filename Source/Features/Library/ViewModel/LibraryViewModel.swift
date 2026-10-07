@@ -248,17 +248,7 @@ final class LibraryViewModel: ViewModelBase {
     }
 
     func isNetworkFailure(_ error: Error) -> Bool {
-        if let bookError = error as? BookDownloadError, case .networkUnavailable = bookError {
-            return true
-        }
-        if let urlError = error as? URLError {
-            switch urlError.code {
-            case .notConnectedToInternet, .networkConnectionLost, .cannotFindHost, .cannotConnectToHost, .timedOut:
-                return true
-            default: return false
-            }
-        }
-        return false
+        BookDownloadManager.isNetworkFailure(error)
     }
 
     // MARK: - Periodic Book Update Check

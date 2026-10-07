@@ -165,6 +165,30 @@ Operasi integrasi dibagi menjadi dua fase independen:
     * Melakukan normalisasi teks (penghapusan harakat/tasykil).
     * Memasukkan token teks ke dalam *virtual table* `search_index` (SQLite FTS5) agar kitab tersebut langsung dapat dicari pada fitur pencarian global.
 
+### C. IntegrationCache (Class) & Status Persistence (v2)
+
+Status apakah sebuah kitab sudah terintegrasi ke dalam arsip disimpan dalam berkas JSON per-arsip di `<archiveBasePath>/integration_cache_v2/<archiveId>.json`. Hal ini membuat pengecekan status menjadi operasi $O(1)$ di memori tanpa perlu membuka koneksi SQLite.
+
+Sebelumnya, terdapat kendala regresi di mana unduhan serentak menimpa status unduhan kitab lain di arsip yang sama:
+
+```mermaid
+flowchart TD
+    A["finalizeIntegration(book)"] --> B["DatabaseManager.invalidateArchiveCache"]
+    B --> C["IntegrationCache.invalidate: hapus JSON + state archive"]
+    A --> D["IntegrationCache.markIntegrated"]
+    D --> E["ensureLoaded: JSON tidak ada -> build()"]
+    E --> F["scanIntegratedBookIds: cari tabel bN_fts"]
+    F --> G["Unified FTS (archive_fts) -> bN_fts tidak ada -> hasil []"]
+    G --> H["JSON = [bookId terakhir saja]"]
+    H --> I["Buku lain di archive yang sama -> 'belum terunduh'"]
+```
+
+**Solusi Arsitektural**:
+1. **Pemisahan Cache**: `DatabaseManager.invalidateArchiveCache` hanya membersihkan ketersediaan berkas arsip dan tidak lagi menghapus status `IntegrationCache`.
+2. **Unified FTS Scanner**: Pemindaian `scanIntegratedBookIds` membaca `archive_index` pada skema Unified FTS (`SELECT DISTINCT book_id FROM archive_index;`) dengan *fallback* ke `bN_fts` untuk basis data lama.
+3. **Atomic Mutex I/O**: Penulisan JSON dilindungi `Mutex` (`ioLock`) untuk mencegah *race condition* saat penulisan konkuren.
+4. **Bounded Bulk Download**: Unduhan massal menggunakan `BoundedBulkDownloader` dengan pembatasan paralelisme ($N=4$) dan ketahanan terhadap galat jaringan tanpa membatalkan (*cancelAll*) *task* yang sedang berjalan (*in-flight*).
+
 ---
 
 ## 4. BookUpdateManager: Staging & Pembaruan Atomik

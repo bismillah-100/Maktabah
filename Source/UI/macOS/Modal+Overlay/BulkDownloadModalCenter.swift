@@ -131,95 +131,52 @@ final class BulkDownloadModalCenter {
         total: Int,
         totalBytes: Int64
     ) async -> [Int: Result<URL, Error>] {
-        var downloadResults: [Int: Result<URL, Error>] = [:]
-        let booksById: [Int: BooksData] = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
-        let tracker = BulkDownloadProgressTracker(totalBooks: total, totalBytes: totalBytes)
-
         if await !NetworkMonitor.shared.isConnected {
             shouldStopDownloads = true
             vc.statusLabel.stringValue = String(localized: .Library.noInternetSkippingDownloads)
+            return [:]
         }
 
-        await withTaskGroup(of: (Int, Result<URL, Error>).self) { group in
-            for book in books {
-                guard !shouldStopDownloads, !Task.isCancelled else { break }
-                addDownloadTask(for: book, to: &group, tracker: tracker, vc: vc)
-                vc.updateStatus(bookId: book.id, status: .downloading)
-            }
-
-            for await (bookId, result) in group {
-                if Task.isCancelled {
-                    group.cancelAll()
-                    break
+        let (downloadResults, stoppedByNetwork) = await BoundedBulkDownloader.run(
+            books: books,
+            onTaskScheduled: { [weak vc] book in
+                Task { @MainActor [weak vc] in
+                    vc?.updateStatus(bookId: book.id, status: .downloading)
                 }
-                downloadResults[bookId] = result
-                let shouldCancel = await handleDownloadResult(
-                    bookId: bookId,
-                    result: result,
-                    expectedSize: booksById[bookId]?.compressedDownloadSize,
-                    tracker: tracker,
-                    vc: vc
-                )
-                if shouldCancel {
-                    shouldStopDownloads = true
-                    group.cancelAll()
+            },
+            onProgressUpdate: { [weak vc] report in
+                Task { @MainActor [weak vc] in
+                    vc?.updateDownloadProgress(
+                        completed: report.completed,
+                        total: report.total,
+                        downloadedBytes: report.downloadedBytes,
+                        totalBytes: report.totalBytes
+                    )
                 }
-            }
-        }
-        return downloadResults
-    }
-
-    private func addDownloadTask(
-        for book: BooksData,
-        to group: inout TaskGroup<(Int, Result<URL, Error>)>,
-        tracker: BulkDownloadProgressTracker,
-        vc: BulkDownloadVC
-    ) {
-        group.addTask { [weak vc] in
-            await BookDownloadManager.shared.downloadBookResult(
-                bookId: book.id,
-                expectedSize: book.compressedDownloadSize,
-                onProgress: { [weak vc] written, bookTotal in
-                    Task { @MainActor [weak vc] in
-                        let progress = await tracker.updateProgress(
-                            bookId: book.id,
-                            bytesWritten: written,
-                            bookTotal: bookTotal
-                        )
-                        vc?.updateDownloadProgress(
-                            completed: progress.completed,
-                            total: progress.total,
-                            downloadedBytes: progress.downloadedBytes,
-                            totalBytes: progress.totalBytes
-                        )
+            },
+            onBookCompleted: { [weak vc] book, result, report in
+                Task { @MainActor [weak vc] in
+                    vc?.updateDownloadProgress(
+                        completed: report.completed,
+                        total: report.total,
+                        downloadedBytes: report.downloadedBytes,
+                        totalBytes: report.totalBytes
+                    )
+                    switch result {
+                    case .success:
+                        vc?.updateStatus(bookId: book.id, status: .downloaded)
+                    case let .failure(error):
+                        vc?.updateStatus(bookId: book.id, status: .failed(error.localizedDescription))
                     }
                 }
-            )
-        }
-    }
-
-    private func handleDownloadResult(
-        bookId: Int,
-        result: Result<URL, Error>,
-        expectedSize: Int64?,
-        tracker: BulkDownloadProgressTracker,
-        vc: BulkDownloadVC
-    ) async -> Bool {
-        let progress = await tracker.markBookCompleted(bookId: bookId, expectedBookSize: expectedSize)
-        vc.updateDownloadProgress(
-            completed: progress.completed,
-            total: progress.total,
-            downloadedBytes: progress.downloadedBytes,
-            totalBytes: progress.totalBytes
+            }
         )
-        switch result {
-        case .success:
-            vc.updateStatus(bookId: bookId, status: .downloaded)
-            return false
-        case let .failure(error):
-            vc.updateStatus(bookId: bookId, status: .failed(error.localizedDescription))
-            return error is CancellationError || vc.dataVM?.viewModel.isNetworkFailure(error) == true
+
+        if stoppedByNetwork {
+            shouldStopDownloads = true
         }
+
+        return downloadResults
     }
 
     private func executeSerialIntegrations(successfulDownloads: [BooksData], vc: BulkDownloadVC, integrateTotal: Int) async -> Int {

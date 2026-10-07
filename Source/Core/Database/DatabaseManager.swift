@@ -415,7 +415,6 @@ final class DatabaseManager: Sendable {
         state.withLock {
             _ = $0.archiveAvailabilityCache.removeValue(forKey: archiveId)
         }
-        IntegrationCache.shared.invalidate(archiveId: archiveId)
     }
 
     static func validateDatabaseFolder(_ url: URL) -> Error? {
