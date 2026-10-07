@@ -9,6 +9,7 @@ import SwiftUI
 
 struct iOSBootstrapView: View {
     @State private var bootstrapManager = iOSBootstrapManager()
+    @State private var showWelcomeScreen = false
 
     var body: some View {
         Group {
@@ -45,7 +46,17 @@ struct iOSBootstrapView: View {
         .onChange(of: bootstrapManager.isReady) { oldValue, newValue in
             if newValue {
                 CloudKitSyncManager.shared.fetchChanges()
+                if WelcomeScreenManager.shouldShow {
+                    showWelcomeScreen = true
+                }
             }
+        }
+        .sheet(isPresented: $showWelcomeScreen) {
+            WelcomeScreenView(onDismiss: {
+                WelcomeScreenManager.markAsPrompted()
+                showWelcomeScreen = false
+            })
+            .interactiveDismissDisabled()
         }
         .overlay {
             if bootstrapManager.showCoreUpdateAlert {

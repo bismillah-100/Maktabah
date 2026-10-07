@@ -52,7 +52,6 @@ struct iOSMainView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showSettings = false
     @Bindable var donationManager = DonationManager.shared
-    @State private var showWelcomeScreen = false
 
     var body: some View {
         @Bindable var bManager = navigationManager
@@ -98,24 +97,12 @@ struct iOSMainView: View {
                 donationManager.showDonationSheet = false
             })
         }
-        .sheet(isPresented: $showWelcomeScreen) {
-            WelcomeScreenView(onDismiss: {
-                WelcomeScreenManager.markAsPrompted()
-                showWelcomeScreen = false
-            })
-            .interactiveDismissDisabled()
-        }
         .alert(item: $navigationManager.alertMessage) { item in
             Alert(
                 title: Text(item.title),
                 message: Text(item.message),
                 dismissButton: .default(Text("OK"))
             )
-        }
-        .onAppear {
-            if WelcomeScreenManager.shouldShow {
-                showWelcomeScreen = true
-            }
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .active {
