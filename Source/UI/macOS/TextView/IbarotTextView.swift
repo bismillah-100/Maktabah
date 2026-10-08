@@ -285,22 +285,94 @@ class IbarotTextView: NSTextView {
         }
     }
 
+    private func removeAnnotationsLinks(
+        clickedCharIndex: Int?,
+        removedLinks: inout [(range: NSRange, value: Any)]
+    ) {
+        guard state.clickableAnnotation,
+              !annotations.isEmpty,
+              let ts = textStorage
+        else { return }
+
+        // 1. Single clicked link
+        if let charIndex = clickedCharIndex, charIndex < ts.length {
+            var effRange = NSRange()
+            if let val = ts.attribute(
+                .link,
+                at: charIndex,
+                longestEffectiveRange: &effRange,
+                in: NSRange(location: 0, length: ts.length)
+            ) {
+                removedLinks.append((effRange, val))
+            }
+        }
+
+        // 2. Selected range links (if active)
+        let sel = selectedRange()
+        if sel.length > 0 {
+            ts.enumerateAttribute(.link, in: sel, options: []) { value, range, _ in
+                if let value, !removedLinks.contains(
+                    where: { $0.range.location == range.location && $0.range.length == range.length }
+                ) {
+                    removedLinks.append((range, value))
+                }
+            }
+        }
+
+        if !removedLinks.isEmpty {
+            ts.beginEditing()
+            for linkInfo in removedLinks {
+                ts.removeAttribute(.link, range: linkInfo.range)
+            }
+            ts.endEditing()
+        }
+    }
+
+    private func insertRemovedLinks(removedLinks: [(range: NSRange, value: Any)]) {
+        guard state.clickableAnnotation, !annotations.isEmpty,
+              let ts = textStorage, !removedLinks.isEmpty
+        else { return }
+
+        DispatchQueue.main.async { [weak ts] in
+            guard let ts else { return }
+            ts.beginEditing()
+            for linkInfo in removedLinks {
+                guard linkInfo.range.location + linkInfo.range.length <= ts.length else { continue }
+                ts.addAttribute(.link, value: linkInfo.value, range: linkInfo.range)
+            }
+            ts.endEditing()
+        }
+    }
+
     override func menu(for event: NSEvent) -> NSMenu? {
-        guard let menu = super.menu(for: event) else { return nil }
-        guard contentKey() != nil, selectedRange().length > 0 else {
+        var removedLinks: [(range: NSRange, value: Any)] = []
+
+        let pointInView = convert(event.locationInWindow, from: nil)
+        let clickedCharIndex = characterIndexForPoint(pointInView)
+
+        removeAnnotationsLinks(clickedCharIndex: clickedCharIndex, removedLinks: &removedLinks)
+
+        defer {
+            insertRemovedLinks(removedLinks: removedLinks)
+        }
+
+        guard let menu = super.menu(for: event),
+              contentKey() != nil, selectedRange().length > 0
+        else {
             return menu
         }
 
         let filtered = filterMenuItems(menu)
         let groupA = buildHighlightGroup()
-        let editItems = buildNoteItem(event, filtered: filtered)
+        let editItems = buildNoteItem(clickedCharIndex: clickedCharIndex)
+        let categorized = categorizeMenuItems(filtered)
 
         menu.removeAllItems()
         addItemsToMenu(
             menu,
             groupA: groupA,
             editItems: editItems,
-            filtered: filtered
+            categorized: categorized
         )
 
         return menu
@@ -346,40 +418,7 @@ class IbarotTextView: NSTextView {
                 return nil
             }
 
-            guard var copy = item.copy() as? NSMenuItem else { return nil }
-            updateItemImage(&copy)
-            return copy
-        }
-    }
-
-    private func updateItemImage(_ item: inout NSMenuItem) {
-        if item.action == #selector(NSText.copy(_:)) {
-            item.image = NSImage(
-                systemSymbolName: "doc.on.doc",
-                accessibilityDescription: nil
-            )
-            return
-        }
-
-        let dict = "character.book.closed"
-        let char = "character.bubble"
-
-        let iconMap: [(String, String)] = [
-            ("Look", dict),
-            ("Cari", dict),
-            ("بحث", dict),
-            ("Translate", char),
-            ("Terjemah", char),
-            ("ترجمة", char),
-        ]
-
-        // Public selector
-        for (key, symbol) in iconMap where item.title.localizedStandardContains(key) {
-            item.image = NSImage(
-                systemSymbolName: symbol,
-                accessibilityDescription: nil
-            )
-            break
+            return item.copy() as? NSMenuItem
         }
     }
 
@@ -397,34 +436,31 @@ class IbarotTextView: NSTextView {
             accessibilityDescription: nil
         )
 
-    private func buildNoteItem(_ event: NSEvent, filtered: [NSMenuItem]) -> [NSMenuItem] {
+    private func buildNoteItem(clickedCharIndex: Int?) -> [NSMenuItem] {
         guard bkId != nil, contentId != nil else { return [] }
         var extraItems: [NSMenuItem] = []
 
         let displayedSelection = selectedRange()
-        if let found = findAnnotationAtLocationOrSelection(event: event, displayedSelection: displayedSelection) {
+        if let found = findAnnotationAtLocationOrSelection(clickedCharIndex: clickedCharIndex, displayedSelection: displayedSelection) {
             if let noteId = found.existing.id {
                 extraItems.append(buildEditNoteItem(noteId: noteId, charIndex: found.charIndex, annotation: found.existing))
             }
             extraItems.append(buildDeleteItem(found.existing))
         } else {
-            let noteItem = NSMenuItem(title: "Add Note".localized, action: #selector(annotateSelection(_:)), keyEquivalent: "")
+            let noteItem = NSMenuItem(title: String(localized: .Annotation.addNote), action: #selector(annotateSelection(_:)), keyEquivalent: "")
             noteItem.image = quoteImage
             noteItem.target = self
             extraItems.append(noteItem)
         }
 
-        extraItems.append(.separator())
-        extraItems.append(contentsOf: filterStandardMenuItems(filtered))
         return extraItems
     }
 
     private func findAnnotationAtLocationOrSelection(
-        event: NSEvent,
+        clickedCharIndex: Int?,
         displayedSelection: NSRange
     ) -> (existing: Annotation, charIndex: Int)? {
-        let pointInView = convert(event.locationInWindow, from: nil)
-        if let charIndex = characterIndexForPoint(pointInView),
+        if let charIndex = clickedCharIndex,
            let noteId = textStorage?.attribute(NSAttributedString.Key("annotationID"), at: charIndex, effectiveRange: nil) as? Int64,
            let existing = annotations.first(where: { $0.id == noteId })
         {
@@ -444,18 +480,55 @@ class IbarotTextView: NSTextView {
         return nil
     }
 
-    private func filterStandardMenuItems(_ filtered: [NSMenuItem]) -> [NSMenuItem] {
-        var items: [NSMenuItem] = []
-        let allowedKeywords = ["Copy", "Salin", "نسخ", "Look", "Cari", "بحث", "Translate", "Terjemah", "ترجمة"]
+    private struct CategorizedMenuItems {
+        var standard: [NSMenuItem] = []
+        var share: NSMenuItem?
+        var remaining: [NSMenuItem] = []
+    }
 
-        for item in filtered where allowedKeywords.contains(where: { item.title.localizedStandardContains($0) }) {
-            items.append(item)
-            if item.action == #selector(NSText.copy(_:)) {
-                items.append(.separator())
-                items.append(buildCopyWithReferenceItem())
+    private func categorizeMenuItems(_ filtered: [NSMenuItem]) -> CategorizedMenuItems {
+        var result = CategorizedMenuItems()
+        var hasAddedCopyWithReference = false
+
+        for item in filtered {
+            let title = item.title
+
+            if item.action == #selector(NSText.copy(_:)) ||
+                title.localizedStandardContains("Copy") ||
+                title.localizedStandardContains("Salin") ||
+                title.localizedStandardContains("نسخ")
+            {
+                item.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
+                result.standard.append(item)
+                if !hasAddedCopyWithReference {
+                    hasAddedCopyWithReference = true
+                    result.standard.append(.separator())
+                    result.standard.append(buildCopyWithReferenceItem())
+                }
+            } else if title.localizedStandardContains("Look") ||
+                title.localizedStandardContains("Cari") ||
+                title.localizedStandardContains("بحث")
+            {
+                item.image = NSImage(systemSymbolName: "character.book.closed", accessibilityDescription: nil)
+                result.standard.append(item)
+            } else if title.localizedStandardContains("Translate") ||
+                title.localizedStandardContains("Terjemah") ||
+                title.localizedStandardContains("ترجمة")
+            {
+                item.image = NSImage(systemSymbolName: "character.bubble", accessibilityDescription: nil)
+                result.standard.append(item)
+            } else if title.localizedStandardContains("Share") ||
+                title.localizedStandardContains("Bagikan") ||
+                title.localizedStandardContains("مشاركة")
+            {
+                item.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+                result.share = item
+            } else {
+                result.remaining.append(item)
             }
         }
-        return items
+
+        return result
     }
 
     private func buildCopyWithReferenceItem() -> NSMenuItem {
@@ -484,7 +557,7 @@ class IbarotTextView: NSTextView {
         annotation: Annotation
     ) -> NSMenuItem {
         let item = NSMenuItem(
-            title: "Edit Note".localized,
+            title: String(localized: .Annotation.editNote),
             action: #selector(showNoteFromMenu(_:)),
             keyEquivalent: ""
         )
@@ -500,7 +573,7 @@ class IbarotTextView: NSTextView {
     private func buildDeleteItem(_ annotation: Annotation) -> NSMenuItem {
         let title =
             annotation.note == nil
-                ? "Delete Highlight".localized : "Delete Highlight & Note".localized
+                ? String(localized: .Annotation.deleteHighlight) : String(localized: .Annotation.deleteHighlightNote)
 
         let item = NSMenuItem(
             title: title,
@@ -521,7 +594,7 @@ class IbarotTextView: NSTextView {
         _ menu: NSMenu,
         groupA: [NSMenuItem],
         editItems: [NSMenuItem],
-        filtered: [NSMenuItem]
+        categorized: CategorizedMenuItems
     ) {
         // Add highlight group
         groupA.forEach { menu.addItem($0) }
@@ -531,33 +604,22 @@ class IbarotTextView: NSTextView {
             editItems.forEach { menu.addItem($0) }
         }
 
-        menu.addItem(.separator())
+        // Add standard items (Copy, Copy with reference, Look Up, Translate)
+        if !categorized.standard.isEmpty {
+            menu.addItem(.separator())
+            categorized.standard.forEach { menu.addItem($0) }
+        }
 
         // Find and add share item
-        if let shareItem = filtered.first(where: {
-            $0.title.localizedStandardContains("Share") ||
-                $0.title.localizedStandardContains("Bagikan") ||
-                $0.title.localizedStandardContains("مشاركة")
-        }) {
-            shareItem.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+        if let shareItem = categorized.share {
             menu.addItem(.separator())
             menu.addItem(shareItem)
-            menu.addItem(.separator())
         }
 
         // Add remaining items
-        let remaining = filtered.filter { item in
-            ![
-                "Share", "Bagikan", "مشاركة",
-                "Copy", "Salin", "نسخ",
-                "Look", "Cari", "بحث",
-                "Translate", "Terjemah", "ترجمة",
-            ].contains(where: { item.title.localizedStandardContains($0) })
-        }
-
-        if !remaining.isEmpty {
+        if !categorized.remaining.isEmpty {
             menu.addItem(.separator())
-            remaining.forEach { menu.addItem($0) }
+            categorized.remaining.forEach { menu.addItem($0) }
         }
     }
 

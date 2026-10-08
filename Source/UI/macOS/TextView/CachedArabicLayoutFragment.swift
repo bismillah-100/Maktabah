@@ -17,9 +17,38 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
     /// Cache level grafis
     private var cachedLayer: CGLayer?
 
+    private var hasActiveSelection: Bool {
+        guard let tlm = textLayoutManager else { return false }
+        let fragmentRange = rangeInElement
+        for selection in tlm.textSelections {
+            for selRange in selection.textRanges where !selRange.isEmpty {
+                if fragmentRange.intersects(selRange) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     override func draw(at point: CGPoint, in context: CGContext) {
         let bounds = renderingSurfaceBounds
         guard bounds.width > 0, bounds.height > 0 else {
+            super.draw(at: point, in: context)
+            return
+        }
+
+        if hasActiveSelection {
+            cachedLayer = nil
+            if TextViewState.shared.enhancedUnderline, TextViewState.shared.isThinUnderlineFont,
+               let element = textElement
+            {
+                EnhancedUnderlineRenderer.drawUnderlines(
+                    for: element,
+                    lineFragments: textLineFragments,
+                    drawPoint: point,
+                    in: context
+                )
+            }
             super.draw(at: point, in: context)
             return
         }
