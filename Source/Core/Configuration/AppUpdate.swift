@@ -10,9 +10,11 @@ import AppKit
 import Sparkle
 
 extension AppDelegate {
-
     @MainActor
     func checkAppUpdates(_ atLaunch: Bool = true) async {
+        #if DEBUG
+        return
+        #else
         let isConnected = await NetworkMonitor.shared.checkConnectivity()
         guard isConnected else { return }
 
@@ -23,6 +25,7 @@ extension AppDelegate {
         } else {
             updater.checkForUpdates()
         }
+        #endif
     }
 }
 

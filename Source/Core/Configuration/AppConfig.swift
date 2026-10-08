@@ -338,7 +338,15 @@ enum AppConfig {
                 create: true
             )
 
-            let maktabahDir = appSupport.appendingPathComponent("Maktabah", isDirectory: true)
+            let folderName: String = {
+                #if DEBUG
+                return "Maktabah-Debug"
+                #else
+                return "Maktabah"
+                #endif
+            }()
+
+            let maktabahDir = appSupport.appendingPathComponent(folderName, isDirectory: true)
 
             // Buat folder Maktabah kalau belum ada
             if !fm.fileExists(atPath: maktabahDir.path) {
