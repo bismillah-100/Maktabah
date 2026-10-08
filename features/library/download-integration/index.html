@@ -1940,6 +1940,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#c-integrationcache-class-status-persistence-v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. IntegrationCache (Class) &amp; Status Persistence (v2)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3756,6 +3767,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#c-integrationcache-class-status-persistence-v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. IntegrationCache (Class) &amp; Status Persistence (v2)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3977,6 +3999,23 @@
 </ul>
 </li>
 </ol>
+<h3 id="c-integrationcache-class-status-persistence-v2">C. IntegrationCache (Class) &amp; Status Persistence (v2)</h3>
+<p>Status apakah sebuah kitab sudah terintegrasi ke dalam arsip disimpan dalam berkas JSON per-arsip di <code>&lt;archiveBasePath&gt;/integration_cache_v2/&lt;archiveId&gt;.json</code>. Hal ini membuat pengecekan status menjadi operasi $O(1)$ di memori tanpa perlu membuka koneksi SQLite.</p>
+<p>Sebelumnya, terdapat kendala regresi di mana unduhan serentak menimpa status unduhan kitab lain di arsip yang sama:</p>
+<pre class="mermaid"><code>flowchart TD
+    A["finalizeIntegration(book)"] --&gt; B["DatabaseManager.invalidateArchiveCache"]
+    B --&gt; C["IntegrationCache.invalidate: hapus JSON + state archive"]
+    A --&gt; D["IntegrationCache.markIntegrated"]
+    D --&gt; E["ensureLoaded: JSON tidak ada -&gt; build()"]
+    E --&gt; F["scanIntegratedBookIds: cari tabel bN_fts"]
+    F --&gt; G["Unified FTS (archive_fts) -&gt; bN_fts tidak ada -&gt; hasil []"]
+    G --&gt; H["JSON = [bookId terakhir saja]"]
+    H --&gt; I["Buku lain di archive yang sama -&gt; 'belum terunduh'"]</code></pre>
+<p><strong>Solusi Arsitektural</strong>:
+1. <strong>Pemisahan Cache</strong>: <code>DatabaseManager.invalidateArchiveCache</code> hanya membersihkan ketersediaan berkas arsip dan tidak lagi menghapus status <code>IntegrationCache</code>.
+2. <strong>Unified FTS Scanner</strong>: Pemindaian <code>scanIntegratedBookIds</code> membaca <code>archive_index</code> pada skema Unified FTS (<code>SELECT DISTINCT book_id FROM archive_index;</code>) dengan <em>fallback</em> ke <code>bN_fts</code> untuk basis data lama.
+3. <strong>Atomic Mutex I/O</strong>: Penulisan JSON dilindungi <code>Mutex</code> (<code>ioLock</code>) untuk mencegah <em>race condition</em> saat penulisan konkuren.
+4. <strong>Bounded Bulk Download</strong>: Unduhan massal menggunakan <code>BoundedBulkDownloader</code> dengan pembatasan paralelisme ($N=4$) dan ketahanan terhadap galat jaringan tanpa membatalkan (<em>cancelAll</em>) <em>task</em> yang sedang berjalan (<em>in-flight</em>).</p>
 <hr />
 <h2 id="4-bookupdatemanager-staging-pembaruan-atomik">4. BookUpdateManager: Staging &amp; Pembaruan Atomik</h2>
 <p>Ketika naskah kitab direvisi, dikoreksi salah ketiknya, atau bertambah jilidnya di server, <code>BookUpdateManager</code> menangani proses pembaruan secara mulus (<em>seamless</em>).</p>
