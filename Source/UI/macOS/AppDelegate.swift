@@ -171,41 +171,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func showWelcomeScreenIfNeeded() {
-        let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let lastVersion = UserDefaults.standard.string(forKey: "lastVersionPrompted") ?? ""
+        guard WelcomeScreenManager.shouldShow else { return }
 
-        if lastVersion != currentVersion {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 520, height: 480),
-                styleMask: [.fullSizeContentView, .titled],
-                backing: .buffered,
-                defer: false
-            )
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 480),
+            styleMask: [.fullSizeContentView, .titled],
+            backing: .buffered,
+            defer: false
+        )
 
-            let contentView = WelcomeScreenView { [weak self, weak window] in
-                guard let window else { return }
-                UserDefaults.standard.set(currentVersion, forKey: "lastVersionPrompted")
+        let contentView = WelcomeScreenView { [weak self, weak window] in
+            guard let window else { return }
+            WelcomeScreenManager.markAsPrompted()
 
-                if let mainWin = self?.mainWindowController?.window, mainWin.sheets.contains(window) {
-                    mainWin.endSheet(window)
-                } else {
-                    window.close()
-                }
-            }
-
-            let hostingView = NSHostingView(rootView: contentView)
-            window.contentView = hostingView
-            window.title = "What's New"
-            window.titleVisibility = .hidden
-            window.titlebarAppearsTransparent = true
-            window.isReleasedWhenClosed = false
-
-            if let mainWin = mainWindowController?.window {
-                mainWin.beginSheet(window)
+            if let mainWin = self?.mainWindowController?.window, mainWin.sheets.contains(window) {
+                mainWin.endSheet(window)
             } else {
-                window.center()
-                window.makeKeyAndOrderFront(nil)
+                window.close()
             }
+        }
+
+        let hostingView = NSHostingView(rootView: contentView)
+        window.contentView = hostingView
+        window.title = "What's New"
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isReleasedWhenClosed = false
+
+        if let mainWin = mainWindowController?.window {
+            mainWin.beginSheet(window)
+        } else {
+            window.center()
+            window.makeKeyAndOrderFront(nil)
         }
     }
 
@@ -378,7 +375,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func showOfflineImportWindow() {
         let contentView = OfflineImportFormView(onImport: { [weak self]
             (url: URL, metadata: BookMetadata, authorRow: [String: any Sendable]?) async in
-            guard let self else { return }
+                guard let self else { return }
                 await performCustomImport(
                     url: url,
                     metadata: metadata,
@@ -635,7 +632,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let w = wc.window as? MainWindow else { return }
 
-        if mainWindowController == nil && restoreState {
+        if mainWindowController == nil, restoreState {
             restorePersistedState(w)
         } else {
             w.setupContentView(mode: mode, restoreState: false)

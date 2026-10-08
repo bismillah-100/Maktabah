@@ -24,6 +24,7 @@ final class iOSBootstrapManager {
 
     private let downloader = CoreDatabaseDownloader()
     private var didPrepare = false
+    private var isInitialDownload = false
 
     func prepareIfNeeded() {
         guard !didPrepare else { return }
@@ -48,6 +49,8 @@ final class iOSBootstrapManager {
             finishSetup()
             return
         }
+
+        isInitialDownload = true
 
         Task { [weak self] in
             guard let self else { return }
@@ -81,6 +84,10 @@ final class iOSBootstrapManager {
     }
 
     private func finishSetup() {
+        if isInitialDownload {
+            WelcomeScreenManager.suppressForFreshInstall()
+        }
+
         DatabaseManager.shared.reloadConnectionAndLibrary()
         isChecking = false
         isReady = true
@@ -161,6 +168,7 @@ final class iOSBootstrapManager {
     func reloadLibrary(isCancellable: Bool = false) {
         self.isCancellable = isCancellable
         didPrepare = false
+        isInitialDownload = false
         isReady = false
         prepareIfNeeded()
     }
