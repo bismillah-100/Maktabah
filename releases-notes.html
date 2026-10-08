@@ -36,6 +36,33 @@
 </head>
 <body>
 
+<h2>Version 4.0.1</h2>
+<p class="version">October 08, 2026</p>
+<h3>Changes</h3>
+<ul>
+  <li>Isolated debug builds, local storage paths, and URL schemes from production releases.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Restored macOS system context menu items (Look Up, Translate, Share) on annotation right-click.</li>
+  <li>Fixed right-click character index resolution on Arabic text in the reader.</li>
+  <li>Fixed annotation search filtering inconsistencies across book, tag, context, and note scopes.</li>
+  <li>Decoupled synchronous database queries from the main thread during annotation hierarchy filtering.</li>
+  <li>Auto-dismiss annotation search scope panel when the search field loses focus.</li>
+  <li>Resolved state loss and race conditions during concurrent book download integration.</li>
+  <li>Fixed memory leaks caused by retain cycles in book download closures and network observers.</li>
+  <li>Unified welcome screen presentation to skip prompts after fresh installs.</li>
+  <li>Replaced disruptive unauthenticated iCloud alerts with background logging.</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Bounded concurrent book downloads to improve memory efficiency and stability.</li>
+  <li>Faster annotation tree filtering and smoother search response.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 4.0</h2>
 <p class="version">October 03, 2026</p>
 <h3>New</h3>
