@@ -949,6 +949,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Annotation (Struct)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helper-computed-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper &amp; Computed Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1029,6 +1046,17 @@
     <span class="md-ellipsis">
       
         AnnotationSortOption (Enum)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#annotationsearchscope-enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AnnotationSearchScope (Enum)
       
     </span>
   </a>
@@ -3631,6 +3659,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Annotation (Struct)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helper-computed-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper &amp; Computed Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3717,6 +3762,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#annotationsearchscope-enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AnnotationSearchScope (Enum)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3789,6 +3845,15 @@
 <li><em>Protocol</em> <code>Sendable</code>: <code>Annotation</code> dijamin aman untuk diteruskan antar-<em>thread</em> (Task/Actor) secara konkuren tanpa risiko <em>data race</em>.</li>
 <li>Teks Konteks (<code>context</code>): Menyimpan salinan denormalisasi potongan teks agar saat pencarian/filter tidak perlu membaca basis data buku utama secara berulang.</li>
 </ul>
+<h3 id="helper-computed-properties">Helper &amp; Computed Properties</h3>
+<p>Untuk menjaga modularitas dan prinsip DRY, <code>Annotation</code> menyediakan <em>computed property</em> pembantu:</p>
+<ul>
+<li><code>displayTitle: String</code>: Mengembalikan teks catatan (<code>note</code>) jika tidak kosong, atau <em>fallback</em> ke teks kutipan (<code>context</code>).</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Metadata Buku Diinjeksi ke Node</p>
+<p>Properti metadata buku (<code>bookTitle</code>, <code>normalizedBookTitle</code>) tidak lagi berada pada model <code>Annotation</code> untuk mencegah <em>query</em> SQLite yang memblokir <em>main thread</em>. Metadata tersebut di-<em>resolve</em> di <em>background queue</em> (misalnya via <code>AnnotationTreeBuilder</code>) dan diinjeksikan langsung ke <code>AnnotationNode</code>.</p>
+</div>
 <h2 id="contentkey-struct">ContentKey (Struct)</h2>
 <p>Kunci untuk <em>in-memory cache map</em> (<code>AnnotationStore</code>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ContentKey</span><span class="p">:</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -3804,9 +3869,11 @@
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">children</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span><span class="p">?</span><span class="w"> </span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">kind</span><span class="p">:</span><span class="w"> </span><span class="n">AnnotationNodeKind</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">bookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">normalizedBookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Catatan Thread-Safety</p>
@@ -3862,15 +3929,43 @@
 </span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">and</span>
 </span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="p">}</span>
 </span></code></pre></div>
+<h3 id="annotationsearchscope-enum">AnnotationSearchScope (Enum)</h3>
+<p>Mengatur cakupan pencarian teks pada hierarki anotasi:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationSearchScope</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">CaseIterable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">all</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">book</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">context</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">note</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">tag</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">title</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="kc">self</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">.</span><span class="n">all</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="n">localized</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">Annotation</span><span class="p">.</span><span class="n">searchScopeAll</span><span class="p">)</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">.</span><span class="n">book</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="n">localized</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">Annotation</span><span class="p">.</span><span class="n">searchScopeBook</span><span class="p">)</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">.</span><span class="n">context</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="n">localized</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">Annotation</span><span class="p">.</span><span class="n">searchScopeContext</span><span class="p">)</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">.</span><span class="n">note</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="n">localized</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">Annotation</span><span class="p">.</span><span class="n">searchScopeNote</span><span class="p">)</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="p">.</span><span class="n">tag</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="n">localized</span><span class="p">:</span><span class="w"> </span><span class="p">.</span><span class="n">Annotation</span><span class="p">.</span><span class="n">searchScopeTag</span><span class="p">)</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><code>.all</code>: Mencari kecocokan pada judul buku, teks konteks, catatan, atau tag.</li>
+<li><code>.book</code>: Membatasi pencarian hanya pada judul buku.</li>
+<li><code>.context</code>: Membatasi pencarian hanya pada teks konteks kutipan.</li>
+<li><code>.note</code>: Membatasi pencarian hanya pada teks catatan pengguna.</li>
+<li><code>.tag</code>: Membatasi pencarian hanya pada label/tag yang terpasang pada anotasi.</li>
+<li><strong>Lokalisasi</strong>: String antarmuka dimuat secara dinamis dari String Catalog <code>Annotation.xcstrings</code> (mendukung lokalisasi EN, AR, ID).</li>
+</ul>
 <h2 id="annotationevent-enum">AnnotationEvent (Enum)</h2>
 <p>Menggunakan tipe data aljabar (<em>algebraic data types</em> / enum dengan <em>associated values</em>) untuk dipancarkan melalui <code>PassthroughSubject</code> di Combine.</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationEvent</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">added</span><span class="p">(</span><span class="n">Annotation</span><span class="p">)</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">updated</span><span class="p">(</span><span class="n">Annotation</span><span class="p">)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">deleted</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">,</span><span class="w"> </span><span class="n">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span><span class="p">?)</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">batchUpdated</span><span class="p">([</span><span class="n">Annotation</span><span class="p">])</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">treeInvalidated</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationEvent</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">added</span><span class="p">(</span><span class="n">Annotation</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">updated</span><span class="p">(</span><span class="n">Annotation</span><span class="p">)</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">deleted</span><span class="p">(</span><span class="n">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">,</span><span class="w"> </span><span class="n">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span><span class="p">?)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">batchUpdated</span><span class="p">([</span><span class="n">Annotation</span><span class="p">])</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">treeInvalidated</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Setiap perubahan di <code>AnnotationStore</code> menghasilkan <em>event</em> yang ditangkap oleh pengamat (<em>observer</em>) seperti <code>AnnotationTreeBuilder</code> atau lapisan antarmuka pengguna.</p>
 

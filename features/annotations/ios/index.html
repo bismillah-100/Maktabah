@@ -1131,6 +1131,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pencarian-scope-pembaruan-snapshot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pencarian Scope &amp; Pembaruan Snapshot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#mode-pengelompokan-filter-tag-chip" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3706,6 +3717,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pencarian-scope-pembaruan-snapshot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pencarian Scope &amp; Pembaruan Snapshot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#mode-pengelompokan-filter-tag-chip" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3883,6 +3905,7 @@
 <ol>
 <li><strong><code>AnnotationListView</code> (SwiftUI Root Container)</strong>:<ul>
 <li>Mengatur <em>toolbar</em> atas: Menu pengelompokan (<em>Group By: Book, Tag, Timeline</em>) dan pengurutan (<em>Sort By &amp; Order</em>).</li>
+<li>Mengintegrasikan pencarian bawaan via modifier <code>.searchable</code> dengan <em>placement</em> <code>.navigationBarDrawer(displayMode: .always)</code> serta pemilih cakupan <code>.searchScopes($viewModel.searchScope)</code> untuk seluruh kasus <code>AnnotationSearchScope</code> (<code>all</code>, <code>book</code>, <code>context</code>, <code>note</code>, <code>tag</code>).</li>
 <li>Menangani ekspor dan impor JSON melalui modifier <code>.fileExporter</code> dan <code>.fileImporter</code> (<code>AnnotationJsonDocument</code>).</li>
 <li>Menampilkan dialog konfirmasi penggantian saat impor (<em>overwrite duplicate confirmation dialog</em>).</li>
 <li>Menangkap notifikasi <code>.annotationMissingBook</code> untuk memunculkan modal peringatan jika buku belum terunduh di perangkat.</li>
@@ -3915,6 +3938,13 @@
 </ul>
 </li>
 </ul>
+<h2 id="pencarian-scope-pembaruan-snapshot">Pencarian Scope &amp; Pembaruan Snapshot</h2>
+<p>Pada iOS, pencarian anotasi terhubung secara reaktif antara SwiftUI dan UIKit:</p>
+<ol>
+<li><strong>Integrasi SwiftUI Searchable</strong>: <code>AnnotationListView</code> memasang modifier <code>.searchable</code> dan <code>.searchScopes</code> yang terikat (<em>two-way binding</em>) ke <code>viewModel.searchText</code> dan <code>viewModel.searchScope</code>.</li>
+<li><strong>Auto-Expand Hasil Pencarian</strong>: Ketika teks pencarian aktif, <code>iOSAnnotationViewController</code> secara otomatis membuka seluruh grup (<em>section snapshot</em>) dengan memanggil <code>snapshot.expand(snapshot.rootItems)</code> sebelum menerapkan data ke <code>dataSource</code>. Hal ini menjamin seluruh item anotasi yang cocok langsung terlihat tanpa mengharuskan pengguna membuka grup satu per satu.</li>
+<li><strong>Penyaringan Reaktif</strong>: Setiap pergantian cakupan (<em>scope</em>) atau kata kunci memicu <code>AnnotationTreeFilter</code> melalui <code>viewModel.applyFilter()</code>, yang kemudian memancarkan pembaruan pohon hierarki melalui <em>closure</em> <code>onTreeUpdate</code>.</li>
+</ol>
 <h2 id="mode-pengelompokan-filter-tag-chip">Mode Pengelompokan &amp; Filter Tag Chip</h2>
 <p>Antarmuka mendukung tata letak dinamis yang disesuaikan berdasarkan dua konsep:</p>
 <ul>

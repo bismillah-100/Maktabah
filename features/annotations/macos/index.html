@@ -3976,7 +3976,7 @@
 <li><strong>Kolom Pencarian (<code>DSFSearchField</code>)</strong>:
     Terintegrasi dengan <em>debounce</em> di <code>AnnotationViewModel.searchText</code>. Perubahan teks secara asinkron menyaring struktur hierarki anotasi.</li>
 <li><strong>Scope Panel Melayang (<code>scopePanel</code>)</strong>:
-    Ketika kolom pencarian aktif, sebuah <code>NSPanel</code> melayang tak berbingkai (<code>level = .popUpMenu</code>) muncul tepat di bawah kolom pencarian. Panel ini memuat kontrol segmen (<code>NSSegmentedControl</code>) yang membatasi cakupan pencarian: Semua (<em>All</em>), Teks Konteks (<em>Text</em>), Catatan (<em>Notes</em>), atau Tag (<em>Tags</em>).</li>
+    Ketika kolom pencarian aktif, sebuah <code>NSPanel</code> melayang tak berbingkai (<code>level = .popUpMenu</code>) muncul tepat di bawah kolom pencarian. Panel ini memuat kontrol segmen (<code>NSSegmentedControl</code>) yang membatasi cakupan pencarian berdasarkan <code>AnnotationSearchScope</code>: Semua (<em>All</em>), Kitab (<em>Book</em>), Konteks (<em>Context</em>), Catatan (<em>Notes</em>), atau Tag (<em>Tags</em>). Ketika kueri atau cakupan berganti, hierarki disaring secara seketika (<em>real-time</em>) dan item induk diperluas (<em>expanded</em>) agar hasil yang cocok langsung terlihat.</li>
 </ul>
 <h2 id="manajemen-filter-tag-penggabungan-tag">Manajemen Filter Tag &amp; Penggabungan Tag</h2>
 <ul>

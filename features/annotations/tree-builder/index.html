@@ -3774,6 +3774,10 @@
 <li>Menghitung perubahan struktural melalui <em>tree diffing</em> secara presisi agar UI dapat melakukan animasi baris secara efisien tanpa <em>full reload</em>.</li>
 <li>Mengelola pengurutan dan penyaringan kitab yang belum terunduh.</li>
 </ol>
+<div class="admonition note">
+<p class="admonition-title">Pemisahan Peran: Konstruksi Hierarki vs. Pemfilteran</p>
+<p><code>AnnotationTreeBuilder</code> hanya bertanggung jawab atas pembentukan struktur hierarki dasar (<em>tree hierarchy</em>) dan kalkulasi <em>tree diffing</em>. Pemfilteran berbasis teks pencarian, cakupan (<em>search scope</em>), serta kombinasi tag aktif didelegasikan ke komponen terpisah <code>AnnotationTreeFilter</code> pada lapisan ViewModel.</p>
+</div>
 <hr />
 <h2 id="2-mode-pengelompokan-annotationgroupingmode">2. Mode Pengelompokan (AnnotationGroupingMode)</h2>
 <p>Sistem mendukung 3 mode organisasi data:</p>

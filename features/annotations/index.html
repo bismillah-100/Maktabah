@@ -3609,7 +3609,7 @@
 </li>
 <li>
 <p><strong>ViewModel Layer (<code>ViewModel/</code>)</strong>
-    Bertindak sebagai jembatan reaktif antara Storage dan UI. Menggunakan <em>framework</em> <code>Combine</code> dan <code>@Observable</code> (di <code>AnnotationViewModel</code>) untuk menyajikan <em>state</em> tampilan, serta menangani <em>debounce</em> dan operasi pencarian asinkron.</p>
+    Bertindak sebagai jembatan reaktif antara Storage dan UI. Menggunakan <em>framework</em> <code>Combine</code> dan <code>@Observable</code> (di <code>AnnotationViewModel</code>) untuk menyajikan <em>state</em> tampilan, menangani <em>debounce</em>, serta mendelegasikan algoritma pemfilteran teks dan tag ke mesin murni <code>AnnotationTreeFilter</code>.</p>
 </li>
 <li>
 <p><strong>Coordinator Layer (<code>Coordinator/</code>)</strong>
@@ -3627,6 +3627,7 @@
     UI_iOS[SwiftUI &amp; UIKit UI&lt;br&gt;iOSAnnotationViewController] --&gt; VM
 
     VM --&gt; Tree[AnnotationTreeBuilder&lt;br&gt;Mutasi Hierarki &amp; Diffing]
+    VM --&gt; Filter[AnnotationTreeFilter&lt;br&gt;Query &amp; Tag Filtering Engine]
     Tree -.-&gt; Publish([Publish Annotation Event])
     VM --&gt; Store[AnnotationStore&lt;br&gt;In-Memory Cache &amp; Mutex]
 
@@ -3648,7 +3649,7 @@
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class UI_Mac,UI_iOS ui;
-    class VM vm;
+    class VM,Filter vm;
     class Store,Tree,Coord store;
     class Repo,SQLite db;
     class Publish event;</code></pre>

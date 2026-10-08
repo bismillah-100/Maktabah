@@ -1087,6 +1087,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#annotationtreefilter-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AnnotationTreeFilter (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pemfilteran-berdasarkan-scope-search-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pemfilteran Berdasarkan Scope (Search Scope)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#logika-pemfilteran-tag" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3635,6 +3657,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#annotationtreefilter-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AnnotationTreeFilter (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pemfilteran-berdasarkan-scope-search-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pemfilteran Berdasarkan Scope (Search Scope)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#logika-pemfilteran-tag" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3713,7 +3757,7 @@
 <ol>
 <li><strong>Mutasi Data</strong>: Terjadi di <code>AnnotationStore</code> secara sinkron (dengan proteksi <code>Mutex</code>) dan memancarkan <code>AnnotationEvent</code> via <code>PassthroughSubject</code>.</li>
 <li><strong>Konstruksi Hierarki</strong>: <code>AnnotationTreeBuilder</code> menangkap <em>event</em> tersebut di antrean latar belakang (<em>background queue</em>), lalu membangun ulang struktur hierarki (Book / Tag / Timeline) dan mengkalkulasi <em>tree diffing</em>.</li>
-<li><strong>Transformasi ViewModel</strong>: <code>AnnotationViewModel</code> berlangganan (<em>subscribe</em>) pada hasil dari <code>AnnotationTreeBuilder</code>. Apabila pencarian atau filter aktif, ViewModel melakukan pemfilteran tambahan.</li>
+<li><strong>Transformasi ViewModel</strong>: <code>AnnotationViewModel</code> berlangganan (<em>subscribe</em>) pada hasil dari <code>AnnotationTreeBuilder</code>. Apabila pencarian atau filter aktif, ViewModel mendelegasikan pemfilteran hierarki ke <code>AnnotationTreeFilter</code>.</li>
 <li><strong>Binding Antarmuka Pengguna</strong>: UI (SwiftUI atau AppKit) dirender ulang secara otomatis melalui makro <code>@Observable</code> atau pembaruan inkremental via <code>onIncrementalUpdate</code>.</li>
 </ol>
 <h2 id="annotationviewmodel-class">AnnotationViewModel (Class)</h2>
@@ -3755,22 +3799,55 @@
 <ol>
 <li><strong>Debounce</strong>: Penundaan 0,3 detik diterapkan sebelum eksekusi <code>applyFilter()</code> untuk mencegah <em>thrashing</em> CPU saat pengguna mengetik dengan cepat. Mekanisme ini menggunakan fitur bawaan Swift Concurrency (<code>Task</code> dan <code>Task.sleep</code>).</li>
 </ol>
-<h3 id="logika-pemfilteran-tag">Logika Pemfilteran Tag</h3>
-<p>ViewModel mendukung dua mode filter tag (<code>OR</code> dan <code>AND</code>):</p>
-<ul>
-<li>Mode <strong>OR</strong>: Menampilkan anotasi yang memuat <em>minimal satu</em> dari tag yang dipilih.</li>
-<li>Mode <strong>AND</strong>: Menampilkan anotasi yang memuat <em>seluruh</em> tag yang dipilih.</li>
-</ul>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">private</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">filterNodesByTags</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">nodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">],</span><span class="w"> </span><span class="n">tags</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;?</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">activeTags</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tags</span><span class="w"> </span><span class="p">??</span><span class="w"> </span><span class="n">selectedTags</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="c1">// ... iterasi node</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">matches</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">tagFilterMode</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="p">.</span><span class="n">and</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="p">?</span><span class="w"> </span><span class="n">activeTags</span><span class="p">.</span><span class="n">allSatisfy</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">annTags</span><span class="p">.</span><span class="bp">contains</span><span class="p">(</span><span class="nv">$0</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="p">:</span><span class="w"> </span><span class="o">!</span><span class="n">activeTags</span><span class="p">.</span><span class="n">isDisjoint</span><span class="p">(</span><span class="n">with</span><span class="p">:</span><span class="w"> </span><span class="n">annTags</span><span class="p">)</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
+<h3 id="annotationtreefilter-struct">AnnotationTreeFilter (Struct)</h3>
+<p>Merupakan utilitas <em>stateless</em> dengan <em>pure functions</em> yang memisahkan seluruh algoritma penyaringan teks, cakupan (<em>scope</em>), dan label/tag dari <code>AnnotationViewModel</code>.</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">AnnotationTreeFilter</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="n">nodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">],</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">        </span><span class="n">withQuery</span><span class="w"> </span><span class="n">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="n">scope</span><span class="p">:</span><span class="w"> </span><span class="n">AnnotationSearchScope</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="n">selectedTags</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="n">filterMode</span><span class="p">:</span><span class="w"> </span><span class="n">TagFilterMode</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">filterNodesByTags</span><span class="p">(</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">        </span><span class="kc">_</span><span class="w"> </span><span class="n">nodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">],</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="n">tags</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;?,</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">        </span><span class="n">mode</span><span class="p">:</span><span class="w"> </span><span class="n">TagFilterMode</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">filterNodesByQuery</span><span class="p">(</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="kc">_</span><span class="w"> </span><span class="n">nodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">],</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="n">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="n">scope</span><span class="p">:</span><span class="w"> </span><span class="n">AnnotationSearchScope</span><span class="p">,</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">        </span><span class="n">bookTitleMap</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">Int</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">raw</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">normalized</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">)]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[:]</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">func</span><span class="w"> </span><span class="nf">availableTags</span><span class="p">(</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="n">nodes</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">],</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">        </span><span class="k">in</span><span class="w"> </span><span class="n">allTags</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">],</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">        </span><span class="n">selectedTags</span><span class="p">:</span><span class="w"> </span><span class="n">Set</span><span class="p">&lt;</span><span class="nb">String</span><span class="p">&gt;,</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">        </span><span class="n">filterMode</span><span class="p">:</span><span class="w"> </span><span class="n">TagFilterMode</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[</span><span class="nb">String</span><span class="p">]</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Jika dalam mode <code>AND</code>, properti <code>availableTags</code> difilter sedemikian rupa sehingga hanya menampilkan tag yang muncul bersamaan (<em>co-occurring</em>) dalam sisa anotasi yang cocok.</p>
+<h3 id="pemfilteran-berdasarkan-scope-search-scope">Pemfilteran Berdasarkan Scope (Search Scope)</h3>
+<p><code>AnnotationTreeFilter</code> mengevaluasi teks pencarian terhadap <code>AnnotationSearchScope</code> yang dipilih:</p>
+<ul>
+<li><strong><code>.all</code></strong>: Memeriksa kecocokan pada judul buku, teks kutipan (<code>context</code>), catatan (<code>note</code>), atau tag.</li>
+<li><strong><code>.book</code></strong>: Menggunakan kamus <em>lookup</em> metadata buku (<code>bookTitleMap</code>) untuk menyaring kecocokan judul buku asli maupun versi ternormalisasi.</li>
+<li><strong><code>.context</code></strong>: Membandingkan teks kutipan.</li>
+<li><strong><code>.note</code></strong>: Memeriksa catatan pribadi pengguna.</li>
+<li><strong><code>.tag</code></strong>: Memeriksa seluruh label/tag pada anotasi.</li>
+</ul>
+<p>Cabang grup (<code>book</code>, <code>tag</code>, <code>dateBucket</code>) akan dipertahankan apabila node grup itu sendiri cocok atau memiliki minimal satu node anak anotasi yang lolos kriteria pencarian.</p>
+<h3 id="logika-pemfilteran-tag">Logika Pemfilteran Tag</h3>
+<p>Mendukung dua mode kombinasi filter:</p>
+<ul>
+<li>Mode <strong>OR</strong>: Menampilkan anotasi yang memuat <em>minimal satu</em> dari tag yang dipilih (<code>!activeTags.isDisjoint(with: annTags)</code>).</li>
+<li>Mode <strong>AND</strong>: Menampilkan anotasi yang memuat <em>seluruh</em> tag yang dipilih (<code>activeTags.allSatisfy { annTags.contains($0) }</code>).</li>
+</ul>
+<p>Dalam mode <code>AND</code>, metode <code>availableTags(for:in:selectedTags:filterMode:)</code> menyaring tag agar hanya menampilkan tag yang muncul bersamaan (<em>co-occurring</em>) dalam anotasi yang sedang lolos seleksi.</p>
 <h2 id="annotationtreebuilder-class">AnnotationTreeBuilder (Class)</h2>
 <p>Merupakan mesin latar belakang (<em>background engine</em>) yang bertugas mengubah daftar linier (<em>flat list</em>) <code>[Annotation]</code> menjadi struktur hierarki <code>AnnotationNode</code> untuk antarmuka <code>NSOutlineView</code> atau <code>SwiftUI List</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationTreeBuilder</span><span class="p">:</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
