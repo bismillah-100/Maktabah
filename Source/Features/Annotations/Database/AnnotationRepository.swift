@@ -189,9 +189,14 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         try _db.execute(query: sql, parameters: parameters)
     }
 
-    func transaction(_ block: () throws -> Void) throws {
+    func transaction(cleanupTags: Bool = false, _ block: () throws -> Void) throws {
         guard let _db else { return }
-        try _db.transaction(block)
+        try _db.transaction {
+            try block()
+            if cleanupTags {
+                try self.deleteUnusedTags()
+            }
+        }
     }
 
     func listTableColumns(tableName: String) throws -> [String] {
@@ -306,7 +311,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         var updatedAnnotation = annotation
         updatedAnnotation.lastModified = now
 
-        try transaction {
+        try transaction(cleanupTags: true) {
             let sql = "UPDATE \(annotationsTable) SET \(colAnnColor) = ?, \(colAnnType) = ?, \(colAnnNote) = ?, \(colAnnLastModified) = ? WHERE \(colAnnId) = ?;"
             let params: [Any] = [
                 updatedAnnotation.colorHex,
@@ -317,7 +322,6 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
             ]
             try _db.execute(query: sql, parameters: params)
             try self.replaceTags(normalizedTags, for: id)
-            try self.deleteUnusedTags()
 
             if let ckId = updatedAnnotation.ckRecordId {
                 try self.addPendingSync(ckRecordId: ckId, operation: "upload")
@@ -332,10 +336,9 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         guard _db != nil else { throw NSError(domain: "DBNil", code: 1) }
         let deletedAnnotation = try loadAnnotationById(id)
 
-        try transaction {
+        try transaction(cleanupTags: true) {
             try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) = ?;", parameters: [id])
             try exec("DELETE FROM \(annotationsTable) WHERE \(colAnnId) = ?;", parameters: [id])
-            try self.deleteUnusedTags()
 
             if let ckId = deletedAnnotation?.ckRecordId {
                 try self.addPendingSync(ckRecordId: ckId, operation: "delete")
@@ -609,7 +612,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         let annotations = try loadAnnotationsByIds(affectedIds)
         var updatedAnnotations: [Annotation] = []
 
-        try transaction {
+        try transaction(cleanupTags: true) {
             if existingNewTagId != -1 {
                 updatedAnnotations = try self.mergeTags(
                     annotations: annotations,
@@ -627,8 +630,6 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
                     trimmedNew: trimmedNew
                 )
             }
-
-            try self.deleteUnusedTags()
         }
 
         return updatedAnnotations
@@ -696,7 +697,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         var updatedAnnotations: [Annotation] = []
         let currentNow = now
 
-        try transaction {
+        try transaction(cleanupTags: true) {
             try self.exec("DELETE FROM \(self.annotationTagsTable) WHERE \(self.colAnnotationTagTagId) = ?;", parameters: [tagId])
             try self.exec("DELETE FROM \(self.tagsTable) WHERE \(self.colTagId) = ?;", parameters: [tagId])
 
@@ -707,8 +708,6 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
                 let updated = try self.saveAndQueueAnnotationChanges(ann, updatedTags: tags, modifiedTimestamp: currentNow)
                 updatedAnnotations.append(updated)
             }
-
-            try self.deleteUnusedTags()
         }
 
         return (tagName, updatedAnnotations)
@@ -717,8 +716,8 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
     private func mutateTags(
         forAnnotationIDs annotationIDs: [Int64],
         tags inputTags: [String],
-        mutation: (inout [String], String, String) -> Bool,
-        afterMutation: (() throws -> Void)? = nil
+        cleanupTags: Bool = false,
+        mutation: (inout [String], String, String) -> Bool
     ) throws -> [Annotation] {
         guard !annotationIDs.isEmpty else { return [] }
         var seen = Set<String>()
@@ -746,8 +745,8 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
                     updated.append(updatedAnn)
                 }
             }
-            if !updated.isEmpty {
-                try afterMutation?()
+            if cleanupTags && !updated.isEmpty {
+                try self.deleteUnusedTags()
             }
         }
 
@@ -768,15 +767,13 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         try mutateTags(
             forAnnotationIDs: annotationIDs,
             tags: tags,
+            cleanupTags: true,
             mutation: { tags, _, normalized in
                 if tags.contains(where: { self.normalizedTagName($0) == normalized }) {
                     tags.removeAll { self.normalizedTagName($0) == normalized }
                     return true
                 }
                 return false
-            },
-            afterMutation: {
-                try self.deleteUnusedTags()
             }
         )
     }
@@ -973,7 +970,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         var updatedOrInsertedAnnotations: [Annotation] = []
         let currentTimestamp = now
 
-        try transaction {
+        try transaction(cleanupTags: true) {
             for ann in annotations {
                 let existingId = try self.findExistingAnnotationId(db: _db, ann: ann)
                 if let existingId {
@@ -995,7 +992,6 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
                     importedCount += 1
                 }
             }
-            try self.deleteUnusedTags()
         }
 
         return (importedCount, updatedOrInsertedAnnotations)
