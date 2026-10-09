@@ -306,7 +306,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
         var effectiveAnnotations = annotations
         if UserDefaults.standard.hideMissingBookAnnotations {
-            let existingBkIds = Set(effectiveAnnotations.map(\.bkId).filter { !LibraryDataManager.shared.getBook([$0]).isEmpty })
+            let uniqueBkIds = Array(Set(effectiveAnnotations.map(\.bkId)))
+            let existingBkIds = Set(LibraryDataManager.shared.getBook(uniqueBkIds).map(\.id))
             effectiveAnnotations = effectiveAnnotations.filter { existingBkIds.contains($0.bkId) }
         }
         guard !effectiveAnnotations.isEmpty else { return }
@@ -344,8 +345,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         var anns = AnnotationStore.shared.loadAnnotations()
 
         if UserDefaults.standard.hideMissingBookAnnotations {
-            let uniqueBkIds = Set(anns.map(\.bkId))
-            let existingBkIds = Set(uniqueBkIds.filter { !LibraryDataManager.shared.getBook([$0]).isEmpty })
+            let uniqueBkIds = Array(Set(anns.map(\.bkId)))
+            let existingBkIds = Set(LibraryDataManager.shared.getBook(uniqueBkIds).map(\.id))
             anns = anns.filter { existingBkIds.contains($0.bkId) }
         }
 
