@@ -145,11 +145,11 @@ flowchart TD
     Match -->|"Tidak Ada"| InsertLocal["Simpan sebagai Entri Baru"]
     Match -->|"Ada"| CheckLWW{"remoteModified >= localModified?"}
     
-    CheckLWW -->|"Ya"| FieldMerge["Merge Parsial Field Non-Destruktif"]
+    CheckLWW -->|"Ya"| OverwriteLocal["Timpa Data Lokal (Source of Truth)"]
     CheckLWW -->|"Tidak"| DropRemote["Pertahankan Data Lokal"]
     
     InsertLocal --> Reorder["Urutkan Ulang historyOrder LIFO"]
-    FieldMerge --> Reorder
+    OverwriteLocal --> Reorder
     
     Reorder --> Persist[("HistoryDatabaseManager.saveCloudKitChanges")]
     Persist --> Notify(["Post .historyDidChange & Reload UI"])
@@ -161,12 +161,11 @@ flowchart TD
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class Remote,Notify event;
-    class InsertLocal,FieldMerge,DropRemote,Reorder store;
+    class InsertLocal,OverwriteLocal,DropRemote,Reorder store;
     class Match,CheckLWW ui;
     class Persist db;
 ```
 
-1. **Last-Write-Wins (LWW)**: Membandingkan `updatedAt` lokal dengan `lastModified` remote. Jika remote lebih baru (`remoteModified >= localModified`), perubahan diterima.
-2. **Field Merging Non-Destruktif**: Jika *field* remote bernilai `nil` (misalnya karena perubahan parsial), nilai lokal yang sudah ada tetap dipertahankan (`lastOpenedAt`, `lastContentId`, `favoritedAt`, `positionUpdatedAt`) untuk mencegah hilangnya progres membaca.
-3. **Rekonsiliasi Urutan (`historyOrder`)**: Setelah entri *remote* digabungkan, `HistoryViewModel` menyortir ulang buku riwayat berdasarkan `lastOpenedAt` terbaru (dibatasi `maxHistoryCount = 50`), menghapus *orphan records*, dan menyimpannya kembali ke SQLite secara atomik via `HistoryDatabaseManager.saveCloudKitChanges` di *background thread*.
+1. **Last-Write-Wins (LWW)**: Membandingkan `updatedAt` lokal dengan `lastModified` remote. Jika remote lebih baru (`remoteModified >= localModified`), perubahan diterima secara utuh sebagai *source of truth*. CloudKit tidak mengirim *partial update*, sehingga field bernilai `nil` mengindikasikan bahwa data secara eksplisit telah dihapus.
+2. **Rekonsiliasi Urutan (`historyOrder`)**: Setelah entri *remote* digabungkan, `HistoryViewModel` menyortir ulang buku riwayat berdasarkan `lastOpenedAt` terbaru (dibatasi `maxHistoryCount = 50`), menghapus *orphan records*, dan menyimpannya kembali ke SQLite secara atomik via `HistoryDatabaseManager.saveCloudKitChanges` di *background thread*.
 4. **Pembaruan UI**: Notifikasi `.historyDidChange` disiarkan untuk menyegarkan daftar riwayat dan favorit di antarmuka macOS dan iOS secara reaktif.
