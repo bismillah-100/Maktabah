@@ -52,21 +52,8 @@ extension HistoryViewModel {
                 let remoteModified = remoteEntry.updatedAt.timeIntervalSince1970
 
                 if remoteModified >= localModified {
-                    var merged = remoteEntry
-                    if merged.lastOpenedAt == nil {
-                        merged.lastOpenedAt = localEntry.lastOpenedAt
-                    }
-                    if merged.lastContentId == nil {
-                        merged.lastContentId = localEntry.lastContentId
-                    }
-                    if merged.favoritedAt == nil {
-                        merged.favoritedAt = localEntry.favoritedAt
-                    }
-                    if merged.positionUpdatedAt == nil {
-                        merged.positionUpdatedAt = localEntry.positionUpdatedAt
-                    }
-                    entriesByBookId[remoteEntry.bookId] = merged
-                    upsertedEntries.append(merged)
+                    entriesByBookId[remoteEntry.bookId] = remoteEntry
+                    upsertedEntries.append(remoteEntry)
                     didChange = true
                 }
             } else {
