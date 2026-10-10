@@ -9,8 +9,10 @@ import Foundation
 import OSLog
 
 extension ResultsHandler {
-    func resolveOrphanFolders() {
-        guard let db else { return }
+    @discardableResult
+    func resolveOrphanFolders() -> Bool {
+        guard let db else { return false }
+        var hasChanges = false
         do {
             try transaction {
                 let sql = """
@@ -45,17 +47,23 @@ extension ResultsHandler {
                         try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colFolderId) = ?;", parameters: [conflictId, orphan.id])
                         try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colParent) = ?;", parameters: [conflictId, orphan.id])
                         try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [orphan.id])
+                        hasChanges = true
                     } else {
                         try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colId) = ?;", parameters: [newParentId, orphan.id])
+                        hasChanges = true
                     }
                 }
             }
         } catch {
             Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan folders: \(error.localizedDescription, privacy: .public)")
         }
+        return hasChanges
     }
 
-    func resolveOrphanResults() {
+    @discardableResult
+    func resolveOrphanResults() -> Bool {
+        guard let db else { return false }
+        var hasChanges = false
         do {
             try transaction {
                 let whereClause = """
@@ -66,6 +74,10 @@ extension ResultsHandler {
                       AND COALESCE(\(resultsTable).\(colFolderId), -1) != COALESCE(f.\(colId), -1)
                   )
                 """
+
+                let countSql = "SELECT COUNT(*) FROM \(resultsTable) \(whereClause)"
+                let orphanCount = try db.fetch(query: countSql, mapping: { $0.int(at: 0) }).first ?? 0
+                guard orphanCount > 0 else { return }
 
                 let updateSql = """
                 UPDATE OR IGNORE \(resultsTable)
@@ -79,9 +91,11 @@ extension ResultsHandler {
                 \(whereClause);
                 """
                 try exec(deleteSql)
+                hasChanges = true
             }
         } catch {
             Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan results: \(error.localizedDescription, privacy: .public)")
         }
+        return hasChanges
     }
 }
