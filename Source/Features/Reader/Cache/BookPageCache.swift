@@ -8,6 +8,9 @@
 import Foundation
 import OSLog
 import Synchronization
+#if canImport(UIKit)
+import UIKit
+#endif
 
 final class BookPageCache: @unchecked Sendable {
     static let shared = BookPageCache()
@@ -18,10 +21,21 @@ final class BookPageCache: @unchecked Sendable {
     private let lock = Mutex<Void>(())
 
     private init() {
-        cache.countLimit = 2000     // total item cache
-        cache.totalCostLimit = 50 * 1024 * 1024 // 50 MB memory (opsional)
+        cache.countLimit = 200
+        cache.totalCostLimit = 5000
 
-        processedCache.countLimit = 2000
+        processedCache.countLimit = 200
+        processedCache.totalCostLimit = 5000
+
+        #if os(iOS)
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            self?.removeAll()
+        }
+        #endif
     }
 
     private func processedSubKey(
@@ -46,7 +60,7 @@ final class BookPageCache: @unchecked Sendable {
             let pages = cache.object(forKey: bookKey) ?? NSMutableDictionary()
 
             pages[content.id as NSNumber] = content
-            cache.setObject(pages, forKey: bookKey)
+            cache.setObject(pages, forKey: bookKey, cost: pages.count)
         }
     }
 
@@ -66,7 +80,7 @@ final class BookPageCache: @unchecked Sendable {
             let subKey = processedSubKey(contentId: contentId, key: key)
 
             pages[subKey] = content
-            processedCache.setObject(pages, forKey: bookKey)
+            processedCache.setObject(pages, forKey: bookKey, cost: pages.count)
         }
     }
 

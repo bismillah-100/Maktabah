@@ -380,17 +380,46 @@ struct iOSIbarotTextView: UIViewRepresentable {
             textView.semanticContentAttribute = .forceRightToLeft
         }
 
-        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
-        let rendered = renderAttributedContent(
-            textView: textView,
-            context: context,
-            contentIdChanged: contentIdChanged
+        let currentKey = RenderCacheKey(
+            bookId: viewModel.currentBook?.id,
+            contentId: viewModel.currentContentId,
+            text: text,
+            annotations: annotations,
+            searchText: searchText,
+            searchMode: searchMode,
+            nearDistance: nearDistance,
+            showHarakat: state.showHarakat,
+            clickableAnnotation: state.clickableAnnotation,
+            enhancedUnderline: enhancedUnderline,
+            isMultiLanguage: isMultiLanguage,
+            isImported: isImported,
+            fontName: state.fontName,
+            fontSize: state.fontSize,
+            lineHeight: state.lineHeight
         )
 
-        textView.attributedText = rendered.attributedString
-        textView.invalidateIntrinsicContentSize()
-        textView.setNeedsLayout()
-        textView.layoutIfNeeded()
+        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
+
+        let rendered: RenderedAttributedContent
+        if let lastKey = context.coordinator.lastRenderKey, lastKey == currentKey,
+           let cached = context.coordinator.lastRenderedContent
+        {
+            rendered = cached
+        } else {
+            let newlyRendered = renderAttributedContent(
+                textView: textView,
+                context: context,
+                contentIdChanged: contentIdChanged
+            )
+            context.coordinator.lastRenderKey = currentKey
+            context.coordinator.lastRenderedContent = newlyRendered
+            rendered = newlyRendered
+
+            textView.attributedText = newlyRendered.attributedString
+            textView.invalidateIntrinsicContentSize()
+            textView.setNeedsLayout()
+            textView.layoutIfNeeded()
+        }
 
         restoreScrollAndSelectionIfNeeded(textView: textView, context: context)
         handleTargetAnnotationAndSearchHighlight(
@@ -402,10 +431,28 @@ struct iOSIbarotTextView: UIViewRepresentable {
         )
     }
 
-    private struct RenderedAttributedContent {
+    struct RenderCacheKey: Equatable {
+        let bookId: Int?
+        let contentId: Int
+        let text: String
+        let annotations: [Annotation]
+        let searchText: String
+        let searchMode: SearchMode?
+        let nearDistance: Int
+        let showHarakat: Bool
+        let clickableAnnotation: Bool
+        let enhancedUnderline: Bool
+        let isMultiLanguage: Bool
+        let isImported: Bool
+        let fontName: String
+        let fontSize: CGFloat
+        let lineHeight: Double
+    }
+
+    struct RenderedAttributedContent {
         let attributedString: NSMutableAttributedString
         let searchRanges: [NSRange]
-        let shouldTriggerSearchAnimation: Bool
+        var shouldTriggerSearchAnimation: Bool
     }
 
     private func renderAttributedContent(
@@ -514,6 +561,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         }
 
         if shouldTriggerSearchAnimation, !searchRanges.isEmpty, let firstRange = searchRanges.first {
+            context.coordinator.lastRenderedContent?.shouldTriggerSearchAnimation = false
             DispatchQueue.main.async { [weak textView] in
                 textView?.scrollRangeToVisible(firstRange)
                 Task { [weak textView] in
@@ -532,6 +580,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
         var lastHighlightedContentId: Int?
         var processedSearchText: String?
         var processedAnnotationId: Int64?
+        var lastRenderKey: RenderCacheKey?
+        var lastRenderedContent: RenderedAttributedContent?
 
         // Pull-to-navigate state
         weak var topIndicator: PullNavigationIndicatorView?

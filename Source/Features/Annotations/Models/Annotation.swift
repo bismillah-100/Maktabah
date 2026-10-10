@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Annotation: Sendable {
+struct Annotation: Sendable, Equatable {
     var id: Int64? // nil sebelum disimpan
     let bkId: Int // book id
     let contentId: Int // BookContent.id
@@ -27,7 +27,7 @@ struct Annotation: Sendable {
     var lastModified: Int64?
 }
 
-enum AnnotationMode: Int, Sendable {
+enum AnnotationMode: Int, Sendable, Equatable {
     case highlight
     case underline
 
