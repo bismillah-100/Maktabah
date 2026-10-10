@@ -100,7 +100,7 @@ struct SyncedScrollRow: View {
                         historySection: true
                     ) {
                         let lastId = viewModel.entriesByBookId[book.id]?.lastContentId
-                        navigationManager.openBook(book, initialContentId: lastId)
+                        navigationManager.openBook(book, options: OpenBookOptions(contentId: lastId))
                     }
                     .frame(maxWidth: 250)
                     .fixedSize(horizontal: true, vertical: false)

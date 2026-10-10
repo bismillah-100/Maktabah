@@ -88,7 +88,7 @@ stateDiagram-v2
 | Properti | Tipe Data | Peran |
 | :--- | :--- | :--- |
 | `currentPage` | `Int` | Mengatur logika navigasi pembaca (ditautkan langsung ke Slider di iOS). |
-| `contentText` | `NSAttributedString` | Produk akhir teks dari basis data yang sudah dirender dan diformat (melalui `ArabicTextRenderer`). |
+| `contentText` | `String` | Teks mentah/konten halaman dari basis data yang akan dirender melalui `ArabicTextRenderer`. |
 | `currentAnnotations` | `[Annotation]` | Array *highlight* dan *underline* murni dari `AnnotationStore` yang disuntikkan ke teks. |
 | `searchEvent` | `ReaderHighlightEvent?` | Event pemicu sorotan kata kunci hasil pencarian berbasis UUID unik di iOS. |
 | `annotationEvent` | `ReaderAnnotationEvent?` | Event pemicu *scroll-to-target* otomatis dan animasi sorotan pada anotasi yang dipilih di iOS. |
