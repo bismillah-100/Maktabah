@@ -8,36 +8,49 @@
 import Foundation
 import OSLog
 
-/// Actor untuk menangani sinkronisasi file I/O secara aman tanpa memblokir thread
-public actor FileCoordinator {
-    public nonisolated static let shared = FileCoordinator()
+/// Pengelola sinkronisasi file I/O secara aman tanpa memblokir cooperative thread pool Swift Concurrency.
+public final class FileCoordinator: Sendable {
+    public static let shared = FileCoordinator()
+    private let ioQueue = DispatchQueue(label: "com.maktabah.widget.filecoordinator", qos: .utility)
 
-    public func read(url: URL) -> Data? {
-        var error: NSError?
-        var fileData: Data?
+    private init() {}
 
-        let coordinator = NSFileCoordinator(filePresenter: nil)
-        coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { newURL in
-            // Pada first-launch, berkas mungkin belum ada. `try?` aman mengembalikan nil.
-            fileData = try? Data(contentsOf: newURL)
+    public func read(url: URL) async -> Data? {
+        await withCheckedContinuation { continuation in
+            ioQueue.async {
+                var error: NSError?
+                var fileData: Data?
+
+                let coordinator = NSFileCoordinator(filePresenter: nil)
+                coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { newURL in
+                    // Pada first-launch, berkas mungkin belum ada. `try?` aman mengembalikan nil.
+                    fileData = try? Data(contentsOf: newURL)
+                }
+
+                continuation.resume(returning: fileData)
+            }
         }
-
-        return fileData
     }
 
-    public func write(data: Data, to url: URL) {
-        // Ensure directory exists
-        let dirURL = url.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
+    public func write(data: Data, to url: URL) async {
+        await withCheckedContinuation { continuation in
+            ioQueue.async {
+                // Ensure directory exists
+                let dirURL = url.deletingLastPathComponent()
+                try? FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
 
-        var error: NSError?
-        let coordinator = NSFileCoordinator(filePresenter: nil)
+                var error: NSError?
+                let coordinator = NSFileCoordinator(filePresenter: nil)
 
-        coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
-            do {
-                try data.write(to: newURL)
-            } catch {
-                Logger.widget.error("Failed to write coordinated data: \(error.localizedDescription, privacy: .public)")
+                coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
+                    do {
+                        try data.write(to: newURL, options: .atomic)
+                    } catch {
+                        Logger.widget.error("Failed to write coordinated data: \(error.localizedDescription, privacy: .public)")
+                    }
+                }
+
+                continuation.resume()
             }
         }
     }
@@ -113,11 +126,28 @@ public extension WidgetSnapshotRecord {
         #endif
     }
 
-    /// Lokasi file JSON di App Group
+    /// Daftar kandidat identifier App Group untuk toleransi Direct vs App Store builds
+    private static var candidateAppGroupIdentifiers: [String] {
+        [
+            appGroupIdentifier,
+            "Q37L5CJ4ZG.group.com.Drn.maktabah",
+            "group.com.Drn.maktabah",
+        ]
+    }
+
+    /// Lokasi file JSON di App Group dengan resolusi toleran terhadap prefix
     static var appGroupURL: URL? {
-        guard let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: appGroupIdentifier
-        ) else { return nil }
+        var groupURL: URL?
+        for identifier in candidateAppGroupIdentifiers {
+            if let url = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: identifier
+            ) {
+                groupURL = url
+                break
+            }
+        }
+
+        guard let groupURL else { return nil }
 
         // Use Application Support directory for isolation
         let appSupportURL = groupURL.appendingPathComponent("Library/Application Support", isDirectory: true)

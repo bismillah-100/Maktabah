@@ -8,7 +8,7 @@
 import WidgetKit
 
 struct HistoryItem: Identifiable {
-    let id = UUID()
+    let id: String
     let bkId: Int
     let bookTitle: String?
     let lastReadContentId: Int?

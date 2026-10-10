@@ -24,6 +24,25 @@ enum ArabicFont: String, CaseIterable {
     case baghdad = "Baghdad"
     case nadeem = "Nadeem"
 
+    static func registerSingleFont(name: String, extension fileExtension: String) {
+        guard let fontURL = Bundle.main.url(forResource: name, withExtension: fileExtension, subdirectory: "Fonts")
+            ?? Bundle.main.url(forResource: name, withExtension: fileExtension)
+        else {
+            return
+        }
+
+        var error: Unmanaged<CFError>?
+        if !CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, &error) {
+            if let error = error?.takeRetainedValue() {
+                Logger.app.error("Error registering font \(name).\(fileExtension, privacy: .public): \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
+    static func registerWidgetFonts() {
+        registerSingleFont(name: "NotoNaskhArabic-Medium", extension: "ttf")
+    }
+
     static func registerCustomFonts() {
         let fontFiles = [
             "UthmanTN1-Ver10.otf",
