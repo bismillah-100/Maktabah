@@ -334,10 +334,17 @@ class IbarotTextVC: NSViewController {
     }
 
     @IBAction func copyWith(_ sender: Any? = nil) {
-        let rawAttributedText: NSAttributedString = if textView.selectedRange.length > 1 {
-            textView.attributedString().attributedSubstring(from: textView.selectedRange())
+        let fullAttributedString = textView.attributedString()
+        let selection = textView.selectedRange()
+        let rawAttributedText: NSAttributedString
+        if selection.location != NSNotFound,
+           selection.location >= 0,
+           selection.length > 0,
+           selection.location + selection.length <= fullAttributedString.length
+        {
+            rawAttributedText = fullAttributedString.attributedSubstring(from: selection)
         } else {
-            textView.attributedString()
+            rawAttributedText = fullAttributedString
         }
         let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
