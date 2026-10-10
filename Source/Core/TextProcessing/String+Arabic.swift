@@ -9,10 +9,11 @@ import Foundation
 
 extension String {
     func normalizeArabic(_ removeDiacritics: Bool = true) -> String {
+        let decomposed = decomposedStringWithCompatibilityMapping
         var result = ""
-        result.reserveCapacity(utf8.count)
+        result.reserveCapacity(decomposed.utf8.count)
 
-        for scalar in unicodeScalars {
+        for scalar in decomposed.unicodeScalars {
             let val = scalar.value
             if (removeDiacritics && scalar.isArabicHarakat) || val == 0x0640 { continue }
             let normalized = (val == 0x0623 || val == 0x0625 || val == 0x0622 || val == 0x0671) ? UnicodeScalar(0x0627)! : scalar
@@ -28,6 +29,22 @@ extension String {
 
     func convertToArabicDigits(isMultilingual: Bool = false) -> String {
         isMultilingual ? convertToArabicDigitsMultilingual() : convertToArabicDigitsDirect()
+    }
+
+    func convertArabicIndicDigitsToASCII() -> String {
+        var newScalars = String.UnicodeScalarView()
+        newScalars.reserveCapacity(unicodeScalars.count)
+        for scalar in unicodeScalars {
+            let val = scalar.value
+            if val >= 0x0660, val <= 0x0669 {
+                newScalars.append(UnicodeScalar(val - 0x0660 + 48)!)
+            } else if val >= 0x06F0, val <= 0x06F9 {
+                newScalars.append(UnicodeScalar(val - 0x06F0 + 48)!)
+            } else {
+                newScalars.append(scalar)
+            }
+        }
+        return String(newScalars)
     }
 
     private func convertToArabicDigitsDirect() -> String {
