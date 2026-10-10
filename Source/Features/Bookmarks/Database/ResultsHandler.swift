@@ -184,6 +184,7 @@ final class ResultsHandler: SyncPendingManaging, Sendable {
         do {
             let database = try SQLiteDatabase(path: url.path, flags: flags)
             database.enableWALMode()
+            try? database.execute(query: "PRAGMA foreign_keys = ON;")
             database.checkpoint() // Ensure WAL is committed and truncated
             let store = SyncPendingStore(database: database)
             state.withLock { s in

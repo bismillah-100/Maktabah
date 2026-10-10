@@ -17,11 +17,13 @@ Inisialisasi basis data diatur dengan konfigurasi performa tinggi dan keamanan k
 let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX
 let database = try SQLiteDatabase(path: url.path, flags: flags)
 database.enableWALMode()
+try? database.execute(query: "PRAGMA foreign_keys = ON;")
 database.checkpoint()
 ```
 
 *   **`SQLITE_OPEN_FULLMUTEX`**: Mengaktifkan mode *serialized threading* SQLite di mana beberapa *thread* dapat berbagi koneksi secara aman tanpa risiko korupsi internal.
-*   **`NSRecursiveLock`**: Di lapisan `SQLiteDatabase`, seluruh eksekusi kueri (`fetch`, `execute`, `transaction`) dilindungi oleh *recursive lock* (`NSRecursiveLock`) untuk mencegah bentrokan instruksi *read-write*.
+*   **`PRAGMA foreign_keys = ON;`**: Mengaktifkan penegakan integritas kunci asing (*foreign keys*) dan kaskade penghapusan (`ON DELETE CASCADE`) secara aktif pada koneksi SQLite.
+*   **`NSRecursiveLock`**: Di lapisan `SQLiteDatabase`, seluruh eksekusi kueri (`fetch`, `execute`, `transaction`, dan `lastInsertRowId`) dilindungi oleh *recursive lock* (`NSRecursiveLock`) untuk mencegah bentrokan instruksi *read-write*.
 *   **WAL Mode (Write-Ahead Logging)**: Menjamin operasi pembacaan tidak memblokir penulisan, dan operasi penulisan tidak memblokir pembacaan.
 *   **Sendable & `Mutex` Isolation**: `ResultsHandler` mengadopsi protokol `Sendable` secara penuh tanpa `nonisolated(unsafe)`. *Instance* `SQLiteDatabase?` dan `SyncPendingStore?` diisolasi di dalam struktur `State` dengan proteksi `Synchronization.Mutex`:
 

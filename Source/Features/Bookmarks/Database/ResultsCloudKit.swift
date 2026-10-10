@@ -19,7 +19,7 @@ extension ResultsHandler {
 
         if uploadIfNeeded, !foldersToUpload.isEmpty || !resultsToUpload.isEmpty {
             DispatchQueue.global(qos: .background).async {
-                CloudKitSyncManager.shared.uploadResultsData(folders: foldersToUpload, results: resultsToUpload, trackPending: false)
+                CloudKitSyncManager.shared.uploadResultsData(folders: foldersToUpload, results: resultsToUpload, trackPending: true)
             }
         }
     }
@@ -53,10 +53,11 @@ extension ResultsHandler {
                     "root"
                 }
 
-                let detId = "folder_\(folder.name)_\(parentIdentifier)"
+                let cId = UUID().uuidString
                 let parentCkRecordIdValue: Any = parentIdentifier == "root" ? NSNull() : parentIdentifier
 
-                try exec("UPDATE \(foldersTable) SET \(colCkRecordId) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ? WHERE \(colId) = ?;", parameters: [detId, now, parentCkRecordIdValue, fId])
+                try exec("UPDATE \(foldersTable) SET \(colCkRecordId) = ?, \(colLastModified) = ?, \(colParentCkRecordId) = ? WHERE \(colId) = ?;", parameters: [cId, now, parentCkRecordIdValue, fId])
+                try self.addPendingSync(ckRecordId: cId, operation: "upload")
 
                 if let reloaded = try reloadSyncFolder(id: fId) {
                     foldersToUpload.append(reloaded)
@@ -99,10 +100,11 @@ extension ResultsHandler {
                     "root"
                 }
 
-                let detId = "result_\(folderIdentifier)_\(res.name)_\(res.bkId)_\(res.archive)"
+                let cId = UUID().uuidString
                 let folderCkIdValue: Any = folderIdentifier == "root" ? NSNull() : folderIdentifier
 
-                try exec("UPDATE \(resultsTable) SET \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ? WHERE \(colId) = ?;", parameters: [detId, now, folderCkIdValue, rId])
+                try exec("UPDATE \(resultsTable) SET \(colResCkRecordId) = ?, \(colResLastModified) = ?, \(colFolderCkRecordId) = ? WHERE \(colId) = ?;", parameters: [cId, now, folderCkIdValue, rId])
+                try self.addPendingSync(ckRecordId: cId, operation: "upload")
 
                 if let reloaded = try reloadSyncResult(id: rId) {
                     resultsToUpload.append(reloaded)
@@ -257,6 +259,7 @@ extension ResultsHandler {
                 conflictParams = [folder.name, existing.id]
             }
             if let conflictId = try db.fetch(query: conflictSql, parameters: conflictParams, mapping: { $0.int64(at: 0) }).first {
+                try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) = ?;", parameters: [conflictId])
                 try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [conflictId])
             }
         }

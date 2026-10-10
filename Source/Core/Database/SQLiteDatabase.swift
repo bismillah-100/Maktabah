@@ -214,7 +214,9 @@ class SQLiteDatabase: @unchecked Sendable {
     }
 
     func lastInsertRowId() -> Int64 {
-        sqlite3_last_insert_rowid(dbPointer)
+        lock.lock()
+        defer { lock.unlock() }
+        return sqlite3_last_insert_rowid(dbPointer)
     }
 
     func checkpoint() {

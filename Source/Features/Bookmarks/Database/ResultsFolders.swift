@@ -121,6 +121,16 @@ extension ResultsHandler {
     }
 
     func updateParent(of id: Int64, to newParentId: Int64?) throws {
+        if let targetParent = newParentId {
+            guard targetParent != id else {
+                throw NSError(domain: "ResultsHandler", code: 400, userInfo: [NSLocalizedDescriptionKey: "Folder cannot be its own parent"])
+            }
+            let descendants = getAllDescendantIds(of: id)
+            guard !descendants.contains(targetParent) else {
+                throw NSError(domain: "ResultsHandler", code: 400, userInfo: [NSLocalizedDescriptionKey: "Target parent is a descendant of the folder"])
+            }
+        }
+
         let now = Int64(Date().timeIntervalSince1970)
         var reloaded: SyncFolder?
 
@@ -169,11 +179,12 @@ extension ResultsHandler {
     }
 
     private func _getAllDescendantIds(of folderId: Int64, ids: inout [Int64], db: SQLiteDatabase) {
+        guard !ids.contains(folderId) else { return }
         ids.append(folderId)
         let sql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ?"
         do {
             let children = try db.fetch(query: sql, parameters: [folderId]) { $0.int64(at: 0) }
-            for childId in children {
+            for childId in children where !ids.contains(childId) {
                 _getAllDescendantIds(of: childId, ids: &ids, db: db)
             }
         } catch {

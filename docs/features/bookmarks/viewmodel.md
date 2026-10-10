@@ -143,7 +143,7 @@ ViewModel/Extensions/
 Menangani fase inisialisasi data dan pemulihan konsistensi indeks:
 
 *   `getFolders()`: Mengambil struktur hierarki folder dari basis data, mengurutkan secara rekursif berbasis lokalitas teks, dan memperbarui `folderRoots`.
-*   `dbLoadAllResults()`: Menjelajahi seluruh folder yang terdaftar dan memuat hasil pencarian yang terkait ke dalam kamus `folderResults`.
+*   `dbLoadAllResults()`: Mengambil seluruh hasil pencarian secara massal via `ResultsHandler.shared.fetchAllResultsGroupedByFolder()` dalam satu kueri terisolasi di background, bebas dari risiko *data race* traversal referensi `FolderNode`.
 *   `rebuildFolderIndex()`: Mengisi ulang kamus `folderById` dan `parentById` melalui penelusuran mendalam (*depth-first walk*).
 *   `rebuildResultIndex()`: Mengisi ulang `resultById` dan memastikan integritas nilai `parentId` di setiap *child node*.
 
@@ -156,7 +156,7 @@ Menyediakan fungsi pembantu operasi hierarki (*tree operations*):
 *   `isDescendant(_ node: FolderNode, of ancestor: FolderNode) -> Bool`:
     *   Mencegah bahaya *infinite circular loop* saat pengguna memindahkan folder ke dalam dirinya sendiri atau ke dalam subfoldernya.
 *   `folderPath(for folderId: Int64?) -> String`:
-    *   Membangun jalur navigasi (*breadcrumb trail*), misalnya: `"Hadits / Shahih Bukhari / Kitab Iman"`. Menggunakan penelusuran balik ke atas (*bottom-up traversal*) via `parentById` dengan kompleksitas $O(d)$ di mana $d$ adalah kedalaman hierarki.
+    *   Membangun jalur navigasi (*breadcrumb trail*), misalnya: `"Hadits / Shahih Bukhari / Kitab Iman"`. Menggunakan penelusuran balik ke atas (*bottom-up traversal*) via `parentById` dengan kompleksitas $O(d)$ di mana $d$ adalah kedalaman hierarki, dilengkapi guard `visited: Set<Int64>` untuk memotong siklus anomali.
 *   `removeNodeFromTree(_ node: FolderNode)`:
     *   Menghapus referensi node secara tepat dari array induknya tanpa merusak struktur cabang lainnya.
 

@@ -52,7 +52,8 @@ extension ResultsViewManager {
 
     private func isDescendant(folder: FolderNode, of ancestorId: Int64) -> Bool {
         var current: FolderNode? = folder
-        while let cur = current {
+        var visited: Set<Int64> = []
+        while let cur = current, visited.insert(cur.id).inserted {
             if cur.id == ancestorId { return true }
             guard let parentId = vm.parentById[cur.id] ?? nil,
                   let nextParent = vm.findFolder(parentId)

@@ -52,7 +52,8 @@ extension ResultsViewModel {
         guard var id = folderId else { return "Root" }
 
         var parts: [String] = []
-        while let node = folderById[id] {
+        var visited: Set<Int64> = []
+        while let node = folderById[id], visited.insert(id).inserted {
             parts.insert(node.name, at: 0)
             if let parent = parentById[id], let p = parent {
                 id = p

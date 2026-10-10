@@ -136,6 +136,33 @@ extension ResultsHandler {
         return buildResultNodes(from: groupedResults)
     }
 
+    func fetchAllResultsGroupedByFolder() -> [Int64?: [ResultNode]] {
+        guard let db else { return [:] }
+        let cols = "\(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colSearchMode), \(colNearDistance)"
+        let sql = "SELECT \(cols) FROM \(resultsTable)"
+
+        var rowsByFolder: [Int64?: [RawResultRow]] = [:]
+        do {
+            let allRows = try fetchRawResultRows(db: db, sql: sql, params: [])
+            for row in allRows {
+                rowsByFolder[row.parentId, default: []].append(row)
+            }
+        } catch {
+            Logger.bookmarks.error("Failed to fetch all results: \(error.localizedDescription, privacy: .public)")
+            return [:]
+        }
+
+        var resultMap: [Int64?: [ResultNode]] = [:]
+        for (folderId, rows) in rowsByFolder {
+            let grouped = groupRawResultRows(rows)
+            let nodes = buildResultNodes(from: grouped)
+            if !nodes.isEmpty {
+                resultMap[folderId] = nodes
+            }
+        }
+        return resultMap
+    }
+
     private func buildFetchResultsQuery(forFolder folderId: Int64?) -> (sql: String, params: [Any]) {
         let cols = "\(colId), \(colFolderId), \(colName), \(colQuery), \(colArchive), \(colBkId), \(colContentId), \(colResCkRecordId), \(colResLastModified), \(colSearchMode), \(colNearDistance)"
         if let fid = folderId {
@@ -163,19 +190,26 @@ extension ResultsHandler {
     }
 
     private func groupRawResultRows(_ results: [RawResultRow]) -> [String: SavedResultsGroup] {
+        let uniqueBkIds = Array(Set(results.map(\.bkId)))
+        let books = LibraryDataManager.shared.getBook(uniqueBkIds)
+        var booksById: [Int: String] = [:]
+        for b in books {
+            booksById[b.id] = b.book
+        }
+
         var groupedResults: [String: SavedResultsGroup] = [:]
         for res in results {
+            let bookTitle = booksById[res.bkId] ?? ""
             let contentsId = res.contentId.components(separatedBy: ",")
             for cid in contentsId {
                 guard let idInt = Int(cid) else { continue }
-                let book = LibraryDataManager.shared.getBook([res.bkId]).first
 
                 let item = SavedResultsItem(
                     archive: String(res.archive),
                     tableName: String(res.bkId),
                     query: res.query,
                     bookId: idInt,
-                    bookTitle: book?.book ?? "",
+                    bookTitle: bookTitle,
                     searchMode: res.searchMode,
                     nearDistance: res.nearDistance
                 )
@@ -356,17 +390,65 @@ extension ResultsHandler {
     }
 
     func migrateBookId(from oldId: Int, to newId: Int) throws -> [SyncResult] {
+        guard let db else { return [] }
         let now = Int64(Date().timeIntervalSince1970)
-        let sql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colBkId) = ?"
 
         var updatedResults: [SyncResult] = []
         try transaction {
-            try exec(sql, parameters: [newId, now, oldId])
-            updatedResults = try fetchSyncResults(whereClause: "WHERE \(colBkId) = ?", parameters: [newId])
+            let oldRows = try fetchSyncResults(whereClause: "WHERE \(colBkId) = ?", parameters: [oldId])
+            guard !oldRows.isEmpty else { return }
 
-            for res in updatedResults {
-                if let ckId = res.ckRecordId {
-                    try addPendingSync(ckRecordId: ckId, operation: "upload")
+            for oldRow in oldRows {
+                guard let oldRowId = oldRow.id else { continue }
+
+                let conflictSql: String
+                let conflictParams: [Any]
+                if let fid = oldRow.folderId {
+                    conflictSql = "SELECT \(colId), \(colContentId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+                    conflictParams = [fid, oldRow.name, newId]
+                } else {
+                    conflictSql = "SELECT \(colId), \(colContentId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+                    conflictParams = [oldRow.name, newId]
+                }
+
+                struct ConflictRow {
+                    let id: Int64
+                    let contentId: String
+                }
+
+                let conflicts = try db.fetch(query: conflictSql, parameters: conflictParams) { row in
+                    ConflictRow(id: row.int64(at: 0), contentId: row.string(at: 1) ?? "")
+                }
+
+                if let existing = conflicts.first {
+                    let oldCids = Set(oldRow.contentId.components(separatedBy: ",").filter { !$0.isEmpty })
+                    let existingCids = Set(existing.contentId.components(separatedBy: ",").filter { !$0.isEmpty })
+                    let mergedCids = oldCids.union(existingCids).sorted().joined(separator: ",")
+
+                    let updateExistingSql = "UPDATE \(resultsTable) SET \(colContentId) = ?, \(colResLastModified) = ? WHERE \(colId) = ?"
+                    try exec(updateExistingSql, parameters: [mergedCids, now, existing.id])
+
+                    try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?", parameters: [oldRowId])
+
+                    if let oldCkId = oldRow.ckRecordId {
+                        try addPendingSync(ckRecordId: oldCkId, operation: "delete")
+                    }
+                    if let reloaded = try reloadSyncResult(id: existing.id) {
+                        updatedResults.append(reloaded)
+                        if let ckId = reloaded.ckRecordId {
+                            try addPendingSync(ckRecordId: ckId, operation: "upload")
+                        }
+                    }
+                } else {
+                    let updateSql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colId) = ?"
+                    try exec(updateSql, parameters: [newId, now, oldRowId])
+
+                    if let reloaded = try reloadSyncResult(id: oldRowId) {
+                        updatedResults.append(reloaded)
+                        if let ckId = reloaded.ckRecordId {
+                            try addPendingSync(ckRecordId: ckId, operation: "upload")
+                        }
+                    }
                 }
             }
         }

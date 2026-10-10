@@ -63,8 +63,9 @@ extension ResultsViewModel {
 
             if oldIndex != -1, newIndex != -1, oldIndex != newIndex {
                 notifyChange(.moveFolder(folder: node, oldParent: parentNode, oldIndex: oldIndex, newParent: parentNode, newIndex: newIndex))
+            } else {
+                notifyChange(.updateFolder(folder: node))
             }
-            notifyChange(.updateFolder(folder: node))
         } else {
             // fallback: try to find and update (shouldn't happen if index consistent)
             if let idx = folderRoots.firstIndex(where: { $0.id == folderId }) {
@@ -155,10 +156,6 @@ extension ResultsViewModel {
 
         // update folderById if missing (usually not necessary)
         folderById[draggedNode.id] = draggedNode
-        // 4. Update results di semua descendant folders
-        for id in draggedNode.allDescendantIds {
-            db.updateResultsFolder(oldFolderId: id, newFolderId: id)
-        }
 
         if oldIndex != -1, newIndex != -1 {
             notifyChange(.moveFolder(folder: draggedNode, oldParent: oldParentNode, oldIndex: oldIndex, newParent: newParent, newIndex: newIndex))
