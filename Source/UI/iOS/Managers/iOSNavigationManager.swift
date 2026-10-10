@@ -133,9 +133,9 @@ class iOSNavigationManager {
         currentMode = mode
     }
 
-    func openBook(_ book: BooksData, initialContentId: Int? = nil, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) {
+    func openBook(_ book: BooksData, options: OpenBookOptions = .init()) {
         Task {
-            await openBookAsync(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation, recordHistory: recordHistory)
+            await openBookAsync(book, options: options)
         }
     }
 
@@ -232,7 +232,7 @@ class iOSNavigationManager {
                     if !MaktabahApp.isIpad, self?.selectedBook != nil {
                         // Do not automatically push a new book if there is already an active reader on iPhone
                     } else {
-                        self?.presentReader(book, initialContentId: initialContentId)
+                        self?.presentReader(book, options: OpenBookOptions(contentId: initialContentId))
                     }
                     self?.activeIntegrationStates.removeAll { $0.id == state.id }
                 }
@@ -259,22 +259,22 @@ class iOSNavigationManager {
         activeIntegrationStates.removeAll { $0.id == state.id }
     }
 
-    private func openBookAsync(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) async {
+    private func openBookAsync(_ book: BooksData, options: OpenBookOptions) async {
         if AppConfig.isUsingBundleMode,
            !BookArchiveIntegrator.shared.isBookIntegrated(book)
         {
-            showBookIntegrationConfirmation(for: book, initialContentId: initialContentId)
+            showBookIntegrationConfirmation(for: book, initialContentId: options.contentId)
             return
         }
 
-        presentReader(book, initialContentId: initialContentId, searchText: searchText, searchMode: searchMode, nearDistance: nearDistance, targetAnnotation: targetAnnotation, recordHistory: recordHistory)
+        presentReader(book, options: options)
 
         await Task.yield()
 
-        if recordHistory {
+        if options.recordHistory {
             HistoryViewModel.shared.addBookToHistory(book.id)
-            if let initialContentId {
-                HistoryViewModel.shared.updateLastContentId(initialContentId, for: book.id)
+            if let contentId = options.contentId {
+                HistoryViewModel.shared.updateLastContentId(contentId, for: book.id)
             }
         }
     }
@@ -327,7 +327,7 @@ class iOSNavigationManager {
         state.transitionToIntegrating()
     }
 
-    private func presentReader(_ book: BooksData, initialContentId: Int?, searchText: String? = nil, searchMode: SearchMode? = nil, nearDistance: Int = 10, targetAnnotation: Annotation? = nil, recordHistory: Bool = true) {
+    private func presentReader(_ book: BooksData, options: OpenBookOptions) {
         switchToMode(.viewer)
         clearPendingBookIntegration()
 
@@ -335,34 +335,21 @@ class iOSNavigationManager {
             currentTab.viewModel.saveCurrentState()
         }
 
-        let searchEvent = (searchText != nil && !searchText!.isEmpty)
-            ? ReaderHighlightEvent(
-                query: searchText!,
-                contentId: initialContentId,
-                mode: searchMode,
-                nearDistance: nearDistance
-            )
-            : nil
-
-        let annotationEvent = targetAnnotation.map {
-            ReaderAnnotationEvent(annotation: $0)
-        }
-
         if let existingTabIndex = openTabs.firstIndex(where: { $0.book.id == book.id }) {
             activeTabId = openTabs[existingTabIndex].id
             // Update initialContentId if provided, so the reader can jump to it
             let updatedTab = openTabs[existingTabIndex]
-            updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || recordHistory
-            if let contentId = initialContentId {
+            updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || options.recordHistory
+            if let contentId = options.contentId {
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId
-                let hasNewSearch = searchEvent != nil
-                let hasNewTarget = annotationEvent != nil
+                let hasNewSearch = options.searchEvent != nil
+                let hasNewTarget = options.annotationEvent != nil
 
                 if !isSameContent || hasNewSearch || hasNewTarget {
-                    if let searchEvent {
+                    if let searchEvent = options.searchEvent {
                         updatedTab.viewModel.searchEvent = searchEvent
                     }
-                    if let annotationEvent {
+                    if let annotationEvent = options.annotationEvent {
                         updatedTab.viewModel.annotationEvent = annotationEvent
                     }
                     updatedTab.viewModel.fetchContentById(contentId)
@@ -370,26 +357,26 @@ class iOSNavigationManager {
 
                 openTabs[existingTabIndex] = updatedTab
             } else {
-                if let searchEvent {
+                if let searchEvent = options.searchEvent {
                     updatedTab.viewModel.searchEvent = searchEvent
                 }
-                if let annotationEvent {
+                if let annotationEvent = options.annotationEvent {
                     updatedTab.viewModel.annotationEvent = annotationEvent
                 }
                 openTabs[existingTabIndex] = updatedTab
             }
         } else {
             let viewModel = ReaderViewModel(book: book)
-            viewModel.recordHistory = recordHistory
-            viewModel.searchEvent = searchEvent
-            viewModel.annotationEvent = annotationEvent
-            viewModel.loadInitialContent(initialContentId: initialContentId)
-            let newTab = ReaderTab(id: UUID(), book: book, initialContentId: initialContentId, viewModel: viewModel)
+            viewModel.recordHistory = options.recordHistory
+            viewModel.searchEvent = options.searchEvent
+            viewModel.annotationEvent = options.annotationEvent
+            viewModel.loadInitialContent(initialContentId: options.contentId)
+            let newTab = ReaderTab(id: UUID(), book: book, initialContentId: options.contentId, viewModel: viewModel)
             openTabs.append(newTab)
             activeTabId = newTab.id
         }
 
-        selectedContentId = initialContentId
+        selectedContentId = options.contentId
         selectedBook = book
     }
 

@@ -123,14 +123,20 @@ struct iOSMainView: View {
                    let book = LibraryDataManager.shared.getBook([annotation.bkId]).first
                 {
                     await MainActor.run {
-                        bManager.openBook(book, initialContentId: Int(annotation.contentId), targetAnnotation: annotation)
+                        bManager.openBook(
+                            book,
+                            options: OpenBookOptions(
+                                contentId: Int(annotation.contentId),
+                                annotationEvent: ReaderAnnotationEvent(annotation: annotation)
+                            )
+                        )
                     }
                 }
 
             case let .history(bkId, contentId):
                 if let book = LibraryDataManager.shared.getBook([bkId]).first {
                     await MainActor.run {
-                        bManager.openBook(book, initialContentId: contentId)
+                        bManager.openBook(book, options: OpenBookOptions(contentId: contentId))
                     }
                 }
             }

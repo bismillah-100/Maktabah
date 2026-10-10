@@ -29,7 +29,7 @@ struct iOSHistoryView: View {
                     viewModel: viewModel,
                     onOpen: { book in
                         let lastId = viewModel.entriesByBookId[book.id]?.lastContentId
-                        navigationManager.openBook(book, initialContentId: lastId)
+                        navigationManager.openBook(book, options: OpenBookOptions(contentId: lastId))
                     }
                 )
             } else if filteredFavorites.isEmpty {

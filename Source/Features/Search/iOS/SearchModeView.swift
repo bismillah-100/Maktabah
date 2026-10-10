@@ -180,14 +180,20 @@ struct SearchModeView: View {
             let table = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
             if let tableInt = Int(table), let bookData = LibraryDataManager.shared.getBook([tableInt]).first {
                 let shouldRecord = UserDefaults.standard.recordSearchHistory
+                let searchEvent = ReaderHighlightEvent(
+                    query: navigationManager.searchViewModel.query,
+                    contentId: item.bookId,
+                    mode: navigationManager.searchViewModel.searchMode,
+                    nearDistance: navigationManager.searchViewModel.nearDistance
+                )
                 await MainActor.run {
                     navigationManager.openBook(
                         bookData,
-                        initialContentId: item.bookId,
-                        searchText: navigationManager.searchViewModel.query,
-                        searchMode: navigationManager.searchViewModel.searchMode,
-                        nearDistance: navigationManager.searchViewModel.nearDistance,
-                        recordHistory: shouldRecord
+                        options: OpenBookOptions(
+                            contentId: item.bookId,
+                            searchEvent: searchEvent,
+                            recordHistory: shouldRecord
+                        )
                     )
                 }
             }

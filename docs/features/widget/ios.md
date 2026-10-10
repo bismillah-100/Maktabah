@@ -21,7 +21,7 @@ sequenceDiagram
     
     rect rgb(240, 248, 255)
         Note over View,Reader: Kasus Anotasi / Riwayat
-        View->>Nav: openBook(book, initialContentId:, targetAnnotation:)
+        View->>Nav: openBook(book, options:)
         Nav-->>View: Update State (selectedBook)
         View->>Reader: adaptiveReaderPush()
         Note over Reader: Render teks & scroll ke target
@@ -47,8 +47,10 @@ private func handleOpenURL(_ url: URL, bManager: iOSNavigationManager) {
                 await MainActor.run {
                     bManager.openBook(
                         book,
-                        initialContentId: Int(annotation.contentId),
-                        targetAnnotation: annotation
+                        options: OpenBookOptions(
+                            contentId: Int(annotation.contentId),
+                            annotationEvent: ReaderAnnotationEvent(annotation: annotation)
+                        )
                     )
                 }
             }
@@ -56,7 +58,7 @@ private func handleOpenURL(_ url: URL, bManager: iOSNavigationManager) {
         case let .history(bkId, contentId):
             if let book = LibraryDataManager.shared.getBook([bkId]).first {
                 await MainActor.run {
-                    bManager.openBook(book, initialContentId: contentId)
+                    bManager.openBook(book, options: OpenBookOptions(contentId: contentId))
                 }
             }
         }
