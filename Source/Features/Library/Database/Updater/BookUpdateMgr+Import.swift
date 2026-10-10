@@ -147,6 +147,9 @@ extension BookUpdateManager {
 
         // Hapus cache per-kitab di folder Books jika ada, agar pembaca beralih ke arsip yang diperbarui
         BookDownloadManager.shared.removeCachedBook(bookId: stagedUpdate.metadata.bkid)
+        BookPageCache.shared.remove(bookId: stagedUpdate.metadata.bkid)
+        BookConnection.invalidateTOC(for: stagedUpdate.metadata.bkid)
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(stagedUpdate.metadata.bkid)))
 
         return BookUpdateResult(
             bookId: stagedUpdate.metadata.bkid,
