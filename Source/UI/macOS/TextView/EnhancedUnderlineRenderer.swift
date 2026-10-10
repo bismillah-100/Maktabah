@@ -149,9 +149,15 @@ enum EnhancedUnderlineRenderer {
         while end > start, isWhitespace(char: nsStr.character(at: end - 1)) { end -= 1 }
         guard end > start else { return nil }
 
+        let lineStart = line.characterRange.location
+        let lineEnd = line.characterRange.location + line.characterRange.length
+        let clampedStart = max(start, lineStart)
+        let clampedEnd = min(end, lineEnd)
+        guard clampedEnd >= clampedStart else { return nil }
+
         var minX = CGFloat.greatestFiniteMagnitude
         var maxX = -CGFloat.greatestFiniteMagnitude
-        for i in start ... end {
+        for i in clampedStart ... clampedEnd {
             let pt = line.locationForCharacter(at: i)
             minX = min(minX, pt.x)
             maxX = max(maxX, pt.x)
