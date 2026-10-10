@@ -3,13 +3,27 @@ import SwiftUI
 struct SearchResultsListView: View {
     let results: [SearchResultItem]
     var showsBookTitle: Bool = true
+    var query: String = ""
+    var mode: SearchMode = .phrase
+    var nearDistance: Int = 10
     let onSelect: (SearchResultItem) -> Void
 
+    private var keywords: [String] {
+        FtsQueryParser.extractKeywords(query: query, mode: mode)
+    }
+
     var body: some View {
+        let currentKeywords = keywords
         ThemeList(isGrouped: false) {
             ForEach(results) { item in
                 Button(action: { onSelect(item) }) {
-                    SearchResultRow(item: item, showsBookTitle: showsBookTitle)
+                    SearchResultRow(
+                        item: item,
+                        showsBookTitle: showsBookTitle,
+                        keywords: currentKeywords,
+                        mode: mode,
+                        nearDistance: nearDistance
+                    )
                 }
             }
         }
@@ -20,7 +34,9 @@ struct SearchResultsListView: View {
 struct SearchResultRow: View {
     let item: SearchResultItem
     var showsBookTitle: Bool = true
-    @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager?
+    var keywords: [String] = []
+    var mode: SearchMode = .phrase
+    var nearDistance: Int = 10
     @State private var resolvedSnippet: NSAttributedString?
 
     var body: some View {
@@ -61,13 +77,12 @@ struct SearchResultRow: View {
                         } catch {
                             return
                         }
-                        guard let vm = navigationManager?.searchViewModel else { return }
-                        let keywords = FtsQueryParser.extractKeywords(query: vm.query, mode: vm.searchMode)
+                        guard !keywords.isEmpty else { return }
                         if let resolved = await SearchHitResolver.shared.resolveSnippet(
                             for: item,
                             keywords: keywords,
-                            mode: vm.searchMode,
-                            nearDistance: vm.nearDistance
+                            mode: mode,
+                            nearDistance: nearDistance
                         ) {
                             resolvedSnippet = resolved
                         }
