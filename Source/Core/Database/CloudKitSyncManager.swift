@@ -456,6 +456,7 @@ final class CloudKitSyncManager: Sendable {
         }
 
         let batchSize = 300
+        let uploadStartTime = Int64(Date().timeIntervalSince1970)
         Task.detached { [weak self] in
             guard let self else { return }
             var lastError: (any Error)?
@@ -475,6 +476,7 @@ final class CloudKitSyncManager: Sendable {
                                     result,
                                     pendingIds: ids,
                                     target: target,
+                                    uploadStartTime: uploadStartTime,
                                     retryCount: retryCount,
                                     completion: { res in
                                         continuation.resume(returning: res)
@@ -507,13 +509,19 @@ final class CloudKitSyncManager: Sendable {
         _ result: Result<Void, any Error>,
         pendingIds: [String],
         target: SyncTarget,
+        uploadStartTime: Int64? = nil,
         retryCount: Int = 0,
         completion: SyncProgress
     ) {
         switch result {
         case .success:
             Task.detached { [weak self] in
-                await self?.pendingCoordinator.removePendingSync(pendingIds, target: target)
+                await self?.pendingCoordinator.removePendingSync(
+                    pendingIds,
+                    target: target,
+                    operation: "upload",
+                    maxQueuedAt: uploadStartTime
+                )
             }
             completion?(.success(()))
         case let .failure(error):
@@ -607,7 +615,11 @@ final class CloudKitSyncManager: Sendable {
                 case .success:
                     if let target {
                         Task.detached { [weak self] in
-                            await self?.pendingCoordinator.removePendingSync(batchStrIds, target: target)
+                            await self?.pendingCoordinator.removePendingSync(
+                                batchStrIds,
+                                target: target,
+                                operation: "delete"
+                            )
                         }
                     }
                     continuation.resume(returning: .success(()))
@@ -635,13 +647,21 @@ final class CloudKitSyncManager: Sendable {
                 }
                 if !idsToRemove.isEmpty, let target {
                     Task.detached { [weak self] in
-                        await self?.pendingCoordinator.removePendingSync(idsToRemove, target: target)
+                        await self?.pendingCoordinator.removePendingSync(
+                            idsToRemove,
+                            target: target,
+                            operation: "delete"
+                        )
                     }
                 }
             } else if ckError.code == .serverRecordChanged || ckError.code == .unknownItem {
                 if let target {
                     Task.detached { [weak self] in
-                        await self?.pendingCoordinator.removePendingSync(batchStrIds, target: target)
+                        await self?.pendingCoordinator.removePendingSync(
+                            batchStrIds,
+                            target: target,
+                            operation: "delete"
+                        )
                     }
                 }
             }
@@ -817,7 +837,11 @@ final class CloudKitSyncManager: Sendable {
             core.upload(records: [serverRecord]) { [weak self] result in
                 if case .success = result {
                     Task.detached { [weak self] in
-                        await self?.pendingCoordinator.removePendingSync([recordId], target: target)
+                        await self?.pendingCoordinator.removePendingSync(
+                            [recordId],
+                            target: target,
+                            operation: "upload"
+                        )
                     }
                 }
                 completion?(result)
@@ -826,7 +850,11 @@ final class CloudKitSyncManager: Sendable {
             Task.detached { [weak self] in
                 defer { completion?(.success(())) }
                 if await self?.applyChangesLocally(recordsToSave: [serverRecord], recordIDsToDelete: []) == true {
-                    await self?.pendingCoordinator.removePendingSync([recordId], target: target)
+                    await self?.pendingCoordinator.removePendingSync(
+                        [recordId],
+                        target: target,
+                        operation: "upload"
+                    )
                 }
             }
         }
@@ -885,7 +913,11 @@ final class CloudKitSyncManager: Sendable {
         let successfulIds = context.pendingRecordIds.filter { !failedIds.contains($0) }
         if !successfulIds.isEmpty {
             Task.detached { [weak self] in
-                await self?.pendingCoordinator.removePendingSync(successfulIds, target: context.target)
+                await self?.pendingCoordinator.removePendingSync(
+                    successfulIds,
+                    target: context.target,
+                    operation: "upload"
+                )
             }
         }
 
