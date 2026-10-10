@@ -461,7 +461,9 @@ class IbarotTextView: NSTextView {
         displayedSelection: NSRange
     ) -> (existing: Annotation, charIndex: Int)? {
         if let charIndex = clickedCharIndex,
-           let noteId = textStorage?.attribute(NSAttributedString.Key("annotationID"), at: charIndex, effectiveRange: nil) as? Int64,
+           let ts = textStorage,
+           charIndex >= 0, charIndex < ts.length,
+           let noteId = ts.attribute(NSAttributedString.Key("annotationID"), at: charIndex, effectiveRange: nil) as? Int64,
            let existing = annotations.first(where: { $0.id == noteId })
         {
             return (existing, charIndex)
@@ -734,7 +736,9 @@ class IbarotTextView: NSTextView {
     @IBAction func annotateSelection(_ sender: Any?) {
         let displayedSelection = selectedRange()
         let selection = sourceRange(forDisplayedRange: displayedSelection)
-        guard selection.length > 0,
+        guard selection.location != NSNotFound,
+              selection.location >= 0,
+              selection.length > 0,
               let bkId, let contentId,
               let page, let part
         else { return }
@@ -752,6 +756,7 @@ class IbarotTextView: NSTextView {
         let calculator = ArabicRangeCalculator()
 
         let ns = sourceTextForAnnotations() as NSString
+        guard selection.location + selection.length <= ns.length else { return }
         let selectedText = ns.substring(with: selection)
         let (rangeWithDiacritics, rangeWithoutDiacritics) =
             calculator.calculateRanges(

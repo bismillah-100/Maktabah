@@ -185,6 +185,10 @@ extension String {
     }
 
     func calculateRangeWithoutHarakat(from sourceRange: NSRange, in sourceTextWithHarakat: String) -> NSRange {
+        guard sourceRange.location != NSNotFound, sourceRange.location >= 0 else {
+            return NSRange(location: NSNotFound, length: 0)
+        }
+
         var startOffset = 0
         var selectedLength = 0
         var currentUtf16 = 0

@@ -19,7 +19,7 @@ struct ArabicRenderResult {
     let footnoteRanges: [NSRange]
 
     func remapDisplayedRange(_ range: NSRange) -> NSRange {
-        guard !replacementEvents.isEmpty else { return range }
+        guard range.location != NSNotFound, range.location >= 0, !replacementEvents.isEmpty else { return range }
 
         let start = displayedOffset(forSourceOffset: range.location, affinity: .leading)
         let end = displayedOffset(forSourceOffset: range.location + range.length, affinity: .trailing)
@@ -27,7 +27,7 @@ struct ArabicRenderResult {
     }
 
     func remapSourceRange(_ range: NSRange) -> NSRange {
-        guard !replacementEvents.isEmpty else { return range }
+        guard range.location != NSNotFound, range.location >= 0, !replacementEvents.isEmpty else { return range }
 
         let start = sourceOffset(forDisplayedOffset: range.location, affinity: .leading)
         let end = sourceOffset(forDisplayedOffset: range.location + range.length, affinity: .trailing)
