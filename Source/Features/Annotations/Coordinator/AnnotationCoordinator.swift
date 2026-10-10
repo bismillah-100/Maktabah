@@ -75,11 +75,23 @@ class AnnotationCoordinator {
 
     @discardableResult
     func saveHighlight(_ params: SaveHighlightParams) throws -> Annotation {
+        let nsText = params.text as NSString
+        let safeRange: NSRange
+        if params.range.location != NSNotFound,
+           params.range.location >= 0,
+           params.range.location + params.range.length <= nsText.length
+        {
+            safeRange = params.range
+        } else {
+            safeRange = NSRange(location: 0, length: 0)
+        }
+        let selectedSnippet = safeRange.length > 0 ? nsText.substring(with: safeRange) : ""
+
         let calculator = ArabicRangeCalculator()
         let ranges = calculator.calculateRanges(
-            for: params.range,
+            for: safeRange,
             in: params.text,
-            selectedText: (params.text as NSString).substring(with: params.range),
+            selectedText: selectedSnippet,
             diacriticsText: params.diacriticsText,
             showHarakat: params.showHarakat
         )
@@ -96,7 +108,7 @@ class AnnotationCoordinator {
             type: params.mode,
             note: nil,
             createdAt: Int64(Date().timeIntervalSince1970),
-            context: (params.text as NSString).substring(with: params.range),
+            context: selectedSnippet,
             page: params.page,
             part: params.part,
             pageArb: String(params.page).convertToArabicDigits(),
