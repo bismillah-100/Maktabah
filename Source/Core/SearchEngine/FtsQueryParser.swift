@@ -40,9 +40,10 @@ enum FtsQueryParser {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
+        let normalizedQuery = trimmed.decomposedStringWithCanonicalMapping
         // Strip explicit NEAR tokens to leave actual search words
-        let cleanedQuery = trimmed
-            .replacingOccurrences(of: #"NEAR(/\d+)?|\bNEAR\b"#, with: " ", options: [.regularExpression, .caseInsensitive])
+        let cleanedQuery = normalizedQuery
+            .replacingOccurrences(of: #"(?i)\bNEAR(/\d+)?\b"#, with: " ", options: .regularExpression)
             .replacingOccurrences(of: #"[(),'"]"#, with: " ", options: .regularExpression)
 
         let rawTerms = cleanedQuery.components(separatedBy: CharacterSet(charactersIn: ",\n\t "))
@@ -62,11 +63,12 @@ enum FtsQueryParser {
 
     /// Extracts the NEAR distance from the query if it contains explicit NEAR syntax.
     static func extractNearDistance(query: String) -> Int? {
+        let normalizedQuery = query.convertArabicIndicDigitsToASCII()
         let pattern = #"(?i)(?:NEAR\s*\(\s*[^,\)]+(?:,\s*(\d+))?\s*\)|[^\s]+\s+NEAR(?:/(\d+))?\s+[^\s]+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
 
-        let nsText = query as NSString
-        if let match = regex.firstMatch(in: query, options: [], range: NSRange(location: 0, length: nsText.length)) {
+        let nsText = normalizedQuery as NSString
+        if let match = regex.firstMatch(in: normalizedQuery, options: [], range: NSRange(location: 0, length: nsText.length)) {
             if match.range(at: 1).location != NSNotFound, let k = Int(nsText.substring(with: match.range(at: 1))) {
                 return k
             } else if match.range(at: 2).location != NSNotFound, let k = Int(nsText.substring(with: match.range(at: 2))) {
@@ -79,8 +81,8 @@ enum FtsQueryParser {
     // MARK: - Private Helpers
 
     private static func hasExplicitNearSyntax(_ text: String) -> Bool {
-        let upper = text.uppercased()
-        return upper.contains("NEAR/") || upper.contains("NEAR")
+        let pattern = #"(?i)(?:\bNEAR\s*\(|\bNEAR\s*/|\s+NEAR\s+)"#
+        return text.range(of: pattern, options: .regularExpression) != nil
     }
 
     private static func parseExplicitNearSyntax(_ text: String, fallbackDistance: Int) -> String? {
@@ -90,18 +92,17 @@ enum FtsQueryParser {
             return nil
         }
 
-        let nsText = text as NSString
-        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+        let normalizedText = text.convertArabicIndicDigitsToASCII()
+        let nsText = normalizedText as NSString
+        let matches = regex.matches(in: normalizedText, options: [], range: NSRange(location: 0, length: nsText.length))
 
         if let match = matches.first {
             let (words, distance) = extractWordsAndDistance(from: match, nsText: nsText, fallbackDistance: fallbackDistance)
-            guard !words.isEmpty else { return nil }
+            guard words.count >= 2 else { return nil }
             return formatNearQuery(terms: words, distance: distance)
         }
 
-        let cleanTerms = extractCleanTerms(text)
-        guard !cleanTerms.isEmpty else { return nil }
-        return formatNearQuery(terms: cleanTerms, distance: fallbackDistance)
+        return nil
     }
 
     private static func extractWordsAndDistance(
@@ -143,10 +144,12 @@ enum FtsQueryParser {
     }
 
     private static func extractCleanTerms(_ text: String) -> [String] {
+        let normalized = text.decomposedStringWithCanonicalMapping
+
         // Remove NEAR keywords, punctuation, and FTS operators
-        let sanitized = text
-            .replacingOccurrences(of: #"NEAR(/\d+)?|\bNEAR\b"#, with: " ", options: [.regularExpression, .caseInsensitive])
-            .replacingOccurrences(of: #"[^\w\s\u0600-\u06FF]"#, with: " ", options: .regularExpression)
+        let sanitized = normalized
+            .replacingOccurrences(of: #"(?i)\bNEAR(/\d+)?\b"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"[^\w\s\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]"#, with: " ", options: .regularExpression)
 
         return sanitized.components(separatedBy: .whitespacesAndNewlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).normalizeArabic().stemArabicLight10() }

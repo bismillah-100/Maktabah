@@ -30,6 +30,22 @@ extension String {
         isMultilingual ? convertToArabicDigitsMultilingual() : convertToArabicDigitsDirect()
     }
 
+    func convertArabicIndicDigitsToASCII() -> String {
+        var newScalars = String.UnicodeScalarView()
+        newScalars.reserveCapacity(unicodeScalars.count)
+        for scalar in unicodeScalars {
+            let val = scalar.value
+            if val >= 0x0660 && val <= 0x0669 {
+                newScalars.append(UnicodeScalar(val - 0x0660 + 48)!)
+            } else if val >= 0x06F0 && val <= 0x06F9 {
+                newScalars.append(UnicodeScalar(val - 0x06F0 + 48)!)
+            } else {
+                newScalars.append(scalar)
+            }
+        }
+        return String(newScalars)
+    }
+
     private func convertToArabicDigitsDirect() -> String {
         var newScalars = String.UnicodeScalarView()
         newScalars.reserveCapacity(unicodeScalars.count)
