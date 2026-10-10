@@ -49,13 +49,29 @@ struct SyncPendingStore: Sendable {
         )
     }
 
-    func removePendingSync(ckRecordIds: [String]) {
+    func removePendingSync(
+        ckRecordIds: [String],
+        operation: String? = nil,
+        maxQueuedAt: Int64? = nil
+    ) {
         guard !ckRecordIds.isEmpty else { return }
         for chunk in ckRecordIds.chunked(into: 500) {
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+            var sql = "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders))"
+            var parameters: [Any] = chunk
+
+            if let operation {
+                sql += " AND operation = ?"
+                parameters.append(operation)
+            }
+            if let maxQueuedAt {
+                sql += " AND queued_at <= ?"
+                parameters.append(maxQueuedAt)
+            }
+
             try? db.execute(
-                query: "DELETE FROM sync_pending WHERE ck_record_id IN (\(placeholders));",
-                parameters: chunk
+                query: sql + ";",
+                parameters: parameters
             )
         }
     }
@@ -77,8 +93,16 @@ extension SyncPendingManaging {
         try syncPendingStore?.addPendingSync(ckRecordId: ckRecordId, operation: operation)
     }
 
-    func removePendingSync(ckRecordIds: [String]) {
-        syncPendingStore?.removePendingSync(ckRecordIds: ckRecordIds)
+    func removePendingSync(
+        ckRecordIds: [String],
+        operation: String? = nil,
+        maxQueuedAt: Int64? = nil
+    ) {
+        syncPendingStore?.removePendingSync(
+            ckRecordIds: ckRecordIds,
+            operation: operation,
+            maxQueuedAt: maxQueuedAt
+        )
     }
 
     func fetchPendingSync(operation: String) -> [String] {
