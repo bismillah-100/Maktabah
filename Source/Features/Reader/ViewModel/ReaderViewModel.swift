@@ -73,7 +73,8 @@ class ReaderViewModel: ViewModelBase {
     static let kfgqpcTitle = Font.custom(ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 18)
     static let kfgqpcList = Font.custom(ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 20)
 
-    var searchText: String = ""
+    var searchEvent: ReaderHighlightEvent?
+    var annotationEvent: ReaderAnnotationEvent?
     var searchMode: SearchMode?
     var nearDistance: Int = UserDefaults.standard.searchNearDistance {
         didSet {
@@ -81,7 +82,6 @@ class ReaderViewModel: ViewModelBase {
         }
     }
 
-    var targetAnnotation: Annotation?
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
     var needsScrollRestore: Bool = false

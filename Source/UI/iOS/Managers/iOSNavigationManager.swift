@@ -335,6 +335,19 @@ class iOSNavigationManager {
             currentTab.viewModel.saveCurrentState()
         }
 
+        let searchEvent = (searchText != nil && !searchText!.isEmpty)
+            ? ReaderHighlightEvent(
+                query: searchText!,
+                contentId: initialContentId,
+                mode: searchMode,
+                nearDistance: nearDistance
+            )
+            : nil
+
+        let annotationEvent = targetAnnotation.map {
+            ReaderAnnotationEvent(annotation: $0)
+        }
+
         if let existingTabIndex = openTabs.firstIndex(where: { $0.book.id == book.id }) {
             activeTabId = openTabs[existingTabIndex].id
             // Update initialContentId if provided, so the reader can jump to it
@@ -342,32 +355,34 @@ class iOSNavigationManager {
             updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || recordHistory
             if let contentId = initialContentId {
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId
-                let hasNewSearch = (searchText != nil && !searchText!.isEmpty)
-                let hasNewTarget = (targetAnnotation != nil)
+                let hasNewSearch = searchEvent != nil
+                let hasNewTarget = annotationEvent != nil
 
                 if !isSameContent || hasNewSearch || hasNewTarget {
-                    updatedTab.viewModel.searchText = searchText ?? ""
-                    updatedTab.viewModel.searchMode = searchMode
-                    updatedTab.viewModel.nearDistance = nearDistance
-                    updatedTab.viewModel.targetAnnotation = targetAnnotation
+                    if let searchEvent {
+                        updatedTab.viewModel.searchEvent = searchEvent
+                    }
+                    if let annotationEvent {
+                        updatedTab.viewModel.annotationEvent = annotationEvent
+                    }
                     updatedTab.viewModel.fetchContentById(contentId)
                 }
 
                 openTabs[existingTabIndex] = updatedTab
             } else {
-                updatedTab.viewModel.searchText = searchText ?? ""
-                updatedTab.viewModel.searchMode = searchMode
-                updatedTab.viewModel.nearDistance = nearDistance
-                updatedTab.viewModel.targetAnnotation = targetAnnotation
+                if let searchEvent {
+                    updatedTab.viewModel.searchEvent = searchEvent
+                }
+                if let annotationEvent {
+                    updatedTab.viewModel.annotationEvent = annotationEvent
+                }
                 openTabs[existingTabIndex] = updatedTab
             }
         } else {
             let viewModel = ReaderViewModel(book: book)
             viewModel.recordHistory = recordHistory
-            viewModel.searchText = searchText ?? ""
-            viewModel.searchMode = searchMode
-            viewModel.nearDistance = nearDistance
-            viewModel.targetAnnotation = targetAnnotation
+            viewModel.searchEvent = searchEvent
+            viewModel.annotationEvent = annotationEvent
             viewModel.loadInitialContent(initialContentId: initialContentId)
             let newTab = ReaderTab(id: UUID(), book: book, initialContentId: initialContentId, viewModel: viewModel)
             openTabs.append(newTab)
