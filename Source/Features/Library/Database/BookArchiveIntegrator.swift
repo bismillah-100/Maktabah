@@ -341,6 +341,9 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     private func finalizeIntegration(book: BooksData) {
         DatabaseManager.shared.invalidateArchiveCache(archiveId: book.archive)
         BookDownloadManager.shared.removeCachedBook(bookId: book.id)
+        BookPageCache.shared.remove(bookId: book.id)
+        BookConnection.invalidateTOC(for: book.id)
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(book.id)))
         IntegrationCache.shared.markIntegrated(bookId: book.id, archiveId: book.archive)
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .bookIntegrated, object: book.id)
@@ -349,6 +352,9 @@ final class BookArchiveIntegrator: @unchecked Sendable {
 
     private func finalizeRemoval(book: BooksData) {
         DatabaseManager.shared.invalidateArchiveCache(archiveId: book.archive)
+        BookPageCache.shared.remove(bookId: book.id)
+        BookConnection.invalidateTOC(for: book.id)
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(book.id)))
         IntegrationCache.shared.unmarkIntegrated(bookId: book.id, archiveId: book.archive)
         LibraryDataManager.shared.removeBookFromMemory(id: book.id, muallifId: book.muallif)
         DispatchQueue.main.async {
