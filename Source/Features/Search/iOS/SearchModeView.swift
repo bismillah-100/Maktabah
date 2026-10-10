@@ -171,21 +171,23 @@ struct SearchModeView: View {
     }
 
     private func handleSelection(_ item: SearchResultItem) {
-        Task {
-            let table = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
-            if let tableInt = Int(table), let bookData = LibraryDataManager.shared.getBook([tableInt]).first {
-                let shouldRecord = UserDefaults.standard.recordSearchHistory
-                await MainActor.run {
-                    navigationManager.openBook(
-                        bookData,
-                        initialContentId: item.bookId,
-                        searchText: navigationManager.searchViewModel.query,
-                        searchMode: navigationManager.searchViewModel.searchMode,
-                        nearDistance: navigationManager.searchViewModel.nearDistance,
-                        recordHistory: shouldRecord
-                    )
-                }
-            }
+        let table = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
+        if let tableInt = Int(table), let bookData = LibraryDataManager.shared.getBook([tableInt]).first {
+            let shouldRecord = UserDefaults.standard.recordSearchHistory
+            let searchEvent = ReaderHighlightEvent(
+                query: navigationManager.searchViewModel.query,
+                contentId: item.bookId,
+                mode: navigationManager.searchViewModel.searchMode,
+                nearDistance: navigationManager.searchViewModel.nearDistance
+            )
+            navigationManager.openBook(
+                bookData,
+                options: OpenBookOptions(
+                    contentId: item.bookId,
+                    searchEvent: searchEvent,
+                    recordHistory: shouldRecord
+                )
+            )
         }
     }
 

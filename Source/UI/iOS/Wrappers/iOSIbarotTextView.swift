@@ -79,18 +79,18 @@ class iOSCustomIbarotTextView: UITextView {
     }
 
     @MainActor
-    func highlighAndScrollToAnns(_ ann: Annotation) {
+    func highlighAndScrollToAnns(_ ann: Annotation) async {
         let range = displayedRange(for: ann)
-
+        guard range.location >= 0, range.length > 0 else { return }
         scrollRangeToVisible(range)
-        Task { [weak self] in
-            await Task.yield()
-            await Task.yield()
-            self?.popupText(for: [range])
-        }
+        await popupText(for: [range])
     }
 
-    func popupText(for ranges: [NSRange]) {
+    @MainActor
+    func popupText(for ranges: [NSRange]) async {
+        try? await Task.sleep(for: .seconds(0.15))
+        guard !Task.isCancelled else { return }
+
         let nsString = textStorage.string as NSString
         guard let firstRange = ranges.first,
               firstRange.location >= 0,
@@ -284,10 +284,8 @@ class PullNavigationIndicatorView: UIView {
 struct iOSIbarotTextView: UIViewRepresentable {
     @Binding var text: String
     var annotations: [Annotation] = []
-    @Binding var searchText: String
-    var searchMode: SearchMode?
-    var nearDistance: Int = 10
-    var targetAnnotation: Annotation?
+    var searchEvent: ReaderHighlightEvent?
+    var annotationEvent: ReaderAnnotationEvent?
     var isMultiLanguage: Bool = false
     var isImported: Bool = false
     var enhancedUnderline: Bool = false
@@ -380,14 +378,15 @@ struct iOSIbarotTextView: UIViewRepresentable {
             textView.semanticContentAttribute = .forceRightToLeft
         }
 
+        let isSearchEventForThisContent = searchEvent != nil && searchEvent?.contentId == viewModel.currentContentId
+        let activeSearchEventId = isSearchEventForThisContent ? searchEvent?.id : nil
+
         let currentKey = RenderCacheKey(
             bookId: viewModel.currentBook?.id,
             contentId: viewModel.currentContentId,
             text: text,
             annotations: annotations,
-            searchText: searchText,
-            searchMode: searchMode,
-            nearDistance: nearDistance,
+            searchEventId: activeSearchEventId,
             showHarakat: state.showHarakat,
             clickableAnnotation: state.clickableAnnotation,
             enhancedUnderline: enhancedUnderline,
@@ -398,8 +397,6 @@ struct iOSIbarotTextView: UIViewRepresentable {
             lineHeight: state.lineHeight
         )
 
-        let contentIdChanged = context.coordinator.lastHighlightedContentId != viewModel.currentContentId
-
         let rendered: RenderedAttributedContent
         if let lastKey = context.coordinator.lastRenderKey, lastKey == currentKey,
            let cached = context.coordinator.lastRenderedContent
@@ -409,7 +406,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
             let newlyRendered = renderAttributedContent(
                 textView: textView,
                 context: context,
-                contentIdChanged: contentIdChanged
+                isSearchEventForThisContent: isSearchEventForThisContent
             )
             context.coordinator.lastRenderKey = currentKey
             context.coordinator.lastRenderedContent = newlyRendered
@@ -425,9 +422,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         handleTargetAnnotationAndSearchHighlight(
             textView: textView,
             context: context,
-            contentIdChanged: contentIdChanged,
-            searchRanges: rendered.searchRanges,
-            shouldTriggerSearchAnimation: rendered.shouldTriggerSearchAnimation
+            searchRanges: rendered.searchRanges
         )
     }
 
@@ -436,9 +431,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         let contentId: Int
         let text: String
         let annotations: [Annotation]
-        let searchText: String
-        let searchMode: SearchMode?
-        let nearDistance: Int
+        let searchEventId: UUID?
         let showHarakat: Bool
         let clickableAnnotation: Bool
         let enhancedUnderline: Bool
@@ -452,13 +445,12 @@ struct iOSIbarotTextView: UIViewRepresentable {
     struct RenderedAttributedContent {
         let attributedString: NSMutableAttributedString
         let searchRanges: [NSRange]
-        var shouldTriggerSearchAnimation: Bool
     }
 
     private func renderAttributedContent(
         textView: iOSCustomIbarotTextView,
         context: Context,
-        contentIdChanged: Bool
+        isSearchEventForThisContent: Bool
     ) -> RenderedAttributedContent {
         let renderer = ArabicTextRenderer()
         let renderResult = renderer.render(
@@ -487,27 +479,19 @@ struct iOSIbarotTextView: UIViewRepresentable {
         }
 
         var searchRanges: [NSRange] = []
-        var shouldTriggerSearchAnimation = false
 
-        if !searchText.isEmpty {
+        if isSearchEventForThisContent, let event = searchEvent, !event.query.isEmpty {
             searchRanges = attributedString.highlightSearchText(
-                searchText: searchText,
-                mode: searchMode,
+                searchText: event.query,
+                mode: event.mode,
                 baseColor: .highlightText,
-                nearDistance: nearDistance
+                nearDistance: event.nearDistance
             )
-            if context.coordinator.processedSearchText != searchText || contentIdChanged {
-                context.coordinator.processedSearchText = searchText
-                shouldTriggerSearchAnimation = true
-            }
-        } else {
-            context.coordinator.processedSearchText = nil
         }
 
         return RenderedAttributedContent(
             attributedString: attributedString,
-            searchRanges: searchRanges,
-            shouldTriggerSearchAnimation: shouldTriggerSearchAnimation
+            searchRanges: searchRanges
         )
     }
 
@@ -540,35 +524,33 @@ struct iOSIbarotTextView: UIViewRepresentable {
     private func handleTargetAnnotationAndSearchHighlight(
         textView: iOSCustomIbarotTextView,
         context: Context,
-        contentIdChanged: Bool,
-        searchRanges: [NSRange],
-        shouldTriggerSearchAnimation: Bool
+        searchRanges: [NSRange]
     ) {
-        if contentIdChanged {
-            context.coordinator.lastHighlightedContentId = viewModel.currentContentId
-            context.coordinator.processedAnnotationId = nil
-        }
+        guard textView.window != nil else { return }
 
-        if let targetAnnotation {
-            if context.coordinator.processedAnnotationId != targetAnnotation.id || targetAnnotation.id == nil || contentIdChanged {
-                context.coordinator.processedAnnotationId = targetAnnotation.id
-                DispatchQueue.main.async {
-                    textView.highlighAndScrollToAnns(targetAnnotation)
-                }
+        if let event = annotationEvent,
+           event.annotation.contentId == viewModel.currentContentId,
+           context.coordinator.lastHandledAnnotationEventId != event.id
+        {
+            context.coordinator.lastHandledAnnotationEventId = event.id
+            context.coordinator.animationTask?.cancel()
+            context.coordinator.animationTask = Task { @MainActor [weak textView] in
+                await textView?.highlighAndScrollToAnns(event.annotation)
             }
-        } else {
-            context.coordinator.processedAnnotationId = nil
         }
 
-        if shouldTriggerSearchAnimation, !searchRanges.isEmpty, let firstRange = searchRanges.first {
-            context.coordinator.lastRenderedContent?.shouldTriggerSearchAnimation = false
-            DispatchQueue.main.async { [weak textView] in
-                textView?.scrollRangeToVisible(firstRange)
-                Task { [weak textView] in
-                    await Task.yield()
-                    await Task.yield()
-                    textView?.popupText(for: searchRanges)
+        if let event = searchEvent,
+           event.contentId == viewModel.currentContentId,
+           !searchRanges.isEmpty,
+           context.coordinator.lastHandledSearchEventId != event.id
+        {
+            context.coordinator.lastHandledSearchEventId = event.id
+            context.coordinator.animationTask?.cancel()
+            context.coordinator.animationTask = Task { @MainActor [weak textView] in
+                if let firstRange = searchRanges.first {
+                    textView?.scrollRangeToVisible(firstRange)
                 }
+                await textView?.popupText(for: searchRanges)
             }
         }
     }
@@ -577,11 +559,11 @@ struct iOSIbarotTextView: UIViewRepresentable {
         var parent: iOSIbarotTextView
         var currentRenderResult: ArabicRenderResult?
         var restoredContentId: Int?
-        var lastHighlightedContentId: Int?
-        var processedSearchText: String?
-        var processedAnnotationId: Int64?
+        var lastHandledSearchEventId: UUID?
+        var lastHandledAnnotationEventId: UUID?
         var lastRenderKey: RenderCacheKey?
         var lastRenderedContent: RenderedAttributedContent?
+        var animationTask: Task<Void, Never>?
 
         // Pull-to-navigate state
         weak var topIndicator: PullNavigationIndicatorView?
@@ -593,6 +575,10 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         init(_ parent: iOSIbarotTextView) {
             self.parent = parent
+        }
+
+        deinit {
+            animationTask?.cancel()
         }
 
         // MARK: - Pull-to-Navigate Scroll Detection

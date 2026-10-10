@@ -47,13 +47,7 @@ extension ReaderViewModel {
             contentId: contentId,
             quran: false
         ) {
-            #if os(iOS)
-            DispatchQueue.main.async { [weak self] in
-                self?.updateContentState(with: content)
-            }
-            #else
             updateContentState(with: content)
-            #endif
         }
     }
 
