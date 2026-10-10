@@ -226,7 +226,7 @@ await NetworkMonitor.shared.registerConnectivityCallbacks(
 ```
 - **Coalescing Loop**: Perulangan `runRetryCoalescingLoop` dilindungi oleh `Mutex` (`retryState`) guna mencegah pemicuan ganda jika koneksi berfluktuasi dengan cepat.
 - **Batch Upload & Delete Paralel**: Eksekusi *batch* dijalankan serentak menggunakan `withTaskGroup`.
-- **Atomic Cleanup**: Hanya rekaman yang dikonfirmasi berhasil disimpan oleh CloudKit yang akan dihapus dari antrean lokal melalui `removePendingSync()`.
+- **Atomic Cleanup & Timestamp Fencing**: Penghapusan dari antrean lokal melalui `removePendingSync()` menyertakan filter parameter `operation` dan batas waktu `maxQueuedAt` guna mencegah *race condition* terhapusnya mutasi lokal baru yang masuk saat proses *upload* atau resolusi konflik sedang berlangsung.
 
 #### `CloudKitUploadDebouncer` (Actor)
 
@@ -266,6 +266,8 @@ struct SyncPendingStore {
 *   `ck_record_id`: Kunci primer (*Primary Key*) sebagai rujukan mutlak ke `CKRecord`.
 *   `operation`: Menyatakan jenis perintah tunda (`upload` atau `delete`).
 *   `queued_at`: Pencatat waktu dalam format integer (UNIX *timestamp*).
+
+Pembersihan antrean menggunakan klausa `WHERE ck_record_id IN (...)` yang dapat difilter secara selektif dengan `operation` serta `queued_at <= maxQueuedAt` agar operasi asinkron konkuren tidak menghapus entri yang baru diantrekan saat proses sinkronisasi berlangsung.
 
 !!! warning "Penyelesaian Konflik Status"
     Bila status `'upload'` ditambahkan, tetapi tabel `sync_pending` telah memiliki entri `'delete'` untuk ID terkait, status `'delete'` tetap dipertahankan. Sebaliknya, instruksi `'delete'` yang baru akan menimpa catatan `'upload'` lama.
