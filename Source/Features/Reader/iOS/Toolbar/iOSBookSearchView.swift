@@ -22,7 +22,10 @@ struct iOSBookSearchView: View {
                 // Results List
                 SearchResultsListView(
                     results: viewModel.results,
-                    showsBookTitle: false
+                    showsBookTitle: false,
+                    query: viewModel.query,
+                    mode: viewModel.searchMode,
+                    nearDistance: viewModel.nearDistance
                 ) { item in
                     onSelect(item.bookId, viewModel.query)
                 }
@@ -32,9 +35,7 @@ struct iOSBookSearchView: View {
             .toolbar {
                 SearchToolbar(
                     viewModel: viewModel,
-                    onLeadingAction: {
-                        dismiss()
-                    },
+                    onLeadingAction: { dismiss() },
                     conditionalLeadingButton: false
                 )
             }

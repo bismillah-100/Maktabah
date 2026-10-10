@@ -348,13 +348,30 @@ struct SearchToolbar: ToolbarContent {
             (!viewModel.results.isEmpty && conditionalLeadingButton)
         {
             ToolbarItem(placement: .cancellationAction) {
-                Button(action: { onLeadingAction?() }) {
-                    Label(.close, systemImage: conditionalLeadingButton
-                        ? "xmark.circle"
-                        : "")
+                Button(role: .cancel, action: { onLeadingAction?() }) {
+                    if conditionalLeadingButton {
+                        Label(.close, systemImage: "xmark.circle")
+                            .labelStyle(.iconOnly)
+                    } else {
+                        Label(.close, systemImage: "xmark.circle")
+                            .labelStyle(.titleOnly)
+                    }
                 }
                 .accessibilityLabel(.close)
                 .help(.close)
+            }
+        }
+
+        //leading
+        if !conditionalLeadingButton,
+           !viewModel.results.isEmpty {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(action: { viewModel.cleanUpState() }) {
+                    Label("Done", systemImage: "xmark.circle")
+                        .labelStyle(.iconOnly)
+                }
+                .accessibilityLabel("Done")
+                .help("Done")
             }
         }
 

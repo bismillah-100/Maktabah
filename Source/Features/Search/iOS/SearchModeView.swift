@@ -160,7 +160,12 @@ struct SearchModeView: View {
             }
         }
 
-        return SearchResultsListView(results: items) { item in
+        return SearchResultsListView(
+            results: items,
+            query: viewModel.query,
+            mode: viewModel.searchMode,
+            nearDistance: viewModel.nearDistance
+        ) { item in
             handleSelection(item)
         }
         .searchable(
