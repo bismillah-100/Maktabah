@@ -161,7 +161,8 @@ final class SearchWorker: @unchecked Sendable {
 
         callbacks.start(1)
 
-        let bookIds: [Int] = (allowedTables ?? []).compactMap { tbl in
+        let localTables = allowedTables.map { Set(tables).intersection($0) }
+        let bookIds: [Int] = (localTables ?? []).compactMap { tbl in
             tbl.hasPrefix("b") ? Int(tbl.dropFirst()) : Int(tbl)
         }
 
@@ -188,7 +189,7 @@ final class SearchWorker: @unchecked Sendable {
         SELECT i.book_id, i.page, i.id, i.part
         FROM \(schema).archive_fts f
         JOIN \(schema).archive_index i ON f.rowid = i.rowid
-        WHERE archive_fts MATCH ?\(withRowIdBounds ? "\n  AND f.rowid BETWEEN ? AND ?" : "")
+        WHERE f.archive_fts MATCH ?\(withRowIdBounds ? "\n  AND f.rowid BETWEEN ? AND ?" : "")
         """
     }
 
