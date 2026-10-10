@@ -21,8 +21,9 @@ actor SQLiteConnectionPool {
     }
 
     /// Ambil koneksi berdasarkan index
-    func getConnection(at index: Int) -> DBConnectionType {
-        connections[index % connections.count]
+    func getConnection(at index: Int) -> DBConnectionType? {
+        guard !connections.isEmpty else { return nil }
+        return connections[abs(index) % connections.count]
     }
 
     /// Interrupt all connections in pool
@@ -34,7 +35,13 @@ actor SQLiteConnectionPool {
 
     /// Menjalankan read-operation pada koneksi tertentu
     func read<T: Sendable>(at index: Int, _ body: @escaping @Sendable (DBConnectionType) throws -> T) async throws -> T {
-        let conn = getConnection(at: index)
+        guard let conn = getConnection(at: index) else {
+            throw NSError(
+                domain: "SQLiteConnectionPool",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "No database connections available in pool"]
+            )
+        }
         return try await withTaskCancellationHandler {
             try await Task.detached(priority: .userInitiated) { try body(conn) }.value
         } onCancel: {
