@@ -275,11 +275,15 @@ final class SearchWorker: @unchecked Sendable {
         let total = hits.count
         callbacks.onRowProgress("archive_\(archiveId)", 0, total)
 
+        let progressStride = max(50, total / 100)
         for (idx, hit) in hits.enumerated() {
-            if idx % 10 == 0 {
+            if idx % progressStride == 0 {
                 await control.pauseController.waitIfPaused()
                 if control.stopFlag() { return }
                 callbacks.onRowProgress(hit.tableName, idx + 1, total)
+            } else if idx % 20 == 0 {
+                await control.pauseController.waitIfPaused()
+                if control.stopFlag() { return }
             }
 
             callbacks.onResult(hit.tableName, hit)
