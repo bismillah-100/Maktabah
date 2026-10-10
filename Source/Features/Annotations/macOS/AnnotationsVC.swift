@@ -164,8 +164,9 @@ class AnnotationsVC: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        if isDataLoaded {
-            return
+        if isDataLoaded { return }
+        for c in outlineView.tableColumns {
+            c.maxWidth = .greatestFiniteMagnitude
         }
         ReusableFunc.showProgressWindow(view)
         xBtn.isHidden = popover
