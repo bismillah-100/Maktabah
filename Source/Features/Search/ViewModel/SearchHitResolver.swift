@@ -36,35 +36,46 @@ final class SearchHitResolver {
             return cached
         }
 
-        guard let content = await LibraryDataManager.shared.fetchSingleContent(
-            archive: item.archive,
-            table: item.tableName,
-            rowId: item.bookId,
-        ) else {
+        guard let payload = await Task.detached(priority: .userInitiated, operation: { () -> (snippet: String, keywords: [String])? in
+            guard let content = await LibraryDataManager.shared.fetchSingleContent(
+                archive: item.archive,
+                table: item.tableName,
+                rowId: item.bookId
+            ) else {
+                return nil
+            }
+
+            let bookId = Int(item.tableName.dropFirst()) ?? 0
+            let book = LibraryDataManager.shared.getBook([bookId]).first
+            let isMultilingual = book?.isMultiLanguage ?? false
+            let isImported = book?.isImported ?? false
+
+            let cleaned = content.nash.cleaningLineBreaks()
+            let stripped = isImported ? cleaned.stripSpanTags() : cleaned
+            let normalized = stripped.convertToArabicDigits(isMultilingual: isMultilingual)
+            let keywordsConverted = keywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
+
+            let snippet: String
+            if mode == .near {
+                snippet = normalized
+                    .normalizeArabic()
+                    .snippetNear(keywords: keywordsConverted, nearDistance: nearDistance, contextLength: 60)
+            } else {
+                snippet = normalized
+                    .normalizeArabic()
+                    .snippetAround(keywords: keywordsConverted, contextLength: 60)
+            }
+
+            return (snippet, keywordsConverted)
+        }).value else {
             return nil
         }
 
-        let bookId = Int(item.tableName.dropFirst()) ?? 0
-        let book = LibraryDataManager.shared.getBook([bookId]).first
-        let isMultilingual = book?.isMultiLanguage ?? false
-        let isImported = book?.isImported ?? false
-
-        let cleaned = content.nash.cleaningLineBreaks()
-        let stripped = isImported ? cleaned.stripSpanTags() : cleaned
-        let normalized = stripped.convertToArabicDigits(isMultilingual: isMultilingual)
-        let keywordsConverted = keywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
-
         let attributed: NSAttributedString
         if mode == .near {
-            let snippet = normalized
-                .normalizeArabic()
-                .snippetNear(keywords: keywordsConverted, nearDistance: nearDistance, contextLength: 60)
-            attributed = snippet.highlightedAttributedText(keywords: keywordsConverted, nearDistance: nearDistance)
+            attributed = payload.snippet.highlightedAttributedText(keywords: payload.keywords, nearDistance: nearDistance)
         } else {
-            let snippet = normalized
-                .normalizeArabic()
-                .snippetAround(keywords: keywordsConverted, contextLength: 60)
-            attributed = snippet.highlightedAttributedText(keywords: keywordsConverted)
+            attributed = payload.snippet.highlightedAttributedText(keywords: payload.keywords)
         }
 
         cache.setObject(attributed, forKey: key)
