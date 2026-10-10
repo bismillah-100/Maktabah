@@ -69,14 +69,31 @@ actor PendingSyncCoordinator {
         }
     }
 
-    func removePendingSync(_ ids: [String], target: SyncTarget) {
+    func removePendingSync(
+        _ ids: [String],
+        target: SyncTarget,
+        operation: String? = nil,
+        maxQueuedAt: Int64? = nil
+    ) {
         switch target {
         case .annotation:
-            AnnotationRepository.shared.removePendingSync(ckRecordIds: ids)
+            AnnotationRepository.shared.removePendingSync(
+                ckRecordIds: ids,
+                operation: operation,
+                maxQueuedAt: maxQueuedAt
+            )
         case .result:
-            ResultsHandler.shared.removePendingSync(ckRecordIds: ids)
+            ResultsHandler.shared.removePendingSync(
+                ckRecordIds: ids,
+                operation: operation,
+                maxQueuedAt: maxQueuedAt
+            )
         case .history:
-            HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: ids)
+            HistoryDatabaseManager.shared.removePendingSync(
+                ckRecordIds: ids,
+                operation: operation,
+                maxQueuedAt: maxQueuedAt
+            )
         }
     }
 
@@ -96,7 +113,7 @@ actor PendingSyncCoordinator {
             let foundIds = Set(toUploadAnn.compactMap(\.ckRecordId))
             let orphans = annPending.filter { !foundIds.contains($0) }
             if !orphans.isEmpty {
-                AnnotationRepository.shared.removePendingSync(ckRecordIds: orphans)
+                AnnotationRepository.shared.removePendingSync(ckRecordIds: orphans, operation: uploadKey)
             }
         }
 
@@ -109,7 +126,7 @@ actor PendingSyncCoordinator {
             let foundIds = foundFolderIds.union(foundResultIds)
             let orphans = resPending.filter { !foundIds.contains($0) }
             if !orphans.isEmpty {
-                ResultsHandler.shared.removePendingSync(ckRecordIds: orphans)
+                ResultsHandler.shared.removePendingSync(ckRecordIds: orphans, operation: uploadKey)
             }
         }
 
@@ -118,7 +135,7 @@ actor PendingSyncCoordinator {
             let foundIds = Set(toUploadHist.compactMap(\.ckRecordId))
             let orphans = histPending.filter { !foundIds.contains($0) }
             if !orphans.isEmpty {
-                HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: orphans)
+                HistoryDatabaseManager.shared.removePendingSync(ckRecordIds: orphans, operation: uploadKey)
             }
         }
 
