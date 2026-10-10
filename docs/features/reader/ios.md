@@ -117,7 +117,7 @@ Mengintegrasikan `UITextView` UIKit ke dalam arsitektur deklaratif SwiftUI:
 
 * **`makeUIView`**: Menginisialisasi `UITextView` kustom dengan properti *non-editable*, *selectable*, serta mendukung perpindahan per halaman (*paging mode*) maupun pengguliran kontinu (*continuous scrolling*).
 * **`updateUIView`**: Menerima injeksi `NSAttributedString` baru dari `ReaderViewModel`. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks.
-* **`Coordinator` (`UITextViewDelegate`)**: Menangani interaksi seleksi teks untuk memunculkan menu pembuatan *highlight/underline* baru serta mencegat ketukan pada rentang anotasi yang telah ada (`onTapAnnotation`).
+* **`Coordinator` (`UITextViewDelegate`)**: Menangani interaksi seleksi teks untuk menu *highlight/underline*, mencegat ketukan anotasi (`onTapAnnotation`), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (`lastHandledSearchEventId`, `lastHandledAnnotationEventId`) per *instance* aktif.
 
 ### C. Penanganan Ekstensi UI & Mode Membaca Layar Penuh (*Fullscreen*)
 
