@@ -110,7 +110,7 @@ Meskipun tersimpan di direktori `Source/Features/Annotations/macOS/`, komponen i
 
 Modul anotasi menyediakan data untuk target Widget Extension:
 
-* **Timeline Provider**: Mengakses kutipan dan catatan harian langsung dari basis data SQLite terbagi via Shared App Group (`group.com.maktabah`).
+* **Timeline Provider**: Mengakses kutipan dan catatan harian melalui snapshot JSON terkoordinasi pada Shared App Group (`group.com.Drn.maktabah`) yang dikompilasi oleh `WidgetUpdateCoordinator`.
 * **PlatformColor**: Konversi warna heksadesimal yang *platform-agnostic* menjamin representasi visual sorotan dan garis bawah seragam di widget Home Screen maupun Lock Screen.
 
 ---

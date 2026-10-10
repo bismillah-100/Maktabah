@@ -11,7 +11,7 @@ import WidgetKit
 @main
 struct MaktabahWidgetBundle: WidgetBundle {
     init() {
-        ArabicFont.registerCustomFonts()
+        ArabicFont.registerWidgetFonts()
     }
 
     var body: some Widget {

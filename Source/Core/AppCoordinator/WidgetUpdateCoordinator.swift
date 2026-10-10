@@ -210,11 +210,18 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         let annotationItems = allAnnotations.map { annotation -> AnnotationSnapshot.Item in
             let title = bookTitleMap[annotation.bkId] ?? "Book ID: \(annotation.bkId)"
             let date = Date(timeIntervalSince1970: TimeInterval(annotation.createdAt))
+            let maxContextLength = 300
+            let rawContext = annotation.context
+            let truncatedContext = rawContext.count > maxContextLength
+                ? String(rawContext.prefix(maxContextLength)) + "..."
+                : rawContext
+
             return AnnotationSnapshot.Item(
                 id: String(annotation.id ?? 0),
                 bookId: annotation.bkId,
+                contentId: annotation.contentId,
                 bookTitle: title,
-                content: annotation.context,
+                content: truncatedContext,
                 colorHex: annotation.colorHex,
                 type: annotation.type.rawValue,
                 date: date
