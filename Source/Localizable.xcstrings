@@ -698,28 +698,6 @@
     "%lld" : {
       "shouldTranslate" : false
     },
-    "%lld / %lld buku" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld كتابا"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld book"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld buku"
-          }
-        }
-      }
-    },
     "%lld Annotations Exist" : {
       "localizations" : {
         "ar" : {

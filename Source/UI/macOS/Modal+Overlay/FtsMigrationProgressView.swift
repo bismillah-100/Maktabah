@@ -130,7 +130,7 @@ struct FtsMigrationProgressSection: View {
 
     private var statusAreaMinHeight: CGFloat {
         let maxConcurrentLines = min(4, max(1, ftsManager.totalArchivesToMigrate))
-        return CGFloat(maxConcurrentLines * 18 + 20)
+        return CGFloat(maxConcurrentLines * 18)
     }
 
     var body: some View {
@@ -157,17 +157,6 @@ struct FtsMigrationProgressSection: View {
                                     .lineLimit(1)
                             }
                         }
-                    }
-                    if ftsManager.isOptimizationOnly {
-                        if ftsManager.totalArchivesToMigrate > 0 {
-                            Text("\(ftsManager.currentArchiveIndex) / \(ftsManager.totalArchivesToMigrate) arsip")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    } else if ftsManager.totalBooksToMigrate > 0 {
-                        Text("\(ftsManager.completedBooksCount) / \(ftsManager.totalBooksToMigrate) buku")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
                     }
                 }
                 .frame(minHeight: statusAreaMinHeight, alignment: .topLeading)
