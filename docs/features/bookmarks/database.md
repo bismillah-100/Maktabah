@@ -141,7 +141,8 @@ Saat sinkronisasi CloudKit berlangsung, *child record* sering kali tiba lebih aw
 Sistem mengatasi kondisi ini melalui dua metode penyelarasan otomatis:
 
 ```swift
-func resolveOrphanFolders() {
+@discardableResult
+func resolveOrphanFolders() -> Bool {
     // Mencocokkan folder yang memiliki parentCkRecordId dengan folder yang baru dibuat
     let sql = """
     SELECT f1.id, f1.name, f1.parentCkRecordId, f2.id as expected_parent
@@ -151,11 +152,13 @@ func resolveOrphanFolders() {
     AND COALESCE(f1.parent, -1) != COALESCE(f2.id, -1)
     """
     // Menghubungkan kembali parent_id atau menggabungkan konflik duplikasi
+    // Mengembalikan `true` jika terdapat perubahan pada basis data
 }
 ```
 
 ```swift
-func resolveOrphanResults() {
+@discardableResult
+func resolveOrphanResults() -> Bool {
     // Mencocokkan hasil pencarian yang belum memiliki folder_id lokal dengan folder induknya
     let sql = """
     SELECT r.id, r.name, r.bkId, f.id as expected_folder
@@ -165,6 +168,7 @@ func resolveOrphanResults() {
     AND COALESCE(r.folder_id, -1) != COALESCE(f.id, -1)
     """
     // Mengarahkan folder_id ke folder yang benar
+    // Mengembalikan `true` jika terdapat perubahan pada basis data
 }
 ```
 
@@ -238,7 +242,7 @@ flowchart TD
     InsertNew --> OrphanFix
     
     OrphanFix --> Persist[("Simpan ke SearchResults.sqlite")]
-    Persist --> Notify(["Picu Diffing & Reload UI"])
+    Persist -->|"Jika hasChanges == true"| Notify(["Picu Diffing & Reload UI (.savedResultsTreeDidUpdate)"])
 
     classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
