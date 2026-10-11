@@ -357,7 +357,10 @@ final class FtsMigrationManager {
 
         try await checkCancellation()
 
-        await updateBookProgress(archiveId: archiveId, statusText: "Arsip \(archiveId): Mengoptimasi...")
+        await updateBookProgress(
+            archiveId: archiveId,
+            statusText: .init(localized: .ftsMigrationOptimize(archive: archiveId))
+        )
         try? Self.exec(db, SQL.optimizeFts)
         try? Self.exec(db, SQL.detachArchiveDb)
         try? Self.exec(db, SQL.vacuum)
@@ -497,7 +500,7 @@ final class FtsMigrationManager {
         if !tables.isEmpty {
             await updateBookProgress(
                 archiveId: archiveId,
-                statusText: "Arsip \(archiveId): Buku 1/\(tables.count)"
+                statusText: .init(localized: .ftsMigrationStatusArchiveBook(archiveId, 1,tables.count))
             )
         }
 
@@ -531,7 +534,7 @@ final class FtsMigrationManager {
                     throw CancellationError()
                 }
 
-                let statusText = "Arsip \(archiveId): Buku \(index + 1)/\(tables.count)"
+                let statusText = String(localized: .ftsMigrationStatusArchiveBook(archiveId, index + 1, tables.count))
                 await updateBookProgress(
                     archiveId: archiveId,
                     statusText: statusText,

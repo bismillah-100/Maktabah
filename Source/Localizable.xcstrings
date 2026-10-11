@@ -214,6 +214,29 @@
         }
       }
     },
+    ".ftsMigrationOptimize" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأرشيف %(archive)lld: تحسين..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive %1$(archive)lld: Optimizing…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip %(archive)lld: Mengoptimalkan..."
+          }
+        }
+      }
+    },
     ".ftsMigrationStatus" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -233,6 +256,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Memperbarui Arsip %1$lld/%2$lld — Buku %3$lld/%4$lld (%5$lld%%)"
+          }
+        }
+      }
+    },
+    ".ftsMigrationStatusArchiveBook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأرشيف %1$lld: الكتاب %2$lld/%3$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive %1$lld: Book %2$lld/%3$lld"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip %1$lld: Buku %2$lld/%3$lld"
           }
         }
       }
@@ -1234,28 +1280,6 @@
         }
       }
     },
-    "Enhanced Underline" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خط سفلي بارز"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enhanced Underline"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pertegas Garis Bawah"
-          }
-        }
-      }
-    },
     "Close" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1982,6 +2006,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edisi"
+          }
+        }
+      }
+    },
+    "Enhanced Underline" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خط سفلي بارز"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enhanced Underline"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertegas Garis Bawah"
           }
         }
       }
