@@ -77,6 +77,7 @@ enum BoundedBulkDownloader {
     static func run(
         books: [BooksData],
         maxConcurrent: Int = defaultMaxConcurrent,
+        isCancelled: (@Sendable () -> Bool)? = nil,
         onTaskScheduled: (@Sendable (BooksData) -> Void)? = nil,
         onProgressUpdate: (@Sendable (ProgressReport) -> Void)? = nil,
         onBookCompleted: (@Sendable (BooksData, Result<URL, Error>, ProgressReport) -> Void)? = nil
@@ -104,7 +105,7 @@ enum BoundedBulkDownloader {
             }
 
             while nextIndex < min(maxConcurrent, total) {
-                guard !Task.isCancelled else { break }
+                guard !Task.isCancelled, !(isCancelled?() ?? false) else { break }
                 let book = books[nextIndex]
                 nextIndex += 1
                 schedule(book: book)
@@ -114,6 +115,10 @@ enum BoundedBulkDownloader {
                 if Task.isCancelled {
                     group.cancelAll()
                     break
+                }
+
+                if isCancelled?() ?? false {
+                    group.cancelAll()
                 }
 
                 downloadResults[bookId] = result
@@ -134,7 +139,7 @@ enum BoundedBulkDownloader {
                     stoppedByNetwork = true
                     // Hentikan penambahan antrean unduhan baru saat jaringan bermasalah,
                     // tetapi biarkan unduhan yang sedang berjalan (in-flight) selesai dan disimpan.
-                } else if !stoppedByNetwork && nextIndex < total && !Task.isCancelled {
+                } else if !stoppedByNetwork, nextIndex < total, !Task.isCancelled, !(isCancelled?() ?? false) {
                     let nextBook = books[nextIndex]
                     nextIndex += 1
                     schedule(book: nextBook)
@@ -174,4 +179,3 @@ enum BoundedBulkDownloader {
         }
     }
 }
-

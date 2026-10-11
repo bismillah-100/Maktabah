@@ -4,6 +4,23 @@
 //
 
 import AppKit
+import Synchronization
+
+final class BulkDownloadCancellation: Sendable {
+    private let mutex = Mutex<Bool>(false)
+
+    var isCancelled: Bool {
+        mutex.withLock { $0 }
+    }
+
+    func cancel() {
+        mutex.withLock { $0 = true }
+    }
+
+    func reset() {
+        mutex.withLock { $0 = false }
+    }
+}
 
 // MARK: - BulkDownloadModalCenter
 
@@ -25,6 +42,7 @@ final class BulkDownloadModalCenter {
     private var vc: BulkDownloadVC?
     private var downloadTask: Task<Void, Never>?
     private var shouldStopDownloads = false
+    private let cancellation = BulkDownloadCancellation()
     private var isDismissing = false
 
     private init() {}
@@ -65,6 +83,9 @@ final class BulkDownloadModalCenter {
         if NSApp.modalWindow != nil {
             NSApp.stopModal()
         }
+        shouldStopDownloads = true
+        cancellation.cancel()
+        downloadTask?.cancel()
         let w = window
         window = nil
         vc = nil
@@ -77,6 +98,7 @@ final class BulkDownloadModalCenter {
 
     func startDownload(books: [BooksData], vc: BulkDownloadVC) {
         shouldStopDownloads = false
+        cancellation.reset()
 
         downloadTask = Task.detached { [weak self] in
             guard let self else { return }
@@ -85,13 +107,15 @@ final class BulkDownloadModalCenter {
     }
 
     func stop() {
+        guard !shouldStopDownloads else { return }
         shouldStopDownloads = true
+        cancellation.cancel()
+
+        vc?.statusLabel.stringValue = String(localized: .Library.stoppingDownloadsIntegrating)
+        vc?.stopButton.isEnabled = false
+
         Task {
             await BookDownloadManager.shared.cancelAllDownloads()
-            await MainActor.run { [weak vc] in
-                vc?.statusLabel.stringValue = String(localized: .Library.stoppingDownloadsIntegrating)
-                vc?.stopButton.isEnabled = false
-            }
         }
     }
 
@@ -133,19 +157,25 @@ final class BulkDownloadModalCenter {
     ) async -> [Int: Result<URL, Error>] {
         if await !NetworkMonitor.shared.isConnected {
             shouldStopDownloads = true
+            cancellation.cancel()
             vc.statusLabel.stringValue = String(localized: .Library.noInternetSkippingDownloads)
             return [:]
         }
 
+        let cancelToken = cancellation
         let (downloadResults, stoppedByNetwork) = await BoundedBulkDownloader.run(
             books: books,
+            isCancelled: {
+                cancelToken.isCancelled
+            },
             onTaskScheduled: { [weak vc] book in
                 Task { @MainActor [weak vc] in
                     vc?.updateStatus(bookId: book.id, status: .downloading)
                 }
             },
-            onProgressUpdate: { [weak vc] report in
-                Task { @MainActor [weak vc] in
+            onProgressUpdate: { [weak vc, weak self] report in
+                Task { @MainActor [weak vc, weak self] in
+                    guard self?.shouldStopDownloads != true else { return }
                     vc?.updateDownloadProgress(
                         completed: report.completed,
                         total: report.total,
@@ -154,14 +184,16 @@ final class BulkDownloadModalCenter {
                     )
                 }
             },
-            onBookCompleted: { [weak vc] book, result, report in
-                Task { @MainActor [weak vc] in
-                    vc?.updateDownloadProgress(
-                        completed: report.completed,
-                        total: report.total,
-                        downloadedBytes: report.downloadedBytes,
-                        totalBytes: report.totalBytes
-                    )
+            onBookCompleted: { [weak vc, weak self] book, result, report in
+                Task { @MainActor [weak vc, weak self] in
+                    if self?.shouldStopDownloads != true {
+                        vc?.updateDownloadProgress(
+                            completed: report.completed,
+                            total: report.total,
+                            downloadedBytes: report.downloadedBytes,
+                            totalBytes: report.totalBytes
+                        )
+                    }
                     switch result {
                     case .success:
                         vc?.updateStatus(bookId: book.id, status: .downloaded)
@@ -174,6 +206,7 @@ final class BulkDownloadModalCenter {
 
         if stoppedByNetwork {
             shouldStopDownloads = true
+            cancellation.cancel()
         }
 
         return downloadResults
