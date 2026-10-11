@@ -203,6 +203,11 @@ final class BookDownloadManager: Sendable {
         }
 
         var downloadedTempURL: URL?
+        defer {
+            if let temp = downloadedTempURL {
+                try? fileManager.removeItem(at: temp)
+            }
+        }
         var lastHTTPResponse: HTTPURLResponse?
 
         let stream = URLSession.downloadStream(
@@ -228,7 +233,6 @@ final class BookDownloadManager: Sendable {
         guard let tempURL = downloadedTempURL, let _ = lastHTTPResponse else {
             throw BookDownloadError.downloadFailed(bookId: bookId)
         }
-        defer { try? fileManager.removeItem(at: tempURL) }
 
         if candidate.pathExtension.lowercased() == "zst" {
             do {

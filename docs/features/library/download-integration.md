@@ -74,8 +74,13 @@ final class BookDownloadManager: @unchecked Sendable {
 }
 ```
 
-### B. Ketahanan Jaringan (NetworkMonitor)
+### B. Ketahanan Jaringan & Pembersihan Staging (Cancellation & Lifecycle)
 `BookDownloadManager` terhubung langsung ke `NetworkMonitor.shared`. Jika sambungan internet terputus saat proses pengunduhan, seluruh koneksi aktif dibatalkan secara tertib (`cancelAllDownloads()`), dan status parsial dibersihkan agar tidak meninggalkan berkas korup pada penyimpanan lokal.
+
+Pada tingkat *stream* pengunduhan (`URLSession.downloadStream` via `DownloadStreamDelegate`):
+* **Pembersihan Dini Berkas Staging**: Berkas unduhan sementara di `NSTemporaryDirectory()` dilacak secara *thread-safe* via `Mutex<URL?>`. Jika `AsyncThrowingStream` dibatalkan oleh pemanggil (`onTermination` dengan alasan `.cancelled`) atau hasil `yield` berstatus `.dropped` / `.terminated`, berkas *staging* langsung dihapus seketika.
+* **Jaminan Defer Guard**: `BookDownloadManager` dan `CoreDatabaseDownloader` menggunakan blok `defer` di awal *scope* pemrosesan berkas sementara. Jika iterasi *stream* atau dekompresi zstd melempar galat pembatalan (`CancellationError`) atau kegagalan I/O, berkas *staging* dipastikan terhapus tanpa meninggalkan *orphaned files*.
+* **Preservasi Kitab Terunduh Saat Pembatalan Massal**: Pada pengunduhan massal (`BulkDownloadModalCenter`), pembatalan di tengah jalan menghentikan sisa antrean dan membersihkan berkas parsial yang sedang berjalan (*in-flight*). Namun, kitab-kitab yang sudah selesai diunduh dan tersimpan di `Caches/Books/{id}.sqlite` tetap dipertahankan dan diselesaikan integrasinya secara serial.
 
 ### C. Pelaporan Ukuran & Progress Terdownload (Byte-Level Progress)
 

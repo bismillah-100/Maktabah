@@ -26,6 +26,7 @@ final class DownloadStreamDelegate: NSObject, URLSessionDownloadDelegate, Sendab
     private let filePrefix: String
     private let customHttpError: (@Sendable (HTTPURLResponse) -> Error?)?
     private let httpErrorMutex = Mutex<Error?>(nil)
+    private let stagedTempURL = Mutex<URL?>(nil)
     private var httpError: Error? {
         httpErrorMutex.withLock { $0 }
     }
@@ -40,6 +41,16 @@ final class DownloadStreamDelegate: NSObject, URLSessionDownloadDelegate, Sendab
         self.expectedSize = expectedSize
         self.filePrefix = filePrefix
         self.customHttpError = customHttpError
+    }
+
+    func cleanupStagedFile() {
+        let tempDest = stagedTempURL.withLock { target in
+            defer { target = nil }
+            return target
+        }
+        if let tempDest {
+            try? FileManager.default.removeItem(at: tempDest)
+        }
     }
 
     func urlSession(
@@ -73,8 +84,16 @@ final class DownloadStreamDelegate: NSObject, URLSessionDownloadDelegate, Sendab
             .appendingPathComponent("\(filePrefix)_\(UUID().uuidString)")
         do {
             try FileManager.default.moveItem(at: location, to: tempDest)
-            continuation.yield(.success(tempURL: tempDest, response: http))
-            continuation.finish()
+            stagedTempURL.withLock { $0 = tempDest }
+            let yieldResult = continuation.yield(.success(tempURL: tempDest, response: http))
+            switch yieldResult {
+            case .enqueued:
+                continuation.finish()
+            case .dropped, .terminated:
+                cleanupStagedFile()
+            @unknown default:
+                continuation.finish()
+            }
         } catch {
             continuation.finish(throwing: error)
         }
@@ -86,8 +105,46 @@ final class DownloadStreamDelegate: NSObject, URLSessionDownloadDelegate, Sendab
         didCompleteWithError error: Error?
     ) {
         if let error, httpError == nil {
+            cleanupStagedFile()
+            Self.cleanupResumeDataTempFile(from: error)
             continuation.finish(throwing: error)
         }
+    }
+
+    static func cleanupResumeDataTempFile(_ data: Data) {
+        let tmpDir = FileManager.default.temporaryDirectory
+        if let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] {
+            if let tempName = plist["NSURLSessionResumeInfoTempFileName"] as? String {
+                try? FileManager.default.removeItem(at: tmpDir.appendingPathComponent(tempName))
+            } else if let objects = plist["$objects"] as? [Any] {
+                for obj in objects {
+                    if let str = obj as? String, str.hasPrefix("CFNetworkDownload_"), str.hasSuffix(".tmp") {
+                        try? FileManager.default.removeItem(at: tmpDir.appendingPathComponent(str))
+                    }
+                }
+            }
+        }
+        if let str = String(data: data, encoding: .isoLatin1) {
+            let pattern = #"CFNetworkDownload_[A-Za-z0-9_-]+\.tmp"#
+            if let regex = try? NSRegularExpression(pattern: pattern) {
+                let range = NSRange(location: 0, length: str.utf16.count)
+                for match in regex.matches(in: str, range: range) {
+                    if let r = Range(match.range, in: str) {
+                        let filename = String(str[r])
+                        try? FileManager.default.removeItem(at: tmpDir.appendingPathComponent(filename))
+                    }
+                }
+            }
+        }
+    }
+
+    static func cleanupResumeDataTempFile(from error: Error?) {
+        guard let err = error as NSError?,
+              let data = err.userInfo[NSURLSessionDownloadTaskResumeData] as? Data
+        else {
+            return
+        }
+        cleanupResumeDataTempFile(data)
     }
 }
 
@@ -118,9 +175,16 @@ extension URLSession {
             let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
             let task = session.downloadTask(with: url)
 
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable reason in
+                task.cancel { resumeData in
+                    if let resumeData {
+                        DownloadStreamDelegate.cleanupResumeDataTempFile(resumeData)
+                    }
+                }
                 session.invalidateAndCancel()
+                if case .cancelled = reason {
+                    delegate.cleanupStagedFile()
+                }
             }
             task.resume()
         }
