@@ -11,10 +11,14 @@ extension HistoryViewModel {
 
     func backfillCloudKitFieldsIfNeeded(completion: (([ReadingEntry]) -> Void)? = nil) {
         var backfilled = [ReadingEntry]()
+        var legacyCkIdsToDelete = [String]()
         var didChange = false
 
         for (bookId, entry) in entriesByBookId {
             if entry.ckRecordId == nil || entry.ckRecordId?.hasPrefix("history_") == true {
+                if let oldId = entry.ckRecordId, oldId.hasPrefix("history_") {
+                    legacyCkIdsToDelete.append(oldId)
+                }
                 var updated = entry
                 updated.ckRecordId = String(bookId)
                 entriesByBookId[bookId] = updated
@@ -35,6 +39,10 @@ extension HistoryViewModel {
                     Logger.history.error("Failed to backfillCloudKitFields: \(error.localizedDescription, privacy: .public)")
                 }
             }
+        }
+
+        if !legacyCkIdsToDelete.isEmpty {
+            CloudKitSyncManager.shared.delete(ckRecordIds: legacyCkIdsToDelete, target: .history, trackPending: true)
         }
 
         completion?(backfilled)
