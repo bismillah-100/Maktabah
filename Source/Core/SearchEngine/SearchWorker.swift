@@ -130,11 +130,11 @@ final class SearchWorker: @unchecked Sendable {
                 }
 
                 let checkFtsDb = checkCountSql("fts_db")
-                if let rows = try? conn.queryInts(sql: checkFtsDb, params: []), !rows.isEmpty {
+                if let rows = try? conn.queryInts(sql: checkFtsDb, params: []), rows.first == 2 {
                     return "fts_db"
                 }
                 let checkMain = checkCountSql("main")
-                if let rows = try? conn.queryInts(sql: checkMain, params: []), !rows.isEmpty {
+                if let rows = try? conn.queryInts(sql: checkMain, params: []), rows.first == 2 {
                     return "main"
                 }
                 return nil
