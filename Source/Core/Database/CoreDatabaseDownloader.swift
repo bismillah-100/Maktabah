@@ -227,6 +227,11 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
         guard let destDir = AppConfig.coreDatabasePath else { throw CoreDownloadError.destinationUnavailable }
         let destURL = URL(fileURLWithPath: destDir).appendingPathComponent(coreFile.filename)
         var downloadedTempURL: URL?
+        defer {
+            if let temp = downloadedTempURL {
+                try? fileManager.removeItem(at: temp)
+            }
+        }
 
         let stream = URLSession.downloadStream(
             from: url,
@@ -248,7 +253,6 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
         }
 
         guard let tempURL = downloadedTempURL else { throw CoreDownloadError.downloadFailed(file: coreFile.filename) }
-        defer { try? fileManager.removeItem(at: tempURL) }
 
         if url.pathExtension.lowercased() == "zst" {
             do {
