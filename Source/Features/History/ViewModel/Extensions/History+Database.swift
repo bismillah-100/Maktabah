@@ -49,56 +49,6 @@ extension HistoryViewModel {
         }
     }
 
-    // MARK: - Pruning
-
-    @discardableResult
-    func pruneOrphanedEntries(deleteFromDB: Bool = true) -> [Int] {
-        let historySet = Set(historyOrder)
-        let toRemove = entriesByBookId.keys.filter { bookId in
-            let entry = entriesByBookId[bookId]
-            let isFav = entry?.isFavorite ?? false
-            let hasHistory = historySet.contains(bookId)
-            return !isFav && !hasHistory
-        }
-        var removedIds = [Int]()
-        var ckIdsToDelete = [String]()
-        for bookId in toRemove {
-            if let ckId = entriesByBookId[bookId]?.ckRecordId {
-                ckIdsToDelete.append(ckId)
-                pendingCloudKitDeletes.insert(ckId)
-            }
-
-            entriesByBookId.removeValue(forKey: bookId)
-            removedIds.append(bookId)
-        }
-
-        if deleteFromDB, !removedIds.isEmpty {
-            let removedIds = removedIds
-            let ckIdsToDelete = ckIdsToDelete
-            Task.detached { [weak self] in
-                do {
-                    try HistoryDatabaseManager.shared.transaction {
-                        try HistoryDatabaseManager.shared.deleteEntries(bookIds: removedIds)
-                        for ckId in ckIdsToDelete {
-                            try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                        }
-                    }
-                    if !ckIdsToDelete.isEmpty {
-                        await MainActor.run { [weak self] in
-                            self?.triggerDeleteDebounce()
-                        }
-                    }
-                } catch {
-                    Logger.history.error("Failed to save pruneOrphanedEntries: \(error.localizedDescription, privacy: .public)")
-                }
-            }
-        } else if !ckIdsToDelete.isEmpty {
-            triggerDeleteDebounce()
-        }
-
-        return removedIds
-    }
-
     func loadBooksData() {
         let hIds = historyOrder
         let fIds = favoriteBookIds
