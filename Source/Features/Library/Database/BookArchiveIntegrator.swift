@@ -40,12 +40,19 @@ enum BookArchiveIntegrateError: LocalizedError {
 actor BookArchiveSingleFlight {
     static let shared = BookArchiveSingleFlight()
 
+    private struct ArchiveQueueItem {
+        let id: UInt64
+        let task: Task<Void, Error>
+    }
+
+    private var nextTaskId: UInt64 = 0
+
     /// Per-book dedup: buku yang sama tidak perlu integrasi ulang.
     private var bookTasks: [Int: Task<Void, Error>] = [:]
 
     /// Per-archive serialisasi: operasi baru mengantri setelah operasi sebelumnya selesai,
     /// mencegah concurrent write ke file archive yang sama.
-    private var archiveTail: [Int: Task<Void, Error>] = [:]
+    private var archiveTail: [Int: ArchiveQueueItem] = [:]
 
     private init() {}
 
@@ -60,24 +67,33 @@ actor BookArchiveSingleFlight {
             return
         }
 
+        let taskId = nextTaskId
+        nextTaskId += 1
+
         // Ambil task terakhir pada archive ini (jika ada) sebagai predecessor.
-        let predecessor = archiveTail[archiveId]
+        let predecessor = archiveTail[archiveId]?.task
 
         // Task baru menunggu predecessor selesai sebelum menjalankan operasi.
-        let task = Task<Void, Error> {
+        let task = Task<Void, Error> { [weak self] in
+            defer {
+                Task { [weak self] in
+                    await self?.finishTask(archiveId: archiveId, bookId: bookId, taskId: taskId)
+                }
+            }
             _ = try? await predecessor?.value
             try await operation()
         }
 
         bookTasks[bookId] = task
-        archiveTail[archiveId] = task
+        archiveTail[archiveId] = ArchiveQueueItem(id: taskId, task: task)
 
-        do {
-            try await task.value
-            bookTasks.removeValue(forKey: bookId)
-        } catch {
-            bookTasks.removeValue(forKey: bookId)
-            throw error
+        try await task.value
+    }
+
+    private func finishTask(archiveId: Int, bookId: Int, taskId: UInt64) {
+        bookTasks.removeValue(forKey: bookId)
+        if archiveTail[archiveId]?.id == taskId {
+            archiveTail.removeValue(forKey: archiveId)
         }
     }
 }
@@ -135,6 +151,27 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             throw ArchiveError.databasePathNotAvailable
         }
 
+        // Fast-path: jika sudah terintegrasi, tidak perlu mengunduh sama sekali.
+        if hasIntegratedBook(
+            archiveDbPath: archiveDbPath,
+            ftsDbPath: ftsDbPath,
+            bookId: book.id
+        ) {
+            finalizeIntegration(book: book)
+            return
+        }
+
+        // Unduhan jaringan berjalan paralel di luar antrean serial per-arsip.
+        let sourceURL = try await resolveValidSourceURL(
+            for: book.id,
+            expectedSize: book.compressedDownloadSize,
+            onProgress: onDownloadProgress
+        )
+
+        // Notifikasi fase integrasi untuk caller (setelah download selesai dan valid)
+        await onIntegrating?()
+
+        // Masuk ke antrean serial BookArchiveSingleFlight hanya untuk fase penulisan SQLite ke arsip.
         try await BookArchiveSingleFlight.shared.run(archiveId: book.archive, bookId: book.id) { [weak self] in
             guard let self else { return }
             if hasIntegratedBook(
@@ -145,15 +182,6 @@ final class BookArchiveIntegrator: @unchecked Sendable {
                 finalizeIntegration(book: book)
                 return
             }
-
-            let sourceURL = try await resolveValidSourceURL(
-                for: book.id,
-                expectedSize: book.compressedDownloadSize,
-                onProgress: onDownloadProgress
-            )
-
-            // Notifikasi fase integrasi untuk caller (setelah download selesai dan valid)
-            await onIntegrating?()
 
             do {
                 let sourceTables = listTables(path: sourceURL.path)
@@ -381,9 +409,23 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         }
 
         let hasBook = ArchiveDatabaseTools.tableExists(db: archiveDb, tableName: bookTable)
-        let hasFts = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main") ||
+        let hasFts = isBookIndexedInUnifiedFts(db: ftsDb, bookId: bookId) ||
             ArchiveDatabaseTools.tableExists(db: ftsDb, tableName: ftsTable)
         return hasBook && hasFts
+    }
+
+    private func isBookIndexedInUnifiedFts(db: OpaquePointer, bookId: Int) -> Bool {
+        guard ArchiveDatabaseTools.hasUnifiedFTS(db: db, schemaName: "main") else {
+            return false
+        }
+        var stmt: OpaquePointer?
+        let sql = "SELECT 1 FROM archive_index WHERE book_id = ? LIMIT 1;"
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            return false
+        }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_int64(stmt, 1, Int64(bookId))
+        return sqlite3_step(stmt) == SQLITE_ROW
     }
 
     // MARK: - Core integrate (async untuk support await onProgress)
@@ -403,6 +445,14 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         let ftsWritePath = try prepareWritableDatabasePath(ftsDbPath)
 
         logIntegrationDiagnostics(archiveDbPath: archiveDbPath, archiveWritePath: archiveWritePath, ftsDbPath: ftsDbPath, ftsWritePath: ftsWritePath)
+
+        var isSuccess = false
+        defer {
+            if !isSuccess {
+                cleanupTempDatabaseFile(writePath: archiveWritePath, originalPath: archiveDbPath)
+                cleanupTempDatabaseFile(writePath: ftsWritePath, originalPath: ftsDbPath)
+            }
+        }
 
         var archiveDbPtr: OpaquePointer? = try openDatabase(path: archiveWritePath)
         guard let archiveDb = archiveDbPtr else {
@@ -435,6 +485,13 @@ final class BookArchiveIntegrator: @unchecked Sendable {
 
         try replaceDatabaseIfNeeded(tempPath: archiveWritePath, originalPath: archiveDbPath)
         try replaceDatabaseIfNeeded(tempPath: ftsWritePath, originalPath: ftsDbPath)
+        isSuccess = true
+    }
+
+    private func cleanupTempDatabaseFile(writePath: String, originalPath: String) {
+        if writePath != originalPath, FileManager.default.fileExists(atPath: writePath) {
+            try? FileManager.default.removeItem(atPath: writePath)
+        }
     }
 
     private func performIntegrationTasks(
@@ -469,8 +526,9 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         await onProgress?(.fts)
         let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: archiveDb)
         let hasLegacyFts = ArchiveDatabaseTools.tableExists(db: archiveDb, schemaName: "fts_db", tableName: "\(bookTable)_fts")
+        let isUnified = hasUnified || !hasLegacyFts
 
-        if hasUnified || !hasLegacyFts {
+        if isUnified {
             try ArchiveDatabaseTools.appendBookToUnifiedFTS(
                 db: archiveDb,
                 ftsSchema: "fts_db",
@@ -491,13 +549,28 @@ final class BookArchiveIntegrator: @unchecked Sendable {
 
         // ── Fase Data ────────────────────────────────────────────────────────
         await onProgress?(.data)
-        try copySourceTablesToArchive(
-            archiveDb: archiveDb,
-            sourceURL: sourceURL,
-            bookId: bookId,
-            bookTable: bookTable,
-            tocTable: tocTable
-        )
+        do {
+            try copySourceTablesToArchive(
+                archiveDb: archiveDb,
+                sourceURL: sourceURL,
+                bookId: bookId,
+                bookTable: bookTable,
+                tocTable: tocTable
+            )
+        } catch {
+            // Kompensasi: hapus data FTS yang baru diindeks jika penyalinan data gagal
+            cleanupFtsCompensation(archiveDb: archiveDb, bookId: bookId, isUnified: isUnified)
+            throw error
+        }
+    }
+
+    private func cleanupFtsCompensation(archiveDb: OpaquePointer, bookId: Int, isUnified: Bool) {
+        if isUnified {
+            try? exec(archiveDb, "DELETE FROM fts_db.archive_fts WHERE rowid IN (SELECT rowid FROM fts_db.archive_index WHERE book_id = \(bookId));")
+            try? exec(archiveDb, "DELETE FROM fts_db.archive_index WHERE book_id = \(bookId);")
+        } else {
+            try? exec(archiveDb, SQL.dropTable(name: "fts_db.b\(bookId)_fts"))
+        }
     }
 
     private func copySourceTablesToArchive(

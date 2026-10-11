@@ -122,14 +122,20 @@ flowchart TD
 Setelah berkas sementara `.sqlite` kitab selesai diunduh, berkas tersebut diintegrasikan ke dalam salah satu dari 20 berkas arsip induk (`1.sqlite` s.d. `20.sqlite`).
 
 ### A. BookArchiveSingleFlight (Actor) - Koordinasi Konkurensi
-Menulis ke satu basis data SQLite secara paralel dari banyak *thread* dapat memicu galat `SQLITE_BUSY` (*database is locked*). Modul ini menggunakan *Actor* dengan antrean *predecessor*:
+Unduhan jaringan berkas sumber kitab berjalan paralel secara independen di luar antrean. Namun, penulisan ke basis data SQLite arsip tetap diserialisasi per-arsip untuk mencegah galat `SQLITE_BUSY` (*database is locked*). Modul ini menggunakan `actor` dengan antrean *predecessor* dan pembersihan rantai *task*:
 
 ```swift
 actor BookArchiveSingleFlight {
     static let shared = BookArchiveSingleFlight()
 
+    private struct ArchiveQueueItem {
+        let id: UInt64
+        let task: Task<Void, Error>
+    }
+
+    private var nextTaskId: UInt64 = 0
     private var bookTasks: [Int: Task<Void, Error>] = [:]
-    private var archiveTail: [Int: Task<Void, Error>] = [:]
+    private var archiveTail: [Int: ArchiveQueueItem] = [:]
 
     func run(archiveId: Int, bookId: Int, operation: @escaping @Sendable () async throws -> Void) async throws {
         // 1. Dedup per-buku: Hindari integrasi ganda untuk buku yang sama
@@ -138,15 +144,23 @@ actor BookArchiveSingleFlight {
             return
         }
 
+        let taskId = nextTaskId
+        nextTaskId += 1
+
         // 2. Serialisasi per-arsip: Tunggu operasi sebelumnya di arsip yang sama selesai
-        let predecessor = archiveTail[archiveId]
-        let task = Task<Void, Error> {
+        let predecessor = archiveTail[archiveId]?.task
+        let task = Task<Void, Error> { [weak self] in
+            defer {
+                Task { [weak self] in
+                    await self?.finishTask(archiveId: archiveId, bookId: bookId, taskId: taskId)
+                }
+            }
             _ = try? await predecessor?.value
             try await operation()
         }
 
         bookTasks[bookId] = task
-        archiveTail[archiveId] = task
+        archiveTail[archiveId] = ArchiveQueueItem(id: taskId, task: task)
         try await task.value
     }
 }
