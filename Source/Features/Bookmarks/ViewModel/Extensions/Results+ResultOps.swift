@@ -34,13 +34,14 @@ extension ResultsViewModel {
                 let newIndex = arr.firstIndex(where: { $0.id == resultId }) ?? oldIndex
                 if oldIndex != newIndex {
                     notifyChange(.moveResult(result: node, oldParentId: folderId, oldIndex: oldIndex, newParentId: folderId, newIndex: newIndex))
+                } else {
+                    notifyChange(.updateResult(result: node))
                 }
             }
         }
 
         // update index
         resultById[resultId] = node
-        notifyChange(.updateResult(result: node))
     }
 
     func deleteResult(_ parentFolderId: Int64?, name: String) {

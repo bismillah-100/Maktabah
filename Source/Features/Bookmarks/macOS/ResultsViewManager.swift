@@ -140,13 +140,11 @@ class ResultsViewManager: NSObject {
             let parentFolder = parentId.flatMap { vm.findFolder($0) }
             let folderCount = parentFolder?.children.count ?? vm.folderRoots.count
             outlineView.insertItems(at: IndexSet(integer: folderCount + index), inParent: parentFolder, withAnimation: .effectGap)
-            outlineView.reloadItem(parentFolder)
 
         case let .removeResult(_, parentId, index):
             let parentFolder = parentId.flatMap { vm.findFolder($0) }
             let folderCount = parentFolder?.children.count ?? vm.folderRoots.count
             outlineView.removeItems(at: IndexSet(integer: folderCount + index), inParent: parentFolder, withAnimation: .effectFade)
-            outlineView.reloadItem(parentFolder)
 
         case let .updateResult(result):
             outlineView.reloadItem(result)
@@ -162,7 +160,7 @@ class ResultsViewManager: NSObject {
                 to: newFolderCount + newIndex, inParent: newParent
             )
             if let newParent { outlineView.reloadItem(newParent) }
-            outlineView.reloadItem(oldParent)
+            if let oldParent { outlineView.reloadItem(oldParent) }
 
         default:
             break
@@ -298,7 +296,12 @@ extension ResultsViewManager: NSOutlineViewDataSource {
                 return foldersToShow[index]
             }
             let itemsToShow = visibleItems(in: folder.id)
-            return itemsToShow[index - foldersToShow.count]
+            let itemIndex = index - foldersToShow.count
+            if itemIndex >= 0, itemIndex < itemsToShow.count {
+                return itemsToShow[itemIndex]
+            }
+            assertionFailure("ResultsViewManager: Child index \(itemIndex) out of bounds for folder \(folder.id)")
+            return NSObject()
         }
 
         let rootFolders = isSearching ? folderRoots.filter { shouldShowFolder($0) } : folderRoots
@@ -306,7 +309,12 @@ extension ResultsViewManager: NSOutlineViewDataSource {
             return rootFolders[index]
         }
         let rootItems = writer ? [] : visibleItems(in: nil)
-        return rootItems[index - rootFolders.count]
+        let rootIndex = index - rootFolders.count
+        if rootIndex >= 0, rootIndex < rootItems.count {
+            return rootItems[rootIndex]
+        }
+        assertionFailure("ResultsViewManager: Root child index \(rootIndex) out of bounds")
+        return NSObject()
     }
 
     func outlineView(_ outlineView: NSOutlineView, persistentObjectForItem item: Any?) -> Any? {
