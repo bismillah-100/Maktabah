@@ -41,7 +41,7 @@ Saat proses impor atau integrasi kitab (`BookUpdateManager` / `BookArchiveIntegr
 
 Saat membaca baris konten (`BookConnection.getContent` atau saat sel pencarian terlihat di layar):
 1. Kolom `nass` dibaca sebagai `BLOB`.
-2. Didekompresi melalui `ZstdDecompressor` menggunakan *context pool* (`ZSTDContextPool`) untuk menghindari *overhead* alokasi memori berulang.
+2. Didekompresi melalui `ZstdDecompressor` menggunakan *context wrapper* per-*thread* untuk menghindari *overhead* alokasi memori berulang.
 3. Hasil pembacaan disimpan sementara di *cache* halaman (`BookPageCache`) untuk mempercepat navigasi berikutnya.
 
 ---
