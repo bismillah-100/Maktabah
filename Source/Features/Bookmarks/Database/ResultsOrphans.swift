@@ -36,7 +36,9 @@ extension ResultsHandler {
                 }
 
                 for orphan in orphans {
-                    guard let newParentId = orphan.expectedParent else { continue }
+                    guard let newParentId = orphan.expectedParent, newParentId != orphan.id else { continue }
+                    let descendants = getAllDescendantIds(of: orphan.id)
+                    guard !descendants.contains(newParentId) else { continue }
 
                     let conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
                     if let conflictId = try db.fetch(query: conflictSql, parameters: [newParentId, orphan.name, orphan.id], mapping: { $0.int64(at: 0) }).first {
