@@ -206,7 +206,7 @@ flowchart TD
 1. **Pemisahan Cache**: `DatabaseManager.invalidateArchiveCache` hanya membersihkan ketersediaan berkas arsip dan tidak lagi menghapus status `IntegrationCache`.
 2. **Unified FTS Scanner**: Pemindaian `scanIntegratedBookIds` membaca `archive_index` pada skema Unified FTS (`SELECT DISTINCT book_id FROM archive_index;`) dengan *fallback* ke `bN_fts` untuk basis data lama.
 3. **Atomic Mutex I/O**: Penulisan JSON dilindungi `Mutex` (`ioLock`) untuk mencegah *race condition* saat penulisan konkuren.
-4. **Bounded Bulk Download**: Unduhan massal menggunakan `BoundedBulkDownloader` dengan pembatasan paralelisme ($N=4$) dan ketahanan terhadap galat jaringan tanpa membatalkan (*cancelAll*) *task* yang sedang berjalan (*in-flight*).
+4. **Bounded Bulk Download & Mekanisme Stop**: Unduhan massal menggunakan `BoundedBulkDownloader` dengan pembatasan paralelisme ($N=4$) dan ketahanan terhadap galat jaringan. Saat pengguna menekan tombol Stop, *closure* `isCancelled` membatalkan *in-flight task* seketika dan mencegah penjadwalan unduhan baru, sehingga alur langsung beralih mengintegrasikan kitab-kitab yang sudah berhasil diunduh secara serial.
 
 ---
 

@@ -534,6 +534,7 @@ final class BulkDownloadVC: NSViewController {
     }
 
     @objc private func stopTapped() {
+        stopButton.isEnabled = false
         BulkDownloadModalCenter.shared.stop()
     }
 }
