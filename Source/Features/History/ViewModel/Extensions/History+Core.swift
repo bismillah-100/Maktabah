@@ -109,9 +109,6 @@ extension HistoryViewModel {
 
     func handleNonFavoritedHistoryRemoval(entry: ReadingEntry, bookId: Int) {
         let ckId = entry.ckRecordId
-        if let ckId {
-            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-        }
         entriesByBookId.removeValue(forKey: bookId)
 
         let order = historyOrder
@@ -121,9 +118,6 @@ extension HistoryViewModel {
             do {
                 try HistoryDatabaseManager.shared.transaction {
                     try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
-                    if let ckId {
-                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                    }
                     try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
                 }
                 DispatchQueue.main.async {
