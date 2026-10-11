@@ -117,22 +117,32 @@ extension ResultsHandler {
     @discardableResult
     func applyCloudKitFolderChanges(foldersToSave: [SyncFolder], recordIdsToDelete: [String]) -> Bool {
         guard let db else { return false }
+        var hasChanges = false
 
         do {
             try transaction {
-                try processFolderDeletions(recordIdsToDelete: recordIdsToDelete, db: db)
+                let deletedCount = try processFolderDeletions(recordIdsToDelete: recordIdsToDelete, db: db)
+                if deletedCount > 0 {
+                    hasChanges = true
+                }
                 let sortedFolders = sortFoldersTopologically(folders: foldersToSave)
                 var (folderCkIdToLocalId, folderCkIdToExisting) = try prefetchFolderSyncContext(foldersToSave: foldersToSave, db: db)
 
-                for folder in sortedFolders {
-                    try processSingleFolderSave(folder, db: db, folderCkIdToLocalId: &folderCkIdToLocalId, folderCkIdToExisting: folderCkIdToExisting)
+                for folder in sortedFolders where try processSingleFolderSave(
+                    folder, db: db, folderCkIdToLocalId: &folderCkIdToLocalId, folderCkIdToExisting: folderCkIdToExisting
+                ) {
+                        hasChanges = true
                 }
             }
 
-            resolveOrphanFolders()
+            if resolveOrphanFolders() {
+                hasChanges = true
+            }
 
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
+            if hasChanges {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
+                }
             }
         } catch {
             Logger.sync.error("ResultsHandler: Failed to apply folder changes: \(error.localizedDescription, privacy: .public)")
@@ -171,8 +181,9 @@ extension ResultsHandler {
         return (folderCkIdToLocalId, folderCkIdToExisting)
     }
 
-    private func processFolderDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws {
-        guard !recordIdsToDelete.isEmpty else { return }
+    @discardableResult
+    private func processFolderDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws -> Int {
+        guard !recordIdsToDelete.isEmpty else { return 0 }
         var allLocalIdsToDelete = Set<Int64>()
 
         for chunk in recordIdsToDelete.chunked(into: 999) {
@@ -187,7 +198,7 @@ extension ResultsHandler {
             }
         }
 
-        guard !allLocalIdsToDelete.isEmpty else { return }
+        guard !allLocalIdsToDelete.isEmpty else { return 0 }
 
         let uniqueLocalIds = Array(allLocalIdsToDelete)
         for chunk in uniqueLocalIds.chunked(into: 999) {
@@ -195,6 +206,7 @@ extension ResultsHandler {
             try exec("DELETE FROM \(resultsTable) WHERE \(colFolderId) IN (\(placeholders));", parameters: chunk)
             try exec("DELETE FROM \(foldersTable) WHERE \(colId) IN (\(placeholders));", parameters: chunk)
         }
+        return uniqueLocalIds.count
     }
 
     private func sortFoldersTopologically(folders: [SyncFolder]) -> [SyncFolder] {
@@ -219,7 +231,6 @@ extension ResultsHandler {
         return sortedFolders
     }
 
-    @discardableResult
     private func processSingleFolderSave(
         _ folder: SyncFolder,
         db: SQLiteDatabase,
@@ -354,10 +365,14 @@ extension ResultsHandler {
     @discardableResult
     func applyCloudKitResultChanges(resultsToSave: [SyncResult], recordIdsToDelete: [String]) -> Bool {
         guard let db else { return false }
+        var hasChanges = false
 
         do {
             try transaction {
-                try processResultDeletions(recordIdsToDelete: recordIdsToDelete, db: db)
+                let deletedCount = try processResultDeletions(recordIdsToDelete: recordIdsToDelete, db: db)
+                if deletedCount > 0 {
+                    hasChanges = true
+                }
 
                 let syncContext = try prefetchResultsSyncContext(resultsToSave: resultsToSave, db: db)
                 let folderCkIdToLocalId = syncContext.folderMap
@@ -369,17 +384,25 @@ extension ResultsHandler {
                     let fLocalId = res.folderCkRecordId.flatMap { folderCkIdToLocalId[$0] }
 
                     if let existing = resCkIdToExisting[ckId] {
-                        try saveUpdatedSyncResult(res, db: db, existing: existing, fLocalId: fLocalId, conflictMap: &conflictMap)
+                        if try saveUpdatedSyncResult(res, db: db, existing: existing, fLocalId: fLocalId, conflictMap: &conflictMap) {
+                            hasChanges = true
+                        }
                     } else {
-                        try insertOrResolveConflictResult(res, db: db, ckId: ckId, fLocalId: fLocalId, conflictMap: &conflictMap)
+                        if try insertOrResolveConflictResult(res, db: db, ckId: ckId, fLocalId: fLocalId, conflictMap: &conflictMap) {
+                            hasChanges = true
+                        }
                     }
                 }
             }
 
-            resolveOrphanResults()
+            if resolveOrphanResults() {
+                hasChanges = true
+            }
 
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
+            if hasChanges {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: .savedResultsTreeDidUpdate, object: nil)
+                }
             }
         } catch {
             Logger.sync.error("ResultsHandler: Failed to apply result changes: \(error.localizedDescription, privacy: .public)")
@@ -388,8 +411,10 @@ extension ResultsHandler {
         return true
     }
 
-    private func processResultDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws {
-        guard !recordIdsToDelete.isEmpty else { return }
+    @discardableResult
+    private func processResultDeletions(recordIdsToDelete: [String], db: SQLiteDatabase) throws -> Int {
+        guard !recordIdsToDelete.isEmpty else { return 0 }
+        var deletedCount = 0
 
         for chunk in recordIdsToDelete.chunked(into: 999) {
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
@@ -398,8 +423,10 @@ extension ResultsHandler {
             if !matchingIds.isEmpty {
                 let idPlaceholders = String(repeating: "?,", count: matchingIds.count).dropLast()
                 try exec("DELETE FROM \(resultsTable) WHERE \(colId) IN (\(idPlaceholders));", parameters: matchingIds)
+                deletedCount += matchingIds.count
             }
         }
+        return deletedCount
     }
 
     private func prefetchResultsSyncContext(
@@ -478,7 +505,6 @@ extension ResultsHandler {
         return conflictMap
     }
 
-    @discardableResult
     private func saveUpdatedSyncResult(
         _ res: SyncResult,
         db: SQLiteDatabase,
@@ -528,7 +554,6 @@ extension ResultsHandler {
         return true
     }
 
-    @discardableResult
     private func insertOrResolveConflictResult(
         _ res: SyncResult,
         db: SQLiteDatabase,
