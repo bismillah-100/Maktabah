@@ -134,7 +134,7 @@ flowchart TD
 * **Debounced Batch Delete**: Operasi penghapusan buku dari riwayat dikumpulkan ke dalam antrean `pendingCloudKitDeletes` dengan penundaan (*debounce*) selama 3 detik sebelum dikirim serentak ke CloudKit, meminimalkan *overhead* jaringan.
 * **Penanganan Mode Offline (`SyncPendingStore`)**: Jika perangkat sedang *offline* saat mutasi terjadi, ID rekaman tetap tersimpan di tabel antrean. Begitu konektivitas internet pulih, `CloudKitSyncManager` secara otomatis men-*flush* antrean *pending* tersebut.
 
-### 3. Alur Sinkronisasi Masuk & Resolusi Konflik (LWW + Field Merging)
+### 3. Alur Sinkronisasi Masuk & Resolusi Konflik (Field-Level Merging)
 
 Saat `CloudKitSyncManager` menerima perubahan *remote* via `fetchChanges`, rekaman diteruskan ke `HistoryViewModel.shared.applyCloudKitChanges(entriesToSave:recordIdsToDelete:)`:
 
@@ -143,13 +143,14 @@ flowchart TD
     Remote(["Terima Rekaman dari CloudKit"]) --> Match{"Apakah Book ID Ada di Lokal?"}
     
     Match -->|"Tidak Ada"| InsertLocal["Simpan sebagai Entri Baru"]
-    Match -->|"Ada"| CheckLWW{"remoteModified >= localModified?"}
+    Match -->|"Ada"| Merge["mergeEntries: Field-Level Merge"]
     
-    CheckLWW -->|"Ya"| OverwriteLocal["Timpa Data Lokal (Source of Truth)"]
-    CheckLWW -->|"Tidak"| DropRemote["Pertahankan Data Lokal"]
+    Merge --> HasChanges{"Ada Perubahan Field?"}
+    HasChanges -->|"Ya"| UpdateLocal["Perbarui Entri Lokal (Merged)"]
+    HasChanges -->|"Tidak"| NoOp["Abaikan (Data Sudah Sinkron)"]
     
     InsertLocal --> Reorder["Urutkan Ulang historyOrder LIFO"]
-    OverwriteLocal --> Reorder
+    UpdateLocal --> Reorder
     
     Reorder --> Persist[("HistoryDatabaseManager.saveCloudKitChanges")]
     Persist --> Notify(["Post .historyDidChange & Reload UI"])
@@ -161,11 +162,12 @@ flowchart TD
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class Remote,Notify event;
-    class InsertLocal,OverwriteLocal,DropRemote,Reorder store;
-    class Match,CheckLWW ui;
+    class InsertLocal,UpdateLocal,Reorder,NoOp store;
+    class Match,HasChanges ui;
+    class Merge vm;
     class Persist db;
 ```
 
-1. **Last-Write-Wins (LWW)**: Membandingkan `updatedAt` lokal dengan `lastModified` remote. Jika remote lebih baru (`remoteModified >= localModified`), perubahan diterima secara utuh sebagai *source of truth*. CloudKit tidak mengirim *partial update*, sehingga field bernilai `nil` mengindikasikan bahwa data secara eksplisit telah dihapus.
-2. **Rekonsiliasi Urutan (`historyOrder`)**: Setelah entri *remote* digabungkan, `HistoryViewModel` menyortir ulang buku riwayat berdasarkan `lastOpenedAt` terbaru (dibatasi `maxHistoryCount = 50`), menghapus *orphan records*, dan menyimpannya kembali ke SQLite secara atomik via `HistoryDatabaseManager.saveCloudKitChanges` di *background thread*.
-4. **Pembaruan UI**: Notifikasi `.historyDidChange` disiarkan untuk menyegarkan daftar riwayat dan favorit di antarmuka macOS dan iOS secara reaktif.
+1. **Field-Level Merging**: Resolusi konflik memisahkan dimensi status favorit (`favoritedAt`) dan posisi baca (`positionUpdatedAt`). Jika satu perangkat mengubah status favorit sementara perangkat lain membaca ke halaman baru, kedua perubahan digabungkan berdasarkan stempel waktu spesifik masing-masing tanpa saling menimpa.
+2. **Rekonsiliasi Urutan (`historyOrder`)**: Setelah entri *remote* digabungkan, `HistoryViewModel` menyortir ulang buku riwayat berdasarkan `lastOpenedAt` terbaru dan membatasi urutan linear antarmuka (`historyOrder`) maksimal 50 item (`maxHistoryCount`). Seluruh entri `ReadingEntry` fisik tetap dipertahankan di database dan CloudKit agar posisi baca (`lastContentId`) tidak hilang saat kitab ke-51+ dibuka.
+3. **Pembaruan UI**: Notifikasi `.historyDidChange` disiarkan untuk menyegarkan daftar riwayat dan favorit di antarmuka macOS dan iOS secara reaktif.
