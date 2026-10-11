@@ -273,9 +273,6 @@ class iOSNavigationManager {
 
         if options.recordHistory {
             HistoryViewModel.shared.addBookToHistory(book.id)
-            if let contentId = options.contentId {
-                HistoryViewModel.shared.updateLastContentId(contentId, for: book.id)
-            }
         }
     }
 
