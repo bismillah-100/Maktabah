@@ -83,6 +83,7 @@ final class IntegrationCache: Sendable {
                 state.integrated[archiveId] = []
             }
             state.integrated[archiveId]?.insert(bookId)
+            state.loadedArchives.insert(archiveId)
         }
         persistCache(for: archiveId)
     }
@@ -98,6 +99,7 @@ final class IntegrationCache: Sendable {
                 books.remove(bookId)
                 state.integrated[archiveId] = books
             }
+            state.loadedArchives.insert(archiveId)
         }
         persistCache(for: archiveId)
     }
@@ -124,7 +126,7 @@ final class IntegrationCache: Sendable {
                 return true
             }
             if shouldSave {
-                saveJSON(bookIds: [], for: archiveId)
+                saveJSON(for: archiveId)
             }
             return
         }
@@ -132,13 +134,18 @@ final class IntegrationCache: Sendable {
         let bookIds = scanIntegratedBookIds(archivePath: archivePath, ftsPath: ftsPath)
 
         let shouldSave = state.withLock { state -> Bool in
-            if state.loadedArchives.contains(archiveId) { return false }
+            if state.loadedArchives.contains(archiveId) {
+                var current = state.integrated[archiveId] ?? []
+                current.formUnion(bookIds)
+                state.integrated[archiveId] = current
+                return true
+            }
             state.integrated[archiveId] = Set(bookIds)
             state.loadedArchives.insert(archiveId)
             return true
         }
         if shouldSave {
-            saveJSON(bookIds: bookIds, for: archiveId)
+            saveJSON(for: archiveId)
         }
     }
 
@@ -203,7 +210,12 @@ final class IntegrationCache: Sendable {
         }
 
         state.withLock { state in
-            if state.loadedArchives.contains(archiveId) { return }
+            if state.loadedArchives.contains(archiveId) {
+                var current = state.integrated[archiveId] ?? []
+                current.formUnion(json.bookIds)
+                state.integrated[archiveId] = current
+                return
+            }
             state.integrated[archiveId] = Set(json.bookIds)
             state.loadedArchives.insert(archiveId)
         }
@@ -212,16 +224,16 @@ final class IntegrationCache: Sendable {
     // MARK: - Internal: persist
 
     private func persistCache(for archiveId: Int) {
-        guard AppConfig.isUsingBundleMode else { return }
-        let ids = state.withLock { Array($0.integrated[archiveId] ?? []) }
-        saveJSON(bookIds: ids, for: archiveId)
+        saveJSON(for: archiveId)
     }
 
-    private func saveJSON(bookIds: [Int], for archiveId: Int) {
+    private func saveJSON(for archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
         guard let dir = cacheDir else { return }
 
         ioLock.withLock { _ in
+            let bookIds = state.withLock { Array($0.integrated[archiveId] ?? []) }
+
             // Pastikan direktori ada
             if !fm.fileExists(atPath: dir.path) {
                 do {
