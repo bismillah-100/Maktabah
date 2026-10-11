@@ -500,7 +500,7 @@ final class FtsMigrationManager {
         if !tables.isEmpty {
             await updateBookProgress(
                 archiveId: archiveId,
-                statusText: .init(localized: .ftsMigrationStatusArchiveBook(archiveId, 1,tables.count))
+                statusText: .init(localized: .ftsMigrationStatusArchiveBook(archiveId, 1, tables.count))
             )
         }
 
