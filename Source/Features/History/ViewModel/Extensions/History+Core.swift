@@ -19,7 +19,7 @@ extension HistoryViewModel {
             entry.ckRecordId = String(entry.bookId)
         }
         entriesByBookId[entry.bookId] = entry
-        HistoryDatabaseManager.shared.upsertEntry(entry)
+        HistoryDatabaseManager.shared.upsertEntryAsync(entry)
         if reloadUI {
             loadBooksData()
             notifyHistoryChanged()
@@ -42,7 +42,6 @@ extension HistoryViewModel {
             historyOrder = Array(historyOrder.prefix(maxHistoryCount))
         }
 
-        pruneOrphanedEntries()
         HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
         saveAndSync(entry: &entry, reloadUI: true)
     }

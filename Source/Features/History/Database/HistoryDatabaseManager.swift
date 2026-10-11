@@ -27,6 +27,8 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
         state.withLock { $0.syncPendingStore }
     }
 
+    private let writeQueue = DispatchQueue(label: "org.maktabah.history.writeQueue", qos: .utility)
+
     /// Legacy UserDefaults keys — used only for migration
     private let legacyStorageKey = "CloudReadingEntries"
     private let legacyPendingUploadsKey = "HistoryPendingUploads"
@@ -113,6 +115,13 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
 
     // MARK: - Core CRUD
 
+    func upsertEntryAsync(_ entry: ReadingEntry) {
+        writeQueue.async { [weak self] in
+            guard let self else { return }
+            try? upsertEntries([entry])
+        }
+    }
+
     func upsertEntry(_ entry: ReadingEntry) {
         try? upsertEntries([entry])
     }
@@ -157,7 +166,7 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
                 var ckIds: [String] = []
                 if trackPending {
                     let ckIdSql = "SELECT ck_record_id FROM reading_entries WHERE book_id IN (" + String(placeholders) + ");"
-                    ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap { $0 }
+                    ckIds = try _db.fetch(query: ckIdSql, parameters: chunk, mapping: { $0.string(at: 0) }).compactMap(\.self)
                 }
 
                 try _db.execute(
