@@ -114,8 +114,6 @@ enum ArchiveDatabaseTools {
         isNassCompressed: Bool = true
     ) throws {
         try createUnifiedFTS(db: db, ftsSchema: ftsSchema)
-        try? exec(db, "DELETE FROM \(ftsSchema).archive_fts WHERE rowid IN (SELECT rowid FROM \(ftsSchema).archive_index WHERE book_id = \(bookId));")
-        try exec(db, "DELETE FROM \(ftsSchema).archive_index WHERE book_id = \(bookId);")
 
         let insertIndexSQL = String(format: SQL.insertUnifiedIndex, ftsSchema)
         let insertFtsSQL = String(format: SQL.insertUnifiedFTS, ftsSchema)
@@ -127,6 +125,9 @@ enum ArchiveDatabaseTools {
         defer { sqlite3_finalize(insertFtsStmt) }
 
         try withTransaction(db: db) {
+            try? exec(db, "DELETE FROM \(ftsSchema).archive_fts WHERE rowid IN (SELECT rowid FROM \(ftsSchema).archive_index WHERE book_id = \(bookId));")
+            try exec(db, "DELETE FROM \(ftsSchema).archive_index WHERE book_id = \(bookId);")
+
             try appendBookFast(
                 db: db,
                 sourceSchema: sourceSchema,
