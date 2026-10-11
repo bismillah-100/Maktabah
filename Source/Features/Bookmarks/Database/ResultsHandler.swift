@@ -42,12 +42,14 @@ struct SyncResult: Sendable {
 
 struct ExistingFolderInfo: Sendable {
     let id: Int64
+    let name: String
     let lastModified: Int64
     let parentId: Int64?
 }
 
 struct ExistingResultInfo: Sendable {
     let id: Int64
+    let name: String
     let lastModified: Int64
     let folderId: Int64?
 }
@@ -159,7 +161,7 @@ final class ResultsHandler: SyncPendingManaging, Sendable {
     func findFolderCkId(id: Int64) throws -> String? {
         guard let db else { return nil }
         let sql = "SELECT \(colCkRecordId) FROM \(foldersTable) WHERE \(colId) = ? LIMIT 1"
-        return try db.fetch(query: sql, parameters: [id]) { $0.string(at: 0) }.compactMap { $0 }.first
+        return try db.fetch(query: sql, parameters: [id]) { $0.string(at: 0) }.compactMap(\.self).first
     }
 
     private init() {}
