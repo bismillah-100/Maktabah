@@ -153,15 +153,19 @@ final class SearchWorker: @unchecked Sendable {
     ) async {
         if control.stopFlag() { return }
 
-        if let allowed = allowedTables, Set(tables).intersection(allowed).isEmpty {
-            callbacks.onTableComplete()
+        let localTables = allowedTables.map { Set(tables).intersection($0) }
+        let tableCount = localTables?.count ?? tables.count
+
+        if allowedTables != nil, (localTables ?? []).isEmpty {
+            for _ in 0 ..< tableCount {
+                callbacks.onTableComplete()
+            }
             callbacks.onComplete()
             return
         }
 
-        callbacks.start(1)
+        callbacks.start(tableCount)
 
-        let localTables = allowedTables.map { Set(tables).intersection($0) }
         let bookIds: [Int] = (localTables ?? []).compactMap { tbl in
             tbl.hasPrefix("b") ? Int(tbl.dropFirst()) : Int(tbl)
         }
@@ -174,13 +178,17 @@ final class SearchWorker: @unchecked Sendable {
                 try conn.queryUnifiedHits(archive: self.archiveId, sql: sql, params: params)
             }
         } catch {
-            callbacks.onTableComplete()
+            for _ in 0 ..< tableCount {
+                callbacks.onTableComplete()
+            }
             callbacks.onComplete()
             return
         }
 
         await dispatchUnifiedHits(hits: hits, callbacks: callbacks, control: control)
-        callbacks.onTableComplete()
+        for _ in 0 ..< tableCount {
+            callbacks.onTableComplete()
+        }
         callbacks.onComplete()
     }
 
@@ -275,7 +283,7 @@ final class SearchWorker: @unchecked Sendable {
         let total = hits.count
         callbacks.onRowProgress("archive_\(archiveId)", 0, total)
 
-        let progressStride = max(50, total / 100)
+        let progressStride = total < 100 ? max(1, total / 20) : max(10, total / 100)
         for (idx, hit) in hits.enumerated() {
             if idx % progressStride == 0 {
                 await control.pauseController.waitIfPaused()

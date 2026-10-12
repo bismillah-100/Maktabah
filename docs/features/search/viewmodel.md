@@ -13,7 +13,7 @@ ViewModel ini mengoordinasikan antrean *multithread* dari `SearchEngine`, menyan
 *   `nearDistance`: Jarak maksimal kata untuk mode *Near*.
 *   `results`: Kumpulan data `SearchResultItem` yang dipancarkan ke antarmuka pengguna.
 *   `isSearching` & `isPaused`: Indikator status siklus hidup (*lifecycle*) pencarian yang sedang aktif.
-*   **Indikator Progress:** Properti `totalTables`, `completedTables`, `totalRowsInTable`, dan `completedRowsInTable` digunakan khusus untuk memandu bilah kemajuan (*progress bar*).
+*   **Indikator Progress:** Properti `totalTables`, `completedTables`, `totalRowsInTable`, dan `completedRowsInTable` digunakan untuk memandu bilah kemajuan (*progress bar*). Pada mode Unified FTS, `completedRowsInTable` / `totalRowsInTable` merefleksikan alur *streaming* baris hasil secara adaptif dengan animasi reaktif (`SearchProgressView` di iOS dan `progressTable` di macOS).
 
 ---
 
