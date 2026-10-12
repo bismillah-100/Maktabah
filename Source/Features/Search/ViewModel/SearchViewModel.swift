@@ -99,6 +99,7 @@ final class SearchViewModel: ViewModelBase {
     let searchEngine = SearchEngine()
     let ldm = LibraryDataManager.shared
     let searchWork = Mutex<Task<Void, Never>?>(nil)
+    let completionDismissTask = Mutex<Task<Void, Never>?>(nil)
 
     // MARK: - Init
 
@@ -143,11 +144,19 @@ final class SearchViewModel: ViewModelBase {
         #endif
     }
 
+    nonisolated func cancelCompletionDismiss() {
+        completionDismissTask.withLock { t in
+            t?.cancel()
+            t = nil
+        }
+    }
+
     nonisolated func clearSearchWork() {
         searchWork.withLock { w in
             w?.cancel()
             w = nil
         }
+        cancelCompletionDismiss()
     }
 
     deinit {

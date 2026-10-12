@@ -13,9 +13,7 @@ extension SearchViewModel {
     }
 
     func startSearch() async {
-        if query.isEmpty {
-            return
-        }
+        if query.isEmpty { return }
 
         let enginePaused = await searchEngine.currentlyPaused()
         if enginePaused || isPaused {
@@ -33,6 +31,7 @@ extension SearchViewModel {
 
         isSearching = true
         isPaused = false
+        cancelCompletionDismiss()
 
         results = []
         SearchHitResolver.shared.clearCache()
@@ -67,14 +66,25 @@ extension SearchViewModel {
         searchWork.withLock { $0 = task }
     }
 
+    func handleSearchCompletion() {
+        emitComplete()
+
+        let dismissTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(0.5))
+            guard let self, !Task.isCancelled, isSearching else { return }
+            stopSearch()
+        }
+        completionDismissTask.withLock { $0 = dismissTask }
+    }
+
     func stopSearch() {
+        cancelCompletionDismiss()
         Task { [searchEngine] in
             await searchEngine.stop()
         }
         clearSearchWork()
         isSearching = false
         isPaused = false
-        emitComplete()
     }
 
     func clearResults() {
@@ -111,7 +121,7 @@ extension SearchViewModel {
                 self?.emitRowProgress(tableName: tableName, current: current, total: total)
             },
             completion: { [weak self] items in self?.emitResults(items: items) },
-            onComplete: { [weak self] in self?.stopSearch() }
+            onComplete: { [weak self] in self?.handleSearchCompletion() }
         )
     }
 
@@ -150,8 +160,11 @@ extension SearchViewModel {
     }
 
     func emitComplete() {
-        #if os(macOS)
         completedTables = totalTables
+        if totalRowsInTable > 0 {
+            completedRowsInTable = totalRowsInTable
+        }
+        #if os(macOS)
         searchDidComplete.send()
         #endif
     }
