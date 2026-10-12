@@ -66,11 +66,11 @@ public protocol WidgetSnapshotDescriptor: Sendable {
 - **`AnnotationSnapshotDescriptor`**:
   - `fileName`: `"WidgetAnnotationSnapshot.json"`
   - `ckRecordName`: `"SharedAnnotationSnapshot"`
-  - `ckRecordType`: `"WidgetAnnotationSnapshot"`
+  - `ckRecordType`: `"AnnotationSnapshot"`
 - **`HistorySnapshotDescriptor`**:
   - `fileName`: `"WidgetHistorySnapshot.json"`
   - `ckRecordName`: `"SharedHistorySnapshot"`
-  - `ckRecordType`: `"WidgetHistorySnapshot"`
+  - `ckRecordType`: `"HistorySnapshot"`
 
 ### WidgetSnapshot (Struct) - Snapshot Generik
 ```swift
@@ -94,6 +94,7 @@ public struct WidgetSnapshot<Descriptor: WidgetSnapshotDescriptor>: WidgetSnapsh
 public struct Item: Codable, Equatable, Sendable {
     public let id: String
     public let bookId: Int
+    public let contentId: Int
     public let bookTitle: String
     public let content: String
     public let colorHex: String

@@ -17,10 +17,13 @@ extension WidgetFamily {
 extension TimelineReloadPolicy {
     static var nextRefresh: TimelineReloadPolicy {
         #if DEBUG
-        .after(Calendar.current.date(byAdding: .minute, value: 1, to: Date())!)
+        let nextDate = Calendar.current.date(byAdding: .minute, value: 1, to: Date())
+            ?? Date().addingTimeInterval(60)
+        return .after(nextDate)
         #else
-        .after(Calendar.current.date(byAdding: .hour, value: 1, to: Date())!)
+        let nextDate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())
+            ?? Date().addingTimeInterval(3600)
+        return .after(nextDate)
         #endif
-
     }
 }

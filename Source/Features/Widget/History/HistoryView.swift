@@ -62,7 +62,8 @@ struct HistoryView: View {
             timeIntervalSince1970: TimeInterval(item.lastReadTime)
         )
         let subtitle = targetDate.formatted(
-            .relative(presentation: .named)
+            date: .numeric,
+            time: .omitted
         )
 
         return WidgetCardView(

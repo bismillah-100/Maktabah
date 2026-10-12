@@ -11,6 +11,7 @@ import Foundation
 public struct AnnotationSnapshotItem: Codable, Identifiable, Equatable, Sendable {
     public let id: String
     public let bookId: Int
+    public let contentId: Int
     public let bookTitle: String
     public let content: String
     public let colorHex: String
@@ -20,6 +21,7 @@ public struct AnnotationSnapshotItem: Codable, Identifiable, Equatable, Sendable
     public init(
         id: String,
         bookId: Int,
+        contentId: Int = 1,
         bookTitle: String,
         content: String,
         colorHex: String,
@@ -28,11 +30,28 @@ public struct AnnotationSnapshotItem: Codable, Identifiable, Equatable, Sendable
     ) {
         self.id = id
         self.bookId = bookId
+        self.contentId = contentId
         self.bookTitle = bookTitle
         self.content = content
         self.colorHex = colorHex
         self.type = type
         self.date = date
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, bookId, contentId, bookTitle, content, colorHex, type, date
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.bookId = try container.decode(Int.self, forKey: .bookId)
+        self.contentId = try container.decodeIfPresent(Int.self, forKey: .contentId) ?? 1
+        self.bookTitle = try container.decode(String.self, forKey: .bookTitle)
+        self.content = try container.decode(String.self, forKey: .content)
+        self.colorHex = try container.decode(String.self, forKey: .colorHex)
+        self.type = try container.decode(Int.self, forKey: .type)
+        self.date = try container.decode(Date.self, forKey: .date)
     }
 }
 
