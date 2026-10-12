@@ -64,9 +64,9 @@ struct iOSBookSearchView: View {
             placement: .toolbar,
             prompt: .searchInThisBook
         )
-        .onSubmit(of: .search, {
+        .onSubmit(of: .search) {
             Task { await viewModel.startSearch() }
-        })
+        }
         .overlay {
             if showFtsMigrationOverlay {
                 Color.black.opacity(0.4)
@@ -95,7 +95,7 @@ struct iOSBookSearchView: View {
                 HStack {
                     Image(systemName: "sparkles")
                         .foregroundColor(.yellow)
-                    Text(.ftsMigrationAvailableBook)
+                    Text(ftsManager.isOptimizationOnly ? .ftsOptimizationAvailableBook : .ftsMigrationAvailableBook)
                         .font(.subheadline)
                         .foregroundColor(.primary)
                     Spacer()
@@ -115,7 +115,7 @@ struct iOSBookSearchView: View {
                     Button {
                         showFtsMigrationOverlay = true
                     } label: {
-                        Text(.ftsMigrationUpdateBtn)
+                        Text(ftsManager.isOptimizationOnly ? .ftsOptimizationBtn : .ftsMigrationUpdateBtn)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.blue)
