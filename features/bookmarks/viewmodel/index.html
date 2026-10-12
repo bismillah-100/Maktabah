@@ -3924,7 +3924,7 @@
 <p>Menangani fase inisialisasi data dan pemulihan konsistensi indeks:</p>
 <ul>
 <li><code>getFolders()</code>: Mengambil struktur hierarki folder dari basis data, mengurutkan secara rekursif berbasis lokalitas teks, dan memperbarui <code>folderRoots</code>.</li>
-<li><code>dbLoadAllResults()</code>: Menjelajahi seluruh folder yang terdaftar dan memuat hasil pencarian yang terkait ke dalam kamus <code>folderResults</code>.</li>
+<li><code>dbLoadAllResults()</code>: Mengambil seluruh hasil pencarian secara massal via <code>ResultsHandler.shared.fetchAllResultsGroupedByFolder()</code> dalam satu kueri terisolasi di background, bebas dari risiko <em>data race</em> traversal referensi <code>FolderNode</code>.</li>
 <li><code>rebuildFolderIndex()</code>: Mengisi ulang kamus <code>folderById</code> dan <code>parentById</code> melalui penelusuran mendalam (<em>depth-first walk</em>).</li>
 <li><code>rebuildResultIndex()</code>: Mengisi ulang <code>resultById</code> dan memastikan integritas nilai <code>parentId</code> di setiap <em>child node</em>.</li>
 </ul>
@@ -3937,7 +3937,7 @@
 </ul>
 </li>
 <li><code>folderPath(for folderId: Int64?) -&gt; String</code>:<ul>
-<li>Membangun jalur navigasi (<em>breadcrumb trail</em>), misalnya: <code>"Hadits / Shahih Bukhari / Kitab Iman"</code>. Menggunakan penelusuran balik ke atas (<em>bottom-up traversal</em>) via <code>parentById</code> dengan kompleksitas $O(d)$ di mana $d$ adalah kedalaman hierarki.</li>
+<li>Membangun jalur navigasi (<em>breadcrumb trail</em>), misalnya: <code>"Hadits / Shahih Bukhari / Kitab Iman"</code>. Menggunakan penelusuran balik ke atas (<em>bottom-up traversal</em>) via <code>parentById</code> dengan kompleksitas $O(d)$ di mana $d$ adalah kedalaman hierarki, dilengkapi guard <code>visited: Set&lt;Int64&gt;</code> untuk memotong siklus anomali.</li>
 </ul>
 </li>
 <li><code>removeNodeFromTree(_ node: FolderNode)</code>:<ul>

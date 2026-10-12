@@ -3861,11 +3861,13 @@
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">let</span><span class="w"> </span><span class="nv">flags</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">SQLITE_OPEN_READWRITE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">SQLITE_OPEN_CREATE</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">SQLITE_OPEN_FULLMUTEX</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">let</span><span class="w"> </span><span class="nv">database</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="k">try</span><span class="w"> </span><span class="n">SQLiteDatabase</span><span class="p">(</span><span class="n">path</span><span class="p">:</span><span class="w"> </span><span class="n">url</span><span class="p">.</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">flags</span><span class="p">:</span><span class="w"> </span><span class="n">flags</span><span class="p">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">database</span><span class="p">.</span><span class="n">enableWALMode</span><span class="p">()</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">database</span><span class="p">.</span><span class="n">checkpoint</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">try</span><span class="p">?</span><span class="w"> </span><span class="n">database</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">:</span><span class="w"> </span><span class="s">"PRAGMA foreign_keys = ON;"</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">database</span><span class="p">.</span><span class="n">checkpoint</span><span class="p">()</span>
 </span></code></pre></div>
 <ul>
 <li><strong><code>SQLITE_OPEN_FULLMUTEX</code></strong>: Mengaktifkan mode <em>serialized threading</em> SQLite di mana beberapa <em>thread</em> dapat berbagi koneksi secara aman tanpa risiko korupsi internal.</li>
-<li><strong><code>NSRecursiveLock</code></strong>: Di lapisan <code>SQLiteDatabase</code>, seluruh eksekusi kueri (<code>fetch</code>, <code>execute</code>, <code>transaction</code>) dilindungi oleh <em>recursive lock</em> (<code>NSRecursiveLock</code>) untuk mencegah bentrokan instruksi <em>read-write</em>.</li>
+<li><strong><code>PRAGMA foreign_keys = ON;</code></strong>: Mengaktifkan penegakan integritas kunci asing (<em>foreign keys</em>) dan kaskade penghapusan (<code>ON DELETE CASCADE</code>) secara aktif pada koneksi SQLite.</li>
+<li><strong><code>NSRecursiveLock</code></strong>: Di lapisan <code>SQLiteDatabase</code>, seluruh eksekusi kueri (<code>fetch</code>, <code>execute</code>, <code>transaction</code>, dan <code>lastInsertRowId</code>) dilindungi oleh <em>recursive lock</em> (<code>NSRecursiveLock</code>) untuk mencegah bentrokan instruksi <em>read-write</em>.</li>
 <li><strong>WAL Mode (Write-Ahead Logging)</strong>: Menjamin operasi pembacaan tidak memblokir penulisan, dan operasi penulisan tidak memblokir pembacaan.</li>
 <li><strong>Sendable &amp; <code>Mutex</code> Isolation</strong>: <code>ResultsHandler</code> mengadopsi protokol <code>Sendable</code> secara penuh tanpa <code>nonisolated(unsafe)</code>. <em>Instance</em> <code>SQLiteDatabase?</code> dan <code>SyncPendingStore?</code> diisolasi di dalam struktur <code>State</code> dengan proteksi <code>Synchronization.Mutex</code>:</li>
 </ul>
@@ -4051,29 +4053,33 @@
 <h2 id="3-resolusi-rekaman-tanpa-induk-orphan-records">3. Resolusi Rekaman Tanpa Induk (<em>Orphan Records</em>)</h2>
 <p>Saat sinkronisasi CloudKit berlangsung, <em>child record</em> sering kali tiba lebih awal daripada <em>parent record</em>-nya (<em>out-of-order delivery</em>). Kondisi ini menyebabkan nilai <code>parent</code> atau <code>folder_id</code> lokal bernilai <code>NULL</code> sementara referensi <code>parentCkRecordId</code> sebenarnya ada.</p>
 <p>Sistem mengatasi kondisi ini melalui dua metode penyelarasan otomatis:</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">resolveOrphanFolders</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="c1">// Mencocokkan folder yang memiliki parentCkRecordId dengan folder yang baru dibuat</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"""</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">    SELECT f1.id, f1.name, f1.parentCkRecordId, f2.id as expected_parent</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="s">    FROM folders f1</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s">    LEFT JOIN folders f2 ON f1.parentCkRecordId = f2.ckRecordId</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s">    WHERE f1.parentCkRecordId IS NOT NULL </span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">    AND COALESCE(f1.parent, -1) != COALESCE(f2.id, -1)</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s">    """</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="c1">// Menghubungkan kembali parent_id atau menggabungkan konflik duplikasi</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">@</span><span class="n">discardableResult</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">func</span><span class="w"> </span><span class="nf">resolveOrphanFolders</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="c1">// Mencocokkan folder yang memiliki parentCkRecordId dengan folder yang baru dibuat</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"""</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="s">    SELECT f1.id, f1.name, f1.parentCkRecordId, f2.id as expected_parent</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="s">    FROM folders f1</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s">    LEFT JOIN folders f2 ON f1.parentCkRecordId = f2.ckRecordId</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">    WHERE f1.parentCkRecordId IS NOT NULL </span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s">    AND COALESCE(f1.parent, -1) != COALESCE(f2.id, -1)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="s">    """</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="c1">// Menghubungkan kembali parent_id atau menggabungkan konflik duplikasi</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">    </span><span class="c1">// Mengembalikan `true` jika terdapat perubahan pada basis data</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="p">}</span>
 </span></code></pre></div>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">func</span><span class="w"> </span><span class="nf">resolveOrphanResults</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="c1">// Mencocokkan hasil pencarian yang belum memiliki folder_id lokal dengan folder induknya</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"""</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s">    SELECT r.id, r.name, r.bkId, f.id as expected_folder</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="s">    FROM results r</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="s">    LEFT JOIN folders f ON r.folder_ckrecord_id = f.ckRecordId</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s">    WHERE r.folder_ckrecord_id IS NOT NULL</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">    AND COALESCE(r.folder_id, -1) != COALESCE(f.id, -1)</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s">    """</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="c1">// Mengarahkan folder_id ke folder yang benar</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">}</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">@</span><span class="n">discardableResult</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kd">func</span><span class="w"> </span><span class="nf">resolveOrphanResults</span><span class="p">()</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="c1">// Mencocokkan hasil pencarian yang belum memiliki folder_id lokal dengan folder induknya</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">sql</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"""</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="s">    SELECT r.id, r.name, r.bkId, f.id as expected_folder</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="s">    FROM results r</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s">    LEFT JOIN folders f ON r.folder_ckrecord_id = f.ckRecordId</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">    WHERE r.folder_ckrecord_id IS NOT NULL</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s">    AND COALESCE(r.folder_id, -1) != COALESCE(f.id, -1)</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="s">    """</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="c1">// Mengarahkan folder_id ke folder yang benar</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="c1">// Mengembalikan `true` jika terdapat perubahan pada basis data</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="p">}</span>
 </span></code></pre></div>
 <hr />
 <h2 id="4-alur-sinkronisasi-cloudkit-resultscloudkitswift">4. Alur Sinkronisasi CloudKit (<code>ResultsCloudKit.swift</code>)</h2>
@@ -4134,7 +4140,7 @@
     InsertNew --&gt; OrphanFix
 
     OrphanFix --&gt; Persist[("Simpan ke SearchResults.sqlite")]
-    Persist --&gt; Notify(["Picu Diffing &amp; Reload UI"])
+    Persist --&gt;|"Jika hasChanges == true"| Notify(["Picu Diffing &amp; Reload UI (.savedResultsTreeDidUpdate)"])
 
     classDef ui fill:#e040fb26,stroke:#c026d3,stroke-width:2px;
     classDef vm fill:#3b82f626,stroke:#2563eb,stroke-width:2px;
