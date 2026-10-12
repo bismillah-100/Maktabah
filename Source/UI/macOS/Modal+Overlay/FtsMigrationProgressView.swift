@@ -21,7 +21,7 @@ struct FtsMigrationProgressView: View {
                     .foregroundColor(.yellow)
                     .font(.title2)
                     .accessibilityHidden(true)
-                Text(.ftsMigrationTitle)
+                Text(ftsManager.isOptimizationOnly ? .ftsOptimizationTitle : .ftsMigrationTitle)
                     .font(.headline)
                 Spacer()
             }
@@ -57,13 +57,13 @@ struct FtsMigrationProgressView: View {
                 .controlSize(.large)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(.ftsMigrationDesc)
+                    Text(ftsManager.isOptimizationOnly ? .ftsOptimizationDesc : .ftsMigrationDesc)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text(.ftsMigrationExample)
+                    Text(ftsManager.isOptimizationOnly ? .ftsOptimizationExample : .ftsMigrationExample)
                         .font(.caption)
                         .foregroundColor(.primary)
                         .padding(8)
@@ -103,7 +103,7 @@ struct FtsMigrationProgressView: View {
                             }
                         }
                     } label: {
-                        Text(.ftsMigrationUpdateBtn)
+                        Text(ftsManager.isOptimizationOnly ? .ftsOptimizationBtn : .ftsMigrationUpdateBtn)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
@@ -158,7 +158,13 @@ struct FtsMigrationProgressSection: View {
                             }
                         }
                     }
-                    if ftsManager.totalBooksToMigrate > 0 {
+                    if ftsManager.isOptimizationOnly {
+                        if ftsManager.totalArchivesToMigrate > 0 {
+                            Text("\(ftsManager.currentArchiveIndex) / \(ftsManager.totalArchivesToMigrate) arsip")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    } else if ftsManager.totalBooksToMigrate > 0 {
                         Text("\(ftsManager.completedBooksCount) / \(ftsManager.totalBooksToMigrate) buku")
                             .font(.caption2)
                             .foregroundColor(.secondary)
