@@ -62,11 +62,15 @@ Proses pembaruan buku secara garis besar berjalan dalam tahapan berikut:
 2. **Download Berkas (*Staging*)**: Mengunduh basis data SQLite baru per-buku ke direktori sementara (`Updates/`).
 3. **Pengecekan Metadata Berkas**: Membaca tabel `main_update` dari basis data hasil unduhan untuk mendapatkan informasi metadata yang akan disinkronisasikan.
 4. **Penerapan Pembaruan (*Apply*)**:
+    * Menutup koneksi pembaca aktif di `LibraryDataManager` untuk arsip tujuan.
     * Konversi isi teks menjadi blob Zstandard.
     * Memindahkan tabel data dan TOC ke *archive database*.
     * Menjalankan pembangunan ulang tabel FTS (*Full-Text Search*).
     * Memperbarui metadata ke tabel `0bok` di `main.sqlite` dan data pengarang di `special.sqlite`.
-5. **Pembersihan (*Cleanup*)**: Menghapus basis data sementara hasil unduhan dan memancarkan notifikasi pembaruan sistem.
+5. **Pembersihan (*Cleanup*)**:
+    * Mengeksekusi *checkpoint* WAL (`TRUNCATE`), mengembalikan *journal mode* ke `DELETE`, menutup koneksi C-SQLite, lalu membersihkan berkas *sidecar* (`-shm`, `-wal`) pada basis data arsip dan FTS via `FileManager.default.removeDatabaseSidecars`.
+    * Menginvalidasi *cache* ketersediaan arsip di `DatabaseManager`.
+    * Menghapus basis data sementara hasil unduhan dan memancarkan notifikasi pembaruan sistem.
 
 ### 1.3 Alur Konversi Tabel SQLite ke Disk
 
@@ -348,7 +352,7 @@ Manajer I/O dan pembaruan data utama (`final class BookUpdateManager: Sendable`)
         * Memastikan data pengarang terunduh dan terpasang.
         * Memanggil `convertBookDatabase` untuk kompresi teks ke blob Zstandard.
         * Menggunakan `BookArchiveSingleFlight` agar penulisan arsip terkunci serial guna mencegah bentrokan transaksi SQLite antar-*thread*.
-        * Mengeksekusi `replaceArchiveDatabase`.
+        * Mengeksekusi `replaceArchiveDatabase` (menutup koneksi pembaca aktif, menyalin data secara atomik, mengeksekusi `wal_checkpoint(TRUNCATE)`, menutup koneksi basis data, membersihkan berkas *sidecar* `-shm`/`-wal` dengan `FileManager.default.removeDatabaseSidecars`, serta menginvalidasi *cache* arsip).
         * Memperbarui rekaman metadata lokal (`saveBookMetadata`).
 
 !!! warning "Notifikasi Integrasi"

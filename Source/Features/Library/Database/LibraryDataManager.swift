@@ -386,6 +386,12 @@ final class LibraryDataManager: Sendable {
         }
     }
 
+    func closeArchiveConnection(archiveId: Int) {
+        archiveConnections.withLock { conns in
+            _ = conns.removeValue(forKey: archiveId)
+        }
+    }
+
     func fetchSingleContent(archive: String, table: String, rowId: Int) async -> BookContent? {
         guard let archiveId = Int(archive) else { return nil }
 

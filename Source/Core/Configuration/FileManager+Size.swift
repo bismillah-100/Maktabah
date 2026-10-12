@@ -22,6 +22,14 @@ extension FileManager {
 
     func removeDatabaseAndSidecars(atPath path: String) {
         try? removeItem(atPath: path)
+        removeDatabaseSidecars(atPath: path)
+    }
+
+    func removeDatabaseSidecars(at url: URL) {
+        removeDatabaseSidecars(atPath: url.path)
+    }
+
+    func removeDatabaseSidecars(atPath path: String) {
         try? removeItem(atPath: path + "-wal")
         try? removeItem(atPath: path + "-shm")
         try? removeItem(atPath: path + "-journal")
