@@ -2816,6 +2816,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-event-pemicu-navigasi-sorotan-ios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Event Pemicu Navigasi &amp; Sorotan (iOS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Event Pemicu Navigasi &amp; Sorotan (iOS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#readerhighlightevent-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderHighlightEvent (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readerannotationevent-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderAnnotationEvent (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openbookoptions-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenBookOptions (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3811,6 +3861,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-event-pemicu-navigasi-sorotan-ios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Event Pemicu Navigasi &amp; Sorotan (iOS)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Event Pemicu Navigasi &amp; Sorotan (iOS)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#readerhighlightevent-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderHighlightEvent (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readerannotationevent-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReaderAnnotationEvent (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openbookoptions-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenBookOptions (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3977,6 +4077,37 @@
 </ul>
 <h3 id="b-backgroundoptions-class-backgroundoptionsswift">B. BackgroundOptions (Class) - BackgroundOptions.swift</h3>
 <p>Komponen kontrol kustom (<code>NSControl</code>) untuk rendering pilihan tema warna latar belakang lingkaran pada macOS. Sebelumnya berada pada modul Annotations dan kini dipindahkan ke <code>Source/Features/Reader/Models/BackgroundOptions.swift</code>.</p>
+<hr />
+<h2 id="6-event-pemicu-navigasi-sorotan-ios">6. Event Pemicu Navigasi &amp; Sorotan (iOS)</h2>
+<h3 id="readerhighlightevent-struct">ReaderHighlightEvent (Struct)</h3>
+<p>Event pemicu sorotan kata kunci hasil pencarian berbasis UUID sekali pakai:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ReaderHighlightEvent</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="n">UUID</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">query</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">contentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">?</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">mode</span><span class="p">:</span><span class="w"> </span><span class="n">SearchMode</span><span class="p">?</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">nearDistance</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li>Setiap ketukan hasil pencarian menghasilkan <code>UUID</code> baru yang menjamin <code>iOSIbarotTextView</code> merespons ketukan berulang (<em>multi-tap</em>) tanpa memerlukan pembersihan status manual.</li>
+</ul>
+<h3 id="readerannotationevent-struct">ReaderAnnotationEvent (Struct)</h3>
+<p>Event pemicu navigasi dan animasi <em>scroll-to-target</em> pada anotasi:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ReaderAnnotationEvent</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="n">UUID</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<h3 id="openbookoptions-struct">OpenBookOptions (Struct)</h3>
+<p>Konfigurasi parameter pembukaan buku yang menyederhanakan <em>interface</em> navigasi antar-modul:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">OpenBookOptions</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">contentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">?</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">searchEvent</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderHighlightEvent</span><span class="p">?</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">annotationEvent</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderAnnotationEvent</span><span class="p">?</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">recordHistory</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="p">}</span>
+</span></code></pre></div>
 
 
 

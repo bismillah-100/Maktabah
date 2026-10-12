@@ -3913,7 +3913,7 @@
 </li>
 <li><strong><code>AnnotationViewControllerWrapper</code> (Bridge Layer)</strong>:<ul>
 <li>Menghubungkan <em>state</em> dan <em>callback</em> <code>AnnotationViewModel</code> (<code>onIncrementalUpdate</code>, <code>onTreeUpdate</code>, <code>onTagsChanged</code>) ke metode di <code>iOSAnnotationViewController</code>.</li>
-<li>Memiliki <code>Coordinator</code> yang menangani delegasi seleksi anotasi dan memicu <code>iOSNavigationManager.openBook(..., targetAnnotation:)</code>.</li>
+<li>Memiliki <code>Coordinator</code> yang menangani delegasi seleksi anotasi dan memicu <code>iOSNavigationManager.openBook(..., options:)</code>.</li>
 <li>Mengatur integrasi <em>pull-to-refresh</em> menuju <code>CloudKitSyncManager.shared.fetchChanges()</code>.</li>
 </ul>
 </li>
@@ -3996,7 +3996,7 @@
 <li><strong>Navigasi Reader via Coordinator</strong>:
     <code>AnnotationViewControllerWrapper.Coordinator</code> menerima anotasi terpilih:<ul>
 <li>Memeriksa apakah data kitab telah terpasang melalui <code>LibraryDataManager.shared.getBook([ann.bkId])</code>.</li>
-<li>Jika kitab ditemukan, memanggil <code>navigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)</code> untuk membuka halaman dan menyorot teks pada <code>iOSReaderView</code>.</li>
+<li>Jika kitab ditemukan, memanggil <code>navigationManager.openBook(book, options: OpenBookOptions(contentId: Int(ann.contentId), annotationEvent: ReaderAnnotationEvent(annotation: ann)))</code> untuk membuka halaman dan menyorot teks pada <code>iOSReaderView</code>.</li>
 <li>Jika kitab belum diunduh, memancarkan notifikasi <code>Notification.Name.annotationMissingBook</code>.</li>
 </ul>
 </li>

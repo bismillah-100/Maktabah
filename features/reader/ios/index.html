@@ -3886,7 +3886,7 @@
 <ul>
 <li><strong><code>makeUIView</code></strong>: Menginisialisasi <code>UITextView</code> kustom dengan properti <em>non-editable</em>, <em>selectable</em>, serta mendukung perpindahan per halaman (<em>paging mode</em>) maupun pengguliran kontinu (<em>continuous scrolling</em>).</li>
 <li><strong><code>updateUIView</code></strong>: Menerima injeksi <code>NSAttributedString</code> baru dari <code>ReaderViewModel</code>. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks.</li>
-<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk memunculkan menu pembuatan <em>highlight/underline</em> baru serta mencegat ketukan pada rentang anotasi yang telah ada (<code>onTapAnnotation</code>).</li>
+<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk menu <em>highlight/underline</em>, mencegat ketukan anotasi (<code>onTapAnnotation</code>), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (<code>lastHandledSearchEventId</code>, <code>lastHandledAnnotationEventId</code>) per <em>instance</em> aktif.</li>
 </ul>
 <h3 id="c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen">C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (<em>Fullscreen</em>)</h3>
 <ul>

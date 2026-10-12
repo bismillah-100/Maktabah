@@ -3736,8 +3736,8 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>contentText</code></td>
-<td style="text-align: left;"><code>NSAttributedString</code></td>
-<td style="text-align: left;">Produk akhir teks dari basis data yang sudah dirender dan diformat (melalui <code>ArabicTextRenderer</code>).</td>
+<td style="text-align: left;"><code>String</code></td>
+<td style="text-align: left;">Teks mentah/konten halaman dari basis data yang akan dirender melalui <code>ArabicTextRenderer</code>.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>currentAnnotations</code></td>
@@ -3745,12 +3745,22 @@
 <td style="text-align: left;">Array <em>highlight</em> dan <em>underline</em> murni dari <code>AnnotationStore</code> yang disuntikkan ke teks.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>targetAnnotation</code></td>
-<td style="text-align: left;"><code>Annotation?</code></td>
-<td style="text-align: left;">Jika tidak <code>nil</code>, sistem akan melakukan <em>scroll-to-target</em> otomatis dan memicu animasi <em>flash</em> pada rentang teks ini.</td>
+<td style="text-align: left;"><code>searchEvent</code></td>
+<td style="text-align: left;"><code>ReaderHighlightEvent?</code></td>
+<td style="text-align: left;">Event pemicu sorotan kata kunci hasil pencarian berbasis UUID unik di iOS.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>annotationEvent</code></td>
+<td style="text-align: left;"><code>ReaderAnnotationEvent?</code></td>
+<td style="text-align: left;">Event pemicu <em>scroll-to-target</em> otomatis dan animasi sorotan pada anotasi yang dipilih di iOS.</td>
 </tr>
 </tbody>
 </table>
+<blockquote>
+<p>[!NOTE]
+<strong>Siklus Hidup Event &amp; Perpindahan Halaman:</strong>
+Pada metode <code>updateContentState(with:)</code>, jika halaman berpindah ke <code>content.id</code> yang berbeda dari <code>searchEvent?.contentId</code> atau <code>annotationEvent?.annotation.contentId</code>, kedua event tersebut otomatis dinetralkan (<code>nil</code>). Hal ini menjamin halaman berikutnya tetap bersih dari residu sorotan pencarian. De-duplikasi eksekusi event dikelola pada level <em>instance</em> <code>Coordinator</code> di <code>iOSIbarotTextView</code> agar tidak ditelan oleh <em>view</em> di <em>background tab</em>.</p>
+</blockquote>
 
 
 

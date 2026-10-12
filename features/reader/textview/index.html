@@ -2961,6 +2961,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#7-siklus-hidup-sorotan-animasi-pencarian-ios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Siklus Hidup Sorotan &amp; Animasi Pencarian (iOS)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3821,6 +3832,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#7-siklus-hidup-sorotan-animasi-pencarian-ios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Siklus Hidup Sorotan &amp; Animasi Pencarian (iOS)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4113,9 +4135,17 @@
 </span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="w">        </span><span class="c1">// - Merekam riwayat baru (HistoryViewModel)</span>
 </span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="w">        </span><span class="c1">// - Memuat Anotasi ke memori (AnnotationStore)</span>
 </span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="w">        </span><span class="c1">// - Mengirimkan notifikasi perubahan antar UI Platform (macOS / iOS)</span>
-</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="p">}</span>
+</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="w">        </span><span class="c1">// - Mereset searchEvent &amp; annotationEvent jika berpindah ke halaman lain</span>
+</span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-5-29"><a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="p">}</span>
 </span></code></pre></div>
+<hr />
+<h2 id="7-siklus-hidup-sorotan-animasi-pencarian-ios">7. Siklus Hidup Sorotan &amp; Animasi Pencarian (iOS)</h2>
+<p>Pada <code>iOSIbarotTextView</code>:
+1. <strong>Pencocokan Halaman Ketat (<em>Strict Content ID</em>)</strong>: Sorotan teks pencarian (<code>highlightSearchText</code>) hanya diterapkan jika <code>searchEvent.contentId == viewModel.currentContentId</code>. Ini mencegah kebocoran atribut warna kuning ke halaman lain saat berpindah halaman.
+2. <strong>Penghindaran Animasi Berulang (<em>De-duplication</em>) &amp; Isolasi Tab</strong>: Animasi <code>popupText</code> dan <em>auto-scroll</em> divalidasi menggunakan <code>coordinator.lastHandledSearchEventId</code> dan <code>coordinator.lastHandledAnnotationEventId</code>. Pelacakan event dibatasi pada <em>instance</em> <code>Coordinator</code> aktif dengan verifikasi jendela aktif (<code>textView.window != nil</code>), sehingga <em>background tab</em> di iPhone tidak menelan event sebelum <em>view</em> aktif sempat menampilkannya.
+3. <strong>Resolusi Tata Letak TextKit 2</strong>: Sebelum menghitung jalur animasi loncat (<em>bounce animation</em>), batas geometri dipastikan telah terhitung secara penuh melalui <code>NSTextLayoutManager.ensureLayout(for:)</code> dan enumerasi segmen teks. Hal ini mengeliminasi masalah <em>lazy layout</em> TextKit 2 yang mengembalikan batas kosong (<code>.zero</code>) pada halaman yang baru dimuat.
+4. <strong>Pembersihan Otomatis (<em>Auto-Purge</em>)</strong>: Saat pembaca berpindah ke halaman berikutnya (<em>next page</em>, <em>slider</em>, <em>jump</em>), <code>searchEvent</code> dan <code>annotationEvent</code> otomatis dibersihkan oleh <code>updateContentState(with:)</code>.</p>
 
 
 
