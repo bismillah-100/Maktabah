@@ -4089,14 +4089,15 @@
 <p><strong>Integrasi ke Archive Database (Build &amp; Replace)</strong>
     Fungsi <code>replaceArchiveDatabase</code> dipanggil secara atomik:</p>
 <ul>
+<li>Menutup koneksi pembaca aktif (<code>BookConnection</code>) pada <code>LibraryDataManager</code> untuk arsip target sebelum mutasi agar tidak menahan <em>file lock</em> atau pemetaan memori bersama (<em>shared memory</em>).</li>
 <li>Menjalankan <code>ATTACH DATABASE</code> untuk <code>source_db</code> (asal), <code>fts_source_db</code> (teks belum dikompresi), dan <code>fts_db</code> (tabel pencarian target).</li>
 <li>Tabel data utama (<code>b{id}</code>) dan TOC (<code>t{id}</code>) disalin dalam satu sesi transaksi (<em>transaction</em>).</li>
 <li>Teks diindeks ke dalam skema Unified FTS (<code>archive_fts</code> dan <code>archive_index</code>) menggunakan <code>ArchiveDatabaseTools.appendBookToUnifiedFTS</code> (atau tabel <em>fallback</em> <code>b{id}_fts</code> pada arsip versi lama).</li>
 </ul>
 </li>
 <li>
-<p><strong>Finalisasi (Checkpoint &amp; Notification)</strong>
-    Sistem merilis (<em>detach</em>) basis data dan memicu <em>checkpoint</em> pada <em>Write-Ahead Logging</em> (WAL). Kemudian, notifikasi <code>.bookIntegrated</code> dipancarkan melalui <code>NotificationCenter</code> agar <em>cache</em> pembaca memuat ulang buku tersebut.</p>
+<p><strong>Finalisasi (Checkpoint, Sidecar Cleanup &amp; Notification)</strong>
+    Sistem merilis (<em>detach</em>) basis data, mengeksekusi <code>PRAGMA wal_checkpoint(TRUNCATE)</code>, dan mengembalikan <em>journal mode</em> ke <code>DELETE</code>. Setelah koneksi SQLite ditutup (<code>sqlite3_close_v2</code>), sistem membersihkan sisa berkas <em>sidecar</em> (<code>-shm</code>, <code>-wal</code>) pada basis data arsip dan FTS menggunakan <code>FileManager.default.removeDatabaseSidecars</code>. Terakhir, <em>cache</em> ketersediaan arsip diinvalidasi dan notifikasi <code>.bookIntegrated</code> dipancarkan melalui <code>NotificationCenter</code> agar <em>cache</em> pembaca memuat ulang buku tersebut.</p>
 </li>
 </ol>
 <h3 id="metode-manipulasi-database">Metode Manipulasi Database</h3>
@@ -4108,7 +4109,7 @@
 </li>
 <li>
 <p><strong>Mode 2 (Change Book ID)</strong>
-    Sistem mengeksekusi <code>changeBookId(oldId:newId:)</code>. Mode ini tidak memindahkan teks atau mengubah Zstandard.</p>
+    Sistem mengeksekusi <code>changeBookId(oldId:newId:)</code>. Mode ini tidak memindahkan teks atau mengubah Zstandard. Operasi DDL (<em>rename table</em>) dijalankan dengan <em>journal mode</em> non-WAL (<code>enableWAL: false</code>) disertai pembersihan berkas <em>sidecar</em> di blok <code>defer</code>:</p>
 <ul>
 <li>Tahapan dimulai dengan mengambil lokasi berkas arsip (misalnya <code>20.sqlite</code>) di dalam basis data utama.</li>
 <li>Mengeksekusi <code>ALTER TABLE "b{oldId}" RENAME TO "b{newId}";</code> serta hal yang sama untuk tabel TOC (<code>t{oldId}</code>).</li>

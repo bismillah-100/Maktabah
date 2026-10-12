@@ -3965,14 +3965,11 @@
       CoreDatabaseDownloader["Sinkronisasi state respons versi unduhan"]
     NSRecursiveLock
       SQLiteDatabase["Dukungan transaksi bersarang (nested transactions)"]
-    NSLock
-      ZSTDContextPool["Isolasi inisialisasi context dekompresi"]
     Actor
       SingleFlight["Isolasi otomatis kumpulan task konkurensi"]</code></pre>
 <ul>
 <li><code>Mutex&lt;T&gt;</code> (dari <em>Synchronization framework</em> macOS 15+ / iOS 18+): Menjadi mekanisme penguncian standar modern di lapisan persistensi Maktabah. Digunakan pada <code>DatabaseManager</code> (mengenkapsulasi <em>state</em> koneksi <code>db</code>, <code>dbSpecial</code>, <code>shortsCache</code>, dan <code>archiveAvailabilityCache</code> ke dalam struktur <code>Sendable</code>), <code>BookConnection</code>, serta repositori fitur (<code>AnnotationRepository</code>, <code>ResultsHandler</code>, <code>HistoryDatabaseManager</code>). Hal ini memungkinkan seluruh <em>manager</em> dan <em>repository</em> mengadopsi protokol <code>Sendable</code> secara langsung dan aman tanpa anotasi <code>@unchecked</code> atau <code>nonisolated(unsafe)</code>.</li>
 <li><code>NSRecursiveLock</code>: Digunakan pada <code>class</code> <code>SQLiteDatabase</code>. <code>NSRecursiveLock</code> memungkinkan satu <em>thread</em> untuk mengunci (<em>lock</em>) <em>resource</em> secara berulang tanpa menyebabkan <em>deadlock</em> pada <em>thread</em> yang sama. Hal ini sangat penting untuk <em>nested transactions</em> SQLite ketika metode pembungkus (<em>wrapper</em>) memanggil metode lain yang juga meminta kunci <em>lock</em>.</li>
-<li><code>NSLock</code>: Digunakan pada utilitas tingkat rendah seperti <code>ZSTDContextPool</code> untuk mengamankan inisialisasi <em>context</em> dekompresi.</li>
 <li><code>actor</code>: Digunakan pada <code>SingleFlight</code> untuk secara otomatis mengisolasi <em>state</em> (kumpulan <em>running tasks</em>), menghindari <em>data race</em> pada level konkurensi tugas (<em>task concurrency</em>).</li>
 </ul>
 <h3 id="prinsip-pemisahan-tanggung-jawab-separation-of-concerns">Prinsip Pemisahan Tanggung Jawab (<em>Separation of Concerns</em>)</h3>
@@ -4080,7 +4077,7 @@
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <ul>
-<li><strong>ZSTDContextPool</strong>: <em>Singleton pool</em> yang menjaga ketersediaan pembungkus konteks (<code>ZSTDContextWrapper</code>) melalui <em>lock pool array</em>. Pendekatan ini menghemat <em>overhead</em> pembuatan <em>decompressor context</em> pada setiap perulangan baris basis data.</li>
+<li><strong>ZSTDContextWrapper</strong>: Pembungkus konteks dekompresi C-API (<code>ZSTD_DCtx</code>) yang disimpan per-<em>thread</em> (<code>Thread.current.threadDictionary</code>) untuk menghindari <em>overhead</em> alokasi ulang <em>context</em> pada pembacaan baris teks basis data.</li>
 <li><strong>Decompressor</strong>:<ul>
 <li>Jika memori berupa <em>blob</em> Zstd dikenali (melalui parameter <em>frame</em> pada <code>ZSTD_getFrameContentSize</code>), data dialokasikan langsung dari pembungkus ke <code>String</code> Swift menggunakan <code>String(unsafeUninitializedCapacity:...)</code>. Ini merupakan optimasi performa tinggi tanpa penyalinan memori perantara (<em>zero-copy intermediate</em>).</li>
 </ul>

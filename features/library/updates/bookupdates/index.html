@@ -4014,13 +4014,19 @@
 <li><strong>Download Berkas (<em>Staging</em>)</strong>: Mengunduh basis data SQLite baru per-buku ke direktori sementara (<code>Updates/</code>).</li>
 <li><strong>Pengecekan Metadata Berkas</strong>: Membaca tabel <code>main_update</code> dari basis data hasil unduhan untuk mendapatkan informasi metadata yang akan disinkronisasikan.</li>
 <li><strong>Penerapan Pembaruan (<em>Apply</em>)</strong>:<ul>
+<li>Menutup koneksi pembaca aktif di <code>LibraryDataManager</code> untuk arsip tujuan.</li>
 <li>Konversi isi teks menjadi blob Zstandard.</li>
 <li>Memindahkan tabel data dan TOC ke <em>archive database</em>.</li>
 <li>Menjalankan pembangunan ulang tabel FTS (<em>Full-Text Search</em>).</li>
 <li>Memperbarui metadata ke tabel <code>0bok</code> di <code>main.sqlite</code> dan data pengarang di <code>special.sqlite</code>.</li>
 </ul>
 </li>
-<li><strong>Pembersihan (<em>Cleanup</em>)</strong>: Menghapus basis data sementara hasil unduhan dan memancarkan notifikasi pembaruan sistem.</li>
+<li><strong>Pembersihan (<em>Cleanup</em>)</strong>:<ul>
+<li>Mengeksekusi <em>checkpoint</em> WAL (<code>TRUNCATE</code>), mengembalikan <em>journal mode</em> ke <code>DELETE</code>, menutup koneksi C-SQLite, lalu membersihkan berkas <em>sidecar</em> (<code>-shm</code>, <code>-wal</code>) pada basis data arsip dan FTS via <code>FileManager.default.removeDatabaseSidecars</code>.</li>
+<li>Menginvalidasi <em>cache</em> ketersediaan arsip di <code>DatabaseManager</code>.</li>
+<li>Menghapus basis data sementara hasil unduhan dan memancarkan notifikasi pembaruan sistem.</li>
+</ul>
+</li>
 </ol>
 <h3 id="13-alur-konversi-tabel-sqlite-ke-disk">1.3 Alur Konversi Tabel SQLite ke Disk</h3>
 <p>Maktabah melakukan optimalisasi ruang penyimpanan dengan menggunakan kompresi <code>zstd</code> pada kolom teks sebelum diintegrasikan secara final ke arsip.</p>
@@ -4271,7 +4277,7 @@
 <li>Memastikan data pengarang terunduh dan terpasang.</li>
 <li>Memanggil <code>convertBookDatabase</code> untuk kompresi teks ke blob Zstandard.</li>
 <li>Menggunakan <code>BookArchiveSingleFlight</code> agar penulisan arsip terkunci serial guna mencegah bentrokan transaksi SQLite antar-<em>thread</em>.</li>
-<li>Mengeksekusi <code>replaceArchiveDatabase</code>.</li>
+<li>Mengeksekusi <code>replaceArchiveDatabase</code> (menutup koneksi pembaca aktif, menyalin data secara atomik, mengeksekusi <code>wal_checkpoint(TRUNCATE)</code>, menutup koneksi basis data, membersihkan berkas <em>sidecar</em> <code>-shm</code>/<code>-wal</code> dengan <code>FileManager.default.removeDatabaseSidecars</code>, serta menginvalidasi <em>cache</em> arsip).</li>
 <li>Memperbarui rekaman metadata lokal (<code>saveBookMetadata</code>).</li>
 </ul>
 </li>

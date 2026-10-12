@@ -3803,7 +3803,7 @@
 <h3 id="waktu-pelaksanaan-dekompresi">Waktu Pelaksanaan Dekompresi</h3>
 <p>Saat membaca baris konten (<code>BookConnection.getContent</code> atau saat sel pencarian terlihat di layar):
 1. Kolom <code>nass</code> dibaca sebagai <code>BLOB</code>.
-2. Didekompresi melalui <code>ZstdDecompressor</code> menggunakan <em>context pool</em> (<code>ZSTDContextPool</code>) untuk menghindari <em>overhead</em> alokasi memori berulang.
+2. Didekompresi melalui <code>ZstdDecompressor</code> menggunakan <em>context wrapper</em> per-<em>thread</em> untuk menghindari <em>overhead</em> alokasi memori berulang.
 3. Hasil pembacaan disimpan sementara di <em>cache</em> halaman (<code>BookPageCache</code>) untuk mempercepat navigasi berikutnya.</p>
 <hr />
 <h2 id="3-arsitektur-unified-fts5-bitwise-packed-rowid">3. Arsitektur Unified FTS5 &amp; Bitwise Packed RowID</h2>
