@@ -4012,7 +4012,7 @@
 </span></code></pre></div>
 - <strong>Coalescing Loop</strong>: Perulangan <code>runRetryCoalescingLoop</code> dilindungi oleh <code>Mutex</code> (<code>retryState</code>) guna mencegah pemicuan ganda jika koneksi berfluktuasi dengan cepat.
 - <strong>Batch Upload &amp; Delete Paralel</strong>: Eksekusi <em>batch</em> dijalankan serentak menggunakan <code>withTaskGroup</code>.
-- <strong>Atomic Cleanup</strong>: Hanya rekaman yang dikonfirmasi berhasil disimpan oleh CloudKit yang akan dihapus dari antrean lokal melalui <code>removePendingSync()</code>.</p>
+- <strong>Atomic Cleanup &amp; Timestamp Fencing</strong>: Penghapusan dari antrean lokal melalui <code>removePendingSync()</code> menyertakan filter parameter <code>operation</code> dan batas waktu <code>maxQueuedAt</code> guna mencegah <em>race condition</em> terhapusnya mutasi lokal baru yang masuk saat proses <em>upload</em> atau resolusi konflik sedang berlangsung.</p>
 <h4 id="cloudkituploaddebouncer-actor"><code>CloudKitUploadDebouncer</code> (Actor)</h4>
 <p><code>actor</code> generik untuk membatasi laju unggahan (<em>rate limiter</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">actor</span><span class="w"> </span><span class="n">CloudKitUploadDebouncer</span><span class="p">&lt;</span><span class="n">Item</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="p">&gt;</span><span class="w"> </span><span class="p">{</span>
@@ -4046,6 +4046,7 @@
 <li><code>operation</code>: Menyatakan jenis perintah tunda (<code>upload</code> atau <code>delete</code>).</li>
 <li><code>queued_at</code>: Pencatat waktu dalam format integer (UNIX <em>timestamp</em>).</li>
 </ul>
+<p>Pembersihan antrean menggunakan klausa <code>WHERE ck_record_id IN (...)</code> yang dapat difilter secara selektif dengan <code>operation</code> serta <code>queued_at &lt;= maxQueuedAt</code> agar operasi asinkron konkuren tidak menghapus entri yang baru diantrekan saat proses sinkronisasi berlangsung.</p>
 <div class="admonition warning">
 <p class="admonition-title">Penyelesaian Konflik Status</p>
 <p>Bila status <code>'upload'</code> ditambahkan, tetapi tabel <code>sync_pending</code> telah memiliki entri <code>'delete'</code> untuk ID terkait, status <code>'delete'</code> tetap dipertahankan. Sebaliknya, instruksi <code>'delete'</code> yang baru akan menimpa catatan <code>'upload'</code> lama.</p>
