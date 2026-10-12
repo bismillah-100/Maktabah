@@ -990,7 +990,7 @@
 		4B2DCF0B307A930B00951BFF /* OpenBookOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenBookOptions.swift; sourceTree = "<group>"; };
 		4B2FAD992EED472E008E933E /* TOCLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOCLoader.swift; sourceTree = "<group>"; };
 		4B313A202F9A0FC60061FCC1 /* ResultCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultCellView.swift; sourceTree = "<group>"; };
-		4B3202282EDAFE85003B95D1 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Maktabah.app; path = "Maktabah Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B3202282EDAFE85003B95D1 /* Maktabah Debug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Maktabah Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B32022B2EDAFE85003B95D1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4B32022D2EDAFE88003B95D1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4B32023C2EDB0F76003B95D1 /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
@@ -1042,7 +1042,7 @@
 		4B6AF2352EE58394002EBFFC /* IbarotTextVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = IbarotTextVC.xib; sourceTree = "<group>"; };
 		4B73BF442EF0799E001ED591 /* AnnotationCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationCellView.swift; sourceTree = "<group>"; };
 		4B73BF462EF09D67001ED591 /* AnnotationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationDelegate.swift; sourceTree = "<group>"; };
-		4B7C912E2F83494200454BE1 /* Maktabah.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Maktabah.app; path = "Maktabah Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4B7C912E2F83494200454BE1 /* Maktabah Debug.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Maktabah Debug.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B7C912F2F834AE300454BE1 /* Direct-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Direct-Info.plist"; sourceTree = "<group>"; };
 		4B8C9DCE2F6984120049E4EF /* ArchiveDatabaseTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveDatabaseTools.swift; sourceTree = "<group>"; };
 		4B8C9DCF2F6984120049E4EF /* BookArchiveIntegrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookArchiveIntegrator.swift; sourceTree = "<group>"; };
@@ -1437,8 +1437,8 @@
 		4B3202292EDAFE85003B95D1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4B3202282EDAFE85003B95D1 /* Maktabah.app */,
-				4B7C912E2F83494200454BE1 /* Maktabah.app */,
+				4B3202282EDAFE85003B95D1 /* Maktabah Debug.app */,
+				4B7C912E2F83494200454BE1 /* Maktabah Debug.app */,
 				F305776F2FA46222005732C6 /* Maktabah.app */,
 				7CF4D3EED1CCDF5AC98A3B54 /* MaktabahWidgetExtension.appex */,
 			);
@@ -2664,7 +2664,7 @@
 				4B88322E2F7EB3A7004C6213 /* libzstd */,
 			);
 			productName = maktab;
-			productReference = 4B3202282EDAFE85003B95D1 /* Maktabah.app */;
+			productReference = 4B3202282EDAFE85003B95D1 /* Maktabah Debug.app */;
 			productType = "com.apple.product-type.application";
 		};
 		4B7C90A02F83494200454BE1 /* Maktabah-Direct */ = {
@@ -2688,7 +2688,7 @@
 				4B7C91312F834CF700454BE1 /* Sparkle */,
 			);
 			productName = maktab;
-			productReference = 4B7C912E2F83494200454BE1 /* Maktabah.app */;
+			productReference = 4B7C912E2F83494200454BE1 /* Maktabah Debug.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A4F8961C86444956FF410500 /* MaktabahWidgetExtension */ = {
@@ -3893,7 +3893,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 193;
+				CURRENT_PROJECT_VERSION = 194;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
@@ -3916,7 +3916,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 4.0.1;
+				MARKETING_VERSION = 4.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3964,7 +3964,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 193;
+				CURRENT_PROJECT_VERSION = 194;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
@@ -3981,7 +3981,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 4.0.1;
+				MARKETING_VERSION = 4.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
