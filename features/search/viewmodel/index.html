@@ -3839,7 +3839,7 @@
 <li><code>nearDistance</code>: Jarak maksimal kata untuk mode <em>Near</em>.</li>
 <li><code>results</code>: Kumpulan data <code>SearchResultItem</code> yang dipancarkan ke antarmuka pengguna.</li>
 <li><code>isSearching</code> &amp; <code>isPaused</code>: Indikator status siklus hidup (<em>lifecycle</em>) pencarian yang sedang aktif.</li>
-<li><strong>Indikator Progress:</strong> Properti <code>totalTables</code>, <code>completedTables</code>, <code>totalRowsInTable</code>, dan <code>completedRowsInTable</code> digunakan khusus untuk memandu bilah kemajuan (<em>progress bar</em>).</li>
+<li><strong>Indikator Progress:</strong> Properti <code>totalTables</code>, <code>completedTables</code>, <code>totalRowsInTable</code>, dan <code>completedRowsInTable</code> digunakan untuk memandu bilah kemajuan (<em>progress bar</em>). Pada mode Unified FTS, <code>completedRowsInTable</code> / <code>totalRowsInTable</code> merefleksikan alur <em>streaming</em> baris hasil secara adaptif dengan animasi reaktif (<code>SearchProgressView</code> di iOS dan <code>progressTable</code> di macOS).</li>
 </ul>
 <hr />
 <h2 id="komponen-penyangga-resolusi-viewport">Komponen Penyangga &amp; Resolusi Viewport</h2>
