@@ -110,12 +110,13 @@ Proses impor buku dari berkas sistem pengguna berjalan melalui tahapan yang dira
 4. **Integrasi ke Archive Database (Build & Replace)**
     Fungsi `replaceArchiveDatabase` dipanggil secara atomik:
 
+    *   Menutup koneksi pembaca aktif (`BookConnection`) pada `LibraryDataManager` untuk arsip target sebelum mutasi agar tidak menahan *file lock* atau pemetaan memori bersama (*shared memory*).
     *   Menjalankan `ATTACH DATABASE` untuk `source_db` (asal), `fts_source_db` (teks belum dikompresi), dan `fts_db` (tabel pencarian target).
     *   Tabel data utama (`b{id}`) dan TOC (`t{id}`) disalin dalam satu sesi transaksi (*transaction*).
     *   Teks diindeks ke dalam skema Unified FTS (`archive_fts` dan `archive_index`) menggunakan `ArchiveDatabaseTools.appendBookToUnifiedFTS` (atau tabel *fallback* `b{id}_fts` pada arsip versi lama).
 
-5. **Finalisasi (Checkpoint & Notification)**
-    Sistem merilis (*detach*) basis data dan memicu *checkpoint* pada *Write-Ahead Logging* (WAL). Kemudian, notifikasi `.bookIntegrated` dipancarkan melalui `NotificationCenter` agar *cache* pembaca memuat ulang buku tersebut.
+5. **Finalisasi (Checkpoint, Sidecar Cleanup & Notification)**
+    Sistem merilis (*detach*) basis data, mengeksekusi `PRAGMA wal_checkpoint(TRUNCATE)`, dan mengembalikan *journal mode* ke `DELETE`. Setelah koneksi SQLite ditutup (`sqlite3_close_v2`), sistem membersihkan sisa berkas *sidecar* (`-shm`, `-wal`) pada basis data arsip dan FTS menggunakan `FileManager.default.removeDatabaseSidecars`. Terakhir, *cache* ketersediaan arsip diinvalidasi dan notifikasi `.bookIntegrated` dipancarkan melalui `NotificationCenter` agar *cache* pembaca memuat ulang buku tersebut.
 
 ### Metode Manipulasi Database
 
@@ -125,7 +126,7 @@ Terdapat tiga mode operasi utama yang dijalankan tergantung pada nilai `importMo
     Mengandalkan `importOfflineUpdate`. Pada mode ini, basis data dimigrasikan secara penuh dan tabel yang sudah ada sebelumnya akan ditimpa. Metode ini mengeksekusi klausa SQL `DROP TABLE IF EXISTS` dan merekonstruksi FTS dari awal.
 
 *   **Mode 2 (Change Book ID)**
-    Sistem mengeksekusi `changeBookId(oldId:newId:)`. Mode ini tidak memindahkan teks atau mengubah Zstandard.
+    Sistem mengeksekusi `changeBookId(oldId:newId:)`. Mode ini tidak memindahkan teks atau mengubah Zstandard. Operasi DDL (*rename table*) dijalankan dengan *journal mode* non-WAL (`enableWAL: false`) disertai pembersihan berkas *sidecar* di blok `defer`:
 
     *   Tahapan dimulai dengan mengambil lokasi berkas arsip (misalnya `20.sqlite`) di dalam basis data utama.
     *   Mengeksekusi `ALTER TABLE "b{oldId}" RENAME TO "b{newId}";` serta hal yang sama untuk tabel TOC (`t{oldId}`).

@@ -10,13 +10,15 @@ import OSLog
 import SQLite3
 
 extension BookUpdateManager {
-    func openDatabase(path: String) throws -> OpaquePointer {
+    func openDatabase(path: String, enableWAL: Bool = true) throws -> OpaquePointer {
         var db: OpaquePointer?
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX
         if sqlite3_open_v2(path, &db, flags, nil) == SQLITE_OK, let validDb = db {
             sqlite3_busy_timeout(validDb, 30000)
-            _ = sqlite3_exec(validDb, "PRAGMA journal_mode=WAL;", nil, nil, nil)
-            _ = sqlite3_exec(validDb, "PRAGMA synchronous=NORMAL;", nil, nil, nil)
+            if enableWAL {
+                _ = sqlite3_exec(validDb, "PRAGMA journal_mode=WAL;", nil, nil, nil)
+                _ = sqlite3_exec(validDb, "PRAGMA synchronous=NORMAL;", nil, nil, nil)
+            }
             return validDb
         } else {
             let error = sqliteError(db, message: "Gagal membuka database \(path)")
