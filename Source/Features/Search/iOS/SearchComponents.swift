@@ -462,14 +462,24 @@ struct SearchProgressView: View {
         if viewModel.isSearching || !integrationStates.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 if viewModel.isSearching {
-                    VStack(alignment: .leading) {
-                        if viewModel.totalTables > 0 {
+                    VStack(alignment: .leading, spacing: 4) {
+                        let shouldShowTablesProgress = showTablesProgress && viewModel.totalTables > 1
+
+                        if shouldShowTablesProgress {
                             ProgressView(
                                 value: Double(min(viewModel.completedTables, viewModel.totalTables)),
                                 total: Double(max(viewModel.totalTables, 1))
                             )
                             .progressViewStyle(.linear)
-                        } else {
+                        }
+
+                        if viewModel.totalRowsInTable > 0 {
+                            ProgressView(
+                                value: Double(viewModel.completedRowsInTable),
+                                total: Double(viewModel.totalRowsInTable)
+                            )
+                            .progressViewStyle(.linear)
+                        } else if !shouldShowTablesProgress && viewModel.totalTables <= 1 {
                             ProgressView()
                                 .progressViewStyle(.linear)
                         }
@@ -483,8 +493,8 @@ struct SearchProgressView: View {
                 }
             }
             .animation(
-                .easeIn(duration: 0.3),
-                value: viewModel.completedTables
+                .easeIn(duration: 0.25),
+                value: [viewModel.completedRowsInTable, viewModel.completedTables]
             )
         }
     }

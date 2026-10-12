@@ -317,6 +317,17 @@ class OptionSearchVC: NSViewController {
                 progressTable.doubleValue = Double(progress.completed)
             }
             .store(in: &cancellables)
+
+        viewModel.rowProgressDidUpdate
+            .receive(on: RunLoop.main)
+            .sink { [weak self] progress in
+                guard let self else { return }
+                if viewModel.totalTables <= 1, progress.total > 0 {
+                    progressTable.maxValue = Double(progress.total)
+                    progressTable.doubleValue = Double(progress.completed)
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func setupTableView() {
