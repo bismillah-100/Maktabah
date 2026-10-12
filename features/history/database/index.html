@@ -1647,10 +1647,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-alur-sinkronisasi-masuk-resolusi-konflik-lww-field-merging" class="md-nav__link">
+  <a href="#3-alur-sinkronisasi-masuk-resolusi-konflik-field-level-merging" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (LWW + Field Merging)
+        3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (Field-Level Merging)
       
     </span>
   </a>
@@ -3696,10 +3696,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-alur-sinkronisasi-masuk-resolusi-konflik-lww-field-merging" class="md-nav__link">
+  <a href="#3-alur-sinkronisasi-masuk-resolusi-konflik-field-level-merging" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (LWW + Field Merging)
+        3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (Field-Level Merging)
       
     </span>
   </a>
@@ -3886,19 +3886,20 @@
 <li><strong>Debounced Batch Delete</strong>: Operasi penghapusan buku dari riwayat dikumpulkan ke dalam antrean <code>pendingCloudKitDeletes</code> dengan penundaan (<em>debounce</em>) selama 3 detik sebelum dikirim serentak ke CloudKit, meminimalkan <em>overhead</em> jaringan.</li>
 <li><strong>Penanganan Mode Offline (<code>SyncPendingStore</code>)</strong>: Jika perangkat sedang <em>offline</em> saat mutasi terjadi, ID rekaman tetap tersimpan di tabel antrean. Begitu konektivitas internet pulih, <code>CloudKitSyncManager</code> secara otomatis men-<em>flush</em> antrean <em>pending</em> tersebut.</li>
 </ul>
-<h3 id="3-alur-sinkronisasi-masuk-resolusi-konflik-lww-field-merging">3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (LWW + Field Merging)</h3>
+<h3 id="3-alur-sinkronisasi-masuk-resolusi-konflik-field-level-merging">3. Alur Sinkronisasi Masuk &amp; Resolusi Konflik (Field-Level Merging)</h3>
 <p>Saat <code>CloudKitSyncManager</code> menerima perubahan <em>remote</em> via <code>fetchChanges</code>, rekaman diteruskan ke <code>HistoryViewModel.shared.applyCloudKitChanges(entriesToSave:recordIdsToDelete:)</code>:</p>
 <pre class="mermaid"><code>flowchart TD
     Remote(["Terima Rekaman dari CloudKit"]) --&gt; Match{"Apakah Book ID Ada di Lokal?"}
 
     Match --&gt;|"Tidak Ada"| InsertLocal["Simpan sebagai Entri Baru"]
-    Match --&gt;|"Ada"| CheckLWW{"remoteModified &gt;= localModified?"}
+    Match --&gt;|"Ada"| Merge["mergeEntries: Field-Level Merge"]
 
-    CheckLWW --&gt;|"Ya"| FieldMerge["Merge Parsial Field Non-Destruktif"]
-    CheckLWW --&gt;|"Tidak"| DropRemote["Pertahankan Data Lokal"]
+    Merge --&gt; HasChanges{"Ada Perubahan Field?"}
+    HasChanges --&gt;|"Ya"| UpdateLocal["Perbarui Entri Lokal (Merged)"]
+    HasChanges --&gt;|"Tidak"| NoOp["Abaikan (Data Sudah Sinkron)"]
 
     InsertLocal --&gt; Reorder["Urutkan Ulang historyOrder LIFO"]
-    FieldMerge --&gt; Reorder
+    UpdateLocal --&gt; Reorder
 
     Reorder --&gt; Persist[("HistoryDatabaseManager.saveCloudKitChanges")]
     Persist --&gt; Notify(["Post .historyDidChange &amp; Reload UI"])
@@ -3910,13 +3911,13 @@
     classDef event fill:#be185d26,stroke:#9d174d,stroke-width:2px,color:#9d174d;
 
     class Remote,Notify event;
-    class InsertLocal,FieldMerge,DropRemote,Reorder store;
-    class Match,CheckLWW ui;
+    class InsertLocal,UpdateLocal,Reorder,NoOp store;
+    class Match,HasChanges ui;
+    class Merge vm;
     class Persist db;</code></pre>
 <ol>
-<li><strong>Last-Write-Wins (LWW)</strong>: Membandingkan <code>updatedAt</code> lokal dengan <code>lastModified</code> remote. Jika remote lebih baru (<code>remoteModified &gt;= localModified</code>), perubahan diterima.</li>
-<li><strong>Field Merging Non-Destruktif</strong>: Jika <em>field</em> remote bernilai <code>nil</code> (misalnya karena perubahan parsial), nilai lokal yang sudah ada tetap dipertahankan (<code>lastOpenedAt</code>, <code>lastContentId</code>, <code>favoritedAt</code>, <code>positionUpdatedAt</code>) untuk mencegah hilangnya progres membaca.</li>
-<li><strong>Rekonsiliasi Urutan (<code>historyOrder</code>)</strong>: Setelah entri <em>remote</em> digabungkan, <code>HistoryViewModel</code> menyortir ulang buku riwayat berdasarkan <code>lastOpenedAt</code> terbaru (dibatasi <code>maxHistoryCount = 50</code>), menghapus <em>orphan records</em>, dan menyimpannya kembali ke SQLite secara atomik via <code>HistoryDatabaseManager.saveCloudKitChanges</code> di <em>background thread</em>.</li>
+<li><strong>Field-Level Merging</strong>: Resolusi konflik memisahkan dimensi status favorit (<code>favoritedAt</code>) dan posisi baca (<code>positionUpdatedAt</code>). Jika satu perangkat mengubah status favorit sementara perangkat lain membaca ke halaman baru, kedua perubahan digabungkan berdasarkan stempel waktu spesifik masing-masing tanpa saling menimpa.</li>
+<li><strong>Rekonsiliasi Urutan (<code>historyOrder</code>)</strong>: Setelah entri <em>remote</em> digabungkan, <code>HistoryViewModel</code> menyortir ulang buku riwayat berdasarkan <code>lastOpenedAt</code> terbaru dan membatasi urutan linear antarmuka (<code>historyOrder</code>) maksimal 50 item (<code>maxHistoryCount</code>). Seluruh entri <code>ReadingEntry</code> fisik tetap dipertahankan di database dan CloudKit agar posisi baca (<code>lastContentId</code>) tidak hilang saat kitab ke-51+ dibuka.</li>
 <li><strong>Pembaruan UI</strong>: Notifikasi <code>.historyDidChange</code> disiarkan untuk menyegarkan daftar riwayat dan favorit di antarmuka macOS dan iOS secara reaktif.</li>
 </ol>
 
