@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import Observation
+import OSLog
 import SwiftUI
 import Synchronization
 
@@ -72,7 +73,8 @@ class ReaderViewModel: ViewModelBase {
     static let kfgqpcTitle = Font.custom(ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 18)
     static let kfgqpcList = Font.custom(ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 20)
 
-    var searchText: String = ""
+    var searchEvent: ReaderHighlightEvent?
+    var annotationEvent: ReaderAnnotationEvent?
     var searchMode: SearchMode?
     var nearDistance: Int = UserDefaults.standard.searchNearDistance {
         didSet {
@@ -80,7 +82,6 @@ class ReaderViewModel: ViewModelBase {
         }
     }
 
-    var targetAnnotation: Annotation?
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
     var needsScrollRestore: Bool = false
@@ -162,8 +163,28 @@ class ReaderViewModel: ViewModelBase {
 
     override func migrateBookId(from oldId: Int, to newId: Int) {
         guard let current = currentBook, current.id == oldId else { return }
-        if let newBookData = LibraryDataManager.shared.booksById[newId] {
-            currentBook = newBookData
+        guard let newBookData = LibraryDataManager.shared.booksById[newId] else { return }
+
+        currentBook = newBookData
+        BookPageCache.shared.remove(bookId: oldId)
+        BookPageCache.shared.remove(bookId: newId)
+        BookConnection.invalidateTOC(for: oldId)
+        BookConnection.invalidateTOC(for: newId)
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(oldId)))
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(newId)))
+
+        do {
+            try bookConnection.connect(archive: newBookData.archive)
+        } catch {
+            Logger.reader.error("Failed to reconnect after migrateBookId: \(error.localizedDescription, privacy: .public)")
+        }
+
+        loadTOC(book: newBookData)
+
+        if let content = bookConnection.getContent(bkid: String(newId), contentId: currentContentId) {
+            updateContentState(with: content)
+        } else {
+            getFirstBookContent(for: newBookData)
         }
     }
 
@@ -195,6 +216,12 @@ class ReaderViewModel: ViewModelBase {
         #endif
 
         #if os(iOS)
+        if let searchEvent, searchEvent.contentId != content.id {
+            self.searchEvent = nil
+        }
+        if let annotationEvent, annotationEvent.annotation.contentId != content.id {
+            self.annotationEvent = nil
+        }
         // Sync to state
         readerState.currentBook = currentBook
         readerState.currentID = content.id

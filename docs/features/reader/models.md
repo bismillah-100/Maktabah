@@ -182,3 +182,45 @@ enum BackgroundColor: Int, CaseIterable, Identifiable {
 
 Komponen kontrol kustom (`NSControl`) untuk rendering pilihan tema warna latar belakang lingkaran pada macOS. Sebelumnya berada pada modul Annotations dan kini dipindahkan ke `Source/Features/Reader/Models/BackgroundOptions.swift`.
 
+---
+
+## 6. Event Pemicu Navigasi & Sorotan (iOS)
+
+### ReaderHighlightEvent (Struct)
+Event pemicu sorotan kata kunci hasil pencarian berbasis UUID sekali pakai:
+
+```swift
+struct ReaderHighlightEvent: Equatable {
+    let id: UUID
+    let query: String
+    let contentId: Int?
+    let mode: SearchMode?
+    let nearDistance: Int
+}
+```
+
+* Setiap ketukan hasil pencarian menghasilkan `UUID` baru yang menjamin `iOSIbarotTextView` merespons ketukan berulang (*multi-tap*) tanpa memerlukan pembersihan status manual.
+
+### ReaderAnnotationEvent (Struct)
+Event pemicu navigasi dan animasi *scroll-to-target* pada anotasi:
+
+```swift
+struct ReaderAnnotationEvent: Equatable {
+    let id: UUID
+    let annotation: Annotation
+}
+```
+
+### OpenBookOptions (Struct)
+Konfigurasi parameter pembukaan buku yang menyederhanakan *interface* navigasi antar-modul:
+
+```swift
+struct OpenBookOptions {
+    var contentId: Int?
+    var searchEvent: ReaderHighlightEvent?
+    var annotationEvent: ReaderAnnotationEvent?
+    var recordHistory: Bool = true
+}
+```
+
+

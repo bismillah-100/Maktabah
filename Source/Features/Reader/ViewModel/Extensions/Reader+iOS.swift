@@ -16,20 +16,25 @@ extension ReaderViewModel {
     }
 
     func didSelectTOCNode(id: Int) {
-        searchText = ""
-        targetAnnotation = nil
+        searchEvent = nil
+        annotationEvent = nil
         fetchContentById(id)
     }
 
     func didSelectSearch(query: String, contentId: Int) {
-        searchText = query
-        searchMode = searchViewModel.searchMode
-        nearDistance = searchViewModel.nearDistance
+        searchEvent = ReaderHighlightEvent(
+            query: query,
+            contentId: contentId,
+            mode: searchViewModel.searchMode,
+            nearDistance: searchViewModel.nearDistance
+        )
+        annotationEvent = nil
         fetchContentById(contentId)
     }
 
     func didSelectAnnotation(_ ann: Annotation) {
-        targetAnnotation = ann
+        annotationEvent = ReaderAnnotationEvent(annotation: ann)
+        searchEvent = nil
         fetchContentById(Int(ann.contentId))
     }
 }

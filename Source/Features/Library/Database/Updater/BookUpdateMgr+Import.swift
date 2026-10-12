@@ -81,8 +81,11 @@ extension BookUpdateManager {
     func preCreateArchiveTables(archiveId: Int, bookId: Int) throws {
         guard let targetPath = AppConfig.archiveDatabasePath(archiveId: archiveId) else { return }
 
-        let db = try openDatabase(path: targetPath)
-        defer { sqlite3_close_v2(db) }
+        let db = try openDatabase(path: targetPath, enableWAL: false)
+        defer {
+            sqlite3_close_v2(db)
+            FileManager.default.removeDatabaseSidecars(atPath: targetPath)
+        }
 
         Logger.library.debug("[Import] Pre-creating tables in archive \(archiveId)...")
 
@@ -147,6 +150,9 @@ extension BookUpdateManager {
 
         // Hapus cache per-kitab di folder Books jika ada, agar pembaca beralih ke arsip yang diperbarui
         BookDownloadManager.shared.removeCachedBook(bookId: stagedUpdate.metadata.bkid)
+        BookPageCache.shared.remove(bookId: stagedUpdate.metadata.bkid)
+        BookConnection.invalidateTOC(for: stagedUpdate.metadata.bkid)
+        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(stagedUpdate.metadata.bkid)))
 
         return BookUpdateResult(
             bookId: stagedUpdate.metadata.bkid,
@@ -210,8 +216,11 @@ extension BookUpdateManager {
     }
 
     private func renameArchiveTables(archivePath: String, oldId: Int, newId: Int) throws {
-        let archiveDb = try openDatabase(path: archivePath)
-        defer { sqlite3_close_v2(archiveDb) }
+        let archiveDb = try openDatabase(path: archivePath, enableWAL: false)
+        defer {
+            sqlite3_close_v2(archiveDb)
+            FileManager.default.removeDatabaseSidecars(atPath: archivePath)
+        }
 
         _ = sqlite3_exec(archiveDb, "DROP TABLE IF EXISTS \"b\(newId)\";", nil, nil, nil)
         _ = sqlite3_exec(archiveDb, "DROP INDEX IF EXISTS \"b\(newId)\";", nil, nil, nil)
@@ -237,8 +246,11 @@ extension BookUpdateManager {
     }
 
     private func renameFtsTables(ftsPath: String, archivePath: String?, oldId: Int, newId: Int) throws {
-        let ftsDb = try openDatabase(path: ftsPath)
-        defer { sqlite3_close_v2(ftsDb) }
+        let ftsDb = try openDatabase(path: ftsPath, enableWAL: false)
+        defer {
+            sqlite3_close_v2(ftsDb)
+            FileManager.default.removeDatabaseSidecars(atPath: ftsPath)
+        }
 
         let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main")
         if hasUnified {
@@ -246,8 +258,11 @@ extension BookUpdateManager {
             _ = sqlite3_exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(oldId);", nil, nil, nil)
 
             if let archivePath {
-                let archiveDb = try openDatabase(path: archivePath)
-                defer { sqlite3_close_v2(archiveDb) }
+                let archiveDb = try openDatabase(path: archivePath, enableWAL: false)
+                defer {
+                    sqlite3_close_v2(archiveDb)
+                    FileManager.default.removeDatabaseSidecars(atPath: archivePath)
+                }
                 try archiveDb.safeAttachDatabase(path: ftsPath, schema: "fts_db")
                 defer { _ = sqlite3_exec(archiveDb, "DETACH DATABASE fts_db;", nil, nil, nil) }
 
@@ -318,20 +333,26 @@ extension BookUpdateManager {
         oldId: Int,
         newId: Int
     ) {
-        if let archivePath, let archiveDb = try? openDatabase(path: archivePath) {
-            defer { sqlite3_close_v2(archiveDb) }
+        if let archivePath, let archiveDb = try? openDatabase(path: archivePath, enableWAL: false) {
+            defer {
+                sqlite3_close_v2(archiveDb)
+                FileManager.default.removeDatabaseSidecars(atPath: archivePath)
+            }
             _ = sqlite3_exec(archiveDb,
                              "ALTER TABLE \"b\(newId)\" RENAME TO \"b\(oldId)\";", nil, nil, nil)
             _ = sqlite3_exec(archiveDb,
                              "ALTER TABLE \"t\(newId)\" RENAME TO \"t\(oldId)\";", nil, nil, nil)
         }
-        if let ftsPath, let ftsDb = try? openDatabase(path: ftsPath) {
-            defer { sqlite3_close_v2(ftsDb) }
+        if let ftsPath, let ftsDb = try? openDatabase(path: ftsPath, enableWAL: false) {
+            defer {
+                sqlite3_close_v2(ftsDb)
+                FileManager.default.removeDatabaseSidecars(atPath: ftsPath)
+            }
             let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: ftsDb, schemaName: "main")
             if hasUnified {
                 _ = sqlite3_exec(ftsDb, "DELETE FROM archive_fts WHERE rowid IN (SELECT rowid FROM archive_index WHERE book_id = \(newId));", nil, nil, nil)
                 _ = sqlite3_exec(ftsDb, "DELETE FROM archive_index WHERE book_id = \(newId);", nil, nil, nil)
-                if let archivePath, let archiveDb = try? openDatabase(path: archivePath) {
+                if let archivePath, let archiveDb = try? openDatabase(path: archivePath, enableWAL: false) {
                     try? archiveDb.safeAttachDatabase(path: ftsPath, schema: "fts_db")
                     try? ArchiveDatabaseTools.appendBookToUnifiedFTS(
                         db: archiveDb,
@@ -343,6 +364,7 @@ extension BookUpdateManager {
                     )
                     _ = sqlite3_exec(archiveDb, "DETACH DATABASE fts_db;", nil, nil, nil)
                     sqlite3_close_v2(archiveDb)
+                    FileManager.default.removeDatabaseSidecars(atPath: archivePath)
                 }
             } else {
                 _ = sqlite3_exec(ftsDb,
@@ -473,11 +495,14 @@ extension BookUpdateManager {
         guard let targetPath = AppConfig.archiveDatabasePath(archiveId: archiveId),
               let ftsDBPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
         else { return }
+
+        LibraryDataManager.shared.closeArchiveConnection(archiveId: archiveId)
+
         var dbPtr: OpaquePointer? = try openDatabase(path: targetPath)
         guard let db = dbPtr else { return }
         defer {
             if let db = dbPtr {
-                checkpoint(db: db)
+                checkpoint(db: db, archivePath: targetPath, ftsPath: ftsDBPath)
             }
         }
 
@@ -497,10 +522,11 @@ extension BookUpdateManager {
         // 2. Build FTS terpisah di luar transaksi main
         try appendOrBuildFTS(db: db, tableName: tableName, bookId: bookId)
 
-        checkpoint(db: db)
+        checkpoint(db: db, archivePath: targetPath, ftsPath: ftsDBPath)
         dbPtr = nil
 
         IntegrationCache.shared.markIntegrated(bookId: bookId, archiveId: archiveId)
+        DatabaseManager.shared.invalidateArchiveCache(archiveId: archiveId)
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .bookIntegrated, object: bookId)
         }
@@ -531,7 +557,11 @@ extension BookUpdateManager {
         }
     }
 
-    private func checkpoint(db: OpaquePointer) {
+    private func checkpoint(
+        db: OpaquePointer,
+        archivePath: String? = nil,
+        ftsPath: String? = nil
+    ) {
         _ = sqlite3_exec(db, "PRAGMA wal_checkpoint(TRUNCATE);", nil, nil, nil)
         _ = sqlite3_exec(db, "PRAGMA journal_mode = DELETE;", nil, nil, nil)
         _ = sqlite3_exec(db, "PRAGMA fts_db.wal_checkpoint(TRUNCATE);", nil, nil, nil)
@@ -542,5 +572,12 @@ extension BookUpdateManager {
         try? exec(db, "DETACH DATABASE source_db;")
 
         sqlite3_close_v2(db)
+
+        if let archivePath {
+            FileManager.default.removeDatabaseSidecars(atPath: archivePath)
+        }
+        if let ftsPath {
+            FileManager.default.removeDatabaseSidecars(atPath: ftsPath)
+        }
     }
 }

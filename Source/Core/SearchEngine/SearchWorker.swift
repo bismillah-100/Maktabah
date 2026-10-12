@@ -130,11 +130,11 @@ final class SearchWorker: @unchecked Sendable {
                 }
 
                 let checkFtsDb = checkCountSql("fts_db")
-                if let rows = try? conn.queryInts(sql: checkFtsDb, params: []), !rows.isEmpty {
+                if let rows = try? conn.queryInts(sql: checkFtsDb, params: []), rows.first == 2 {
                     return "fts_db"
                 }
                 let checkMain = checkCountSql("main")
-                if let rows = try? conn.queryInts(sql: checkMain, params: []), !rows.isEmpty {
+                if let rows = try? conn.queryInts(sql: checkMain, params: []), rows.first == 2 {
                     return "main"
                 }
                 return nil
@@ -161,7 +161,8 @@ final class SearchWorker: @unchecked Sendable {
 
         callbacks.start(1)
 
-        let bookIds: [Int] = (allowedTables ?? []).compactMap { tbl in
+        let localTables = allowedTables.map { Set(tables).intersection($0) }
+        let bookIds: [Int] = (localTables ?? []).compactMap { tbl in
             tbl.hasPrefix("b") ? Int(tbl.dropFirst()) : Int(tbl)
         }
 
@@ -188,7 +189,7 @@ final class SearchWorker: @unchecked Sendable {
         SELECT i.book_id, i.page, i.id, i.part
         FROM \(schema).archive_fts f
         JOIN \(schema).archive_index i ON f.rowid = i.rowid
-        WHERE archive_fts MATCH ?\(withRowIdBounds ? "\n  AND f.rowid BETWEEN ? AND ?" : "")
+        WHERE f.archive_fts MATCH ?\(withRowIdBounds ? "\n  AND f.rowid BETWEEN ? AND ?" : "")
         """
     }
 
@@ -274,11 +275,15 @@ final class SearchWorker: @unchecked Sendable {
         let total = hits.count
         callbacks.onRowProgress("archive_\(archiveId)", 0, total)
 
+        let progressStride = max(50, total / 100)
         for (idx, hit) in hits.enumerated() {
-            if idx % 10 == 0 {
+            if idx % progressStride == 0 {
                 await control.pauseController.waitIfPaused()
                 if control.stopFlag() { return }
                 callbacks.onRowProgress(hit.tableName, idx + 1, total)
+            } else if idx % 20 == 0 {
+                await control.pauseController.waitIfPaused()
+                if control.stopFlag() { return }
             }
 
             callbacks.onResult(hit.tableName, hit)

@@ -118,17 +118,39 @@ class OptionSearchVC: NSViewController {
     }
 
     private func setupMigrationButtonIfNeeded() {
-        FtsMigrationManager.shared.checkNeedsMigration()
+        let ftsManager = FtsMigrationManager.shared
+        ftsManager.checkNeedsMigration()
 
         let isHidden = UserDefaults.standard.bool(forKey: "hideFtsMigrationBannerv5")
         guard let stackView = optionsSegment.superview as? NSStackView,
-              FtsMigrationManager.shared.needsMigration &&
-              migrationButton == nil && !isHidden
+              ftsManager.needsMigration,
+              migrationButton == nil,
+              !isHidden
         else { return }
 
-        let title = bkId.isEmpty
-            ? String(localized: .updateIndex)
-            : String(localized: .ftsMigrationAvailableBook)
+        let targetArchiveId: Int? = !bkId.isEmpty
+            ? Int(bkId).flatMap { try? DatabaseManager.shared.fetchBook(byId: $0) }?.archive
+            : nil
+
+        if let targetArchiveId, !ftsManager.doesArchiveNeedAction(targetArchiveId) {
+            return
+        }
+
+        let isOptimizeOnly: Bool = if let targetArchiveId {
+            ftsManager.isArchiveOptimizationOnly(targetArchiveId)
+        } else {
+            ftsManager.isOptimizationOnly
+        }
+
+        let title: String = if isOptimizeOnly {
+            bkId.isEmpty
+                ? String(localized: "Optimize Index")
+                : String(localized: .ftsOptimizationAvailableBook)
+        } else {
+            bkId.isEmpty
+                ? String(localized: .updateIndex)
+                : String(localized: .ftsMigrationAvailableBook)
+        }
 
         let segmentedControl = NSSegmentedControl()
         segmentedControl.segmentCount = 2

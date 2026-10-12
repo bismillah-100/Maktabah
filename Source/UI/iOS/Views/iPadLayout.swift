@@ -112,7 +112,7 @@ struct iPadLayout: View {
                     viewModel: historyViewModel,
                     onOpen: { book in
                         let lastId = historyViewModel.entriesByBookId[book.id]?.lastContentId
-                        bManager.openBook(book, initialContentId: lastId)
+                        bManager.openBook(book, options: OpenBookOptions(contentId: lastId))
                     }
                 )
             }

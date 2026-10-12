@@ -19,7 +19,7 @@ extension HistoryViewModel {
             entry.ckRecordId = String(entry.bookId)
         }
         entriesByBookId[entry.bookId] = entry
-        HistoryDatabaseManager.shared.upsertEntry(entry)
+        HistoryDatabaseManager.shared.upsertEntryAsync(entry)
         if reloadUI {
             loadBooksData()
             notifyHistoryChanged()
@@ -42,7 +42,6 @@ extension HistoryViewModel {
             historyOrder = Array(historyOrder.prefix(maxHistoryCount))
         }
 
-        pruneOrphanedEntries()
         HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
         saveAndSync(entry: &entry, reloadUI: true)
     }
@@ -110,9 +109,6 @@ extension HistoryViewModel {
 
     func handleNonFavoritedHistoryRemoval(entry: ReadingEntry, bookId: Int) {
         let ckId = entry.ckRecordId
-        if let ckId {
-            try? HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-        }
         entriesByBookId.removeValue(forKey: bookId)
 
         let order = historyOrder
@@ -122,9 +118,6 @@ extension HistoryViewModel {
             do {
                 try HistoryDatabaseManager.shared.transaction {
                     try HistoryDatabaseManager.shared.deleteEntries(bookIds: deletedIds)
-                    if let ckId {
-                        try HistoryDatabaseManager.shared.addPendingSync(ckRecordId: ckId, operation: "delete")
-                    }
                     try HistoryDatabaseManager.shared.replaceHistoryOrder(order)
                 }
                 DispatchQueue.main.async {

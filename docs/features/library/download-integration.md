@@ -74,8 +74,13 @@ final class BookDownloadManager: @unchecked Sendable {
 }
 ```
 
-### B. Ketahanan Jaringan (NetworkMonitor)
+### B. Ketahanan Jaringan & Pembersihan Staging (Cancellation & Lifecycle)
 `BookDownloadManager` terhubung langsung ke `NetworkMonitor.shared`. Jika sambungan internet terputus saat proses pengunduhan, seluruh koneksi aktif dibatalkan secara tertib (`cancelAllDownloads()`), dan status parsial dibersihkan agar tidak meninggalkan berkas korup pada penyimpanan lokal.
+
+Pada tingkat *stream* pengunduhan (`URLSession.downloadStream` via `DownloadStreamDelegate`):
+* **Pembersihan Dini Berkas Staging**: Berkas unduhan sementara di `NSTemporaryDirectory()` dilacak secara *thread-safe* via `Mutex<URL?>`. Jika `AsyncThrowingStream` dibatalkan oleh pemanggil (`onTermination` dengan alasan `.cancelled`) atau hasil `yield` berstatus `.dropped` / `.terminated`, berkas *staging* langsung dihapus seketika.
+* **Jaminan Defer Guard**: `BookDownloadManager` dan `CoreDatabaseDownloader` menggunakan blok `defer` di awal *scope* pemrosesan berkas sementara. Jika iterasi *stream* atau dekompresi zstd melempar galat pembatalan (`CancellationError`) atau kegagalan I/O, berkas *staging* dipastikan terhapus tanpa meninggalkan *orphaned files*.
+* **Preservasi Kitab Terunduh Saat Pembatalan Massal**: Pada pengunduhan massal (`BulkDownloadModalCenter`), pembatalan di tengah jalan menghentikan sisa antrean dan membersihkan berkas parsial yang sedang berjalan (*in-flight*). Namun, kitab-kitab yang sudah selesai diunduh dan tersimpan di `Caches/Books/{id}.sqlite` tetap dipertahankan dan diselesaikan integrasinya secara serial.
 
 ### C. Pelaporan Ukuran & Progress Terdownload (Byte-Level Progress)
 
@@ -122,14 +127,20 @@ flowchart TD
 Setelah berkas sementara `.sqlite` kitab selesai diunduh, berkas tersebut diintegrasikan ke dalam salah satu dari 20 berkas arsip induk (`1.sqlite` s.d. `20.sqlite`).
 
 ### A. BookArchiveSingleFlight (Actor) - Koordinasi Konkurensi
-Menulis ke satu basis data SQLite secara paralel dari banyak *thread* dapat memicu galat `SQLITE_BUSY` (*database is locked*). Modul ini menggunakan *Actor* dengan antrean *predecessor*:
+Unduhan jaringan berkas sumber kitab berjalan paralel secara independen di luar antrean. Namun, penulisan ke basis data SQLite arsip tetap diserialisasi per-arsip untuk mencegah galat `SQLITE_BUSY` (*database is locked*). Modul ini menggunakan `actor` dengan antrean *predecessor* dan pembersihan rantai *task*:
 
 ```swift
 actor BookArchiveSingleFlight {
     static let shared = BookArchiveSingleFlight()
 
+    private struct ArchiveQueueItem {
+        let id: UInt64
+        let task: Task<Void, Error>
+    }
+
+    private var nextTaskId: UInt64 = 0
     private var bookTasks: [Int: Task<Void, Error>] = [:]
-    private var archiveTail: [Int: Task<Void, Error>] = [:]
+    private var archiveTail: [Int: ArchiveQueueItem] = [:]
 
     func run(archiveId: Int, bookId: Int, operation: @escaping @Sendable () async throws -> Void) async throws {
         // 1. Dedup per-buku: Hindari integrasi ganda untuk buku yang sama
@@ -138,15 +149,23 @@ actor BookArchiveSingleFlight {
             return
         }
 
+        let taskId = nextTaskId
+        nextTaskId += 1
+
         // 2. Serialisasi per-arsip: Tunggu operasi sebelumnya di arsip yang sama selesai
-        let predecessor = archiveTail[archiveId]
-        let task = Task<Void, Error> {
+        let predecessor = archiveTail[archiveId]?.task
+        let task = Task<Void, Error> { [weak self] in
+            defer {
+                Task { [weak self] in
+                    await self?.finishTask(archiveId: archiveId, bookId: bookId, taskId: taskId)
+                }
+            }
             _ = try? await predecessor?.value
             try await operation()
         }
 
         bookTasks[bookId] = task
-        archiveTail[archiveId] = task
+        archiveTail[archiveId] = ArchiveQueueItem(id: taskId, task: task)
         try await task.value
     }
 }
@@ -187,7 +206,7 @@ flowchart TD
 1. **Pemisahan Cache**: `DatabaseManager.invalidateArchiveCache` hanya membersihkan ketersediaan berkas arsip dan tidak lagi menghapus status `IntegrationCache`.
 2. **Unified FTS Scanner**: Pemindaian `scanIntegratedBookIds` membaca `archive_index` pada skema Unified FTS (`SELECT DISTINCT book_id FROM archive_index;`) dengan *fallback* ke `bN_fts` untuk basis data lama.
 3. **Atomic Mutex I/O**: Penulisan JSON dilindungi `Mutex` (`ioLock`) untuk mencegah *race condition* saat penulisan konkuren.
-4. **Bounded Bulk Download**: Unduhan massal menggunakan `BoundedBulkDownloader` dengan pembatasan paralelisme ($N=4$) dan ketahanan terhadap galat jaringan tanpa membatalkan (*cancelAll*) *task* yang sedang berjalan (*in-flight*).
+4. **Bounded Bulk Download & Mekanisme Stop**: Unduhan massal menggunakan `BoundedBulkDownloader` dengan pembatasan paralelisme ($N=4$) dan ketahanan terhadap galat jaringan. Saat pengguna menekan tombol Stop, *closure* `isCancelled` membatalkan *in-flight task* seketika dan mencegah penjadwalan unduhan baru, sehingga alur langsung beralih mengintegrasikan kitab-kitab yang sudah berhasil diunduh secara serial.
 
 ---
 

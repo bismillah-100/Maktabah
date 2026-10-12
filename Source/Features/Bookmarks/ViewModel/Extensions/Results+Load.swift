@@ -29,36 +29,8 @@ extension ResultsViewModel {
     }
 
     func dbLoadAllResults() async {
-        let currentRoots = folderRoots
-
         let allResults = await Task.detached {
-            var resultsMap: [Int64?: [ResultNode]] = [:]
-            let dbHandler = ResultsHandler.shared
-
-            func loadResultsForFolderId(_ folderId: Int64?) {
-                let results = dbHandler.fetchResults(forFolder: folderId)
-                if !results.isEmpty {
-                    let sortedNodes = results.sorted {
-                        $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-                    }
-                    resultsMap[folderId] = sortedNodes
-                }
-            }
-
-            loadResultsForFolderId(nil)
-
-            func loadResultsForFolder(_ folder: FolderNode) {
-                loadResultsForFolderId(folder.id)
-                for child in folder.children {
-                    loadResultsForFolder(child)
-                }
-            }
-
-            for root in currentRoots {
-                loadResultsForFolder(root)
-            }
-
-            return resultsMap
+            ResultsHandler.shared.fetchAllResultsGroupedByFolder()
         }.value
 
         folderResults = allResults

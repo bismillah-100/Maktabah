@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct ReadingEntry: Codable, Identifiable, Hashable {
+struct ReadingEntry: Codable, Identifiable, Hashable, Sendable {
     let bookId: Int
     var lastContentId: Int?
     var lastOpenedAt: Date?

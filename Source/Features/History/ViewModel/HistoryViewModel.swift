@@ -45,7 +45,6 @@ class HistoryViewModel: ViewModelBase {
         get { historyOrder }
         set {
             historyOrder = Array(newValue.prefix(maxHistoryCount))
-            pruneOrphanedEntries()
             scheduleSave()
             loadBooksData()
             notifyHistoryChanged()

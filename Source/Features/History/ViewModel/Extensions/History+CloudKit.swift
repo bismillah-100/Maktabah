@@ -48,23 +48,8 @@ extension HistoryViewModel {
         var didChange = false
         for remoteEntry in entriesToSave {
             if let localEntry = entriesByBookId[remoteEntry.bookId] {
-                let localModified = localEntry.updatedAt.timeIntervalSince1970
-                let remoteModified = remoteEntry.updatedAt.timeIntervalSince1970
-
-                if remoteModified >= localModified {
-                    var merged = remoteEntry
-                    if merged.lastOpenedAt == nil {
-                        merged.lastOpenedAt = localEntry.lastOpenedAt
-                    }
-                    if merged.lastContentId == nil {
-                        merged.lastContentId = localEntry.lastContentId
-                    }
-                    if merged.favoritedAt == nil {
-                        merged.favoritedAt = localEntry.favoritedAt
-                    }
-                    if merged.positionUpdatedAt == nil {
-                        merged.positionUpdatedAt = localEntry.positionUpdatedAt
-                    }
+                let (merged, changed) = mergeEntries(local: localEntry, remote: remoteEntry)
+                if changed {
                     entriesByBookId[remoteEntry.bookId] = merged
                     upsertedEntries.append(merged)
                     didChange = true
@@ -78,15 +63,91 @@ extension HistoryViewModel {
         return didChange
     }
 
+    func mergeEntries(local: ReadingEntry, remote: ReadingEntry) -> (merged: ReadingEntry, changed: Bool) {
+        var merged = local
+        var changed = false
+
+        if mergeFavorite(into: &merged, local: local, remote: remote) {
+            changed = true
+        }
+        if mergePosition(into: &merged, local: local, remote: remote) {
+            changed = true
+        }
+        if mergeMetadata(into: &merged, local: local, remote: remote) {
+            changed = true
+        }
+
+        return (merged, changed)
+    }
+
+    private func mergeFavorite(into merged: inout ReadingEntry, local: ReadingEntry, remote: ReadingEntry) -> Bool {
+        let localFav = local.favoritedAt ?? .distantPast
+        let remoteFav = remote.favoritedAt ?? .distantPast
+
+        if remoteFav > localFav {
+            guard merged.isFavorite != remote.isFavorite || merged.favoritedAt != remote.favoritedAt else { return false }
+            merged.isFavorite = remote.isFavorite
+            merged.favoritedAt = remote.favoritedAt
+            return true
+        }
+
+        if remoteFav == localFav, remote.isFavorite != local.isFavorite, remote.updatedAt >= local.updatedAt {
+            merged.isFavorite = remote.isFavorite
+            return true
+        }
+
+        return false
+    }
+
+    private func mergePosition(into merged: inout ReadingEntry, local: ReadingEntry, remote: ReadingEntry) -> Bool {
+        let localPos = local.positionUpdatedAt ?? .distantPast
+        let remotePos = remote.positionUpdatedAt ?? .distantPast
+
+        if remotePos > localPos {
+            guard merged.lastContentId != remote.lastContentId || merged.positionUpdatedAt != remote.positionUpdatedAt else { return false }
+            merged.lastContentId = remote.lastContentId
+            merged.positionUpdatedAt = remote.positionUpdatedAt
+            return true
+        }
+
+        if remotePos == localPos, remote.lastContentId != local.lastContentId, remote.updatedAt >= local.updatedAt {
+            merged.lastContentId = remote.lastContentId
+            return true
+        }
+
+        return false
+    }
+
+    private func mergeMetadata(into merged: inout ReadingEntry, local: ReadingEntry, remote: ReadingEntry) -> Bool {
+        var changed = false
+
+        if let rOpen = remote.lastOpenedAt {
+            if local.lastOpenedAt == nil || rOpen > local.lastOpenedAt! {
+                merged.lastOpenedAt = rOpen
+                changed = true
+            }
+        }
+
+        if merged.ckRecordId == nil {
+            merged.ckRecordId = remote.ckRecordId ?? String(local.bookId)
+            changed = true
+        }
+
+        let maxUpdated = max(local.updatedAt, remote.updatedAt)
+        if merged.updatedAt != maxUpdated {
+            merged.updatedAt = maxUpdated
+            changed = true
+        }
+
+        return changed
+    }
+
     func synchronizeHistoryOrder(deletedIds: inout [Int], upsertedEntries: [ReadingEntry]) {
         let validHistoryEntries = entriesByBookId.values.filter { $0.lastOpenedAt != nil }
         let sortedIds = validHistoryEntries
             .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
             .map(\.bookId)
         historyOrder = Array(sortedIds.prefix(maxHistoryCount))
-
-        let prunedIds = pruneOrphanedEntries(deleteFromDB: false)
-        deletedIds.append(contentsOf: prunedIds)
 
         let finalOrder = historyOrder
         loadBooksData()

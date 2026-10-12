@@ -214,6 +214,29 @@
         }
       }
     },
+    ".ftsMigrationOptimize" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأرشيف %(archive)lld: تحسين..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive %1$(archive)lld: Optimizing…"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip %(archive)lld: Mengoptimalkan..."
+          }
+        }
+      }
+    },
     ".ftsMigrationStatus" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -233,6 +256,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Memperbarui Arsip %1$lld/%2$lld — Buku %3$lld/%4$lld (%5$lld%%)"
+          }
+        }
+      }
+    },
+    ".ftsMigrationStatusArchiveBook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأرشيف %1$lld: الكتاب %2$lld/%3$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive %1$lld: Book %2$lld/%3$lld"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arsip %1$lld: Buku %2$lld/%3$lld"
           }
         }
       }
@@ -375,6 +421,167 @@
         }
       }
     },
+    ".ftsOptimizationAvailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين فهرس البحث FTS متاح."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FTS Search Index Optimization is available."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimasi Indeks Pencarian FTS tersedia."
+          }
+        }
+      }
+    },
+    ".ftsOptimizationAvailableBook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين البحث متاح لهذا الكتاب."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search index optimization is available for this book."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimasi indeks pencarian tersedia untuk buku ini."
+          }
+        }
+      }
+    },
+    ".ftsOptimizationBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين الآن"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimize Now"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimasi Sekarang"
+          }
+        }
+      }
+    },
+    ".ftsOptimizationDesc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تقوم هذه العملية بحذف جداول الفهرس القديمة لتوفير مساحة التخزين وتحسين أداء البحث."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This update cleans up legacy search index tables to significantly increase storage efficiency and optimize search performance."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pembaruan ini menghapus tabel indeks lama untuk meningkatkan efisiensi penyimpanan dan mengoptimalkan performa pencarian."
+          }
+        }
+      }
+    },
+    ".ftsOptimizationExample" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيتم حذف الجداول القديمة وإعادة تنظيم فهرس البحث وضغط قاعدة البيانات لاستعادة المساحة المستهلكة."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legacy tables will be deleted, the FTS index will be optimized, and the database will be vacuumed to reclaim free space."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabel lama akan dihapus, indeks FTS akan dioptimasi, dan basis data akan dipadatkan (vacuum) untuk menghemat ruang disk."
+          }
+        }
+      }
+    },
+    ".ftsOptimizationNowCountBtn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين الآن (%1$lld أرشيف)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimize Now (%1$lld archives)"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimasi Sekarang (%1$lld arsip)"
+          }
+        }
+      }
+    },
+    ".ftsOptimizationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين محرك البحث"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Engine Optimization"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimasi Mesin Pencari"
+          }
+        }
+      }
+    },
     ".moreOptions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -490,28 +697,6 @@
     },
     "%lld" : {
       "shouldTranslate" : false
-    },
-    "%lld / %lld buku" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld كتابا"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld book"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld buku"
-          }
-        }
-      }
     },
     "%lld Annotations Exist" : {
       "localizations" : {
@@ -1069,28 +1254,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anotasi yang Dapat Diklik"
-          }
-        }
-      }
-    },
-    "Enhanced Underline" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خط سفلي بارز"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enhanced Underline"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pertegas Garis Bawah"
           }
         }
       }
@@ -1821,6 +1984,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edisi"
+          }
+        }
+      }
+    },
+    "Enhanced Underline" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خط سفلي بارز"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enhanced Underline"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pertegas Garis Bawah"
           }
         }
       }
@@ -3427,6 +3612,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opsional"
+          }
+        }
+      }
+    },
+    "Optimize Index" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين الفهرس"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimize Index"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimasi Indeks"
           }
         }
       }

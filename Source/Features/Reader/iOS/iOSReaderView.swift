@@ -51,10 +51,8 @@ struct iOSReaderView: View {
         iOSIbarotTextView(
             text: $viewModel.contentText,
             annotations: viewModel.currentAnnotations,
-            searchText: $viewModel.searchText,
-            searchMode: viewModel.searchMode,
-            nearDistance: viewModel.nearDistance,
-            targetAnnotation: viewModel.targetAnnotation,
+            searchEvent: viewModel.searchEvent,
+            annotationEvent: viewModel.annotationEvent,
             isMultiLanguage: book.isMultiLanguage,
             isImported: book.isImported,
             enhancedUnderline: textViewState.enhancedUnderline,

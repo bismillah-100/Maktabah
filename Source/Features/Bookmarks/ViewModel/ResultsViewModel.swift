@@ -49,6 +49,8 @@ class ResultsViewModel {
         onTreeChange?(change)
     }
 
+    private var syncReloadTask: Task<Void, Never>?
+
     private init() {
         NotificationCenter.default.addObserver(
             self,
@@ -66,16 +68,20 @@ class ResultsViewModel {
     }
 
     @objc private func handleBookIdMigrated(_ notification: Notification) {
-        Task {
-            await getFolders()
-            await dbLoadAllResults()
-            notifyChange(.fullReload)
-        }
+        scheduleReloadTree()
     }
 
     @objc private func handleSavedResultsTreeDidUpdate() {
-        Task {
+        scheduleReloadTree()
+    }
+
+    private func scheduleReloadTree() {
+        syncReloadTask?.cancel()
+        syncReloadTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            guard !Task.isCancelled, let self else { return }
             await getFolders()
+            guard !Task.isCancelled else { return }
             await dbLoadAllResults()
         }
     }

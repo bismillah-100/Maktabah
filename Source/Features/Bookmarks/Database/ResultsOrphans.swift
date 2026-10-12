@@ -9,8 +9,10 @@ import Foundation
 import OSLog
 
 extension ResultsHandler {
-    func resolveOrphanFolders() {
-        guard let db else { return }
+    @discardableResult
+    func resolveOrphanFolders() -> Bool {
+        guard let db else { return false }
+        var hasChanges = false
         do {
             try transaction {
                 let sql = """
@@ -36,24 +38,32 @@ extension ResultsHandler {
                 }
 
                 for orphan in orphans {
-                    guard let newParentId = orphan.expectedParent else { continue }
+                    guard let newParentId = orphan.expectedParent, newParentId != orphan.id else { continue }
+                    let descendants = getAllDescendantIds(of: orphan.id)
+                    guard !descendants.contains(newParentId) else { continue }
 
                     let conflictSql = "SELECT \(colId) FROM \(foldersTable) WHERE \(colParent) = ? AND \(colName) = ? AND \(colId) != ? LIMIT 1"
                     if let conflictId = try db.fetch(query: conflictSql, parameters: [newParentId, orphan.name, orphan.id], mapping: { $0.int64(at: 0) }).first {
                         try exec("UPDATE \(resultsTable) SET \(colFolderId) = ? WHERE \(colFolderId) = ?;", parameters: [conflictId, orphan.id])
                         try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colParent) = ?;", parameters: [conflictId, orphan.id])
                         try exec("DELETE FROM \(foldersTable) WHERE \(colId) = ?;", parameters: [orphan.id])
+                        hasChanges = true
                     } else {
                         try exec("UPDATE \(foldersTable) SET \(colParent) = ? WHERE \(colId) = ?;", parameters: [newParentId, orphan.id])
+                        hasChanges = true
                     }
                 }
             }
         } catch {
             Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan folders: \(error.localizedDescription, privacy: .public)")
         }
+        return hasChanges
     }
 
-    func resolveOrphanResults() {
+    @discardableResult
+    func resolveOrphanResults() -> Bool {
+        guard let db else { return false }
+        var hasChanges = false
         do {
             try transaction {
                 let whereClause = """
@@ -64,6 +74,10 @@ extension ResultsHandler {
                       AND COALESCE(\(resultsTable).\(colFolderId), -1) != COALESCE(f.\(colId), -1)
                   )
                 """
+
+                let countSql = "SELECT COUNT(*) FROM \(resultsTable) \(whereClause)"
+                let orphanCount = try db.fetch(query: countSql, mapping: { $0.int(at: 0) }).first ?? 0
+                guard orphanCount > 0 else { return }
 
                 let updateSql = """
                 UPDATE OR IGNORE \(resultsTable)
@@ -77,9 +91,11 @@ extension ResultsHandler {
                 \(whereClause);
                 """
                 try exec(deleteSql)
+                hasChanges = true
             }
         } catch {
             Logger.bookmarks.error("ResultsHandler: Failed to resolve orphan results: \(error.localizedDescription, privacy: .public)")
         }
+        return hasChanges
     }
 }

@@ -77,15 +77,12 @@ mindmap
       CoreDatabaseDownloader["Sinkronisasi state respons versi unduhan"]
     NSRecursiveLock
       SQLiteDatabase["Dukungan transaksi bersarang (nested transactions)"]
-    NSLock
-      ZSTDContextPool["Isolasi inisialisasi context dekompresi"]
     Actor
       SingleFlight["Isolasi otomatis kumpulan task konkurensi"]
 ```
 
 - `Mutex<T>` (dari *Synchronization framework* macOS 15+ / iOS 18+): Menjadi mekanisme penguncian standar modern di lapisan persistensi Maktabah. Digunakan pada `DatabaseManager` (mengenkapsulasi *state* koneksi `db`, `dbSpecial`, `shortsCache`, dan `archiveAvailabilityCache` ke dalam struktur `Sendable`), `BookConnection`, serta repositori fitur (`AnnotationRepository`, `ResultsHandler`, `HistoryDatabaseManager`). Hal ini memungkinkan seluruh *manager* dan *repository* mengadopsi protokol `Sendable` secara langsung dan aman tanpa anotasi `@unchecked` atau `nonisolated(unsafe)`.
 - `NSRecursiveLock`: Digunakan pada `class` `SQLiteDatabase`. `NSRecursiveLock` memungkinkan satu *thread* untuk mengunci (*lock*) *resource* secara berulang tanpa menyebabkan *deadlock* pada *thread* yang sama. Hal ini sangat penting untuk *nested transactions* SQLite ketika metode pembungkus (*wrapper*) memanggil metode lain yang juga meminta kunci *lock*.
-- `NSLock`: Digunakan pada utilitas tingkat rendah seperti `ZSTDContextPool` untuk mengamankan inisialisasi *context* dekompresi.
 - `actor`: Digunakan pada `SingleFlight` untuk secara otomatis mengisolasi *state* (kumpulan *running tasks*), menghindari *data race* pada level konkurensi tugas (*task concurrency*).
 
 ### Prinsip Pemisahan Tanggung Jawab (*Separation of Concerns*)
@@ -199,7 +196,7 @@ enum ZstdDecompressor {
 }
 ```
 
-- **ZSTDContextPool**: *Singleton pool* yang menjaga ketersediaan pembungkus konteks (`ZSTDContextWrapper`) melalui *lock pool array*. Pendekatan ini menghemat *overhead* pembuatan *decompressor context* pada setiap perulangan baris basis data.
+- **ZSTDContextWrapper**: Pembungkus konteks dekompresi C-API (`ZSTD_DCtx`) yang disimpan per-*thread* (`Thread.current.threadDictionary`) untuk menghindari *overhead* alokasi ulang *context* pada pembacaan baris teks basis data.
 - **Decompressor**:
     - Jika memori berupa *blob* Zstd dikenali (melalui parameter *frame* pada `ZSTD_getFrameContentSize`), data dialokasikan langsung dari pembungkus ke `String` Swift menggunakan `String(unsafeUninitializedCapacity:...)`. Ini merupakan optimasi performa tinggi tanpa penyalinan memori perantara (*zero-copy intermediate*).
 

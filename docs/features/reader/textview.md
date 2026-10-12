@@ -312,6 +312,18 @@ class ReaderViewModel: ViewModelBase {
         // - Merekam riwayat baru (HistoryViewModel)
         // - Memuat Anotasi ke memori (AnnotationStore)
         // - Mengirimkan notifikasi perubahan antar UI Platform (macOS / iOS)
+        // - Mereset searchEvent & annotationEvent jika berpindah ke halaman lain
     }
 }
 ```
+
+---
+
+## 7. Siklus Hidup Sorotan & Animasi Pencarian (iOS)
+
+Pada `iOSIbarotTextView`:
+1. **Pencocokan Halaman Ketat (*Strict Content ID*)**: Sorotan teks pencarian (`highlightSearchText`) hanya diterapkan jika `searchEvent.contentId == viewModel.currentContentId`. Ini mencegah kebocoran atribut warna kuning ke halaman lain saat berpindah halaman.
+2. **Penghindaran Animasi Berulang (*De-duplication*) & Isolasi Tab**: Animasi `popupText` dan *auto-scroll* divalidasi menggunakan `coordinator.lastHandledSearchEventId` dan `coordinator.lastHandledAnnotationEventId`. Pelacakan event dibatasi pada *instance* `Coordinator` aktif dengan verifikasi jendela aktif (`textView.window != nil`), sehingga *background tab* di iPhone tidak menelan event sebelum *view* aktif sempat menampilkannya.
+3. **Resolusi Tata Letak TextKit 2**: Sebelum menghitung jalur animasi loncat (*bounce animation*), batas geometri dipastikan telah terhitung secara penuh melalui `NSTextLayoutManager.ensureLayout(for:)` dan enumerasi segmen teks. Hal ini mengeliminasi masalah *lazy layout* TextKit 2 yang mengembalikan batas kosong (`.zero`) pada halaman yang baru dimuat.
+4. **Pembersihan Otomatis (*Auto-Purge*)**: Saat pembaca berpindah ke halaman berikutnya (*next page*, *slider*, *jump*), `searchEvent` dan `annotationEvent` otomatis dibersihkan oleh `updateContentState(with:)`.
+

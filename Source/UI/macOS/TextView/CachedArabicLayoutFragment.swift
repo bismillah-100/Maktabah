@@ -38,7 +38,6 @@ class CachedArabicLayoutFragment: NSTextLayoutFragment {
         }
 
         if hasActiveSelection {
-            cachedLayer = nil
             if TextViewState.shared.enhancedUnderline, TextViewState.shared.isThinUnderlineFont,
                let element = textElement
             {

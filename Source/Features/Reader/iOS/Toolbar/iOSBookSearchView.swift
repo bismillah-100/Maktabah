@@ -22,7 +22,10 @@ struct iOSBookSearchView: View {
                 // Results List
                 SearchResultsListView(
                     results: viewModel.results,
-                    showsBookTitle: false
+                    showsBookTitle: false,
+                    query: viewModel.query,
+                    mode: viewModel.searchMode,
+                    nearDistance: viewModel.nearDistance
                 ) { item in
                     onSelect(item.bookId, viewModel.query)
                 }
@@ -32,9 +35,7 @@ struct iOSBookSearchView: View {
             .toolbar {
                 SearchToolbar(
                     viewModel: viewModel,
-                    onLeadingAction: {
-                        dismiss()
-                    },
+                    onLeadingAction: { dismiss() },
                     conditionalLeadingButton: false
                 )
             }
@@ -63,9 +64,9 @@ struct iOSBookSearchView: View {
             placement: .toolbar,
             prompt: .searchInThisBook
         )
-        .onSubmit(of: .search, {
+        .onSubmit(of: .search) {
             Task { await viewModel.startSearch() }
-        })
+        }
         .overlay {
             if showFtsMigrationOverlay {
                 Color.black.opacity(0.4)
@@ -94,7 +95,7 @@ struct iOSBookSearchView: View {
                 HStack {
                     Image(systemName: "sparkles")
                         .foregroundColor(.yellow)
-                    Text(.ftsMigrationAvailableBook)
+                    Text(ftsManager.isOptimizationOnly ? .ftsOptimizationAvailableBook : .ftsMigrationAvailableBook)
                         .font(.subheadline)
                         .foregroundColor(.primary)
                     Spacer()
@@ -114,7 +115,7 @@ struct iOSBookSearchView: View {
                     Button {
                         showFtsMigrationOverlay = true
                     } label: {
-                        Text(.ftsMigrationUpdateBtn)
+                        Text(ftsManager.isOptimizationOnly ? .ftsOptimizationBtn : .ftsMigrationUpdateBtn)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.blue)

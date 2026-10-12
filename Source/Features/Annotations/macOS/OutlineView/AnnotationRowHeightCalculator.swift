@@ -31,7 +31,7 @@ enum AnnotationRowHeightCalculator {
             measuredHeight(
                 for: note,
                 width: contentWidth,
-                font: NSFont.systemFont(ofSize: 15),
+                font: ReusableFunc.bundledArabicFont(ofSize: 15),
                 lineLimit: UserDefaults.standard.annMaxNumberOfLines
             )
         } else {
@@ -41,8 +41,8 @@ enum AnnotationRowHeightCalculator {
         let pagePartText = pageAndTagsText(for: annotation, groupingMode: groupingMode)
         let pagePartHeight = measuredHeight(
             for: pagePartText,
-            width: contentWidth * 0.72,
-            font: NSFont.systemFont(ofSize: 15),
+            width: contentWidth,
+            font: ReusableFunc.bundledArabicFont(ofSize: 15),
             lineLimit: AnnotationCellView.pagePartLineLimit
         )
 

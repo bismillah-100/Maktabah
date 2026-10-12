@@ -160,7 +160,12 @@ struct SearchModeView: View {
             }
         }
 
-        return SearchResultsListView(results: items) { item in
+        return SearchResultsListView(
+            results: items,
+            query: viewModel.query,
+            mode: viewModel.searchMode,
+            nearDistance: viewModel.nearDistance
+        ) { item in
             handleSelection(item)
         }
         .searchable(
@@ -171,21 +176,23 @@ struct SearchModeView: View {
     }
 
     private func handleSelection(_ item: SearchResultItem) {
-        Task {
-            let table = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
-            if let tableInt = Int(table), let bookData = LibraryDataManager.shared.getBook([tableInt]).first {
-                let shouldRecord = UserDefaults.standard.recordSearchHistory
-                await MainActor.run {
-                    navigationManager.openBook(
-                        bookData,
-                        initialContentId: item.bookId,
-                        searchText: navigationManager.searchViewModel.query,
-                        searchMode: navigationManager.searchViewModel.searchMode,
-                        nearDistance: navigationManager.searchViewModel.nearDistance,
-                        recordHistory: shouldRecord
-                    )
-                }
-            }
+        let table = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
+        if let tableInt = Int(table), let bookData = LibraryDataManager.shared.getBook([tableInt]).first {
+            let shouldRecord = UserDefaults.standard.recordSearchHistory
+            let searchEvent = ReaderHighlightEvent(
+                query: navigationManager.searchViewModel.query,
+                contentId: item.bookId,
+                mode: navigationManager.searchViewModel.searchMode,
+                nearDistance: navigationManager.searchViewModel.nearDistance
+            )
+            navigationManager.openBook(
+                bookData,
+                options: OpenBookOptions(
+                    contentId: item.bookId,
+                    searchEvent: searchEvent,
+                    recordHistory: shouldRecord
+                )
+            )
         }
     }
 
@@ -196,7 +203,7 @@ struct SearchModeView: View {
                 HStack {
                     Image(systemName: "sparkles")
                         .foregroundColor(.yellow)
-                    Text(.ftsMigrationAvailable)
+                    Text(ftsManager.isOptimizationOnly ? .ftsOptimizationAvailable : .ftsMigrationAvailable)
                         .font(.subheadline)
                         .foregroundColor(.primary)
                     Spacer()
@@ -206,10 +213,10 @@ struct SearchModeView: View {
                     Button {
                         showFtsMigrationOverlay = true
                     } label: {
-                        Text(.ftsMigrationUpdateNowCountBtn(
-                            ftsManager.totalArchivesToMigrate
-                        ))
-                        .frame(maxWidth: .infinity)
+                        Text(ftsManager.isOptimizationOnly
+                            ? .ftsOptimizationNowCountBtn(ftsManager.totalArchivesToMigrate)
+                            : .ftsMigrationUpdateNowCountBtn(ftsManager.totalArchivesToMigrate))
+                            .frame(maxWidth: .infinity)
                     }
                     .tint(.green)
                     .prominentButtonStyleIfAvailable()

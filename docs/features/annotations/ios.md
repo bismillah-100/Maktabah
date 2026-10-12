@@ -82,7 +82,7 @@ flowchart TD
     *   Menangkap notifikasi `.annotationMissingBook` untuk memunculkan modal peringatan jika buku belum terunduh di perangkat.
 2.  **`AnnotationViewControllerWrapper` (Bridge Layer)**:
     *   Menghubungkan *state* dan *callback* `AnnotationViewModel` (`onIncrementalUpdate`, `onTreeUpdate`, `onTagsChanged`) ke metode di `iOSAnnotationViewController`.
-    *   Memiliki `Coordinator` yang menangani delegasi seleksi anotasi dan memicu `iOSNavigationManager.openBook(..., targetAnnotation:)`.
+    *   Memiliki `Coordinator` yang menangani delegasi seleksi anotasi dan memicu `iOSNavigationManager.openBook(..., options:)`.
     *   Mengatur integrasi *pull-to-refresh* menuju `CloudKitSyncManager.shared.fetchChanges()`.
 3.  **`iOSAnnotationViewController` (UIKit Presentation Layer)**:
     *   Mengelola tampilan koleksi hierarki, *expandable snapshot* per grup, *header tag chips*, dan pembaruan visual inkremental.
@@ -151,7 +151,7 @@ Ketika pengguna mengetuk item di `UICollectionView`:
 2.  **Navigasi Reader via Coordinator**:
     `AnnotationViewControllerWrapper.Coordinator` menerima anotasi terpilih:
     *   Memeriksa apakah data kitab telah terpasang melalui `LibraryDataManager.shared.getBook([ann.bkId])`.
-    *   Jika kitab ditemukan, memanggil `navigationManager.openBook(book, initialContentId: Int(ann.contentId), targetAnnotation: ann)` untuk membuka halaman dan menyorot teks pada `iOSReaderView`.
+    *   Jika kitab ditemukan, memanggil `navigationManager.openBook(book, options: OpenBookOptions(contentId: Int(ann.contentId), annotationEvent: ReaderAnnotationEvent(annotation: ann)))` untuk membuka halaman dan menyorot teks pada `iOSReaderView`.
     *   Jika kitab belum diunduh, memancarkan notifikasi `Notification.Name.annotationMissingBook`.
 3.  **Peringatan Kitab Belum Terunduh (*Missing Book Alert*)**:
     `AnnotationListView` di lapisan SwiftUI mengamati notifikasi tersebut melalui `.onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook))` dan memunculkan dialog peringatan bahwa kitab terkait perlu diunduh terlebih dahulu.

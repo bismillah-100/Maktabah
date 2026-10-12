@@ -26,13 +26,13 @@ struct SettingsView: View {
             ftsManager.checkNeedsMigration()
         }
     }
-    
+
     @ViewBuilder
     private var searchIndexSection: some View {
         if ftsManager.needsMigration {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(.ftsMigrationAvailable)
+                    Text(ftsManager.isOptimizationOnly ? .ftsOptimizationAvailable : .ftsMigrationAvailable)
                         .font(.caption)
                         .foregroundColor(.primary)
 
@@ -44,7 +44,9 @@ struct SettingsView: View {
                             showFtsMigrationOverlay = true
                             #endif
                         } label: {
-                            Text(.ftsMigrationUpdateIndexBtn(ftsManager.totalArchivesToMigrate))
+                            Text(ftsManager.isOptimizationOnly
+                                ? .ftsOptimizationNowCountBtn(ftsManager.totalArchivesToMigrate)
+                                : .ftsMigrationUpdateIndexBtn(ftsManager.totalArchivesToMigrate))
                         }
                     }
                 }
@@ -57,6 +59,7 @@ struct SettingsView: View {
 }
 
 // MARK: - macOS Form
+
 #if os(macOS)
 extension SettingsView {
     private var macOSForm: some View {
@@ -77,12 +80,12 @@ extension SettingsView {
         } message: {
             Text(.Setting.annotationsMoveFolderFileExistsDesc)
         }
-
     }
 }
 #endif
 
 // MARK: - iOS Form
+
 #if os(iOS)
 extension SettingsView {
     private var iOSForm: some View {
@@ -101,7 +104,8 @@ extension SettingsView {
                 .listRowBackground(Color.appCellBackground)
 
             if AppConfig.isUsingBundleMode,
-               viewModel.hasPendingVacuum || viewModel.isVacuuming {
+               viewModel.hasPendingVacuum || viewModel.isVacuuming
+            {
                 optimizationSection
                     .listRowBackground(Color.appCellBackground)
             }
@@ -188,6 +192,7 @@ extension SettingsView {
 #endif
 
 // MARK: - Shared Sections
+
 extension SettingsView {
     private var databaseModeSection: some View {
         Section {
@@ -236,7 +241,7 @@ extension SettingsView {
             libraryButtons
             #endif
 
-            if !viewModel.isBundleMode && viewModel.hasBundledData {
+            if !viewModel.isBundleMode, viewModel.hasBundledData {
                 VStack(alignment: .leading, spacing: 8) {
                     Button {
                         viewModel.cleanupBundledData()
