@@ -529,6 +529,7 @@ final class CloudKitSyncManager: Sendable {
                 error,
                 pendingRecordIds: pendingIds,
                 target: target,
+                uploadStartTime: uploadStartTime,
                 retryCount: retryCount,
                 completion: completion
             )
@@ -816,6 +817,7 @@ final class CloudKitSyncManager: Sendable {
         ckError: CKError,
         target: SyncTarget,
         pendingRecordIds: [String] = [],
+        conflictStartTime: Int64? = nil,
         completion: SyncProgress = nil
     ) {
         guard let serverRecord = ckError.userInfo[CKRecordChangedErrorServerRecordKey] as? CKRecord,
@@ -828,6 +830,7 @@ final class CloudKitSyncManager: Sendable {
         let recordId = localRecord.recordID.recordName
         let serverLastModified = serverRecord["lastModified"] as? Int64 ?? 0
         let localLastModified = localRecord["lastModified"] as? Int64 ?? 0
+        let resolutionStartTime = conflictStartTime ?? Int64(Date().timeIntervalSince1970)
 
         if localLastModified >= serverLastModified || abs(localLastModified - serverLastModified) < 5 {
             for key in localRecord.allKeys() {
@@ -840,7 +843,8 @@ final class CloudKitSyncManager: Sendable {
                         await self?.pendingCoordinator.removePendingSync(
                             [recordId],
                             target: target,
-                            operation: "upload"
+                            operation: "upload",
+                            maxQueuedAt: resolutionStartTime
                         )
                     }
                 }
@@ -853,7 +857,8 @@ final class CloudKitSyncManager: Sendable {
                     await self?.pendingCoordinator.removePendingSync(
                         [recordId],
                         target: target,
-                        operation: "upload"
+                        operation: "upload",
+                        maxQueuedAt: resolutionStartTime
                     )
                 }
             }
@@ -864,6 +869,7 @@ final class CloudKitSyncManager: Sendable {
         _ error: any Error,
         pendingRecordIds: [String],
         target: SyncTarget,
+        uploadStartTime: Int64? = nil,
         retryCount: Int = 0,
         completion: SyncProgress = nil
     ) {
@@ -874,7 +880,13 @@ final class CloudKitSyncManager: Sendable {
 
         switch ckError.code {
         case .serverRecordChanged:
-            resolveServerRecordConflict(ckError: ckError, target: target, pendingRecordIds: pendingRecordIds, completion: completion)
+            resolveServerRecordConflict(
+                ckError: ckError,
+                target: target,
+                pendingRecordIds: pendingRecordIds,
+                conflictStartTime: uploadStartTime,
+                completion: completion
+            )
         case .partialFailure:
             if let partialErrors = ckError.userInfo[CKPartialErrorsByItemIDKey] as? [CKRecord.ID: any Error] {
                 let context = PartialUploadContext(
@@ -882,7 +894,8 @@ final class CloudKitSyncManager: Sendable {
                     pendingRecordIds: pendingRecordIds,
                     target: target,
                     originalError: error,
-                    retryCount: retryCount
+                    retryCount: retryCount,
+                    uploadStartTime: uploadStartTime
                 )
                 handlePartialUploadErrors(context: context, completion: completion)
             } else {
@@ -903,6 +916,7 @@ final class CloudKitSyncManager: Sendable {
         let target: SyncTarget
         let originalError: any Error
         let retryCount: Int
+        let uploadStartTime: Int64?
     }
 
     private func handlePartialUploadErrors(
@@ -916,7 +930,8 @@ final class CloudKitSyncManager: Sendable {
                 await self?.pendingCoordinator.removePendingSync(
                     successfulIds,
                     target: context.target,
-                    operation: "upload"
+                    operation: "upload",
+                    maxQueuedAt: context.uploadStartTime
                 )
             }
         }
@@ -926,7 +941,12 @@ final class CloudKitSyncManager: Sendable {
         let rateLimitErrors = innerErrors.filter { $0.code == .requestRateLimited || $0.code == .serviceUnavailable || $0.code == .zoneBusy }
 
         if !conflicts.isEmpty {
-            resolveMultipleServerRecordConflicts(conflicts: conflicts, target: context.target, completion: completion)
+            resolveMultipleServerRecordConflicts(
+                conflicts: conflicts,
+                target: context.target,
+                conflictStartTime: context.uploadStartTime,
+                completion: completion
+            )
         } else {
             if let firstRateLimit = rateLimitErrors.first {
                 handleCloudKitError(firstRateLimit, operationType: .upload, retryCount: context.retryCount)
@@ -940,6 +960,7 @@ final class CloudKitSyncManager: Sendable {
     private func resolveMultipleServerRecordConflicts(
         conflicts: [CKError],
         target: SyncTarget,
+        conflictStartTime: Int64? = nil,
         completion: SyncProgress
     ) {
         Task.detached { [weak self] in
@@ -954,7 +975,11 @@ final class CloudKitSyncManager: Sendable {
                     group.addTask { [weak self] in
                         guard let self else { return .success(()) }
                         return await withCheckedContinuation { continuation in
-                            self.resolveServerRecordConflict(ckError: conflict, target: target) { result in
+                            self.resolveServerRecordConflict(
+                                ckError: conflict,
+                                target: target,
+                                conflictStartTime: conflictStartTime
+                            ) { result in
                                 continuation.resume(returning: result)
                             }
                         }
