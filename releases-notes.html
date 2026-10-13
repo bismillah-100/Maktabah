@@ -36,6 +36,46 @@
 </head>
 <body>
 
+<h2>Version 4.1</h2>
+<p class="version">October 13, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Added field-level merging for CloudKit to enhance synchronization accuracy.</li>
+  <li>Supported automatic cleanup of legacy database tables and optimized search indexing.</li>
+  <li>Implemented event-based triggers for book highlights (iOS).</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Consolidated and streamlined book navigation and opening mechanisms (iOS).</li>
+  <li>Improved the internal architecture and data handling for Bookmarks and Annotations.</li>
+  <li>Enhanced database transaction safety during search index cleanups.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Restored row-level progress streaming during searches in unified mode.</li>
+  <li>Resolved race conditions that caused duplicate sync queues and stale UI updates.</li>
+  <li>Stabilized Widget snapshot timeline refresh to prevent display issues.</li>
+  <li>Fixed CloudKit synchronization loops and prevented redundant database writes.</li>
+  <li>Enhanced History syncing to preserve correct physical reading progress during UI capping.</li>
+  <li>Resolved out-of-bounds runtime crashes and integer overflow issues in the Reader.</li>
+  <li>Fixed single-character selection issues when copying text with references.</li>
+  <li>Ensured downloaded books integrate seamlessly without leaving orphaned staging files on cancellation.</li>
+  <li>Improved search engine reliability by enforcing boundaries, supporting Arabic digits, and decomposing ligatures.</li>
+  <li>Enforced strict foreign keys and protected database integrity during operations.</li>
+  <li>Resolved duplicate content updates and redundant pending sync calls in History (iOS).</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Added a brief completion delay before dismissing the search progress bar for smoother visual feedback.</li>
+  <li>Significantly optimized search performance by moving heavy processing to background tasks and throttling data emissions.</li>
+  <li>Improved the Reader's view diffing and text selection rendering performance (iOS).</li>
+  <li>Avoided redundant database writes and reduced N+1 query overhead in Bookmarks and Annotations.</li>
+  <li>Offloaded heavy database insert operations to detached background tasks to prevent UI freezes.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 4.0.1</h2>
 <p class="version">October 08, 2026</p>
 <h3>Changes</h3>

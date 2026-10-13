@@ -3,6 +3,15 @@
     <channel>
         <title>Maktabah</title>
         <item>
+            <title>4.1</title>
+            <pubDate>Tue, 13 Oct 2026 00:11:39 +0000</pubDate>
+            <sparkle:version>194</sparkle:version>
+            <sparkle:shortVersionString>4.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v4.1/Maktabah-v4.1.zip" length="8222119" type="application/octet-stream" sparkle:edSignature="UHzo3KYvdIYapTrcb/uCyY+0FQLfzJOwQuU0wpQvKtWDFnsYY+sh7B+oN5oCKzCSm9ZMOwDlcTLc0BjeaWQMDQ=="/>
+            <sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>
+        </item>
+        <item>
             <title>4.0.1</title>
             <pubDate>Thu, 08 Oct 2026 03:34:14 +0000</pubDate>
             <sparkle:version>193</sparkle:version>
