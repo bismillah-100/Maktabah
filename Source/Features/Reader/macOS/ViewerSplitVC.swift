@@ -280,6 +280,8 @@ class ViewerSplitVC: ReaderSplitVC {
     }
 
     deinit {
+        workItemAppereance?.cancel()
+        workItemAppereance = nil
         if let bgObserver {
             NotificationCenter.default.removeObserver(bgObserver)
         }

@@ -808,10 +808,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationDidResignActive(_ notification: Notification) {
-        flushPendingWidgetUpdates(cloudKit: true)
-    }
-
     private func flushPendingWidgetUpdates(cloudKit: Bool = false) {
         WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(
             forceCloudKit: cloudKit
