@@ -1,5 +1,5 @@
 //
-//  RowiResultsSplitVC.swift
+//  RowiResultsVC.swift
 //  maktab
 //
 //  Created by MacBook on 10/12/25.
@@ -131,7 +131,7 @@ class RowiResultsVC: NSViewController {
         }
 
         viewModel?.onSearchBatchAppended = { [weak self] startIndex, count in
-            let indices = IndexSet(integersIn: startIndex..<(startIndex + count))
+            let indices = IndexSet(integersIn: startIndex ..< (startIndex + count))
             self?.tableView.insertRows(at: indices, withAnimation: .effectFade)
         }
 
@@ -195,7 +195,7 @@ class RowiResultsVC: NSViewController {
     @IBAction func switchRowiMode(_ sender: NSSegmentedControl) {
         switch sender.selectedSegment {
         case 0: hideStackUtils()
-        case 1: 
+        case 1:
             hideRowiUtils()
             if rebuildTask != nil { return }
             ReusableFunc.showProgressWindow(view)
@@ -230,7 +230,7 @@ class RowiResultsVC: NSViewController {
 
     @IBAction func buttonDidClick(_ sender: NSButton) {
         selectedButtons = sender
-        hStackButtons.forEach { btn in
+        for btn in hStackButtons {
             btn.state = (sender == btn) ? .on : .off
         }
 
@@ -271,7 +271,7 @@ class RowiResultsVC: NSViewController {
     }
 
     func turnOffStateButtons() {
-        hStackButtons.forEach({ $0.state = .off })
+        hStackButtons.forEach { $0.state = .off }
     }
 }
 
@@ -297,11 +297,12 @@ extension RowiResultsVC: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard row < tarjamahList.count,
               let cell = tableView.makeView(
-                withIdentifier: NSUserInterfaceItemIdentifier(
-                    CellIViewIdentifier
-                        .resultAndOutlineChild
-                        .rawValue
-                ), owner: self) as? NSTableCellView
+                  withIdentifier: NSUserInterfaceItemIdentifier(
+                      CellIViewIdentifier
+                          .resultAndOutlineChild
+                          .rawValue
+                  ), owner: self
+              ) as? NSTableCellView
         else { return nil }
 
         let data = tarjamahList[row]
@@ -358,16 +359,16 @@ extension RowiResultsVC: NSTableViewDelegate {
 extension RowiResultsVC: ReaderStateComponent {
     func updateState(_ state: inout ReaderState) {
         viewModel?.updateState(&state)
-        
+
         state.authorTarjamahResults = tarjamahList
         state.authorRowiMode = (rowiMode == .sidebar) ? "sidebar" : "fullSearch"
-        
+
         let sidebarSelection: Bool = hStackButtons.contains { $0.state == .on }
         state.authorDisplayMode = sidebarSelection ? .rowiInfo : .bookContent
     }
 
     func restore(from state: ReaderState) {
-        guard let rowi = state.currentRowi else { return }
+        guard state.currentRowi != nil || state.authorTarjamahResults?.isEmpty == false else { return }
 
         shouldClickButton = false
         viewModel?.restore(from: state)
@@ -391,7 +392,9 @@ extension RowiResultsVC: ReaderStateComponent {
         }
 
         // Restore tampilan konten atau info bio
-        rowiTextField.stringValue = rowi.isoName
+        if rowiMode == .sidebar, let rowi = state.currentRowi {
+            rowiTextField.stringValue = rowi.isoName
+        }
 
         if let displayMode = state.authorDisplayMode {
             if displayMode == .rowiInfo, let btn = selectedButtons {
@@ -422,14 +425,14 @@ extension RowiResultsVC: ReaderStateComponent {
             hStack.isHidden = false
             optionSegment.setSelected(true, forSegment: 0)
         case .fullSearch:
+            rowiTextField.stringValue = "إسم الراوي من الشريط الجانبي"
             hStack.isHidden = true
             hStackSearch.isHidden = false
             optionSegment.setSelected(true, forSegment: 1)
         }
 
-        rowiTextField.stringValue = "إسم الراوي من الشريط الجانبي"
-
-        Logger.narrator.debug("🔄 Updated UI for restored mode: \(String(describing: self.rowiMode), privacy: .public)")
+        let modeDescription = String(describing: rowiMode)
+        Logger.narrator.debug("🔄 Updated UI for restored mode: \(modeDescription, privacy: .public)")
     }
 }
 
