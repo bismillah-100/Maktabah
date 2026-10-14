@@ -116,6 +116,10 @@ final class SQLiteConnection: DBConnectionType, @unchecked Sendable {
 
         let stmt = try getOrPrepareStatement(sql: sql, db: db)
         bindParams(params, to: stmt)
+        defer {
+            sqlite3_reset(stmt)
+            sqlite3_clear_bindings(stmt)
+        }
         return try body(stmt)
     }
 
