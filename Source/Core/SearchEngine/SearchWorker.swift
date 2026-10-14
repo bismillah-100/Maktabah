@@ -7,6 +7,7 @@
 
 import Foundation
 import SQLite3
+import Synchronization
 
 struct SearchControl: Sendable {
     let pauseController: PauseController
@@ -40,14 +41,13 @@ private struct ChunkResultContext {
     let totalCount: Int
 }
 
-final class SearchWorker: @unchecked Sendable {
+final class SearchWorker: Sendable {
     let archiveId: String
     let tables: [String]
     let pool: SQLiteConnectionPool
     let batchSize: Int
     let queryLimit: String = "\nLIMIT 10000;"
-    private var detectedSchemaCache: String?? = nil
-    private let schemaLock = NSLock()
+    private let schemaTask = Mutex<Task<String?, Never>?>(nil)
 
     init(archiveId: String, tables: [String], pool: SQLiteConnectionPool, batchSize: Int = 200) {
         self.archiveId = archiveId
@@ -120,28 +120,39 @@ final class SearchWorker: @unchecked Sendable {
     }
 
     private func checkUnifiedFtsSchema() async -> String? {
-        do {
-            return try await pool.read(at: 0) { conn in
-                let checkCountSql = { (schemaName: String) in
-                    """
-                    SELECT count(*) FROM \(schemaName).sqlite_master 
-                    WHERE type='table' AND name IN ('archive_fts', 'archive_index');
-                    """
-                }
-
-                let checkFtsDb = checkCountSql("fts_db")
-                if let rows = try? conn.queryInts(sql: checkFtsDb, params: []), rows.first == 2 {
-                    return "fts_db"
-                }
-                let checkMain = checkCountSql("main")
-                if let rows = try? conn.queryInts(sql: checkMain, params: []), rows.first == 2 {
-                    return "main"
-                }
-                return nil
+        let task = schemaTask.withLock { existingTask -> Task<String?, Never> in
+            if let existingTask {
+                return existingTask
             }
-        } catch {
-            return nil
+            let newTask = Task { [pool] in
+                do {
+                    return try await pool.read(at: 0) { conn -> String? in
+                        let checkCountSql = { (schemaName: String) in
+                            """
+                            SELECT count(*) FROM \(schemaName).sqlite_master 
+                            WHERE type='table' AND name IN ('archive_fts', 'archive_index');
+                            """
+                        }
+
+                        let checkFtsDb = checkCountSql("fts_db")
+                        if let rows = try? conn.queryInts(sql: checkFtsDb, params: []), rows.first == 2 {
+                            return "fts_db"
+                        }
+                        let checkMain = checkCountSql("main")
+                        if let rows = try? conn.queryInts(sql: checkMain, params: []), rows.first == 2 {
+                            return "main"
+                        }
+                        return nil
+                    }
+                } catch {
+                    return nil
+                }
+            }
+            existingTask = newTask
+            return newTask
         }
+
+        return await task.value
     }
 
     private func searchUnifiedArchive(
