@@ -16,10 +16,20 @@ import SQLite3
 import Synchronization
 
 final class BookConnection: Sendable {
-    private let _db = Mutex<SQLiteDatabase?>(nil)
+    private struct ConnectionState {
+        var archiveId: Int?
+        var db: SQLiteDatabase?
+    }
+
+    private let _state = Mutex<ConnectionState>(ConnectionState())
+    private let _connectLock = Mutex<Void>(())
 
     var db: SQLiteDatabase? {
-        _db.withLock { $0 }
+        _state.withLock { $0.db }
+    }
+
+    var currentArchiveId: Int? {
+        _state.withLock { $0.archiveId }
     }
 
     nonisolated(unsafe) static let tocTreeCache: NSCache<NSNumber, NSArray> = {
@@ -42,34 +52,49 @@ final class BookConnection: Sendable {
         setDatabase(nil)
     }
 
-    func setDatabase(_ newDB: SQLiteDatabase?) {
-        _db.withLock { $0 = newDB }
+    func setDatabase(_ newDB: SQLiteDatabase?, archiveId: Int? = nil) {
+        _state.withLock {
+            $0.db = newDB
+            $0.archiveId = newDB != nil ? archiveId : nil
+        }
     }
 
     /// Connect ke archive database dengan availability check
-    /// - Parameter archive: Archive ID (1-20, sesuai kolom Archive di tabel 0bok)
+    /// - Parameters:
+    ///   - archive: Archive ID (1-20, sesuai kolom Archive di tabel 0bok)
+    ///   - force: Jika false dan archive sudah terhubung, langsung keluar tanpa membuka ulang koneksi
     /// - Throws: ArchiveError jika archive tidak tersedia
-    func connect(archive: Int) throws {
-        guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archive) else {
-            throw ArchiveError.databasePathNotAvailable
-        }
+    func connect(archive: Int, force: Bool = false) throws {
+        try _connectLock.withLock { _ in
+            if !force {
+                let isConnected = _state.withLock { state in
+                    state.archiveId == archive && state.db != nil
+                }
+                if isConnected { return }
+            }
 
-        // Check apakah archive tersedia
-        guard DatabaseManager.shared.checkArchiveAvailability(archiveId: archive) else {
-            throw ArchiveError.archiveNotAvailable(archiveId: archive)
-        }
+            guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archive) else {
+                throw ArchiveError.databasePathNotAvailable
+            }
 
-        // Tutup koneksi lama jika ada
-        setDatabase(nil)
+            // Check apakah archive tersedia
+            guard DatabaseManager.shared.checkArchiveAvailability(archiveId: archive) else {
+                throw ArchiveError.archiveNotAvailable(archiveId: archive)
+            }
 
-        let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
+            // Tutup koneksi lama jika ada
+            setDatabase(nil)
 
-        do {
-            setDatabase(try SQLiteDatabase(path: archivePath, flags: flags))
-        } catch let SQLiteError.connectionFailed(msg) {
-            throw NSError(domain: "BookConnection", code: 1, userInfo: [NSLocalizedDescriptionKey: msg])
-        } catch {
-            throw NSError(domain: "BookConnection", code: 1, userInfo: [NSLocalizedDescriptionKey: error.localizedDescription])
+            let flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX
+
+            do {
+                let newDb = try SQLiteDatabase(path: archivePath, flags: flags)
+                setDatabase(newDb, archiveId: archive)
+            } catch let SQLiteError.connectionFailed(msg) {
+                throw NSError(domain: "BookConnection", code: 1, userInfo: [NSLocalizedDescriptionKey: msg])
+            } catch {
+                throw NSError(domain: "BookConnection", code: 1, userInfo: [NSLocalizedDescriptionKey: error.localizedDescription])
+            }
         }
     }
 
@@ -112,7 +137,7 @@ final class BookConnection: Sendable {
                     )
                 }
                 return nil
-            }.compactMap { $0 }.first
+            }.compactMap(\.self).first
         } catch {
             Logger.db.error("fetchTafseer error: \(error.localizedDescription, privacy: .public)")
             return nil
@@ -214,7 +239,7 @@ extension BookConnection {
         do {
             let contents = try db.fetch(query: query, parameters: parameters) { [weak self] row -> BookContent? in
                 self?.parseBookContent(row: row, bkid: bkid, quran: quran)
-            }.compactMap { $0 }
+            }.compactMap(\.self)
 
             if let content = contents.first {
                 setCache(bkId: bkid, content: content)
@@ -426,7 +451,7 @@ extension BookConnection {
                     sub: Int(sub),
                     id: Int(id)
                 )
-            }.compactMap { $0 }
+            }.compactMap(\.self)
         } catch {
             Logger.db.error("getTOCEntries error: \(error.localizedDescription, privacy: .public)")
             return []
