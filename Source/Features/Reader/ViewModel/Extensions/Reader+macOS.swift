@@ -6,18 +6,23 @@
 import Foundation
 
 struct ContentRenderPayload: Equatable, Sendable {
+    let bookId: Int?
     let text: String
     let content: BookContent?
     let keepScrollPosition: Bool
 
-    init(text: String, content: BookContent? = nil, keepScrollPosition: Bool = false) {
+    init(bookId: Int? = nil, text: String, content: BookContent? = nil, keepScrollPosition: Bool = false) {
+        self.bookId = bookId
         self.text = text
         self.content = content
         self.keepScrollPosition = keepScrollPosition
     }
 
     static func == (lhs: ContentRenderPayload, rhs: ContentRenderPayload) -> Bool {
-        lhs.text == rhs.text && lhs.keepScrollPosition == rhs.keepScrollPosition
+        lhs.bookId == rhs.bookId &&
+            lhs.content?.id == rhs.content?.id &&
+            lhs.keepScrollPosition == rhs.keepScrollPosition &&
+            lhs.text == rhs.text
     }
 }
 
@@ -94,7 +99,7 @@ extension ReaderViewModel {
               )
         else { return }
 
-        contentPayload = ContentRenderPayload(text: content.nash, content: content, keepScrollPosition: keepScrollPosition)
+        contentPayload = ContentRenderPayload(bookId: currentBook.id, text: content.nash, content: content, keepScrollPosition: keepScrollPosition)
         onPayloadChanged?(contentPayload)
         onContentChanged?(content)
     }

@@ -97,9 +97,9 @@ extension ReaderViewModel {
         guard let book = currentBook else { return }
         let bkid = String(book.id)
         let part = currentPart ?? -1 <= 1 ? 1 : currentPart!
-        Task { [weak self] in
+        Task.detached { [weak self] in
             guard let self else { return }
-            guard let result = bookConnection.getContent(
+            guard let result = await bookConnection.getContent(
                 bkid: bkid, part: part, page: page
             )
             else { return }
