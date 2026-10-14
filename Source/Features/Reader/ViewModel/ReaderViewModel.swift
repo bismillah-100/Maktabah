@@ -193,7 +193,7 @@ class ReaderViewModel: ViewModelBase {
     func updateContentState(with content: BookContent) {
         contentText = content.nash
         #if os(macOS)
-        contentPayload = ContentRenderPayload(text: content.nash, content: content, keepScrollPosition: false)
+        contentPayload = ContentRenderPayload(bookId: currentBook?.id, text: content.nash, content: content, keepScrollPosition: false)
         onPayloadChanged?(contentPayload)
         #endif
         currentPart = content.part
