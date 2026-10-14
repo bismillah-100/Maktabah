@@ -3,21 +3,23 @@
 //  Maktabah
 //
 
+#if os(macOS)
 import Cocoa
+#endif
 import Foundation
 import OSLog
 
 @MainActor
 class ReaderStateManager {
+    // MARK: - State Storage (In-Memory per Tab/SplitVC)
 
-    // MARK: - State Storage
-    private var viewerModeState: ReaderState? = nil
-    private var searchModeState: ReaderState? = nil
-    private var authorModeState: ReaderState? = nil
+    private var viewerModeState: ReaderState = .init()
+    private var searchModeState: ReaderState = .init()
+    private var authorModeState: ReaderState = .init()
 
-    private let fileManager = FileManager.default
+    private static let fileManager = FileManager.default
 
-    private var statesDirectory: URL {
+    private static var statesDirectory: URL {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let maktabahDir = appSupport.appendingPathComponent("Maktabah/States")
         if !fileManager.fileExists(atPath: maktabahDir.path) {
@@ -26,108 +28,130 @@ class ReaderStateManager {
         return maktabahDir
     }
 
-    /// Menghasilkan lokasi file di disk untuk menyimpan state pada mode tertentu.
-    /// - Parameter mode: Mode aplikasi yang menentukan nama file state.
-    /// - Returns: URL file untuk state pada mode tersebut.
-    private func stateFileURL(for mode: AppMode) -> URL {
+    private static var tabsSessionFileURL: URL {
+        statesDirectory.appendingPathComponent("tabs_session.json")
+    }
+
+    private static func legacyStateFileURL(for mode: AppMode) -> URL {
         let filename: String
         switch mode {
         case .viewer: filename = "viewer_state.json"
         case .search: filename = "search_state.json"
         case .narrator: filename = "author_state.json"
+        #if os(iOS)
+        default: filename = "viewer_state.json"
+        #endif
         }
         return statesDirectory.appendingPathComponent(filename)
     }
 
-    /// Mengambil state untuk mode tertentu dengan lazy loading dari disk jika belum ada di memori.
-    /// - Parameter mode: Mode aplikasi yang ingin diambil state-nya.
-    /// - Returns: Objek `ReaderState` untuk mode tersebut.
+    // MARK: - Per-Tab State Access
+
+    /// Mengambil state di memori untuk mode tertentu pada tab ini.
     func getState(for mode: AppMode) -> ReaderState {
         switch mode {
-        case .viewer:
-            if viewerModeState == nil {  // Cek dulu
-                viewerModeState = loadStateFromFile(for: .viewer) ?? ReaderState()
-            }
-            return viewerModeState!
-        case .search:
-            if searchModeState == nil {
-                searchModeState = loadStateFromFile(for: .search) ?? ReaderState()
-            }
-            return searchModeState!
-        case .narrator:
-            if authorModeState == nil {
-                authorModeState = loadStateFromFile(for: .narrator) ?? ReaderState()
-            }
-            return authorModeState!
+        case .viewer: return viewerModeState
+        case .search: return searchModeState
+        case .narrator: return authorModeState
+        #if os(iOS)
+        default: return viewerModeState
+        #endif
         }
     }
 
     /// Menetapkan state di memori untuk mode tertentu.
-    /// - Parameters:
-    ///   - state: Objek `ReaderState` yang akan disimpan.
-    ///   - mode: Mode aplikasi yang dikaitkan dengan state tersebut.
     func setState(_ state: ReaderState, for mode: AppMode) {
         switch mode {
         case .viewer: viewerModeState = state
         case .search: searchModeState = state
         case .narrator: authorModeState = state
+        #if os(iOS)
+        default: break
+        #endif
         }
     }
 
-    /// Menyimpan seluruh state yang saat ini ada di memori ke disk per mode terkait.
-    func persistToDisk() {
-        if viewerModeState != nil { saveStateToFile(viewerModeState!, for: .viewer) }
-        if searchModeState != nil { saveStateToFile(searchModeState!, for: .search) }
-        if authorModeState != nil { saveStateToFile(authorModeState!, for: .narrator) }
-    }
-    
-    /// Menyimpan state ke disk untuk mode tertentu.
-    /// - Parameter for: Mode yang sesuai component yang akan disimpan state nya.
-    func persisToDisk(for mode: AppMode) {
-        let state = getState(for: mode)
-        saveStateToFile(state, for: mode)
+    // MARK: - Snapshot Export & Import (Per-Tab)
+
+    func exportTabSnapshot(currentMode: AppMode, components: [ReaderStateComponent?]) -> TabStateSnapshot {
+        saveState(for: currentMode, components: components)
+        return TabStateSnapshot(
+            currentModeRaw: currentMode.rawValue,
+            viewerState: viewerModeState,
+            searchState: searchModeState,
+            authorState: authorModeState
+        )
     }
 
-    /// Menyimpan state tertentu ke file JSON pada direktori Application Support.
-    /// - Parameters:
-    ///   - state: Objek `ReaderState` yang akan diserialisasi.
-    ///   - mode: Mode aplikasi yang menentukan file tujuan penyimpanan.
-    private func saveStateToFile(_ state: ReaderState, for mode: AppMode) {
-        let fileURL = stateFileURL(for: mode)
+    func importTabSnapshot(_ snapshot: TabStateSnapshot) {
+        viewerModeState = snapshot.viewerState
+        searchModeState = snapshot.searchState
+        authorModeState = snapshot.authorState
+    }
+
+    // MARK: - Multi-Tab Disk Persistence
+
+    static func saveTabsSession(_ session: WindowTabsSession) {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(state)
-            try data.write(to: fileURL, options: [.atomic])
+            let data = try encoder.encode(session)
+            try data.write(to: tabsSessionFileURL, options: [.atomic])
         } catch {
-            Logger.reader.error("Failed to save \(mode.rawValue, privacy: .public) state: \(error.localizedDescription, privacy: .public)")
+            Logger.reader.error("Failed to save tabs session: \(error.localizedDescription, privacy: .public)")
         }
     }
 
-    /// Memuat state dari file JSON untuk mode tertentu jika file tersedia.
-    /// - Parameter mode: Mode aplikasi yang state-nya ingin dimuat.
-    /// - Returns: `ReaderState` hasil decoding atau `nil` bila tidak tersedia/terjadi error.
-    private func loadStateFromFile(for mode: AppMode) -> ReaderState? {
-        let fileURL = stateFileURL(for: mode)
-        guard fileManager.fileExists(atPath: fileURL.path) else { return nil }
-        do {
-            let data = try Data(contentsOf: fileURL)
-            return try JSONDecoder().decode(ReaderState.self, from: data)
-        } catch {
-            Logger.reader.error("Failed to load \(mode.rawValue, privacy: .public) state: \(error.localizedDescription, privacy: .public)")
-            return nil
+    static func loadTabsSession() -> WindowTabsSession? {
+        if fileManager.fileExists(atPath: tabsSessionFileURL.path) {
+            do {
+                let data = try Data(contentsOf: tabsSessionFileURL)
+                let session = try JSONDecoder().decode(WindowTabsSession.self, from: data)
+                if !session.tabs.isEmpty {
+                    return session
+                }
+            } catch {
+                Logger.reader.error("Failed to load tabs session: \(error.localizedDescription, privacy: .public)")
+            }
         }
+
+        // Fallback migrasi dari file single-window lama
+        let viewer = loadLegacyStateFromFile(for: .viewer)
+        let search = loadLegacyStateFromFile(for: .search)
+        let author = loadLegacyStateFromFile(for: .narrator)
+
+        if viewer != nil || search != nil || author != nil {
+            let lastMode = UserDefaults.standard.lastAppMode
+            let migratedTab = TabStateSnapshot(
+                currentModeRaw: lastMode.rawValue,
+                viewerState: viewer ?? ReaderState(),
+                searchState: search ?? ReaderState(),
+                authorState: author ?? ReaderState()
+            )
+            return WindowTabsSession(selectedTabIndex: 0, tabs: [migratedTab])
+        }
+
+        return nil
     }
 
-    /*
-    func getLastMode() -> AppMode {
-        UserDefaults.standard.lastAppMode
+    private static func loadLegacyStateFromFile(for mode: AppMode) -> ReaderState? {
+        let fileURL = legacyStateFileURL(for: mode)
+        guard fileManager.fileExists(atPath: fileURL.path),
+              let data = try? Data(contentsOf: fileURL) else { return nil }
+        return try? JSONDecoder().decode(ReaderState.self, from: data)
     }
-    
-    func clearAllStates() {
-        try? fileManager.removeItem(at: statesDirectory)
+
+    func persistToDisk() {
+        #if os(macOS)
+        (NSApp.delegate as? AppDelegate)?.saveAllTabsSession()
+        #endif
     }
-     */
+
+    func persisToDisk(for mode: AppMode) {
+        #if os(macOS)
+        (NSApp.delegate as? AppDelegate)?.saveAllTabsSession()
+        #endif
+    }
 
     // MARK: - Simplified Persistence Logic
 
@@ -176,4 +200,3 @@ class ReaderStateManager {
         }
     }
 }
-

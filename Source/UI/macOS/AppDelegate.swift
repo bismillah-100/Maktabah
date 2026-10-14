@@ -27,6 +27,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
 
     fileprivate var mainWindowController: NSWindowController!
+    fileprivate var windowControllers = Set<WindowController>()
+    private var isTerminating = false
     private var pendingDeepLink: WidgetDeepLink?
     private var isFinishedLaunching = false
     private var activeDeepLinkTask: Task<Void, Never>?
@@ -64,7 +66,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         let wc = WindowController()
-        mainWindowController = wc
+        registerWindowController(wc)
         guard let window = wc.window else { return }
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]
             == "1" { return }
@@ -207,10 +209,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillResignActive(_ notification: Notification) {
+        saveAllTabsSession()
         flushPendingWidgetUpdates(cloudKit: true)
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        isTerminating = true
+        saveAllTabsSession()
         flushPendingWidgetUpdates(cloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
@@ -234,6 +239,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: - Window Management
+
+    func registerWindowController(_ wc: WindowController) {
+        windowControllers.insert(wc)
+        if mainWindowController == nil {
+            mainWindowController = wc
+        }
+    }
+
+    func saveAllTabsSession() {
+        guard let refWindow = (keyWindow ?? mainWindowController?.window as? MainWindow ?? NSApp.windows.compactMap { $0 as? MainWindow }.first) else {
+            return
+        }
+
+        let tabbedWindows: [MainWindow] = if let group = refWindow.tabGroup?.windows.compactMap({ $0 as? MainWindow }), !group.isEmpty {
+            group
+        } else {
+            [refWindow]
+        }
+
+        let selectedWin = refWindow.tabGroup?.selectedWindow as? MainWindow ?? refWindow
+        var selectedIndex = 0
+        var snapshots: [TabStateSnapshot] = []
+
+        for (idx, win) in tabbedWindows.enumerated() {
+            if win === selectedWin { selectedIndex = idx }
+            let splitVC = win.splitVC
+            let mode = splitVC.currentMode
+            snapshots.append(
+                splitVC.stateManager.exportTabSnapshot(
+                    currentMode: mode,
+                    components: splitVC.components(for: mode)
+                )
+            )
+        }
+
+        guard !snapshots.isEmpty else { return }
+
+        let session = WindowTabsSession(selectedTabIndex: selectedIndex, tabs: snapshots)
+        ReaderStateManager.saveTabsSession(session)
+    }
 
     func setupWindowObserver() {
         NotificationCenter.default.addObserver(
@@ -262,44 +307,85 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func windowObserverWillCloseNotification(_ notification: Notification) {
         guard let window = notification.object as? MainWindow else { return }
 
-        window.splitVC.persistCurrentStateToDisk()
+        if !isTerminating {
+            let remainingMainWindows = NSApp.windows
+                .compactMap { $0 as? MainWindow }
+                .filter { $0 !== window }
+
+            if remainingMainWindows.isEmpty {
+                saveAllTabsSession()
+            } else {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, !self.isTerminating else { return }
+                    saveAllTabsSession()
+                }
+            }
+        }
+
+        if let wc = window.windowController as? WindowController {
+            windowControllers.remove(wc)
+        }
         if mainWindowController?.window === window {
-            mainWindowController = nil
+            mainWindowController = windowControllers.first
         }
     }
 
     // MARK: - App Launch
 
     func restorePersistedState(_ window: MainWindow?) {
-        guard let window else {
+        guard let firstWindow = window else {
             Logger.app.debug("mainWindowController window nil")
             return
         }
 
-        window.setupContentView()
+        if let wc = firstWindow.windowController as? WindowController {
+            registerWindowController(wc)
+        }
 
-        guard let splitVC = window.contentViewController as? SplitVC else {
-            Logger.app.debug("Cannot restore state: SplitVC not found")
+        guard let session = ReaderStateManager.loadTabsSession(), !session.tabs.isEmpty else {
+            firstWindow.setupContentView(restoreState: false)
+            firstWindow.displayIfNeeded()
             return
         }
 
-        // Get last active mode
-        let lastMode = window.currentMode
+        var restoredWindows: [MainWindow] = []
+        var previousWindow = firstWindow
 
-        Logger.app.debug("Restoring app to last mode: \(lastMode.rawValue, privacy: .public)")
+        for (index, snapshot) in session.tabs.enumerated() {
+            let targetWindow: MainWindow
+            if index == 0 {
+                targetWindow = firstWindow
+            } else {
+                let newWC = WindowController()
+                registerWindowController(newWC)
+                guard let newWin = newWC.window as? MainWindow else { continue }
+                previousWindow.addTabbedWindow(newWin, ordered: .above)
+                previousWindow = newWin
+                targetWindow = newWin
+            }
 
-        splitVC.setupForMode(lastMode)
-        splitVC.setupAutoSave()
+            let mode = snapshot.currentMode
+            let splitVC = targetWindow.splitVC
+            splitVC.stateManager.importTabSnapshot(snapshot)
 
-        // Ini baru load state yang dibutuhkan
-        splitVC.stateManager.restoreState(
-            for: lastMode,
-            components: splitVC.components(for: lastMode)
-        )
+            targetWindow.setupContentView(mode: mode, restoreState: true)
+            splitVC.setupForMode(mode)
+            splitVC.setupAutoSave()
+            splitVC.sidebarItem.isCollapsed = splitVC.stateManager.getState(for: mode).isSidebarCollapsed
+            splitVC.stateManager.restoreState(
+                for: mode,
+                components: splitVC.components(for: mode)
+            )
+            targetWindow.setupView()
+            targetWindow.displayIfNeeded()
 
-        // Switch to last mode (this will restore the state)
-        window.setupView()
-        window.displayIfNeeded()
+            restoredWindows.append(targetWindow)
+        }
+
+        let safeIndex = min(max(0, session.selectedTabIndex), restoredWindows.count - 1)
+        let activeWindow = restoredWindows[safeIndex]
+        firstWindow.tabGroup?.selectedWindow = activeWindow
+        activeWindow.makeKeyAndOrderFront(nil)
     }
 
     @IBAction func openSettings(_ sender: Any?) {
@@ -522,11 +608,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resetCurrentViewState() {
         guard let keyWindow else { return }
         let splitVC = keyWindow.splitVC
-        let mode = UserDefaults.standard.lastAppMode
+        let mode = keyWindow.currentMode
         splitVC.stateManager.cleanUpState(
             for: mode,
             components: splitVC.components(for: mode)
         )
+        saveAllTabsSession()
     }
 
     @objc private func viewOptions() {
@@ -629,19 +716,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func newWindow(_ sender: Any, restoreState: Bool, mode: AppMode? = nil) {
         let wc = WindowController()
         wc.window?.setFrameAutosaveName("MainWindow")
+        let hadNoMainWindow = (mainWindowController == nil)
+        registerWindowController(wc)
 
         guard let w = wc.window as? MainWindow else { return }
 
-        if mainWindowController == nil, restoreState {
+        if hadNoMainWindow, restoreState {
             restorePersistedState(w)
         } else {
             w.setupContentView(mode: mode, restoreState: false)
+            w.makeKeyAndOrderFront(sender)
+            w.displayIfNeeded()
         }
-
-        mainWindowController = wc
-
-        w.makeKeyAndOrderFront(sender)
-        w.displayIfNeeded()
     }
 
     @IBAction func newTabWindow(_ sender: Any?) {

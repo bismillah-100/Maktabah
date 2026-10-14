@@ -10,12 +10,12 @@ import Foundation
 /// Display mode untuk Author mode (karena bisa tampil info Rowi atau buku)
 enum AuthorDisplayMode: Equatable, Codable {
     case rowiInfo
-    case bookContent  // Tampilan dari table selection (buku biasa)
+    case bookContent // Tampilan dari table selection (buku biasa)
 }
 
 struct CleanedTextResult {
     let text: String
-    let coloredRanges: [NSRange]  // Range dalam string 'text'
+    let coloredRanges: [NSRange] // Range dalam string 'text'
 }
 
 /// State untuk satu instance viewer (bisa untuk mode berbeda)
@@ -28,8 +28,8 @@ struct ReaderState: Codable {
     var isSidebarCollapsed: Bool = false
 
     // Sidebar/TOC State
-    var expandedNodeIDs: [Int] = []  // IDs of expanded items
-    var sidebarScrollPosition: CGPoint?  // Scroll position of outline view
+    var expandedNodeIDs: [Int] = [] // IDs of expanded items
+    var sidebarScrollPosition: CGPoint? // Scroll position of outline view
 
     /// Khusus untuk Author mode - menentukan apa yang ditampilkan
     var authorDisplayMode: AuthorDisplayMode?
@@ -44,8 +44,8 @@ struct ReaderState: Codable {
 
     /// Untuk Author Mode - menyimpan hasil tarjamah
     var authorTarjamahResults: [TarjamahResult]?
-    var authorRowiMode: String?  // "sidebar" atau "fullSearch"
-    var authorSearchQuery: String?  // Query untuk full search
+    var authorRowiMode: String? // "sidebar" atau "fullSearch"
+    var authorSearchQuery: String? // Query untuk full search
 
     /// Untuk Search Mode - menyimpan hasil search
     var searchResults: [SearchResultItem]?
@@ -90,7 +90,7 @@ struct ReaderState: Codable {
         body(&self)
     }
 
-    // Fungsi toggle sederhana
+    /// Fungsi toggle sederhana
     mutating func toggleSidebar(_ collapsed: Bool) {
         isSidebarCollapsed = collapsed
     }
@@ -99,9 +99,27 @@ struct ReaderState: Codable {
 /// Extension untuk mudah compare state
 extension ReaderState: Equatable {
     static func == (lhs: ReaderState, rhs: ReaderState) -> Bool {
-        return lhs.currentBook?.id == rhs.currentBook?.id
+        lhs.currentBook?.id == rhs.currentBook?.id
             && lhs.currentID == rhs.currentID
             && lhs.currentRowi?.id == rhs.currentRowi?.id
             && lhs.authorDisplayMode == rhs.authorDisplayMode
     }
+}
+
+/// Menyimpan seluruh state (Viewer, Search, Narrator) milik satu tab
+struct TabStateSnapshot: Codable {
+    var currentModeRaw: Int
+    var viewerState: ReaderState
+    var searchState: ReaderState
+    var authorState: ReaderState
+
+    var currentMode: AppMode {
+        AppMode(rawValue: currentModeRaw) ?? .viewer
+    }
+}
+
+/// Menyimpan daftar seluruh tab yang terbuka pada jendela utama beserta tab yang aktif
+struct WindowTabsSession: Codable {
+    var selectedTabIndex: Int
+    var tabs: [TabStateSnapshot]
 }
