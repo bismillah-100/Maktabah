@@ -164,6 +164,22 @@ class BookTOCViewModel {
         return nil
     }
 
+    func setTOCData(nodes: [TOCNode], ranges: [TOCRange]? = nil) {
+        self.tocNodes = nodes
+        if let ranges {
+            self.tocRanges = ranges
+        } else {
+            let allNodes = Self.flattenNodes(nodes)
+            Self.computeEndIDs(for: allNodes)
+            self.tocRanges = Self.buildRanges(from: allNodes)
+        }
+        var cache: [Int: TOCNode] = [:]
+        for r in self.tocRanges {
+            cache[r.node.id] = r.node
+        }
+        self.nodeIdCache = cache
+    }
+
     func cleanUp() {
         loadingTask?.cancel()
         loadingTask = nil

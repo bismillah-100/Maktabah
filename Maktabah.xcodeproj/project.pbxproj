@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -892,6 +892,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4BD8A4EB307E521A00E04BCB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4B3202202EDAFE85003B95D1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4B7C90A02F83494200454BE1;
+			remoteInfo = "Maktabah-Direct";
+		};
 		A886BBC2D61851739D1C1BAF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4B3202202EDAFE85003B95D1 /* Project object */;
@@ -918,36 +925,30 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		1D7FC649C80D7C946647B7BB /* Embed App Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstSubfolder = PlugIns;
 			files = (
 				4B61312E396EE9E55B6C7C47 /* MaktabahWidgetExtension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		27B743681714473A88095BC1 /* Embed App Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstSubfolder = PlugIns;
 			files = (
 				F3E054F23042657000647936 /* MaktabahWidgetExtension.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F3E054FD3042765900647936 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolderSpec = 13;
+			dstSubfolder = PlugIns;
 			files = (
 				F3E054FA3042765900647936 /* MaktabahWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -1085,6 +1086,7 @@
 		4BD6C33B2EE6AA7F008684E3 /* MainWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindow.swift; sourceTree = "<group>"; };
 		4BD728222EE44C5500ACEB7C /* IbarotTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IbarotTextView.swift; sourceTree = "<group>"; };
 		4BD728242EE4544C00ACEB7C /* StringExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExt.swift; sourceTree = "<group>"; };
+		4BD8A4E7307E521A00E04BCB /* MaktabahTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MaktabahTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDatabaseDownloader.swift; sourceTree = "<group>"; };
 		4BDAB9852F69C2A8007D0945 /* CoreDownloadProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDownloadProgressView.swift; sourceTree = "<group>"; };
 		4BDAB9872F69E4CC007D0945 /* BulkDownloadVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkDownloadVC.swift; sourceTree = "<group>"; };
@@ -1356,39 +1358,44 @@
 		FEA400010000000000000001 /* PlatformColor+Hex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "PlatformColor+Hex.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		4BD8A4E8307E521A00E04BCB /* MaktabahTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MaktabahTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		45320887082E8A7770BE2DCB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				CC58659B2AB339934754DAF9 /* Foundation.framework in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4B3202252EDAFE85003B95D1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				4B88322F2F7EB3A7004C6213 /* libzstd in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4B7C91072F83494200454BE1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				4B7C91322F834CF700454BE1 /* Sparkle in Frameworks */,
 				4B7C91092F83494200454BE1 /* libzstd in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4BD8A4E4307E521A00E04BCB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
 		};
 		F30577472FA46222005732C6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				F30577492FA46222005732C6 /* libzstd in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -1428,6 +1435,7 @@
 			isa = PBXGroup;
 			children = (
 				4B32022A2EDAFE85003B95D1 /* Source */,
+				4BD8A4E8307E521A00E04BCB /* MaktabahTests */,
 				4B3202292EDAFE85003B95D1 /* Products */,
 				4BA3936B2EF15F0200736DFF /* Frameworks */,
 				F3E054F33042657000647936 /* Recovered References */,
@@ -1441,6 +1449,7 @@
 				4B7C912E2F83494200454BE1 /* Maktabah Debug.app */,
 				F305776F2FA46222005732C6 /* Maktabah.app */,
 				7CF4D3EED1CCDF5AC98A3B54 /* MaktabahWidgetExtension.appex */,
+				4BD8A4E7307E521A00E04BCB /* MaktabahTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2691,6 +2700,27 @@
 			productReference = 4B7C912E2F83494200454BE1 /* Maktabah Debug.app */;
 			productType = "com.apple.product-type.application";
 		};
+		4BD8A4E6307E521A00E04BCB /* MaktabahTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4BD8A4EF307E521A00E04BCB /* Build configuration list for PBXNativeTarget "MaktabahTests" */;
+			buildPhases = (
+				4BD8A4E3307E521A00E04BCB /* Sources */,
+				4BD8A4E4307E521A00E04BCB /* Frameworks */,
+				4BD8A4E5307E521A00E04BCB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4BD8A4EC307E521A00E04BCB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4BD8A4E8307E521A00E04BCB /* MaktabahTests */,
+			);
+			name = MaktabahTests;
+			productName = MaktabahTests;
+			productReference = 4BD8A4E7307E521A00E04BCB /* MaktabahTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		A4F8961C86444956FF410500 /* MaktabahWidgetExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B9DEEC2A6E249AFB9D36C771 /* Build configuration list for PBXNativeTarget "MaktabahWidgetExtension" */;
@@ -2700,8 +2730,6 @@
 				46C8CCBE9E3C4FF6B8BF5242 /* Resources */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			name = MaktabahWidgetExtension;
 			productName = MaktabahWidgetExtension;
@@ -2737,16 +2765,19 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					4B3202272EDAFE85003B95D1 = {
 						CreatedOnToolsVersion = 15.2;
 					};
+					4BD8A4E6307E521A00E04BCB = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 4B7C90A02F83494200454BE1;
+					};
 				};
 			};
 			buildConfigurationList = 4B3202232EDAFE85003B95D1 /* Build configuration list for PBXProject "Maktabah" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -2756,10 +2787,12 @@
 				id,
 			);
 			mainGroup = 4B32021F2EDAFE85003B95D1;
+			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4B88322D2F7EB3A7004C6213 /* XCRemoteSwiftPackageReference "zstd" */,
 				4B7C91302F834CF700454BE1 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 4B3202292EDAFE85003B95D1 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -2768,6 +2801,7 @@
 				4B7C90A02F83494200454BE1 /* Maktabah-Direct */,
 				F30576DD2FA46222005732C6 /* Maktabah-iOS */,
 				A4F8961C86444956FF410500 /* MaktabahWidgetExtension */,
+				4BD8A4E6307E521A00E04BCB /* MaktabahTests */,
 			);
 		};
 /* End PBXProject section */
@@ -2775,17 +2809,14 @@
 /* Begin PBXResourcesBuildPhase section */
 		46C8CCBE9E3C4FF6B8BF5242 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				F3304ED63043912600B9023C /* Localizable.xcstrings in Resources */,
 				F3C507893044B72F00BBEC32 /* NotoNaskhArabic-Medium.ttf in Resources */,
 				F3D33FF93041BC970036D4DE /* InfoPlist.strings in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4B3202262EDAFE85003B95D1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				F3C507863044B64D00BBEC32 /* Fonts in Resources */,
 				4B0139E82EEB3CB000424CFA /* InitProgress.xib in Resources */,
@@ -2822,11 +2853,9 @@
 				4BA7269E2EFC76C0003CA0ED /* ViewOptions.xib in Resources */,
 				4B01CA0E2EFCD7B2002A66FA /* MainMenu.xib in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4B7C910A2F83494200454BE1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				4B7C910B2F83494200454BE1 /* InitProgress.xib in Resources */,
 				4B7C910C2F83494200454BE1 /* SidebarVC.xib in Resources */,
@@ -2863,11 +2892,14 @@
 				4B7C912A2F83494200454BE1 /* MainMenu.xib in Resources */,
 				F3C507853044B61C00BBEC32 /* Fonts in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4BD8A4E5307E521A00E04BCB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
 		};
 		F305774A2FA46222005732C6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				F32A8B5A304572D000C28F42 /* Fonts in Resources */,
 				F305774F2FA46222005732C6 /* Assets.xcassets in Resources */,
@@ -2881,14 +2913,12 @@
 				F305775A2FA46222005732C6 /* InfoPlist.strings in Resources */,
 				F30577662FA46222005732C6 /* Localizable.xcstrings in Resources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		211C61EBAF37E14B5BD92385 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				F3D33FD53041BC970036D4DE /* MaktabahWidgetBundle.swift in Sources */,
 				F3D33FE53041BC970036D4DE /* Extensions.swift in Sources */,
@@ -2911,11 +2941,9 @@
 				5CF35837DDB9D9548518C526 /* WidgetSnapshotRecord.swift in Sources */,
 				F3A000052FA46222005732C6 /* AppLogger.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4B3202242EDAFE85003B95D1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				CAF000220000000000000022 /* ResultsDelegate.swift in Sources */,
 				CAF000270000000000000027 /* OptionSearchDelegate.swift in Sources */,
@@ -3183,11 +3211,9 @@
 				F3A0000A2FBB000100000001 /* SingleFlight.swift in Sources */,
 				F3A0000E2FBB000100000001 /* ZstdDecompressor.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		4B7C90A52F83494200454BE1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				CAF000230000000000000023 /* ResultsDelegate.swift in Sources */,
 				CAF000280000000000000028 /* OptionSearchDelegate.swift in Sources */,
@@ -3456,11 +3482,14 @@
 				EEBDF61480D82A1441EAF2DD /* AnnotationSnapshot.swift in Sources */,
 				BD5DF925F31DE6CC287FFC10 /* WidgetSnapshotRecord.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4BD8A4E3307E521A00E04BCB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
 		};
 		F30576E22FA46222005732C6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				CAF000540000000000000054 /* IbarotTextOptions.swift in Sources */,
 				CAF000590000000000000059 /* TextViewRenderable.swift in Sources */,
@@ -3704,11 +3733,15 @@
 				F319965C3068C5D0005013F8 /* SearchResultBuffer.swift in Sources */,
 				8929444A1AD0BCA77A8D89C7 /* WidgetSnapshotRecord.swift in Sources */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4BD8A4EC307E521A00E04BCB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4B7C90A02F83494200454BE1 /* Maktabah-Direct */;
+			targetProxy = 4BD8A4EB307E521A00E04BCB /* PBXContainerItemProxy */;
+		};
 		516E3B99384FC9869297FEBA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = MaktabahWidgetExtension;
@@ -3858,7 +3891,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		4B3202332EDAFE88003B95D1 /* Debug */ = {
+		4B3202332EDAFE88003B95D1 /* Debug configuration for PBXProject "Maktabah" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -3929,7 +3962,7 @@
 			};
 			name = Debug;
 		};
-		4B3202342EDAFE88003B95D1 /* Release */ = {
+		4B3202342EDAFE88003B95D1 /* Release configuration for PBXProject "Maktabah" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -3992,7 +4025,7 @@
 			};
 			name = Release;
 		};
-		4B3202362EDAFE88003B95D1 /* Debug */ = {
+		4B3202362EDAFE88003B95D1 /* Debug configuration for PBXNativeTarget "Maktabah" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APP_URL_SCHEME = "maktabah-debug";
@@ -4049,7 +4082,7 @@
 			};
 			name = Debug;
 		};
-		4B3202372EDAFE88003B95D1 /* Release */ = {
+		4B3202372EDAFE88003B95D1 /* Release configuration for PBXNativeTarget "Maktabah" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APP_URL_SCHEME = maktabah;
@@ -4107,7 +4140,7 @@
 			};
 			name = Release;
 		};
-		4B7C912C2F83494200454BE1 /* Debug */ = {
+		4B7C912C2F83494200454BE1 /* Debug configuration for PBXNativeTarget "Maktabah-Direct" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APP_URL_SCHEME = "maktabah-debug";
@@ -4163,7 +4196,7 @@
 			};
 			name = Debug;
 		};
-		4B7C912D2F83494200454BE1 /* Release */ = {
+		4B7C912D2F83494200454BE1 /* Release configuration for PBXNativeTarget "Maktabah-Direct" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APP_URL_SCHEME = maktabah;
@@ -4220,7 +4253,59 @@
 			};
 			name = Release;
 		};
-		533AE2002D123E9F40C01788 /* Release */ = {
+		4BD8A4ED307E521A00E04BCB /* Debug configuration for PBXNativeTarget "MaktabahTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.8;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.MaktabahTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Maktabah Debug.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Maktabah Debug";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		4BD8A4EE307E521A00E04BCB /* Release configuration for PBXNativeTarget "MaktabahTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Q37L5CJ4ZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MACOSX_DEPLOYMENT_TARGET = 15.8;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.Drn.MaktabahTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Maktabah Debug.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Maktabah Debug";
+				XROS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		533AE2002D123E9F40C01788 /* Release configuration for PBXNativeTarget "MaktabahWidgetExtension" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -4261,7 +4346,7 @@
 			};
 			name = Release;
 		};
-		64552BE60598ECDE8D04ACB3 /* Debug */ = {
+		64552BE60598ECDE8D04ACB3 /* Debug configuration for PBXNativeTarget "MaktabahWidgetExtension" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -4301,7 +4386,7 @@
 			};
 			name = Debug;
 		};
-		F305776D2FA46222005732C6 /* Debug */ = {
+		F305776D2FA46222005732C6 /* Debug configuration for PBXNativeTarget "Maktabah-iOS" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APP_URL_SCHEME = "maktabah-debug";
@@ -4341,7 +4426,7 @@
 			};
 			name = Debug;
 		};
-		F305776E2FA46222005732C6 /* Release */ = {
+		F305776E2FA46222005732C6 /* Release configuration for PBXNativeTarget "Maktabah-iOS" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				APP_URL_SCHEME = maktabah;
@@ -4388,46 +4473,49 @@
 		4B3202232EDAFE85003B95D1 /* Build configuration list for PBXProject "Maktabah" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4B3202332EDAFE88003B95D1 /* Debug */,
-				4B3202342EDAFE88003B95D1 /* Release */,
+				4B3202332EDAFE88003B95D1 /* Debug configuration for PBXProject "Maktabah" */,
+				4B3202342EDAFE88003B95D1 /* Release configuration for PBXProject "Maktabah" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		4B3202352EDAFE88003B95D1 /* Build configuration list for PBXNativeTarget "Maktabah" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4B3202362EDAFE88003B95D1 /* Debug */,
-				4B3202372EDAFE88003B95D1 /* Release */,
+				4B3202362EDAFE88003B95D1 /* Debug configuration for PBXNativeTarget "Maktabah" */,
+				4B3202372EDAFE88003B95D1 /* Release configuration for PBXNativeTarget "Maktabah" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		4B7C912B2F83494200454BE1 /* Build configuration list for PBXNativeTarget "Maktabah-Direct" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4B7C912C2F83494200454BE1 /* Debug */,
-				4B7C912D2F83494200454BE1 /* Release */,
+				4B7C912C2F83494200454BE1 /* Debug configuration for PBXNativeTarget "Maktabah-Direct" */,
+				4B7C912D2F83494200454BE1 /* Release configuration for PBXNativeTarget "Maktabah-Direct" */,
 			);
-			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4BD8A4EF307E521A00E04BCB /* Build configuration list for PBXNativeTarget "MaktabahTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4BD8A4ED307E521A00E04BCB /* Debug configuration for PBXNativeTarget "MaktabahTests" */,
+				4BD8A4EE307E521A00E04BCB /* Release configuration for PBXNativeTarget "MaktabahTests" */,
+			);
 			defaultConfigurationName = Release;
 		};
 		B9DEEC2A6E249AFB9D36C771 /* Build configuration list for PBXNativeTarget "MaktabahWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				533AE2002D123E9F40C01788 /* Release */,
-				64552BE60598ECDE8D04ACB3 /* Debug */,
+				533AE2002D123E9F40C01788 /* Release configuration for PBXNativeTarget "MaktabahWidgetExtension" */,
+				64552BE60598ECDE8D04ACB3 /* Debug configuration for PBXNativeTarget "MaktabahWidgetExtension" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		F305776C2FA46222005732C6 /* Build configuration list for PBXNativeTarget "Maktabah-iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F305776D2FA46222005732C6 /* Debug */,
-				F305776E2FA46222005732C6 /* Release */,
+				F305776D2FA46222005732C6 /* Debug configuration for PBXNativeTarget "Maktabah-iOS" */,
+				F305776E2FA46222005732C6 /* Release configuration for PBXNativeTarget "Maktabah-iOS" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
