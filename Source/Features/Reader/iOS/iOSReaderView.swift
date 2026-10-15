@@ -12,18 +12,10 @@ struct iOSReaderView: View {
         horizontalSizeClass == .regular
     }
 
-    @State private var showingTOC = false
-    @State private var showingOptions = false
-    @State private var showingSearch = false
-    @State private var showingAnnotationsList = false
     @State private var showingBookInfo = false
     @State private var showingAnnotationActionSheet = false
     @State private var tappedAnnotationId: Int64?
-    @State private var showingEditNoteAlert = false
-    @State private var editingNoteText = ""
-    @State private var showingNavigation = false
     @State private var showingTabsList = false
-    @State private var isReading = false
 
     init(book: BooksData,
          viewModel: ReaderViewModel? = nil,
@@ -47,52 +39,18 @@ struct iOSReaderView: View {
     }
 
     var body: some View {
-        @Bindable var viewModel = viewModel
-        iOSIbarotTextView(
-            text: $viewModel.contentText,
-            annotations: viewModel.currentAnnotations,
-            searchEvent: viewModel.searchEvent,
-            annotationEvent: viewModel.annotationEvent,
-            isMultiLanguage: book.isMultiLanguage,
-            isImported: book.isImported,
-            enhancedUnderline: textViewState.enhancedUnderline,
+        _ReaderTextContentView(
+            book: book,
             viewModel: viewModel,
-            onAddAnnotation: { range, mode, sourceText, color in
-                do {
-                    try viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                } catch {
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                }
-            },
-            onTapAnnotation: { annId in
-                tappedAnnotationId = annId
-                showingAnnotationActionSheet = true
-            },
-            onNavigateNext: { viewModel.goToNextPage() },
-            onNavigatePrev: { viewModel.goToPrevPage() }
+            textViewState: textViewState,
+            tappedAnnotationId: $tappedAnnotationId,
+            showingAnnotationActionSheet: $showingAnnotationActionSheet
         )
-        .background(backgroundColor)
-        .ignoresSafeArea(edges: .vertical)
-        .legacyVisibleToolbarBackgrounds()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .equatable()
         .preferredColorScheme(isDarkMode ? .dark : .light)
         .navigationTitle(resolvedNavigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .if(!isRegularLayout) { view in
-            view
-                .toolbarVisibility(
-                    isReading ? .hidden : .visible,
-                    for: .navigationBar, .bottomBar
-                )
-                .onTapGesture {
-                    guard !viewModel.isPopoverPresented else { return }
-                    withAnimation(.easeInOut) {
-                        isReading.toggle()
-                    }
-                }
-        }
         .toolbar {
             if !isRegularLayout, bManager.openTabs.count > 1 {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -136,37 +94,11 @@ struct iOSReaderView: View {
         .onDisappear {
             viewModel.saveCurrentState()
         }
-        .sheet(isPresented: $showingSearch) {
-            iOSBookSearchView(book: book, onSelect: { contentId, query in
-                viewModel.didSelectSearch(query: query, contentId: contentId)
-                showingSearch = false
-            }, viewModel: viewModel.searchViewModel)
-        }
         .sheet(isPresented: $showingTabsList) {
             iOSReaderTabsPopoverView(isPresented: $showingTabsList)
         }
         .sheet(isPresented: $showingBookInfo) {
             iOSBookInfoView(book: book)
-        }
-        .sheet(isPresented: $showingTOC) {
-            iOSTOCView(
-                tocViewModel: viewModel.tocViewModel,
-                selectedId: viewModel.tocViewModel.findNode(forContentId: viewModel.currentContentId)?.id,
-                onSelect: { id in
-                    viewModel.didSelectTOCNode(id: id)
-                    showingTOC = false
-                }
-            )
-        }
-        .sheet(isPresented: $showingAnnotationsList) {
-            iOSBookAnnotationsView(
-                bookId: book.id,
-                annotations: viewModel.currentAnnotations,
-                onSelect: { ann in
-                    viewModel.didSelectAnnotation(ann)
-                    showingAnnotationsList = false
-                }
-            )
         }
         .sheet(isPresented: Binding(
             get: { showingAnnotationActionSheet && tappedAnnotationId != nil },
@@ -195,6 +127,67 @@ struct iOSReaderView: View {
                 .presentationDetents([.medium, .large])
             }
         }
+    }
+}
+
+// MARK: - Isolated Text Content View
+
+/// Extracted to its own struct so that `@State` sheet toggles in `iOSReaderView`
+/// don't invalidate the `UIViewRepresentable` body and trigger `updateUIView`.
+private struct _ReaderTextContentView: View {
+    let book: BooksData
+    var viewModel: ReaderViewModel
+    var textViewState: TextViewState
+    @Binding var tappedAnnotationId: Int64?
+    @Binding var showingAnnotationActionSheet: Bool
+
+    var body: some View {
+        @Bindable var viewModel = viewModel
+        iOSIbarotTextView(
+            text: $viewModel.contentText,
+            annotations: viewModel.currentAnnotations,
+            searchEvent: viewModel.searchEvent,
+            annotationEvent: viewModel.annotationEvent,
+            isMultiLanguage: book.isMultiLanguage,
+            isImported: book.isImported,
+            enhancedUnderline: textViewState.enhancedUnderline,
+            viewModel: viewModel,
+            onAddAnnotation: { range, mode, sourceText, color in
+                do {
+                    try viewModel.addAnnotation(in: range, mode: mode, sourceText: sourceText, color: color)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                } catch {
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                }
+            },
+            onTapAnnotation: { annId in
+                tappedAnnotationId = annId
+                showingAnnotationActionSheet = true
+            },
+            onNavigateNext: { viewModel.goToNextPage() },
+            onNavigatePrev: { viewModel.goToPrevPage() }
+        )
+        .background(textViewState.backgroundColor.color)
+        .ignoresSafeArea(edges: .vertical)
+        .legacyVisibleToolbarBackgrounds()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+extension _ReaderTextContentView: @MainActor Equatable {
+    static func == (lhs: _ReaderTextContentView, rhs: _ReaderTextContentView) -> Bool {
+        lhs.book.id == rhs.book.id &&
+            lhs.viewModel.currentContentId == rhs.viewModel.currentContentId &&
+            lhs.viewModel.contentText == rhs.viewModel.contentText &&
+            lhs.viewModel.currentAnnotations == rhs.viewModel.currentAnnotations &&
+            lhs.viewModel.searchEvent == rhs.viewModel.searchEvent &&
+            lhs.viewModel.annotationEvent == rhs.viewModel.annotationEvent &&
+            lhs.textViewState.showHarakat == rhs.textViewState.showHarakat &&
+            lhs.textViewState.enhancedUnderline == rhs.textViewState.enhancedUnderline &&
+            lhs.textViewState.fontName == rhs.textViewState.fontName &&
+            lhs.textViewState.fontSize == rhs.textViewState.fontSize &&
+            lhs.textViewState.lineHeight == rhs.textViewState.lineHeight &&
+            lhs.textViewState.backgroundColorIndex == rhs.textViewState.backgroundColorIndex
     }
 }
 
