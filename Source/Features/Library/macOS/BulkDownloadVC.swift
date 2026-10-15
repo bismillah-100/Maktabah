@@ -393,18 +393,12 @@ final class BulkDownloadVC: NSViewController {
         }
 
         if knownSizeCount == selectedCount, totalCompressedSize > 0 {
-            let sizeString = ByteCountFormatter.string(
-                fromByteCount: totalCompressedSize,
-                countStyle: .file
-            )
+            let sizeString = totalCompressedSize.formattedByteCount
             return title + " (\(sizeString))."
         }
 
         if knownSizeCount > 0, totalCompressedSize > 0 {
-            let sizeString = ByteCountFormatter.string(
-                fromByteCount: totalCompressedSize,
-                countStyle: .file
-            )
+            let sizeString = totalCompressedSize.formattedByteCount
             return title + " ±(\(sizeString))."
         }
 
@@ -439,8 +433,8 @@ final class BulkDownloadVC: NSViewController {
         }
 
         if totalBytes > 0, completed < total {
-            let writtenStr = ByteCountFormatter.string(fromByteCount: downloadedBytes, countStyle: .file)
-            let totalStr = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
+            let writtenStr = downloadedBytes.formattedByteCount
+            let totalStr = totalBytes.formattedByteCount
             statusLabel.stringValue = "\(countLabel) (\(writtenStr) / \(totalStr))"
             progressBar.doubleValue = min(1.0, Double(downloadedBytes) / Double(totalBytes))
         } else {

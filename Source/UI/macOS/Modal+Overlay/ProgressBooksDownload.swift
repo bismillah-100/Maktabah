@@ -61,7 +61,7 @@ final class BundleArchiveDownloadProgressState: Identifiable {
 
         if let size, size > 0 {
             book.compressedDownloadSize = size
-            sizeString = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+            sizeString = size.formattedByteCount
         }
 
         return BundleArchiveDownloadProgressState(
@@ -534,13 +534,14 @@ extension BookIntegrateModalCenter {
         try await BookArchiveIntegrator.shared.ensureBookIntegrated(
             book,
             onDownloadProgress: { [weak self] written, total in
+                let writtenStr = written.formattedByteCount
+                let totalStr = total > 0 ? total.formattedByteCount : ""
+                let progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
                 Task { @MainActor [weak self] in
                     guard let state = self?.progressState, state.mode == .downloading else { return }
-                    let writtenStr = ByteCountFormatter.string(fromByteCount: written, countStyle: .file)
-                    let totalStr = total > 0 ? ByteCountFormatter.string(fromByteCount: total, countStyle: .file) : ""
                     state.detail = total > 0 ? "\(writtenStr) / \(totalStr)" : writtenStr
                     withAnimation(.linear(duration: 0.15)) {
-                        state.progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
+                        state.progress = progress
                     }
                 }
             },

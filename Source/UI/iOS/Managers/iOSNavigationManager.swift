@@ -222,13 +222,14 @@ class iOSNavigationManager {
                 try await BookArchiveIntegrator.shared.ensureBookIntegrated(
                     book,
                     onDownloadProgress: { [weak state] written, total in
+                        let writtenStr = written.formattedByteCount
+                        let totalStr = total > 0 ? total.formattedByteCount : ""
+                        let progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
                         Task { @MainActor [weak state] in
                             guard let state, state.mode == .downloading else { return }
-                            let writtenStr = ByteCountFormatter.string(fromByteCount: written, countStyle: .file)
-                            let totalStr = total > 0 ? ByteCountFormatter.string(fromByteCount: total, countStyle: .file) : ""
                             state.detail = total > 0 ? "\(writtenStr) / \(totalStr)" : writtenStr
                             withAnimation(.linear(duration: 0.15)) {
-                                state.progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
+                                state.progress = progress
                             }
                         }
                     },
@@ -320,7 +321,7 @@ class iOSNavigationManager {
         let totalSize = books.reduce(0 as Int64) { $0 + ($1.compressedDownloadSize ?? 0) }
         var sizeString = ""
         if totalSize > 0 {
-            sizeString = ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
+            sizeString = totalSize.formattedByteCount
         }
 
         let message = String(localized: .Library.bulkBookDownloadAlert(books.count))

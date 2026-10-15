@@ -39,6 +39,9 @@
 		4B03185F2F41E7BD00CB1677 /* SplitVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03185E2F41E7BC00CB1677 /* SplitVC.swift */; };
 		4B03D9D12F42DB5B004E0FDB /* ReaderState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */; };
 		4B03D9D72F42DD6D004E0FDB /* ReaderStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */; };
+		4B0450EC30812F23000C4B6E /* ByteCountFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0450EB30812F23000C4B6E /* ByteCountFormat.swift */; };
+		4B0450ED30812F23000C4B6E /* ByteCountFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0450EB30812F23000C4B6E /* ByteCountFormat.swift */; };
+		4B0450EE30812F23000C4B6E /* ByteCountFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0450EB30812F23000C4B6E /* ByteCountFormat.swift */; };
 		4B0EED392EFAB38800585C31 /* QuranTafseerVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0EED382EFAB38800585C31 /* QuranTafseerVC.swift */; };
 		4B18185E2F45377200AFFAEE /* AnnotationColorMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */; };
 		4B20DB792EE7D1BB00B97126 /* ReusableFunc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B20DB782EE7D1BB00B97126 /* ReusableFunc.swift */; };
@@ -976,6 +979,7 @@
 		4B03185E2F41E7BC00CB1677 /* SplitVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitVC.swift; sourceTree = "<group>"; };
 		4B03D9D02F42DB5B004E0FDB /* ReaderState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderState.swift; sourceTree = "<group>"; };
 		4B03D9D62F42DD6D004E0FDB /* ReaderStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderStateManager.swift; sourceTree = "<group>"; };
+		4B0450EB30812F23000C4B6E /* ByteCountFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteCountFormat.swift; sourceTree = "<group>"; };
 		4B0EED382EFAB38800585C31 /* QuranTafseerVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuranTafseerVC.swift; sourceTree = "<group>"; };
 		4B18185D2F45377200AFFAEE /* AnnotationColorMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationColorMenuView.swift; sourceTree = "<group>"; };
 		4B20DB782EE7D1BB00B97126 /* ReusableFunc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableFunc.swift; sourceTree = "<group>"; };
@@ -1991,6 +1995,7 @@
 		FE0000020000000000000002 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				4B0450EB30812F23000C4B6E /* ByteCountFormat.swift */,
 				F82BE78484304FF69C3B8BA1 /* Color+Hex.swift */,
 				4B58EDDE2EE3D1E000073495 /* Date+Formatting.swift */,
 				FE0100010000000000000001 /* NSAttributedString+Archiving.swift */,
@@ -3121,6 +3126,7 @@
 				4B6100E62EFA73DD00CCBED6 /* QuranSplitVC.swift in Sources */,
 				F34D9FC8303D64D10000FB79 /* AnnotationMenu.swift in Sources */,
 				4B58EDDF2EE3D1E000073495 /* Date+Formatting.swift in Sources */,
+				4B0450EC30812F23000C4B6E /* ByteCountFormat.swift in Sources */,
 				4BB174422F1AFAFF00BF1A2F /* ScreenTimeManager.swift in Sources */,
 				4B6AF2332EE57CCD002EBFFC /* Toolbar.swift in Sources */,
 				F3AE62C1304C5760002569BB /* ObserversLibrary.swift in Sources */,
@@ -3408,6 +3414,7 @@
 				4B7C90EF2F83494200454BE1 /* DatabaseManager.swift in Sources */,
 				4B7C90F02F83494200454BE1 /* QuranSplitVC.swift in Sources */,
 				4B7C90F12F83494200454BE2 /* Date+Formatting.swift in Sources */,
+				4B0450ED30812F23000C4B6E /* ByteCountFormat.swift in Sources */,
 				F3A77FC02FFFE6D70092EB4F /* NetworkMonitor.swift in Sources */,
 				4B7C90F32F83494200454BE1 /* ScreenTimeManager.swift in Sources */,
 				4B7C90F42F83494200454BE1 /* Toolbar.swift in Sources */,
@@ -3659,6 +3666,7 @@
 				F32D441B303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				F321672D2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,
 				F305772F2FA46222005732C7 /* Date+Formatting.swift in Sources */,
+				4B0450EE30812F23000C4B6E /* ByteCountFormat.swift in Sources */,
 				F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */,
 				F37F1C523002A267002B5618 /* SerialTaskQueue.swift in Sources */,
 				F32D440C303CFB3500429664 /* DBConnectionType.swift in Sources */,
