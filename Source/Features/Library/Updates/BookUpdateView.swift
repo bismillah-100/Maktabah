@@ -172,11 +172,9 @@ struct UpdateView: View {
     #if !os(macOS)
     private var iOSLayout: some View {
         contentView
-            .toolbar {
+            .safeAreaInset(edge: .bottom) {
                 if viewModel.hasUpdates {
-                    ToolbarItem(placement: .bottomBar) {
-                        iOSFooterView
-                    }
+                    iOSFooterView
                 }
             }
     }
@@ -189,7 +187,8 @@ struct UpdateView: View {
             bookUpdateInfo
             updateBookButton
         }
-        .padding(.bottom, 32)
+        .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder
@@ -214,7 +213,7 @@ struct UpdateView: View {
         .buttonStyle(.borderedProminent)
         #endif
         .controlSize(.large)
-        .clipShape(.capsule)
+        .buttonBorderShape(.capsule)
         .disabled(viewModel.isUpdating || viewModel.selectedCount == 0)
     }
 
