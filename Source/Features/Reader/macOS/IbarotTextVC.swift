@@ -530,8 +530,18 @@ extension IbarotTextVC {
 
 extension IbarotTextVC: SidebarDelegate {
     func didSelectItem(_ id: Int) {
+        didSelectItem(id, title: "")
+    }
+
+    func didSelectItem(_ id: Int, title: String) {
         lastSelectedContentIdFromSidebar = id
         handleDelegate(id)
+
+        if !title.isEmpty {
+            Task {
+                await textDelegate?.scrollToTOC(title: title)
+            }
+        }
     }
 }
 

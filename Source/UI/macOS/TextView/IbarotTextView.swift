@@ -1067,6 +1067,29 @@ extension IbarotTextView: TextViewRenderable {
         }
     }
 
+    @MainActor
+    func scrollToTOC(title: String) async {
+        taskQueue.enqueue { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                guard let text = textStorage?.string else { return }
+
+                textLayoutManager?.ensureFullDocumentLayout()
+                needsLayout = true
+
+                if let range = text.findTOCMatchingRange(title: title) {
+                    scrollRangeToVisible(range)
+                    enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                    layoutSubtreeIfNeeded()
+                    showFindIndicator(for: range)
+                } else {
+                    scrollToBeginningOfDocument(nil)
+                }
+            }
+        }
+    }
+
     func scrollTo(_ scrollPos: CGPoint) async {
         taskQueue.enqueue { [weak self] in
             guard let self, let scrollView = await enclosingScrollView else { return }

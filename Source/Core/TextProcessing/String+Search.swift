@@ -413,4 +413,68 @@ extension String {
 
         return attributed
     }
+
+    func findTOCMatchingRange(title: String) -> NSRange? {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty, !isEmpty else { return nil }
+
+        let nsString = self as NSString
+        let totalLen = nsString.length
+
+        // Priority 1: Direct match at paragraph start
+        if let match = searchTOCExact(target: trimmedTitle, in: nsString, totalLen: totalLen, onlyParagraphStart: true) {
+            return match
+        }
+
+        // Priority 2: Direct match anywhere on the page
+        if let match = searchTOCExact(target: trimmedTitle, in: nsString, totalLen: totalLen, onlyParagraphStart: false) {
+            return match
+        }
+
+        // Priority 3: Prefix fallbacks at paragraph start
+        let words = trimmedTitle.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+        if words.count > 2 {
+            let prefix3 = words.prefix(3).joined(separator: " ")
+            if let match = searchTOCExact(target: prefix3, in: nsString, totalLen: totalLen, onlyParagraphStart: true) {
+                return match
+            }
+        }
+        if words.count > 1 {
+            let prefix2 = words.prefix(2).joined(separator: " ")
+            if let match = searchTOCExact(target: prefix2, in: nsString, totalLen: totalLen, onlyParagraphStart: true) {
+                return match
+            }
+        }
+
+        return nil
+    }
+
+    private func searchTOCExact(target: String, in nsString: NSString, totalLen: Int, onlyParagraphStart: Bool) -> NSRange? {
+        guard !target.isEmpty else { return nil }
+        let ranges = findArabicMatchingRanges(keywords: [target])
+        guard !ranges.isEmpty else { return nil }
+
+        if onlyParagraphStart {
+            return ranges.first { r in
+                r.location + r.length <= totalLen && isAtParagraphStart(r, in: nsString)
+            }
+        } else {
+            return ranges.first
+        }
+    }
+
+    private func isAtParagraphStart(_ range: NSRange, in nsString: NSString) -> Bool {
+        guard range.location > 0 else { return true }
+        let prefixRange = NSRange(location: 0, length: range.location)
+        let substring = nsString.substring(with: prefixRange)
+        for char in substring.reversed() {
+            if char == "\n" || char == "\r" {
+                return true
+            }
+            if char.isLetter || char.isNumber {
+                return false
+            }
+        }
+        return true
+    }
 }

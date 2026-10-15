@@ -15,10 +15,16 @@ extension ReaderViewModel {
         }
     }
 
-    func didSelectTOCNode(id: Int) {
-        searchEvent = nil
+    func didSelectTOCNode(id: Int, title: String = "") {
         annotationEvent = nil
-        fetchContentById(id)
+        searchEvent = title.isEmpty ? nil : ReaderHighlightEvent(
+            query: title,
+            contentId: id,
+            isTOC: true
+        )
+        if id != currentContentId {
+            fetchContentById(id)
+        }
     }
 
     func didSelectSearch(query: String, contentId: Int) {

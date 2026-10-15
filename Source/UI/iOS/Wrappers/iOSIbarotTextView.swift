@@ -483,12 +483,18 @@ struct iOSIbarotTextView: UIViewRepresentable {
         var searchRanges: [NSRange] = []
 
         if isSearchEventForThisContent, let event = searchEvent, !event.query.isEmpty {
-            searchRanges = attributedString.highlightSearchText(
-                searchText: event.query,
-                mode: event.mode,
-                baseColor: .highlightText,
-                nearDistance: event.nearDistance
-            )
+            if event.isTOC {
+                if let range = attributedString.string.findTOCMatchingRange(title: event.query) {
+                    searchRanges = [range]
+                }
+            } else {
+                searchRanges = attributedString.highlightSearchText(
+                    searchText: event.query,
+                    mode: event.mode,
+                    baseColor: .highlightText,
+                    nearDistance: event.nearDistance
+                )
+            }
         }
 
         return RenderedAttributedContent(
@@ -544,7 +550,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         if let event = searchEvent,
            event.contentId == viewModel.currentContentId,
-           !searchRanges.isEmpty,
+           (!searchRanges.isEmpty || event.isTOC),
            context.coordinator.lastHandledSearchEventId != event.id
         {
             context.coordinator.lastHandledSearchEventId = event.id
@@ -552,8 +558,12 @@ struct iOSIbarotTextView: UIViewRepresentable {
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 if let firstRange = searchRanges.first {
                     textView?.scrollRangeToVisible(firstRange)
+                    await textView?.popupText(for: searchRanges)
+                } else if event.isTOC {
+                    if let tv = textView {
+                        tv.setContentOffset(CGPoint(x: 0, y: -tv.adjustedContentInset.top), animated: true)
+                    }
                 }
-                await textView?.popupText(for: searchRanges)
             }
         }
     }

@@ -289,7 +289,7 @@ extension SidebarVC: NSOutlineViewDelegate {
 
         Logger.reader.debug("Selected: \(node.bab), id: \(node.id)")
 
-        delegate?.didSelectItem(node.id)
+        delegate?.didSelectItem(node.id, title: node.bab)
 
         updateTextColor(selectedRow: selectedRow)
     }

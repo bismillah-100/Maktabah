@@ -13,12 +13,14 @@ struct ReaderHighlightEvent: Equatable {
     let contentId: Int?
     let mode: SearchMode?
     let nearDistance: Int
+    let isTOC: Bool
     
     init(
         query: String,
         contentId: Int? = nil,
         mode: SearchMode? = nil,
         nearDistance: Int = 10,
+        isTOC: Bool = false,
         id: UUID = UUID()
     ) {
         self.id = id
@@ -26,5 +28,6 @@ struct ReaderHighlightEvent: Equatable {
         self.contentId = contentId
         self.mode = mode
         self.nearDistance = nearDistance
+        self.isTOC = isTOC
     }
 }

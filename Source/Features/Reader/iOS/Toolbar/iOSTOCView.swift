@@ -11,13 +11,13 @@ import SwiftUI
 struct iOSTOCView: View {
     let tocViewModel: BookTOCViewModel
     let selectedId: Int?
-    let onSelect: (Int) -> Void
+    let onSelect: (Int, String) -> Void
 
     @State private var searchText = ""
     @State private var expandedPaths: Set<ObjectIdentifier> = []
     @Environment(\.dismiss) private var dismiss
 
-    init(tocViewModel: BookTOCViewModel, selectedId: Int?, onSelect: @escaping (Int) -> Void) {
+    init(tocViewModel: BookTOCViewModel, selectedId: Int?, onSelect: @escaping (Int, String) -> Void) {
         self.tocViewModel = tocViewModel
         self.selectedId = selectedId
         self.onSelect = onSelect
@@ -111,8 +111,8 @@ struct iOSTOCView: View {
     return iOSTOCView(
         tocViewModel: dummyVM,
         selectedId: 3,
-        onSelect: { selectedId in
-            Logger.reader.debug("Selected ID: \(selectedId)")
+        onSelect: { selectedId, title in
+            Logger.reader.debug("Selected ID: \(selectedId), Title: \(title)")
         }
     )
 }
