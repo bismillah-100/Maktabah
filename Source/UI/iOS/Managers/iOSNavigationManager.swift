@@ -225,6 +225,11 @@ class iOSNavigationManager {
                         await MainActor.run { [weak self] in
                             self?.showIntegratingState(for: state)
                         }
+                    },
+                    onProgress: { phase in
+                        await MainActor.run {
+                            state.updateIntegrationPhase(phase)
+                        }
                     }
                 )
 
