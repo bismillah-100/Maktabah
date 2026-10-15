@@ -221,26 +221,36 @@ class iOSNavigationManager {
             do {
                 try await BookArchiveIntegrator.shared.ensureBookIntegrated(
                     book,
-                    onIntegrating: { [weak self] in
-                        await MainActor.run { [weak self] in
-                            self?.showIntegratingState(for: state)
+                    onDownloadProgress: { [weak state] written, total in
+                        Task { @MainActor [weak state] in
+                            guard let state, state.mode == .downloading else { return }
+                            let writtenStr = ByteCountFormatter.string(fromByteCount: written, countStyle: .file)
+                            let totalStr = total > 0 ? ByteCountFormatter.string(fromByteCount: total, countStyle: .file) : ""
+                            state.detail = total > 0 ? "\(writtenStr) / \(totalStr)" : writtenStr
+                            withAnimation(.linear(duration: 0.15)) {
+                                state.progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
+                            }
                         }
                     },
-                    onProgress: { phase in
-                        await MainActor.run {
-                            state.updateIntegrationPhase(phase)
-                        }
+                    onIntegrating: { [weak self] in
+                        await self?.completeDownloadBeforeIntegrating(for: state)
+                    },
+                    onProgress: { [weak self] phase in
+                        await self?.updateProgressPhase(for: state, phase: phase)
                     }
                 )
 
-                await MainActor.run { [weak self] in
-                    if !MaktabahApp.isIpad, self?.selectedBook != nil {
-                        // Do not automatically push a new book if there is already an active reader on iPhone
-                    } else {
-                        self?.presentReader(book, options: OpenBookOptions(contentId: initialContentId))
-                    }
-                    self?.activeIntegrationStates.removeAll { $0.id == state.id }
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    state.progress = 1.0
                 }
+                await Task.yield()
+
+                if !MaktabahApp.isIpad, self?.selectedBook != nil {
+                    // Do not automatically push a new book if there is already an active reader on iPhone
+                } else {
+                    self?.presentReader(book, options: OpenBookOptions(contentId: initialContentId))
+                }
+                self?.activeIntegrationStates.removeAll { $0.id == state.id }
             } catch is CancellationError {
                 await MainActor.run { [weak self] in
                     self?.activeIntegrationStates.removeAll { $0.id == state.id }
@@ -327,6 +337,22 @@ class iOSNavigationManager {
 
     private func showIntegratingState(for state: BundleArchiveDownloadProgressState) {
         state.transitionToIntegrating()
+    }
+
+    private func completeDownloadBeforeIntegrating(for state: BundleArchiveDownloadProgressState) async {
+        withAnimation(.linear(duration: 0.15)) {
+            state.progress = 1.0
+        }
+        try? await Task.sleep(for: .milliseconds(450))
+        withAnimation(.easeInOut(duration: 0.25)) {
+            showIntegratingState(for: state)
+        }
+    }
+
+    private func updateProgressPhase(for state: BundleArchiveDownloadProgressState, phase: IntegratePhase) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            state.updateIntegrationPhase(phase)
+        }
     }
 
     private func presentReader(_ book: BooksData, options: OpenBookOptions) {

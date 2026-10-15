@@ -114,6 +114,7 @@ struct BundleArchiveDownloadProgressView: View {
                     Image(systemName: "tray.and.arrow.down.fill")
                         .foregroundStyle(.white)
                         .imageScale(.medium)
+                        .symbolEffect(.pulse, isActive: state.mode != .confirmation)
                 }
                 .frame(width: 36, height: 36)
 
@@ -245,6 +246,7 @@ struct iOSBookDownloadProgressView: View {
                         Image(systemName: "tray.and.arrow.down.fill")
                             .font(.caption)
                             .foregroundColor(.accentColor)
+                            .symbolEffect(.pulse, isActive: state.mode != .confirmation)
                         Text(state.title)
                             .font(.caption)
                             .fontWeight(.bold)
@@ -282,9 +284,12 @@ struct iOSBookDownloadProgressView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(.green)
                     }
+                    .transition(.opacity.combined(with: .scale))
                 } else if state.mode == .integrating {
-                    ProgressView().progressViewStyle(.circular)
+                    ProgressView()
+                        .progressViewStyle(.circular)
                         .controlSize(.small)
+                        .transition(.opacity.combined(with: .scale))
                 }
             }
 
@@ -292,10 +297,13 @@ struct iOSBookDownloadProgressView: View {
                 ProgressView(value: state.progress)
                     .progressViewStyle(.linear)
                     .tint(.accentColor)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
+        .animation(.easeInOut(duration: 0.25), value: state.mode)
+        .animation(.smooth(duration: 0.25), value: state.progress)
     }
 }
 
@@ -424,6 +432,18 @@ final class BookIntegrateModalCenter {
         updateWindowSize(height: 180, animated: true)
     }
 
+    func completeDownloadBeforeIntegrating() async {
+        progressState?.progress = 1.0
+        try? await Task.sleep(for: .seconds(0.4))
+        showIntegrating()
+    }
+
+    func updateProgressPhase(_ phase: IntegratePhase) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            progressState?.updateIntegrationPhase(phase)
+        }
+    }
+
     func dismiss() {
         internalDismiss(cancelContinuation: true)
     }
@@ -519,18 +539,23 @@ extension BookIntegrateModalCenter {
                     let writtenStr = ByteCountFormatter.string(fromByteCount: written, countStyle: .file)
                     let totalStr = total > 0 ? ByteCountFormatter.string(fromByteCount: total, countStyle: .file) : ""
                     state.detail = total > 0 ? "\(writtenStr) / \(totalStr)" : writtenStr
-                    state.progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
+                    withAnimation(.linear(duration: 0.15)) {
+                        state.progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
+                    }
                 }
             },
             onIntegrating: { [weak self] in
-                await self?.showIntegrating()
+                await self?.completeDownloadBeforeIntegrating()
             },
             onProgress: { [weak self] phase in
-                await MainActor.run { [weak self] in
-                    self?.progressState?.updateIntegrationPhase(phase)
-                }
+                await self?.updateProgressPhase(phase)
             }
         )
+
+        withAnimation(.easeInOut(duration: 0.25)) {
+            progressState?.progress = 1.0
+        }
+        await Task.yield()
     }
 }
 #endif
