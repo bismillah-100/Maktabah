@@ -5,6 +5,8 @@
 //  Created by MacBook on 17/01/26.
 //
 
+#if os(macOS)
+import AppKit
 import Foundation
 import IOKit.pwr_mgt
 import OSLog
@@ -15,6 +17,15 @@ final class ScreenTimeManager: Sendable {
         var assertionID: IOPMAssertionID = 0
         var timerTask: Task<Void, Never>?
         var isActive = false
+        var durationMinutes: Int = 10
+        var lastResetTime: ContinuousClock.Instant = .now
+        var eventMonitor: Any?
+    }
+
+    private struct CancellationSnapshot {
+        let assertionID: IOPMAssertionID
+        let timerTask: Task<Void, Never>?
+        let eventMonitor: Any?
     }
 
     private let state: Mutex<State>
@@ -32,9 +43,22 @@ final class ScreenTimeManager: Sendable {
         }
     }
 
-    // Extend screen time
+    // Extend screen time dengan monitoring interaksi pengguna
     func extend(minutes: Int = 10) {
-        cancel()
+        state.withLock { s in
+            s.isActive = true
+            s.durationMinutes = minutes
+        }
+
+        ensureAssertion(minutes: minutes)
+        resetTimer(minutes: minutes)
+        startMonitoring()
+    }
+
+    // Pastikan assertion IOKit aktif untuk mencegah sleep
+    private func ensureAssertion(minutes: Int) {
+        let needsCreate = state.withLock { $0.assertionID == 0 }
+        guard needsCreate else { return }
 
         let reasonForActivity = "Extend screen time \(minutes) menit" as CFString
         var newAssertionID: IOPMAssertionID = 0
@@ -46,53 +70,130 @@ final class ScreenTimeManager: Sendable {
             &newAssertionID
         )
 
-        guard result == kIOReturnSuccess else { return }
-
-        Logger.app.debug("Screen time extended untuk \(minutes) menit")
-
-        let task = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(minutes * 60))
-            self?.cancel()
+        guard result == kIOReturnSuccess else {
+            Logger.app.error("Gagal membuat IOPMAssertion: \(result)")
+            return
         }
+
+        Logger.app.debug("Screen time assertion dibuat untuk \(minutes) menit")
 
         let oldAssertion = state.withLock { s -> IOPMAssertionID in
             let old = s.assertionID
             s.assertionID = newAssertionID
-            s.isActive = true
-            s.timerTask = task
             return old
         }
 
-        // Lepas assertion lama jika terjadi race condition saat pemanggilan
         if oldAssertion != 0 {
             IOPMAssertionRelease(oldAssertion)
         }
     }
 
-    // Cancel dari pengaturan
-    func cancel() {
-        // Ambil data yang perlu dibersihkan lalu ubah state secara atomik
-        let (assertionToRelease, taskToCancel) = state.withLock { s -> (IOPMAssertionID, Task<Void, Never>?) in
+    // Reset countdown timer (10 menit sejak interaksi terakhir)
+    private func resetTimer(minutes: Int) {
+        let task = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(minutes * 60))
+            self?.handleTimeout()
+        }
+
+        let oldTask = state.withLock { s -> Task<Void, Never>? in
+            let old = s.timerTask
+            s.timerTask = task
+            s.lastResetTime = .now
+            return old
+        }
+
+        oldTask?.cancel()
+    }
+
+    // Waktu jeda 10 menit tanpa interaksi telah habis -> lepas assertion agar layar bisa tidur sesuai setting sistem
+    private func handleTimeout() {
+        let assertionToRelease = state.withLock { s -> IOPMAssertionID in
             let assertion = s.assertionID
-            let task = s.timerTask
+            s.assertionID = 0
+            s.timerTask = nil
+            return assertion
+        }
+
+        if assertionToRelease != 0 {
+            IOPMAssertionRelease(assertionToRelease)
+            Logger.app.debug("Screen time idle timeout tercapai; assertion dilepas")
+        }
+    }
+
+    // Mulai pantau interaksi pengguna di jendela aplikasi
+    private func startMonitoring() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.startMonitoring()
+            }
+            return
+        }
+
+        state.withLock { s in
+            guard s.isActive, s.eventMonitor == nil else { return }
+            s.eventMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown, .keyDown, .scrollWheel]
+            ) { [weak self] event in
+                self?.userDidInteract()
+                return event
+            }
+        }
+    }
+
+    // Callback saat ada interaksi: di-throttle minimal 30 detik antar reset agar tidak membebani sistem
+    private func userDidInteract() {
+        let now = ContinuousClock.now
+        let (shouldRefresh, minutes) = state.withLock { s -> (Bool, Int) in
+            guard s.isActive else { return (false, 0) }
+            if now - s.lastResetTime >= .seconds(30) {
+                s.lastResetTime = now
+                return (true, s.durationMinutes)
+            }
+            return (false, 0)
+        }
+
+        if shouldRefresh {
+            ensureAssertion(minutes: minutes)
+            resetTimer(minutes: minutes)
+        }
+    }
+
+    // Cancel / matikan dari pengaturan
+    func cancel() {
+        let snapshot = state.withLock { s -> CancellationSnapshot in
+            let snapshot = CancellationSnapshot(
+                assertionID: s.assertionID,
+                timerTask: s.timerTask,
+                eventMonitor: s.eventMonitor
+            )
 
             s.assertionID = 0
             s.isActive = false
             s.timerTask = nil
+            s.eventMonitor = nil
 
-            return (assertion, task)
+            return snapshot
         }
 
-        // Eksekusi pelepasan di luar lock untuk mencegah lock contention
-        taskToCancel?.cancel()
+        snapshot.timerTask?.cancel()
 
-        if assertionToRelease != 0 {
-            IOPMAssertionRelease(assertionToRelease)
+        if snapshot.assertionID != 0 {
+            IOPMAssertionRelease(snapshot.assertionID)
             Logger.app.debug("Screen time extension dibatalkan")
+        }
+
+        if let monitorToRemove = snapshot.eventMonitor {
+            if Thread.isMainThread {
+                NSEvent.removeMonitor(monitorToRemove)
+            } else {
+                DispatchQueue.main.async {
+                    NSEvent.removeMonitor(monitorToRemove)
+                }
+            }
         }
     }
 
-    // Cek status
+    // Cek status aktif
     func isExtended() -> Bool {
         state.withLock { $0.isActive }
     }
@@ -101,3 +202,12 @@ final class ScreenTimeManager: Sendable {
         cancel()
     }
 }
+#else
+final class ScreenTimeManager: Sendable {
+    static let shared = ScreenTimeManager()
+    var isActive: Bool { false }
+    func extend(minutes: Int = 10) {}
+    func cancel() {}
+    func isExtended() -> Bool { false }
+}
+#endif

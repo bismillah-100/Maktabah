@@ -680,8 +680,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @IBAction private func extendScreenTime(_ sender: NSMenuItem) {
-        let screenTime = ScreenTimeManager.shared
-        sender.state == .off ? screenTime.extend() : screenTime.cancel()
+        let shouldEnable = sender.state == .off
+        shouldEnable ? ScreenTimeManager.shared.extend() : ScreenTimeManager.shared.cancel()
+        UserDefaults.standard.extendScreenTime = shouldEnable
     }
 
     @IBAction private func clickableAnnotation(_ sender: NSMenuItem) {
