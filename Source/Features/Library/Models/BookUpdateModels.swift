@@ -5,17 +5,18 @@
 //  Updated struktur untuk download selektif
 //
 
-import Foundation
 import Combine
+import Foundation
 
 // MARK: - CSV Entry dengan informasi lengkap
+
 struct BookIndexEntry: Codable, Sendable {
     let bkid: Int
     let bk: String
     let category: Int
     let versionName: Int64
     let downloadURL: String
-    let fileSize: Int64  // Ukuran dalam bytes
+    let fileSize: Int64 // Ukuran dalam bytes
 
     enum CodingKeys: String, CodingKey {
         case bkid
@@ -54,37 +55,39 @@ struct BookMetadata: Sendable {
 }
 
 // MARK: - Update Status untuk UI
+
 enum UpdateStatus: Equatable, Sendable {
-    case pending  // Belum diproses
-    case checking  // Sedang mengecek versi
+    case pending // Belum diproses
+    case checking // Sedang mengecek versi
     case new // buku baru
-    case needsUpdate  // Perlu update
-    case upToDate  // Sudah terbaru
-    case downloading  // Sedang download
-    case downloaded  // Download selesai, menunggu proses
-    case processing  // Sedang memproses
-    case completed  // Selesai
-    case failed(String)  // Gagal dengan pesan error
-    case skipped  // Dilewati (tidak dipilih user)
+    case needsUpdate // Perlu update
+    case upToDate // Sudah terbaru
+    case downloading // Sedang download
+    case downloaded // Download selesai, menunggu proses
+    case processing // Sedang memproses
+    case completed // Selesai
+    case failed(String) // Gagal dengan pesan error
+    case skipped // Dilewati (tidak dipilih user)
 
     var displayText: String {
         switch self {
-        case .pending: return String(localized: .Library.waiting)
-        case .checking: return String(localized: .Library.checking)
-        case .new: return String(localized: "new").localizedUppercase
-        case .needsUpdate: return String(localized: .Library.needsUpdate)
-        case .upToDate: return String(localized: .Library.alreadyUpdated)
-        case .downloading: return String(localized: .Library.downloadingWithEllipsis)
-        case .downloaded: return String(localized: .Library.downloaded)
-        case .processing: return String(localized: .Library.processing)
-        case .completed: return String(localized: "Done")
-        case .failed(let msg): return String(localized: .Library.failedWithMessage(msg))
-        case .skipped: return String(localized: .Library.skipped)
+        case .pending: String(localized: .Library.waiting)
+        case .checking: String(localized: .Library.checking)
+        case .new: String(localized: "new").localizedUppercase
+        case .needsUpdate: String(localized: .Library.needsUpdate)
+        case .upToDate: String(localized: .Library.alreadyUpdated)
+        case .downloading: String(localized: .Library.downloadingWithEllipsis)
+        case .downloaded: String(localized: .Library.downloaded)
+        case .processing: String(localized: .Library.processing)
+        case .completed: String(localized: "Done")
+        case let .failed(msg): String(localized: .Library.failedWithMessage(msg))
+        case .skipped: String(localized: .Library.skipped)
         }
     }
 }
 
 // MARK: - Book Update Item untuk ditampilkan di List
+
 @Observable
 final class BookUpdateItem: Identifiable, @unchecked Sendable {
     let id: Int
@@ -111,7 +114,7 @@ final class BookUpdateItem: Identifiable, @unchecked Sendable {
     }
 
     var fileSizeFormatted: String {
-        ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+        fileSize.formattedByteCount
     }
 
     var categoryName: String {
@@ -138,11 +141,12 @@ final class BookUpdateItem: Identifiable, @unchecked Sendable {
         self.downloadURL = downloadURL
 
         // Auto-select jika perlu update
-        self.isSelected = needsUpdate
+        isSelected = needsUpdate
     }
 }
 
 // MARK: - Result untuk tracking
+
 struct BookUpdateResult: Sendable {
     let bookId: Int
     let catId: Int

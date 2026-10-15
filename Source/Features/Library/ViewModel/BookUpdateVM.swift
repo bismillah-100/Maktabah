@@ -55,10 +55,7 @@ final class BookUpdateViewModel: @unchecked Sendable {
         }
         selectedCount = count
         totalSelectedSize = size
-        totalSelectedSizeFormatted = ByteCountFormatter.string(
-            fromByteCount: size,
-            countStyle: .file
-        )
+        totalSelectedSizeFormatted = size.formattedByteCount
         needsUpdateCount = needsCount
     }
 

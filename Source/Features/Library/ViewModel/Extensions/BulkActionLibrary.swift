@@ -103,8 +103,8 @@ extension LibraryViewModel {
     ) {
         progressState.message = String(localized: .Library.downloadingCountOfTotal(report.completed, report.total))
         if report.totalBytes > 0 {
-            let writtenStr = ByteCountFormatter.string(fromByteCount: report.downloadedBytes, countStyle: .file)
-            let totalStr = ByteCountFormatter.string(fromByteCount: report.totalBytes, countStyle: .file)
+            let writtenStr = report.downloadedBytes.formattedByteCount
+            let totalStr = report.totalBytes.formattedByteCount
             progressState.detail = "\(report.completed)/\(report.total) (\(writtenStr) / \(totalStr))"
             progressState.progress = min(1.0, Double(report.downloadedBytes) / Double(report.totalBytes))
         } else {
