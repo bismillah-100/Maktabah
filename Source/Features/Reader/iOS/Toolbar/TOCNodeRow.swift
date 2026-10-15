@@ -10,7 +10,7 @@ import SwiftUI
 struct TOCNodeRow: View {
     let item: TOCNode
     let selectedId: Int?
-    let onSelect: (Int) -> Void
+    let onSelect: (Int, String) -> Void
     @Binding var expandedPaths: Set<ObjectIdentifier>
 
     var isExpanded: Binding<Bool> {
@@ -80,7 +80,7 @@ struct TOCNodeRow: View {
 
     var nodeLabel: some View {
         Button(action: {
-            onSelect(item.id)
+            onSelect(item.id, item.bab)
         }) {
             Text(item.bab)
                 .font(ReaderViewModel.kfgqpcTitle)
@@ -97,7 +97,7 @@ struct TOCNodeRow: View {
     return TOCNodeRow(
         item: mockNode,
         selectedId: 1,
-        onSelect: { _ in },
+        onSelect: { _, _ in },
         expandedPaths: .constant(Set([ObjectIdentifier(mockNode)]))
     )
     .padding()
