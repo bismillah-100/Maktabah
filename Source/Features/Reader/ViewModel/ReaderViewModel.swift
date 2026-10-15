@@ -84,8 +84,11 @@ class ReaderViewModel: ViewModelBase {
 
     var searchViewModel = SearchViewModel()
     var readerState: ReaderState = .init()
+    @ObservationIgnored
     var needsScrollRestore: Bool = false
+    @ObservationIgnored
     var fetchScrollPosition: (() -> CGPoint?)?
+    @ObservationIgnored
     var fetchSelectedRange: (() -> NSRange?)?
     var isPopoverPresented: Bool = false
     #endif

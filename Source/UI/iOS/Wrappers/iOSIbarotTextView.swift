@@ -324,6 +324,13 @@ struct iOSIbarotTextView: UIViewRepresentable {
             onAddAnnotation?(sourceRange, .underline, sourceText, color)
         }
 
+        viewModel.fetchScrollPosition = { [weak textView] in
+            textView?.contentOffset
+        }
+        viewModel.fetchSelectedRange = { [weak textView] in
+            textView?.selectedRange
+        }
+
         container.addSubview(textView)
 
         // Pull navigation indicators
@@ -363,19 +370,14 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         context.coordinator.parent = self
 
-        viewModel.fetchScrollPosition = { [weak textView] in
-            textView?.contentOffset
-        }
-        viewModel.fetchSelectedRange = { [weak textView] in
-            textView?.selectedRange
+        let targetAlignment: NSTextAlignment = isMultiLanguage ? .natural : .right
+        if textView.textAlignment != targetAlignment {
+            textView.textAlignment = targetAlignment
         }
 
-        if isMultiLanguage {
-            textView.textAlignment = .natural
-            textView.semanticContentAttribute = .unspecified
-        } else {
-            textView.textAlignment = .right
-            textView.semanticContentAttribute = .forceRightToLeft
+        let targetSemantic: UISemanticContentAttribute = isMultiLanguage ? .unspecified : .forceRightToLeft
+        if textView.semanticContentAttribute != targetSemantic {
+            textView.semanticContentAttribute = targetSemantic
         }
 
         let isSearchEventForThisContent = searchEvent != nil && searchEvent?.contentId == viewModel.currentContentId
@@ -507,11 +509,12 @@ struct iOSIbarotTextView: UIViewRepresentable {
     }
 
     private func restoreScrollAndSelectionIfNeeded(textView: iOSCustomIbarotTextView, context: Context) {
-        guard context.coordinator.restoredContentId != viewModel.currentContentId || viewModel.needsScrollRestore else { return }
+        let isNewContent = context.coordinator.restoredContentId != viewModel.currentContentId
+        guard isNewContent || viewModel.needsScrollRestore else { return }
 
         if let scroll = viewModel.readerState.scrollPosition {
             textView.setContentOffset(scroll, animated: false)
-        } else {
+        } else if isNewContent {
             textView.setContentOffset(CGPoint(x: 0, y: -textView.adjustedContentInset.top), animated: false)
         }
         if let range = viewModel.readerState.selectedRange {
