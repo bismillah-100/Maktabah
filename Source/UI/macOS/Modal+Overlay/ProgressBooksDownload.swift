@@ -79,6 +79,15 @@ final class BundleArchiveDownloadProgressState: Identifiable {
         detail = String(localized: .Library.pleaseWaitProcessCannotBeCancelled)
         progress = 0
     }
+
+    func updateIntegrationPhase(_ phase: IntegratePhase) {
+        switch phase {
+        case .fts:
+            progress = 0.5
+        case .data:
+            progress = 0.9
+        }
+    }
 }
 
 struct BundleArchiveDownloadProgressView: View {
@@ -152,15 +161,9 @@ struct BundleArchiveDownloadProgressView: View {
 
             if state.mode != .confirmation {
                 VStack(alignment: .leading, spacing: 8) {
-                    if state.mode == .integrating {
-                        ProgressView()
-                            .progressViewStyle(.linear)
-                            .tint(.accentColor)
-                    } else {
-                        ProgressView(value: state.progress)
-                            .progressViewStyle(.linear)
-                            .tint(.accentColor)
-                    }
+                    ProgressView(value: state.progress)
+                        .progressViewStyle(.linear)
+                        .tint(.accentColor)
 
                     HStack(alignment: .firstTextBaseline) {
                         Text(state.detail)
@@ -279,22 +282,60 @@ struct iOSBookDownloadProgressView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(.green)
                     }
-                } else {
-                    Text(state.detail)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                } else if state.mode == .integrating {
+                    ProgressView().progressViewStyle(.circular)
+                        .controlSize(.small)
                 }
             }
 
             if state.mode != .confirmation {
                 ProgressView(value: state.progress)
-                    .progressViewStyle(LinearProgressViewStyle())
+                    .progressViewStyle(.linear)
                     .tint(.accentColor)
             }
         }
         .padding(.horizontal)
         .padding(.vertical, 10)
     }
+}
+
+#Preview("iOSBookDownloadProgressView") {
+    VStack(spacing: 20) {
+        iOSBookDownloadProgressView(
+            state: BundleArchiveDownloadProgressState(
+                title: "صحيح البخاري",
+                message: "Unduh kitab untuk membaca",
+                mode: .confirmation,
+                totalSizeString: "12.5 MB"
+            )
+        )
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(10)
+
+        iOSBookDownloadProgressView(
+            state: BundleArchiveDownloadProgressState(
+                title: "صحيح البخاري",
+                message: "Mengunduh kitab dari server...",
+                detail: "5.2 MB / 12.5 MB",
+                progress: 0.42,
+                mode: .downloading
+            )
+        )
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(10)
+
+        iOSBookDownloadProgressView(
+            state: {
+                let state = BundleArchiveDownloadProgressState(title: "صحيح البخاري", message: "")
+                state.transitionToIntegrating()
+                return state
+            }()
+        )
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(10)
+    }
+    .frame(width: 450)
+    .padding()
 }
 
 extension View {
@@ -483,6 +524,11 @@ extension BookIntegrateModalCenter {
             },
             onIntegrating: { [weak self] in
                 await self?.showIntegrating()
+            },
+            onProgress: { [weak self] phase in
+                await MainActor.run { [weak self] in
+                    self?.progressState?.updateIntegrationPhase(phase)
+                }
             }
         )
     }
