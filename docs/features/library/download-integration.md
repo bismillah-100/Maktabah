@@ -171,7 +171,7 @@ actor BookArchiveSingleFlight {
 }
 ```
 
-### B. IntegratePhase (Enum) - Dua Fase Integrasi & Pelacakan Progress
+### IntegratePhase (Enum)
 
 Operasi integrasi dibagi menjadi dua fase independen yang dipantau kemajuannya secara deterministik melalui `BundleArchiveDownloadProgressState.updateIntegrationPhase`:
 

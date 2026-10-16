@@ -233,46 +233,39 @@ sequenceDiagram
     participant Reader as IbarotTextVC
 
     App->>App: applicationDidFinishLaunching()
-    Note over App: pendingDeepLink != nil (Cold Start Widget)
-    App->>Win: window.setupContentView(mode: .viewer, restoreState: false)
-    Win->>Split: switchToMode(.viewer, restoreState: false)
-    Note over Split: Setup mode .viewer tanpa memulihkan state disk lama
-
+    App->>Win: restorePersistedState(mainWindowController.window)
+    Note over App: Memulihkan seluruh sesi tab terlebih dahulu agar tab lama tidak hilang
+    
     App->>+Reader: activeDeepLinkTask = Task { handleDeepLink(deepLink) }
     alt Deep Link: .annotation(id)
         Reader->>Reader: openAnnotation(annotation)
-    else Deep Link: .history(bkId, contentId)
-        Reader->>Reader: openHistory(book, contentId)
+    else Deep Link: .lastRead / .book(id, page, part)
+        Reader->>Reader: openBook(...)
     end
     deactivate Reader
 ```
 
-### E. Alur Persistensi State ke Disk saat Jendela Ditutup (*Window Close & Disk Persistence*)
+### E. Alur Persistensi Multi-Tab & Penghentian Aplikasi (*Quit & Session Persistence*)
 
 ```mermaid
-sequenceDiagram
-    autonumber
+flowchart TD
+    subgraph "App Lifecycle (AppDelegate)"
+        A["User Cmd+Q / Quit"] --> B["applicationShouldTerminate(_:)"]
+        B -->|"1. isTerminating = true"| C["saveAllTabsSession()"]
+        C -->|"2. Atomic Save"| D["tabs_session.json"]
+        B -->|"3. Return .terminateNow"| E["AppKit Window Teardown"]
+        E --> F["windowObserverWillCloseNotification"]
+        F -->|"isTerminating == true"| G["Skip duplicate save & avoid pruning"]
+    end
 
-    actor User as Pengguna
-    participant App as AppDelegate
-    participant Split as SplitVC
-    participant State as ReaderStateManager
-    participant Comp as Komponen UI
-
-    User->>+App: Tutup Jendela (Cmd+W) / willCloseNotification
-    App->>+Split: persistCurrentStateToDisk()
-
-    Split->>+State: saveState(for: currentMode)
-    State->>+Comp: updateState(&state)
-    Note over Comp: Simpan Book, Page, Scroll, Selection, Query
-    Comp-->>-State: State terbarui
-
-    State->>State: persistToDisk()<br/>(JSONEncoder & Tulis Atomik ke Disk)
-    State-->>-Split: Selesai simpan ke disk
-    Split-->>-App: Persist selesai
-
-    App->>App: mainWindowController = nil
-    deactivate App
+    subgraph "Launch & Restoration"
+        H["App Launch / Reopen"] --> I{"Deep Link Pending?"}
+        I -->|"Yes"| J["restorePersistedState first"]
+        J --> K["Open Deep Link in Active/Target Tab"]
+        I -->|"No"| L["restorePersistedState"]
+        L --> M["Restore Tabs in Loop"]
+        M --> N["Only Key Window gets First Responder"]
+    end
 ```
 
 ---
@@ -303,10 +296,12 @@ Manajemen status antarmuka (seperti kitab aktif, nomor halaman, posisi *scroll*,
    - **Langkah 5 (Restorasi Mode Baru Bersyarat)**: Jika parameter `restoreState` bernilai `true` (default), `stateManager.restoreState(for: mode, components: components(for: mode))` dipanggil untuk memulihkan state komponen target. Jika dipicu dari deep link widget (`restoreState: false`), restorasi diabaikan agar konten deep link dimuat tanpa tertimpa state persisten lama.
 
 3. **Persistensi Sesi Tab ke Disk (`saveAllTabsSession`)**
-   - Dipicu saat jendela ditutup (`windowObserverWillCloseNotification`), aplikasi kehilangan fokus (`applicationWillResignActive`), maupun saat aplikasi akan dihentikan (`applicationWillTerminate`).
+   - Menggunakan mekanisme *debounced auto-save* (3 detik via Combine `PassthroughSubject`) serta pembanding *in-memory diffing* (`lastSavedSession == session`).
+   - Apabila tidak ada perubahan tab/halaman/kitab, penulisan ke disk dilewati 100% (*Zero Disk I/O*).
+   - Dipicu saat fokus tab berganti (`windowObserverDidChangeKey`), reset tampilan (`resetCurrentViewState`), serta flush langsung saat aplikasi akan dihentikan (`applicationShouldTerminate`).
    - Mengambil seluruh jendela di dalam grup tab (`refWindow.tabGroup?.windows`).
    - Mengekstrak `TabStateSnapshot` dari masing-masing jendela via `splitVC.stateManager.exportTabSnapshot(currentMode:components:)`.
-   - Mengemas seluruh snapshot bersama `selectedIndex` ke dalam `WindowTabsSession` dan menyimpannya secara atomik ke *disk* di `~/Library/Application Support/Maktabah/States/window_tabs_session.json` (`ReaderStateManager.saveTabsSession`).
+   - Mengemas seluruh snapshot bersama `selectedIndex` ke dalam `WindowTabsSession` dan menyimpannya secara atomik ke *disk* di `~/Library/Application Support/Maktabah/States/tabs_session.json` (`ReaderStateManager.saveTabsSession`).
 
 ### ReaderStateComponent (Protocol)
 
@@ -333,24 +328,33 @@ Objek *state* dienkapsulasi dalam struktur `Codable` yang disimpan pada direktor
 - `search_state.json`: Menyimpan *state* pencarian (kueri, opsi FTS, hasil pencarian, dan buku terpilih).
 - `author_state.json`: Menyimpan *state* biografi perawi (perawi aktif, kueri rujukan, dan hasil biografi).
 
-### TabStateSnapshot (Struct) & WindowTabsSession (Struct)
+### TabStateSnapshot (Struct)
 
 Model persistensi sesi multi-tab macOS untuk mempertahankan tata letak tab antar-peluncuran aplikasi:
 
 ```swift
-public struct TabStateSnapshot: Codable {
-    public let currentMode: AppMode
-    public let states: [String: ReaderState]
-}
-
-public struct WindowTabsSession: Codable {
-    public let selectedTabIndex: Int
-    public let tabs: [TabStateSnapshot]
+public struct TabStateSnapshot: Codable, Equatable {
+    public var currentModeRaw: Int
+    public var viewerState: ReaderState
+    public var searchState: ReaderState
+    public var authorState: ReaderState
 }
 ```
 
-* **`TabStateSnapshot`**: Mengisolasi kamus *state* (`states`) per tab jendela sehingga mutasi pembacaan di satu tab tidak bocor (*leak*) ke tab lain.
-* **`WindowTabsSession`**: Mengenkapsulasi seluruh tab aktif bersama indeks tab yang sedang dibuka (`selectedTabIndex`) dan disimpan pada `window_tabs_session.json`.
+* Mengisolasi *state* (`viewerState`, `searchState`, `authorState`) per-tab jendela secara terisolasi.
+
+### WindowTabsSession (Struct)
+
+Model persistensi sesi tab jendela:
+
+```swift
+public struct WindowTabsSession: Codable, Equatable {
+    public var selectedTabIndex: Int
+    public var tabs: [TabStateSnapshot]
+}
+```
+
+* Mengenkapsulasi seluruh tab aktif bersama indeks tab yang sedang dibuka (`selectedTabIndex`) dan disimpan pada `tabs_session.json`.
 
 ### Penanganan Jendela Ganda & Grup Tab (*Multi-Window & Tabs*)
 

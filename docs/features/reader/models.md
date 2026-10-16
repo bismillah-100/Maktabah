@@ -64,7 +64,7 @@ Dengan menjadikan kombinasi *boolean* ini sebagai kunci *hash*, `BookPageCache` 
 
 ## 2. Opsi & Payload Perenderan Teks
 
-### A. IbarotTextOptions (Struct) - IbarotTextOptions.swift
+### IbarotTextOptions (Struct)
 
 *Struct* parameter yang diteruskan ke *protocol* `TextViewRenderable`:
 
@@ -80,7 +80,7 @@ struct IbarotTextOptions {
 
 * **`keepScrollPosition`**: Menentukan apakah posisi gulir layar (*scroll offset*) dipertahankan saat teks dimuat ulang (*reload*), misalnya ketika pengguna mengubah ukuran font atau visibilitas harakat agar posisi baca tidak melompat ke atas.
 
-### B. ContentRenderPayload (Struct) - ContentRenderPayload.swift
+### ContentRenderPayload (Struct)
 
 Paket muatan (*render payload*) untuk pembaruan teks AppKit/UIKit:
 
@@ -134,7 +134,7 @@ final class TOCNode: Identifiable, @unchecked Sendable {
 
 ## 4. ReaderState & Model Sesi Tab
 
-### A. ReaderState (Struct) - State Navigasi & Pemulihan Sesi
+### ReaderState (Struct)
 
 `ReaderState` merangkum seluruh status tampilan pembaca aktif, memungkinkan pemulihan posisi sesi (*session restoration*):
 
@@ -166,24 +166,33 @@ struct ReaderState: Codable, Equatable {
     * `.bookContent`: Menampilkan teks kitab karya pengarang tersebut.
 * **`hasContent`**: Properti terhitung untuk memvalidasi apakah layar pembaca sedang memuat naskah aktif atau dalam status kosong (*placeholder*).
 
-### B. TabStateSnapshot (Struct) & WindowTabsSession (Struct)
+### TabStateSnapshot (Struct)
 
 Model persistensi sesi multi-tab untuk mengisolasi memori navigasi antar-tab jendela macOS:
 
 ```swift
-public struct TabStateSnapshot: Codable {
-    public let currentMode: AppMode
-    public let states: [String: ReaderState]
-}
-
-public struct WindowTabsSession: Codable {
-    public let selectedTabIndex: Int
-    public let tabs: [TabStateSnapshot]
+public struct TabStateSnapshot: Codable, Equatable {
+    public var currentModeRaw: Int
+    public var viewerState: ReaderState
+    public var searchState: ReaderState
+    public var authorState: ReaderState
 }
 ```
 
-* **`TabStateSnapshot`**: Menyimpan kamus `states` (`viewer`, `search`, `author`) per-tab jendela secara terisolasi.
-* **`WindowTabsSession`**: Mengemas seluruh daftar snapshot tab beserta indeks tab aktif (`selectedTabIndex`) untuk ditulis secara atomik ke `window_tabs_session.json`.
+* Menyimpan state (`viewerState`, `searchState`, `authorState`) per-tab jendela secara terisolasi.
+
+### WindowTabsSession (Struct)
+
+Model persistensi sesi tab jendela:
+
+```swift
+public struct WindowTabsSession: Codable, Equatable {
+    public var selectedTabIndex: Int
+    public var tabs: [TabStateSnapshot]
+}
+```
+
+* Mengemas seluruh daftar snapshot tab beserta indeks tab aktif (`selectedTabIndex`) untuk ditulis secara atomik ke `tabs_session.json`.
 
 ---
 
