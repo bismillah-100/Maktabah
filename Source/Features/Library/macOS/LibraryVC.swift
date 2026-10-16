@@ -253,4 +253,8 @@ extension LibraryVC: LibraryViewDelegate {
             }
         }
     }
+
+    func openBookInNewTab(_ book: BooksData) {
+        (view.window as? MainWindow)?.openBookInNewTab(book)
+    }
 }
