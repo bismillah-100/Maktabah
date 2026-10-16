@@ -7,6 +7,7 @@
 //
 
 @preconcurrency import CloudKit
+import Combine
 import OSLog
 import SwiftUI
 #if DIRECT_DISTRIBUTION
@@ -29,8 +30,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     fileprivate var windowControllers = Set<WindowController>()
     private var isTerminating = false
     private var pendingDeepLink: WidgetDeepLink?
-    private var isFinishedLaunching = false
+    var isFinishedLaunching = false
     private var activeDeepLinkTask: Task<Void, Never>?
+
+    private let sessionSaveSubject = PassthroughSubject<Void, Never>()
+    private var sessionSaveCancellable: AnyCancellable?
+    private var lastSavedSession: WindowTabsSession?
 
     fileprivate weak var quranWindow: NSWindow?
     fileprivate weak var settingsWindow: NSWindow?
@@ -97,6 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         BookConnection.tocTreeCache.totalCostLimit = 50 * 1024 * 1024
 
         setupWindowObserver()
+        setupSessionAutoSave()
 
         controlMenu.delegate = self
         _ = ScreenTimeManager.shared // untuk init supaya pengaturan diload.
@@ -205,7 +211,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillResignActive(_ notification: Notification) {
-        saveAllTabsSession()
         flushPendingWidgetUpdates(cloudKit: true)
     }
 
@@ -217,7 +222,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ aNotification: Notification) {
         isTerminating = true
-        saveAllTabsSession()
         flushPendingWidgetUpdates(cloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
@@ -249,6 +253,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func scheduleSessionSave() {
+        guard isFinishedLaunching, !isTerminating else { return }
+        sessionSaveSubject.send(())
+    }
+
+    func setupSessionAutoSave() {
+        sessionSaveCancellable = sessionSaveSubject
+            .debounce(for: .seconds(3), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                guard let self, !isTerminating, mainWindowController != nil else { return }
+                saveAllTabsSession()
+            }
+    }
+
     func saveAllTabsSession() {
         guard let refWindow = (keyWindow ?? mainWindowController?.window as? MainWindow ?? NSApp.windows.compactMap { $0 as? MainWindow }.first) else {
             return
@@ -278,6 +296,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !snapshots.isEmpty else { return }
 
         let session = WindowTabsSession(selectedTabIndex: selectedIndex, tabs: snapshots)
+        if lastSavedSession == session {
+            return
+        }
+        lastSavedSession = session
         ReaderStateManager.saveTabsSession(session)
     }
 
@@ -296,32 +318,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func windowObserverDidChangeKey(_ notification: Notification) {
         guard let window = notification.object as? MainWindow,
               let windowController = window.windowController as? WindowController
-        else {
-            return
-        }
+        else { return }
 
         if mainWindowController != windowController {
             mainWindowController = windowController
         }
+
+        scheduleSessionSave()
     }
 
     @objc func windowObserverWillCloseNotification(_ notification: Notification) {
         guard let window = notification.object as? MainWindow else { return }
-
-        if !isTerminating {
-            let remainingMainWindows = NSApp.windows
-                .compactMap { $0 as? MainWindow }
-                .filter { $0 !== window }
-
-            if remainingMainWindows.isEmpty {
-                saveAllTabsSession()
-            } else {
-                DispatchQueue.main.async { [weak self] in
-                    guard let self, !self.isTerminating else { return }
-                    saveAllTabsSession()
-                }
-            }
-        }
 
         if let wc = window.windowController as? WindowController {
             windowControllers.remove(wc)
@@ -348,6 +355,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             firstWindow.displayIfNeeded()
             return
         }
+
+        lastSavedSession = session
 
         var restoredWindows: [MainWindow] = []
         var previousWindow = firstWindow

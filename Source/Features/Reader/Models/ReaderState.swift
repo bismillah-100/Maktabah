@@ -135,11 +135,16 @@ extension ReaderState: Equatable {
             && lhs.currentPart == rhs.currentPart
             && lhs.currentRowi?.id == rhs.currentRowi?.id
             && lhs.authorDisplayMode == rhs.authorDisplayMode
+            && lhs.isSidebarCollapsed == rhs.isSidebarCollapsed
+            && lhs.searchQuery == rhs.searchQuery
+            && lhs.searchModeRaw == rhs.searchModeRaw
+            && lhs.searchNearDistance == rhs.searchNearDistance
+            && lhs.authorSearchQuery == rhs.authorSearchQuery
     }
 }
 
 /// Menyimpan seluruh state (Viewer, Search, Narrator) milik satu tab
-struct TabStateSnapshot: Codable {
+struct TabStateSnapshot: Codable, Equatable {
     var currentModeRaw: Int
     var viewerState: ReaderState
     var searchState: ReaderState
@@ -151,7 +156,7 @@ struct TabStateSnapshot: Codable {
 }
 
 /// Menyimpan daftar seluruh tab yang terbuka pada jendela utama beserta tab yang aktif
-struct WindowTabsSession: Codable {
+struct WindowTabsSession: Codable, Equatable {
     var selectedTabIndex: Int
     var tabs: [TabStateSnapshot]
 }

@@ -153,7 +153,7 @@ class ReaderStateManager {
 
     func persistToDisk() {
         #if os(macOS)
-        (NSApp.delegate as? AppDelegate)?.saveAllTabsSession()
+        (NSApp.delegate as? AppDelegate)?.scheduleSessionSave()
         #endif
     }
 

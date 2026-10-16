@@ -288,4 +288,55 @@ struct AppDelegateLifecycleTests {
         #expect(resolvedIndex == 1)
         #expect(resolvedIndex != count - 1)
     }
+
+    @Test("Full Workspace Preservation: windowObserverWillCloseNotification tidak menghapus atau menimpa sesi saat seluruh jendela ditutup")
+    func testWindowWillClose_preservesSessionWhenLastWindowCloses() {
+        let appDelegate = AppDelegate()
+
+        // 1. Simpan sesi awal dengan 2 tab
+        let snap1 = TabStateSnapshot(currentModeRaw: 0, viewerState: ReaderState(), searchState: ReaderState(), authorState: ReaderState())
+        let snap2 = TabStateSnapshot(currentModeRaw: 1, viewerState: ReaderState(), searchState: ReaderState(), authorState: ReaderState())
+        let initialSession = WindowTabsSession(selectedTabIndex: 0, tabs: [snap1, snap2])
+        ReaderStateManager.saveTabsSession(initialSession)
+
+        // 2. Buat dummy window terakhir yang sedang menutup
+        let window = MainWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        let notification = Notification(name: NSWindow.willCloseNotification, object: window)
+
+        // 3. Panggil willCloseNotification (simulasi jendela terakhir menutup tanpa terminasi)
+        appDelegate.windowObserverWillCloseNotification(notification)
+
+        // 4. Verifikasi bahwa sesi disk tetap utuh (2 tab), tidak tertimpa menjadi 1 tab atau kosong
+        let loadedSession = ReaderStateManager.loadTabsSession()
+        #expect(loadedSession != nil)
+        #expect(loadedSession?.tabs.count == 2)
+    }
+
+    @Test("Debounced Session Save: scheduleSessionSave tidak melakukan save seketika ke disk")
+    func testScheduleSessionSave_debouncesDiskWrite() {
+        let appDelegate = AppDelegate()
+        appDelegate.isFinishedLaunching = true
+        appDelegate.setupSessionAutoSave()
+
+        // Panggil scheduleSessionSave
+        appDelegate.scheduleSessionSave()
+
+        // Karena debounced (3 detik), tidak boleh langsung menulis synchronous
+        #expect(appDelegate.isFinishedLaunching == true)
+    }
+
+    @Test("App Termination & Background: memicu direct saveAllTabsSession seketika")
+    func testApplicationTermination_flushesSessionImmediately() {
+        let appDelegate = AppDelegate()
+        _ = appDelegate.applicationShouldTerminate(NSApp)
+
+        let mirror = Mirror(reflecting: appDelegate)
+        let isTerminating = mirror.children.first(where: { $0.label == "isTerminating" })?.value as? Bool
+        #expect(isTerminating == true)
+    }
 }

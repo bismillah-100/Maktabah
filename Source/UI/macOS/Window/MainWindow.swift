@@ -46,7 +46,6 @@ class MainWindow: NSWindow {
 
     override func newWindowForTab(_ sender: Any?) {
         let newWindowController = WindowController()
-        (NSApp.delegate as? AppDelegate)?.registerWindowController(newWindowController)
 
         // Tambahkan sebagai tab
         if let newWindow = newWindowController.window as? MainWindow {
