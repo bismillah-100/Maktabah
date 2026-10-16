@@ -8,6 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # macOS (direct/Developer ID Version)
 xcodebuild build -project Maktabah.xcodeproj -scheme Maktabah-Direct -configuration Debug
 
+# Run Tests (MaktabahTests via Maktabah-Direct scheme)
+xcodebuild test -project Maktabah.xcodeproj -scheme Maktabah-Direct -configuration Debug
+
 # iOS Simulator (iPhone)
 xcodebuild build -project Maktabah.xcodeproj -scheme Maktabah-iOS \
   -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=26.3.1" -configuration Debug
@@ -60,10 +63,10 @@ The codebase is organized into three primary layers under `Source/`:
 
 - **`SQLiteDatabase`**: Thread-safe SQLite wrapper (NSRecursiveLock) via `libsqlite3`. Exposes `fetch()` and `execute()`.
 - **`DatabaseManager`**: Singleton managing two connections: `main.sqlite` (book catalog) and `special.sqlite` (authors, abbreviations).
-- **`BookConnection`**: Per-book connection to archive SQLite files. Content blobs are LZString-compressed and decompressed on read. Tables `b{id}` (content) and `t{id}` (TOC) per archive.
+- **`BookConnection`**: Per-book connection to archive SQLite files. Content blobs are LZString-compressed and decompressed on read. Tracks `currentArchiveId` and provides idempotent `connect(archive:force:)`. Tables `b{id}` (content) and `t{id}` (TOC) per archive.
 - **`BookDownloadManager`**: Per-book downloader. Metadata is stored in `index.json` hosted on GitHub Releases to locate download links.
 - **`CoreDatabaseDownloader`**: Downloads + decompresses (zstd) core DBs from GitHub Releases on initial launch or update.
-- **`SearchEngine`**: Engine to search FTS table with multiple concurrent connections via `SQLiteConnectionPool` on `1-20.sqlite` archives.
+- **`SearchEngine`**: Engine to search FTS table with multiple concurrent connections via `SQLiteConnectionPool` on `1-20.sqlite` archives. `SearchWorker` caches Unified FTS schema per archive via Mutex.
 - Archives live in `~/Library/Application Support/Maktabah/Caches/Archives/` (custom) or bundled.
 
 ### Reader Architecture

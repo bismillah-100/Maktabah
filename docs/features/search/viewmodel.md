@@ -74,6 +74,8 @@ Fungsionalitas `SearchViewModel` didistribusikan ke dalam beberapa berkas eksten
 Menangani siklus pencarian seperti eksekusi awal (`startSearch`), jeda/lanjutkan (*pause/resume*), dan penghentian *task* (`stopSearch`). Eksekusi dialihkan ke *background thread* melalui `Task.detached` dengan penguncian `Mutex` pada referensi `Task` untuk mencegah akses konkuren ganda.
 Di AppKit (macOS), ekstensi ini memanfaatkan *Combine Publishers* seperti `searchDidInitialize` atau `searchProgressDidUpdate`.
 
+* **Sentralisasi Cooldown Penyelesaian (`handleSearchCompletion`)**: Penutupan indikator pencarian dan pengiriman sinyal selesai disentralisasi ke dalam view model dengan jeda waktu terukur (0.5 detik di iOS dan 1.0 detik di macOS via `completionDismissTask` yang diproteksi `Mutex`). Mekanisme ini mengeliminasi *race condition* pada `OptionSearchVC` saat kueri menghasilkan 0 baris kecocokan, memastikan bilah progres ditutup dan tombol pencarian di-reset secara konsisten.
+
 ### 2. Library (`Search+Library.swift`)
 
 Bertindak sebagai adapter dan delegator menuju `LibraryDataManager` untuk melacak tabel SQLite (*resolve*) terhadap pustaka kitab terkait.

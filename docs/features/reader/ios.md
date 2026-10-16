@@ -112,12 +112,13 @@ flowchart TD
 | `showingNavigation` | `PageJumpSheet` | Bilah geser (*slider*) cepat dan kolom masukan nomor halaman/juz. |
 | `showingTabsList` | `iOSReaderTabsPopoverView` | Menampilkan daftar kitab yang sedang dibuka secara bersamaan (*multi-tab reader* popover) pada tata letak kompak. |
 
-### B. Jembatan iOSIbarotTextView (UIViewRepresentable)
-Mengintegrasikan `UITextView` UIKit ke dalam arsitektur deklaratif SwiftUI:
+### B. Jembatan iOSIbarotTextView (UIViewRepresentable) & Isolasi Layout
+Mengintegrasikan `UITextView` UIKit ke dalam arsitektur deklaratif SwiftUI dengan perlindungan tata letak TextKit 2:
 
 * **`makeUIView`**: Menginisialisasi `UITextView` kustom dengan properti *non-editable*, *selectable*, serta mendukung perpindahan per halaman (*paging mode*) maupun pengguliran kontinu (*continuous scrolling*).
-* **`updateUIView`**: Menerima injeksi `NSAttributedString` baru dari `ReaderViewModel`. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks.
-* **`Coordinator` (`UITextViewDelegate`)**: Menangani interaksi seleksi teks untuk menu *highlight/underline*, mencegat ketukan anotasi (`onTapAnnotation`), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (`lastHandledSearchEventId`, `lastHandledAnnotationEventId`) per *instance* aktif.
+* **`updateUIView`**: Menerima injeksi `NSAttributedString` baru dari `ReaderViewModel`. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks. Mutasi `textAlignment` dan atribut semantik teks diproteksi dengan guard nilai saat ini guna mencegah pembatalan hierarki tata letak TextKit 2 yang berat pada halaman panjang.
+* **Isolasi Render Lembar Modal (`ReaderTextContentView: Equatable`)**: Tampilan pembaca dibungkus dalam *struct* terisolasi yang mengadopsi `Equatable`. Hal ini mencegah SwiftUI mengevaluasi ulang *Text View* ketika status *sheet* (seperti TOC atau opsi tampilan) dimutasi oleh kontainer induk.
+* **`Coordinator` (`UITextViewDelegate`)**: Menangani interaksi seleksi teks untuk menu *highlight/underline*, mencegat ketukan anotasi (`onTapAnnotation`), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (`lastHandledSearchEventId`, `lastHandledAnnotationEventId`) per *instance* aktif. Properti pembantu restorasi *scroll* ditandai dengan `@ObservationIgnored` pada `ReaderViewModel` untuk mencegah siklus evaluasi reaktif yang berlebih.
 
 ### C. Penanganan Ekstensi UI & Mode Membaca Layar Penuh (*Fullscreen*)
 

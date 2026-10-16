@@ -71,6 +71,7 @@ Saat memuat halaman (terutama ketika pengguna melakukan *fast-scrolling* dengan 
 
 *   **Task Cancellation**: `ReaderViewModel` menyimpan referensi *task* pemuatan dalam `currentLoadTask`. Jika pengguna berpindah halaman sebelum halaman saat ini selesai dimuat, *task* sebelumnya langsung dibatalkan (`currentLoadTask?.cancel()`).
 *   **Debouncing Pagination**: Perpindahan halaman melalui *slider* di-*debounce* selama beberapa milidetik. Pemuatan basis data FTS atau dekompresi *Zstandard* (zstd) tidak akan terpicu hingga pengguna berhenti menggeser tuas *slider*.
+*   **Offloading Kueri Pagination (`jumpToPage`)**: Eksekusi pengambilan konten basis data pada navigasi *slider* didelegasikan ke *background thread* melalui `Task.detached`. Pendekatan ini memisahkan kueri I/O disk SQLite dari isolasi `@MainActor`, menjamin antarmuka pengguna tidak mengalami *stutter* saat pergeseran halaman cepat.
 
 ```mermaid
 stateDiagram-v2

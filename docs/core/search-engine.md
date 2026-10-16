@@ -117,18 +117,20 @@ actor SearchEngine {
 1. Kumpulan *worker* yang dipetakan per ID arsip basis data.
 
 !!! note "Task Cancellation"
-    `SearchEngine` mengelola penugasan tugas utamanya dalam properti `searchTask`, yang dapat dibatalkan melalui `.cancel()` saat operasi diinterupsi oleh pengguna.
+    `SearchEngine` mengelola siklus hidup *task* utamanya dalam properti `searchTask`, yang dapat dibatalkan melalui `.cancel()` saat operasi diinterupsi oleh pengguna.
 
-#### `SearchWorker` (Class)
+#### SearchWorker (Class)
 
-*Class* *worker* yang bertugas menjalankan kueri FTS pada satu berkas arsip basis data. Mengadopsi *protocol* `@unchecked Sendable` dengan menjaga status tak berubah (*immutable state*).
+*Class* *worker* yang bertugas menjalankan kueri FTS pada satu berkas arsip basis data. Mengadopsi *protocol* `Sendable` penuh dengan perlindungan *state* internal menggunakan `Synchronization.Mutex`.
 
 ```swift
-final class SearchWorker: @unchecked Sendable {
+final class SearchWorker: Sendable {
     let archiveId: String
     let tables: [String]
     let pool: SQLiteConnectionPool
     let batchSize: Int
+    let queryLimit: String = "\nLIMIT 10000;"
+    private let schemaCache = Mutex<String??>(nil)
 }
 ```
 
@@ -136,6 +138,7 @@ final class SearchWorker: @unchecked Sendable {
 - **`tables`**: Daftar nama tabel kitab yang berada di dalam arsip ini.
 - **`pool`**: *Connection Pool* untuk eksekusi kueri konkuren.
 - **`batchSize`**: Batas *batch* pengambilan konten baris kitab (nilai bawaan: 200).
+- **`schemaCache`**: *Cache* skema FTS berbasis `Mutex<String??>`. *Worker* memverifikasi apakah arsip menggunakan skema `"fts_db"` atau `"main"` sekali saja dan menyimpannya di memori, mengeliminasi kueri berulang ke `sqlite_master` pada setiap eksekusi pencarian.
 
 ##### Strategi Kueri Multi-Tier (Unified FTS)
 

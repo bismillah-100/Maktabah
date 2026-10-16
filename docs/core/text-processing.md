@@ -109,6 +109,10 @@ Mesin pencari memerlukan normalisasi khusus untuk menyorot kata kunci dalam baha
 * **Normalisasi Skalar (`NormalizedArabicScalarMap`)**: Memetakan huruf Arab yang bentuk dasarnya sama tetapi kode Unicode-nya berbeda (seperti *alif*, *alif maksura*, *ya*, *hamza*) agar pencocokan kueri tahan terhadap variasi penulisan.
 * **`snippetNear(keywords:nearDistance:)`**: Algoritma ekstraksi cuplikan teks (*snippet*) khusus mode *Search Near* (pencarian kedekatan kata). Menggunakan metode *sliding window* untuk menghitung batas-batas klaster kata yang memenuhi toleransi kedekatan (`nearDistance`) sebelum memotong teks konteks (`contextLength`).
 * **`highlightedAttributedText()`**: Menyuntikkan atribut warna latar belakang ke dalam `NSAttributedString` untuk setiap kemunculan kata kunci (*keywords*).
+* **Pencocokan Judul TOC (`findTOCMatchingRange(title:)`)**: Algoritma pelacak rentang (*range*) judul bab pada teks halaman aktif untuk navigasi daftar isi (TOC). Menerapkan strategi bertingkat (*multi-priority tiers*):
+    1. *Prioritas 1*: Pencocokan persis pada awal paragraf (`onlyParagraphStart: true`).
+    2. *Prioritas 2*: Pencocokan persis di posisi mana pun pada halaman aktif.
+    3. *Prioritas 3*: Pencocokan bertahap awalan (*prefix fallback*) 3 kata, kemudian 2 kata di awal paragraf untuk judul bab yang panjang atau memiliki variasi teks lanjutan.
 
 ---
 

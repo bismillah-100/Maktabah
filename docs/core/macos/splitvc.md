@@ -281,17 +281,18 @@ sequenceDiagram
 
 `SplitVC` adalah *subclass* dari `NSSplitViewController` yang bertindak sebagai fondasi utama tata letak Maktabah pada macOS. Maktabah mendaur ulang *instance* ini untuk seluruh mode guna menghemat alokasi memori dan menjaga kelancaran animasi transisi.
 
-### Siklus Hidup `ReaderStateManager`
+### Siklus Hidup ReaderStateManager
 
 Manajemen status antarmuka (seperti kitab aktif, nomor halaman, posisi *scroll*, rentang seleksi teks, kueri pencarian, serta status *collapsed* pada *sidebar*) dikelola oleh `ReaderStateManager` melalui 3 fase siklus:
 
 1. **Restorasi saat Peluncuran (`restorePersistedState`)**
    - Dipicu di `AppDelegate.applicationDidFinishLaunching(_:)` saat jendela utama pertama kali dibuka.
-   - Mengambil mode terakhir dari `UserDefaults.standard.lastAppMode` (misalnya `.viewer`, `.search`, atau `.narrator`).
-   - Memanggil `splitVC.setupForMode(lastMode)` dan `splitVC.setupAutoSave()`.
-   - Mengeksekusi `stateManager.restoreState(for: lastMode, components: splitVC.components(for: lastMode))`.
-   - `ReaderStateManager` memuat berkas JSON secara *lazy* dari direktori `~/Library/Application Support/Maktabah/States/{viewer,search,author}_state.json`.
-   - Setiap komponen yang mengadopsi *protocol* `ReaderStateComponent` (`IbarotTextVC`, `OptionSearchVC`, atau `RowiResultsVC`) memulihkan kondisi UI mereka secara sinkron.
+   - Memeriksa sesi tab multi-window melalui `ReaderStateManager.loadTabsSession()`.
+   - Jika berkas sesi ditemukan (`WindowTabsSession`), sistem mengiterasi seluruh snapshot tab (`[TabStateSnapshot]`):
+     - Jendela pertama dijadikan basis, sedangkan jendela tab berikutnya dibuatkan *instance* `WindowController` baru dan digabungkan ke grup tab via `addTabbedWindow(newWin, ordered: .above)`.
+     - Setiap tab mengimpor snapshot memorinya secara terisolasi (`splitVC.stateManager.importTabSnapshot(snapshot)`), menyetel mode, memulihkan *sidebar*, dan mengeksekusi restorasi komponen UI.
+     - Tab aktif difokuskan kembali sesuai indeks `session.selectedTabIndex` (`tabGroup?.selectedWindow = activeWindow`).
+   - Jika sesi tab belum tersedia, sistem memuat jendela tunggal bawaan tanpa restorasi state (`setupContentView(restoreState: false)`).
 
 2. **Penyimpanan & Restorasi saat Beralih Mode (`switchToMode(_:restoreState:)`)**
    - Dipicu ketika pengguna memilih mode pada *segmented control* di *toolbar*, menu bar, atau melalui navigasi URL deep link widget.
@@ -301,13 +302,13 @@ Manajemen status antarmuka (seperti kitab aktif, nomor halaman, posisi *scroll*,
    - **Langkah 4 (Setup Mode Baru)**: Memasang *child controllers* mode baru via `setupForMode(newMode)` dan memulihkan status *collapsed* pada *sidebar* (`sidebarItem.isCollapsed`).
    - **Langkah 5 (Restorasi Mode Baru Bersyarat)**: Jika parameter `restoreState` bernilai `true` (default), `stateManager.restoreState(for: mode, components: components(for: mode))` dipanggil untuk memulihkan state komponen target. Jika dipicu dari deep link widget (`restoreState: false`), restorasi diabaikan agar konten deep link dimuat tanpa tertimpa state persisten lama.
 
-3. **Persistensi ke Disk saat Jendela Ditutup (`persistCurrentStateToDisk`)**
-   - `AppDelegate` mengamati notifikasi `NSWindow.willCloseNotification` melalui `windowObserverWillCloseNotification(_:)`.
-   - Memanggil `window.splitVC.persistCurrentStateToDisk()`.
-   - `stateManager.saveState(for: currentMode, components: components(for: currentMode))` memperbarui *state* di memori.
-   - `stateManager.persisToDisk(for: currentMode)` melakukan serialisasi `ReaderState` ke format JSON (`.prettyPrinted`, `.sortedKeys`) dan menuliskannya secara atomik ke *disk* (`.atomic`).
+3. **Persistensi Sesi Tab ke Disk (`saveAllTabsSession`)**
+   - Dipicu saat jendela ditutup (`windowObserverWillCloseNotification`), aplikasi kehilangan fokus (`applicationWillResignActive`), maupun saat aplikasi akan dihentikan (`applicationWillTerminate`).
+   - Mengambil seluruh jendela di dalam grup tab (`refWindow.tabGroup?.windows`).
+   - Mengekstrak `TabStateSnapshot` dari masing-masing jendela via `splitVC.stateManager.exportTabSnapshot(currentMode:components:)`.
+   - Mengemas seluruh snapshot bersama `selectedIndex` ke dalam `WindowTabsSession` dan menyimpannya secara atomik ke *disk* di `~/Library/Application Support/Maktabah/States/window_tabs_session.json` (`ReaderStateManager.saveTabsSession`).
 
-### `ReaderStateComponent` (Protocol)
+### ReaderStateComponent (Protocol)
 
 Komponen UI yang berpartisipasi dalam persistensi *state* mengadopsi *protocol* `@MainActor ReaderStateComponent`:
 
@@ -324,7 +325,7 @@ protocol ReaderStateComponent: AnyObject {
 * **`restore(from state: ReaderState)`**: Membaca nilai dari `ReaderState` dan menerapkannya kembali ke UI (misalnya membuka kembali kitab, memposisikan *scroll*, atau merender ulang hasil pencarian).
 * **`cleanUpState()`**: Mengembalikan UI ke kondisi awal saat pengguna mengeksekusi *reset* melalui menu *Reset Current View* (`AppDelegate.resetCurrentViewState()`).
 
-### `ReaderState` (Struct)
+### ReaderState (Struct)
 
 Objek *state* dienkapsulasi dalam struktur `Codable` yang disimpan pada direktori `~/Library/Application Support/Maktabah/States/`:
 
@@ -332,10 +333,30 @@ Objek *state* dienkapsulasi dalam struktur `Codable` yang disimpan pada direktor
 - `search_state.json`: Menyimpan *state* pencarian (kueri, opsi FTS, hasil pencarian, dan buku terpilih).
 - `author_state.json`: Menyimpan *state* biografi perawi (perawi aktif, kueri rujukan, dan hasil biografi).
 
-### Penanganan Jendela Ganda (*Multi-Window & Tabs*)
+### TabStateSnapshot (Struct) & WindowTabsSession (Struct)
 
-- **Jendela Utama (*Primary Window*)**: Menjalankan `restorePersistedState(_:)` untuk memulihkan sesi terakhir dari *disk*.
-- **Tab / Jendela Baru (`newWindowForTab(_:)`)**: Memanggil `setupContentView(restoreState: false)` yang menginisialisasi `ReaderState()` baru di memori tanpa memuat *state* lama dari *disk*, mencegah benturan antarjendela.
+Model persistensi sesi multi-tab macOS untuk mempertahankan tata letak tab antar-peluncuran aplikasi:
+
+```swift
+public struct TabStateSnapshot: Codable {
+    public let currentMode: AppMode
+    public let states: [String: ReaderState]
+}
+
+public struct WindowTabsSession: Codable {
+    public let selectedTabIndex: Int
+    public let tabs: [TabStateSnapshot]
+}
+```
+
+* **`TabStateSnapshot`**: Mengisolasi kamus *state* (`states`) per tab jendela sehingga mutasi pembacaan di satu tab tidak bocor (*leak*) ke tab lain.
+* **`WindowTabsSession`**: Mengenkapsulasi seluruh tab aktif bersama indeks tab yang sedang dibuka (`selectedTabIndex`) dan disimpan pada `window_tabs_session.json`.
+
+### Penanganan Jendela Ganda & Grup Tab (*Multi-Window & Tabs*)
+
+- **Retensi WindowController**: `AppDelegate` menyimpan referensi seluruh `WindowController` aktif dalam `Set<WindowController>` (`windowControllers`) untuk mencegah deallokasi dini saat jendela tab ditambahkan.
+- **Isolasi Memori Antar-Tab**: Setiap jendela tab memiliki *instance* `ReaderStateManager` mandiri. Ketika tab baru dibuka (`newWindowForTab(_:)`), tab tersebut beroperasi dengan memori *state* bersih tanpa menimpa *state* tab pendahulunya.
+- **Restorasi Sesi Utuh**: Saat aplikasi diluncurkan kembali, seluruh tab yang sebelumnya terbuka dikelompokkan kembali ke dalam grup tab jendela yang sama persis dengan urutan dan posisi fokus terakhir pengguna.
 
 ### Struct, Class, & Enum Terkait
 
