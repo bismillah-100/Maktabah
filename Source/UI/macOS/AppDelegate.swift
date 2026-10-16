@@ -9,7 +9,6 @@
 @preconcurrency import CloudKit
 import OSLog
 import SwiftUI
-import UniformTypeIdentifiers
 #if DIRECT_DISTRIBUTION
 import Sparkle
 #endif
@@ -83,16 +82,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSApplication.shared.activate(ignoringOtherApps: true)
+        restorePersistedState(mainWindowController.window as? MainWindow)
+
         if let deepLink = pendingDeepLink {
             pendingDeepLink = nil
-            if let window = mainWindowController?.window as? MainWindow {
-                window.setupContentView(mode: .viewer, restoreState: false)
-            }
             activeDeepLinkTask = Task { @MainActor in
                 await handleDeepLink(deepLink)
             }
-        } else {
-            restorePersistedState(mainWindowController.window as? MainWindow)
         }
         isFinishedLaunching = true
         buildViewMenu()
@@ -213,6 +209,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         flushPendingWidgetUpdates(cloudKit: true)
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        isTerminating = true
+        saveAllTabsSession()
+        return .terminateNow
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
         isTerminating = true
         saveAllTabsSession()
@@ -258,12 +260,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             [refWindow]
         }
 
-        let selectedWin = refWindow.tabGroup?.selectedWindow as? MainWindow ?? refWindow
-        var selectedIndex = 0
+        let selectedWin = keyWindow ?? (refWindow.tabGroup?.selectedWindow as? MainWindow) ?? (mainWindowController?.window as? MainWindow) ?? refWindow
+        let selectedIndex = tabbedWindows.firstIndex(where: { $0 === selectedWin }) ?? 0
         var snapshots: [TabStateSnapshot] = []
 
-        for (idx, win) in tabbedWindows.enumerated() {
-            if win === selectedWin { selectedIndex = idx }
+        for win in tabbedWindows {
             let splitVC = win.splitVC
             let mode = splitVC.currentMode
             snapshots.append(
@@ -386,6 +387,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let activeWindow = restoredWindows[safeIndex]
         firstWindow.tabGroup?.selectedWindow = activeWindow
         activeWindow.makeKeyAndOrderFront(nil)
+        if let wc = activeWindow.windowController as? WindowController {
+            mainWindowController = wc
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            (activeWindow.tabGroup ?? firstWindow.tabGroup)?.selectedWindow = activeWindow
+            activeWindow.makeKeyAndOrderFront(nil)
+            if let wc = activeWindow.windowController as? WindowController {
+                mainWindowController = wc
+            }
+        }
     }
 
     @IBAction func openSettings(_ sender: Any?) {

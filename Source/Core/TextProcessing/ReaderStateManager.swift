@@ -19,14 +19,14 @@ class ReaderStateManager {
 
     private static let fileManager = FileManager.default
 
-    private static var statesDirectory: URL {
+    private static let statesDirectory: URL = {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let maktabahDir = appSupport.appendingPathComponent("Maktabah/States")
         if !fileManager.fileExists(atPath: maktabahDir.path) {
             try? fileManager.createDirectory(at: maktabahDir, withIntermediateDirectories: true)
         }
         return maktabahDir
-    }
+    }()
 
     private static var tabsSessionFileURL: URL {
         statesDirectory.appendingPathComponent("tabs_session.json")
@@ -128,10 +128,20 @@ class ReaderStateManager {
                 searchState: search ?? ReaderState(),
                 authorState: author ?? ReaderState()
             )
-            return WindowTabsSession(selectedTabIndex: 0, tabs: [migratedTab])
+            let session = WindowTabsSession(selectedTabIndex: 0, tabs: [migratedTab])
+            saveTabsSession(session)
+            cleanupLegacyStateFiles()
+            return session
         }
 
         return nil
+    }
+
+    private static func cleanupLegacyStateFiles() {
+        for mode in [AppMode.viewer, AppMode.search, AppMode.narrator] {
+            let fileURL = legacyStateFileURL(for: mode)
+            try? fileManager.removeItem(at: fileURL)
+        }
     }
 
     private static func loadLegacyStateFromFile(for mode: AppMode) -> ReaderState? {
@@ -142,12 +152,6 @@ class ReaderStateManager {
     }
 
     func persistToDisk() {
-        #if os(macOS)
-        (NSApp.delegate as? AppDelegate)?.saveAllTabsSession()
-        #endif
-    }
-
-    func persisToDisk(for mode: AppMode) {
         #if os(macOS)
         (NSApp.delegate as? AppDelegate)?.saveAllTabsSession()
         #endif

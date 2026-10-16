@@ -666,7 +666,9 @@ extension IbarotTextVC: ReaderStateComponent {
 
             if let range = state.selectedRange {
                 textView.setSelectedRange(range)
-                view.window?.makeFirstResponder(textView)
+                if view.window?.isKeyWindow == true {
+                    view.window?.makeFirstResponder(textView)
+                }
             }
 
             if let query = state.searchQuery {
