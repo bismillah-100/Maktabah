@@ -347,7 +347,8 @@ extension LibraryViewManager: NSOutlineViewDataSource {
             return viewModel.displayedCategories[index]
         }
         if let category = item as? CategoryData,
-           category.children.indices.contains(index) {
+           category.children.indices.contains(index)
+        {
             return category.children[index]
         }
         return ""
@@ -439,10 +440,32 @@ extension LibraryViewManager: NSOutlineViewDelegate {
 // MARK: - NSMenuDelegate
 
 extension LibraryViewManager: NSMenuDelegate {
+    private func isBookDownloaded(_ book: BooksData) -> Bool {
+        if AppConfig.isUsingBundleMode {
+            BookArchiveIntegrator.shared.isBookIntegrated(book)
+        } else {
+            LibraryDataManager.shouldRemoveBook(id: book.id)
+        }
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
         let clickedRow = outlineView.clickedRow
+
+        if !searchView, clickedRow >= 0, let clickedBook = outlineView.item(atRow: clickedRow) as? BooksData {
+            if isBookDownloaded(clickedBook) {
+                let openInNewTabItem = NSMenuItem(
+                    title: String(localized: .Library.openInNewTab),
+                    action: #selector(openInNewTabAction(_:)),
+                    keyEquivalent: ""
+                )
+                openInNewTabItem.target = self
+                openInNewTabItem.representedObject = clickedBook
+                menu.addItem(openInNewTabItem)
+            }
+        }
+
         let rowsToProcess = ReusableFunc.resolveRowsToProcess(
             selectedRows: outlineView.selectedRowIndexes,
             clickedRow: clickedRow
@@ -451,28 +474,23 @@ extension LibraryViewManager: NSMenuDelegate {
         var deletableBooks: [BooksData] = []
         for row in rowsToProcess {
             guard let book = outlineView.item(atRow: row) as? BooksData else { continue }
-            if AppConfig.isUsingBundleMode,
-               BookArchiveIntegrator.shared.isBookIntegrated(book)
-            {
-                deletableBooks.append(book)
-            } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
+            if isBookDownloaded(book) {
                 deletableBooks.append(book)
             }
         }
 
-        guard !deletableBooks.isEmpty else {
-            addFavoriteContextMenu(menu: menu, clickedRow: clickedRow)
-            return
+        if !deletableBooks.isEmpty {
+            if !menu.items.isEmpty { menu.addItem(NSMenuItem.separator()) }
+            let deleteItem = NSMenuItem(
+                title: String(localized: .Library.deleteDownload),
+                action: #selector(deleteBookAction(_:)),
+                keyEquivalent: ""
+            )
+            deleteItem.target = self
+            deleteItem.representedObject = deletableBooks
+            menu.addItem(deleteItem)
         }
 
-        let deleteItem = NSMenuItem(
-            title: String(localized: .Library.deleteDownload),
-            action: #selector(deleteBookAction(_:)),
-            keyEquivalent: ""
-        )
-        deleteItem.target = self
-        deleteItem.representedObject = deletableBooks
-        menu.addItem(deleteItem)
         addFavoriteContextMenu(menu: menu, clickedRow: clickedRow)
     }
 
@@ -496,6 +514,11 @@ extension LibraryViewManager: NSMenuDelegate {
                 menu.addItem(historyItem)
             }
         }
+    }
+
+    @objc func openInNewTabAction(_ sender: NSMenuItem) {
+        guard let book = sender.representedObject as? BooksData else { return }
+        delegate?.openBookInNewTab(book)
     }
 
     @objc func toggleFavoriteAction(_ sender: NSMenuItem) {

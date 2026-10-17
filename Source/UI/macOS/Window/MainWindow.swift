@@ -46,12 +46,27 @@ class MainWindow: NSWindow {
 
     override func newWindowForTab(_ sender: Any?) {
         let newWindowController = WindowController()
+        (NSApp.delegate as? AppDelegate)?.registerWindowController(newWindowController)
 
         // Tambahkan sebagai tab
         if let newWindow = newWindowController.window as? MainWindow {
             addTabbedWindow(newWindow, ordered: .above)
             newWindow.setupContentView(restoreState: false)
             newWindow.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    func openBookInNewTab(_ book: BooksData) {
+        let newWindowController = WindowController()
+        (NSApp.delegate as? AppDelegate)?.registerWindowController(newWindowController)
+
+        if let newWindow = newWindowController.window as? MainWindow {
+            addTabbedWindow(newWindow, ordered: .above)
+            newWindow.setupContentView(mode: .viewer, restoreState: false)
+            newWindow.makeKeyAndOrderFront(nil)
+            Task { @MainActor in
+                await newWindow.splitVC.ibarotTextVC.didSelectBook(for: book, loadContent: true)
+            }
         }
     }
 

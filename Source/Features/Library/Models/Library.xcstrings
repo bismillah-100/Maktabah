@@ -1832,6 +1832,23 @@
         }
       }
     },
+    "Open in New Tab" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح في علامة تبويب جديدة"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buka di Tab Baru"
+          }
+        }
+      }
+    },
     "Open Web Converter" : {
       "extractionState" : "manual",
       "localizations" : {
