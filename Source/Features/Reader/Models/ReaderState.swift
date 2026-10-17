@@ -10,12 +10,12 @@ import Foundation
 /// Display mode untuk Author mode (karena bisa tampil info Rowi atau buku)
 enum AuthorDisplayMode: Equatable, Codable {
     case rowiInfo
-    case bookContent  // Tampilan dari table selection (buku biasa)
+    case bookContent // Tampilan dari table selection (buku biasa)
 }
 
 struct CleanedTextResult {
     let text: String
-    let coloredRanges: [NSRange]  // Range dalam string 'text'
+    let coloredRanges: [NSRange] // Range dalam string 'text'
 }
 
 /// State untuk satu instance viewer (bisa untuk mode berbeda)
@@ -28,8 +28,8 @@ struct ReaderState: Codable {
     var isSidebarCollapsed: Bool = false
 
     // Sidebar/TOC State
-    var expandedNodeIDs: [Int] = []  // IDs of expanded items
-    var sidebarScrollPosition: CGPoint?  // Scroll position of outline view
+    var expandedNodeIDs: [Int] = [] // IDs of expanded items
+    var sidebarScrollPosition: CGPoint? // Scroll position of outline view
 
     /// Khusus untuk Author mode - menentukan apa yang ditampilkan
     var authorDisplayMode: AuthorDisplayMode?
@@ -44,8 +44,8 @@ struct ReaderState: Codable {
 
     /// Untuk Author Mode - menyimpan hasil tarjamah
     var authorTarjamahResults: [TarjamahResult]?
-    var authorRowiMode: String?  // "sidebar" atau "fullSearch"
-    var authorSearchQuery: String?  // Query untuk full search
+    var authorRowiMode: String? // "sidebar" atau "fullSearch"
+    var authorSearchQuery: String? // Query untuk full search
 
     /// Untuk Search Mode - menyimpan hasil search
     var searchResults: [SearchResultItem]?
@@ -86,11 +86,41 @@ struct ReaderState: Codable {
         searchQuery = nil
     }
 
+    enum CodingKeys: String, CodingKey {
+        case currentBook, currentPage, currentID, currentPart, currentRowi
+        case isSidebarCollapsed, expandedNodeIDs, sidebarScrollPosition
+        case authorDisplayMode, scrollPosition, selectedRange
+        case authorTarjamahResults, authorRowiMode, authorSearchQuery
+        case searchResults, searchQuery, searchModeRaw, searchNearDistance
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        currentBook = try container.decodeIfPresent(BooksData.self, forKey: .currentBook)
+        currentPage = try container.decodeIfPresent(Int.self, forKey: .currentPage)
+        currentID = try container.decodeIfPresent(Int.self, forKey: .currentID)
+        currentPart = try container.decodeIfPresent(Int.self, forKey: .currentPart)
+        currentRowi = try container.decodeIfPresent(Rowi.self, forKey: .currentRowi)
+        isSidebarCollapsed = try container.decodeIfPresent(Bool.self, forKey: .isSidebarCollapsed) ?? false
+        expandedNodeIDs = try container.decodeIfPresent([Int].self, forKey: .expandedNodeIDs) ?? []
+        sidebarScrollPosition = try container.decodeIfPresent(CGPoint.self, forKey: .sidebarScrollPosition)
+        authorDisplayMode = try container.decodeIfPresent(AuthorDisplayMode.self, forKey: .authorDisplayMode)
+        scrollPosition = try container.decodeIfPresent(CGPoint.self, forKey: .scrollPosition)
+        selectedRange = try container.decodeIfPresent(NSRange.self, forKey: .selectedRange)
+        authorTarjamahResults = try container.decodeIfPresent([TarjamahResult].self, forKey: .authorTarjamahResults)
+        authorRowiMode = try container.decodeIfPresent(String.self, forKey: .authorRowiMode)
+        authorSearchQuery = try container.decodeIfPresent(String.self, forKey: .authorSearchQuery)
+        searchResults = try container.decodeIfPresent([SearchResultItem].self, forKey: .searchResults)
+        searchQuery = try container.decodeIfPresent(String.self, forKey: .searchQuery)
+        searchModeRaw = try container.decodeIfPresent(Int.self, forKey: .searchModeRaw)
+        searchNearDistance = try container.decodeIfPresent(Int.self, forKey: .searchNearDistance)
+    }
+
     mutating func edit(_ body: (inout ReaderState) -> Void) {
         body(&self)
     }
 
-    // Fungsi toggle sederhana
+    /// Fungsi toggle sederhana
     mutating func toggleSidebar(_ collapsed: Bool) {
         isSidebarCollapsed = collapsed
     }
@@ -99,9 +129,34 @@ struct ReaderState: Codable {
 /// Extension untuk mudah compare state
 extension ReaderState: Equatable {
     static func == (lhs: ReaderState, rhs: ReaderState) -> Bool {
-        return lhs.currentBook?.id == rhs.currentBook?.id
+        lhs.currentBook?.id == rhs.currentBook?.id
             && lhs.currentID == rhs.currentID
+            && lhs.currentPage == rhs.currentPage
+            && lhs.currentPart == rhs.currentPart
             && lhs.currentRowi?.id == rhs.currentRowi?.id
             && lhs.authorDisplayMode == rhs.authorDisplayMode
+            && lhs.isSidebarCollapsed == rhs.isSidebarCollapsed
+            && lhs.searchQuery == rhs.searchQuery
+            && lhs.searchModeRaw == rhs.searchModeRaw
+            && lhs.searchNearDistance == rhs.searchNearDistance
+            && lhs.authorSearchQuery == rhs.authorSearchQuery
     }
+}
+
+/// Menyimpan seluruh state (Viewer, Search, Narrator) milik satu tab
+struct TabStateSnapshot: Codable, Equatable {
+    var currentModeRaw: Int
+    var viewerState: ReaderState
+    var searchState: ReaderState
+    var authorState: ReaderState
+
+    var currentMode: AppMode {
+        AppMode(rawValue: currentModeRaw) ?? .viewer
+    }
+}
+
+/// Menyimpan daftar seluruh tab yang terbuka pada jendela utama beserta tab yang aktif
+struct WindowTabsSession: Codable, Equatable {
+    var selectedTabIndex: Int
+    var tabs: [TabStateSnapshot]
 }

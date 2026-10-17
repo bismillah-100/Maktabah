@@ -10,7 +10,6 @@ import Cocoa
 import OSLog
 
 class WindowController: NSWindowController {
-
     init() {
         super.init(window: nil)
         loadWindow()
@@ -35,6 +34,7 @@ class WindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
+        window.isReleasedWhenClosed = false
         window.title = "المكتبة"
         window.subtitle = ""
         window.setFrameAutosaveName("MainWindow")

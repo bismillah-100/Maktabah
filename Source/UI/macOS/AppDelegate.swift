@@ -7,9 +7,9 @@
 //
 
 @preconcurrency import CloudKit
+import Combine
 import OSLog
 import SwiftUI
-import UniformTypeIdentifiers
 #if DIRECT_DISTRIBUTION
 import Sparkle
 #endif
@@ -27,9 +27,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var bookUpdatesMenuItem: NSMenuItem!
 
     fileprivate var mainWindowController: NSWindowController!
+    fileprivate var windowControllers = Set<WindowController>()
+    private var isTerminating = false
     private var pendingDeepLink: WidgetDeepLink?
-    private var isFinishedLaunching = false
+    var isFinishedLaunching = false
     private var activeDeepLinkTask: Task<Void, Never>?
+
+    private let sessionSaveSubject = PassthroughSubject<Void, Never>()
+    private var sessionSaveCancellable: AnyCancellable?
+    private var lastSavedSession: WindowTabsSession?
 
     fileprivate weak var quranWindow: NSWindow?
     fileprivate weak var settingsWindow: NSWindow?
@@ -64,7 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         let wc = WindowController()
-        mainWindowController = wc
+        registerWindowController(wc)
         guard let window = wc.window else { return }
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"]
             == "1" { return }
@@ -81,16 +87,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSApplication.shared.activate(ignoringOtherApps: true)
+        restorePersistedState(mainWindowController.window as? MainWindow)
+
         if let deepLink = pendingDeepLink {
             pendingDeepLink = nil
-            if let window = mainWindowController?.window as? MainWindow {
-                window.setupContentView(mode: .viewer, restoreState: false)
-            }
             activeDeepLinkTask = Task { @MainActor in
                 await handleDeepLink(deepLink)
             }
-        } else {
-            restorePersistedState(mainWindowController.window as? MainWindow)
         }
         isFinishedLaunching = true
         buildViewMenu()
@@ -99,6 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         BookConnection.tocTreeCache.totalCostLimit = 50 * 1024 * 1024
 
         setupWindowObserver()
+        setupSessionAutoSave()
 
         controlMenu.delegate = self
         _ = ScreenTimeManager.shared // untuk init supaya pengaturan diload.
@@ -210,7 +214,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         flushPendingWidgetUpdates(cloudKit: true)
     }
 
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        isTerminating = true
+        saveAllTabsSession()
+        return .terminateNow
+    }
+
     func applicationWillTerminate(_ aNotification: Notification) {
+        isTerminating = true
         flushPendingWidgetUpdates(cloudKit: true)
         CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
@@ -235,6 +246,63 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Window Management
 
+    func registerWindowController(_ wc: WindowController) {
+        windowControllers.insert(wc)
+        if mainWindowController == nil {
+            mainWindowController = wc
+        }
+    }
+
+    func scheduleSessionSave() {
+        guard isFinishedLaunching, !isTerminating else { return }
+        sessionSaveSubject.send(())
+    }
+
+    func setupSessionAutoSave() {
+        sessionSaveCancellable = sessionSaveSubject
+            .debounce(for: .seconds(3), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                guard let self, !isTerminating, mainWindowController != nil else { return }
+                saveAllTabsSession()
+            }
+    }
+
+    func saveAllTabsSession() {
+        guard let refWindow = (keyWindow ?? mainWindowController?.window as? MainWindow ?? NSApp.windows.compactMap { $0 as? MainWindow }.first) else {
+            return
+        }
+
+        let tabbedWindows: [MainWindow] = if let group = refWindow.tabGroup?.windows.compactMap({ $0 as? MainWindow }), !group.isEmpty {
+            group
+        } else {
+            [refWindow]
+        }
+
+        let selectedWin = keyWindow ?? (refWindow.tabGroup?.selectedWindow as? MainWindow) ?? (mainWindowController?.window as? MainWindow) ?? refWindow
+        let selectedIndex = tabbedWindows.firstIndex(where: { $0 === selectedWin }) ?? 0
+        var snapshots: [TabStateSnapshot] = []
+
+        for win in tabbedWindows {
+            let splitVC = win.splitVC
+            let mode = splitVC.currentMode
+            snapshots.append(
+                splitVC.stateManager.exportTabSnapshot(
+                    currentMode: mode,
+                    components: splitVC.components(for: mode)
+                )
+            )
+        }
+
+        guard !snapshots.isEmpty else { return }
+
+        let session = WindowTabsSession(selectedTabIndex: selectedIndex, tabs: snapshots)
+        if lastSavedSession == session {
+            return
+        }
+        lastSavedSession = session
+        ReaderStateManager.saveTabsSession(session)
+    }
+
     func setupWindowObserver() {
         NotificationCenter.default.addObserver(
             self, selector: #selector(windowObserverDidChangeKey(_:)),
@@ -250,56 +318,96 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func windowObserverDidChangeKey(_ notification: Notification) {
         guard let window = notification.object as? MainWindow,
               let windowController = window.windowController as? WindowController
-        else {
-            return
-        }
+        else { return }
 
         if mainWindowController != windowController {
             mainWindowController = windowController
         }
+
+        scheduleSessionSave()
     }
 
     @objc func windowObserverWillCloseNotification(_ notification: Notification) {
         guard let window = notification.object as? MainWindow else { return }
 
-        window.splitVC.persistCurrentStateToDisk()
+        if let wc = window.windowController as? WindowController {
+            windowControllers.remove(wc)
+        }
         if mainWindowController?.window === window {
-            mainWindowController = nil
+            mainWindowController = windowControllers.first
         }
     }
 
     // MARK: - App Launch
 
     func restorePersistedState(_ window: MainWindow?) {
-        guard let window else {
+        guard let firstWindow = window else {
             Logger.app.debug("mainWindowController window nil")
             return
         }
 
-        window.setupContentView()
+        if let wc = firstWindow.windowController as? WindowController {
+            registerWindowController(wc)
+        }
 
-        guard let splitVC = window.contentViewController as? SplitVC else {
-            Logger.app.debug("Cannot restore state: SplitVC not found")
+        guard let session = ReaderStateManager.loadTabsSession(), !session.tabs.isEmpty else {
+            firstWindow.setupContentView(restoreState: false)
+            firstWindow.displayIfNeeded()
             return
         }
 
-        // Get last active mode
-        let lastMode = window.currentMode
+        lastSavedSession = session
 
-        Logger.app.debug("Restoring app to last mode: \(lastMode.rawValue, privacy: .public)")
+        var restoredWindows: [MainWindow] = []
+        var previousWindow = firstWindow
 
-        splitVC.setupForMode(lastMode)
-        splitVC.setupAutoSave()
+        for (index, snapshot) in session.tabs.enumerated() {
+            let targetWindow: MainWindow
+            if index == 0 {
+                targetWindow = firstWindow
+            } else {
+                let newWC = WindowController()
+                registerWindowController(newWC)
+                guard let newWin = newWC.window as? MainWindow else { continue }
+                previousWindow.addTabbedWindow(newWin, ordered: .above)
+                previousWindow = newWin
+                targetWindow = newWin
+            }
 
-        // Ini baru load state yang dibutuhkan
-        splitVC.stateManager.restoreState(
-            for: lastMode,
-            components: splitVC.components(for: lastMode)
-        )
+            let mode = snapshot.currentMode
+            let splitVC = targetWindow.splitVC
+            splitVC.stateManager.importTabSnapshot(snapshot)
 
-        // Switch to last mode (this will restore the state)
-        window.setupView()
-        window.displayIfNeeded()
+            targetWindow.setupContentView(mode: mode, restoreState: true)
+            splitVC.setupForMode(mode)
+            splitVC.setupAutoSave()
+            splitVC.sidebarItem.isCollapsed = splitVC.stateManager.getState(for: mode).isSidebarCollapsed
+            splitVC.stateManager.restoreState(
+                for: mode,
+                components: splitVC.components(for: mode)
+            )
+            targetWindow.setupView()
+            targetWindow.displayIfNeeded()
+
+            restoredWindows.append(targetWindow)
+        }
+
+        let safeIndex = min(max(0, session.selectedTabIndex), restoredWindows.count - 1)
+        let activeWindow = restoredWindows[safeIndex]
+        firstWindow.tabGroup?.selectedWindow = activeWindow
+        activeWindow.makeKeyAndOrderFront(nil)
+        if let wc = activeWindow.windowController as? WindowController {
+            mainWindowController = wc
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            (activeWindow.tabGroup ?? firstWindow.tabGroup)?.selectedWindow = activeWindow
+            activeWindow.makeKeyAndOrderFront(nil)
+            if let wc = activeWindow.windowController as? WindowController {
+                mainWindowController = wc
+            }
+        }
     }
 
     @IBAction func openSettings(_ sender: Any?) {
@@ -522,11 +630,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resetCurrentViewState() {
         guard let keyWindow else { return }
         let splitVC = keyWindow.splitVC
-        let mode = UserDefaults.standard.lastAppMode
+        let mode = keyWindow.currentMode
         splitVC.stateManager.cleanUpState(
             for: mode,
             components: splitVC.components(for: mode)
         )
+        saveAllTabsSession()
     }
 
     @objc private func viewOptions() {
@@ -593,8 +702,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @IBAction private func extendScreenTime(_ sender: NSMenuItem) {
-        let screenTime = ScreenTimeManager.shared
-        sender.state == .off ? screenTime.extend() : screenTime.cancel()
+        let shouldEnable = sender.state == .off
+        shouldEnable ? ScreenTimeManager.shared.extend() : ScreenTimeManager.shared.cancel()
+        UserDefaults.standard.extendScreenTime = shouldEnable
     }
 
     @IBAction private func clickableAnnotation(_ sender: NSMenuItem) {
@@ -629,19 +739,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func newWindow(_ sender: Any, restoreState: Bool, mode: AppMode? = nil) {
         let wc = WindowController()
         wc.window?.setFrameAutosaveName("MainWindow")
+        let hadNoMainWindow = (mainWindowController == nil)
+        registerWindowController(wc)
 
         guard let w = wc.window as? MainWindow else { return }
 
-        if mainWindowController == nil, restoreState {
+        if hadNoMainWindow, restoreState {
             restorePersistedState(w)
         } else {
             w.setupContentView(mode: mode, restoreState: false)
+            w.makeKeyAndOrderFront(sender)
+            w.displayIfNeeded()
         }
-
-        mainWindowController = wc
-
-        w.makeKeyAndOrderFront(sender)
-        w.displayIfNeeded()
     }
 
     @IBAction func newTabWindow(_ sender: Any?) {
@@ -720,10 +829,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 Logger.history.error("Failed to open history book from deep link: \(error.localizedDescription, privacy: .public)")
             }
         }
-    }
-
-    func applicationDidResignActive(_ notification: Notification) {
-        flushPendingWidgetUpdates(cloudKit: true)
     }
 
     private func flushPendingWidgetUpdates(cloudKit: Bool = false) {

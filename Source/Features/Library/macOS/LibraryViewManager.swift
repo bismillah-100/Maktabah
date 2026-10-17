@@ -60,9 +60,14 @@ class LibraryViewManager: NSObject {
             .filter { [weak self] _ in
                 self?.isSetupComplete == true
             }
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] update in
-                self?.handleViewModelUpdate(update)
+                if Thread.isMainThread {
+                    self?.handleViewModelUpdate(update)
+                } else {
+                    DispatchQueue.main.async {
+                        self?.handleViewModelUpdate(update)
+                    }
+                }
             }
             .store(in: &cancellables)
 
@@ -220,7 +225,8 @@ class LibraryViewManager: NSObject {
                           category: subCategory,
                           path: path + [subCategory],
                           targetBookName: targetBookName
-                      ) {
+                      )
+            {
                 return found
             }
         }
@@ -334,11 +340,14 @@ extension LibraryViewManager: NSOutlineViewDataSource {
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
         if item == nil {
             if viewModel.isFlatMode, let firstCat = viewModel.displayedCategories.first {
+                guard firstCat.children.indices.contains(index) else { return "" }
                 return firstCat.children[index]
             }
+            guard viewModel.displayedCategories.indices.contains(index) else { return "" }
             return viewModel.displayedCategories[index]
         }
-        if let category = item as? CategoryData {
+        if let category = item as? CategoryData,
+           category.children.indices.contains(index) {
             return category.children[index]
         }
         return ""
@@ -400,7 +409,9 @@ extension LibraryViewManager: NSOutlineViewDelegate {
         }
     }
 
-    func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat { 26 }
+    func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
+        26
+    }
 
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
@@ -441,7 +452,8 @@ extension LibraryViewManager: NSMenuDelegate {
         for row in rowsToProcess {
             guard let book = outlineView.item(atRow: row) as? BooksData else { continue }
             if AppConfig.isUsingBundleMode,
-               BookArchiveIntegrator.shared.isBookIntegrated(book) {
+               BookArchiveIntegrator.shared.isBookIntegrated(book)
+            {
                 deletableBooks.append(book)
             } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
                 deletableBooks.append(book)
@@ -477,7 +489,8 @@ extension LibraryViewManager: NSMenuDelegate {
             let isHistory = HistoryViewModel.shared.historyBookIds.contains(book.id)
             if isHistory {
                 let historyItem = NSMenuItem(
-                    title: String(localized: "Remove from History"), action: #selector(removeHistoryAction(_:)), keyEquivalent: "")
+                    title: String(localized: "Remove from History"), action: #selector(removeHistoryAction(_:)), keyEquivalent: ""
+                )
                 historyItem.target = self
                 historyItem.representedObject = book
                 menu.addItem(historyItem)
