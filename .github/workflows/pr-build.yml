@@ -83,3 +83,31 @@ jobs:
             ENABLE_TESTABILITY=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             WORKER_URL="$WORKER_URL"
+
+  build-gate:
+    name: Build Gate
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify build requirement
+        run: |
+          CHANGES_RESULT="${{ needs.changes.result }}"
+          BUILD_RESULT="${{ needs.build.result }}"
+          CODE_CHANGED="${{ needs.changes.outputs.code }}"
+
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "Changes detection job failed or was cancelled."
+            exit 1
+          fi
+
+          if [ "$BUILD_RESULT" = "success" ]; then
+            echo "All required builds succeeded."
+            exit 0
+          elif [ "$BUILD_RESULT" = "skipped" ] && [ "$CODE_CHANGED" != "true" ]; then
+            echo "No code changes detected; builds skipped legitimately."
+            exit 0
+          else
+            echo "Build failed or was unexpectedly skipped (result: $BUILD_RESULT)."
+            exit 1
+          fi
