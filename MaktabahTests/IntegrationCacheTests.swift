@@ -7,6 +7,7 @@ import Foundation
 @testable import Maktabah_Debug
 import Testing
 
+@Suite("IntegrationCache Tests", .serialized)
 final class IntegrationCacheTests {
     let cache = IntegrationCache.shared
     let updateManager = BookUpdateManager.shared
