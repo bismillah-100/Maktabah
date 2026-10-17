@@ -178,9 +178,11 @@ Di bagian bawah *sidebar*, `LibraryVC` menyematkan bilah segmentasi mengambang b
 ### C. LibraryViewManager (Class) & Render Baris Kustom
 
 * Mengimplementasikan `NSOutlineViewDataSource` dan `NSOutlineViewDelegate`.
-* Membedakan *rendering* sel induk (kategori kitab yang dapat diekspansi) dengan *child cell* (judul kitab dengan tipografi Arab, nama pengarang, indikator ketersediaan berkas, dan kapasitas MB).
-* Menyediakan *context menu* klik kanan: Hapus unduhan arsip lokal, Buka detail informasi kitab (`BookInfoPopoverVC`), dan Tambah/Hapus dari Favorit.
-* **Pencegahan Rekursi Seleksi (`isUpdatingOutline`)**: Menjaga agar pembaruan programatis pada outline view (`beginUpdates`, `selectRowIndexes`, `endUpdates`) tidak memicu *event* ganda pada `outlineViewSelectionDidChange`.
+* Menyediakan *context menu* klik kanan:
+  * **Buka di *Tab* Baru (`openBookInNewTab`)**: Tersedia khusus untuk kitab yang telah terunduh/terintegrasi secara lokal (`isBookIntegrated`), mendelegasikan pembuatan *window controller* baru ke `MainWindow.openBookInNewTab`.
+  * **Hapus Unduhan**: Menghapus arsip SQLite lokal dari *disk*.
+  * **Informasi Kitab**: Menampilkan *popover* informasi bibliografi kitab (`BookInfoPopoverVC`).
+  * **Favorit**: Menambah atau menghapus kitab dari daftar favorit.
 * **Preservasi Seleksi Flat List (`restoreFlatSelection`)**: Pada mode daftar datar (seperti hasil filter pencarian dan riwayat), seleksi dipulihkan menggunakan indeks baris langsung (`selectFlatRow`) untuk mencegah hilangnya fokus item yang aktif.
 
 ### D. Animasi Batch Inkremental & Debouncing Histori (`LibraryView+Diffing`)
