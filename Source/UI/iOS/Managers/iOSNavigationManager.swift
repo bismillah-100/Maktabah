@@ -371,12 +371,10 @@ class iOSNavigationManager {
             updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || options.recordHistory
             if let contentId = options.contentId {
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId
-                let hasNewSearch = options.searchEvent != nil
-                let hasNewTarget = options.annotationEvent != nil
+                updatedTab.viewModel.searchEvent = options.searchEvent
+                updatedTab.viewModel.annotationEvent = options.annotationEvent
 
-                if !isSameContent || hasNewSearch || hasNewTarget {
-                    updatedTab.viewModel.searchEvent = options.searchEvent
-                    updatedTab.viewModel.annotationEvent = options.annotationEvent
+                if !isSameContent {
                     updatedTab.viewModel.fetchContentById(contentId)
                 }
 
