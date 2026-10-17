@@ -332,9 +332,8 @@ Pada `iOSIbarotTextView`:
 6. **Guard Relayout TextKit 2 & Isolasi Sheet (iOS)**:
    - Pada metode `updateUIView`, pembaruan properti perataan teks (`textAlignment`) dan atribut semantik diproteksi dengan guard pengecekan kesamaan nilai saat ini. Langkah ini mencegah pembatalan hierarki tata letak TextKit 2 yang membebani CPU saat lembaran modal (*sheet presentation*) dimunculkan di atas halaman panjang.
    - Tampilan pembaca diekstrak ke dalam komponen terisolasi `ReaderTextContentView: View, Equatable` guna mengeliminasi evaluasi ulang teks deklaratif SwiftUI akibat mutasi *state* kontainer induk.
-7. **Optimasi *Lazy Text Layout* & Ekspor Cetak (macOS)**:
-   - Pada `IbarotTextView`, pemanggilan *layout* seluruh dokumen yang membebani CPU dihilangkan dan digantikan oleh `textLayoutManager?.ensureLayout(for: range)` yang hanya menghitung fragmen teks pada rentang target navigasi (anotasi, pencarian teks, dan bab TOC).
-   - Menghilangkan *layout pass* berulang (`needsLayout = true` dan `layoutSubtreeIfNeeded()`) pada lompatan navigasi, menghemat siklus *render* antarmuka.
+7. **Presisi Tata Letak Teks & Ekspor Cetak (macOS)**:
+   - Pada `IbarotTextView`, pemanggilan `textLayoutManager?.ensureFullDocumentLayout()` serta pembaruan hierarki tata letak (`needsLayout = true` dan `layoutSubtreeIfNeeded()`) dijalankan sebelum `scrollRangeToVisible(_:)` pada lompatan navigasi (anotasi, pencarian teks, dan bab TOC). Hal ini menjamin bahwa seluruh koordinat dan tinggi baris terhitung presisi untuk semua jenis font Arab dan ukuran, mengeliminasi deviasi estimasi tinggi baris TextKit 2.
    - Pengecekan tampilan cetak (`printView`) dimigrasikan menggunakan `NSTextView(usingTextLayoutManager: true)` untuk menjamin perenderan konsisten berbasis TextKit 2 tanpa *fallback* ke mesin lama TextKit 1.
 
 

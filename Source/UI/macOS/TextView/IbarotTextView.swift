@@ -1028,9 +1028,11 @@ extension IbarotTextView: TextViewRenderable {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 let r = displayedRange(for: ann)
+                textLayoutManager?.ensureFullDocumentLayout()
+                needsLayout = true
                 scrollRangeToVisible(r)
-                textLayoutManager?.ensureLayout(for: r)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                layoutSubtreeIfNeeded()
                 showFindIndicator(for: r)
             }
         }
@@ -1041,19 +1043,18 @@ extension IbarotTextView: TextViewRenderable {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
             await MainActor.run { [weak self] in
-                guard let self else { return }
-                let ranges = textStorage?.highlightSearchText(
+                guard let self, let firstRange = textStorage?.highlightSearchText(
                     searchText: searchText,
                     mode: mode,
                     baseColor: .highlightText,
                     nearDistance: nearDistance
-                ) ?? []
+                ).first else { return }
 
-                guard let firstRange = ranges.first else { return }
-
+                textLayoutManager?.ensureFullDocumentLayout()
+                needsLayout = true
                 scrollRangeToVisible(firstRange)
-                textLayoutManager?.ensureLayout(for: firstRange)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                layoutSubtreeIfNeeded()
                 showFindIndicator(for: firstRange)
             }
         }
@@ -1068,9 +1069,11 @@ extension IbarotTextView: TextViewRenderable {
                 guard let text = textStorage?.string else { return }
 
                 if let range = text.findTOCMatchingRange(title: title) {
+                    textLayoutManager?.ensureFullDocumentLayout()
+                    needsLayout = true
                     scrollRangeToVisible(range)
-                    textLayoutManager?.ensureLayout(for: range)
                     enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+                    layoutSubtreeIfNeeded()
                     showFindIndicator(for: range)
                 } else {
                     scrollToBeginningOfDocument(nil)
