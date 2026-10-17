@@ -8,7 +8,6 @@ import Foundation
 import Testing
 
 struct SearchTests {
-
     // MARK: - 1. FtsQueryParser Tests
 
     @Test("FtsQueryParser: Format query sesuai SearchMode (phrase, contains, or, near)")
@@ -97,7 +96,7 @@ struct SearchTests {
     // MARK: - 3. SearchResultBuffer Tests
 
     @Test("SearchResultBuffer: Batching & manual flush")
-    func testSearchResultBuffer() async {
+    func testSearchResultBuffer() {
         let flushedItems = LockIsolated<[SearchResultItem]>([])
 
         let buffer = SearchResultBuffer(batchSize: 5, flushInterval: .milliseconds(500)) { items in
@@ -116,6 +115,37 @@ struct SearchTests {
 
         #expect(flushedItems.value.count == 3)
     }
+
+    // MARK: - 4. SearchViewModel Completion Cooldown Tests
+
+    @Test("SearchViewModel: handleSearchCompletion memicu cooldown dan menghentikan status isSearching")
+    @MainActor
+    func testSearchViewModel_handleSearchCompletion() async throws {
+        let viewModel = SearchViewModel()
+        viewModel.isSearching = true
+
+        viewModel.handleSearchCompletion()
+
+        // Sesaat setelah memicu completion, status searching masih aktif selama cooldown
+        #expect(viewModel.isSearching == true)
+
+        // Tunggu cooldown selesai (1.0 detik di macOS)
+        try await Task.sleep(for: .milliseconds(1000))
+        await Task.yield()
+        #expect(viewModel.isSearching == false)
+    }
+
+    @Test("SearchViewModel: stopSearch membatalkan dismissTask completion yang sedang berjalan")
+    @MainActor
+    func testSearchViewModel_stopSearchCancelsDismissTask() {
+        let viewModel = SearchViewModel()
+        viewModel.isSearching = true
+
+        viewModel.handleSearchCompletion()
+        viewModel.stopSearch()
+
+        #expect(viewModel.isSearching == false)
+    }
 }
 
 /// Helper isolation wrapper untuk testing callback asynchronous
@@ -124,7 +154,7 @@ private final class LockIsolated<T>: @unchecked Sendable {
     private let lock = NSLock()
 
     init(_ value: T) {
-        self._value = value
+        _value = value
     }
 
     var value: T {

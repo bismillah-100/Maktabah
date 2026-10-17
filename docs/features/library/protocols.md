@@ -24,16 +24,25 @@ protocol LibraryDelegate: AnyObject {
 
 ---
 
-## 2. LibraryViewDelegate (Protocol) - Seleksi Item Baris
+## 2. LibraryViewDelegate (Protocol) - Seleksi Item Baris & Multi-Tab
 
-*Protocol* `LibraryViewDelegate` digunakan untuk komunikasi antara komponen presentasi *sub-view* (misalnya baris *outline* atau sel tabel katalog) dengan manajer data katalog:
+*Protocol* `LibraryViewDelegate` digunakan untuk komunikasi antara komponen presentasi *sub-view* (misalnya baris *outline* atau sel tabel katalog) dengan manajer data katalog dan pengendali jendela:
 
 ```swift
 @MainActor
 protocol LibraryViewDelegate: AnyObject {
     func didSelectItem(_ row: Int) async
+    func openBookInNewTab(_ book: BooksData)
+}
+
+extension LibraryViewDelegate {
+    func openBookInNewTab(_ book: BooksData) {}
 }
 ```
+
+### Metode:
+* `didSelectItem(_ row:)`: Memuat kitab pada *tab* aktif saat baris katalog diklik.
+* `openBookInNewTab(_ book:)`: Membuka kitab terpilih di *tab* jendela baru (`MainWindow.openBookInNewTab`) melalui *context menu* klik kanan untuk kitab yang telah terunduh/terintegrasi.
 
 ---
 

@@ -153,3 +153,18 @@ public final class StringInterner: Sendable {
 
 * **Sinkronisasi via Mutex**: Menggunakan `Synchronization.Mutex` untuk menjamin operasi `intern` sepenuhnya *thread-safe* di lingkungan konkurensi Swift 6.
 * **Protokol `Sendable` Penuh**: Memungkinkan `StringInterner.shared` dibagikan lintas *actor* dan *thread pool* tanpa menggunakan `nonisolated(unsafe)`.
+
+---
+
+## 6. Resolusi Tata Letak TextKit 2 (`TextStorage.swift`)
+
+Pada dokumen kitab dengan puluhan ribu baris, memicu penataan letak (*layout calculation*) secara menyeluruh dapat membebani CPU dan menyebabkan *frame drop*.
+
+### NSTextLayoutManager (Class)
+
+Menyediakan komputasi tata letak parsial (*lazy layout*):
+
+* **`ensureLayout(for: NSRange)`**: Mengonversi `NSRange` menjadi `NSTextRange` valid, lalu hanya mengevaluasi fragmen tata letak (*text layout fragments*) yang melingkupi rentang target tersebut tanpa memaksa komputasi seluruh dokumen.
+* **`ensureLayout(for: [NSRange])`**: Iterasi *batch* efisien untuk beberapa rentang sekaligus (misalnya seluruh hasil sorotan pencarian halaman).
+* **`ensureFullDocumentLayout()`**: Menghitung seluruh fragmen dokumen dari awal hingga akhir sebagai jalur cadangan (*fallback*) khusus saat operasi cetak atau ekspor.
+

@@ -324,7 +324,7 @@ class ReaderViewModel: ViewModelBase {
 Pada `iOSIbarotTextView`:
 1. **Pencocokan Halaman Ketat (*Strict Content ID*)**: Sorotan teks pencarian (`highlightSearchText`) hanya diterapkan jika `searchEvent.contentId == viewModel.currentContentId`. Ini mencegah kebocoran atribut warna kuning ke halaman lain saat berpindah halaman.
 2. **Penghindaran Animasi Berulang (*De-duplication*) & Isolasi Tab**: Animasi `popupText` dan *auto-scroll* divalidasi menggunakan `coordinator.lastHandledSearchEventId` dan `coordinator.lastHandledAnnotationEventId`. Pelacakan event dibatasi pada *instance* `Coordinator` aktif dengan verifikasi jendela aktif (`textView.window != nil`), sehingga *background tab* di iPhone tidak menelan event sebelum *view* aktif sempat menampilkannya.
-3. **Resolusi Tata Letak TextKit 2**: Sebelum menghitung jalur animasi loncat (*bounce animation*), batas geometri dipastikan telah terhitung secara penuh melalui `NSTextLayoutManager.ensureLayout(for:)` dan enumerasi segmen teks. Hal ini mengeliminasi masalah *lazy layout* TextKit 2 yang mengembalikan batas kosong (`.zero`) pada halaman yang baru dimuat.
+3. **Resolusi Tata Letak TextKit 2 & Isolasi Paragraf**: Sebelum menghitung jalur animasi loncat (*bounce animation*), batas geometri dipastikan telah terhitung secara penuh melalui `NSTextLayoutManager.ensureLayout(for: paragraphRange)` dengan isolasi paragraf pembungkus. Langkah ini mengeliminasi masalah *lazy layout drift* pada TextKit 2 yang mengembalikan batas kosong (`.zero`) atau koordinat bergeser pada halaman yang baru dimuat, sekaligus menjangkar titik asal (*anchor origin*) *overlay* ke batas seleksi lokal.
 4. **Pembersihan Otomatis (*Auto-Purge*)**: Saat pembaca berpindah ke halaman berikutnya (*next page*, *slider*, *jump*), `searchEvent` dan `annotationEvent` otomatis dibersihkan oleh `updateContentState(with:)`.
 5. **Navigasi Judul TOC & Flash Indikator Lintas Platform**:
    - **macOS (`IbarotTextView`)**: Implementasi `scrollToTOC(title:)` memanfaatkan `string.findTOCMatchingRange(title:)` untuk mencari rentang judul bab. Jendela teks digulir ke rentang tersebut (`scrollRangeToVisible`), lalu memancarkan efek visual bawaan AppKit melalui `showFindIndicator(for: charRange)`.
@@ -332,4 +332,9 @@ Pada `iOSIbarotTextView`:
 6. **Guard Relayout TextKit 2 & Isolasi Sheet (iOS)**:
    - Pada metode `updateUIView`, pembaruan properti perataan teks (`textAlignment`) dan atribut semantik diproteksi dengan guard pengecekan kesamaan nilai saat ini. Langkah ini mencegah pembatalan hierarki tata letak TextKit 2 yang membebani CPU saat lembaran modal (*sheet presentation*) dimunculkan di atas halaman panjang.
    - Tampilan pembaca diekstrak ke dalam komponen terisolasi `ReaderTextContentView: View, Equatable` guna mengeliminasi evaluasi ulang teks deklaratif SwiftUI akibat mutasi *state* kontainer induk.
+7. **Optimasi *Lazy Text Layout* & Ekspor Cetak (macOS)**:
+   - Pada `IbarotTextView`, pemanggilan *layout* seluruh dokumen yang membebani CPU dihilangkan dan digantikan oleh `textLayoutManager?.ensureLayout(for: range)` yang hanya menghitung fragmen teks pada rentang target navigasi (anotasi, pencarian teks, dan bab TOC).
+   - Menghilangkan *layout pass* berulang (`needsLayout = true` dan `layoutSubtreeIfNeeded()`) pada lompatan navigasi, menghemat siklus *render* antarmuka.
+   - Pengecekan tampilan cetak (`printView`) dimigrasikan menggunakan `NSTextView(usingTextLayoutManager: true)` untuk menjamin perenderan konsisten berbasis TextKit 2 tanpa *fallback* ke mesin lama TextKit 1.
+
 

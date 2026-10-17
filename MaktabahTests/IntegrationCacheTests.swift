@@ -108,7 +108,7 @@ final class IntegrationCacheTests {
 
         // Verifikasi bahwa seluruh 50 buku terdaftar tanpa ada yang tertimpa/hilang karena race condition
         for id in bookIds {
-            #expect(self.cache.isIntegrated(bookId: id, archiveId: archiveId) == true)
+            #expect(cache.isIntegrated(bookId: id, archiveId: archiveId) == true)
         }
 
         // Jalankan unmark concurrently untuk separuh buku
@@ -125,10 +125,10 @@ final class IntegrationCacheTests {
 
         // Verifikasi state akhir setelah operasi concurrent
         for id in unmarkGroup {
-            #expect(self.cache.isIntegrated(bookId: id, archiveId: archiveId) == false)
+            #expect(cache.isIntegrated(bookId: id, archiveId: archiveId) == false)
         }
         for id in retainGroup {
-            #expect(self.cache.isIntegrated(bookId: id, archiveId: archiveId) == true)
+            #expect(cache.isIntegrated(bookId: id, archiveId: archiveId) == true)
         }
 
         // Cleanup
@@ -161,7 +161,7 @@ final class IntegrationCacheTests {
 
         // Verifikasi semua tercatat di archive masing-masing
         for task in tasks {
-            let isDone = self.cache.isIntegrated(bookId: task.bookId, archiveId: task.archiveId)
+            let isDone = cache.isIntegrated(bookId: task.bookId, archiveId: task.archiveId)
             #expect(isDone == true)
         }
 
@@ -169,5 +169,31 @@ final class IntegrationCacheTests {
         for task in tasks {
             cache.unmarkIntegrated(bookId: task.bookId, archiveId: task.archiveId)
         }
+    }
+
+    // MARK: - Integration Progress State Tests
+
+    @Test("BundleArchiveDownloadProgressState: Pembaruan fase integrasi (.fts -> 0.5, .data -> 0.9)")
+    @MainActor
+    func testBundleArchiveDownloadProgressState_integrationPhases() {
+        let state = BundleArchiveDownloadProgressState(
+            title: "كتاب تجريبي",
+            message: "Sedang mengunduh",
+            mode: .downloading,
+            totalSizeString: "10 MB"
+        )
+
+        // Transisi ke integrating
+        state.transitionToIntegrating()
+        #expect(state.mode == .integrating)
+        #expect(state.progress == 0)
+
+        // Fase FTS (50%)
+        state.updateIntegrationPhase(.fts)
+        #expect(state.progress == 0.5)
+
+        // Fase Data (90%)
+        state.updateIntegrationPhase(.data)
+        #expect(state.progress == 0.9)
     }
 }
