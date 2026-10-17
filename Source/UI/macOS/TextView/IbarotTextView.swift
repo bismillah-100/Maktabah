@@ -1028,10 +1028,7 @@ extension IbarotTextView: TextViewRenderable {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 let r = displayedRange(for: ann)
-                scrollRangeToVisible(r)
-                textLayoutManager?.ensureLayout(for: r)
-                enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                showFindIndicator(for: r)
+                scrollAndShowFindIndicator(for: r)
             }
         }
     }
@@ -1041,20 +1038,13 @@ extension IbarotTextView: TextViewRenderable {
         taskQueue.enqueue { [weak self] in
             guard let self, !Task.isCancelled else { return }
             await MainActor.run { [weak self] in
-                guard let self else { return }
-                let ranges = textStorage?.highlightSearchText(
+                guard let self, let firstRange = textStorage?.highlightSearchText(
                     searchText: searchText,
                     mode: mode,
                     baseColor: .highlightText,
                     nearDistance: nearDistance
-                ) ?? []
-
-                guard let firstRange = ranges.first else { return }
-
-                scrollRangeToVisible(firstRange)
-                textLayoutManager?.ensureLayout(for: firstRange)
-                enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                showFindIndicator(for: firstRange)
+                ).first else { return }
+                scrollAndShowFindIndicator(for: firstRange)
             }
         }
     }
@@ -1068,10 +1058,7 @@ extension IbarotTextView: TextViewRenderable {
                 guard let text = textStorage?.string else { return }
 
                 if let range = text.findTOCMatchingRange(title: title) {
-                    scrollRangeToVisible(range)
-                    textLayoutManager?.ensureLayout(for: range)
-                    enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                    showFindIndicator(for: range)
+                    scrollAndShowFindIndicator(for: range)
                 } else {
                     scrollToBeginningOfDocument(nil)
                 }
@@ -1085,6 +1072,15 @@ extension IbarotTextView: TextViewRenderable {
             await scrollView.contentView.scroll(to: NSPoint(x: .zero, y: scrollPos.y))
             await scrollView.reflectScrolledClipView(scrollView.contentView)
         }
+    }
+
+    private func scrollAndShowFindIndicator(for range: NSRange) {
+        textLayoutManager?.ensureFullDocumentLayout()
+        needsLayout = true
+        scrollRangeToVisible(range)
+        enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
+        layoutSubtreeIfNeeded()
+        showFindIndicator(for: range)
     }
 }
 
