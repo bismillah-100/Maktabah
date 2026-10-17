@@ -3829,6 +3829,12 @@
 <li><strong>Normalisasi Skalar (<code>NormalizedArabicScalarMap</code>)</strong>: Memetakan huruf Arab yang bentuk dasarnya sama tetapi kode Unicode-nya berbeda (seperti <em>alif</em>, <em>alif maksura</em>, <em>ya</em>, <em>hamza</em>) agar pencocokan kueri tahan terhadap variasi penulisan.</li>
 <li><strong><code>snippetNear(keywords:nearDistance:)</code></strong>: Algoritma ekstraksi cuplikan teks (<em>snippet</em>) khusus mode <em>Search Near</em> (pencarian kedekatan kata). Menggunakan metode <em>sliding window</em> untuk menghitung batas-batas klaster kata yang memenuhi toleransi kedekatan (<code>nearDistance</code>) sebelum memotong teks konteks (<code>contextLength</code>).</li>
 <li><strong><code>highlightedAttributedText()</code></strong>: Menyuntikkan atribut warna latar belakang ke dalam <code>NSAttributedString</code> untuk setiap kemunculan kata kunci (<em>keywords</em>).</li>
+<li><strong>Pencocokan Judul TOC (<code>findTOCMatchingRange(title:)</code>)</strong>: Algoritma pelacak rentang (<em>range</em>) judul bab pada teks halaman aktif untuk navigasi daftar isi (TOC). Menerapkan strategi bertingkat (<em>multi-priority tiers</em>):<ol>
+<li><em>Prioritas 1</em>: Pencocokan persis pada awal paragraf (<code>onlyParagraphStart: true</code>).</li>
+<li><em>Prioritas 2</em>: Pencocokan persis di posisi mana pun pada halaman aktif.</li>
+<li><em>Prioritas 3</em>: Pencocokan bertahap awalan (<em>prefix fallback</em>) 3 kata, kemudian 2 kata di awal paragraf untuk judul bab yang panjang atau memiliki variasi teks lanjutan.</li>
+</ol>
+</li>
 </ul>
 <hr />
 <h2 id="4-analisis-morfologi-arab-stringarabicswift">4. Analisis Morfologi Arab (<code>String+Arabic.swift</code>)</h2>

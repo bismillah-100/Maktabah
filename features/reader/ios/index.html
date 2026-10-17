@@ -2768,10 +2768,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-jembatan-iosibarottextview-uiviewrepresentable" class="md-nav__link">
+  <a href="#b-jembatan-iosibarottextview-uiviewrepresentable-isolasi-layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. Jembatan iOSIbarotTextView (UIViewRepresentable)
+        B. Jembatan iOSIbarotTextView (UIViewRepresentable) &amp; Isolasi Layout
       
     </span>
   </a>
@@ -3696,10 +3696,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-jembatan-iosibarottextview-uiviewrepresentable" class="md-nav__link">
+  <a href="#b-jembatan-iosibarottextview-uiviewrepresentable-isolasi-layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. Jembatan iOSIbarotTextView (UIViewRepresentable)
+        B. Jembatan iOSIbarotTextView (UIViewRepresentable) &amp; Isolasi Layout
       
     </span>
   </a>
@@ -3881,12 +3881,13 @@
 </tr>
 </tbody>
 </table>
-<h3 id="b-jembatan-iosibarottextview-uiviewrepresentable">B. Jembatan iOSIbarotTextView (UIViewRepresentable)</h3>
-<p>Mengintegrasikan <code>UITextView</code> UIKit ke dalam arsitektur deklaratif SwiftUI:</p>
+<h3 id="b-jembatan-iosibarottextview-uiviewrepresentable-isolasi-layout">B. Jembatan iOSIbarotTextView (UIViewRepresentable) &amp; Isolasi Layout</h3>
+<p>Mengintegrasikan <code>UITextView</code> UIKit ke dalam arsitektur deklaratif SwiftUI dengan perlindungan tata letak TextKit 2:</p>
 <ul>
 <li><strong><code>makeUIView</code></strong>: Menginisialisasi <code>UITextView</code> kustom dengan properti <em>non-editable</em>, <em>selectable</em>, serta mendukung perpindahan per halaman (<em>paging mode</em>) maupun pengguliran kontinu (<em>continuous scrolling</em>).</li>
-<li><strong><code>updateUIView</code></strong>: Menerima injeksi <code>NSAttributedString</code> baru dari <code>ReaderViewModel</code>. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks.</li>
-<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk menu <em>highlight/underline</em>, mencegat ketukan anotasi (<code>onTapAnnotation</code>), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (<code>lastHandledSearchEventId</code>, <code>lastHandledAnnotationEventId</code>) per <em>instance</em> aktif.</li>
+<li><strong><code>updateUIView</code></strong>: Menerima injeksi <code>NSAttributedString</code> baru dari <code>ReaderViewModel</code>. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks. Mutasi <code>textAlignment</code> dan atribut semantik teks diproteksi dengan guard nilai saat ini guna mencegah pembatalan hierarki tata letak TextKit 2 yang berat pada halaman panjang.</li>
+<li><strong>Isolasi Render Lembar Modal (<code>ReaderTextContentView: Equatable</code>)</strong>: Tampilan pembaca dibungkus dalam <em>struct</em> terisolasi yang mengadopsi <code>Equatable</code>. Hal ini mencegah SwiftUI mengevaluasi ulang <em>Text View</em> ketika status <em>sheet</em> (seperti TOC atau opsi tampilan) dimutasi oleh kontainer induk.</li>
+<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk menu <em>highlight/underline</em>, mencegat ketukan anotasi (<code>onTapAnnotation</code>), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (<code>lastHandledSearchEventId</code>, <code>lastHandledAnnotationEventId</code>) per <em>instance</em> aktif. Properti pembantu restorasi <em>scroll</em> ditandai dengan <code>@ObservationIgnored</code> pada <code>ReaderViewModel</code> untuk mencegah siklus evaluasi reaktif yang berlebih.</li>
 </ul>
 <h3 id="c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen">C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (<em>Fullscreen</em>)</h3>
 <ul>

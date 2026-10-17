@@ -3710,6 +3710,7 @@
 <ul>
 <li><strong>Task Cancellation</strong>: <code>ReaderViewModel</code> menyimpan referensi <em>task</em> pemuatan dalam <code>currentLoadTask</code>. Jika pengguna berpindah halaman sebelum halaman saat ini selesai dimuat, <em>task</em> sebelumnya langsung dibatalkan (<code>currentLoadTask?.cancel()</code>).</li>
 <li><strong>Debouncing Pagination</strong>: Perpindahan halaman melalui <em>slider</em> di-<em>debounce</em> selama beberapa milidetik. Pemuatan basis data FTS atau dekompresi <em>Zstandard</em> (zstd) tidak akan terpicu hingga pengguna berhenti menggeser tuas <em>slider</em>.</li>
+<li><strong>Offloading Kueri Pagination (<code>jumpToPage</code>)</strong>: Eksekusi pengambilan konten basis data pada navigasi <em>slider</em> didelegasikan ke <em>background thread</em> melalui <code>Task.detached</code>. Pendekatan ini memisahkan kueri I/O disk SQLite dari isolasi <code>@MainActor</code>, menjamin antarmuka pengguna tidak mengalami <em>stutter</em> saat pergeseran halaman cepat.</li>
 </ul>
 <pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Idle: Reader Diam

@@ -1930,10 +1930,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-integratephase-enum-dua-fase-integrasi" class="md-nav__link">
+  <a href="#integratephase-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. IntegratePhase (Enum) - Dua Fase Integrasi
+        IntegratePhase (Enum)
       
     </span>
   </a>
@@ -3757,10 +3757,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-integratephase-enum-dua-fase-integrasi" class="md-nav__link">
+  <a href="#integratephase-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. IntegratePhase (Enum) - Dua Fase Integrasi
+        IntegratePhase (Enum)
       
     </span>
   </a>
@@ -4001,21 +4001,31 @@
 </span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="b-integratephase-enum-dua-fase-integrasi">B. IntegratePhase (Enum) - Dua Fase Integrasi</h3>
-<p>Operasi integrasi dibagi menjadi dua fase independen:</p>
+<h3 id="integratephase-enum">IntegratePhase (Enum)</h3>
+<p>Operasi integrasi dibagi menjadi dua fase independen yang dipantau kemajuannya secara deterministik melalui <code>BundleArchiveDownloadProgressState.updateIntegrationPhase</code>:</p>
 <ol>
 <li><strong>Fase Data (<code>IntegratePhase.data</code>)</strong>:<ul>
 <li>Menjalankan <code>ATTACH DATABASE</code> berkas buku sementara ke arsip <code>1-20.sqlite</code>.</li>
 <li>Menyalin tabel konten (<code>b{id}</code>) dan tabel daftar isi (<em>Table of Contents</em> <code>t{id}</code>).</li>
 <li>Menjalankan transaksi cepat agar <em>lock</em> basis data segera dilepas.</li>
+<li>Merefleksikan progres integrasi tahap awal (rentang 0.0 s.d. 0.5).</li>
 </ul>
 </li>
-<li><strong>Fase Indeks (<code>IntegratePhase.fts</code>)</strong>:<ul>
+<li>
+<p><strong>Fase Indeks (<code>IntegratePhase.fts</code>)</strong>:</p>
+<ul>
 <li>Membaca teks Arab dari tabel <code>b{id}</code> yang baru disalin.</li>
 <li>Melakukan normalisasi teks (penghapusan harakat/tasykil).</li>
 <li>Memasukkan token teks ke dalam <em>virtual table</em> <code>search_index</code> (SQLite FTS5) agar kitab tersebut langsung dapat dicari pada fitur pencarian global.</li>
+<li>Merefleksikan progres integrasi tahap akhir (rentang 0.5 s.d. 1.0).</li>
 </ul>
 </li>
+<li>
+<p><strong>Transisi Halus &amp; Efek Animasi</strong>:
+  Antarmuka modal unduhan (<code>ProgressBooksDownload</code> di macOS dan <code>iOSNavigationManager</code> di iOS) menyematkan jeda penyelesaian bertahap (<em>completion pause</em>) dan efek simbol berdenyut (<em>pulsing symbol effect</em>) untuk mencegah kedipan atau reset mendadak saat status berpindah dari unduhan jaringan ke integrasi basis data.</p>
+</li>
+<li><strong>Sentralisasi Format Ukuran (<code>ByteCountFormat.swift</code>)</strong>:
+  Konversi ukuran byte di seluruh modul perpustakaan, jendela pembaruan, dan bilah progres disentralisasi menggunakan ekstensi <code>BinaryInteger.formattedByteCount</code> berbasis <code>ByteCountFormatter</code> native.</li>
 </ol>
 <h3 id="c-integrationcache-class-status-persistence-v2">C. IntegrationCache (Class) &amp; Status Persistence (v2)</h3>
 <p>Status apakah sebuah kitab sudah terintegrasi ke dalam arsip disimpan dalam berkas JSON per-arsip di <code>&lt;archiveBasePath&gt;/integration_cache_v2/&lt;archiveId&gt;.json</code>. Hal ini membuat pengecekan status menjadi operasi $O(1)$ di memori tanpa perlu membuka koneksi SQLite.</p>

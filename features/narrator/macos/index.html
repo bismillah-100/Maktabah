@@ -3881,7 +3881,9 @@
 </ul>
 <h3 id="3-restorasi-state-readerstatecomponent">3. Restorasi State (ReaderStateComponent)</h3>
 <ul>
-<li>Navigasi antar-perawi dan riwayat klik kitab tarjamah disimpan secara persisten. Ketika jendela ditutup atau mode berpindah, state terakhir perawi yang sedang diteliti dapat direstorasi seketika.</li>
+<li><strong>Restorasi Mode Mandiri (Sidebar &amp; FullSearch)</strong>: Pemulihan antarmuka mengevaluasi kondisi <code>state.currentRowi != nil || state.authorTarjamahResults?.isEmpty == false</code>. Hal ini memungkinkan hasil penelusuran biografi (<code>tarjamahList</code>) pada mode <code>fullSearch</code> direstorasi seketika meskipun tidak ada profil perawi tunggal yang sedang aktif.</li>
+<li><strong>Isolasi Input Teks</strong>: Penyetelan nama <code>rowiTextField.stringValue = rowi.isoName</code> dibatasi hanya pada mode <code>.sidebar</code>. Pada mode <code>fullSearch</code>, kolom input pencarian dipertahankan tanpa tertimpa data profil perawi.</li>
+<li>Navigasi antar-perawi dan riwayat klik kitab tarjamah disimpan secara persisten. Ketika jendela ditutup atau mode berpindah, <em>state</em> terakhir perawi yang sedang diteliti dapat direstorasi seketika.</li>
 </ul>
 
 

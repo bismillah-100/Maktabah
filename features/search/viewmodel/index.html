@@ -3887,6 +3887,9 @@
 <h3 id="1-execution-searchexecutionswift">1. Execution (<code>Search+Execution.swift</code>)</h3>
 <p>Menangani siklus pencarian seperti eksekusi awal (<code>startSearch</code>), jeda/lanjutkan (<em>pause/resume</em>), dan penghentian <em>task</em> (<code>stopSearch</code>). Eksekusi dialihkan ke <em>background thread</em> melalui <code>Task.detached</code> dengan penguncian <code>Mutex</code> pada referensi <code>Task</code> untuk mencegah akses konkuren ganda.
 Di AppKit (macOS), ekstensi ini memanfaatkan <em>Combine Publishers</em> seperti <code>searchDidInitialize</code> atau <code>searchProgressDidUpdate</code>.</p>
+<ul>
+<li><strong>Sentralisasi Cooldown Penyelesaian (<code>handleSearchCompletion</code>)</strong>: Penutupan indikator pencarian dan pengiriman sinyal selesai disentralisasi ke dalam view model dengan jeda waktu terukur (0.5 detik di iOS dan 1.0 detik di macOS via <code>completionDismissTask</code> yang diproteksi <code>Mutex</code>). Mekanisme ini mengeliminasi <em>race condition</em> pada <code>OptionSearchVC</code> saat kueri menghasilkan 0 baris kecocokan, memastikan bilah progres ditutup dan tombol pencarian di-reset secara konsisten.</li>
+</ul>
 <h3 id="2-library-searchlibraryswift">2. Library (<code>Search+Library.swift</code>)</h3>
 <p>Bertindak sebagai adapter dan delegator menuju <code>LibraryDataManager</code> untuk melacak tabel SQLite (<em>resolve</em>) terhadap pustaka kitab terkait.</p>
 <h3 id="3-observers-searchobserversswift">3. Observers (<code>Search+Observers.swift</code>)</h3>

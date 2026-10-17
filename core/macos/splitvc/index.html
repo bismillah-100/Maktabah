@@ -826,10 +826,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+  <a href="#e-alur-persistensi-multi-tab-penghentian-aplikasi-quit-session-persistence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
+        E. Alur Persistensi Multi-Tab &amp; Penghentian Aplikasi (Quit &amp; Session Persistence)
       
     </span>
   </a>
@@ -887,10 +887,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#penanganan-jendela-ganda-multi-window-tabs" class="md-nav__link">
+  <a href="#tabstatesnapshot-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Jendela Ganda (Multi-Window &amp; Tabs)
+        TabStateSnapshot (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windowtabssession-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WindowTabsSession (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#penanganan-jendela-ganda-grup-tab-multi-window-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Penanganan Jendela Ganda &amp; Grup Tab (Multi-Window &amp; Tabs)
       
     </span>
   </a>
@@ -3873,10 +3895,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence" class="md-nav__link">
+  <a href="#e-alur-persistensi-multi-tab-penghentian-aplikasi-quit-session-persistence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. Alur Persistensi State ke Disk saat Jendela Ditutup (Window Close &amp; Disk Persistence)
+        E. Alur Persistensi Multi-Tab &amp; Penghentian Aplikasi (Quit &amp; Session Persistence)
       
     </span>
   </a>
@@ -3934,10 +3956,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#penanganan-jendela-ganda-multi-window-tabs" class="md-nav__link">
+  <a href="#tabstatesnapshot-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Jendela Ganda (Multi-Window &amp; Tabs)
+        TabStateSnapshot (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windowtabssession-struct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WindowTabsSession (Struct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#penanganan-jendela-ganda-grup-tab-multi-window-tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Penanganan Jendela Ganda &amp; Grup Tab (Multi-Window &amp; Tabs)
       
     </span>
   </a>
@@ -4207,56 +4251,52 @@
     participant Reader as IbarotTextVC
 
     App-&gt;&gt;App: applicationDidFinishLaunching()
-    Note over App: pendingDeepLink != nil (Cold Start Widget)
-    App-&gt;&gt;Win: window.setupContentView(mode: .viewer, restoreState: false)
-    Win-&gt;&gt;Split: switchToMode(.viewer, restoreState: false)
-    Note over Split: Setup mode .viewer tanpa memulihkan state disk lama
+    App-&gt;&gt;Win: restorePersistedState(mainWindowController.window)
+    Note over App: Memulihkan seluruh sesi tab terlebih dahulu agar tab lama tidak hilang
 
     App-&gt;&gt;+Reader: activeDeepLinkTask = Task { handleDeepLink(deepLink) }
     alt Deep Link: .annotation(id)
         Reader-&gt;&gt;Reader: openAnnotation(annotation)
-    else Deep Link: .history(bkId, contentId)
-        Reader-&gt;&gt;Reader: openHistory(book, contentId)
+    else Deep Link: .lastRead / .book(id, page, part)
+        Reader-&gt;&gt;Reader: openBook(...)
     end
     deactivate Reader</code></pre>
-<h3 id="e-alur-persistensi-state-ke-disk-saat-jendela-ditutup-window-close-disk-persistence">E. Alur Persistensi State ke Disk saat Jendela Ditutup (<em>Window Close &amp; Disk Persistence</em>)</h3>
-<pre class="mermaid"><code>sequenceDiagram
-    autonumber
+<h3 id="e-alur-persistensi-multi-tab-penghentian-aplikasi-quit-session-persistence">E. Alur Persistensi Multi-Tab &amp; Penghentian Aplikasi (<em>Quit &amp; Session Persistence</em>)</h3>
+<pre class="mermaid"><code>flowchart TD
+    subgraph "App Lifecycle (AppDelegate)"
+        A["User Cmd+Q / Quit"] --&gt; B["applicationShouldTerminate(_:)"]
+        B --&gt;|"1. isTerminating = true"| C["saveAllTabsSession()"]
+        C --&gt;|"2. Atomic Save"| D["tabs_session.json"]
+        B --&gt;|"3. Return .terminateNow"| E["AppKit Window Teardown"]
+        E --&gt; F["windowObserverWillCloseNotification"]
+        F --&gt;|"isTerminating == true"| G["Skip duplicate save &amp; avoid pruning"]
+    end
 
-    actor User as Pengguna
-    participant App as AppDelegate
-    participant Split as SplitVC
-    participant State as ReaderStateManager
-    participant Comp as Komponen UI
-
-    User-&gt;&gt;+App: Tutup Jendela (Cmd+W) / willCloseNotification
-    App-&gt;&gt;+Split: persistCurrentStateToDisk()
-
-    Split-&gt;&gt;+State: saveState(for: currentMode)
-    State-&gt;&gt;+Comp: updateState(&amp;state)
-    Note over Comp: Simpan Book, Page, Scroll, Selection, Query
-    Comp--&gt;&gt;-State: State terbarui
-
-    State-&gt;&gt;State: persistToDisk()&lt;br/&gt;(JSONEncoder &amp; Tulis Atomik ke Disk)
-    State--&gt;&gt;-Split: Selesai simpan ke disk
-    Split--&gt;&gt;-App: Persist selesai
-
-    App-&gt;&gt;App: mainWindowController = nil
-    deactivate App</code></pre>
+    subgraph "Launch &amp; Restoration"
+        H["App Launch / Reopen"] --&gt; I{"Deep Link Pending?"}
+        I --&gt;|"Yes"| J["restorePersistedState first"]
+        J --&gt; K["Open Deep Link in Active/Target Tab"]
+        I --&gt;|"No"| L["restorePersistedState"]
+        L --&gt; M["Restore Tabs in Loop"]
+        M --&gt; N["Only Key Window gets First Responder"]
+    end</code></pre>
 <hr />
 <h2 id="3-bedah-splitvc-manajemen-state">3. Bedah SplitVC &amp; Manajemen State</h2>
 <p><code>SplitVC</code> adalah <em>subclass</em> dari <code>NSSplitViewController</code> yang bertindak sebagai fondasi utama tata letak Maktabah pada macOS. Maktabah mendaur ulang <em>instance</em> ini untuk seluruh mode guna menghemat alokasi memori dan menjaga kelancaran animasi transisi.</p>
-<h3 id="siklus-hidup-readerstatemanager">Siklus Hidup <code>ReaderStateManager</code></h3>
+<h3 id="siklus-hidup-readerstatemanager">Siklus Hidup ReaderStateManager</h3>
 <p>Manajemen status antarmuka (seperti kitab aktif, nomor halaman, posisi <em>scroll</em>, rentang seleksi teks, kueri pencarian, serta status <em>collapsed</em> pada <em>sidebar</em>) dikelola oleh <code>ReaderStateManager</code> melalui 3 fase siklus:</p>
 <ol>
 <li><strong>Restorasi saat Peluncuran (<code>restorePersistedState</code>)</strong></li>
 <li>Dipicu di <code>AppDelegate.applicationDidFinishLaunching(_:)</code> saat jendela utama pertama kali dibuka.</li>
-<li>Mengambil mode terakhir dari <code>UserDefaults.standard.lastAppMode</code> (misalnya <code>.viewer</code>, <code>.search</code>, atau <code>.narrator</code>).</li>
-<li>Memanggil <code>splitVC.setupForMode(lastMode)</code> dan <code>splitVC.setupAutoSave()</code>.</li>
-<li>Mengeksekusi <code>stateManager.restoreState(for: lastMode, components: splitVC.components(for: lastMode))</code>.</li>
-<li><code>ReaderStateManager</code> memuat berkas JSON secara <em>lazy</em> dari direktori <code>~/Library/Application Support/Maktabah/States/{viewer,search,author}_state.json</code>.</li>
+<li>Memeriksa sesi tab multi-window melalui <code>ReaderStateManager.loadTabsSession()</code>.</li>
+<li>Jika berkas sesi ditemukan (<code>WindowTabsSession</code>), sistem mengiterasi seluruh snapshot tab (<code>[TabStateSnapshot]</code>):<ul>
+<li>Jendela pertama dijadikan basis, sedangkan jendela tab berikutnya dibuatkan <em>instance</em> <code>WindowController</code> baru dan digabungkan ke grup tab via <code>addTabbedWindow(newWin, ordered: .above)</code>.</li>
+<li>Setiap tab mengimpor snapshot memorinya secara terisolasi (<code>splitVC.stateManager.importTabSnapshot(snapshot)</code>), menyetel mode, memulihkan <em>sidebar</em>, dan mengeksekusi restorasi komponen UI.</li>
+<li>Tab aktif difokuskan kembali sesuai indeks <code>session.selectedTabIndex</code> (<code>tabGroup?.selectedWindow = activeWindow</code>).</li>
+</ul>
+</li>
 <li>
-<p>Setiap komponen yang mengadopsi <em>protocol</em> <code>ReaderStateComponent</code> (<code>IbarotTextVC</code>, <code>OptionSearchVC</code>, atau <code>RowiResultsVC</code>) memulihkan kondisi UI mereka secara sinkron.</p>
+<p>Jika sesi tab belum tersedia, sistem memuat jendela tunggal bawaan tanpa restorasi state (<code>setupContentView(restoreState: false)</code>).</p>
 </li>
 <li>
 <p><strong>Penyimpanan &amp; Restorasi saat Beralih Mode (<code>switchToMode(_:restoreState:)</code>)</strong></p>
@@ -4270,14 +4310,16 @@
 <p><strong>Langkah 5 (Restorasi Mode Baru Bersyarat)</strong>: Jika parameter <code>restoreState</code> bernilai <code>true</code> (default), <code>stateManager.restoreState(for: mode, components: components(for: mode))</code> dipanggil untuk memulihkan state komponen target. Jika dipicu dari deep link widget (<code>restoreState: false</code>), restorasi diabaikan agar konten deep link dimuat tanpa tertimpa state persisten lama.</p>
 </li>
 <li>
-<p><strong>Persistensi ke Disk saat Jendela Ditutup (<code>persistCurrentStateToDisk</code>)</strong></p>
+<p><strong>Persistensi Sesi Tab ke Disk (<code>saveAllTabsSession</code>)</strong></p>
 </li>
-<li><code>AppDelegate</code> mengamati notifikasi <code>NSWindow.willCloseNotification</code> melalui <code>windowObserverWillCloseNotification(_:)</code>.</li>
-<li>Memanggil <code>window.splitVC.persistCurrentStateToDisk()</code>.</li>
-<li><code>stateManager.saveState(for: currentMode, components: components(for: currentMode))</code> memperbarui <em>state</em> di memori.</li>
-<li><code>stateManager.persisToDisk(for: currentMode)</code> melakukan serialisasi <code>ReaderState</code> ke format JSON (<code>.prettyPrinted</code>, <code>.sortedKeys</code>) dan menuliskannya secara atomik ke <em>disk</em> (<code>.atomic</code>).</li>
+<li>Menggunakan mekanisme <em>debounced auto-save</em> (3 detik via Combine <code>PassthroughSubject</code>) serta pembanding <em>in-memory diffing</em> (<code>lastSavedSession == session</code>).</li>
+<li>Apabila tidak ada perubahan tab/halaman/kitab, penulisan ke disk dilewati 100% (<em>Zero Disk I/O</em>).</li>
+<li>Dipicu saat fokus tab berganti (<code>windowObserverDidChangeKey</code>), reset tampilan (<code>resetCurrentViewState</code>), serta flush langsung saat aplikasi akan dihentikan (<code>applicationShouldTerminate</code>).</li>
+<li>Mengambil seluruh jendela di dalam grup tab (<code>refWindow.tabGroup?.windows</code>).</li>
+<li>Mengekstrak <code>TabStateSnapshot</code> dari masing-masing jendela via <code>splitVC.stateManager.exportTabSnapshot(currentMode:components:)</code>.</li>
+<li>Mengemas seluruh snapshot bersama <code>selectedIndex</code> ke dalam <code>WindowTabsSession</code> dan menyimpannya secara atomik ke <em>disk</em> di <code>~/Library/Application Support/Maktabah/States/tabs_session.json</code> (<code>ReaderStateManager.saveTabsSession</code>).</li>
 </ol>
-<h3 id="readerstatecomponent-protocol"><code>ReaderStateComponent</code> (Protocol)</h3>
+<h3 id="readerstatecomponent-protocol">ReaderStateComponent (Protocol)</h3>
 <p>Komponen UI yang berpartisipasi dalam persistensi <em>state</em> mengadopsi <em>protocol</em> <code>@MainActor ReaderStateComponent</code>:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">ReaderStateComponent</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
@@ -4291,17 +4333,40 @@
 <li><strong><code>restore(from state: ReaderState)</code></strong>: Membaca nilai dari <code>ReaderState</code> dan menerapkannya kembali ke UI (misalnya membuka kembali kitab, memposisikan <em>scroll</em>, atau merender ulang hasil pencarian).</li>
 <li><strong><code>cleanUpState()</code></strong>: Mengembalikan UI ke kondisi awal saat pengguna mengeksekusi <em>reset</em> melalui menu <em>Reset Current View</em> (<code>AppDelegate.resetCurrentViewState()</code>).</li>
 </ul>
-<h3 id="readerstate-struct"><code>ReaderState</code> (Struct)</h3>
+<h3 id="readerstate-struct">ReaderState (Struct)</h3>
 <p>Objek <em>state</em> dienkapsulasi dalam struktur <code>Codable</code> yang disimpan pada direktori <code>~/Library/Application Support/Maktabah/States/</code>:</p>
 <ul>
 <li><code>viewer_state.json</code>: Menyimpan <em>state</em> mode pembaca (kitab aktif, halaman, posisi <em>scroll</em>, seleksi, status TOC).</li>
 <li><code>search_state.json</code>: Menyimpan <em>state</em> pencarian (kueri, opsi FTS, hasil pencarian, dan buku terpilih).</li>
 <li><code>author_state.json</code>: Menyimpan <em>state</em> biografi perawi (perawi aktif, kueri rujukan, dan hasil biografi).</li>
 </ul>
-<h3 id="penanganan-jendela-ganda-multi-window-tabs">Penanganan Jendela Ganda (<em>Multi-Window &amp; Tabs</em>)</h3>
+<h3 id="tabstatesnapshot-struct">TabStateSnapshot (Struct)</h3>
+<p>Model persistensi sesi multi-tab macOS untuk mempertahankan tata letak tab antar-peluncuran aplikasi:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">TabStateSnapshot</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">currentModeRaw</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">viewerState</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderState</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">searchState</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderState</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">authorState</span><span class="p">:</span><span class="w"> </span><span class="n">ReaderState</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
+</span></code></pre></div>
 <ul>
-<li><strong>Jendela Utama (<em>Primary Window</em>)</strong>: Menjalankan <code>restorePersistedState(_:)</code> untuk memulihkan sesi terakhir dari <em>disk</em>.</li>
-<li><strong>Tab / Jendela Baru (<code>newWindowForTab(_:)</code>)</strong>: Memanggil <code>setupContentView(restoreState: false)</code> yang menginisialisasi <code>ReaderState()</code> baru di memori tanpa memuat <em>state</em> lama dari <em>disk</em>, mencegah benturan antarjendela.</li>
+<li>Mengisolasi <em>state</em> (<code>viewerState</code>, <code>searchState</code>, <code>authorState</code>) per-tab jendela secara terisolasi.</li>
+</ul>
+<h3 id="windowtabssession-struct">WindowTabsSession (Struct)</h3>
+<p>Model persistensi sesi tab jendela:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">public</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="nc">WindowTabsSession</span><span class="p">:</span><span class="w"> </span><span class="n">Codable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">selectedTabIndex</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">tabs</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">TabStateSnapshot</span><span class="p">]</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li>Mengenkapsulasi seluruh tab aktif bersama indeks tab yang sedang dibuka (<code>selectedTabIndex</code>) dan disimpan pada <code>tabs_session.json</code>.</li>
+</ul>
+<h3 id="penanganan-jendela-ganda-grup-tab-multi-window-tabs">Penanganan Jendela Ganda &amp; Grup Tab (<em>Multi-Window &amp; Tabs</em>)</h3>
+<ul>
+<li><strong>Retensi WindowController</strong>: <code>AppDelegate</code> menyimpan referensi seluruh <code>WindowController</code> aktif dalam <code>Set&lt;WindowController&gt;</code> (<code>windowControllers</code>) untuk mencegah deallokasi dini saat jendela tab ditambahkan.</li>
+<li><strong>Isolasi Memori Antar-Tab</strong>: Setiap jendela tab memiliki <em>instance</em> <code>ReaderStateManager</code> mandiri. Ketika tab baru dibuka (<code>newWindowForTab(_:)</code>), tab tersebut beroperasi dengan memori <em>state</em> bersih tanpa menimpa <em>state</em> tab pendahulunya.</li>
+<li><strong>Restorasi Sesi Utuh</strong>: Saat aplikasi diluncurkan kembali, seluruh tab yang sebelumnya terbuka dikelompokkan kembali ke dalam grup tab jendela yang sama persis dengan urutan dan posisi fokus terakhir pengguna.</li>
 </ul>
 <h3 id="struct-class-enum-terkait">Struct, Class, &amp; Enum Terkait</h3>
 <ul>
