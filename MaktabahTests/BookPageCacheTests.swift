@@ -7,6 +7,7 @@ import Foundation
 @testable import Maktabah_Debug
 import Testing
 
+@Suite("BookPageCache Tests", .serialized)
 struct BookPageCacheTests {
     let cache = BookPageCache.shared
 
