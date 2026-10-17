@@ -183,10 +183,7 @@ struct BundleArchiveDownloadProgressView: View {
                     HStack {
                         Spacer()
                         Button(
-                            NSLocalizedString(
-                                "Cancel",
-                                comment: "Cancel active archive download button"
-                            ),
+                            "Cancel",
                             action: onCancel
                         )
                         .buttonStyle(.bordered)
@@ -197,10 +194,7 @@ struct BundleArchiveDownloadProgressView: View {
                 HStack(spacing: 12) {
                     Spacer()
                     Button(
-                        NSLocalizedString(
-                            "Cancel",
-                            comment: "Cancel action button"
-                        ),
+                        "Cancel",
                         action: onCancel
                     )
                     .buttonStyle(.bordered)

@@ -947,6 +947,9 @@
         }
       }
     },
+    "Application Will Terminate because Folder Location Not Found on %@" : {
+
+    },
     "appNeedAccess" : {
       "localizations" : {
         "ar" : {
@@ -1040,6 +1043,9 @@
         }
       }
     },
+    "Author with ID %lld not found." : {
+
+    },
     "Background" : {
       "localizations" : {
         "ar" : {
@@ -1118,7 +1124,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Cancel action button\nCancel active archive download button",
+      "comment" : "Cancel action button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1769,6 +1775,9 @@
           }
         }
       }
+    },
+    "Database error: %@" : {
+
     },
     "Date Created" : {
       "extractionState" : "manual",

@@ -405,12 +405,10 @@ extension LibraryViewManager: NSOutlineViewDelegate {
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
         let alert = NSAlert()
-        let alertInfo: LocalizedStringResource = books.count == 1
-            ? .Library.deleteDownloadedSingleConfirmation(books[0].book)
-            : .Library.deleteDownloadedMultipleConfirmation(books.count)
-
         alert.messageText = String(localized: .Library.deleteDownload)
-        alert.informativeText = String(localized: alertInfo)
+        alert.informativeText = books.count == 1
+            ? String(localized: .Library.deleteDownloadedSingleConfirmation(books[0].book))
+            : String(localized: .Library.deleteDownloadedMultipleConfirmation(books.count))
         alert.addButton(withTitle: String(localized: "Delete"))
         alert.addButton(withTitle: String(localized: "Cancel"))
         alert.alertStyle = .warning

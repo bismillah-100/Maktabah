@@ -180,10 +180,9 @@ final class DatabaseManager: Sendable {
         }
         #if os(macOS)
         ReusableFunc.showAlert(
-            title: NSLocalizedString("Folder Not Found", comment: ""),
-            message: NSLocalizedString(
-                "Application Will Terminate because Folder Location Not Found on \(AppConfig.databaseFilesPath ?? "N/A")",
-                comment: ""
+            title: String(localized: "Folder Not Found"),
+            message: String(
+                localized: "Application Will Terminate because Folder Location Not Found on \(AppConfig.databaseFilesPath ?? "N/A")"
             )
         )
         Task { @MainActor in
