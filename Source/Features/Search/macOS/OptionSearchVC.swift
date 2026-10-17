@@ -72,7 +72,6 @@ class OptionSearchVC: NSViewController {
 
     private var cancellables = Set<AnyCancellable>()
     private var resultsLoadingTask: Task<Void, Never>?
-    private var progressDismissTask: Task<Void, Never>?
     private let cellTasks = NSMapTable<NSTableCellView, CellTaskBox>.weakToStrongObjects()
     private var migrationButton: NSView?
     private var nearDistanceField: NSTextField?
@@ -280,17 +279,11 @@ class OptionSearchVC: NSViewController {
             .store(in: &cancellables)
 
         viewModel.searchDidComplete
-            .receive(on: RunLoop.main)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 guard let self else { return }
-                progressTable.doubleValue = progressTable.maxValue
-                progressDismissTask?.cancel()
-                progressDismissTask = Task { @MainActor [weak self] in
-                    try? await Task.sleep(for: .seconds(0.5))
-                    guard let self, !viewModel.isSearching else { return }
-                    updateStartButton(state: .off)
-                    resetProgressBar()
-                }
+                updateStartButton(state: .off)
+                resetProgressBar()
             }
             .store(in: &cancellables)
 
@@ -401,7 +394,6 @@ class OptionSearchVC: NSViewController {
     }
 
     private func startSearchEngine() {
-        resetProgressDismiss()
         if let lvm = libraryViewManager {
             viewModel.setSelectedBooks(lvm.viewModel.selectedBookIds)
         } else if !bkId.isEmpty {
@@ -411,7 +403,6 @@ class OptionSearchVC: NSViewController {
     }
 
     func resetProgressBar() {
-        resetProgressDismiss()
         progressTable.stopAnimation(nil)
         progressTable.isIndeterminate = false
         progressTable.isHidden = true
@@ -428,11 +419,6 @@ class OptionSearchVC: NSViewController {
         progressTable.stopAnimation(nil)
         progressTable.isHidden = hide
         progressTable.isIndeterminate = false
-    }
-    
-    func resetProgressDismiss() {
-        progressDismissTask?.cancel()
-        progressDismissTask = nil
     }
 
     @IBAction func startSearch(_ sender: Any) {
@@ -456,7 +442,6 @@ class OptionSearchVC: NSViewController {
     }
 
     @IBAction func stopSearch(_ sender: Any?) {
-        resetProgressDismiss()
         viewModel.stopSearch()
         startButton.state = .off
         startButton.image = NSImage(
@@ -546,8 +531,6 @@ class OptionSearchVC: NSViewController {
     deinit {
         Logger.search.debug("deinit OptionSearchVC")
         cancellables.removeAll()
-        progressDismissTask?.cancel()
-        progressDismissTask = nil
         resultsLoadingTask?.cancel()
         resultsLoadingTask = nil
     }

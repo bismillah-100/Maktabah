@@ -362,9 +362,10 @@ struct SearchToolbar: ToolbarContent {
             }
         }
 
-        //leading
+        // leading
         if !conditionalLeadingButton,
-           !viewModel.results.isEmpty {
+           !viewModel.results.isEmpty
+        {
             ToolbarItem(placement: .cancellationAction) {
                 Button(action: { viewModel.cleanUpState() }) {
                     Label("Done", systemImage: "xmark.circle")
@@ -453,7 +454,6 @@ struct SearchToolbar: ToolbarContent {
 
 struct SearchProgressView: View {
     @Bindable var viewModel: SearchViewModel
-    var showTablesProgress: Bool = true
     var showIntegrationState: Bool = true
     @Environment(iOSNavigationManager.self) var navigationManager: iOSNavigationManager
 
@@ -463,23 +463,13 @@ struct SearchProgressView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if viewModel.isSearching {
                     VStack(alignment: .leading, spacing: 4) {
-                        let shouldShowTablesProgress = showTablesProgress && viewModel.totalTables > 1
-
-                        if shouldShowTablesProgress {
-                            ProgressView(
-                                value: Double(min(viewModel.completedTables, viewModel.totalTables)),
-                                total: Double(max(viewModel.totalTables, 1))
-                            )
-                            .progressViewStyle(.linear)
-                        }
-
                         if viewModel.totalRowsInTable > 0 {
                             ProgressView(
                                 value: Double(viewModel.completedRowsInTable),
                                 total: Double(viewModel.totalRowsInTable)
                             )
                             .progressViewStyle(.linear)
-                        } else if !shouldShowTablesProgress && viewModel.totalTables <= 1 {
+                        } else {
                             ProgressView()
                                 .progressViewStyle(.linear)
                         }
@@ -494,7 +484,7 @@ struct SearchProgressView: View {
             }
             .animation(
                 .easeIn(duration: 0.25),
-                value: [viewModel.completedRowsInTable, viewModel.completedTables]
+                value: viewModel.completedRowsInTable
             )
         }
     }

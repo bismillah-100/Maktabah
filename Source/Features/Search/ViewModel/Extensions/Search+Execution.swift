@@ -68,11 +68,18 @@ extension SearchViewModel {
 
     func handleSearchCompletion() {
         emitComplete()
+        var delay: Double = 0.5
+        #if os(macOS)
+        delay = 1
+        #endif
 
         let dismissTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(0.5))
+            try? await Task.sleep(for: .seconds(delay))
             guard let self, !Task.isCancelled, isSearching else { return }
             stopSearch()
+            #if os(macOS)
+            searchDidComplete.send()
+            #endif
         }
         completionDismissTask.withLock { $0 = dismissTask }
     }
@@ -165,7 +172,7 @@ extension SearchViewModel {
             completedRowsInTable = totalRowsInTable
         }
         #if os(macOS)
-        searchDidComplete.send()
+        searchProgressDidUpdate.send((completed: totalTables, total: totalTables))
         #endif
     }
 }
