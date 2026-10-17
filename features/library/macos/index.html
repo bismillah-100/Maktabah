@@ -3945,9 +3945,11 @@ deactivate TV</code></pre>
 <h3 id="c-libraryviewmanager-class-render-baris-kustom">C. LibraryViewManager (Class) &amp; Render Baris Kustom</h3>
 <ul>
 <li>Mengimplementasikan <code>NSOutlineViewDataSource</code> dan <code>NSOutlineViewDelegate</code>.</li>
-<li>Membedakan <em>rendering</em> sel induk (kategori kitab yang dapat diekspansi) dengan <em>child cell</em> (judul kitab dengan tipografi Arab, nama pengarang, indikator ketersediaan berkas, dan kapasitas MB).</li>
-<li>Menyediakan <em>context menu</em> klik kanan: Hapus unduhan arsip lokal, Buka detail informasi kitab (<code>BookInfoPopoverVC</code>), dan Tambah/Hapus dari Favorit.</li>
-<li><strong>Pencegahan Rekursi Seleksi (<code>isUpdatingOutline</code>)</strong>: Menjaga agar pembaruan programatis pada outline view (<code>beginUpdates</code>, <code>selectRowIndexes</code>, <code>endUpdates</code>) tidak memicu <em>event</em> ganda pada <code>outlineViewSelectionDidChange</code>.</li>
+<li>Menyediakan <em>context menu</em> klik kanan:</li>
+<li><strong>Buka di <em>Tab</em> Baru (<code>openBookInNewTab</code>)</strong>: Tersedia khusus untuk kitab yang telah terunduh/terintegrasi secara lokal (<code>isBookIntegrated</code>), mendelegasikan pembuatan <em>window controller</em> baru ke <code>MainWindow.openBookInNewTab</code>.</li>
+<li><strong>Hapus Unduhan</strong>: Menghapus arsip SQLite lokal dari <em>disk</em>.</li>
+<li><strong>Informasi Kitab</strong>: Menampilkan <em>popover</em> informasi bibliografi kitab (<code>BookInfoPopoverVC</code>).</li>
+<li><strong>Favorit</strong>: Menambah atau menghapus kitab dari daftar favorit.</li>
 <li><strong>Preservasi Seleksi Flat List (<code>restoreFlatSelection</code>)</strong>: Pada mode daftar datar (seperti hasil filter pencarian dan riwayat), seleksi dipulihkan menggunakan indeks baris langsung (<code>selectFlatRow</code>) untuk mencegah hilangnya fokus item yang aktif.</li>
 </ul>
 <h3 id="d-animasi-batch-inkremental-debouncing-histori-libraryviewdiffing">D. Animasi Batch Inkremental &amp; Debouncing Histori (<code>LibraryView+Diffing</code>)</h3>

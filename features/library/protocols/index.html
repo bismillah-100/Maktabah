@@ -2014,13 +2014,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-libraryviewdelegate-protocol-seleksi-item-baris" class="md-nav__link">
+  <a href="#2-libraryviewdelegate-protocol-seleksi-item-baris-multi-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. LibraryViewDelegate (Protocol) - Seleksi Item Baris
+        2. LibraryViewDelegate (Protocol) - Seleksi Item Baris &amp; Multi-Tab
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. LibraryViewDelegate (Protocol) - Seleksi Item Baris &amp; Multi-Tab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metode:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3607,13 +3624,30 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-libraryviewdelegate-protocol-seleksi-item-baris" class="md-nav__link">
+  <a href="#2-libraryviewdelegate-protocol-seleksi-item-baris-multi-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. LibraryViewDelegate (Protocol) - Seleksi Item Baris
+        2. LibraryViewDelegate (Protocol) - Seleksi Item Baris &amp; Multi-Tab
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="2. LibraryViewDelegate (Protocol) - Seleksi Item Baris &amp; Multi-Tab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metode:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3679,13 +3713,23 @@
 <li><code>loadContent</code>: Nilai <em>boolean</em> penentu apakah konten teks halaman pertama harus langsung dimuat ke <em>Text Engine</em> atau hanya menyiapkan metadata koneksi basis data buku.</li>
 </ul>
 <hr />
-<h2 id="2-libraryviewdelegate-protocol-seleksi-item-baris">2. LibraryViewDelegate (Protocol) - Seleksi Item Baris</h2>
-<p><em>Protocol</em> <code>LibraryViewDelegate</code> digunakan untuk komunikasi antara komponen presentasi <em>sub-view</em> (misalnya baris <em>outline</em> atau sel tabel katalog) dengan manajer data katalog:</p>
+<h2 id="2-libraryviewdelegate-protocol-seleksi-item-baris-multi-tab">2. LibraryViewDelegate (Protocol) - Seleksi Item Baris &amp; Multi-Tab</h2>
+<p><em>Protocol</em> <code>LibraryViewDelegate</code> digunakan untuk komunikasi antara komponen presentasi <em>sub-view</em> (misalnya baris <em>outline</em> atau sel tabel katalog) dengan manajer data katalog dan pengendali jendela:</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">LibraryViewDelegate</span><span class="p">:</span><span class="w"> </span><span class="nb">AnyObject</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">didSelectItem</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">row</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span><span class="w"> </span><span class="k">async</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">openBookInNewTab</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">book</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="kd">extension</span><span class="w"> </span><span class="nc">LibraryViewDelegate</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">openBookInNewTab</span><span class="p">(</span><span class="kc">_</span><span class="w"> </span><span class="n">book</span><span class="p">:</span><span class="w"> </span><span class="n">BooksData</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
 </span></code></pre></div>
+<h3 id="metode">Metode:</h3>
+<ul>
+<li><code>didSelectItem(_ row:)</code>: Memuat kitab pada <em>tab</em> aktif saat baris katalog diklik.</li>
+<li><code>openBookInNewTab(_ book:)</code>: Membuka kitab terpilih di <em>tab</em> jendela baru (<code>MainWindow.openBookInNewTab</code>) melalui <em>context menu</em> klik kanan untuk kitab yang telah terunduh/terintegrasi.</li>
+</ul>
 <hr />
 <h2 id="3-searchablelibrarysidebar-protocol-integrasi-kolom-pencarian-macos">3. SearchableLibrarySidebar (Protocol) - Integrasi Kolom Pencarian macOS</h2>
 <p>Pada platform macOS, komponen pencarian <em>sidebar</em> menggunakan <code>DSFSearchField</code>. <em>Protocol</em> <code>SearchableLibrarySidebar</code> menyediakan implementasi default untuk menghubungkan input pencarian <em>toolbar</em> atau <em>split view</em> ke <code>LibraryViewManager</code>:</p>

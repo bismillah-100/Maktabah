@@ -647,6 +647,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-resolusi-tata-letak-textkit-2-textstorageswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Resolusi Tata Letak TextKit 2 (TextStorage.swift)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Resolusi Tata Letak TextKit 2 (TextStorage.swift)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nstextlayoutmanager-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NSTextLayoutManager (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3721,6 +3749,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-resolusi-tata-letak-textkit-2-textstorageswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Resolusi Tata Letak TextKit 2 (TextStorage.swift)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Resolusi Tata Letak TextKit 2 (TextStorage.swift)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nstextlayoutmanager-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NSTextLayoutManager (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3869,6 +3925,16 @@
 <ul>
 <li><strong>Sinkronisasi via Mutex</strong>: Menggunakan <code>Synchronization.Mutex</code> untuk menjamin operasi <code>intern</code> sepenuhnya <em>thread-safe</em> di lingkungan konkurensi Swift 6.</li>
 <li><strong>Protokol <code>Sendable</code> Penuh</strong>: Memungkinkan <code>StringInterner.shared</code> dibagikan lintas <em>actor</em> dan <em>thread pool</em> tanpa menggunakan <code>nonisolated(unsafe)</code>.</li>
+</ul>
+<hr />
+<h2 id="6-resolusi-tata-letak-textkit-2-textstorageswift">6. Resolusi Tata Letak TextKit 2 (<code>TextStorage.swift</code>)</h2>
+<p>Pada dokumen kitab dengan puluhan ribu baris, memicu penataan letak (<em>layout calculation</em>) secara menyeluruh dapat membebani CPU dan menyebabkan <em>frame drop</em>.</p>
+<h3 id="nstextlayoutmanager-class">NSTextLayoutManager (Class)</h3>
+<p>Menyediakan komputasi tata letak parsial (<em>lazy layout</em>):</p>
+<ul>
+<li><strong><code>ensureLayout(for: NSRange)</code></strong>: Mengonversi <code>NSRange</code> menjadi <code>NSTextRange</code> valid, lalu hanya mengevaluasi fragmen tata letak (<em>text layout fragments</em>) yang melingkupi rentang target tersebut tanpa memaksa komputasi seluruh dokumen.</li>
+<li><strong><code>ensureLayout(for: [NSRange])</code></strong>: Iterasi <em>batch</em> efisien untuk beberapa rentang sekaligus (misalnya seluruh hasil sorotan pencarian halaman).</li>
+<li><strong><code>ensureFullDocumentLayout()</code></strong>: Menghitung seluruh fragmen dokumen dari awal hingga akhir sebagai jalur cadangan (<em>fallback</em>) khusus saat operasi cetak atau ekspor.</li>
 </ul>
 
 
