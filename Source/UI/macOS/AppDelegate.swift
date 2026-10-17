@@ -374,26 +374,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 targetWindow = newWin
             }
 
-            let mode = snapshot.currentMode
-            let splitVC = targetWindow.splitVC
-            splitVC.stateManager.importTabSnapshot(snapshot)
-
-            targetWindow.setupContentView(mode: mode, restoreState: true)
-            splitVC.setupForMode(mode)
-            splitVC.setupAutoSave()
-            splitVC.sidebarItem.isCollapsed = splitVC.stateManager.getState(for: mode).isSidebarCollapsed
-            splitVC.stateManager.restoreState(
-                for: mode,
-                components: splitVC.components(for: mode)
-            )
-            targetWindow.setupView()
-            targetWindow.displayIfNeeded()
-
+            configureRestoredWindow(targetWindow, with: snapshot)
             restoredWindows.append(targetWindow)
         }
 
         let safeIndex = min(max(0, session.selectedTabIndex), restoredWindows.count - 1)
-        let activeWindow = restoredWindows[safeIndex]
+        activateWindow(restoredWindows[safeIndex], firstWindow: firstWindow)
+    }
+
+    private func configureRestoredWindow(_ window: MainWindow, with snapshot: TabStateSnapshot) {
+        let mode = snapshot.currentMode
+        let splitVC = window.splitVC
+        splitVC.stateManager.importTabSnapshot(snapshot)
+
+        window.setupContentView(mode: mode, restoreState: true)
+        splitVC.setupForMode(mode)
+        splitVC.setupAutoSave()
+        splitVC.sidebarItem.isCollapsed = splitVC.stateManager.getState(for: mode).isSidebarCollapsed
+        splitVC.stateManager.restoreState(
+            for: mode,
+            components: splitVC.components(for: mode)
+        )
+        window.setupView()
+        window.displayIfNeeded()
+    }
+
+    private func activateWindow(_ activeWindow: MainWindow, firstWindow: MainWindow) {
         firstWindow.tabGroup?.selectedWindow = activeWindow
         activeWindow.makeKeyAndOrderFront(nil)
         if let wc = activeWindow.windowController as? WindowController {

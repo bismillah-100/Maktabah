@@ -174,39 +174,50 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         // Masuk ke antrean serial BookArchiveSingleFlight hanya untuk fase penulisan SQLite ke arsip.
         try await BookArchiveSingleFlight.shared.run(archiveId: book.archive, bookId: book.id) { [weak self] in
             guard let self else { return }
-            if hasIntegratedBook(
+            try await executeArchiveIntegration(
+                book: book,
+                sourceURL: sourceURL,
                 archiveDbPath: archiveDbPath,
                 ftsDbPath: ftsDbPath,
-                bookId: book.id
-            ) {
-                finalizeIntegration(book: book)
-                return
-            }
-
-            do {
-                let sourceTables = listTables(path: sourceURL.path)
-                Logger.library.debug("[BookIntegrate] source: \(sourceURL.path, privacy: .public)")
-                Logger.library.debug("[BookIntegrate] source tables: \(sourceTables.joined(separator: ", "), privacy: .public)")
-                Logger.library.debug("[BookIntegrate] archive: \(archiveDbPath, privacy: .public)")
-                Logger.library.debug("[BookIntegrate] fts: \(ftsDbPath, privacy: .public)")
-                // Jalankan pekerjaan CPU-intensif di background, tetapi tetap bisa
-                // mengawait callback onProgress ke MainActor.
-                try await Task.detached(priority: .userInitiated) { [weak self] in
-                    guard let self else { return }
-                    try await integrate(
-                        sourceURL: sourceURL,
-                        archiveDbPath: archiveDbPath,
-                        ftsDbPath: ftsDbPath,
-                        bookId: book.id,
-                        onProgress: onProgress
-                    )
-                }.value
-
-                finalizeIntegration(book: book)
-            } catch {
-                throw error
-            }
+                onProgress: onProgress
+            )
         }
+    }
+
+    private func executeArchiveIntegration(
+        book: BooksData,
+        sourceURL: URL,
+        archiveDbPath: String,
+        ftsDbPath: String,
+        onProgress: (@Sendable (IntegratePhase) async -> Void)?
+    ) async throws {
+        if hasIntegratedBook(
+            archiveDbPath: archiveDbPath,
+            ftsDbPath: ftsDbPath,
+            bookId: book.id
+        ) {
+            finalizeIntegration(book: book)
+            return
+        }
+
+        let sourceTables = listTables(path: sourceURL.path)
+        Logger.library.debug("[BookIntegrate] source: \(sourceURL.path, privacy: .public)")
+        Logger.library.debug("[BookIntegrate] source tables: \(sourceTables.joined(separator: ", "), privacy: .public)")
+        Logger.library.debug("[BookIntegrate] archive: \(archiveDbPath, privacy: .public)")
+        Logger.library.debug("[BookIntegrate] fts: \(ftsDbPath, privacy: .public)")
+
+        try await Task.detached(priority: .userInitiated) { [weak self] in
+            guard let self else { return }
+            try await integrate(
+                sourceURL: sourceURL,
+                archiveDbPath: archiveDbPath,
+                ftsDbPath: ftsDbPath,
+                bookId: book.id,
+                onProgress: onProgress
+            )
+        }.value
+
+        finalizeIntegration(book: book)
     }
 
     /// Menghapus kitab dari archive dan FTS.
@@ -530,6 +541,34 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         // ── Fase FTS ────────────────────────────────────────────────────────
         // nass masih TEXT di source → bisa dibaca langsung untuk FTS
         await onProgress?(.fts)
+        let isUnified = try buildFtsIndex(
+            archiveDb: archiveDb,
+            bookTable: bookTable,
+            bookId: bookId
+        )
+
+        // ── Fase Data ────────────────────────────────────────────────────────
+        await onProgress?(.data)
+        do {
+            try copySourceTablesToArchive(
+                archiveDb: archiveDb,
+                sourceURL: sourceURL,
+                bookId: bookId,
+                bookTable: bookTable,
+                tocTable: tocTable
+            )
+        } catch {
+            // Kompensasi: hapus data FTS yang baru diindeks jika penyalinan data gagal
+            cleanupFtsCompensation(archiveDb: archiveDb, bookId: bookId, isUnified: isUnified)
+            throw error
+        }
+    }
+
+    private func buildFtsIndex(
+        archiveDb: OpaquePointer,
+        bookTable: String,
+        bookId: Int
+    ) throws -> Bool {
         let hasUnified = ArchiveDatabaseTools.hasUnifiedFTS(db: archiveDb)
         let hasLegacyFts = ArchiveDatabaseTools.tableExists(db: archiveDb, schemaName: "fts_db", tableName: "\(bookTable)_fts")
         let isUnified = hasUnified || !hasLegacyFts
@@ -552,22 +591,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
                 sourceTable: bookTable
             )
         }
-
-        // ── Fase Data ────────────────────────────────────────────────────────
-        await onProgress?(.data)
-        do {
-            try copySourceTablesToArchive(
-                archiveDb: archiveDb,
-                sourceURL: sourceURL,
-                bookId: bookId,
-                bookTable: bookTable,
-                tocTable: tocTable
-            )
-        } catch {
-            // Kompensasi: hapus data FTS yang baru diindeks jika penyalinan data gagal
-            cleanupFtsCompensation(archiveDb: archiveDb, bookId: bookId, isUnified: isUnified)
-            throw error
-        }
+        return isUnified
     }
 
     private func cleanupFtsCompensation(archiveDb: OpaquePointer, bookId: Int, isUnified: Bool) {

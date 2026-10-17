@@ -401,58 +401,81 @@ extension ResultsHandler {
             for oldRow in oldRows {
                 guard let oldRowId = oldRow.id else { continue }
 
-                let conflictSql: String
-                let conflictParams: [Any]
-                if let fid = oldRow.folderId {
-                    conflictSql = "SELECT \(colId), \(colContentId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
-                    conflictParams = [fid, oldRow.name, newId]
+                let conflict = try findConflict(db: db, oldRow: oldRow, newId: newId)
+                let reloaded: SyncResult?
+                if let existing = conflict {
+                    reloaded = try mergeConflictingResult(oldRow: oldRow, oldRowId: oldRowId, existing: existing, now: now)
                 } else {
-                    conflictSql = "SELECT \(colId), \(colContentId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
-                    conflictParams = [oldRow.name, newId]
+                    reloaded = try updateMigratedResult(oldRowId: oldRowId, newId: newId, now: now)
                 }
 
-                struct ConflictRow {
-                    let id: Int64
-                    let contentId: String
-                }
-
-                let conflicts = try db.fetch(query: conflictSql, parameters: conflictParams) { row in
-                    ConflictRow(id: row.int64(at: 0), contentId: row.string(at: 1) ?? "")
-                }
-
-                if let existing = conflicts.first {
-                    let oldCids = Set(oldRow.contentId.components(separatedBy: ",").filter { !$0.isEmpty })
-                    let existingCids = Set(existing.contentId.components(separatedBy: ",").filter { !$0.isEmpty })
-                    let mergedCids = oldCids.union(existingCids).sorted().joined(separator: ",")
-
-                    let updateExistingSql = "UPDATE \(resultsTable) SET \(colContentId) = ?, \(colResLastModified) = ? WHERE \(colId) = ?"
-                    try exec(updateExistingSql, parameters: [mergedCids, now, existing.id])
-
-                    try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?", parameters: [oldRowId])
-
-                    if let oldCkId = oldRow.ckRecordId {
-                        try addPendingSync(ckRecordId: oldCkId, operation: "delete")
-                    }
-                    if let reloaded = try reloadSyncResult(id: existing.id) {
-                        updatedResults.append(reloaded)
-                        if let ckId = reloaded.ckRecordId {
-                            try addPendingSync(ckRecordId: ckId, operation: "upload")
-                        }
-                    }
-                } else {
-                    let updateSql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colId) = ?"
-                    try exec(updateSql, parameters: [newId, now, oldRowId])
-
-                    if let reloaded = try reloadSyncResult(id: oldRowId) {
-                        updatedResults.append(reloaded)
-                        if let ckId = reloaded.ckRecordId {
-                            try addPendingSync(ckRecordId: ckId, operation: "upload")
-                        }
-                    }
+                if let reloaded {
+                    updatedResults.append(reloaded)
                 }
             }
         }
         return updatedResults
+    }
+
+    private struct ConflictRow {
+        let id: Int64
+        let contentId: String
+    }
+
+    private func findConflict(db: SQLiteDatabase, oldRow: SyncResult, newId: Int) throws -> ConflictRow? {
+        let conflictSql: String
+        let conflictParams: [Any]
+        if let fid = oldRow.folderId {
+            conflictSql = "SELECT \(colId), \(colContentId) FROM \(resultsTable) WHERE \(colFolderId) = ? AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+            conflictParams = [fid, oldRow.name, newId]
+        } else {
+            conflictSql = "SELECT \(colId), \(colContentId) FROM \(resultsTable) WHERE \(colFolderId) IS NULL AND \(colName) = ? AND \(colBkId) = ? LIMIT 1"
+            conflictParams = [oldRow.name, newId]
+        }
+
+        let conflicts = try db.fetch(query: conflictSql, parameters: conflictParams) { row in
+            ConflictRow(id: row.int64(at: 0), contentId: row.string(at: 1) ?? "")
+        }
+        return conflicts.first
+    }
+
+    private func mergeConflictingResult(
+        oldRow: SyncResult,
+        oldRowId: Int64,
+        existing: ConflictRow,
+        now: Int64
+    ) throws -> SyncResult? {
+        let oldCids = Set(oldRow.contentId.components(separatedBy: ",").filter { !$0.isEmpty })
+        let existingCids = Set(existing.contentId.components(separatedBy: ",").filter { !$0.isEmpty })
+        let mergedCids = oldCids.union(existingCids).sorted().joined(separator: ",")
+
+        let updateExistingSql = "UPDATE \(resultsTable) SET \(colContentId) = ?, \(colResLastModified) = ? WHERE \(colId) = ?"
+        try exec(updateExistingSql, parameters: [mergedCids, now, existing.id])
+        try exec("DELETE FROM \(resultsTable) WHERE \(colId) = ?", parameters: [oldRowId])
+
+        if let oldCkId = oldRow.ckRecordId {
+            try addPendingSync(ckRecordId: oldCkId, operation: "delete")
+        }
+        guard let reloaded = try reloadSyncResult(id: existing.id) else { return nil }
+        if let ckId = reloaded.ckRecordId {
+            try addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
+        return reloaded
+    }
+
+    private func updateMigratedResult(
+        oldRowId: Int64,
+        newId: Int,
+        now: Int64
+    ) throws -> SyncResult? {
+        let updateSql = "UPDATE \(resultsTable) SET \(colBkId) = ?, \(colResLastModified) = ? WHERE \(colId) = ?"
+        try exec(updateSql, parameters: [newId, now, oldRowId])
+
+        guard let reloaded = try reloadSyncResult(id: oldRowId) else { return nil }
+        if let ckId = reloaded.ckRecordId {
+            try addPendingSync(ckRecordId: ckId, operation: "upload")
+        }
+        return reloaded
     }
 
     func fetchResults(byCkRecordIds ckRecordIds: [String]) -> [SyncResult] {

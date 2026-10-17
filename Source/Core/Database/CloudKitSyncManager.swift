@@ -462,27 +462,14 @@ final class CloudKitSyncManager: Sendable {
 
             await withTaskGroup(of: Result<Void, any Error>.self) { group in
                 for batch in records.chunked(into: batchSize) {
-                    let ids = batch.map(\.recordID.recordName)
                     group.addTask { [weak self] in
                         guard let self else { return .success(()) }
-                        return await withCheckedContinuation { continuation in
-                            self.core.upload(records: batch) { [weak self] result in
-                                guard let self else {
-                                    continuation.resume(returning: .success(()))
-                                    return
-                                }
-                                handleUploadResult(
-                                    result,
-                                    pendingIds: ids,
-                                    target: target,
-                                    uploadStartTime: uploadStartTime,
-                                    retryCount: retryCount,
-                                    completion: { res in
-                                        continuation.resume(returning: res)
-                                    }
-                                )
-                            }
-                        }
+                        return await uploadBatch(
+                            batch,
+                            target: target,
+                            uploadStartTime: uploadStartTime,
+                            retryCount: retryCount
+                        )
                     }
                 }
 
@@ -500,6 +487,33 @@ final class CloudKitSyncManager: Sendable {
                 } else {
                     pendingCompletions.forEach { $0(.success(())) }
                 }
+            }
+        }
+    }
+
+    private func uploadBatch(
+        _ batch: [CKRecord],
+        target: SyncTarget,
+        uploadStartTime: Int64,
+        retryCount: Int
+    ) async -> Result<Void, any Error> {
+        let ids = batch.map(\.recordID.recordName)
+        return await withCheckedContinuation { continuation in
+            core.upload(records: batch) { [weak self] result in
+                guard let self else {
+                    continuation.resume(returning: .success(()))
+                    return
+                }
+                handleUploadResult(
+                    result,
+                    pendingIds: ids,
+                    target: target,
+                    uploadStartTime: uploadStartTime,
+                    retryCount: retryCount,
+                    completion: { res in
+                        continuation.resume(returning: res)
+                    }
+                )
             }
         }
     }

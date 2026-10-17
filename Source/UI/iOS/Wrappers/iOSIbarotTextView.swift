@@ -380,6 +380,20 @@ struct iOSIbarotTextView: UIViewRepresentable {
             textView.semanticContentAttribute = targetSemantic
         }
 
+        let rendered = resolveRenderedContent(textView: textView, context: context)
+
+        restoreScrollAndSelectionIfNeeded(textView: textView, context: context)
+        handleTargetAnnotationAndSearchHighlight(
+            textView: textView,
+            context: context,
+            searchRanges: rendered.searchRanges
+        )
+    }
+
+    private func resolveRenderedContent(
+        textView: iOSCustomIbarotTextView,
+        context: Context
+    ) -> RenderedAttributedContent {
         let isSearchEventForThisContent = searchEvent != nil && searchEvent?.contentId == viewModel.currentContentId
         let activeSearchEventId = isSearchEventForThisContent ? searchEvent?.id : nil
 
@@ -399,33 +413,25 @@ struct iOSIbarotTextView: UIViewRepresentable {
             lineHeight: state.lineHeight
         )
 
-        let rendered: RenderedAttributedContent
         if let lastKey = context.coordinator.lastRenderKey, lastKey == currentKey,
            let cached = context.coordinator.lastRenderedContent
         {
-            rendered = cached
-        } else {
-            let newlyRendered = renderAttributedContent(
-                textView: textView,
-                context: context,
-                isSearchEventForThisContent: isSearchEventForThisContent
-            )
-            context.coordinator.lastRenderKey = currentKey
-            context.coordinator.lastRenderedContent = newlyRendered
-            rendered = newlyRendered
-
-            textView.attributedText = newlyRendered.attributedString
-            textView.invalidateIntrinsicContentSize()
-            textView.setNeedsLayout()
-            textView.layoutIfNeeded()
+            return cached
         }
 
-        restoreScrollAndSelectionIfNeeded(textView: textView, context: context)
-        handleTargetAnnotationAndSearchHighlight(
+        let newlyRendered = renderAttributedContent(
             textView: textView,
             context: context,
-            searchRanges: rendered.searchRanges
+            isSearchEventForThisContent: isSearchEventForThisContent
         )
+        context.coordinator.lastRenderKey = currentKey
+        context.coordinator.lastRenderedContent = newlyRendered
+
+        textView.attributedText = newlyRendered.attributedString
+        textView.invalidateIntrinsicContentSize()
+        textView.setNeedsLayout()
+        textView.layoutIfNeeded()
+        return newlyRendered
     }
 
     struct RenderCacheKey: Equatable {
