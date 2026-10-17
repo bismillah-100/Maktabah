@@ -17,7 +17,7 @@ final class CloudKitCoreManager: Sendable {
     /// Struktur data internal untuk membungkus state yang membutuhkan sinkronisasi mutual exclusion.
     private struct ManagerState {
         var isSyncing: Bool = false
-        var notifyTask: Task<Void, Never>? = nil
+        var notifyTask: Task<Void, Never>?
     }
 
     /// Singleton instance thread-safe yang valid dalam Swift 6 tanpa perlu `nonisolated(unsafe)`.
@@ -41,10 +41,10 @@ final class CloudKitCoreManager: Sendable {
 
     private init() {
         let defaultContainer = CKContainer(identifier: "iCloud.Maktabah")
-        self.container = defaultContainer
-        self.privateDatabase = defaultContainer.privateCloudDatabase
-        self.zoneId = CKRecordZone.ID(zoneName: "AnnotationsZone", ownerName: CKCurrentUserDefaultName)
-        self.state = Mutex(ManagerState())
+        container = defaultContainer
+        privateDatabase = defaultContainer.privateCloudDatabase
+        zoneId = CKRecordZone.ID(zoneName: "AnnotationsZone", ownerName: CKCurrentUserDefaultName)
+        state = Mutex(ManagerState())
     }
 
     /// Membaca status sinkronisasi secara thread-safe menggunakan Mutex `withLock`.
@@ -60,6 +60,15 @@ final class CloudKitCoreManager: Sendable {
             $0.isSyncing = syncing
         }
         completion?()
+    }
+
+    /// Mencoba memulai sinkronisasi secara atomik. Mengembalikan `true` jika berhasil memulai, `false` jika sedang berjalan.
+    func tryBeginSyncing() -> Bool {
+        state.withLock { state in
+            guard !state.isSyncing else { return false }
+            state.isSyncing = true
+            return true
+        }
     }
 
     // MARK: - Token Management

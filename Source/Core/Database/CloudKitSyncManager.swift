@@ -49,7 +49,6 @@ final class CloudKitSyncManager: Sendable {
     /// State mutable dibungkus dengan Mutex untuk keamanan konkurensi Swift 6 tanpa @unchecked Sendable
     private let accountChangeTask = Mutex<Task<Void, Never>?>(nil)
     private let retryState = Mutex<(isRunning: Bool, pendingRetryCount: Int?)>((false, nil))
-    private let isSyncingLock = Mutex<Void>(())
 
     private init() {
         setupAccountChangeObserver()
@@ -472,7 +471,7 @@ final class CloudKitSyncManager: Sendable {
                                     continuation.resume(returning: .success(()))
                                     return
                                 }
-                                self.handleUploadResult(
+                                handleUploadResult(
                                     result,
                                     pendingIds: ids,
                                     target: target,
@@ -560,10 +559,10 @@ final class CloudKitSyncManager: Sendable {
             }
 
             if trackPending, let target {
-                await self.pendingCoordinator.addPendingDeletes(ckRecordIds, target: target)
+                await pendingCoordinator.addPendingDeletes(ckRecordIds, target: target)
             }
 
-            let finalError = await self.performBatchDeletions(
+            let finalError = await performBatchDeletions(
                 recordIds: recordIds,
                 batchSize: batchSize,
                 target: target,
@@ -591,7 +590,7 @@ final class CloudKitSyncManager: Sendable {
             for batch in recordIds.chunked(into: batchSize) {
                 group.addTask { [weak self] in
                     guard let self else { return .success(()) }
-                    return await self.executeDeleteBatch(batch, target: target, retryCount: retryCount)
+                    return await executeDeleteBatch(batch, target: target, retryCount: retryCount)
                 }
             }
 
@@ -673,11 +672,7 @@ final class CloudKitSyncManager: Sendable {
     // MARK: - Fetch Changes Pipeline
 
     private func beginSyncing() -> Bool {
-        isSyncingLock.withLock { _ in
-            guard !core.isSyncing else { return false }
-            core.setSyncing(true)
-            return true
-        }
+        core.tryBeginSyncing()
     }
 
     func fetchChanges(retryCount: Int = 0) {
