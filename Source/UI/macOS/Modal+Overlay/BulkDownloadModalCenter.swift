@@ -185,22 +185,7 @@ final class BulkDownloadModalCenter {
                 }
             },
             onBookCompleted: { [weak vc, weak self] book, result, report in
-                Task { @MainActor [weak vc, weak self] in
-                    if self?.shouldStopDownloads != true {
-                        vc?.updateDownloadProgress(
-                            completed: report.completed,
-                            total: report.total,
-                            downloadedBytes: report.downloadedBytes,
-                            totalBytes: report.totalBytes
-                        )
-                    }
-                    switch result {
-                    case .success:
-                        vc?.updateStatus(bookId: book.id, status: .downloaded)
-                    case let .failure(error):
-                        vc?.updateStatus(bookId: book.id, status: .failed(error.localizedDescription))
-                    }
-                }
+                self?.handleBookCompleted(book: book, result: result, report: report, vc: vc)
             }
         )
 
@@ -210,6 +195,30 @@ final class BulkDownloadModalCenter {
         }
 
         return downloadResults
+    }
+
+    nonisolated private func handleBookCompleted(
+        book: BooksData,
+        result: Result<URL, Error>,
+        report: BoundedBulkDownloader.ProgressReport,
+        vc: BulkDownloadVC?
+    ) {
+        Task { @MainActor [weak vc, weak self] in
+            if self?.shouldStopDownloads != true {
+                vc?.updateDownloadProgress(
+                    completed: report.completed,
+                    total: report.total,
+                    downloadedBytes: report.downloadedBytes,
+                    totalBytes: report.totalBytes
+                )
+            }
+            switch result {
+            case .success:
+                vc?.updateStatus(bookId: book.id, status: .downloaded)
+            case let .failure(error):
+                vc?.updateStatus(bookId: book.id, status: .failed(error.localizedDescription))
+            }
+        }
     }
 
     private func executeSerialIntegrations(successfulDownloads: [BooksData], vc: BulkDownloadVC, integrateTotal: Int) async -> Int {

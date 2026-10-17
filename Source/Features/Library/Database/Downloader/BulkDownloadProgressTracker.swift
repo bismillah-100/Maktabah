@@ -122,20 +122,15 @@ enum BoundedBulkDownloader {
                 }
 
                 downloadResults[bookId] = result
-                let expectedSize = booksById[bookId]?.compressedDownloadSize
-                let progress = await tracker.markBookCompleted(bookId: bookId, expectedBookSize: expectedSize)
-                let report = ProgressReport(
-                    completed: progress.completed,
-                    total: progress.total,
-                    downloadedBytes: progress.downloadedBytes,
-                    totalBytes: progress.totalBytes
+                let networkFailure = await processCompletedDownload(
+                    bookId: bookId,
+                    result: result,
+                    tracker: tracker,
+                    booksById: booksById,
+                    onBookCompleted: onBookCompleted
                 )
 
-                if let book = booksById[bookId] {
-                    onBookCompleted?(book, result, report)
-                }
-
-                if case let .failure(error) = result, BookDownloadManager.isNetworkFailure(error) {
+                if networkFailure {
                     stoppedByNetwork = true
                     // Hentikan penambahan antrean unduhan baru saat jaringan bermasalah,
                     // tetapi biarkan unduhan yang sedang berjalan (in-flight) selesai dan disimpan.
@@ -148,6 +143,32 @@ enum BoundedBulkDownloader {
         }
 
         return (downloadResults, stoppedByNetwork)
+    }
+
+    private static func processCompletedDownload(
+        bookId: Int,
+        result: Result<URL, Error>,
+        tracker: BulkDownloadProgressTracker,
+        booksById: [Int: BooksData],
+        onBookCompleted: (@Sendable (BooksData, Result<URL, Error>, ProgressReport) -> Void)?
+    ) async -> Bool {
+        let expectedSize = booksById[bookId]?.compressedDownloadSize
+        let progress = await tracker.markBookCompleted(bookId: bookId, expectedBookSize: expectedSize)
+        let report = ProgressReport(
+            completed: progress.completed,
+            total: progress.total,
+            downloadedBytes: progress.downloadedBytes,
+            totalBytes: progress.totalBytes
+        )
+
+        if let book = booksById[bookId] {
+            onBookCompleted?(book, result, report)
+        }
+
+        if case let .failure(error) = result, BookDownloadManager.isNetworkFailure(error) {
+            return true
+        }
+        return false
     }
 
     private static func makeDownloadTask(

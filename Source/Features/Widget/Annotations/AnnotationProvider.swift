@@ -19,67 +19,33 @@ struct AnnotationProvider: AppIntentTimelineProvider {
         AnnotationEntry(
             date: Date(),
             annotations: [
-                AnnotationWidgetItem(
-                    id: 1,
-                    bkId: 1,
-                    bookTitle: "Kitab Al-Umm",
-                    contentId: 1,
-                    context: "قال الشافعي رحمه الله تعالى في كتاب الأم...",
-                    colorHex: "#FF9300",
-                    type: 0,
-                    createdAt: Int64(Date().timeIntervalSince1970)
-                ),
-                AnnotationWidgetItem(
-                    id: 2,
-                    bkId: 2,
-                    bookTitle: "Sahih Al-Bukhari",
-                    contentId: 1,
-                    context: "إنما الأعمال بالنيات وإنما لكل امرئ ما نوى...",
-                    colorHex: "#34C759",
-                    type: 0,
-                    createdAt: Int64(Date().timeIntervalSince1970) - 3600
-                ),
-                AnnotationWidgetItem(
-                    id: 3,
-                    bkId: 3,
-                    bookTitle: "Al-Majmu' Syarh Al-Muhadzdzab",
-                    contentId: 1,
-                    context: "فرع في بيان المسائل المتعلقة بالنية في الطهارة...",
-                    colorHex: "#007AFF",
-                    type: 1,
-                    createdAt: Int64(Date().timeIntervalSince1970) - 7200
-                ),
-                AnnotationWidgetItem(
-                    id: 4,
-                    bkId: 4,
-                    bookTitle: "Tafsir Al-Qurtubi",
-                    contentId: 1,
-                    context: "القول في تأويل قوله تعالى واذكروا نعمة الله عليكم...",
-                    colorHex: "#AF52DE",
-                    type: 0,
-                    createdAt: Int64(Date().timeIntervalSince1970) - 10800
-                ),
-                AnnotationWidgetItem(
-                    id: 5,
-                    bkId: 5,
-                    bookTitle: "Riyadhus Shalihin",
-                    contentId: 1,
-                    context: "باب الصبر والمرابطة على الطاعات...",
-                    colorHex: "#FF9300",
-                    type: 0,
-                    createdAt: Int64(Date().timeIntervalSince1970) - 14400
-                ),
-                AnnotationWidgetItem(
-                    id: 6,
-                    bkId: 6,
-                    bookTitle: "Sunan Abu Dawud",
-                    contentId: 1,
-                    context: "كتاب الطهارة وما يوجب الوضوء...",
-                    colorHex: "#FF2D55",
-                    type: 1,
-                    createdAt: Int64(Date().timeIntervalSince1970) - 18000
-                ),
+                makePlaceholderItem(id: 1, title: "Kitab Al-Umm", context: "قال الشافعي رحمه الله تعالى في كتاب الأم...", colorHex: "#FF9300", type: 0),
+                makePlaceholderItem(id: 2, title: "Sahih Al-Bukhari", context: "إنما الأعمال بالنيات وإنما لكل امرئ ما نوى...", colorHex: "#34C759", type: 0),
+                makePlaceholderItem(id: 3, title: "Al-Majmu' Syarh Al-Muhadzdzab", context: "فرع في بيان المسائل المتعلقة بالنية في الطهارة...", colorHex: "#007AFF", type: 1),
+                makePlaceholderItem(id: 4, title: "Tafsir Al-Qurtubi", context: "القول في تأويل قوله تعالى واذكروا نعمة الله عليكم...", colorHex: "#AF52DE", type: 0),
+                makePlaceholderItem(id: 5, title: "Riyadhus Shalihin", context: "باب الصبر والمرابطة على الطاعات...", colorHex: "#FF9300", type: 0),
+                makePlaceholderItem(id: 6, title: "Sunan Abu Dawud", context: "كتاب الطهارة وما يوجب الوضوء...", colorHex: "#FF2D55", type: 1),
             ]
+        )
+    }
+
+    private func makePlaceholderItem(
+        id: Int64,
+        title: String,
+        context: String,
+        colorHex: String,
+        type: Int
+    ) -> AnnotationWidgetItem {
+        let timeOffset = (id - 1) * 3600
+        return AnnotationWidgetItem(
+            id: id,
+            bkId: Int(id),
+            bookTitle: title,
+            contentId: 1,
+            context: context,
+            colorHex: colorHex,
+            type: type,
+            createdAt: Int64(Date().timeIntervalSince1970) - timeOffset
         )
     }
 
