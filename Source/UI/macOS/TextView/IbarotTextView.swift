@@ -116,12 +116,10 @@ class IbarotTextView: NSTextView {
         printInfo.scalingFactor = 1.0
 
         // Buat NSTextView sementara untuk menggambar attributed string
-        let tmpTextView = NSTextView(
-            frame: NSRect(x: 0, y: 0, width: 600, height: 800)
-        )
+        let tmpTextView = NSTextView(usingTextLayoutManager: true)
+        tmpTextView.frame = NSRect(x: 0, y: 0, width: 600, height: 800)
         tmpTextView.textStorage?.setAttributedString(attrString)
-        let fr = NSRange(location: 0, length: attrString.length)
-        tmpTextView.layoutManager?.ensureLayout(forCharacterRange: fr)
+        tmpTextView.textLayoutManager?.ensureFullDocumentLayout()
 
         // Jalankan print operation
         let op = NSPrintOperation(view: tmpTextView, printInfo: printInfo)
@@ -1001,7 +999,7 @@ extension IbarotTextView: TextViewRenderable {
         visibleRect: NSRect,
         scrollView: NSScrollView
     ) {
-        guard let textStorage, let textLayoutManager else { return }
+        guard let textStorage else { return }
 
         currentRenderResult = renderResult
         footnoteRanges = renderResult.footnoteRanges
@@ -1015,8 +1013,6 @@ extension IbarotTextView: TextViewRenderable {
             replacementEvents: renderResult.replacementEvents
         )
         textStorage.endEditing()
-
-        textLayoutManager.ensureFullDocumentLayout()
 
         if options.keepScrollPosition == true {
             scrollView.restoreScrollPosition(percentage: scrollPercentage, originX: visibleRect.origin.x)
@@ -1032,11 +1028,9 @@ extension IbarotTextView: TextViewRenderable {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 let r = displayedRange(for: ann)
-                textLayoutManager?.ensureFullDocumentLayout()
-                needsLayout = true
                 scrollRangeToVisible(r)
+                textLayoutManager?.ensureLayout(for: r)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                layoutSubtreeIfNeeded()
                 showFindIndicator(for: r)
             }
         }
@@ -1057,11 +1051,9 @@ extension IbarotTextView: TextViewRenderable {
 
                 guard let firstRange = ranges.first else { return }
 
-                textLayoutManager?.ensureFullDocumentLayout()
-                needsLayout = true
                 scrollRangeToVisible(firstRange)
+                textLayoutManager?.ensureLayout(for: firstRange)
                 enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                layoutSubtreeIfNeeded()
                 showFindIndicator(for: firstRange)
             }
         }
@@ -1075,13 +1067,10 @@ extension IbarotTextView: TextViewRenderable {
                 guard let self else { return }
                 guard let text = textStorage?.string else { return }
 
-                textLayoutManager?.ensureFullDocumentLayout()
-                needsLayout = true
-
                 if let range = text.findTOCMatchingRange(title: title) {
                     scrollRangeToVisible(range)
+                    textLayoutManager?.ensureLayout(for: range)
                     enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
-                    layoutSubtreeIfNeeded()
                     showFindIndicator(for: range)
                 } else {
                     scrollToBeginningOfDocument(nil)
