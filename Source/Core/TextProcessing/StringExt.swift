@@ -95,6 +95,6 @@ extension NSTextField {
 
 extension String {
     var localized: String {
-        NSLocalizedString(self, comment: "")
+        Bundle.main.localizedString(forKey: self, value: nil, table: nil)
     }
 }

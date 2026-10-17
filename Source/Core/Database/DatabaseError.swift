@@ -17,23 +17,20 @@ enum DatabaseError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noConnection:
-            return NSLocalizedString(
-                "Database connection is not available.",
-                comment: ""
+            String(
+                localized: "Database connection is not available."
             )
-        case .authorNotFound(let id):
-            return NSLocalizedString(
-                "Author with ID \(id) not found.",
-                comment: ""
+        case let .authorNotFound(id):
+            String(
+                localized: "Author with ID \(id) not found."
             )
-        case .bookNotFound(let id):
-            return String(
+        case let .bookNotFound(id):
+            String(
                 localized: .Library.bookNotFound(id)
             )
-        case .other(let message):
-            return NSLocalizedString(
-                "Database error: \(message)",
-                comment: ""
+        case let .other(message):
+            String(
+                localized: "Database error: \(message)"
             )
         }
     }

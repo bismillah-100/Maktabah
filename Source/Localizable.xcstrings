@@ -866,6 +866,12 @@
             "value" : "التعليق"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotation"
+          }
+        },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
@@ -940,6 +946,9 @@
           }
         }
       }
+    },
+    "Application Will Terminate because Folder Location Not Found on %@" : {
+
     },
     "appNeedAccess" : {
       "localizations" : {
@@ -1034,6 +1043,9 @@
         }
       }
     },
+    "Author with ID %lld not found." : {
+
+    },
     "Background" : {
       "localizations" : {
         "ar" : {
@@ -1112,7 +1124,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Cancel action button\nCancel active archive download button",
+      "comment" : "Cancel action button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1763,6 +1775,9 @@
           }
         }
       }
+    },
+    "Database error: %@" : {
+
     },
     "Date Created" : {
       "extractionState" : "manual",
@@ -3600,22 +3615,6 @@
         }
       }
     },
-    "Optional" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختياري"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opsional"
-          }
-        }
-      }
-    },
     "Optimize Index" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3635,6 +3634,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Optimasi Indeks"
+          }
+        }
+      }
+    },
+    "Optional" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختياري"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opsional"
           }
         }
       }
