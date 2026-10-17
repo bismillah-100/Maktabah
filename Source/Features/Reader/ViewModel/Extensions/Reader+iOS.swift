@@ -35,12 +35,17 @@ extension ReaderViewModel {
             nearDistance: searchViewModel.nearDistance
         )
         annotationEvent = nil
-        fetchContentById(contentId)
+        if contentId != currentContentId {
+            fetchContentById(contentId)
+        }
     }
 
     func didSelectAnnotation(_ ann: Annotation) {
         annotationEvent = ReaderAnnotationEvent(annotation: ann)
         searchEvent = nil
-        fetchContentById(Int(ann.contentId))
+        let targetContentId = Int(ann.contentId)
+        if targetContentId != currentContentId {
+            fetchContentById(targetContentId)
+        }
     }
 }

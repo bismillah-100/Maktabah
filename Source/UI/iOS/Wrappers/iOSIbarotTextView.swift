@@ -88,6 +88,8 @@ class iOSCustomIbarotTextView: UITextView {
 
     @MainActor
     func popupText(for ranges: [NSRange]) async {
+        textLayoutManager?.ensureLayout(for: ranges)
+
         try? await Task.sleep(for: .seconds(0.15))
         guard !Task.isCancelled else { return }
 
@@ -138,14 +140,18 @@ class iOSCustomIbarotTextView: UITextView {
         }
     }
 
-    private func calculateHighlightPath(for ranges: [NSRange]) -> UIBezierPath {
+    private func calculateHighlightPath(
+        for ranges: [NSRange],
+        in targetView: UITextView? = nil
+    ) -> UIBezierPath {
+        let tv = targetView ?? self
         let path = UIBezierPath()
         for range in ranges {
-            guard let startPos = position(from: beginningOfDocument, offset: range.location),
-                  let endPos = position(from: startPos, offset: range.length),
-                  let textRange = textRange(from: startPos, to: endPos) else { continue }
+            guard let startPos = tv.position(from: tv.beginningOfDocument, offset: range.location),
+                  let endPos = tv.position(from: startPos, offset: range.length),
+                  let textRange = tv.textRange(from: startPos, to: endPos) else { continue }
 
-            let rects = selectionRects(for: textRange)
+            let rects = tv.selectionRects(for: textRange)
             for selectionRect in rects {
                 let rect = selectionRect.rect
                 guard rect.width > 0, rect.height > 0 else { continue }
@@ -156,7 +162,20 @@ class iOSCustomIbarotTextView: UITextView {
     }
 
     private func createOverlayTextView(for ranges: [NSRange], totalRect: CGRect) -> UITextView {
-        let attrText = NSMutableAttributedString(attributedString: textStorage)
+        let fullText = textStorage.string as NSString
+        let validRanges = ranges.filter {
+            $0.location >= 0 && $0.length > 0 && $0.location + $0.length <= fullText.length
+        }
+        guard let first = validRanges.first else { return UITextView() }
+
+        // 1. Ambil batas paragraf penuh yang menaungi ranges agar word-wrap & RTL identik
+        let combinedRange = validRanges.dropFirst().reduce(first) { NSUnionRange($0, $1) }
+        let paragraphRange = fullText.paragraphRange(for: combinedRange)
+
+        // 2. Salin hanya attributed string untuk paragraf tersebut
+        let attrText = NSMutableAttributedString(
+            attributedString: textStorage.attributedSubstring(from: paragraphRange)
+        )
         let fullRangeLocal = NSRange(location: 0, length: attrText.length)
 
         attrText.addAttribute(.foregroundColor, value: UIColor.clear, range: fullRangeLocal)
@@ -165,13 +184,19 @@ class iOSCustomIbarotTextView: UITextView {
         attrText.removeAttribute(.underlineStyle, range: fullRangeLocal)
         attrText.removeAttribute(.underlineColor, range: fullRangeLocal)
 
-        for rng in ranges {
+        let localRanges: [NSRange] = validRanges.map {
+            NSRange(location: $0.location - paragraphRange.location, length: $0.length)
+        }
+        for rng in localRanges {
             guard rng.location >= 0, rng.location + rng.length <= attrText.length else { continue }
             attrText.addAttribute(.foregroundColor, value: UIColor.black, range: rng)
         }
 
-        let textOverlay = UITextView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height))
-        textOverlay.attributedText = attrText
+        // 3. Konfigurasi properti UITextView SEBELUM mengisi attributedText
+        // agar UIKit tidak menimpa NSParagraphStyle (lineHeight).
+        let textOverlay = UITextView(
+            frame: CGRect(x: 0, y: 0, width: bounds.width, height: max(bounds.height, totalRect.height * 2))
+        )
         textOverlay.backgroundColor = .clear
         textOverlay.isScrollEnabled = false
         textOverlay.isEditable = false
@@ -182,9 +207,24 @@ class iOSCustomIbarotTextView: UITextView {
         textOverlay.textContainer.lineFragmentPadding = textContainer.lineFragmentPadding
         textOverlay.clipsToBounds = false
 
+        textOverlay.attributedText = attrText
+
+        // 4. Pastikan TextKit 2 merampungkan layout untuk paragraf ini
+        let fitSize = textOverlay.sizeThatFits(
+            CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
+        )
+        textOverlay.frame.size = CGSize(width: bounds.width, height: max(fitSize.height, totalRect.height))
+        textOverlay.textLayoutManager?.ensureLayout(for: localRanges)
         textOverlay.layoutIfNeeded()
-        textOverlay.frame.size.height = max(bounds.height, textOverlay.contentSize.height)
-        textOverlay.frame.origin = CGPoint(x: -totalRect.minX, y: -totalRect.minY)
+
+        // 5. Anchor langsung menggunakan koordinat selectionRects di dalam textOverlay sendiri
+        let overlayRect = calculateHighlightPath(for: localRanges, in: textOverlay).bounds
+        if !overlayRect.isNull, overlayRect.width > 0, overlayRect.height > 0 {
+            textOverlay.frame.origin = CGPoint(x: -overlayRect.minX, y: -overlayRect.minY)
+        } else {
+            textOverlay.frame.origin = CGPoint(x: -totalRect.minX, y: -totalRect.minY)
+        }
+
         return textOverlay
     }
 
@@ -369,16 +409,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         guard let textView = uiView.subviews.first as? iOSCustomIbarotTextView else { return }
 
         context.coordinator.parent = self
-
-        let targetAlignment: NSTextAlignment = isMultiLanguage ? .natural : .right
-        if textView.textAlignment != targetAlignment {
-            textView.textAlignment = targetAlignment
-        }
-
-        let targetSemantic: UISemanticContentAttribute = isMultiLanguage ? .unspecified : .forceRightToLeft
-        if textView.semanticContentAttribute != targetSemantic {
-            textView.semanticContentAttribute = targetSemantic
-        }
+        updateTextAlignmentAndSemantics(for: textView)
 
         let rendered = resolveRenderedContent(textView: textView, context: context)
 
@@ -432,6 +463,18 @@ struct iOSIbarotTextView: UIViewRepresentable {
         textView.setNeedsLayout()
         textView.layoutIfNeeded()
         return newlyRendered
+    }
+
+    private func updateTextAlignmentAndSemantics(for textView: iOSCustomIbarotTextView) {
+        let targetAlignment: NSTextAlignment = isMultiLanguage ? .natural : .right
+        if textView.textAlignment != targetAlignment {
+            textView.textAlignment = targetAlignment
+        }
+
+        let targetSemantic: UISemanticContentAttribute = isMultiLanguage ? .unspecified : .forceRightToLeft
+        if textView.semanticContentAttribute != targetSemantic {
+            textView.semanticContentAttribute = targetSemantic
+        }
     }
 
     struct RenderCacheKey: Equatable {
@@ -556,7 +599,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         if let event = searchEvent,
            event.contentId == viewModel.currentContentId,
-           (!searchRanges.isEmpty || event.isTOC),
+           !searchRanges.isEmpty || event.isTOC,
            context.coordinator.lastHandledSearchEventId != event.id
         {
             context.coordinator.lastHandledSearchEventId = event.id
