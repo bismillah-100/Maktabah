@@ -170,7 +170,8 @@ class iOSCustomIbarotTextView: UITextView {
             attrText.addAttribute(.foregroundColor, value: UIColor.black, range: rng)
         }
 
-        let textOverlay = UITextView(frame: CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height))
+        let requiredHeight = max(bounds.height, totalRect.maxY, contentSize.height)
+        let textOverlay = UITextView(frame: CGRect(x: -totalRect.minX, y: -totalRect.minY, width: bounds.width, height: requiredHeight))
         textOverlay.attributedText = attrText
         textOverlay.backgroundColor = .clear
         textOverlay.isScrollEnabled = false
@@ -182,9 +183,13 @@ class iOSCustomIbarotTextView: UITextView {
         textOverlay.textContainer.lineFragmentPadding = textContainer.lineFragmentPadding
         textOverlay.clipsToBounds = false
 
+        if let tlm = textOverlay.textLayoutManager {
+            tlm.ensureLayout(for: tlm.documentRange)
+        } else {
+            textOverlay.layoutManager.ensureLayout(forCharacterRange: fullRangeLocal)
+        }
+
         textOverlay.layoutIfNeeded()
-        textOverlay.frame.size.height = max(bounds.height, textOverlay.contentSize.height)
-        textOverlay.frame.origin = CGPoint(x: -totalRect.minX, y: -totalRect.minY)
         return textOverlay
     }
 
