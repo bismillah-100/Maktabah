@@ -139,7 +139,7 @@ jobs:
               list_match = re.search(list_pattern, content, re.DOTALL)
               if not list_match:
                   return None
-              release_match = re.search(r'([A-F0-9]+)\s*/\*\s*Release\s*\*/', list_match.group(1))
+              release_match = re.search(r'([A-F0-9]+)\s*/\*[^*]*Release[^*]*\*/', list_match.group(1))
               return release_match.group(1) if release_match else None
 
           team = os.environ['TEAM_ID']
@@ -148,7 +148,7 @@ jobs:
               global content
               if not config_id or not uuid:
                   return
-              pattern = r'(' + config_id + r' /\* Release \*/ = \{[^{]*buildSettings = \{)(.*?)(\};)'
+              pattern = r'(' + config_id + r'\s*(?:/\*[^*]*\*/)?\s*=\s*\{[^{]*buildSettings = \{)(.*?)(\};)'
               def replace_target(match):
                   h, s, f = match.group(1), match.group(2), match.group(3)
                   keys_to_remove = ['CODE_SIGN_STYLE', 'CODE_SIGN_IDENTITY', 'PROVISIONING_PROFILE_SPECIFIER', 'DEVELOPMENT_TEAM']
@@ -164,10 +164,14 @@ jobs:
 
           # 1. Patch Maktabah-Direct
           direct_config_id = get_release_config_id('Maktabah-Direct')
-          patch_target_release(direct_config_id, os.environ.get('UUID_PROFILE', ''))
 
           # 2. Patch MaktabahWidgetExtension
           widget_config_id = get_release_config_id('MaktabahWidgetExtension')
+
+          if not direct_config_id or not widget_config_id:
+              raise SystemExit(f"Config ID not found (Direct: {direct_config_id}, Widget: {widget_config_id})")
+
+          patch_target_release(direct_config_id, os.environ.get('UUID_PROFILE', ''))
           patch_target_release(widget_config_id, os.environ.get('UUID_WIDGET_PROFILE', ''), 'Source/Features/Widget/MaktabahWidgetDirect.entitlements')
 
           # 3. Patch Project-level (agar tidak fallback ke Development)
