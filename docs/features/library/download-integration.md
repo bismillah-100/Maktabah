@@ -171,18 +171,25 @@ actor BookArchiveSingleFlight {
 }
 ```
 
-### B. IntegratePhase (Enum) - Dua Fase Integrasi
+### IntegratePhase (Enum)
 
-Operasi integrasi dibagi menjadi dua fase independen:
+Operasi integrasi dibagi menjadi dua fase independen yang dipantau kemajuannya secara deterministik melalui `BundleArchiveDownloadProgressState.updateIntegrationPhase`:
 
 1. **Fase Data (`IntegratePhase.data`)**:
     * Menjalankan `ATTACH DATABASE` berkas buku sementara ke arsip `1-20.sqlite`.
     * Menyalin tabel konten (`b{id}`) dan tabel daftar isi (*Table of Contents* `t{id}`).
     * Menjalankan transaksi cepat agar *lock* basis data segera dilepas.
+    * Merefleksikan progres integrasi tahap awal (rentang 0.0 s.d. 0.5).
 2. **Fase Indeks (`IntegratePhase.fts`)**:
     * Membaca teks Arab dari tabel `b{id}` yang baru disalin.
     * Melakukan normalisasi teks (penghapusan harakat/tasykil).
     * Memasukkan token teks ke dalam *virtual table* `search_index` (SQLite FTS5) agar kitab tersebut langsung dapat dicari pada fitur pencarian global.
+    * Merefleksikan progres integrasi tahap akhir (rentang 0.5 s.d. 1.0).
+
+* **Transisi Halus & Efek Animasi**:
+  Antarmuka modal unduhan (`ProgressBooksDownload` di macOS dan `iOSNavigationManager` di iOS) menyematkan jeda penyelesaian bertahap (*completion pause*) dan efek simbol berdenyut (*pulsing symbol effect*) untuk mencegah kedipan atau reset mendadak saat status berpindah dari unduhan jaringan ke integrasi basis data.
+* **Sentralisasi Format Ukuran (`ByteCountFormat.swift`)**:
+  Konversi ukuran byte di seluruh modul perpustakaan, jendela pembaruan, dan bilah progres disentralisasi menggunakan ekstensi `BinaryInteger.formattedByteCount` berbasis `ByteCountFormatter` native.
 
 ### C. IntegrationCache (Class) & Status Persistence (v2)
 

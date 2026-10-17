@@ -25,6 +25,9 @@ protocol TextViewRenderable: AnyObject {
         options: IbarotTextOptions
     )
 
+    /// Melompat ke judul bab daftar isi (TOC) dan memberikan efek visual sorotan sekilas.
+    func scrollToTOC(title: String) async
+
     /// Melompat ke koordinat spesifik (scroll to offset).
     func scrollTo(_ scrollPos: CGPoint) async
     
@@ -34,6 +37,20 @@ protocol TextViewRenderable: AnyObject {
     /// Memfokuskan pengguliran dan penyorotan kepada objek anotasi tertentu.
     func highlightAndScrollToAnns(_ ann: Annotation) async
 }
+
+### SidebarDelegate (Protocol)
+
+*Protocol* delegasi navigasi bilah sisi (*sidebar*) daftar isi atau biografi perawi pada platform macOS:
+
+```swift
+@MainActor
+protocol SidebarDelegate: AnyObject {
+    func didSelectItem(_ id: Int)
+    func didSelectItem(_ id: Int, title: String)
+}
+```
+
+* **`didSelectItem(_:title:)`**: Meneruskan seleksi bab daftar isi beserta teks judul bab (`title`) menuju *controller* pembaca. Hal ini memungkinkan `IbarotTextVC` memicu pencarian rentang fuzzy judul di halaman target via `scrollToTOC(title:)`. Protocol extension menyediakan fallback otomatis yang memanggil `didSelectItem(id)`.
 ```
 
 ## Alur Implementasi & Contoh Kode (Implementation)

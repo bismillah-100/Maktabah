@@ -158,4 +158,6 @@ Memiliki dua mode presentasi dinamis:
 
 ### 3. Restorasi State (ReaderStateComponent)
 
-* Navigasi antar-perawi dan riwayat klik kitab tarjamah disimpan secara persisten. Ketika jendela ditutup atau mode berpindah, state terakhir perawi yang sedang diteliti dapat direstorasi seketika.
+* **Restorasi Mode Mandiri (Sidebar & FullSearch)**: Pemulihan antarmuka mengevaluasi kondisi `state.currentRowi != nil || state.authorTarjamahResults?.isEmpty == false`. Hal ini memungkinkan hasil penelusuran biografi (`tarjamahList`) pada mode `fullSearch` direstorasi seketika meskipun tidak ada profil perawi tunggal yang sedang aktif.
+* **Isolasi Input Teks**: Penyetelan nama `rowiTextField.stringValue = rowi.isoName` dibatasi hanya pada mode `.sidebar`. Pada mode `fullSearch`, kolom input pencarian dipertahankan tanpa tertimpa data profil perawi.
+* Navigasi antar-perawi dan riwayat klik kitab tarjamah disimpan secara persisten. Ketika jendela ditutup atau mode berpindah, *state* terakhir perawi yang sedang diteliti dapat direstorasi seketika.

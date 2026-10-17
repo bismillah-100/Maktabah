@@ -101,7 +101,7 @@ Sistem basis data dirancang secara modular agar tidak terjadi tumpang tindih per
 
 Berikut adalah perincian setiap *struct*, *class*, dan *enum* yang berada di dalam subsistem antarmuka basis data.
 
-### 1. `SQLiteDatabase` (Class)
+### SQLiteDatabase (Class)
 
 *Class* `SQLiteDatabase` membungkus interaksi dengan pustaka C SQLite agar berstatus *thread-safe* serta *Sendable*.
 
@@ -124,8 +124,9 @@ class SQLiteDatabase: @unchecked Sendable {
     - `execute(query: String, parameters: [Any])`: Menjalankan kueri modifikasi tanpa pengembalian baris data.
     - `fetch<T>(query: String, parameters: [Any], mapping: (SQLiteRow) throws -> T)`: Menjalankan *statement* `SELECT` dan memetakannya menjadi *array* objek model.
     - **Ekstensi OpaquePointer**: Memuat fungsi pembantu untuk *bind parameters*, membaca teks UTF-8 (`columnString`), hingga mengekstraksi *blob* Zstd dan melakukan dekompresi otomatis (`columnTextOrDecompressedBlob`).
+    - **Statement Reset (`defer { sqlite3_reset(stmt) }`)**: Pada fungsi eksekusi *prepared statement* berparameter (`withBoundStatement`), penyetelan ulang *statement* dipanggil seketika dalam blok `defer` setelah iterasi atau pembacaan baris selesai. Hal ini menjamin *shared read locks* SQLite segera dilepas kembali ke *connection pool*.
 
-### 2. `DatabaseManager` (Class)
+### DatabaseManager (Class)
 
 Merupakan *singleton* utama penampung data katalog Maktabah.
 
@@ -147,14 +148,26 @@ class DatabaseManager {
     - `setupFolders()`: Membuka koneksi `db` dan `dbSpecial` sesuai *path* konfigurasi aplikasi. Apabila berkas tidak ditemukan, eksekusi dialihkan ke *mode read-only* atau memicu pengunduhan.
     - Fungsi *Fetch*: `fetchAllCategories()`, `fetchAllBooksGroupedByCategory()`, `fetchBook(byId:)`, yang memetakan baris hasil `SQLiteRow` ke *struct* model aplikasi.
 
-### 3. `BookConnection` (Class)
+### BookConnection (Class)
 
 Mengelola akses basis data masing-masing arsip buku berdasarkan pola *lazy loading*.
 
 ```swift
-class BookConnection: @unchecked Sendable {
-    private let _db = Mutex<SQLiteDatabase?>(nil)
-    var db: SQLiteDatabase? { _db.withLock { $0 } }
+final class BookConnection: Sendable {
+    private struct ConnectionState {
+        var archiveId: Int?
+        var db: SQLiteDatabase?
+    }
+
+    private let _state = Mutex<ConnectionState>(ConnectionState())
+
+    var db: SQLiteDatabase? {
+        _state.withLock { $0.db }
+    }
+
+    var currentArchiveId: Int? {
+        _state.withLock { $0.archiveId }
+    }
 
     nonisolated(unsafe) static let tocTreeCache: NSCache<NSNumber, NSArray>
     nonisolated(unsafe) static let totalPartsCache: NSCache<NSString, NSNumber>
@@ -162,11 +175,11 @@ class BookConnection: @unchecked Sendable {
 ```
 
 - **Logika Internal**:
-    - `connect(archive: Int)`: Memastikan ketersediaan arsip buku di sistem berkas dan membuat *instance* `SQLiteDatabase` dari *path* arsip yang dituju.
+    - `connect(archive: Int, force: Bool = false)`: Memastikan ketersediaan arsip buku di sistem berkas dan membuat *instance* `SQLiteDatabase`. Jika parameter `force` bernilai `false` dan arsip yang sama sudah terhubung, eksekusi langsung keluar (*early return* idempoten) tanpa membuka ulang koneksi, mencegah *teardown* koneksi saat navigasi daftar isi (TOC).
     - `getContent(bkid:contentId:quran:)`: Mengambil rekaman data buku dari tabel `b{bkid}` (contoh `b1442`). Fungsi ini secara otomatis memeriksa status kompresi dan membaca konten melalui blok Zstd (bila berupa *blob*) lalu menyimpannya ke `BookPageCache`.
     - `buildTOCTree(from:bookId:)`: Memproses baris linier daftar isi menjadi hierarki *parent-child* `[TOCNode]` melalui algoritma *multiple-pass*. Menggunakan `tocTreeCache` agar performa pemuatan daftar isi tetap responsif.
 
-### 4. `SingleFlight` (Actor)
+### SingleFlight (Actor)
 
 Mencegah pemanggilan fungsi *async* yang sama persis bila operasi sebelumnya masih berjalan (menerapkan pola *request coalescing*).
 
@@ -178,10 +191,10 @@ actor SingleFlight<Key: Hashable, Value: Sendable> {
 
 - **Cara Kerja**:
     - Saat metode `run(key:operation:)` dipanggil, pengecekan awal dilakukan pada *dictionary* `runningTasks`.
-    - Jika *key* sudah ada, pemanggil akan menunggu hasil eksekusi tugas yang sedang berjalan (`await existingTask.value`).
+    - Jika *key* sudah ada, pemanggil akan menunggu hasil eksekusi *task* yang sedang berjalan (`await existingTask.value`).
     - Jika *key* belum terdaftar, *task* baru dibuat, disimpan, dan dieksekusi hingga selesai untuk mendistribusikan hasilnya ke seluruh pemanggil.
 
-### 5. `ZstdDecompressor` (Enum) & `ZSTDContextWrapper` (Class)
+### ZstdDecompressor (Enum) & ZSTDContextWrapper (Class)
 
 Modul manajer khusus yang membungkus pustaka C Zstandard (`libzstd`) tingkat rendah secara *thread-safe* di platform Apple.
 
@@ -200,7 +213,7 @@ enum ZstdDecompressor {
 - **Decompressor**:
     - Jika memori berupa *blob* Zstd dikenali (melalui parameter *frame* pada `ZSTD_getFrameContentSize`), data dialokasikan langsung dari pembungkus ke `String` Swift menggunakan `String(unsafeUninitializedCapacity:...)`. Ini merupakan optimasi performa tinggi tanpa penyalinan memori perantara (*zero-copy intermediate*).
 
-### 6. `CoreDatabaseDownloader` (Class)
+### CoreDatabaseDownloader (Class)
 
 Komponen yang mengelola pemeriksaan pembaruan dan pengunduhan berkas basis data berukuran besar dari GitHub Releases.
 
@@ -224,7 +237,7 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
     === "iOS"
         Pada iOS, antarmuka ini dialihkan menggunakan komponen SwiftUI sehingga referensi `NSWindow` ditiadakan. Implementasi jendela modal tersebut hanya dikompilasi pada target macOS melalui makro kompilasi.
 
-### 7. `FtsMigrationManager` (Class) & `ArchiveDatabaseTools`
+### FtsMigrationManager (Class) & ArchiveDatabaseTools
 
 Modul internal untuk memigrasikan skema basis data lama atau tabel pencarian (*Full-Text Search*) dari skema per-kitab (`b{id}_fts`) menuju skema **Unified FTS5** (`archive_fts` + `archive_index`).
 

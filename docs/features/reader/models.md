@@ -62,7 +62,9 @@ Dengan menjadikan kombinasi *boolean* ini sebagai kunci *hash*, `BookPageCache` 
 
 ---
 
-## 2. IbarotTextOptions (Struct) - Opsi Perenderan Teks
+## 2. Opsi & Payload Perenderan Teks
+
+### IbarotTextOptions (Struct)
 
 *Struct* parameter yang diteruskan ke *protocol* `TextViewRenderable`:
 
@@ -77,6 +79,21 @@ struct IbarotTextOptions {
 ```
 
 * **`keepScrollPosition`**: Menentukan apakah posisi gulir layar (*scroll offset*) dipertahankan saat teks dimuat ulang (*reload*), misalnya ketika pengguna mengubah ukuran font atau visibilitas harakat agar posisi baca tidak melompat ke atas.
+
+### ContentRenderPayload (Struct)
+
+Paket muatan (*render payload*) untuk pembaruan teks AppKit/UIKit:
+
+```swift
+struct ContentRenderPayload: Equatable, Sendable {
+    let bookId: Int?
+    let text: String
+    let content: BookContent?
+    let keepScrollPosition: Bool
+}
+```
+
+* **Komparasi Komposit**: Operator `==` mengevaluasi `bookId`, `content?.id`, `keepScrollPosition`, dan `text`. Pengecekan ID buku dan ID baris sebelum teks mencegah terlewatinya pembaruan tampilan ketika berpindah ke halaman yang memiliki teks identik.
 
 ---
 
@@ -115,7 +132,9 @@ final class TOCNode: Identifiable, @unchecked Sendable {
 
 ---
 
-## 4. ReaderState (Struct) - State Navigasi & Pemulihan Sesi
+## 4. ReaderState & Model Sesi Tab
+
+### ReaderState (Struct)
 
 `ReaderState` merangkum seluruh status tampilan pembaca aktif, memungkinkan pemulihan posisi sesi (*session restoration*):
 
@@ -146,6 +165,34 @@ struct ReaderState: Codable, Equatable {
     * `.rowiInfo`: Menampilkan biografi perawi hadis (*tarjamah rowi*).
     * `.bookContent`: Menampilkan teks kitab karya pengarang tersebut.
 * **`hasContent`**: Properti terhitung untuk memvalidasi apakah layar pembaca sedang memuat naskah aktif atau dalam status kosong (*placeholder*).
+
+### TabStateSnapshot (Struct)
+
+Model persistensi sesi multi-tab untuk mengisolasi memori navigasi antar-tab jendela macOS:
+
+```swift
+public struct TabStateSnapshot: Codable, Equatable {
+    public var currentModeRaw: Int
+    public var viewerState: ReaderState
+    public var searchState: ReaderState
+    public var authorState: ReaderState
+}
+```
+
+* Menyimpan state (`viewerState`, `searchState`, `authorState`) per-tab jendela secara terisolasi.
+
+### WindowTabsSession (Struct)
+
+Model persistensi sesi tab jendela:
+
+```swift
+public struct WindowTabsSession: Codable, Equatable {
+    public var selectedTabIndex: Int
+    public var tabs: [TabStateSnapshot]
+}
+```
+
+* Mengemas seluruh daftar snapshot tab beserta indeks tab aktif (`selectedTabIndex`) untuk ditulis secara atomik ke `tabs_session.json`.
 
 ---
 
@@ -196,10 +243,12 @@ struct ReaderHighlightEvent: Equatable {
     let contentId: Int?
     let mode: SearchMode?
     let nearDistance: Int
+    var isTOC: Bool = false
 }
 ```
 
 * Setiap ketukan hasil pencarian menghasilkan `UUID` baru yang menjamin `iOSIbarotTextView` merespons ketukan berulang (*multi-tap*) tanpa memerlukan pembersihan status manual.
+* **`isTOC`**: Properti penanda sorotan yang dipicu oleh navigasi daftar isi (TOC). Menampilkan animasi popup teks sementara tanpa menyimpan rekaman highlight permanen ke `AnnotationStore`.
 
 ### ReaderAnnotationEvent (Struct)
 Event pemicu navigasi dan animasi *scroll-to-target* pada anotasi:

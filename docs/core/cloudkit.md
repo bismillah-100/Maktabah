@@ -64,7 +64,7 @@ Penjelasan metode dan prinsip arsitektur:
 
 Seluruh implementasi `class` dan `struct` dirancang untuk memenuhi batasan memori dan *thread-safety* pada Swift 6.
 
-#### `CloudKitSyncManager` (Class) & Inisialisasi
+#### CloudKitSyncManager (Class) & Inisialisasi
 
 `CloudKitSyncManager` adalah *class* orkestrator tingkat atas yang mengoordinasikan seluruh alur sinkronisasi saat siklus hidup aplikasi dimulai. Titik inisialisasi utamanya berada pada fungsi `initializeOnLaunch()`:
 
@@ -92,7 +92,7 @@ Jika pengaturan aktif, `initializeOnLaunch()` akan menjalankan tahapan berikut s
     * `performInitialUploadCheck()`: Melakukan pemeriksaan unggahan awal untuk data lokal.
     * `retryAllPendingOperations()`: Mengunggah kembali seluruh data yang berada di antrean luring (`SyncPendingStore`).
 
-#### `CloudKitCoreManager` (Class)
+#### CloudKitCoreManager (Class)
 
 *Class* utama (*singleton*) yang berinteraksi langsung dengan API `CloudKit`. Menyediakan fungsi untuk mengunggah (`upload`), menghapus (`delete`), dan menarik pembaruan (`fetchChanges`).
 
@@ -100,18 +100,26 @@ Jika pengaturan aktif, `initializeOnLaunch()` akan menjalankan tahapan berikut s
 final class CloudKitCoreManager: Sendable {
     private struct ManagerState { // (1)!
         var isSyncing: Bool = false
-        var notifyTask: Task<Void, Never>? = nil
+        var notifyTask: Task<Void, Never>?
     }
 
     static let shared = CloudKitCoreManager()
     let container: CKContainer
     let privateDatabase: CKDatabase
     let zoneId: CKRecordZone.ID
-    // ...
+    
+    func tryBeginSyncing() -> Bool { // (2)!
+        state.withLock { state in
+            guard !state.isSyncing else { return false }
+            state.isSyncing = true
+            return true
+        }
+    }
 }
 ```
 
 1. `struct` ini membungkus *state* yang bersifat *mutable*, kemudian diamankan menggunakan `Synchronization.Mutex` untuk mencegah *data race* saat diakses secara konkuren.
+2. Inisiasi sinkronisasi dilakukan secara atomik melalui `tryBeginSyncing()`. Hal ini mengeliminasi kunci ganda (`isSyncingLock`) pada `CloudKitSyncManager`, mencegah kondisi *race condition* antara peresetan *token* dan awal penarikan data (*fetch*).
 
 === "macOS"
     Mengeksekusi antrean di latar belakang secara *native* pada AppKit.
