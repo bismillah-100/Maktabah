@@ -10,6 +10,7 @@ import SwiftUI
 struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
     let navigationManager: iOSNavigationManager
     @Bindable var viewModel: AnnotationViewModel
+    var onEditAnnotation: ((Annotation) -> Void)?
 
     func makeUIViewController(context: Context) -> iOSAnnotationViewController {
         let vc = iOSAnnotationViewController()
@@ -22,6 +23,9 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
             if let id = node.annotation?.id {
                 viewModel.deleteAnnotation(id: id)
             }
+        }
+        vc.onAnnotationEditRequested = { [weak coordinator = context.coordinator] ann in
+            coordinator?.onEditAnnotation?(ann)
         }
 
         vc.onRefreshRequested = { [weak vc] in
@@ -49,6 +53,7 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: iOSAnnotationViewController, context: Context) {
         uiViewController.viewModel = viewModel
+        context.coordinator.onEditAnnotation = onEditAnnotation
         // Only set initial data — incremental updates come from notifications via callback
         if !context.coordinator.hasAppliedOnce {
             context.coordinator.hasAppliedOnce = true
@@ -62,12 +67,15 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(navigationManager: navigationManager)
+        let coordinator = Coordinator(navigationManager: navigationManager)
+        coordinator.onEditAnnotation = onEditAnnotation
+        return coordinator
     }
 
     class Coordinator {
         let navigationManager: iOSNavigationManager
         var hasAppliedOnce = false
+        var onEditAnnotation: ((Annotation) -> Void)?
         init(navigationManager: iOSNavigationManager) {
             self.navigationManager = navigationManager
         }
