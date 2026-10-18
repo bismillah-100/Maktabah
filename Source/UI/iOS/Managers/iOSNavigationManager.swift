@@ -217,7 +217,8 @@ class iOSNavigationManager {
         state.detail = ""
         state.progress = 0
 
-        Task { [weak self] in
+        Task { [weak self, weak state] in
+            guard let state else { return }
             do {
                 try await BookArchiveIntegrator.shared.ensureBookIntegrated(
                     book,
