@@ -23,6 +23,11 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
 
         let shouldHideDelete = nodes.isEmpty || hasUntaggedRoot
 
+        let isSingleAnnotation = nodes.count == 1 && nodes.first?.annotation != nil
+        editMenuItem.isHidden = !isSingleAnnotation
+        editMenuItem.target = self
+        editMenuItem.action = #selector(editAnnotationClicked(_:))
+
         deleteMenuItem.isHidden = shouldHideDelete
         deleteMenuItem.target = self
         deleteMenuItem.action = #selector(deleteItem(_:))
@@ -62,6 +67,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
     private func hideMenuOnGroupRow(nodes: [AnnotationNode]) -> Bool {
         let isDateBucketClick = nodes.count == 1 && nodes.first?.kind == .dateBucket
         if isDateBucketClick {
+            editMenuItem.isHidden = true
             deleteMenuItem.isHidden = true
             copyMenuItem.isHidden = true
             addTagMenuItem.isHidden = true
@@ -76,6 +82,8 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         menu.delegate = self
 
         let itemsToAdd: [NSMenuItem] = [
+            editMenuItem,
+            .separator(),
             addTagMenuItem,
             removeTagMenuItem,
             renameTagMenuItem,
@@ -94,6 +102,70 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
     }
 
     // MARK: - Actions
+
+    @objc private func editAnnotationClicked(_: NSMenuItem) {
+        guard let outlineView else { return }
+        let nodes = effectiveNodes(for: outlineView)
+        guard nodes.count == 1,
+              let node = nodes.first,
+              let annotation = node.annotation
+        else { return }
+
+        let row = outlineView.row(forItem: node)
+        guard row != -1 else { return }
+
+        let positioningView: NSView
+        let positioningRect: NSRect
+
+        if let cell = outlineView.view(atColumn: 0, row: row, makeIfNecessary: false) {
+            positioningView = cell
+            positioningRect = cell.bounds
+        } else {
+            positioningView = outlineView
+            positioningRect = outlineView.rect(ofRow: row)
+        }
+
+        presentAnnotationEditorPopover(for: annotation, relativeTo: positioningRect, of: positioningView)
+    }
+
+    private func presentAnnotationEditorPopover(
+        for annotation: Annotation,
+        relativeTo positioningRect: NSRect,
+        of positioningView: NSView
+    ) {
+        editorPopover?.performClose(nil)
+
+        let editorVC = AnnotationEditorVC()
+        editorVC.annotation = annotation
+
+        let popover = NSPopover()
+        popover.contentViewController = editorVC
+        popover.behavior = .transient
+        popover.show(relativeTo: positioningRect, of: positioningView, preferredEdge: .maxY)
+        editorPopover = popover
+
+        editorVC.onSave = { [weak popover] updated in
+            do {
+                try AnnotationStore.shared.updateAnnotation(updated)
+            } catch {
+                Logger.annotations.error("Gagal menyimpan/update anotasi: \(error.localizedDescription, privacy: .public)")
+            }
+            popover?.performClose(nil)
+        }
+
+        editorVC.onDelete = { [weak popover] id in
+            do {
+                try AnnotationStore.shared.deleteAnnotation(id: id)
+            } catch {
+                Logger.annotations.error("Gagal menghapus anotasi: \(error.localizedDescription, privacy: .public)")
+            }
+            popover?.performClose(nil)
+        }
+
+        editorVC.onCancel = { [weak popover] in
+            popover?.performClose(nil)
+        }
+    }
 
     @objc func copyClickedAnnotation(_: NSMenuItem) {
         guard let rtfData = exportToRTF() else { return }
