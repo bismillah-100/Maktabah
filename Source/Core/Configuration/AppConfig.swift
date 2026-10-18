@@ -22,6 +22,7 @@ enum AppConfig {
     static let bookReleaseBaseURLKey = "book_release_base_url"
     static let bookIndexURLKey = "book_index_url"
     static let appcastURLKey = "appcast_url"
+    static var fm: FileManager { .default }
 
     /// Target FTS index version
     static let currentFtsVersion: Int = 5
@@ -34,7 +35,6 @@ enum AppConfig {
         guard let appSupport = appSupportDir else { return nil }
         let cachePath = appSupport.appendingPathComponent("Caches", isDirectory: true)
 
-        let fm = FileManager.default
         do {
             if !fm.fileExists(atPath: cachePath.path) {
                 try fm.createDirectory(at: cachePath, withIntermediateDirectories: true)
@@ -330,7 +330,6 @@ enum AppConfig {
 
     static var appSupportDir: URL? {
         do {
-            let fm = FileManager.default
             let appSupport = try fm.url(
                 for: .applicationSupportDirectory,
                 in: .userDomainMask,
@@ -432,7 +431,6 @@ enum AppConfig {
             return nil
         }
 
-        let fm = FileManager.default
         if !fm.fileExists(atPath: url.path) {
             try? fm.createDirectory(at: url, withIntermediateDirectories: true)
         }
@@ -449,7 +447,6 @@ enum AppConfig {
     }
 
     private static func ensureDirectoryExists(at path: String) -> String? {
-        let fm = FileManager.default
         do {
             if !fm.fileExists(atPath: path) {
                 try fm.createDirectory(
@@ -487,7 +484,6 @@ enum AppConfig {
     /// - Archive files akan berada di: ~/Library/Application Support/Maktabah/Caches/
     static func setupBundleMode() -> Bool {
         // Ensure archive cache folder exists
-        let fm = FileManager.default
         guard let cachePath = archiveCachePath else {
             Logger.app.error("Archive cache path tidak tersedia")
             return false
@@ -534,12 +530,16 @@ enum AppConfig {
     /// - Parameter folderUrl: URL folder yang dipilih user
     /// - Returns: True jika migration berhasil
     static func migrateToCustomMode(folderUrl: URL) -> Bool {
+        guard ensureHasArchiveFiles(folderUrl: folderUrl) else {
+            Logger.app.error("Custom folder does not contain 1-20.sqlite: \(folderUrl.path, privacy: .public)")
+            return false
+        }
+
         do {
             // 1. Save custom folder bookmark
             saveBookmark(url: folderUrl, key: customDatabaseFolderKey)
 
             // 2. Create Files subdirectory structure di custom folder
-            let fm = FileManager.default
             let filesDir = folderUrl.appendingPathComponent("Files", isDirectory: true)
 
             if !fm.fileExists(atPath: filesDir.path) {
@@ -572,6 +572,15 @@ enum AppConfig {
             Logger.app.error("Error migrating to Custom Mode: \(error.localizedDescription, privacy: .public)")
             return false
         }
+    }
+
+    static func ensureHasArchiveFiles(folderUrl: URL) -> Bool {
+        let hasArchiveFiles = (1...20).allSatisfy { id in
+            let fileURL = folderUrl.appendingPathComponent("\(id).sqlite")
+            return fm.fileExists(atPath: fileURL.path)
+        }
+
+        return hasArchiveFiles
     }
 
     /// Check jika user sudah setup custom database folder
@@ -615,7 +624,6 @@ enum AppConfig {
     }
 
     private static func migrateFiles(from sourceURL: URL, to destURL: URL) {
-        let fm = FileManager.default
         let files = ["Annotations.sqlite", "SearchResults.sqlite", "History.sqlite"]
         let exts = ["", "-wal", "-shm"]
 
