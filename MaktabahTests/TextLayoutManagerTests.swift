@@ -101,7 +101,7 @@ struct TextLayoutManagerTests {
         layoutManager.ensureLayout(for: NSRange(location: 999_999, length: 50))
     }
 
-    @Test("IbarotTextView showFindIndicator dan scrollRangeToVisible berfungsi dengan layout penuh dokumen")
+    @Test("IbarotTextView showFindIndicator dan scrollRangeToVisible berfungsi dengan layout viewport tanpa full layout")
     @MainActor
     func testIbarotTextViewTargetedLayoutAndFindIndicator() {
         let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 500, height: 700))
@@ -119,20 +119,21 @@ struct TextLayoutManagerTests {
         let targetRange = (fullText as NSString).range(of: targetQuery)
         #expect(targetRange.location != NSNotFound)
 
-        // Jalankan ensureFullDocumentLayout terlebih dahulu sesuai alur produksi baru, lalu scroll dan indicator
-        textView.textLayoutManager?.ensureFullDocumentLayout()
-        textView.needsLayout = true
+        // Jalankan alur sinkronisasi viewport (ensureLayout + scroll + layoutViewport)
+        textView.textLayoutManager?.ensureLayout(for: targetRange)
         textView.scrollRangeToVisible(targetRange)
         scrollView.contentView.layoutSubtreeIfNeeded()
-        textView.layoutSubtreeIfNeeded()
+        textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
         textView.showFindIndicator(for: targetRange)
 
-        // Periksa bahwa layout fragment untuk targetRange valid dan memiliki posisi Y terhitung
+        // Periksa bahwa layout fragment untuk targetRange valid dan berada dalam rentang viewport yang terlihat
         if let tlm = textView.textLayoutManager,
            let targetLoc = tlm.location(tlm.documentRange.location, offsetBy: targetRange.location),
            let fragment = tlm.textLayoutFragment(for: targetLoc)
         {
             #expect(fragment.layoutFragmentFrame.minY > 0)
+            let visibleRect = scrollView.documentVisibleRect
+            #expect(visibleRect.intersects(fragment.layoutFragmentFrame))
         }
     }
 
