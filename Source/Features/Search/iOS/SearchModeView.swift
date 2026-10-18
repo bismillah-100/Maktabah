@@ -108,7 +108,10 @@ struct SearchModeView: View {
                 viewModel: viewModel,
                 displayedCategories: viewModel.displayedCategories,
                 updateTrigger: viewModel.updateTrigger,
-                onTap: { isSearchFieldFocused = false }
+                onTap: { isSearchFieldFocused = false },
+                onShowBookInfo: { book in
+                    navigationManager.selectedBookForInfo = book
+                }
             )
             .themeTint()
             .ignoresSafeArea(edges: .vertical)

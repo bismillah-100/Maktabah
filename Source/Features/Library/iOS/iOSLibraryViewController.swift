@@ -121,59 +121,49 @@ class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
     override func didSelectLoadMore() {
         viewModel?.loadMoreAuthors()
     }
-}
 
-// MARK: - UICollectionViewDelegate Context Menu
+    // MARK: - Context Menu Actions
 
-extension iOSLibraryViewController {
-    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
-        guard let indexPath = indexPaths.first,
-              let item = dataSource.itemIdentifier(for: indexPath),
-              case let .book(book) = item,
-              let viewModel
-        else {
-            return nil
+    override func contextMenuActions(for book: BooksData) -> [UIAction] {
+        guard let viewModel, !viewModel.isSelectionMode else { return [] }
+
+        let infoAction = makeBookInfoAction(for: book)
+
+        let selectAction = UIAction(
+            title: String(localized: "Select") + "...",
+            image: UIImage(systemName: "checkmark.circle")
+        ) { [weak self] _ in
+            viewModel.enterSelectionMode(selecting: book)
+            self?.onSelectionChanged?()
         }
 
         let isDownloaded = viewModel.isBookDownloaded(book)
-
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
-            let selectAction = UIAction(
-                title: String(localized: "Select") + "...",
-                image: UIImage(systemName: "checkmark.circle")
-            ) { _ in
-                viewModel.enterSelectionMode(selecting: book)
-                self?.onSelectionChanged?()
-            }
-
-            let mainAction: UIAction? = if AppConfig.isUsingBundleMode {
-                if isDownloaded {
-                    UIAction(
-                        title: String(localized: .Library.deleteDownload),
-                        image: UIImage(systemName: "trash"),
-                        attributes: .destructive
-                    ) { _ in
-                        self?.onDeleteBook?(book)
-                    }
-                } else {
-                    UIAction(title: String(localized: "Download"), image: UIImage(systemName: "icloud.and.arrow.down")) { _ in
-                        self?.onDownloadBook?(book)
-                    }
-                }
-            } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
+        let mainAction: UIAction? = if AppConfig.isUsingBundleMode {
+            if isDownloaded {
                 UIAction(
                     title: String(localized: .Library.deleteDownload),
                     image: UIImage(systemName: "trash"),
                     attributes: .destructive
-                ) { _ in
+                ) { [weak self] _ in
                     self?.onDeleteBook?(book)
                 }
             } else {
-                nil
+                UIAction(title: String(localized: "Download"), image: UIImage(systemName: "icloud.and.arrow.down")) { [weak self] _ in
+                    self?.onDownloadBook?(book)
+                }
             }
-
-            let children = [mainAction, selectAction].compactMap(\.self)
-            return UIMenu(title: "", children: children)
+        } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
+            UIAction(
+                title: String(localized: .Library.deleteDownload),
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.onDeleteBook?(book)
+            }
+        } else {
+            nil
         }
+
+        return [infoAction, mainAction, selectAction].compactMap(\.self)
     }
 }

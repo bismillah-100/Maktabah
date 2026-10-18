@@ -25,6 +25,7 @@ class iOSNavigationManager {
 
     var currentMode: AppMode = .viewer
     var selectedBook: BooksData?
+    var selectedBookForInfo: BooksData?
     var selectedContentId: Int?
     var searchText: String = ""
     var showViewOptions: Bool = false

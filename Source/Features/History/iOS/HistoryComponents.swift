@@ -1,18 +1,20 @@
 //
-//  FavoriteComponents.swift
+//  HistoryComponents.swift
 //  Maktabah-iOS
 //
 
 import SwiftUI
 
 // MARK: - Scroll State
+
 @Observable
 final class ScrollState {
-    var normalizedOffset: CGFloat = 0  // 0.0 to 1.0
-    var lastScrollingRow: Int? = nil
+    var normalizedOffset: CGFloat = 0 // 0.0 to 1.0
+    var lastScrollingRow: Int?
 }
 
 // MARK: - Main Grid View
+
 struct HistoryHorizontalGrid: View {
     let books: [BooksData]
     var viewModel: HistoryViewModel
@@ -27,9 +29,9 @@ struct HistoryHorizontalGrid: View {
     // Row: 1 jika ≤4 buku, 2 jika 5-8 buku, 3 jika ≥9 buku
     private var actualRowCount: Int {
         switch books.count {
-        case 0...4: return 1
-        case 5...8: return 2
-        default: return 3
+        case 0 ... 4: 1
+        case 5 ... 8: 2
+        default: 3
         }
     }
 
@@ -38,8 +40,8 @@ struct HistoryHorizontalGrid: View {
         return CGFloat(actualRowCount) * cardHeight + CGFloat(actualRowCount - 1) * cardSpacing
     }
 
-    // Bagi books ke dalam row secara interleaved
-    // book ke-0 → row 0, book ke-1 → row 1, dst
+    /// Bagi books ke dalam row secara interleaved
+    /// book ke-0 → row 0, book ke-1 → row 1, dst
     private var rows: [[BooksData]] {
         guard actualRowCount > 0 else { return [] }
         var result: [[BooksData]] = Array(repeating: [], count: actualRowCount)
@@ -74,6 +76,7 @@ struct HistoryHorizontalGrid: View {
 }
 
 // MARK: - Synced Scroll Row
+
 struct SyncedScrollRow: View {
     let rowIndex: Int
     let rowBooks: [BooksData]
@@ -104,13 +107,6 @@ struct SyncedScrollRow: View {
                     }
                     .frame(maxWidth: 250)
                     .fixedSize(horizontal: true, vertical: false)
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            viewModel.removeHistory(for: book.id)
-                        } label: {
-                            Label("Remove from History", systemImage: "clock.badge.xmark")
-                        }
-                    }
                 }
             }
         }
@@ -119,18 +115,12 @@ struct SyncedScrollRow: View {
 }
 
 // MARK: - UIScrollView wrapper dengan offset sync
+
 struct SyncedUIScrollView<Content: View>: UIViewRepresentable {
     let rowIndex: Int
     var scrollState: ScrollState
     var isRTL: Bool
-    let content: Content
-
-    init(rowIndex: Int, scrollState: ScrollState, isRTL: Bool, @ViewBuilder content: () -> Content) {
-        self.rowIndex = rowIndex
-        self.scrollState = scrollState
-        self.isRTL = isRTL
-        self.content = content()
-    }
+    @ViewBuilder let content: Content
 
     func makeCoordinator() -> Coordinator {
         Coordinator(rowIndex: rowIndex, scrollState: scrollState, isRTL: isRTL)
@@ -225,6 +215,7 @@ struct BookCard: View {
     let historySection: Bool
     let action: () -> Void
 
+    @Environment(iOSNavigationManager.self) private var navigationManager: iOSNavigationManager
     @State private var showPopover = false
     @State private var isDeleted = false
 
@@ -261,16 +252,33 @@ struct BookCard: View {
                 showPopover = true
             }
             .popover(isPresented: $showPopover, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
-                Button(role: .destructive) {
-                    isDeleted = true
-                    showPopover = false
-                } label: {
-                    Label("Remove from History", systemImage: "clock.badge.xmark")
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                VStack(alignment: .leading, spacing: 0) {
+                    Button {
+                        showPopover = false
+                        navigationManager.selectedBookForInfo = book
+                    } label: {
+                        BookInfoLabel()
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+
+                    if historySection {
+                        Divider()
+
+                        Button(role: .destructive) {
+                            isDeleted = true
+                            showPopover = false
+                        } label: {
+                            Label("Remove from History", systemImage: "clock.badge.xmark")
+                                .foregroundColor(.red)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .buttonStyle(.plain)
                 .presentationCompactAdaptation(.popover)
                 .onDisappear {
                     if isDeleted {
