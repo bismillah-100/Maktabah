@@ -36,44 +36,6 @@
 </head>
 <body>
 
-<h2>Version 4.2</h2>
-<p class="version">October 17, 2026</p>
-<h3>New</h3>
-<ul>
-  <li>Restored multi-tab reading sessions and state persistence across app relaunches on macOS.</li>
-  <li>Added "Open in New Tab" context menu item for integrated books in Library on macOS.</li>
-  <li>Implemented fuzzy-matched heading search and visual indicator flash on TOC selection.</li>
-  <li>Added multi-phase determinate progress tracking for book downloads and archive integrations.</li>
-  <li>Added comprehensive unit test suites for database, CloudKit sync, reader layout, and search engine.</li>
-</ul>
-<h3>Changes</h3>
-<ul>
-  <li>Modernized text rendering to use targeted lazy text layout (TextKit 2) instead of eager full-document layout.</li>
-  <li>Consolidated byte size formatting and localized string catalog representations across all modules.</li>
-  <li>Offloaded page jump queries to background tasks to keep slider interactions responsive.</li>
-  <li>Updated documentation across core database, text processing, library, and reader features.</li>
-</ul>
-<h3>Fixes</h3>
-<ul>
-  <li>Fixed unexpected reader scroll resets when opening annotations or switching views on iOS.</li>
-  <li>Fixed text popup overlay alignment and layout drift by isolating paragraph layout bounds.</li>
-  <li>Resolved iOS book update bottom bar layout distortion on newer iOS versions.</li>
-  <li>Fixed shared SQLite read locks remaining active by resetting prepared statements immediately after execution.</li>
-  <li>Prevented dual-lock race conditions during CloudKit sync initialization and token resets.</li>
-  <li>Fixed UI race condition in search view model during zero-result searches.</li>
-  <li>Prevented text view re-layout when presenting modal sheets on iOS.</li>
-</ul>
-<h3>Improvements</h3>
-<ul>
-  <li>Optimized search performance by caching unified FTS schema in SearchWorker with thread-safe Mutex.</li>
-  <li>Made database connection management idempotent to avoid redundant reconnections during TOC loading.</li>
-  <li>Added activity monitoring on macOS to reset screen sleep timers smoothly during active reading.</li>
-  <li>Smoothed archive integration transitions with pulsing indicators and completion pacing.</li>
-</ul>
-
-<hr>
-
-
 <h2>Version 4.1</h2>
 <p class="version">October 13, 2026</p>
 <h3>New</h3>
