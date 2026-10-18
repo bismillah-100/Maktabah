@@ -217,17 +217,16 @@ class iOSNavigationManager {
         state.detail = ""
         state.progress = 0
 
-        Task { [weak self, weak state] in
-            guard let state else { return }
+        Task { [weak self] in
             do {
                 try await BookArchiveIntegrator.shared.ensureBookIntegrated(
                     book,
-                    onDownloadProgress: { [weak state] written, total in
+                    onDownloadProgress: { written, total in
                         let writtenStr = written.formattedByteCount
                         let totalStr = total > 0 ? total.formattedByteCount : ""
                         let progress = total > 0 ? min(1.0, Double(written) / Double(total)) : 0
-                        Task { @MainActor [weak state] in
-                            guard let state, state.mode == .downloading else { return }
+                        Task { @MainActor in
+                            guard state.mode == .downloading else { return }
                             state.detail = total > 0 ? "\(writtenStr) / \(totalStr)" : writtenStr
                             withAnimation(.linear(duration: 0.15)) {
                                 state.progress = progress
