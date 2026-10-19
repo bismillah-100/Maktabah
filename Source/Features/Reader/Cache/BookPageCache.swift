@@ -49,7 +49,7 @@ final class BookPageCache: @unchecked Sendable {
         lock.withLock { _ in
             let bookKey = bookId as NSNumber
             let pages = cache.object(forKey: bookKey)
-            Logger.reader.debug("Cache HIT: \(bookKey), \(String(describing: pages), privacy: .public)")
+            // Logger.reader.debug("Cache HIT: \(bookKey), \(String(describing: pages), privacy: .public)")
             return pages?[contentId as NSNumber] as? BookContent
         }
     }

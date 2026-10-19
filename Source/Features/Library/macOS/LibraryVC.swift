@@ -94,7 +94,6 @@ class LibraryVC: NSViewController {
                 guard let self else { return }
                 if state == .loading {
                     ReusableFunc.showProgressWindow(view)
-                    setupUI()
                 } else {
                     ReusableFunc.closeProgressWindow(view)
                 }

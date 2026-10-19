@@ -193,6 +193,8 @@ class LibraryViewManager: NSObject {
             guard !Task.isCancelled else { return }
             await MainActor.run { [weak self] in
                 guard let self, viewModel.selectedBookName == bookName else { return }
+                isUpdatingOutline = true
+                defer { isUpdatingOutline = false }
                 for cat in result.categoryPath {
                     outlineView.expandItem(cat)
                 }
@@ -245,18 +247,20 @@ class LibraryViewManager: NSObject {
 
     private func selectFlatRow(_ row: Int) {
         guard row >= 0, row < outlineView.numberOfRows else { return }
+        let wasUpdating = isUpdatingOutline
         isUpdatingOutline = true
         outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-        isUpdatingOutline = false
+        isUpdatingOutline = wasUpdating
         outlineView.scrollRowToVisible(row)
     }
 
     private func safelySelectOutlineRow(for book: BooksData) {
         let row = outlineView.row(forItem: book)
         if row >= 0, outlineView.selectedRow != row {
+            let wasUpdating = isUpdatingOutline
             isUpdatingOutline = true
             outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-            isUpdatingOutline = false
+            isUpdatingOutline = wasUpdating
             outlineView.scrollRowToVisible(row)
         }
     }
