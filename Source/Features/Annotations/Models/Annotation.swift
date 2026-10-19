@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct Annotation: Sendable, Equatable {
+struct Annotation: Sendable, Equatable, Identifiable {
     var id: Int64? // nil sebelum disimpan
     let bkId: Int // book id
     let contentId: Int // BookContent.id

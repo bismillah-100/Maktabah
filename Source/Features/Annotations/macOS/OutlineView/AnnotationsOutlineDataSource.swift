@@ -34,6 +34,14 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     }
 
     let menu = NSMenu()
+    weak var editorPopover: NSPopover?
+
+    lazy var editMenuItem: NSMenuItem = {
+        let item = NSMenuItem()
+        item.title = String(localized: .Annotation.editAnnotation) + threeDots
+        item.image = NSImage(systemSymbolName: "quote.bubble", accessibilityDescription: "")
+        return item
+    }()
 
     lazy var deleteMenuItem: NSMenuItem = {
         let item = NSMenuItem()

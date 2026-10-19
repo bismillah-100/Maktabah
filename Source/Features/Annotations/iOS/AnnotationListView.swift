@@ -14,6 +14,7 @@ struct AnnotationListView: View {
     @State private var importAlertTitle = ""
     @State private var importAlertMessage: String?
     @State private var showImportAlert = false
+    @State private var editingAnnotation: Annotation?
 
     var body: some View {
         let viewModel = navigationManager.annotationViewModel
@@ -36,25 +37,20 @@ struct AnnotationListView: View {
     private func annotationContent(_ viewModel: AnnotationViewModel) -> some View {
         AnnotationViewControllerWrapper(
             navigationManager: navigationManager,
-            viewModel: viewModel
+            viewModel: viewModel,
+            onEditAnnotation: { ann in
+                editingAnnotation = ann
+            }
         )
         .themeTint()
         .ignoresSafeArea(edges: .vertical)
         .annotationSearch(viewModel: viewModel)
-        .onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook)) { notification in
-            if let bookId = notification.object as? Int {
-                missingBookId = bookId
-                showMissingBookAlert = true
-            }
-        }
-        .onChange(of: hideMissingBookAnnotations) { _, _ in
-            viewModel.applyFilter()
-        }
-        .alert(.Library.bookNotFound(missingBookId), isPresented: $showMissingBookAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(.Library.bookMissingOnAnnotationClick)
-        }
+        .missingBookAlert(
+            missingBookId: $missingBookId,
+            showAlert: $showMissingBookAlert,
+            hideAnnotations: hideMissingBookAnnotations,
+            onFilterChange: { viewModel.applyFilter() }
+        )
         .withActiveIntegrationStates()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -81,6 +77,10 @@ struct AnnotationListView: View {
             title: importAlertTitle,
             message: importAlertMessage,
             isPresented: $showImportAlert
+        )
+        .annotationEditorSheet(
+            editingAnnotation: $editingAnnotation,
+            viewModel: viewModel
         )
     }
 
@@ -287,6 +287,51 @@ private extension View {
             if let msg = message {
                 Text(msg)
             }
+        }
+    }
+
+    func missingBookAlert(
+        missingBookId: Binding<Int>,
+        showAlert: Binding<Bool>,
+        hideAnnotations: Bool,
+        onFilterChange: @escaping () -> Void
+    ) -> some View {
+        onReceive(NotificationCenter.default.publisher(for: .annotationMissingBook)) { notification in
+            if let bookId = notification.object as? Int {
+                missingBookId.wrappedValue = bookId
+                showAlert.wrappedValue = true
+            }
+        }
+        .onChange(of: hideAnnotations) { _, _ in
+            onFilterChange()
+        }
+        .alert(.Library.bookNotFound(missingBookId.wrappedValue), isPresented: showAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(.Library.bookMissingOnAnnotationClick)
+        }
+    }
+
+    func annotationEditorSheet(
+        editingAnnotation: Binding<Annotation?>,
+        viewModel: AnnotationViewModel
+    ) -> some View {
+        sheet(item: editingAnnotation) { ann in
+            iOSAnnotationEditorSheet(
+                annotation: ann,
+                onSave: { updated in
+                    do {
+                        try AnnotationStore.shared.updateAnnotation(updated)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    } catch {
+                        UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    }
+                },
+                onDelete: { id in
+                    viewModel.deleteAnnotation(id: id)
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                }
+            )
         }
     }
 }

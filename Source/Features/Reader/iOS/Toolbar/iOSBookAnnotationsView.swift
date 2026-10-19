@@ -16,6 +16,7 @@ struct iOSBookAnnotationsView: View {
     /// Load annotations specific to this book directly from the manager
     @State private var bookAnnotations: [Annotation] = []
     @State private var searchText: String = ""
+    @State private var editingAnnotation: Annotation?
 
     var filteredAnnotations: [Annotation] {
         if searchText.isEmpty {
@@ -73,6 +74,19 @@ struct iOSBookAnnotationsView: View {
                     }
                     .padding(.vertical, 4)
                 }
+                .contextMenu {
+                    Button {
+                        editingAnnotation = ann
+                    } label: {
+                        Label(String(localized: .Annotation.editAnnotation), systemImage: "pencil")
+                    }
+
+                    Button(role: .destructive) {
+                        deleteAnnotation(ann)
+                    } label: {
+                        Label(String(localized: "Delete"), systemImage: "trash")
+                    }
+                }
             }
             .environment(\.layoutDirection, .rightToLeft)
             .searchable(text: $searchText, prompt: String(localized: .Annotation.searchAnnotations))
@@ -97,6 +111,43 @@ struct iOSBookAnnotationsView: View {
             .onAppear {
                 loadBookAnnotations()
             }
+            .sheet(item: $editingAnnotation) { ann in
+                iOSAnnotationEditorSheet(
+                    annotation: ann,
+                    onSave: { updated in
+                        do {
+                            try AnnotationStore.shared.updateAnnotation(updated)
+                            loadBookAnnotations()
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        } catch {
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        }
+                    },
+                    onDelete: { id in
+                        do {
+                            try AnnotationStore.shared.deleteAnnotation(id: id)
+                            loadBookAnnotations()
+                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                        } catch {
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        }
+                    }
+                )
+            }
+            .onReceive(AnnotationStore.shared.events) { _ in
+                loadBookAnnotations()
+            }
+        }
+    }
+
+    private func deleteAnnotation(_ annotation: Annotation) {
+        guard let id = annotation.id else { return }
+        do {
+            try AnnotationStore.shared.deleteAnnotation(id: id)
+            loadBookAnnotations()
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        } catch {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
 

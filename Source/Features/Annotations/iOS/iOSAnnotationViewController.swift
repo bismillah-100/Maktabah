@@ -13,6 +13,7 @@ class iOSAnnotationViewController: UIViewController {
     weak var viewModel: AnnotationViewModel?
     var onAnnotationSelected: ((SwiftUIAnnotationNode) -> Void)?
     var onAnnotationDeleted: ((SwiftUIAnnotationNode) -> Void)?
+    var onAnnotationEditRequested: ((Annotation) -> Void)?
     var onNeedFullReload: (() -> Void)?
     var onRefreshRequested: (() -> Void)?
 
@@ -551,6 +552,40 @@ extension iOSAnnotationViewController: UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, canFocusItemAt indexPath: IndexPath) -> Bool {
         dataSource.itemIdentifier(for: indexPath)?.isGroup == true ? false : true
+    }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        contextMenuConfigurationForItemAt indexPath: IndexPath,
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        guard let item = dataSource.itemIdentifier(for: indexPath),
+              case let .annotation(node) = item,
+              let annotation = node.annotation
+        else { return nil }
+
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            let editAction = UIAction(
+                title: String(localized: .Annotation.editAnnotation),
+                image: UIImage(systemName: "pencil")
+            ) { _ in
+                self?.onAnnotationEditRequested?(annotation)
+            }
+
+            let deleteAction = UIAction(
+                title: String(localized: "Delete"),
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { _ in
+                guard let self else { return }
+                var snap = self.dataSource.snapshot()
+                snap.deleteItems([item])
+                self.dataSource.apply(snap, animatingDifferences: true)
+                self.onAnnotationDeleted?(node)
+            }
+
+            return UIMenu(children: [editAction, deleteAction])
+        }
     }
 }
 
