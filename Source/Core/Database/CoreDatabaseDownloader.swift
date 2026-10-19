@@ -227,7 +227,7 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
         guard let destDir = AppConfig.coreDatabasePath ?? AppConfig.archiveCachePath else {
             throw CoreDownloadError.destinationUnavailable
         }
-        try? fileManager.createDirectory(atPath: destDir, withIntermediateDirectories: true)
+        try fileManager.createDirectory(atPath: destDir, withIntermediateDirectories: true)
         let destURL = URL(fileURLWithPath: destDir).appendingPathComponent(coreFile.filename)
         var downloadedTempURL: URL?
         defer {
