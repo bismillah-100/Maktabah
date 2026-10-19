@@ -80,8 +80,9 @@ class iOSCustomIbarotTextView: UITextView {
         pendingRestoreOffset = nil
         isRestoringScroll = true
 
+        let effectiveTopInset = max(adjustedContentInset.top, safeAreaInsets.top)
         if targetDocY <= 0 {
-            let topOffset = CGPoint(x: 0, y: -adjustedContentInset.top)
+            let topOffset = CGPoint(x: 0, y: -effectiveTopInset)
             setContentOffset(topOffset, animated: false)
             isRestoringScroll = false
             return
@@ -103,7 +104,7 @@ class iOSCustomIbarotTextView: UITextView {
             }
         }
 
-        let targetOffsetY = targetDocY - adjustedContentInset.top
+        let targetOffsetY = targetDocY - effectiveTopInset
         setContentOffset(CGPoint(x: 0, y: targetOffsetY), animated: false)
         textLayoutManager?.textViewportLayoutController.layoutViewport()
 
@@ -390,7 +391,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         textView.delegate = context.coordinator
         textView.alwaysBounceVertical = true
 
-        setupClosure(for: textView)
+        setupClosure(for: textView, context: context)
 
         container.addSubview(textView)
 
@@ -431,7 +432,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         context.coordinator.parent = self
         updateTextAlignmentAndSemantics(for: textView)
-        setupViewModelClosure(for: textView)
+        setupViewModelClosure(for: textView, context: context)
 
         if context.coordinator.lastBackgroundColorIndex != state.backgroundColorIndex {
             context.coordinator.lastBackgroundColorIndex = state.backgroundColorIndex
@@ -451,7 +452,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         )
     }
 
-    private func setupClosure(for textView: iOSCustomIbarotTextView) {
+    private func setupClosure(for textView: iOSCustomIbarotTextView, context: Context) {
         textView.onHighlight = { sourceRange, sourceText in
             let color = UserDefaults.standard.recentHighlightColors.first ?? .yellow
             onAddAnnotation?(sourceRange, .highlight, sourceText, color)
@@ -461,18 +462,29 @@ struct iOSIbarotTextView: UIViewRepresentable {
             onAddAnnotation?(sourceRange, .underline, sourceText, color)
         }
 
-        setupViewModelClosure(for: textView)
+        setupViewModelClosure(for: textView, context: context)
     }
 
-    private func setupViewModelClosure(for textView: iOSCustomIbarotTextView) {
-        viewModel.fetchScrollPosition = { [weak textView] in
+    private func setupViewModelClosure(for textView: iOSCustomIbarotTextView, context: Context) {
+        viewModel.fetchScrollPosition = { [weak textView, weak coordinator = context.coordinator] in
             guard let textView,
                   textView.window != nil,
                   !textView.isRestoringScroll,
                   textView.bounds.height > 0
-            else { return nil }
-            let docY = textView.contentOffset.y + textView.adjustedContentInset.top
-            return CGPoint(x: 0, y: max(0, docY))
+            else {
+                return coordinator?.lastKnownScrollPosition
+            }
+
+            let effectiveTopInset = max(textView.adjustedContentInset.top, textView.safeAreaInsets.top)
+            let liveDocY = max(0, textView.contentOffset.y + effectiveTopInset)
+
+            if liveDocY <= 0, let cached = coordinator?.lastKnownScrollPosition, cached.y > 0 {
+                return cached
+            }
+
+            let pos = CGPoint(x: 0, y: liveDocY)
+            coordinator?.lastKnownScrollPosition = pos
+            return pos
         }
         viewModel.fetchSelectedRange = { [weak textView] in
             textView?.selectedRange
@@ -628,6 +640,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         let targetDocY = viewModel.readerState.scrollPosition?.y ?? (isNewContent ? 0 : nil)
         if let targetDocY {
+            context.coordinator.lastKnownScrollPosition = CGPoint(x: 0, y: targetDocY)
             textView.pendingRestoreOffset = targetDocY
             if textView.bounds.height > 0 {
                 textView.applyPendingScrollRestore()
@@ -676,7 +689,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
                     textView?.scrollRangeToVisible(firstRange)
                     await textView?.popupText(for: searchRanges)
                 } else if event.isTOC, let tv = textView {
-                    tv.setContentOffset(CGPoint(x: 0, y: -tv.adjustedContentInset.top), animated: true)
+                    let effectiveTopInset = max(tv.adjustedContentInset.top, tv.safeAreaInsets.top)
+                    tv.setContentOffset(CGPoint(x: 0, y: -effectiveTopInset), animated: true)
                 }
             }
         }
@@ -687,6 +701,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         var currentRenderResult: ArabicRenderResult?
         var restoredBookId: Int?
         var restoredContentId: Int?
+        var lastKnownScrollPosition: CGPoint?
         var lastHandledSearchEventId: UUID?
         var lastHandledAnnotationEventId: UUID?
         var lastRenderKey: RenderCacheKey?
@@ -713,6 +728,10 @@ struct iOSIbarotTextView: UIViewRepresentable {
         // MARK: - Pull-to-Navigate Scroll Detection
 
         func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            if scrollView.isDragging || scrollView.isDecelerating || scrollView.isTracking {
+                updateLastKnownScrollPosition(from: scrollView)
+            }
+
             let offsetY = scrollView.contentOffset.y
             let contentHeight = scrollView.contentSize.height
             let boundsHeight = scrollView.bounds.height
@@ -785,7 +804,24 @@ struct iOSIbarotTextView: UIViewRepresentable {
             }
         }
 
+        func updateLastKnownScrollPosition(from scrollView: UIScrollView) {
+            guard let customTextView = scrollView as? iOSCustomIbarotTextView,
+                  !customTextView.isRestoringScroll,
+                  scrollView.window != nil,
+                  scrollView.bounds.height > 0
+            else { return }
+            let topInset = max(scrollView.adjustedContentInset.top, scrollView.safeAreaInsets.top)
+            let docY = max(0, scrollView.contentOffset.y + topInset)
+            lastKnownScrollPosition = CGPoint(x: 0, y: docY)
+        }
+
+        func scrollViewDidScrollToTop(_ scrollView: UIScrollView) {
+            updateLastKnownScrollPosition(from: scrollView)
+        }
+
         func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+            updateLastKnownScrollPosition(from: scrollView)
+
             defer {
                 hasTriggeredHaptic = false
                 activePullDirection = nil
@@ -801,6 +837,14 @@ struct iOSIbarotTextView: UIViewRepresentable {
             case .next:
                 parent.onNavigateNext?()
             }
+        }
+
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            updateLastKnownScrollPosition(from: scrollView)
+        }
+
+        func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+            updateLastKnownScrollPosition(from: scrollView)
         }
 
         func textView(
