@@ -128,7 +128,7 @@ struct iOSReaderBottomToolbarView: View {
             if let book = viewModel.currentBook {
                 iOSBookAnnotationsView(
                     bookId: book.id,
-                    annotations: viewModel.currentAnnotations,
+                    viewModel: viewModel.bookAnnotationsViewModel,
                     onSelect: { ann in
                         viewModel.didSelectAnnotation(ann)
                         showingAnnotationsList = false

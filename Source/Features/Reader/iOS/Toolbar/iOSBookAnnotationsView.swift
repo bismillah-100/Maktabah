@@ -9,87 +9,23 @@ import SwiftUI
 
 struct iOSBookAnnotationsView: View {
     let bookId: Int
-    let annotations: [Annotation]
+    @Bindable var viewModel: BookAnnotationsViewModel
     let onSelect: (Annotation) -> Void
     @Environment(\.dismiss) private var dismiss
 
-    /// Load annotations specific to this book directly from the manager
-    @State private var bookAnnotations: [Annotation] = []
-    @State private var searchText: String = ""
     @State private var editingAnnotation: Annotation?
-
-    var filteredAnnotations: [Annotation] {
-        if searchText.isEmpty {
-            return bookAnnotations
-        } else {
-            let query = searchText.normalizeArabic(false)
-            return bookAnnotations.filter { ann in
-                ann.context.normalizeArabic(false).localizedStandardContains(query) ||
-                    (ann.note?.normalizeArabic(false).localizedStandardContains(query) == true)
-            }
-        }
-    }
 
     var body: some View {
         NavigationStack {
-            ThemeList(filteredAnnotations, id: \.id, isGrouped: false) { ann in
-                Button(action: {
-                    onSelect(ann)
-                }) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(ann.context)
-                            .font(ReaderViewModel.kfgqpcTitle)
-                            .lineLimit(2)
-                            .truncationMode(.middle)
-
-                        if let note = ann.note, !note.isEmpty {
-                            Text(note)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity)
-                                .lineLimit(3)
-                                .truncationMode(.middle)
-                        }
-
-                        HStack {
-                            Circle()
-                                .fill(Color.effectiveAnnotationColor(hex: ann.colorHex, isUnderline: ann.type == .underline, defaultHighlight: .yellow))
-                                .frame(width: 12, height: 12)
-
-                            Text(
-                                ann.type == .highlight
-                                    ? String(localized: .Annotation.highlight) : String(localized: "Underline")
-                            )
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                            Spacer()
-
-                            if let pgArb = ann.pageArb {
-                                Text(verbatim: "ج \(ann.partArb ?? "") ∙ ص \(pgArb)")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
+            ScrollViewReader { proxy in
+                annotationLists
+                    .onAppear {
+                        guard let targetId = viewModel.scrollPositionId else { return }
+                        proxy.scrollTo(targetId, anchor: .top)
                     }
-                    .padding(.vertical, 4)
-                }
-                .contextMenu {
-                    Button {
-                        editingAnnotation = ann
-                    } label: {
-                        Label(String(localized: .Annotation.editAnnotation), systemImage: "pencil")
-                    }
-
-                    Button(role: .destructive) {
-                        deleteAnnotation(ann)
-                    } label: {
-                        Label(String(localized: "Delete"), systemImage: "trash")
-                    }
-                }
             }
             .environment(\.layoutDirection, .rightToLeft)
-            .searchable(text: $searchText, prompt: String(localized: .Annotation.searchAnnotations))
+            .searchable(text: $viewModel.searchText, prompt: String(localized: .Annotation.searchAnnotations))
             .navigationTitle("Annotations")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -109,84 +45,111 @@ struct iOSBookAnnotationsView: View {
                 }
             }
             .onAppear {
-                loadBookAnnotations()
+                if !viewModel.hasLoaded || viewModel.bookId != bookId {
+                    viewModel.loadBookAnnotations(bookId: bookId)
+                }
             }
             .sheet(item: $editingAnnotation) { ann in
                 iOSAnnotationEditorSheet(
                     annotation: ann,
                     onSave: { updated in
-                        do {
-                            try AnnotationStore.shared.updateAnnotation(updated)
-                            loadBookAnnotations()
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        } catch {
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        }
+                        Task { await updateAnnotation(updated) }
                     },
-                    onDelete: { id in
-                        do {
-                            try AnnotationStore.shared.deleteAnnotation(id: id)
-                            loadBookAnnotations()
-                            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-                        } catch {
-                            UINotificationFeedbackGenerator().notificationOccurred(.error)
-                        }
+                    onDelete: { _ in
+                        Task { await deleteAnnotation(ann) }
                     }
                 )
-            }
-            .onReceive(AnnotationStore.shared.events) { _ in
-                loadBookAnnotations()
             }
         }
     }
 
-    private func deleteAnnotation(_ annotation: Annotation) {
-        guard let id = annotation.id else { return }
+    var annotationLists: some View {
+        ThemeList(viewModel.filteredAnnotations, id: \.stableId) { ann in
+            Button(action: {
+                viewModel.scrollPositionId = ann.stableId
+                onSelect(ann)
+            }) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ann.context)
+                        .font(ReaderViewModel.kfgqpcTitle)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+
+                    if let note = ann.note, !note.isEmpty {
+                        Text(note)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .lineLimit(3)
+                            .truncationMode(.middle)
+                    }
+
+                    HStack {
+                        Circle()
+                            .fill(Color.effectiveAnnotationColor(hex: ann.colorHex, isUnderline: ann.type == .underline, defaultHighlight: .yellow))
+                            .frame(width: 12, height: 12)
+
+                        Text(
+                            ann.type == .highlight
+                                ? String(localized: .Annotation.highlight) : String(localized: "Underline")
+                        )
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+
+                        Spacer()
+
+                        if let pgArb = ann.pageArb {
+                            Text(verbatim: "ج \(ann.partArb ?? "") ∙ ص \(pgArb)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .contextMenu {
+                Button {
+                    editingAnnotation = ann
+                } label: {
+                    Label(String(localized: .Annotation.editAnnotation), systemImage: "pencil")
+                }
+
+                Button(role: .destructive) {
+                    Task { await deleteAnnotation(ann) }
+                } label: {
+                    Label(String(localized: "Delete"), systemImage: "trash")
+                }
+            }
+        }
+        .listStyle(.plain)
+        .background(Color.appBackground)
+        .scrollPosition(id: $viewModel.scrollPositionId)
+    }
+
+    private func updateAnnotation(_ updated: Annotation) async {
         do {
-            try AnnotationStore.shared.deleteAnnotation(id: id)
-            loadBookAnnotations()
-            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            try viewModel.updateAnnotation(updated)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         } catch {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
 
-    private func loadBookAnnotations() {
-        if let bookNode = AnnotationTreeBuilder.shared.currentRootNode()?.children.first(
-            where: {
-                $0.kind == .book
-                    && $0.children.first?.annotation?.bkId == bookId
-            }
-        ) {
-            bookAnnotations = bookNode.children.compactMap(\.annotation)
-        } else {
-            let allAnns = AnnotationStore.shared.loadAnnotations(bkId: bookId)
-            bookAnnotations = allAnns
+    private func deleteAnnotation(_ annotation: Annotation) async {
+        do {
+            try viewModel.deleteAnnotation(annotation)
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        } catch {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
 }
 
 #Preview {
-    let mockAnn = Annotation(
-        id: 1,
-        bkId: 1,
-        contentId: 1,
-        range: NSRange(location: 0, length: 10),
-        rangeDiacritics: NSRange(location: 0, length: 10),
-        colorHex: "#FFFF00",
-        type: .highlight,
-        note: "Sample Note",
-        createdAt: 0,
-        context: "Sample context text here",
-        page: 1,
-        part: 1,
-        pageArb: "١",
-        partArb: "١",
-        tags: []
-    )
+    let vm = BookAnnotationsViewModel()
     return iOSBookAnnotationsView(
         bookId: 1,
-        annotations: [mockAnn],
+        viewModel: vm,
         onSelect: { _ in }
     )
 }
