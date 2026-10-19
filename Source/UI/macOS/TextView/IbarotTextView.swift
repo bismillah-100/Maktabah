@@ -1067,14 +1067,26 @@ extension IbarotTextView: TextViewRenderable {
     }
 
     func scrollTo(_ scrollPos: CGPoint) async {
-        taskQueue.enqueue { [weak self] in
-            guard let self, let scrollView = await enclosingScrollView else { return }
-            await scrollView.contentView.scroll(to: NSPoint(x: .zero, y: scrollPos.y))
-            await scrollView.reflectScrolledClipView(scrollView.contentView)
-            await MainActor.run {
-                textLayoutManager?.textViewportLayoutController.layoutViewport()
+        await taskQueue.enqueue { [weak self] in
+            guard let self else { return }
+            await MainActor.run { [weak self] in
+                guard let self, let scrollView = enclosingScrollView,
+                      scrollPos.y > 0, let tlm = textLayoutManager
+                else { return }
+
+                let viewportHeight = max(scrollView.contentView.bounds.height, 400)
+                let targetY = scrollPos.y + viewportHeight
+                tlm.enumerateTextLayoutFragments(
+                    from: tlm.documentRange.location, options: [.ensuresLayout]
+                ) { fragment in
+                    fragment.layoutFragmentFrame.maxY < targetY
+                }
+                scrollView.contentView.layoutSubtreeIfNeeded()
+                scrollView.contentView.scroll(to: NSPoint(x: .zero, y: max(0, scrollPos.y)))
+                scrollView.reflectScrolledClipView(scrollView.contentView)
+                tlm.textViewportLayoutController.layoutViewport()
             }
-        }
+        }.value
     }
 
     private func scrollAndShowFindIndicator(for range: NSRange) {

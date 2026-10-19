@@ -87,6 +87,8 @@ class SplitVC: NSSplitViewController {
     }
 
     func switchToMode(_ mode: AppMode, restoreState: Bool = true) {
+        guard mode != currentMode else { return }
+
         // Simpan title sebelum switch
         persistCurrentStateToDisk(persistToDisk: !restoreState)
 
