@@ -467,17 +467,24 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
     private func setupViewModelClosure(for textView: iOSCustomIbarotTextView, context: Context) {
         viewModel.fetchScrollPosition = { [weak textView, weak coordinator = context.coordinator] in
-            if let coordinator, let cached = coordinator.lastKnownScrollPosition {
+            guard let textView,
+                  textView.window != nil,
+                  !textView.isRestoringScroll,
+                  textView.bounds.height > 0
+            else {
+                return coordinator?.lastKnownScrollPosition
+            }
+
+            let effectiveTopInset = max(textView.adjustedContentInset.top, textView.safeAreaInsets.top)
+            let liveDocY = max(0, textView.contentOffset.y + effectiveTopInset)
+
+            if liveDocY <= 0, let cached = coordinator?.lastKnownScrollPosition, cached.y > 0 {
                 return cached
             }
-            guard let textView,
-                  !textView.isRestoringScroll,
-                  textView.window != nil,
-                  textView.bounds.height > 0
-            else { return nil }
-            let effectiveTopInset = max(textView.adjustedContentInset.top, textView.safeAreaInsets.top)
-            let docY = textView.contentOffset.y + effectiveTopInset
-            return CGPoint(x: 0, y: max(0, docY))
+
+            let pos = CGPoint(x: 0, y: liveDocY)
+            coordinator?.lastKnownScrollPosition = pos
+            return pos
         }
         viewModel.fetchSelectedRange = { [weak textView] in
             textView?.selectedRange
@@ -664,11 +671,8 @@ struct iOSIbarotTextView: UIViewRepresentable {
         {
             context.coordinator.lastHandledAnnotationEventId = event.id
             context.coordinator.animationTask?.cancel()
-            context.coordinator.animationTask = Task { @MainActor [weak textView, weak coordinator = context.coordinator] in
+            context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 await textView?.highlighAndScrollToAnns(event.annotation)
-                if let textView {
-                    coordinator?.updateLastKnownScrollPosition(from: textView)
-                }
             }
         }
 
@@ -679,16 +683,14 @@ struct iOSIbarotTextView: UIViewRepresentable {
         {
             context.coordinator.lastHandledSearchEventId = event.id
             context.coordinator.animationTask?.cancel()
-            context.coordinator.animationTask = Task { @MainActor [weak textView, weak coordinator = context.coordinator] in
+            context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 if let firstRange = searchRanges.first {
                     textView?.textLayoutManager?.ensureLayout(for: firstRange)
                     textView?.scrollRangeToVisible(firstRange)
                     await textView?.popupText(for: searchRanges)
                 } else if event.isTOC, let tv = textView {
-                    tv.setContentOffset(CGPoint(x: 0, y: -tv.adjustedContentInset.top), animated: true)
-                }
-                if let textView {
-                    coordinator?.updateLastKnownScrollPosition(from: textView)
+                    let effectiveTopInset = max(tv.adjustedContentInset.top, tv.safeAreaInsets.top)
+                    tv.setContentOffset(CGPoint(x: 0, y: -effectiveTopInset), animated: true)
                 }
             }
         }
@@ -838,6 +840,10 @@ struct iOSIbarotTextView: UIViewRepresentable {
         }
 
         func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            updateLastKnownScrollPosition(from: scrollView)
+        }
+
+        func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
             updateLastKnownScrollPosition(from: scrollView)
         }
 
