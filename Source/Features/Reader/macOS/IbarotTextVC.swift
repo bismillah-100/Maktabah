@@ -668,7 +668,6 @@ extension IbarotTextVC: ReaderStateComponent {
 
         pendingRestoreTask?.cancel()
         pendingRestoreTask = Task { @MainActor [weak self] in
-            defer { self?.pendingRestoreTask = nil }
             guard let self, !Task.isCancelled else { return }
 
             await waitForSearchLayoutSettle()
@@ -693,6 +692,10 @@ extension IbarotTextVC: ReaderStateComponent {
 
             if let scrollPos = state.scrollPosition {
                 await textDelegate?.scrollTo(scrollPos)
+            }
+
+            if !Task.isCancelled {
+                self.pendingRestoreTask = nil
             }
         }
     }
