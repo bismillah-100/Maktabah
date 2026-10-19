@@ -390,27 +390,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         textView.delegate = context.coordinator
         textView.alwaysBounceVertical = true
 
-        textView.onHighlight = { sourceRange, sourceText in
-            let color = UserDefaults.standard.recentHighlightColors.first ?? .yellow
-            onAddAnnotation?(sourceRange, .highlight, sourceText, color)
-        }
-        textView.onUnderline = { sourceRange, sourceText in
-            let color = UserDefaults.standard.recentUnderlineColors.first ?? .label
-            onAddAnnotation?(sourceRange, .underline, sourceText, color)
-        }
-
-        viewModel.fetchScrollPosition = { [weak textView] in
-            guard let textView,
-                  textView.window != nil,
-                  !textView.isRestoringScroll,
-                  textView.bounds.height > 0
-            else { return nil }
-            let docY = textView.contentOffset.y + textView.adjustedContentInset.top
-            return CGPoint(x: 0, y: max(0, docY))
-        }
-        viewModel.fetchSelectedRange = { [weak textView] in
-            textView?.selectedRange
-        }
+        setupClosure(for: textView)
 
         container.addSubview(textView)
 
@@ -451,19 +431,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         context.coordinator.parent = self
         updateTextAlignmentAndSemantics(for: textView)
-
-        viewModel.fetchScrollPosition = { [weak textView] in
-            guard let textView,
-                  textView.window != nil,
-                  !textView.isRestoringScroll,
-                  textView.bounds.height > 0
-            else { return nil }
-            let docY = textView.contentOffset.y + textView.adjustedContentInset.top
-            return CGPoint(x: 0, y: max(0, docY))
-        }
-        viewModel.fetchSelectedRange = { [weak textView] in
-            textView?.selectedRange
-        }
+        setupViewModelClosure(for: textView)
 
         if context.coordinator.lastBackgroundColorIndex != state.backgroundColorIndex {
             context.coordinator.lastBackgroundColorIndex = state.backgroundColorIndex
@@ -481,6 +449,34 @@ struct iOSIbarotTextView: UIViewRepresentable {
             context: context,
             searchRanges: rendered.searchRanges
         )
+    }
+
+    private func setupClosure(for textView: iOSCustomIbarotTextView) {
+        textView.onHighlight = { sourceRange, sourceText in
+            let color = UserDefaults.standard.recentHighlightColors.first ?? .yellow
+            onAddAnnotation?(sourceRange, .highlight, sourceText, color)
+        }
+        textView.onUnderline = { sourceRange, sourceText in
+            let color = UserDefaults.standard.recentUnderlineColors.first ?? .label
+            onAddAnnotation?(sourceRange, .underline, sourceText, color)
+        }
+
+        setupViewModelClosure(for: textView)
+    }
+
+    private func setupViewModelClosure(for textView: iOSCustomIbarotTextView) {
+        viewModel.fetchScrollPosition = { [weak textView] in
+            guard let textView,
+                  textView.window != nil,
+                  !textView.isRestoringScroll,
+                  textView.bounds.height > 0
+            else { return nil }
+            let docY = textView.contentOffset.y + textView.adjustedContentInset.top
+            return CGPoint(x: 0, y: max(0, docY))
+        }
+        viewModel.fetchSelectedRange = { [weak textView] in
+            textView?.selectedRange
+        }
     }
 
     private func resolveRenderedContent(
