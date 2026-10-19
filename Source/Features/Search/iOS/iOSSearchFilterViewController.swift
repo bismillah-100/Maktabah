@@ -145,6 +145,7 @@ struct SearchFilterUIKitView: UIViewControllerRepresentable {
     var displayedCategories: [CategoryData]
     var updateTrigger: Int = 0
     var onTap: () -> Void = {}
+    var onShowBookInfo: ((BooksData) -> Void)?
 
     func makeUIViewController(context: Context) -> iOSSearchFilterViewController {
         let vc = iOSSearchFilterViewController()
@@ -152,6 +153,7 @@ struct SearchFilterUIKitView: UIViewControllerRepresentable {
         vc.onSelectionChanged = { ids in
             viewModel.setSelectedBooks(ids)
         }
+        vc.onShowBookInfo = onShowBookInfo
         vc.additionalSafeAreaInsets.bottom = 50
 
         let tap = UITapGestureRecognizer(
@@ -169,6 +171,7 @@ struct SearchFilterUIKitView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: iOSSearchFilterViewController, context: Context) {
+        uiViewController.onShowBookInfo = onShowBookInfo
         context.coordinator.onTap = onTap
 
         let structureChanged = context.coordinator.hasChanged(trigger: updateTrigger)

@@ -88,6 +88,7 @@ struct iOSBookInfoView: View {
                 loadBookInfo()
             }
         }
+        .themeTint()
     }
 
     private func loadBookInfo() {

@@ -97,6 +97,9 @@ struct iOSMainView: View {
                 donationManager.showDonationSheet = false
             })
         }
+        .sheet(item: $bManager.selectedBookForInfo) { book in
+            iOSBookInfoView(book: book)
+        }
         .alert(item: $navigationManager.alertMessage) { item in
             Alert(
                 title: Text(item.title),

@@ -29,6 +29,7 @@ class LibraryViewManager: NSObject {
     let dataManager = LibraryDataManager.shared
     let historyManager = HistoryViewModel.shared
     private let selectionSubject = PassthroughSubject<Int, Never>()
+    private var bookInfoPopover: NSPopover?
 
     init(
         outlineView: NSOutlineView,
@@ -317,6 +318,8 @@ class LibraryViewManager: NSObject {
             cancellables.removeAll()
             checkBoxToggle = nil
             delegate = nil
+            bookInfoPopover?.performClose(nil)
+            bookInfoPopover = nil
         }
     }
 }
@@ -453,8 +456,8 @@ extension LibraryViewManager: NSMenuDelegate {
 
         let clickedRow = outlineView.clickedRow
 
-        if !searchView, clickedRow >= 0, let clickedBook = outlineView.item(atRow: clickedRow) as? BooksData {
-            if isBookDownloaded(clickedBook) {
+        if clickedRow >= 0, let clickedBook = outlineView.item(atRow: clickedRow) as? BooksData {
+            if !searchView, isBookDownloaded(clickedBook) {
                 let openInNewTabItem = NSMenuItem(
                     title: String(localized: .Library.openInNewTab),
                     action: #selector(openInNewTabAction(_:)),
@@ -464,6 +467,15 @@ extension LibraryViewManager: NSMenuDelegate {
                 openInNewTabItem.representedObject = clickedBook
                 menu.addItem(openInNewTabItem)
             }
+
+            let bookInfoItem = NSMenuItem(
+                title: String(localized: .Library.bookInfo),
+                action: #selector(showBookInfoAction(_:)),
+                keyEquivalent: ""
+            )
+            bookInfoItem.target = self
+            bookInfoItem.representedObject = clickedBook
+            menu.addItem(bookInfoItem)
         }
 
         let rowsToProcess = ReusableFunc.resolveRowsToProcess(
@@ -519,6 +531,36 @@ extension LibraryViewManager: NSMenuDelegate {
     @objc func openInNewTabAction(_ sender: NSMenuItem) {
         guard let book = sender.representedObject as? BooksData else { return }
         delegate?.openBookInNewTab(book)
+    }
+
+    @objc func showBookInfoAction(_ sender: NSMenuItem) {
+        guard let book = sender.representedObject as? BooksData else { return }
+        showBookInfo(for: book)
+    }
+
+    func showBookInfo(for book: BooksData) {
+        LibraryDataManager.shared.loadBookInfo(book.id) { [weak self] in
+            guard let self else { return }
+            let resolvedBook = LibraryDataManager.shared.booksById[book.id] ?? book
+            presentBookInfoPopover(for: resolvedBook)
+        }
+    }
+
+    private func presentBookInfoPopover(for book: BooksData) {
+        bookInfoPopover?.performClose(nil)
+
+        let row = outlineView.row(forItem: book)
+        let anchor = outlineView.cellAnchor(forRow: row)
+
+        let bookInfoVC = BookInfo()
+        bookInfoVC.bookData = book
+        bookInfoVC.popOver = true
+
+        let popover = NSPopover()
+        popover.contentViewController = bookInfoVC
+        popover.behavior = .transient
+        popover.show(relativeTo: anchor.rect, of: anchor.view, preferredEdge: .maxX)
+        bookInfoPopover = popover
     }
 
     @objc func toggleFavoriteAction(_ sender: NSMenuItem) {

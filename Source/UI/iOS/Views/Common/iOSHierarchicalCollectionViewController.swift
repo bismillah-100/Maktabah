@@ -1,3 +1,4 @@
+import SwiftUI
 import UIKit
 
 // MARK: - Shared Types
@@ -57,6 +58,17 @@ class iOSHierarchicalCollectionViewController: BaseHierarchicalListViewControlle
     var loadMoreCount: Int = 0
     var showLoadMore: Bool = false
     var onLoadMore: (() -> Void)?
+    var onShowBookInfo: ((BooksData) -> Void)?
+
+    func makeBookInfoAction(for book: BooksData) -> UIAction {
+        UIAction.bookInfo { [weak self] _ in
+            self?.onShowBookInfo?(book)
+        }
+    }
+
+    open func contextMenuActions(for book: BooksData) -> [UIAction] {
+        [makeBookInfoAction(for: book)]
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -270,5 +282,41 @@ extension iOSHierarchicalCollectionViewController: UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, canFocusItemAt indexPath: IndexPath) -> Bool {
         !isGroup(dataSource.itemIdentifier(for: indexPath))
+    }
+
+    open func collectionView(
+        _ collectionView: UICollectionView,
+        contextMenuConfigurationForItemsAt indexPaths: [IndexPath],
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        guard let indexPath = indexPaths.first,
+              let item = dataSource.itemIdentifier(for: indexPath),
+              case let .book(book) = item
+        else { return nil }
+
+        let actions = contextMenuActions(for: book)
+        guard !actions.isEmpty else { return nil }
+
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            UIMenu(title: "", children: actions)
+        }
+    }
+}
+
+// MARK: - Book Info Helpers
+
+extension UIAction {
+    static func bookInfo(handler: @escaping (UIAction) -> Void) -> UIAction {
+        UIAction(
+            title: String(localized: .Library.bookInfo),
+            image: UIImage(systemName: "info.circle"),
+            handler: handler
+        )
+    }
+}
+
+struct BookInfoLabel: View {
+    var body: some View {
+        Label(String(localized: .Library.bookInfo), systemImage: "info.circle")
     }
 }

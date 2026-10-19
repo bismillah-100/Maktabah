@@ -11,10 +11,12 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
     let navigationManager: iOSNavigationManager
     @Bindable var viewModel: AnnotationViewModel
     var onEditAnnotation: ((Annotation) -> Void)?
+    var onShowBookInfo: ((BooksData) -> Void)?
 
     func makeUIViewController(context: Context) -> iOSAnnotationViewController {
         let vc = iOSAnnotationViewController()
         vc.viewModel = viewModel
+        vc.onShowBookInfo = onShowBookInfo
         vc.additionalSafeAreaInsets.bottom = 15
         vc.onAnnotationSelected = { node in
             context.coordinator.handleSelection(node)
@@ -53,6 +55,7 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: iOSAnnotationViewController, context: Context) {
         uiViewController.viewModel = viewModel
+        uiViewController.onShowBookInfo = onShowBookInfo
         context.coordinator.onEditAnnotation = onEditAnnotation
         // Only set initial data — incremental updates come from notifications via callback
         if !context.coordinator.hasAppliedOnce {

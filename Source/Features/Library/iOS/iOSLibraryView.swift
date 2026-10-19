@@ -88,6 +88,9 @@ struct iOSLibraryView: View {
                     for: book,
                     initialContentId: nil
                 )
+            },
+            onShowBookInfo: { book in
+                navigationManager.selectedBookForInfo = book
             }
         )
         .themeTint()

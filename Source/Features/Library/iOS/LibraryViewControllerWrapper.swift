@@ -7,6 +7,7 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
     @Binding var showOnlyDownloaded: Bool
     var onDeleteSingleBook: ((BooksData) -> Void)?
     var onDownloadSingleBook: ((BooksData) -> Void)?
+    var onShowBookInfo: ((BooksData) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(navigationManager: navigationManager, viewModel: viewModel)
@@ -23,6 +24,7 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
         }
         vc.onDeleteBook = onDeleteSingleBook
         vc.onDownloadBook = onDownloadSingleBook
+        vc.onShowBookInfo = onShowBookInfo
         vc.showLoadMore = viewModel.hasMoreAuthors
         vc.loadMoreCount = viewModel.totalAuthorCount - viewModel.displayedCategories.count
 
@@ -47,6 +49,7 @@ struct LibraryViewControllerWrapper: UIViewControllerRepresentable {
         uiViewController.viewModel = context.coordinator.viewModel
         uiViewController.onDeleteBook = onDeleteSingleBook
         uiViewController.onDownloadBook = onDownloadSingleBook
+        uiViewController.onShowBookInfo = onShowBookInfo
 
         let showLoadMore = context.coordinator.viewModel.hasMoreAuthors
         let loadMoreCount = context.coordinator.viewModel.totalAuthorCount - context.coordinator.viewModel.displayedCategories.count
