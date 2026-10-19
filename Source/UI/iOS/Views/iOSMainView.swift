@@ -100,6 +100,10 @@ struct iOSMainView: View {
         .sheet(item: $bManager.selectedBookForInfo) { book in
             iOSBookInfoView(book: book)
         }
+        .sheet(isPresented: $bManager.showingTabsList) {
+            iOSReaderTabsPopoverView(bManager: bManager, isPresented: $bManager.showingTabsList)
+                .environment(navigationManager)
+        }
         .alert(item: $navigationManager.alertMessage) { item in
             Alert(
                 title: Text(item.title),
@@ -155,6 +159,7 @@ extension View {
             let tab = manager.openTabs.first(where: { $0.book.id == book.id && $0.id == manager.activeTabId })
                 ?? manager.openTabs.first(where: { $0.book.id == book.id })
             iOSReaderView(book: book, viewModel: tab?.viewModel, initialContentId: manager.selectedContentId)
+                .id(tab?.id)
         }
     }
 

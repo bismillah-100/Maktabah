@@ -39,6 +39,7 @@ class iOSNavigationManager {
 
     var openTabs: [ReaderTab] = []
     var activeTabId: UUID?
+    var showingTabsList: Bool = false
 
     private var observerTokens: [NotificationToken] = []
 
@@ -151,12 +152,21 @@ class iOSNavigationManager {
             if activeTabId == id {
                 activeTabId = openTabs.last?.id
                 if let nextTabId = activeTabId, let nextTab = openTabs.first(where: { $0.id == nextTabId }) {
+                    nextTab.viewModel.annotationEvent = nil
+                    nextTab.viewModel.searchEvent = nil
+                    nextTab.viewModel.needsScrollRestore = true
                     selectedBook = nextTab.book
+                    selectedContentId = nextTab.viewModel.currentContentId
                 } else {
                     selectedBook = nil
+                    selectedContentId = nil
                 }
             } else if selectedBook?.id == tab.book.id {
                 selectedBook = nil
+            }
+
+            if openTabs.isEmpty {
+                showingTabsList = false
             }
         }
     }
@@ -169,16 +179,21 @@ class iOSNavigationManager {
         activeTabId = nil
         selectedBook = nil
         selectedContentId = nil
+        showingTabsList = false
     }
 
     func selectTab(id: UUID) {
+        guard activeTabId != id else { return }
         if let activeId = activeTabId, let currentTab = openTabs.first(where: { $0.id == activeId }) {
             currentTab.viewModel.saveCurrentState()
         }
         activeTabId = id
         if let nextTab = openTabs.first(where: { $0.id == id }) {
+            nextTab.viewModel.annotationEvent = nil
+            nextTab.viewModel.searchEvent = nil
+            nextTab.viewModel.needsScrollRestore = true
             selectedBook = nextTab.book
-            selectedContentId = nextTab.initialContentId
+            selectedContentId = nextTab.viewModel.currentContentId
         }
     }
 
@@ -370,6 +385,7 @@ class iOSNavigationManager {
             // Update initialContentId if provided, so the reader can jump to it
             let updatedTab = openTabs[existingTabIndex]
             updatedTab.viewModel.recordHistory = updatedTab.viewModel.recordHistory || options.recordHistory
+            updatedTab.viewModel.needsScrollRestore = true
             if let contentId = options.contentId {
                 let isSameContent = updatedTab.viewModel.currentContentId == contentId
                 updatedTab.viewModel.searchEvent = options.searchEvent
