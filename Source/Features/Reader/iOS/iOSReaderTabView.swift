@@ -21,7 +21,7 @@ struct iOSReaderTabView: View {
                 iOSReaderView(
                     book: activeTab.book,
                     viewModel: activeTab.viewModel,
-                    initialContentId: activeTab.initialContentId
+                    initialContentId: activeTab.viewModel.currentContentId
                 )
                 .id(activeTab.id)
             } else {

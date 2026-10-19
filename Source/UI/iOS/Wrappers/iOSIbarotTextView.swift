@@ -39,20 +39,6 @@ class iOSCustomIbarotTextView: UITextView {
 
         // Font setup defaults
         font = state.currentFont
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleEnhancedUnderlineChanged),
-            name: .didChangeEnhancedUnderline,
-            object: nil
-        )
-    }
-
-    @objc private func handleEnhancedUnderlineChanged() {
-        if let tlm = textLayoutManager {
-            tlm.invalidateLayout(for: tlm.documentRange)
-            setNeedsDisplay()
-        }
     }
 
     // MARK: - Actions for UIMenuController (Pre-iOS 16)
@@ -78,10 +64,59 @@ class iOSCustomIbarotTextView: UITextView {
         onUnderline?(sourceRange, sourceText)
     }
 
+    var pendingRestoreOffset: CGFloat?
+    var isRestoringScroll: Bool = false
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if pendingRestoreOffset != nil {
+            applyPendingScrollRestore()
+        }
+    }
+
+    @MainActor
+    func applyPendingScrollRestore() {
+        guard let targetDocY = pendingRestoreOffset, bounds.height > 0 else { return }
+        pendingRestoreOffset = nil
+        isRestoringScroll = true
+
+        if targetDocY <= 0 {
+            let topOffset = CGPoint(x: 0, y: -adjustedContentInset.top)
+            setContentOffset(topOffset, animated: false)
+            isRestoringScroll = false
+            return
+        }
+
+        if let tlm = textLayoutManager {
+            let viewportHeight = max(bounds.height, 400)
+            let targetLayoutY = targetDocY + viewportHeight
+            tlm.enumerateTextLayoutFragments(
+                from: tlm.documentRange.location,
+                options: [.ensuresLayout]
+            ) { fragment in
+                fragment.layoutFragmentFrame.maxY < targetLayoutY
+            }
+
+            let laidOutHeight = tlm.usageBoundsForTextContainer.height + textContainerInset.top + textContainerInset.bottom
+            if laidOutHeight > contentSize.height {
+                contentSize = CGSize(width: bounds.width, height: laidOutHeight)
+            }
+        }
+
+        let targetOffsetY = targetDocY - adjustedContentInset.top
+        setContentOffset(CGPoint(x: 0, y: targetOffsetY), animated: false)
+        textLayoutManager?.textViewportLayoutController.layoutViewport()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.isRestoringScroll = false
+        }
+    }
+
     @MainActor
     func highlighAndScrollToAnns(_ ann: Annotation) async {
         let range = displayedRange(for: ann)
         guard range.location >= 0, range.length > 0 else { return }
+        textLayoutManager?.ensureLayout(for: range)
         scrollRangeToVisible(range)
         await popupText(for: [range])
     }
@@ -355,21 +390,7 @@ struct iOSIbarotTextView: UIViewRepresentable {
         textView.delegate = context.coordinator
         textView.alwaysBounceVertical = true
 
-        textView.onHighlight = { sourceRange, sourceText in
-            let color = UserDefaults.standard.recentHighlightColors.first ?? .yellow
-            onAddAnnotation?(sourceRange, .highlight, sourceText, color)
-        }
-        textView.onUnderline = { sourceRange, sourceText in
-            let color = UserDefaults.standard.recentUnderlineColors.first ?? .label
-            onAddAnnotation?(sourceRange, .underline, sourceText, color)
-        }
-
-        viewModel.fetchScrollPosition = { [weak textView] in
-            textView?.contentOffset
-        }
-        viewModel.fetchSelectedRange = { [weak textView] in
-            textView?.selectedRange
-        }
+        setupClosure(for: textView)
 
         container.addSubview(textView)
 
@@ -410,6 +431,15 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         context.coordinator.parent = self
         updateTextAlignmentAndSemantics(for: textView)
+        setupViewModelClosure(for: textView)
+
+        if context.coordinator.lastBackgroundColorIndex != state.backgroundColorIndex {
+            context.coordinator.lastBackgroundColorIndex = state.backgroundColorIndex
+            if let tlm = textView.textLayoutManager {
+                tlm.invalidateLayout(for: tlm.documentRange)
+                textView.setNeedsDisplay()
+            }
+        }
 
         let rendered = resolveRenderedContent(textView: textView, context: context)
 
@@ -419,6 +449,34 @@ struct iOSIbarotTextView: UIViewRepresentable {
             context: context,
             searchRanges: rendered.searchRanges
         )
+    }
+
+    private func setupClosure(for textView: iOSCustomIbarotTextView) {
+        textView.onHighlight = { sourceRange, sourceText in
+            let color = UserDefaults.standard.recentHighlightColors.first ?? .yellow
+            onAddAnnotation?(sourceRange, .highlight, sourceText, color)
+        }
+        textView.onUnderline = { sourceRange, sourceText in
+            let color = UserDefaults.standard.recentUnderlineColors.first ?? .label
+            onAddAnnotation?(sourceRange, .underline, sourceText, color)
+        }
+
+        setupViewModelClosure(for: textView)
+    }
+
+    private func setupViewModelClosure(for textView: iOSCustomIbarotTextView) {
+        viewModel.fetchScrollPosition = { [weak textView] in
+            guard let textView,
+                  textView.window != nil,
+                  !textView.isRestoringScroll,
+                  textView.bounds.height > 0
+            else { return nil }
+            let docY = textView.contentOffset.y + textView.adjustedContentInset.top
+            return CGPoint(x: 0, y: max(0, docY))
+        }
+        viewModel.fetchSelectedRange = { [weak textView] in
+            textView?.selectedRange
+        }
     }
 
     private func resolveRenderedContent(
@@ -565,18 +623,26 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
     private func restoreScrollAndSelectionIfNeeded(textView: iOSCustomIbarotTextView, context: Context) {
         let isNewContent = context.coordinator.restoredContentId != viewModel.currentContentId
+            || context.coordinator.restoredBookId != viewModel.currentBook?.id
         guard isNewContent || viewModel.needsScrollRestore else { return }
 
-        if let scroll = viewModel.readerState.scrollPosition {
-            textView.setContentOffset(scroll, animated: false)
-        } else if isNewContent {
-            textView.setContentOffset(CGPoint(x: 0, y: -textView.adjustedContentInset.top), animated: false)
+        let targetDocY = viewModel.readerState.scrollPosition?.y ?? (isNewContent ? 0 : nil)
+        if let targetDocY {
+            textView.pendingRestoreOffset = targetDocY
+            if textView.bounds.height > 0 {
+                textView.applyPendingScrollRestore()
+            }
         }
-        if let range = viewModel.readerState.selectedRange {
+
+        if let range = viewModel.readerState.selectedRange,
+           range.location >= 0,
+           range.location + range.length <= textView.textStorage.length
+        {
             textView.selectedRange = range
         }
         viewModel.needsScrollRestore = false
         context.coordinator.restoredContentId = viewModel.currentContentId
+        context.coordinator.restoredBookId = viewModel.currentBook?.id
     }
 
     private func handleTargetAnnotationAndSearchHighlight(
@@ -588,9 +654,14 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         if let event = annotationEvent,
            event.annotation.contentId == viewModel.currentContentId,
-           context.coordinator.lastHandledAnnotationEventId != event.id
+           viewModel.lastHandledAnnotationEventId != event.id
         {
+            viewModel.lastHandledAnnotationEventId = event.id
             context.coordinator.lastHandledAnnotationEventId = event.id
+            DispatchQueue.main.async { [weak viewModel] in
+                viewModel?.annotationEvent = nil
+            }
+
             context.coordinator.animationTask?.cancel()
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 await textView?.highlighAndScrollToAnns(event.annotation)
@@ -600,18 +671,22 @@ struct iOSIbarotTextView: UIViewRepresentable {
         if let event = searchEvent,
            event.contentId == viewModel.currentContentId,
            !searchRanges.isEmpty || event.isTOC,
-           context.coordinator.lastHandledSearchEventId != event.id
+           viewModel.lastHandledSearchEventId != event.id
         {
+            viewModel.lastHandledSearchEventId = event.id
             context.coordinator.lastHandledSearchEventId = event.id
+            DispatchQueue.main.async { [weak viewModel] in
+                viewModel?.searchEvent = nil
+            }
+
             context.coordinator.animationTask?.cancel()
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 if let firstRange = searchRanges.first {
+                    textView?.textLayoutManager?.ensureLayout(for: firstRange)
                     textView?.scrollRangeToVisible(firstRange)
                     await textView?.popupText(for: searchRanges)
-                } else if event.isTOC {
-                    if let tv = textView {
-                        tv.setContentOffset(CGPoint(x: 0, y: -tv.adjustedContentInset.top), animated: true)
-                    }
+                } else if event.isTOC, let tv = textView {
+                    tv.setContentOffset(CGPoint(x: 0, y: -tv.adjustedContentInset.top), animated: true)
                 }
             }
         }
@@ -620,11 +695,13 @@ struct iOSIbarotTextView: UIViewRepresentable {
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: iOSIbarotTextView
         var currentRenderResult: ArabicRenderResult?
+        var restoredBookId: Int?
         var restoredContentId: Int?
         var lastHandledSearchEventId: UUID?
         var lastHandledAnnotationEventId: UUID?
         var lastRenderKey: RenderCacheKey?
         var lastRenderedContent: RenderedAttributedContent?
+        var lastBackgroundColorIndex: Int?
         var animationTask: Task<Void, Never>?
 
         // Pull-to-navigate state

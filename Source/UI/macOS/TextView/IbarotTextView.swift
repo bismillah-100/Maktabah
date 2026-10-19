@@ -1071,6 +1071,9 @@ extension IbarotTextView: TextViewRenderable {
             guard let self, let scrollView = await enclosingScrollView else { return }
             await scrollView.contentView.scroll(to: NSPoint(x: .zero, y: scrollPos.y))
             await scrollView.reflectScrolledClipView(scrollView.contentView)
+            await MainActor.run {
+                textLayoutManager?.textViewportLayoutController.layoutViewport()
+            }
         }
     }
 
