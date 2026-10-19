@@ -193,6 +193,9 @@ class LibraryViewManager: NSObject {
             guard !Task.isCancelled else { return }
             await MainActor.run { [weak self] in
                 guard let self, viewModel.selectedBookName == bookName else { return }
+                let wasUpdating = isUpdatingOutline
+                isUpdatingOutline = true
+                defer { isUpdatingOutline = wasUpdating }
                 for cat in result.categoryPath {
                     outlineView.expandItem(cat)
                 }
@@ -245,18 +248,20 @@ class LibraryViewManager: NSObject {
 
     private func selectFlatRow(_ row: Int) {
         guard row >= 0, row < outlineView.numberOfRows else { return }
+        let wasUpdating = isUpdatingOutline
         isUpdatingOutline = true
         outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-        isUpdatingOutline = false
+        isUpdatingOutline = wasUpdating
         outlineView.scrollRowToVisible(row)
     }
 
     private func safelySelectOutlineRow(for book: BooksData) {
         let row = outlineView.row(forItem: book)
         if row >= 0, outlineView.selectedRow != row {
+            let wasUpdating = isUpdatingOutline
             isUpdatingOutline = true
             outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-            isUpdatingOutline = false
+            isUpdatingOutline = wasUpdating
             outlineView.scrollRowToVisible(row)
         }
     }
@@ -457,7 +462,7 @@ extension LibraryViewManager: NSMenuDelegate {
         let clickedRow = outlineView.clickedRow
 
         if clickedRow >= 0, let clickedBook = outlineView.item(atRow: clickedRow) as? BooksData {
-            if !searchView, isBookDownloaded(clickedBook) {
+            if !searchView, BookArchiveIntegrator.shared.isBookIntegrated(clickedBook) {
                 let openInNewTabItem = NSMenuItem(
                     title: String(localized: .Library.openInNewTab),
                     action: #selector(openInNewTabAction(_:)),

@@ -665,6 +665,9 @@ extension IbarotTextVC: ReaderStateComponent {
         }
 
         libraryVC?.dataVM.viewModel.selectedBookName = book.book
+        if libraryVC?.dataVM.isSetupComplete == true {
+            libraryVC?.dataVM.restoreSelection(byBookName: book.book)
+        }
 
         pendingRestoreTask?.cancel()
         pendingRestoreTask = Task { @MainActor [weak self] in
