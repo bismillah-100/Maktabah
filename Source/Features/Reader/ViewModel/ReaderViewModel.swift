@@ -75,8 +75,8 @@ class ReaderViewModel: ViewModelBase {
 
     var searchEvent: ReaderHighlightEvent?
     var annotationEvent: ReaderAnnotationEvent?
-    var lastHandledAnnotationEventId: UUID?
-    var lastHandledSearchEventId: UUID?
+    @ObservationIgnored var lastHandledAnnotationEventId: UUID?
+    @ObservationIgnored var lastHandledSearchEventId: UUID?
     var searchMode: SearchMode?
     var nearDistance: Int = UserDefaults.standard.searchNearDistance {
         didSet {

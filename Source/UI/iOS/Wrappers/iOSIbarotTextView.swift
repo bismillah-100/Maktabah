@@ -662,7 +662,9 @@ struct iOSIbarotTextView: UIViewRepresentable {
         {
             viewModel.lastHandledAnnotationEventId = event.id
             context.coordinator.lastHandledAnnotationEventId = event.id
-            viewModel.annotationEvent = nil
+            DispatchQueue.main.async { [weak viewModel] in
+                viewModel?.annotationEvent = nil
+            }
 
             context.coordinator.animationTask?.cancel()
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
@@ -677,7 +679,9 @@ struct iOSIbarotTextView: UIViewRepresentable {
         {
             viewModel.lastHandledSearchEventId = event.id
             context.coordinator.lastHandledSearchEventId = event.id
-            viewModel.searchEvent = nil
+            DispatchQueue.main.async { [weak viewModel] in
+                viewModel?.searchEvent = nil
+            }
 
             context.coordinator.animationTask?.cancel()
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
@@ -759,16 +763,6 @@ struct iOSIbarotTextView: UIViewRepresentable {
             // Bersihkan state jika dilepas di posisi tengah/normal
             if !scrollView.isTracking {
                 activePullDirection = nil
-            }
-
-            if let customTextView = scrollView as? iOSCustomIbarotTextView,
-               scrollView.window != nil,
-               (scrollView.isTracking || scrollView.isDragging || scrollView.isDecelerating),
-               !customTextView.isRestoringScroll,
-               scrollView.bounds.height > 0
-            {
-                let docY = max(0, offsetY + adjustedTopInset)
-                parent.viewModel.readerState.scrollPosition = CGPoint(x: 0, y: docY)
             }
         }
 
