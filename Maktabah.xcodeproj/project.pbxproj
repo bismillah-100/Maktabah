@@ -503,6 +503,9 @@
 		F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */; };
 		F35A7AC72FE304E800355E70 /* BookTOCViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */; };
 		F35A7AC82FE304E800355E70 /* BookTOCViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */; };
+		F35A7BD22FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7BD12FE304E800355E70 /* BookAnnotationsViewModel.swift */; };
+		F35A7BD32FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7BD12FE304E800355E70 /* BookAnnotationsViewModel.swift */; };
+		F35A7BD42FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35A7BD12FE304E800355E70 /* BookAnnotationsViewModel.swift */; };
 		F363824E2FA6C6150006636C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDAB98B2F69E860007D0945 /* SettingsView.swift */; };
 		F36382512FA6FA1E0006636C /* BootstrapManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382502FA6FA1E0006636C /* BootstrapManager.swift */; };
 		F36382532FA6FABF0006636C /* BootstrapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36382522FA6FABF0006636C /* BootstrapView.swift */; };
@@ -1198,6 +1201,7 @@
 		F34E11512FDAE32900E5A703 /* BaseHierarchicalListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseHierarchicalListViewController.swift; sourceTree = "<group>"; };
 		F34E11532FDAE84600E5A703 /* ListLayoutMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListLayoutMetrics.swift; sourceTree = "<group>"; };
 		F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTOCViewModel.swift; sourceTree = "<group>"; };
+		F35A7BD12FE304E800355E70 /* BookAnnotationsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookAnnotationsViewModel.swift; sourceTree = "<group>"; };
 		F36382502FA6FA1E0006636C /* BootstrapManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BootstrapManager.swift; sourceTree = "<group>"; };
 		F36382522FA6FABF0006636C /* BootstrapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BootstrapView.swift; sourceTree = "<group>"; };
 		F363825A2FA702A00006636C /* iPhoneLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPhoneLayout.swift; sourceTree = "<group>"; };
@@ -2606,6 +2610,7 @@
 			isa = PBXGroup;
 			children = (
 				F3AE62E1304C5C43002569BB /* Extensions */,
+				F35A7BD12FE304E800355E70 /* BookAnnotationsViewModel.swift */,
 				F35A7AC52FE304E800355E70 /* BookTOCViewModel.swift */,
 				F3D02D412FE04D580054807F /* ReaderViewModel.swift */,
 			);
@@ -3175,6 +3180,7 @@
 				F3D9CB1F3009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
 				F3902EB02F9EE1CB004BA5D1 /* TagMergePopoverVC.swift in Sources */,
 				4B5EC2992EE334C600991F39 /* ResultsHandler.swift in Sources */,
+				F35A7BD32FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */,
 				F35A7AC72FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				4B9C83062F7EAE1C00CE1800 /* ZstdShim.swift in Sources */,
 				4B03185F2F41E7BD00CB1677 /* SplitVC.swift in Sources */,
@@ -3312,6 +3318,7 @@
 				F30577962FA4987B005732C6 /* NotificationName.swift in Sources */,
 				F3D33FEC3041BC970036D4DE /* WidgetDeepLink.swift in Sources */,
 				4B7C90B82F83494200454BE1 /* StringExt.swift in Sources */,
+				F35A7BD22FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */,
 				F35A7AC62FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				4B7C90B92F83494200454BE1 /* ArabicTextRenderer.swift in Sources */,
 				F34D9FC5303D64940000FB79 /* AnnotationRTFExporter.swift in Sources */,
@@ -3691,6 +3698,7 @@
 				F3AE62BE304C5760002569BB /* SelectionLibrary.swift in Sources */,
 				F3AE62BF304C5760002569BB /* BulkActionLibrary.swift in Sources */,
 				F305772D2FA46222005732C6 /* DatabaseManager.swift in Sources */,
+				F35A7BD42FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */,
 				F35A7AC82FE304E800355E70 /* BookTOCViewModel.swift in Sources */,
 				F32D441B303CFB9A00429664 /* SQLiteConnection.swift in Sources */,
 				F321672D2FBB2C0D00601DB3 /* SQLiteDatabase.swift in Sources */,

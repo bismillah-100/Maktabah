@@ -46,6 +46,10 @@ struct ContentKey: Hashable, Sendable {
 }
 
 extension Annotation {
+    var stableId: Int64 {
+        id ?? 0
+    }
+
     var displayTitle: String {
         if let note, !note.isEmpty {
             return note

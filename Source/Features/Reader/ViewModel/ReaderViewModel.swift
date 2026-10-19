@@ -83,6 +83,7 @@ class ReaderViewModel: ViewModelBase {
     }
 
     var searchViewModel = SearchViewModel()
+    var bookAnnotationsViewModel = BookAnnotationsViewModel()
     var readerState: ReaderState = .init()
     @ObservationIgnored
     var needsScrollRestore: Bool = false
@@ -158,6 +159,9 @@ class ReaderViewModel: ViewModelBase {
         super.init()
         if let book {
             currentBook = book
+            #if os(iOS)
+            bookAnnotationsViewModel.bookId = book.id
+            #endif
         }
         setupNotificationObservers()
     }
