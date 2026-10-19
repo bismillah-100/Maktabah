@@ -15,7 +15,6 @@ struct iOSReaderView: View {
     @State private var showingBookInfo = false
     @State private var showingAnnotationActionSheet = false
     @State private var tappedAnnotationId: Int64?
-    @State private var showingTabsList = false
 
     init(book: BooksData,
          viewModel: ReaderViewModel? = nil,
@@ -55,7 +54,7 @@ struct iOSReaderView: View {
             if !isRegularLayout, bManager.openTabs.count > 1 {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showingTabsList.toggle()
+                        bManager.showingTabsList.toggle()
                     } label: {
                         Text(book.book)
                             .lineLimit(1)
@@ -93,9 +92,6 @@ struct iOSReaderView: View {
         }
         .onDisappear {
             viewModel.saveCurrentState()
-        }
-        .sheet(isPresented: $showingTabsList) {
-            iOSReaderTabsPopoverView(isPresented: $showingTabsList)
         }
         .sheet(isPresented: $showingBookInfo) {
             iOSBookInfoView(book: book)
@@ -177,6 +173,8 @@ private struct _ReaderTextContentView: View {
 extension _ReaderTextContentView: @MainActor Equatable {
     static func == (lhs: _ReaderTextContentView, rhs: _ReaderTextContentView) -> Bool {
         lhs.book.id == rhs.book.id &&
+            lhs.viewModel === rhs.viewModel &&
+            !rhs.viewModel.needsScrollRestore &&
             lhs.viewModel.currentContentId == rhs.viewModel.currentContentId &&
             lhs.viewModel.contentText == rhs.viewModel.contentText &&
             lhs.viewModel.currentAnnotations == rhs.viewModel.currentAnnotations &&

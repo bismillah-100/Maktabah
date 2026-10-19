@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct iOSReaderTabsPopoverView: View {
-    @Environment(iOSNavigationManager.self) var bManager
+    var bManager: iOSNavigationManager
     @Binding var isPresented: Bool
 
     @State private var highlightedTabId: UUID?
@@ -22,10 +22,10 @@ struct iOSReaderTabsPopoverView: View {
         NavigationStack {
             ThemeList(bManager.openTabs, id: \.id) { tab in
                 Button(action: {
-                    isPresented = false
                     if tab.id != bManager.activeTabId {
                         bManager.selectTab(id: tab.id)
                     }
+                    isPresented = false
                 }) {
                     HStack(spacing: 8) {
                         if currentTabId == tab.id {
@@ -133,6 +133,6 @@ struct iOSReaderTabsPopoverView: View {
     manager.openTabs = [mockTab, mockTab1]
     manager.activeTabId = mockTab.id
 
-    return iOSReaderTabsPopoverView(isPresented: .constant(true))
+    return iOSReaderTabsPopoverView(bManager: manager, isPresented: .constant(true))
         .environment(manager)
 }

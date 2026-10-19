@@ -691,7 +691,7 @@ extension IbarotTextVC: ReaderStateComponent {
             guard !Task.isCancelled else { return }
 
             if let scrollPos = state.scrollPosition {
-                await textDelegate?.scrollTo(scrollPos)
+                await textDelegate?.scrollTo(scrollPos)            
             }
 
             if !Task.isCancelled {

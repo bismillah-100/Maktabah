@@ -13,6 +13,8 @@ extension ReaderViewModel {
         if let range = fetchSelectedRange?() {
             readerState.selectedRange = range
         }
+        annotationEvent = nil
+        searchEvent = nil
     }
 
     func didSelectTOCNode(id: Int, title: String = "") {
