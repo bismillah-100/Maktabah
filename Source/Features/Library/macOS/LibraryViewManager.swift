@@ -461,7 +461,7 @@ extension LibraryViewManager: NSMenuDelegate {
         let clickedRow = outlineView.clickedRow
 
         if clickedRow >= 0, let clickedBook = outlineView.item(atRow: clickedRow) as? BooksData {
-            if !searchView, isBookDownloaded(clickedBook) {
+            if !searchView, BookArchiveIntegrator.shared.isBookIntegrated(clickedBook) {
                 let openInNewTabItem = NSMenuItem(
                     title: String(localized: .Library.openInNewTab),
                     action: #selector(openInNewTabAction(_:)),
