@@ -132,6 +132,14 @@ struct iOSReaderBottomToolbarView: View {
                     onSelect: { ann in
                         viewModel.didSelectAnnotation(ann)
                         showingAnnotationsList = false
+                    },
+                    onUpdate: { updated in
+                        try viewModel.updateAnnotation(updated)
+                    },
+                    onDelete: { ann in
+                        if let id = ann.id {
+                            try viewModel.deleteAnnotation(id: id)
+                        }
                     }
                 )
             }

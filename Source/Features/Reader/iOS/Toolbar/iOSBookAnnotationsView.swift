@@ -11,6 +11,8 @@ struct iOSBookAnnotationsView: View {
     let bookId: Int
     @Bindable var viewModel: BookAnnotationsViewModel
     let onSelect: (Annotation) -> Void
+    var onUpdate: ((Annotation) throws -> Void)? = nil
+    var onDelete: ((Annotation) throws -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
 
     @State private var editingAnnotation: Annotation?
@@ -46,7 +48,7 @@ struct iOSBookAnnotationsView: View {
             }
             .onAppear {
                 if !viewModel.hasLoaded || viewModel.bookId != bookId {
-                    viewModel.loadBookAnnotations(bookId: bookId)
+                    Task { await viewModel.loadBookAnnotations(bookId: bookId) }
                 }
             }
             .sheet(item: $editingAnnotation) { ann in
@@ -128,7 +130,7 @@ struct iOSBookAnnotationsView: View {
 
     private func updateAnnotation(_ updated: Annotation) async {
         do {
-            try viewModel.updateAnnotation(updated)
+            try onUpdate?(updated)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         } catch {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
@@ -137,7 +139,7 @@ struct iOSBookAnnotationsView: View {
 
     private func deleteAnnotation(_ annotation: Annotation) async {
         do {
-            try viewModel.deleteAnnotation(annotation)
+            try onDelete?(annotation)
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
         } catch {
             UINotificationFeedbackGenerator().notificationOccurred(.error)

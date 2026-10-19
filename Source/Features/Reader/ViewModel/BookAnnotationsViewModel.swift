@@ -13,24 +13,30 @@ import Observation
 final class BookAnnotationsViewModel {
     var bookId: Int?
     var bookAnnotations: [Annotation] = []
-    var searchText: String = ""
+    var filteredAnnotations: [Annotation] = []
     var scrollPositionId: Int64?
     private(set) var hasLoaded: Bool = false
 
-    @ObservationIgnored
-    private var cancellables = Set<AnyCancellable>()
+    private var searchDebounceTask: Task<Void, Never>?
 
-    var filteredAnnotations: [Annotation] {
-        if searchText.isEmpty {
-            return bookAnnotations
-        } else {
-            let query = searchText.normalizeArabic(false)
-            return bookAnnotations.filter { ann in
-                ann.context.normalizeArabic(false).localizedStandardContains(query) ||
-                    (ann.note?.normalizeArabic(false).localizedStandardContains(query) == true)
+    var searchText: String = "" {
+        didSet {
+            guard oldValue != searchText else { return }
+            searchDebounceTask?.cancel()
+            if searchText.isEmpty {
+                filteredAnnotations = bookAnnotations
+            } else {
+                searchDebounceTask = Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(0.5))
+                    guard !Task.isCancelled else { return }
+                    self?.filterAnnotations(with: self?.searchText ?? "")
+                }
             }
         }
     }
+
+    @ObservationIgnored
+    private var cancellables = Set<AnyCancellable>()
 
     init(bookId: Int? = nil) {
         self.bookId = bookId
@@ -42,32 +48,39 @@ final class BookAnnotationsViewModel {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self, let id = bookId else { return }
-                loadBookAnnotations(bookId: id)
+                Task {
+                    await self.loadBookAnnotations(bookId: id)
+                }
             }
             .store(in: &cancellables)
     }
 
-    func loadBookAnnotations(bookId: Int) {
+    func loadBookAnnotations(bookId: Int) async {
         self.bookId = bookId
-        if let bookNode = AnnotationTreeBuilder.shared.currentRootNode()?.children.first(
-            where: {
-                $0.kind == .book
-                    && $0.children.first?.annotation?.bkId == bookId
+        let anns: [Annotation] = await Task.detached(priority: .userInitiated) {
+            if let bookNode = AnnotationTreeBuilder.shared.currentRootNode()?.children.first(where: {
+                $0.kind == .book && $0.children.first?.annotation?.bkId == bookId
+            }) {
+                return bookNode.children.compactMap(\.annotation)
+            } else {
+                return AnnotationStore.shared.loadAnnotations(bkId: bookId)
             }
-        ) {
-            bookAnnotations = bookNode.children.compactMap(\.annotation)
-        } else {
-            bookAnnotations = AnnotationStore.shared.loadAnnotations(bkId: bookId)
+        }.value
+
+        self.bookAnnotations = anns
+        self.filterAnnotations(with: self.searchText)
+        self.hasLoaded = true
+    }
+
+    private func filterAnnotations(with query: String) {
+        guard !query.isEmpty else {
+            filteredAnnotations = bookAnnotations
+            return
         }
-        hasLoaded = true
-    }
-
-    func updateAnnotation(_ updated: Annotation) throws {
-        try AnnotationStore.shared.updateAnnotation(updated)
-    }
-
-    func deleteAnnotation(_ annotation: Annotation) throws {
-        guard let id = annotation.id else { return }
-        try AnnotationStore.shared.deleteAnnotation(id: id)
+        let normalizedQuery = query.normalizeArabic(false)
+        filteredAnnotations = bookAnnotations.filter { ann in
+            ann.context.normalizeArabic(false).localizedStandardContains(normalizedQuery) ||
+                (ann.note?.normalizeArabic(false).localizedStandardContains(normalizedQuery) == true)
+        }
     }
 }

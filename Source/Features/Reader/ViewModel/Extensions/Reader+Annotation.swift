@@ -51,28 +51,15 @@ extension ReaderViewModel {
         )
         _ = try annotationCoordinator.saveHighlight(params)
         loadAnnotations()
-        #if os(iOS)
-        bookAnnotationsViewModel.loadBookAnnotations(bookId: book.id)
-        #endif
     }
 
     func deleteAnnotation(id: Int64) throws {
         try annotationStore.deleteAnnotation(id: id)
         loadAnnotations()
-        #if os(iOS)
-        if let book = currentBook {
-            bookAnnotationsViewModel.loadBookAnnotations(bookId: book.id)
-        }
-        #endif
     }
 
     func updateAnnotation(_ annotation: Annotation) throws {
         try annotationStore.updateAnnotation(annotation)
         loadAnnotations()
-        #if os(iOS)
-        if let book = currentBook {
-            bookAnnotationsViewModel.loadBookAnnotations(bookId: book.id)
-        }
-        #endif
     }
 }
