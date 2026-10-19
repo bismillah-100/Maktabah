@@ -654,14 +654,9 @@ struct iOSIbarotTextView: UIViewRepresentable {
 
         if let event = annotationEvent,
            event.annotation.contentId == viewModel.currentContentId,
-           viewModel.lastHandledAnnotationEventId != event.id
+           context.coordinator.lastHandledAnnotationEventId != event.id
         {
-            viewModel.lastHandledAnnotationEventId = event.id
             context.coordinator.lastHandledAnnotationEventId = event.id
-            DispatchQueue.main.async { [weak viewModel] in
-                viewModel?.annotationEvent = nil
-            }
-
             context.coordinator.animationTask?.cancel()
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 await textView?.highlighAndScrollToAnns(event.annotation)
@@ -671,14 +666,9 @@ struct iOSIbarotTextView: UIViewRepresentable {
         if let event = searchEvent,
            event.contentId == viewModel.currentContentId,
            !searchRanges.isEmpty || event.isTOC,
-           viewModel.lastHandledSearchEventId != event.id
+           context.coordinator.lastHandledSearchEventId != event.id
         {
-            viewModel.lastHandledSearchEventId = event.id
             context.coordinator.lastHandledSearchEventId = event.id
-            DispatchQueue.main.async { [weak viewModel] in
-                viewModel?.searchEvent = nil
-            }
-
             context.coordinator.animationTask?.cancel()
             context.coordinator.animationTask = Task { @MainActor [weak textView] in
                 if let firstRange = searchRanges.first {
