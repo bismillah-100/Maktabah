@@ -114,18 +114,8 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         let row = outlineView.row(forItem: node)
         guard row != -1 else { return }
 
-        let positioningView: NSView
-        let positioningRect: NSRect
-
-        if let cell = outlineView.view(atColumn: 0, row: row, makeIfNecessary: false) {
-            positioningView = cell
-            positioningRect = cell.bounds
-        } else {
-            positioningView = outlineView
-            positioningRect = outlineView.rect(ofRow: row)
-        }
-
-        presentAnnotationEditorPopover(for: annotation, relativeTo: positioningRect, of: positioningView)
+        let anchor = outlineView.cellAnchor(forRow: row)
+        presentAnnotationEditorPopover(for: annotation, relativeTo: anchor.rect, of: anchor.view)
     }
 
     private func presentAnnotationEditorPopover(

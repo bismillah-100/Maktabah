@@ -16,6 +16,7 @@ class iOSAnnotationViewController: UIViewController {
     var onAnnotationEditRequested: ((Annotation) -> Void)?
     var onNeedFullReload: (() -> Void)?
     var onRefreshRequested: (() -> Void)?
+    var onShowBookInfo: ((BooksData) -> Void)?
 
     // MARK: - Properties
 
@@ -554,13 +555,39 @@ extension iOSAnnotationViewController: UICollectionViewDelegate {
         dataSource.itemIdentifier(for: indexPath)?.isGroup == true ? false : true
     }
 
+    private func resolveBook(for groupNode: SwiftUIAnnotationNode) -> BooksData? {
+        if let bkId = groupNode.children?.first(where: { $0.annotation != nil })?.annotation?.bkId {
+            return LibraryDataManager.shared.booksById[bkId] ?? LibraryDataManager.shared.getBook([bkId]).first
+        }
+        for sectionID in dataSource.snapshot().sectionIdentifiers {
+            let items = dataSource.snapshot(for: sectionID).items
+            if items.contains(where: { $0.node.id == groupNode.id }) {
+                if let ann = items.compactMap(\.node.annotation).first {
+                    return LibraryDataManager.shared.booksById[ann.bkId] ?? LibraryDataManager.shared.getBook([ann.bkId]).first
+                }
+            }
+        }
+        return nil
+    }
+
     func collectionView(
         _ collectionView: UICollectionView,
         contextMenuConfigurationForItemAt indexPath: IndexPath,
         point: CGPoint
     ) -> UIContextMenuConfiguration? {
-        guard let item = dataSource.itemIdentifier(for: indexPath),
-              case let .annotation(node) = item,
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return nil }
+
+        if case let .group(node) = item, node.kind == .book {
+            guard let book = resolveBook(for: node) else { return nil }
+            return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+                let infoAction = UIAction.bookInfo { _ in
+                    self?.onShowBookInfo?(book)
+                }
+                return UIMenu(title: node.title, children: [infoAction])
+            }
+        }
+
+        guard case let .annotation(node) = item,
               let annotation = node.annotation
         else { return nil }
 

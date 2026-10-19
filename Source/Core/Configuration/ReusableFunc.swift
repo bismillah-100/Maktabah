@@ -247,7 +247,6 @@ class ReusableFunc {
     }
     #endif
 
-
     #if os(macOS)
     static func helpSearchOpt(_ sender: NSButton) {
         let searchHelpPopover = NSPopover()
@@ -327,7 +326,7 @@ class ReusableFunc {
 }
 
 #if os(macOS)
-extension NSOutlineView {
+extension NSTableView {
     func effectiveRows() -> IndexSet {
         if clickedRow == -1 { return selectedRowIndexes }
         return selectedRowIndexes.contains(clickedRow)
@@ -339,6 +338,19 @@ extension NSOutlineView {
         let anchorRow = clickedRow >= 0 ? clickedRow : selectedRow
         guard anchorRow >= 0 else { return bounds }
         return rect(ofRow: anchorRow)
+    }
+
+    func cellAnchor(forRow row: Int, column: Int = 0) -> (view: NSView, rect: NSRect) {
+        guard row >= 0, row < numberOfRows else { return (self, bounds) }
+        if let cell = view(atColumn: column, row: row, makeIfNecessary: false) {
+            return (cell, cell.bounds)
+        }
+        return (self, rect(ofRow: row))
+    }
+
+    func contextMenuCellAnchor(column: Int = 0) -> (view: NSView, rect: NSRect) {
+        let anchorRow = clickedRow >= 0 ? clickedRow : selectedRow
+        return cellAnchor(forRow: anchorRow, column: column)
     }
 }
 

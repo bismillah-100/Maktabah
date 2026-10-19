@@ -38,9 +38,8 @@ struct AnnotationListView: View {
         AnnotationViewControllerWrapper(
             navigationManager: navigationManager,
             viewModel: viewModel,
-            onEditAnnotation: { ann in
-                editingAnnotation = ann
-            }
+            onEditAnnotation: { editingAnnotation = $0 },
+            onShowBookInfo: { navigationManager.selectedBookForInfo = $0 }
         )
         .themeTint()
         .ignoresSafeArea(edges: .vertical)
