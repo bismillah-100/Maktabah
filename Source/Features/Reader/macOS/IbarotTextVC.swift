@@ -336,15 +336,14 @@ class IbarotTextVC: NSViewController {
     @IBAction func copyWith(_ sender: Any? = nil) {
         let fullAttributedString = textView.attributedString()
         let selection = textView.selectedRange()
-        let rawAttributedText: NSAttributedString
-        if selection.location != NSNotFound,
-           selection.location >= 0,
-           selection.length > 0,
-           selection.location + selection.length <= fullAttributedString.length
+        let rawAttributedText: NSAttributedString = if selection.location != NSNotFound,
+                                                       selection.location >= 0,
+                                                       selection.length > 0,
+                                                       selection.location + selection.length <= fullAttributedString.length
         {
-            rawAttributedText = fullAttributedString.attributedSubstring(from: selection)
+            fullAttributedString.attributedSubstring(from: selection)
         } else {
-            rawAttributedText = fullAttributedString
+            fullAttributedString
         }
         let attributedText = rawAttributedText.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -621,10 +620,12 @@ extension IbarotTextVC: TarjamahBDelegate {
 
 extension IbarotTextVC: ReaderStateComponent {
     func updateState(_ state: inout ReaderState) {
-        state.selectedRange = textView.selectedRange()
+        if let textView, let ts = textView.textStorage, ts.length > 0 {
+            state.selectedRange = textView.selectedRange()
 
-        if let scrollView = textView.enclosingScrollView {
-            state.scrollPosition = scrollView.documentVisibleRect.origin
+            if pendingRestoreTask == nil, let scrollView = textView.enclosingScrollView {
+                state.scrollPosition = scrollView.contentView.bounds.origin
+            }
         }
 
         if let sidebarVC {
@@ -667,6 +668,7 @@ extension IbarotTextVC: ReaderStateComponent {
 
         pendingRestoreTask?.cancel()
         pendingRestoreTask = Task { @MainActor [weak self] in
+            defer { self?.pendingRestoreTask = nil }
             guard let self, !Task.isCancelled else { return }
 
             await waitForSearchLayoutSettle()
