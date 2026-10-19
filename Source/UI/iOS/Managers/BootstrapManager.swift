@@ -5,6 +5,7 @@
 //  Created by Ghoys Mawahib on 03/05/26.
 //
 
+import OSLog
 import SwiftUI
 
 // MARK: - Bootstrap
@@ -39,11 +40,15 @@ final class iOSBootstrapManager {
                     return
                 } else {
                     AppConfig.resetCustomModeKey()
-                    _ = AppConfig.setupBundleMode()
+                    if !AppConfig.setupBundleMode() {
+                        Logger.app.error("Failed to setup bundle mode during custom mode validation fallback")
+                    }
                 }
             } else {
                 AppConfig.resetCustomModeKey()
-                _ = AppConfig.setupBundleMode()
+                if !AppConfig.setupBundleMode() {
+                    Logger.app.error("Failed to setup bundle mode during custom path fallback")
+                }
             }
         }
 

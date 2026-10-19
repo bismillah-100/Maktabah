@@ -363,9 +363,7 @@ enum AppConfig {
     }
 
     static func resolvedPath(for key: String) -> URL? {
-        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
-        guard !data.isEmpty else {
-            UserDefaults.standard.removeObject(forKey: key)
+        guard let data = UserDefaults.standard.data(forKey: key), !data.isEmpty else {
             return nil
         }
 
