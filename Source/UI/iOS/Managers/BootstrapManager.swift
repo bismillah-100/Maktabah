@@ -39,9 +39,11 @@ final class iOSBootstrapManager {
                     return
                 } else {
                     AppConfig.resetCustomModeKey()
+                    _ = AppConfig.setupBundleMode()
                 }
             } else {
                 AppConfig.resetCustomModeKey()
+                _ = AppConfig.setupBundleMode()
             }
         }
 

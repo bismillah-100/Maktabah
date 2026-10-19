@@ -364,6 +364,10 @@ enum AppConfig {
 
     static func resolvedPath(for key: String) -> URL? {
         guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        guard !data.isEmpty else {
+            UserDefaults.standard.removeObject(forKey: key)
+            return nil
+        }
 
         var isStale = false
         do {
@@ -381,9 +385,13 @@ enum AppConfig {
             )
 
             _ = url.startAccessingSecurityScopedResource()
+            if isStale {
+                saveBookmark(url: url, key: key)
+            }
             return url
         } catch {
             Logger.app.error("Bookmark resolve error: \(error.localizedDescription, privacy: .public)")
+            UserDefaults.standard.removeObject(forKey: key)
         }
         return nil
     }
@@ -585,7 +593,13 @@ enum AppConfig {
 
     /// Check jika user sudah setup custom database folder
     static func hasCustomDatabaseFolder() -> Bool {
-        UserDefaults.standard.data(forKey: customDatabaseFolderKey) != nil
+        guard let path = customDatabasePath, fm.fileExists(atPath: path) else {
+            if UserDefaults.standard.data(forKey: customDatabaseFolderKey) != nil {
+                resetCustomModeKey()
+            }
+            return false
+        }
+        return true
     }
 
     static func setupAnnotationsAndResults() {
