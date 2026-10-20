@@ -123,5 +123,5 @@ Modul anotasi menyediakan data untuk target Widget Extension:
 | **Mesin Daftar** | `NSOutlineView` (Expandable rows) | `UICollectionView` (Hierarchical section snapshot) |
 | **Kalkulasi Tinggi** | `AnnotationRowHeightCalculator` manual | Auto-layout via `UIContentConfiguration` |
 | **Aksi Geser (Swipe)** | Trailing swipe action untuk Hapus (`NSTableViewRowAction`) | Trailing swipe action untuk Hapus (`trailingSwipeActionsConfigurationProvider`) |
-| **Pengeditan Anotasi** | Langsung di sidebar via `AnnotationMenu` & `AnnotationEditorVC` | Di dalam Reader view via `iOSAnnotationEditorSheet` |
+| **Pengeditan Anotasi** | Langsung di sidebar via `AnnotationMenu` (`cellAnchor`) & `AnnotationEditorVC` | Di dalam Reader view dan langsung dari daftar sidebar/toolbar via menu konteks (`iOSAnnotationEditorSheet`) |
 | **Filter Tag** | Bilah horizontal di titlebar accessory (`NSTitlebarAccessoryViewController`) | Supplementary header view dengan teknik inversi matriks LTR/RTL |

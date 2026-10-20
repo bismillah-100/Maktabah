@@ -7,7 +7,7 @@ Bagian ini membedah berbagai `struct`, `class`, dan `enum` murni yang berada di 
 Entitas utama yang merepresentasikan sebuah anotasi (*highlight*, *underline*, atau *note*).
 
 ```swift
-struct Annotation: Sendable {
+struct Annotation: Sendable, Equatable, Identifiable {
     var id: Int64? // (1)!
     let bkId: Int // (2)!
     let contentId: Int 
@@ -47,6 +47,7 @@ struct Annotation: Sendable {
 Untuk menjaga modularitas dan prinsip DRY, `Annotation` menyediakan *computed property* pembantu:
 
 - `displayTitle: String`: Mengembalikan teks catatan (`note`) jika tidak kosong, atau *fallback* ke teks kutipan (`context`).
+- `stableId: Int64`: Mengembalikan `id ?? 0` sebagai pengidentifikasi stabil (*stable identity*) untuk keperluan *diffing* `ThemeList` dan preservasi ID posisi *scroll* antarmuka di iOS.
 
 !!! note "Metadata Buku Diinjeksi ke Node"
     Properti metadata buku (`bookTitle`, `normalizedBookTitle`) tidak lagi berada pada model `Annotation` untuk mencegah *query* SQLite yang memblokir *main thread*. Metadata tersebut di-*resolve* di *background queue* (misalnya via `AnnotationTreeBuilder`) dan diinjeksikan langsung ke `AnnotationNode`.

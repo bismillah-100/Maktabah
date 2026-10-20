@@ -89,19 +89,23 @@ stateDiagram-v2
 
 `iOSMainView` adalah kontainer utama yang merespons perubahan *environment* dan menentukan tata letak yang sesuai.
 
-### `iOSMainView` (Struct)
+### iOSMainView (Struct)
 
 Tanggung jawab utama `iOSMainView`:
 
 - **Routing Berbasis Lingkungan**: Memeriksa `horizontalSizeClass`. Jika bernilai `.regular` (iPad / Mac Catalyst), sistem merender `iPadLayout`. Jika bernilai `.compact` (iPhone), sistem merender `iPhoneLayout`.
 - **Manajemen State Global**: Mengelola `@State` untuk navigasi (`iOSNavigationManager`), tab yang dipilih (`selectedTab`), visibilitas kolom iPad, serta status tampilan *sheet* (Pengaturan / Donasi). Observer pada `iOSNavigationManager` (`.bookIntegrated` dan `.libraryFolderChanged`) menggunakan referensi `[weak self]` guna mencegah siklus retensi (*retain cycle*) memori saat navigasi tab berpindah.
+- **Sentralisasi Lembaran Modal (*Modal Sheet Centralization*)**:
+  Memusatkan presentasi modal pada tingkat kontainer tertinggi guna mencegah konflik hierarki tampilan deklaratif SwiftUI:
+  * `.sheet(item: $bManager.selectedBookForInfo)`: Menyajikan `iOSBookInfoView` saat pengguna memicu aksi "Informasi Kitab" dari berbagai layar (katalog perpustakaan, lembar filter pencarian, maupun kartu riwayat/favorit).
+  * `.sheet(isPresented: $bManager.showingTabsList)`: Menyajikan `iOSReaderTabsPopoverView` untuk mengelola daftar tab pembaca aktif di iPhone, dipindahkan dari *local state* `iOSReaderView` ke `iOSNavigationManager` terpusat.
 - **Deep Linking**: Menangani `.onOpenURL` untuk membuka anotasi tertentu atau riwayat bacaan berdasarkan URL WidgetKit.
 - **Siklus Hidup (*Lifecycle*)**: Memantau perubahan `scenePhase`. Saat bernilai `.active`, sistem memicu sinkronisasi `CloudKitSyncManager` dan mencatat aktivasi aplikasi pada `DonationManager`.
 
 !!! note "Lifecycle"
     `iOSMainView` bereaksi pada fase *scene* `.active` untuk menyerap perubahan sinkronisasi CloudKit dan memperbarui status donasi secara otomatis.
 
-### `iOSTab` (Enum)
+### iOSTab (Enum)
 
 Enum `iOSTab` mendefinisikan menu navigasi utama dengan 5 pilihan:
 
@@ -124,7 +128,7 @@ Pendekatan antarmuka Maktabah bersifat adaptif dengan memisahkan alur navigasi a
 
 === "iPhone (TabView)"
 
-    ### `iPhoneLayout`
+    ### iPhoneLayout (Struct)
 
     Pada iPhone, aplikasi menggunakan bilah tab (**TabView**) di bagian bawah layar. `iPhoneLayout` membungkus setiap menu tab dengan `NavigationStack` tersendiri sehingga navigasi subhalaman di satu tab tidak memengaruhi tab lainnya.
 
@@ -144,7 +148,7 @@ Pendekatan antarmuka Maktabah bersifat adaptif dengan memisahkan alur navigasi a
 
 === "iPad (Sidebar)"
 
-    ### `iPadLayout`
+    ### iPadLayout (Struct)
 
     Pada iPad, aplikasi menggunakan **NavigationSplitView** (tata letak 2–3 kolom) untuk memaksimalkan area layar lebar. Navigasi ditempatkan pada *sidebar* (kolom kiri) dan pembaca buku (*Reader*) pada kolom detail (kanan).
 

@@ -227,6 +227,7 @@ final class CoreDatabaseDownloader: NSObject, Sendable {
 
 - Menggunakan arsitektur `AsyncThrowingStream` yang dibungkus di dalam `class` delegasi pembantu (`CoreDownloadDelegate: URLSessionDownloadDelegate`).
 - Mengekstrak dan mengonversi berkas arsip Zstandard (`.zst`) menjadi basis data `.sqlite` secara langsung (*on-the-fly*).
+- **Resolusi Direktori & Fallback Jalur**: Saat mengeksekusi `downloadSingleFile`, sistem memeriksa direktori tujuan melalui `AppConfig.coreDatabasePath`. Jika belum tersedia atau bernilai `nil`, sistem menerapkan *fallback* aman ke `AppConfig.archiveCachePath`. Eksistensi direktori dibuat secara eksplisit menggunakan `fileManager.createDirectory(atPath: destDir, withIntermediateDirectories: true)` sebelum pengunduhan dan penulisan berkas diproses.
 
 !!! note "Modal Pengunduhan Spesifik Platform"
     Modul pengunduhan memiliki subkomponen antarmuka bernama `CoreDownloadModalCenter` yang beradaptasi terhadap karakteristik masing-masing platform.
@@ -274,7 +275,7 @@ final class FtsMigrationManager {
 
 Seluruh notifikasi galat yang ditimbulkan subsistem ini distandarisasi dengan *custom error enum* menggunakan *protocol* `LocalizedError`.
 
-### `ArchiveError` (Enum)
+### ArchiveError (Enum)
 
 Menggambarkan permasalahan status sistem berkas pada repositori buku (arsip berkas SQLite 1–20).
 
@@ -291,7 +292,7 @@ enum ArchiveError: LocalizedError {
 }
 ```
 
-### `DatabaseError` (Enum)
+### DatabaseError (Enum)
 
 Pengecualian (*exception*) spesifik ketika terjadi kendala kueri pada manajer utama.
 
@@ -304,7 +305,7 @@ enum DatabaseError: Error, LocalizedError {
 }
 ```
 
-### `DBConnectionType` (Protocol)
+### DBConnectionType (Protocol)
 
 *Protocol* `Sendable` standar yang berfungsi sebagai antarmuka abstrak bagi pembungkus SQLite agar komponen data tidak bergantung langsung pada `class` konkret.
 

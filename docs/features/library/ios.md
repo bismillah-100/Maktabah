@@ -172,9 +172,10 @@ init(_ configuration: ListContentConfiguration) {
   * **Update Sheet (`UpdateView`)**: Memeriksa dan mengunduh pembaruan isi kitab dari GitHub Releases.
   * **Bulk Delete Dialog**: Dialog konfirmasi penghapusan arsip lokal kitab.
 
-### C. LibraryViewControllerWrapper (UIViewControllerRepresentable)
+### C. LibraryViewControllerWrapper (Struct)
 
-* Menjembatani `iOSLibraryViewController` ke SwiftUI untuk menjamin kestabilan *frame rate* 60–120 FPS saat pengguliran ribuan baris buku.
+* Menjembatani `iOSLibraryViewController` (UIKit) ke SwiftUI untuk menjamin kestabilan *frame rate* 60–120 FPS saat pengguliran ribuan baris buku.
+* Menghubungkan *closure* aksi informasi buku `onShowBookInfo` dari sel `iOSLibraryViewController` (`makeBookInfoAction(for:)`) menuju `navigationManager.selectedBookForInfo` yang disajikan di root antarmuka `iOSMainView`.
 * Mengisolasi delegasi seleksi buku dan memperbarui status filter pencarian tanpa membuat ulang hierarki *view*.
 
 ### D. AuthorModeView (Struct)

@@ -96,7 +96,7 @@ Jika pengguna memindahkan direktori ini melalui tombol "Choose Annotations Folde
 
 ## Bedah Komponen Teknis
 
-### `AppConfig` (Enum)
+### AppConfig (Enum)
 
 Objek `AppConfig` direpresentasikan sebagai `enum` tanpa *case* sehingga tidak dapat diinstansiasi. Komponen ini menyimpan seluruh letak kunci preferensi konfigurasi.
 
@@ -120,13 +120,19 @@ enum AppConfig {
 2. *Computed property* Boolean yang mengabstraksi pemanggilan `UserDefaults` secara langsung.
 3. Properti opsional untuk menentukan resolusi *path* internal (seperti folder *Cache*).
 
-**Penjelasan Properti Utama Lainnya:**
+**Penjelasan Properti & Fungsi Integritas Utama:**
 
 * `databaseFilesPath`: Memeriksa ketersediaan `customDatabasePath`; jika tidak ada, sistem menggunakan `coreDatabasePath`.
 * `bookReleaseBaseURL`: Menampung tautan GitHub Releases yang dipakai sebagai *base URL* pengunduhan berkas buku.
 * `shouldCheckCoreVersion`: Memeriksa apakah jeda waktu dari pemeriksaan versi inti (*core*) terakhir telah melampaui enam bulan.
+* `ensureHasArchiveFiles(folderUrl:)`: Memvalidasi kelengkapan 20 berkas arsip SQLite (`1.sqlite` sampai `20.sqlite`) di dalam folder tujuan sebelum migrasi ke *Custom Mode* diizinkan.
+* `hasCustomDatabaseFolder()`: Memverifikasi ketersediaan direktori kustom dan keberadaan fisik jalurnya di sistem berkas melalui `FileManager.fileExists(atPath:)`, memastikan aplikasi tidak terkunci dalam status rusak jika media eksternal dilepas.
+* `resolvedPath(for:)`: Menyelesaikan *security-scoped bookmark* dari `UserDefaults`. Fungsi memvalidasi data tidak kosong (`!data.isEmpty`), mengaktifkan akses sumber daya aman via `startAccessingSecurityScopedResource()`, dan secara otomatis memperbarui serta menyimpan ulang bookmark apabila terdeteksi usang (`bookmarkDataIsStale == true`).
 
-### `SettingsActions` (Enum)
+!!! tip "Pemulihan Mode Bundel Otomatis (BootstrapManager)"
+    Pada siklus inisialisasi aplikasi (khususnya di iOS melalui `BootstrapManager`), apabila konfigurasi diarahkan ke *Custom Mode* namun validasi `hasCustomDatabaseFolder()` gagal menemukan direktori fisik yang sah, sistem secara aman mengalihkan konfigurasi kembali ke *Bundle Mode* (`isUsingBundleMode = true`) guna mencegah kegagalan peluncuran (*crash/unresponsive launch*).
+
+### SettingsActions (Enum)
 
 `SettingsActions` memfasilitasi interaksi I/O eksternal dan pemindahan berkas.
 
@@ -161,7 +167,7 @@ enum SettingsActions {
 * `selectLibraryFolder`: Berfungsi dalam transisi penyimpanan basis data inti. Parameter validasi memeriksa apakah folder yang dipilih merupakan direktori pustaka yang valid.
 * `switchToBundleMode`: Menangani aksi peralihan sistem berkas kembali ke *bundle mode* dan memeriksa kelengkapan berkas menggunakan `CoreDatabaseDownloader`.
 
-### `SettingsViewModel` (Class)
+### SettingsViewModel (Class)
 
 *ViewModel* tunggal (*singleton*) ini menggunakan `@Observable` agar propertinya dapat dipantau langsung oleh antarmuka SwiftUI.
 
@@ -190,7 +196,7 @@ final class SettingsViewModel {
 
 Sistem konfigurasi membungkus galat ke dalam *enum* yang terstruktur.
 
-### `AppConfig.MigrationResolution` (Enum)
+### AppConfig.MigrationResolution (Enum)
 
 ```swift
 enum MigrationResolution {
@@ -206,7 +212,7 @@ enum MigrationResolution {
 * `keepDestination`: Metode migrasi mempertahankan berkas yang sudah ada di direktori tujuan dan menghapus berkas asal.
 * `overwriteDestination`: Metode migrasi memindahkan berkas dari direktori sumber dan menimpa berkas yang ada di direktori tujuan.
 
-### `StorageError` (Enum)
+### StorageError (Enum)
 
 Sistem melemparkan (`throw`) jenis enum `StorageError` apabila instruksi I/O mengalami kegagalan. Karena mengadopsi *protocol* `LocalizedError`, setiap *case* menyediakan deskripsi pesan galat standar.
 

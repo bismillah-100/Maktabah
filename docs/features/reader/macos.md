@@ -167,12 +167,14 @@ Ketika pengguna mengklik kanan pada teks atau melakukan seleksi:
 * **Pencarian Kontekstual**: Opsi mencari frasa yang diseleksi di dalam kitab aktif (*In-Book Search*) atau di seluruh katalog perpustakaan (*Global FTS*).
 * **Menu Penampilan Teks**: Menyesuaikan ukuran font, famili font Arab (*Traditional Arabic*, *Scheherazade*, *Amiri*), dan tema latar belakang (*Sepia*, *Dark Sepia*, *White*, *Black*).
 
-### E. Navigasi Terisolasi & Perekaman Histori Bersyarat (IbarotTextVC)
+### E. Navigasi Terisolasi, State Component & Perekaman Histori Bersyarat (IbarotTextVC)
 
 `IbarotTextVC` menyediakan API navigasi asinkron tingkat tinggi yang aman dari *race condition* untuk membuka anotasi dan riwayat:
 
 * **`openAnnotation(_ annotation: Annotation) async throws`**: Membatalkan `pendingRestoreTask`, memastikan kitab terkait terbuka, berpindah ke `contentId`, dan menginstruksikan perender teks untuk menggulir serta menyorot anotasi.
 * **`openHistory(book: BooksData, contentId: Int?) async throws`**: Membuka buku dan melompat ke posisi bacaan terakhir.
+* **Proteksi Status Restorasi pada ReaderStateComponent**: Pada metode `updateState(_:)`, perekaman koordinat `state.scrollPosition = scrollView.contentView.bounds.origin` diproteksi dengan guard `pendingRestoreTask == nil`. Hal ini mencegah koordinat sementara yang belum tuntas (*intermediate scroll position*) tersimpan secara keliru ke dalam `ReaderState` saat pemulihan posisi sedang berjalan.
+* **Pemulihan Seleksi Outline Seketika**: Saat beralih tab (`applyState`), apabila `libraryVC?.dataVM.isSetupComplete == true`, sistem langsung memanggil `libraryVC?.dataVM.restoreSelection(byBookName: book.book)` agar baris kitab aktif pada *outline view* segera tersorot tanpa jeda.
 * **Perekaman Histori Bersyarat**: Pembaruan seleksi buku ke `LibraryViewModel` membedakan antara aksi navigasi aktif dan pemuatan pratinjau:
   ```swift
   if viewModel.recordHistory {
@@ -180,7 +182,9 @@ Ketika pengguna mengklik kanan pada teks atau melakukan seleksi:
   } else {
       libraryVC?.dataVM.viewModel.selectedBookName = book.book
   }
-  libraryVC?.dataVM.restoreSelection(byBookName: book.book)
+  if libraryVC?.dataVM.isSetupComplete == true {
+      libraryVC?.dataVM.restoreSelection(byBookName: book.book)
+  }
   ```
   `handleBookSelection` (yang mengunggah riwayat ke CloudKit) hanya dipanggil jika `recordHistory == true`, mencegah pencatatan histori palsu saat sekadar memulihkan state jendela.
 

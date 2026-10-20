@@ -93,7 +93,38 @@ stateDiagram-v2
 | `currentAnnotations` | `[Annotation]` | Array *highlight* dan *underline* murni dari `AnnotationStore` yang disuntikkan ke teks. |
 | `searchEvent` | `ReaderHighlightEvent?` | Event pemicu sorotan kata kunci hasil pencarian berbasis UUID unik di iOS. |
 | `annotationEvent` | `ReaderAnnotationEvent?` | Event pemicu *scroll-to-target* otomatis dan animasi sorotan pada anotasi yang dipilih di iOS. |
+| `bookAnnotationsViewModel` | `BookAnnotationsViewModel?` | Menyimpan *instance* status pencarian dan navigasi lembar anotasi buku di iOS. |
+| `needsScrollRestore` | `Bool` | Penanda kebutuhan restorasi posisi gulir saat layar pembaca muncul kembali. |
 
 > [!NOTE]
 > **Siklus Hidup Event & Perpindahan Halaman:**
 > Pada metode `updateContentState(with:)`, jika halaman berpindah ke `content.id` yang berbeda dari `searchEvent?.contentId` atau `annotationEvent?.annotation.contentId`, kedua event tersebut otomatis dinetralkan (`nil`). Hal ini menjamin halaman berikutnya tetap bersih dari residu sorotan pencarian. De-duplikasi eksekusi event dikelola pada level *instance* `Coordinator` di `iOSIbarotTextView` agar tidak ditelan oleh *view* di *background tab*.
+
+---
+
+## 4. Manajemen Status Lembar Anotasi iOS
+
+Untuk mengisolasi alur pencarian dan penyaringan anotasi per-kitab pada lembar modal iOS (`iOSBookAnnotationsView`), sistem menyediakan *class* pembantu terdedikasi:
+
+### BookAnnotationsViewModel (Class)
+
+Objek ini dikelola di bawah isolasi `@Observable @MainActor` dan diretensi langsung oleh `ReaderViewModel.bookAnnotationsViewModel`:
+
+```swift
+@Observable @MainActor
+final class BookAnnotationsViewModel {
+    var bookId: Int?
+    var bookAnnotations: [Annotation] = []
+    var filteredAnnotations: [Annotation] = []
+    var scrollPositionId: Int64?
+    private(set) var hasLoaded: Bool = false
+    var searchText: String = ""
+    // ...
+}
+```
+
+*   **Penyaringan Ber-debounce (*Debounced Search*)**: Modifikasi pada `searchText` membatalkan `searchDebounceTask` yang sedang berjalan dan menerapkan jeda 0,5 detik (`Task.sleep(for: .seconds(0.5))`).
+*   **Normalisasi Teks Arab**: Pencarian mencocokkan kueri terhadap catatan (`note`) maupun konteks kutipan (`context`) dengan normalisasi harakat (`normalizeArabic(false)`).
+*   **Offloading Kueri Pohon Anotasi**: Pembacaan data dari `AnnotationTreeBuilder` atau `AnnotationStore` dieksekusi secara asinkron menggunakan `Task.detached(priority: .userInitiated)` agar tidak membebani aktor utama (*main actor*).
+*   **Sinkronisasi Reaktif**: Mengamati mutasi data secara global melalui langganan Combine pada `AnnotationStore.shared.events` untuk memicu pemuatan ulang otomatis saat anotasi ditambah, disunting, atau dihapus.
+*   **Preservasi Status Sheet**: Retensi *instance* di dalam `ReaderViewModel` menjamin riwayat kueri pencarian dan posisi baris yang disorot (`scrollPositionId`) tetap terjaga saat lembar modal ditutup dan dibuka kembali.

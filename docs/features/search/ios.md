@@ -129,7 +129,7 @@ sequenceDiagram
 * Menjadi kontainer utama antarmuka pencarian yang mengelola lapisan `ZStack` dan `Overlay`.
 * Mengatur *toolbar* pengurutan dinamis, penyajian lembar modal (*sheets*) menuju histori pencarian tersimpan (*Saved Results*), dan pemberitahuan migrasi basis data FTS bila diperlukan.
 
-### 2. Sub-Komponen Modular (`SearchComponents.swift`)
+### 2. Sub-Komponen Modular (SearchComponents)
 
 * **`SearchInputBar`**: Kolom input pencarian utama dengan integrasi `@FocusState` untuk manajemen *keyboard*, tombol pembersih teks instan, dan indikator status aktif.
 * **`SearchHistoryOverlay`**: Hamparan mengambang yang menampilkan daftar 20 kueri pencarian terakhir saat kolom teks aktif, memudahkan pencarian berulang tanpa mengetik ulang.
@@ -143,5 +143,6 @@ sequenceDiagram
 
 ### 4. iOSSearchFilterViewController (Class) - Penyaring Cakupan / Scope
 
-* Menggunakan `UIViewControllerRepresentable` untuk memuat struktur hierarki pustaka UIKit (*hierarchical outline*).
+* Menggunakan `UIViewControllerRepresentable` (`SearchFilterUIKitView`) untuk memuat struktur hierarki pustaka UIKit (*hierarchical outline*).
 * Menangani seleksi multi-pilihan kategori atau kitab dengan performa tinggi saat menyaring ratusan kategori secara bersamaan.
+* Menyalurkan aksi menu konteks "Informasi Kitab" via *callback* `onShowBookInfo` yang diteruskan ke `navigationManager.selectedBookForInfo` untuk disajikan di tingkat root `iOSMainView`.
