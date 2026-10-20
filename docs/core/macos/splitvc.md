@@ -289,6 +289,7 @@ Manajemen status antarmuka (seperti kitab aktif, nomor halaman, posisi *scroll*,
 
 2. **Penyimpanan & Restorasi saat Beralih Mode (`switchToMode(_:restoreState:)`)**
    - Dipicu ketika pengguna memilih mode pada *segmented control* di *toolbar*, menu bar, atau melalui navigasi URL deep link widget.
+   - **Guard Mode Identik**: Dievaluasi pertama kali via `guard mode != currentMode else { return }`. Apabila mode target sama dengan mode yang sedang aktif, eksekusi langsung kembali (*early return*) untuk mencegah siklus *teardown*, *render* ulang hierarki *split*, serta persistensi *disk* yang membebani CPU.
    - **Langkah 1 (Simpan Mode Lama)**: `stateManager.saveState(for: currentMode, title: ..., components: components(for: currentMode))` mengumpulkan data UI mutakhir ke memori RAM (`ReaderState`).
    - **Langkah 2 (Persistensi Instan ke Disk)**: Mengeksekusi `stateManager.persistState()` langsung saat pergantian mode agar data tidak hilang apabila aplikasi ditutup mendadak.
    - **Langkah 3 (Teardown Tampilan)**: Mengosongkan teks bacaan (`ibarotTextVC.textView.string.removeAll()`) dan menghapus seluruh item split kecuali kontainer *sidebar* persisten.

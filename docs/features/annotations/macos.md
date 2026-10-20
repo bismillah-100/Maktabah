@@ -141,7 +141,7 @@ macOS menyediakan interaksi langsung dari *sidebar*:
 *   **Trailing Swipe Action (Hapus)**:
     Mengimplementasikan `NSTableViewDelegate.tableView(_:rowActionsForRow:edge:)` pada sisi `.trailing`. Menyediakan aksi geser dengan ikon `trash.slash.fill` untuk menghapus anotasi terpilih secara instan.
 *   **Menu Konteks Baris (`AnnotationMenu`)**:
-    Menyediakan aksi klik kanan: Salin teks (`copyMenuItem`), Tambah/Hapus Tag, Ubah Tipe (*Highlight* vs. *Underline*), serta opsi hapus.
+    Menyediakan aksi klik kanan: Salin teks (`copyMenuItem`), Sunting Anotasi (`editMenuItem` — hanya aktif pada satu baris anotasi terpilih dan menyajikan popover `AnnotationEditorVC` yang dijangkarkan secara presisi pada sel via `outlineView.cellAnchor(forRow:)`), Tambah/Hapus Tag, Ubah Tipe (*Highlight* vs. *Underline*), serta opsi hapus.
 *   **Menu Palet Warna Cepat (`AnnotationColorMenuView`)**:
     Menampilkan deretan titik warna di dalam menu konteks untuk *highlight* serta tombol *underline* terdedikasi. Ikon *underline* dikonfigurasi menggunakan SF Symbol dengan `NSImage.SymbolConfiguration(paletteColors:)` yang mencerminkan warna terakhir dari `recentUnderlineColors` (fallback ke `.labelColor`).
 *   **Panel Editor Anotasi (`AnnotationEditorVC`)**:

@@ -149,7 +149,7 @@ struct iOSHistoryView: View {
 
 Fitur ini memanfaatkan makro `@Observable` (dari properti `viewModel.filteredFavorites` dan `filteredHistory`) untuk *rendering* secara reaktif. Seluruh penyaringan data dikelola pada lapisan logika `HistoryViewModel` (misalnya saat kolom pencarian diisi teks).
 
-### B. `HistoryFavoriteSections.swift`
+### B. HistoryFavoriteSections (Struct)
 Berkas ini bertugas sebagai pembungkus (*wrapper*) bagian tampilan. Komponen statis seperti `Section(header: Text("History"))` dibungkus dalam modul terisolasi agar iPad dapat me-*render* bagian ini secara independen di *sidebar* tanpa perlu me-*render* ulang `ThemeList` secara penuh.
 
 ### C. HistoryHorizontalGrid (Struct)
@@ -188,3 +188,13 @@ final class ScrollState {
 ```
 
 `ScrollState` bertugas mempertahankan rasio posisi kompartemen *grid*. Jika pengguna kembali ke `iOSHistoryView` dari halaman membaca buku, *Scroll View* SwiftUI menyelaraskan *offset* `normalizedOffset` (0.0 hingga 1.0) ke lokasi semula (*last visual retention*) sehingga elemen kartu antarmuka tidak melompat (*flicker*) atau bergeser.
+
+### E. BookCard (Struct) & Popover Tekan-Lama
+
+Komponen visual kartu buku individual di dalam kisi (*grid*) riwayat dan daftar favorit:
+
+* **Aksi Ketuk Utama**: Membuka buku pada posisi terakhir atau halaman pertama melalui `navigationManager.openBook(book)`.
+* **Popover Tekan-Lama (*Long-Press Context Popover*)**:
+  * Menggunakan gestur `.onLongPressGesture` untuk menampilkan menu popover interaktif:
+    - **Informasi Kitab (`BookInfoLabel`)**: Menyetel `navigationManager.selectedBookForInfo = book` yang memunculkan lembar informasi bibliografi di tingkat root `iOSMainView`.
+    - **Hapus dari Riwayat (Destruktif)**: Menghapus entri buku dari catatan riwayat lokal (`historySection`).

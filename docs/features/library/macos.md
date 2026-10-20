@@ -170,19 +170,21 @@ Di bagian bawah *sidebar*, `LibraryVC` menyematkan bilah segmentasi mengambang b
 * **Segment 3 (`arrow.down.circle.fill`)**: Mode khusus unduhan (tersedia saat `AppConfig.isUsingBundleMode` aktif) untuk menyaring hanya kitab yang berkas arsip SQLite-nya telah diunduh secara lokal.
 * **Manajemen Inset ScrollView (`updateScrollViewConstraint`)**: Ketinggian kontainer kapsul dihitung secara otomatis untuk menyesuaikan `scrollView.contentInsets.bottom` (atau `scrollViewBottomConstraint`), mencegah baris terbawah tabel tertutup oleh tombol segmentasi.
 
-### B. LibraryVC (NSViewController)
+### B. LibraryVC (Class)
 
 * Mengelola siklus hidup tampilan *sidebar*, kaitan *constraint* pencarian, dan inisialisasi awal dataset secara asinkron (`dataVM.prepareData`).
 * Mengamati notifikasi `.libraryFolderChanged` untuk mereset seleksi dan memuat ulang struktur direktori saat folder basis data beralih.
+* **Pencegahan Re-setup Redundan**: Mengeliminasi pemanggilan berulang `setupUI()` selama progress pemuatan berlangsung, menjaga kestabilan *layout hierarchy*.
 
 ### C. LibraryViewManager (Class) & Render Baris Kustom
 
 * Mengimplementasikan `NSOutlineViewDataSource` dan `NSOutlineViewDelegate`.
 * Menyediakan *context menu* klik kanan:
-  * **Buka di *Tab* Baru (`openBookInNewTab`)**: Tersedia khusus untuk kitab yang telah terunduh/terintegrasi secara lokal (`isBookIntegrated`), mendelegasikan pembuatan *window controller* baru ke `MainWindow.openBookInNewTab`.
+  * **Buka di *Tab* Baru (`openBookInNewTab`)**: Tersedia untuk kitab yang telah terunduh/terintegrasi secara lokal (`isBookIntegrated`), mendelegasikan pembuatan *window controller* baru ke `MainWindow.openBookInNewTab`.
   * **Hapus Unduhan**: Menghapus arsip SQLite lokal dari *disk*.
-  * **Informasi Kitab**: Menampilkan *popover* informasi bibliografi kitab (`BookInfoPopoverVC`).
+  * **Informasi Kitab**: Menampilkan *popover* informasi bibliografi kitab [`BookInfo`](file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Library/macOS/LibraryViewManager.swift#L560) yang terjangkar presisi via helper `outlineView.cellAnchor(forRow:)`.
   * **Favorit**: Menambah atau menghapus kitab dari daftar favorit.
+* **Preservasi Status Outline (`isUpdatingOutline`)**: Menggunakan blok `defer { isUpdatingOutline = previousUpdatingOutline }` untuk menjaga integritas status pembaruan saat ekspansi kategori dan pemulihan seleksi, mencegah siklus reset seleksi prematur.
 * **Preservasi Seleksi Flat List (`restoreFlatSelection`)**: Pada mode daftar datar (seperti hasil filter pencarian dan riwayat), seleksi dipulihkan menggunakan indeks baris langsung (`selectFlatRow`) untuk mencegah hilangnya fokus item yang aktif.
 
 ### D. Animasi Batch Inkremental & Debouncing Histori (`LibraryView+Diffing`)
@@ -192,7 +194,7 @@ Untuk mencegah *flickering* visual dan lonjakan tampilan (*content jumping*):
 * **Debounce Pembaruan Histori (3 Detik)**: Notifikasi `.historyDidChange` di-*debounce* selama 3 detik pada `RunLoop.main` sebelum memicu penataan ulang baris. Hal ini mencegah outline view melompat-lompat (*jitter*) ketika pengguna menavigasi beberapa kitab secara cepat, sementara ID kitab tetap tercatat ke basis data histori secara instan.
 * **Mutasi Terarah**: Menjalankan mutasi *native* AppKit secara presisi: `outlineView.insertItems(at:inParent:withAnimation:)` dan `outlineView.removeItems(at:inParent:withAnimation:)`.
 
-### E. BulkDownloadVC (NSViewController)
+### E. BulkDownloadVC (Class)
 
 * Panel *sheet* modal yang menampilkan status antrean unduhan kitab massal.
 * Memuat bilah progres menyeluruh (*aggregate progress bar*), kecepatan jaringan aktual, dan kontrol jeda/batalkan.

@@ -165,6 +165,8 @@ struct ReaderState: Codable, Equatable {
     * `.rowiInfo`: Menampilkan biografi perawi hadis (*tarjamah rowi*).
     * `.bookContent`: Menampilkan teks kitab karya pengarang tersebut.
 * **`hasContent`**: Properti terhitung untuk memvalidasi apakah layar pembaca sedang memuat naskah aktif atau dalam status kosong (*placeholder*).
+* **Evaluasi Kesetaraan Kustom (`Equatable`)**:
+    * Implementasi kustom `static func ==` turut membandingkan `lhs.scrollPosition == rhs.scrollPosition` dan `lhs.sidebarScrollPosition == rhs.sidebarScrollPosition`. Hal ini menjamin bahwa status gulir terkini pembaca dan *sidebar* diikutsertakan dalam perbandingan *snapshot* sesi multi-tab untuk mencegah siklus simpan atau restorasi redundan.
 
 ### TabStateSnapshot (Struct)
 

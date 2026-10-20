@@ -184,10 +184,14 @@ listConfig.trailingSwipeActionsConfigurationProvider = { [weak self] indexPath i
 
 ## Mekanisme Pengeditan Anotasi di iOS
 
-*   **Pemisahan Aksi Hapus vs. Pengeditan**:
-    Pengguna dapat menghapus anotasi secara cepat dari daftar melalui aksi geser (*swipe action*), namun form pengeditan isi tidak disematkan di dalam daftar.
-*   **Pengeditan Berpusat di Reader (`iOSAnnotationEditorSheet`)**:
-    Pengubahan catatan (*note*), warna sorotan, tipe garis bawah (*underline*), maupun penambahan tag dilakukan langsung dari dalam tampilan membaca (`iOSReaderView`) melalui lembar modal `iOSAnnotationEditorSheet` saat teks beranotasi diketuk. Pemilihan warna beradaptasi secara dinamis dengan status toggle *underline*: menyajikan palet warna teks (`.label` / dynamic text color) dan warna garis bawah terdedikasi saat *underline* aktif. Penyimpanan otomatis memperbarui `recentUnderlineColors` di `UserDefaults`.
+*   **Menu Konteks Interaktif & Aksi Geser (Swipe)**:
+    Pengguna dapat mengelola anotasi langsung dari daftar baris melalui dua jalur:
+    - **Aksi Geser (*Swipe Action*)**: Menggeser sel ke kiri (*trailing edge*) memunculkan tombol hapus destruktif instan.
+    - **Menu Konteks Tekan-Lama (`UIContextMenuConfiguration`)**: Menekan lama pada sel anotasi di [`iOSAnnotationViewController`](file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/iOS/iOSAnnotationViewController.swift#L557) atau pada daftar anotasi buku [`iOSBookAnnotationsView`](file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Reader/iOS/Toolbar/iOSBookAnnotationsView.swift#L77) memunculkan menu konteks dengan aksi:
+      * **"Edit Anotasi" (`pencil`)**: Membuka lembar modal [`iOSAnnotationEditorSheet`](file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Annotations/iOS/iOSAnnotationEditorSheet.swift) untuk menyunting teks catatan (*note*), warna sorotan, gaya garis bawah (*underline*), dan tag.
+      * **"Hapus" (`trash`, destruktif)**: Menghapus anotasi dari penyimpanan `AnnotationStore`.
+*   **Pengeditan Langsung di Reader (`iOSAnnotationEditorSheet`)**:
+    Selain dari daftar, pengeditan juga dapat dipicu dari dalam tampilan membaca (`iOSReaderView`) saat teks beranotasi diketuk. Pemilihan warna beradaptasi secara dinamis dengan status toggle *underline*: menyajikan palet warna teks (`.label` / *dynamic text color*) dan warna garis bawah terdedikasi saat *underline* aktif. Penyimpanan otomatis memperbarui `recentUnderlineColors` di `UserDefaults`.
 *   **Menu Seleksi Teks & Palette SF Symbol**:
     Aksi *underline* pada menu seleksi teks (`UIAction` di `iOSIbarotTextView`) dikonfigurasi menggunakan SF Symbol dengan `UIImage.SymbolConfiguration(paletteColors:)` sesuai warna terakhir dari `recentUnderlineColors` (fallback ke `.label`).
 
