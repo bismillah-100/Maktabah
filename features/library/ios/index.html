@@ -1997,10 +1997,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-libraryviewcontrollerwrapper-uiviewcontrollerrepresentable" class="md-nav__link">
+  <a href="#c-libraryviewcontrollerwrapper-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C. LibraryViewControllerWrapper (UIViewControllerRepresentable)
+        C. LibraryViewControllerWrapper (Struct)
       
     </span>
   </a>
@@ -3729,10 +3729,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#c-libraryviewcontrollerwrapper-uiviewcontrollerrepresentable" class="md-nav__link">
+  <a href="#c-libraryviewcontrollerwrapper-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        C. LibraryViewControllerWrapper (UIViewControllerRepresentable)
+        C. LibraryViewControllerWrapper (Struct)
       
     </span>
   </a>
@@ -3915,9 +3915,10 @@
 <li><strong>Update Sheet (<code>UpdateView</code>)</strong>: Memeriksa dan mengunduh pembaruan isi kitab dari GitHub Releases.</li>
 <li><strong>Bulk Delete Dialog</strong>: Dialog konfirmasi penghapusan arsip lokal kitab.</li>
 </ul>
-<h3 id="c-libraryviewcontrollerwrapper-uiviewcontrollerrepresentable">C. LibraryViewControllerWrapper (UIViewControllerRepresentable)</h3>
+<h3 id="c-libraryviewcontrollerwrapper-struct">C. LibraryViewControllerWrapper (Struct)</h3>
 <ul>
-<li>Menjembatani <code>iOSLibraryViewController</code> ke SwiftUI untuk menjamin kestabilan <em>frame rate</em> 60–120 FPS saat pengguliran ribuan baris buku.</li>
+<li>Menjembatani <code>iOSLibraryViewController</code> (UIKit) ke SwiftUI untuk menjamin kestabilan <em>frame rate</em> 60–120 FPS saat pengguliran ribuan baris buku.</li>
+<li>Menghubungkan <em>closure</em> aksi informasi buku <code>onShowBookInfo</code> dari sel <code>iOSLibraryViewController</code> (<code>makeBookInfoAction(for:)</code>) menuju <code>navigationManager.selectedBookForInfo</code> yang disajikan di root antarmuka <code>iOSMainView</code>.</li>
 <li>Mengisolasi delegasi seleksi buku dan memperbarui status filter pencarian tanpa membuat ulang hierarki <em>view</em>.</li>
 </ul>
 <h3 id="d-authormodeview-struct">D. AuthorModeView (Struct)</h3>

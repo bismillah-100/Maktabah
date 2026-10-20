@@ -4302,6 +4302,7 @@
 <p><strong>Penyimpanan &amp; Restorasi saat Beralih Mode (<code>switchToMode(_:restoreState:)</code>)</strong></p>
 </li>
 <li>Dipicu ketika pengguna memilih mode pada <em>segmented control</em> di <em>toolbar</em>, menu bar, atau melalui navigasi URL deep link widget.</li>
+<li><strong>Guard Mode Identik</strong>: Dievaluasi pertama kali via <code>guard mode != currentMode else { return }</code>. Apabila mode target sama dengan mode yang sedang aktif, eksekusi langsung kembali (<em>early return</em>) untuk mencegah siklus <em>teardown</em>, <em>render</em> ulang hierarki <em>split</em>, serta persistensi <em>disk</em> yang membebani CPU.</li>
 <li><strong>Langkah 1 (Simpan Mode Lama)</strong>: <code>stateManager.saveState(for: currentMode, title: ..., components: components(for: currentMode))</code> mengumpulkan data UI mutakhir ke memori RAM (<code>ReaderState</code>).</li>
 <li><strong>Langkah 2 (Persistensi Instan ke Disk)</strong>: Mengeksekusi <code>stateManager.persistState()</code> langsung saat pergantian mode agar data tidak hilang apabila aplikasi ditutup mendadak.</li>
 <li><strong>Langkah 3 (Teardown Tampilan)</strong>: Mengosongkan teks bacaan (<code>ibarotTextVC.textView.string.removeAll()</code>) dan menghapus seluruh item split kecuali kontainer <em>sidebar</em> persisten.</li>

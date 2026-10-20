@@ -3951,7 +3951,7 @@
 <li><strong>Trailing Swipe Action (Hapus)</strong>:
     Mengimplementasikan <code>NSTableViewDelegate.tableView(_:rowActionsForRow:edge:)</code> pada sisi <code>.trailing</code>. Menyediakan aksi geser dengan ikon <code>trash.slash.fill</code> untuk menghapus anotasi terpilih secara instan.</li>
 <li><strong>Menu Konteks Baris (<code>AnnotationMenu</code>)</strong>:
-    Menyediakan aksi klik kanan: Salin teks (<code>copyMenuItem</code>), Tambah/Hapus Tag, Ubah Tipe (<em>Highlight</em> vs. <em>Underline</em>), serta opsi hapus.</li>
+    Menyediakan aksi klik kanan: Salin teks (<code>copyMenuItem</code>), Sunting Anotasi (<code>editMenuItem</code> — hanya aktif pada satu baris anotasi terpilih dan menyajikan popover <code>AnnotationEditorVC</code> yang dijangkarkan secara presisi pada sel via <code>outlineView.cellAnchor(forRow:)</code>), Tambah/Hapus Tag, Ubah Tipe (<em>Highlight</em> vs. <em>Underline</em>), serta opsi hapus.</li>
 <li><strong>Menu Palet Warna Cepat (<code>AnnotationColorMenuView</code>)</strong>:
     Menampilkan deretan titik warna di dalam menu konteks untuk <em>highlight</em> serta tombol <em>underline</em> terdedikasi. Ikon <em>underline</em> dikonfigurasi menggunakan SF Symbol dengan <code>NSImage.SymbolConfiguration(paletteColors:)</code> yang mencerminkan warna terakhir dari <code>recentUnderlineColors</code> (fallback ke <code>.labelColor</code>).</li>
 <li><strong>Panel Editor Anotasi (<code>AnnotationEditorVC</code>)</strong>:

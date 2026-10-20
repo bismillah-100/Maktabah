@@ -1720,10 +1720,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-historyfavoritesectionsswift" class="md-nav__link">
+  <a href="#b-historyfavoritesections-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. HistoryFavoriteSections.swift
+        B. HistoryFavoriteSections (Struct)
       
     </span>
   </a>
@@ -1746,6 +1746,17 @@
     <span class="md-ellipsis">
       
         D. Manajemen Scroll State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-bookcard-struct-popover-tekan-lama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. BookCard (Struct) &amp; Popover Tekan-Lama
       
     </span>
   </a>
@@ -3696,10 +3707,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-historyfavoritesectionsswift" class="md-nav__link">
+  <a href="#b-historyfavoritesections-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. HistoryFavoriteSections.swift
+        B. HistoryFavoriteSections (Struct)
       
     </span>
   </a>
@@ -3722,6 +3733,17 @@
     <span class="md-ellipsis">
       
         D. Manajemen Scroll State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-bookcard-struct-popover-tekan-lama" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. BookCard (Struct) &amp; Popover Tekan-Lama
       
     </span>
   </a>
@@ -3873,7 +3895,7 @@
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Fitur ini memanfaatkan makro <code>@Observable</code> (dari properti <code>viewModel.filteredFavorites</code> dan <code>filteredHistory</code>) untuk <em>rendering</em> secara reaktif. Seluruh penyaringan data dikelola pada lapisan logika <code>HistoryViewModel</code> (misalnya saat kolom pencarian diisi teks).</p>
-<h3 id="b-historyfavoritesectionsswift">B. <code>HistoryFavoriteSections.swift</code></h3>
+<h3 id="b-historyfavoritesections-struct">B. HistoryFavoriteSections (Struct)</h3>
 <p>Berkas ini bertugas sebagai pembungkus (<em>wrapper</em>) bagian tampilan. Komponen statis seperti <code>Section(header: Text("History"))</code> dibungkus dalam modul terisolasi agar iPad dapat me-<em>render</em> bagian ini secara independen di <em>sidebar</em> tanpa perlu me-<em>render</em> ulang <code>ThemeList</code> secara penuh.</p>
 <h3 id="c-historyhorizontalgrid-struct">C. HistoryHorizontalGrid (Struct)</h3>
 <p>Karena riwayat yang baru dibaca disajikan di posisi teratas dalam tampilan <em>carousel</em> geser menyamping (<em>horizontal grid</em>), Maktabah menyediakan komponen <code>HistoryHorizontalGrid</code>:</p>
@@ -3904,6 +3926,17 @@ Blok kode di atas merupakan adaptasi tata letak layar sentuh (<em>layout adaptat
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 </span></code></pre></div>
 <p><code>ScrollState</code> bertugas mempertahankan rasio posisi kompartemen <em>grid</em>. Jika pengguna kembali ke <code>iOSHistoryView</code> dari halaman membaca buku, <em>Scroll View</em> SwiftUI menyelaraskan <em>offset</em> <code>normalizedOffset</code> (0.0 hingga 1.0) ke lokasi semula (<em>last visual retention</em>) sehingga elemen kartu antarmuka tidak melompat (<em>flicker</em>) atau bergeser.</p>
+<h3 id="e-bookcard-struct-popover-tekan-lama">E. BookCard (Struct) &amp; Popover Tekan-Lama</h3>
+<p>Komponen visual kartu buku individual di dalam kisi (<em>grid</em>) riwayat dan daftar favorit:</p>
+<ul>
+<li><strong>Aksi Ketuk Utama</strong>: Membuka buku pada posisi terakhir atau halaman pertama melalui <code>navigationManager.openBook(book)</code>.</li>
+<li><strong>Popover Tekan-Lama (<em>Long-Press Context Popover</em>)</strong>:</li>
+<li>Menggunakan gestur <code>.onLongPressGesture</code> untuk menampilkan menu popover interaktif:<ul>
+<li><strong>Informasi Kitab (<code>BookInfoLabel</code>)</strong>: Menyetel <code>navigationManager.selectedBookForInfo = book</code> yang memunculkan lembar informasi bibliografi di tingkat root <code>iOSMainView</code>.</li>
+<li><strong>Hapus dari Riwayat (Destruktif)</strong>: Menghapus entri buku dari catatan riwayat lokal (<code>historySection</code>).</li>
+</ul>
+</li>
+</ul>
 
 
 

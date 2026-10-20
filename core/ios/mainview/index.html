@@ -723,10 +723,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#iphonelayout" class="md-nav__link">
+  <a href="#iphonelayout-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        iPhoneLayout
+        iPhoneLayout (Struct)
       
     </span>
   </a>
@@ -734,10 +734,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ipadlayout" class="md-nav__link">
+  <a href="#ipadlayout-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        iPadLayout
+        iPadLayout (Struct)
       
     </span>
   </a>
@@ -3752,10 +3752,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#iphonelayout" class="md-nav__link">
+  <a href="#iphonelayout-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        iPhoneLayout
+        iPhoneLayout (Struct)
       
     </span>
   </a>
@@ -3763,10 +3763,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ipadlayout" class="md-nav__link">
+  <a href="#ipadlayout-struct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        iPadLayout
+        iPadLayout (Struct)
       
     </span>
   </a>
@@ -3879,11 +3879,15 @@
     }</code></pre>
 <h2 id="komponen-inti-iosmainview">Komponen Inti: iOSMainView</h2>
 <p><code>iOSMainView</code> adalah kontainer utama yang merespons perubahan <em>environment</em> dan menentukan tata letak yang sesuai.</p>
-<h3 id="iosmainview-struct"><code>iOSMainView</code> (Struct)</h3>
+<h3 id="iosmainview-struct">iOSMainView (Struct)</h3>
 <p>Tanggung jawab utama <code>iOSMainView</code>:</p>
 <ul>
 <li><strong>Routing Berbasis Lingkungan</strong>: Memeriksa <code>horizontalSizeClass</code>. Jika bernilai <code>.regular</code> (iPad / Mac Catalyst), sistem merender <code>iPadLayout</code>. Jika bernilai <code>.compact</code> (iPhone), sistem merender <code>iPhoneLayout</code>.</li>
 <li><strong>Manajemen State Global</strong>: Mengelola <code>@State</code> untuk navigasi (<code>iOSNavigationManager</code>), tab yang dipilih (<code>selectedTab</code>), visibilitas kolom iPad, serta status tampilan <em>sheet</em> (Pengaturan / Donasi). Observer pada <code>iOSNavigationManager</code> (<code>.bookIntegrated</code> dan <code>.libraryFolderChanged</code>) menggunakan referensi <code>[weak self]</code> guna mencegah siklus retensi (<em>retain cycle</em>) memori saat navigasi tab berpindah.</li>
+<li><strong>Sentralisasi Lembaran Modal (<em>Modal Sheet Centralization</em>)</strong>:
+  Memusatkan presentasi modal pada tingkat kontainer tertinggi guna mencegah konflik hierarki tampilan deklaratif SwiftUI:</li>
+<li><code>.sheet(item: $bManager.selectedBookForInfo)</code>: Menyajikan <code>iOSBookInfoView</code> saat pengguna memicu aksi "Informasi Kitab" dari berbagai layar (katalog perpustakaan, lembar filter pencarian, maupun kartu riwayat/favorit).</li>
+<li><code>.sheet(isPresented: $bManager.showingTabsList)</code>: Menyajikan <code>iOSReaderTabsPopoverView</code> untuk mengelola daftar tab pembaca aktif di iPhone, dipindahkan dari <em>local state</em> <code>iOSReaderView</code> ke <code>iOSNavigationManager</code> terpusat.</li>
 <li><strong>Deep Linking</strong>: Menangani <code>.onOpenURL</code> untuk membuka anotasi tertentu atau riwayat bacaan berdasarkan URL WidgetKit.</li>
 <li><strong>Siklus Hidup (<em>Lifecycle</em>)</strong>: Memantau perubahan <code>scenePhase</code>. Saat bernilai <code>.active</code>, sistem memicu sinkronisasi <code>CloudKitSyncManager</code> dan mencatat aktivasi aplikasi pada <code>DonationManager</code>.</li>
 </ul>
@@ -3891,7 +3895,7 @@
 <p class="admonition-title">Lifecycle</p>
 <p><code>iOSMainView</code> bereaksi pada fase <em>scene</em> <code>.active</code> untuk menyerap perubahan sinkronisasi CloudKit dan memperbarui status donasi secara otomatis.</p>
 </div>
-<h3 id="iostab-enum"><code>iOSTab</code> (Enum)</h3>
+<h3 id="iostab-enum">iOSTab (Enum)</h3>
 <p>Enum <code>iOSTab</code> mendefinisikan menu navigasi utama dengan 5 pilihan:</p>
 <ul>
 <li><code>viewer</code> (Perpustakaan)</li>
@@ -3912,7 +3916,7 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">iPhone (TabView)</label><label for="__tabbed_1_2">iPad (Sidebar)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<h3 id="iphonelayout"><code>iPhoneLayout</code></h3>
+<h3 id="iphonelayout-struct">iPhoneLayout (Struct)</h3>
 <p>Pada iPhone, aplikasi menggunakan bilah tab (<strong>TabView</strong>) di bagian bawah layar. <code>iPhoneLayout</code> membungkus setiap menu tab dengan <code>NavigationStack</code> tersendiri sehingga navigasi subhalaman di satu tab tidak memengaruhi tab lainnya.</p>
 <p>Fitur utama:</p>
 <ul>
@@ -3930,7 +3934,7 @@
 </ul>
 </div>
 <div class="tabbed-block">
-<h3 id="ipadlayout"><code>iPadLayout</code></h3>
+<h3 id="ipadlayout-struct">iPadLayout (Struct)</h3>
 <p>Pada iPad, aplikasi menggunakan <strong>NavigationSplitView</strong> (tata letak 2–3 kolom) untuk memaksimalkan area layar lebar. Navigasi ditempatkan pada <em>sidebar</em> (kolom kiri) dan pembaca buku (<em>Reader</em>) pada kolom detail (kanan).</p>
 <p>Fitur utama:</p>
 <ul>

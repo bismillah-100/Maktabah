@@ -3874,20 +3874,25 @@
 <td style="text-align: left;"><code>PageJumpSheet</code></td>
 <td style="text-align: left;">Bilah geser (<em>slider</em>) cepat dan kolom masukan nomor halaman/juz.</td>
 </tr>
-<tr>
-<td style="text-align: left;"><code>showingTabsList</code></td>
-<td style="text-align: left;"><code>iOSReaderTabsPopoverView</code></td>
-<td style="text-align: left;">Menampilkan daftar kitab yang sedang dibuka secara bersamaan (<em>multi-tab reader</em> popover) pada tata letak kompak.</td>
-</tr>
 </tbody>
 </table>
+<blockquote>
+<p>[!NOTE]
+<strong>Sentralisasi Daftar Tab Kompak (<code>showingTabsList</code>):</strong>
+Variabel status <code>showingTabsList</code> yang menyajikan <code>iOSReaderTabsPopoverView</code> pada tata letak kompak dipindahkan dari <code>@State</code> lokal <code>iOSReaderView</code> ke <code>iOSNavigationManager.showingTabsList</code>. Lembar ini dipusatkan di tingkat root <code>iOSMainView</code> guna mencegah tumpang-tindih hierarki modal dan mempertahankan isolasi <em>view</em>.</p>
+</blockquote>
 <h3 id="b-jembatan-iosibarottextview-uiviewrepresentable-isolasi-layout">B. Jembatan iOSIbarotTextView (UIViewRepresentable) &amp; Isolasi Layout</h3>
 <p>Mengintegrasikan <code>UITextView</code> UIKit ke dalam arsitektur deklaratif SwiftUI dengan perlindungan tata letak TextKit 2:</p>
 <ul>
-<li><strong><code>makeUIView</code></strong>: Menginisialisasi <code>UITextView</code> kustom dengan properti <em>non-editable</em>, <em>selectable</em>, serta mendukung perpindahan per halaman (<em>paging mode</em>) maupun pengguliran kontinu (<em>continuous scrolling</em>).</li>
+<li><strong><code>makeUIView</code></strong>: Menginisialisasi <code>UITextView</code> kustom (<code>iOSCustomIbarotTextView</code>) dengan properti <em>non-editable</em>, <em>selectable</em>, serta mendukung perpindahan per halaman (<em>paging mode</em>) maupun pengguliran kontinu (<em>continuous scrolling</em>).</li>
 <li><strong><code>updateUIView</code></strong>: Menerima injeksi <code>NSAttributedString</code> baru dari <code>ReaderViewModel</code>. Pada metode ini, lapisan warna anotasi dan sorotan kata kunci pencarian diterapkan secara dinamis berdasarkan kalkulasi rentang teks. Mutasi <code>textAlignment</code> dan atribut semantik teks diproteksi dengan guard nilai saat ini guna mencegah pembatalan hierarki tata letak TextKit 2 yang berat pada halaman panjang.</li>
 <li><strong>Isolasi Render Lembar Modal (<code>ReaderTextContentView: Equatable</code>)</strong>: Tampilan pembaca dibungkus dalam <em>struct</em> terisolasi yang mengadopsi <code>Equatable</code>. Hal ini mencegah SwiftUI mengevaluasi ulang <em>Text View</em> ketika status <em>sheet</em> (seperti TOC atau opsi tampilan) dimutasi oleh kontainer induk.</li>
-<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk menu <em>highlight/underline</em>, mencegat ketukan anotasi (<code>onTapAnnotation</code>), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (<code>lastHandledSearchEventId</code>, <code>lastHandledAnnotationEventId</code>) per <em>instance</em> aktif. Properti pembantu restorasi <em>scroll</em> ditandai dengan <code>@ObservationIgnored</code> pada <code>ReaderViewModel</code> untuk mencegah siklus evaluasi reaktif yang berlebih.</li>
+<li><strong>Stabilisasi Posisi Scroll &amp; Caching Coordinator</strong>:</li>
+<li><strong>Offset Dokumen Murni</strong>: Posisi gulir dikalkulasi relatif terhadap dokumen aktual (<code>liveDocY = max(0, contentOffset.y + effectiveTopInset)</code>), mengompensasi penyesuaian dinamis <code>adjustedContentInset.top</code> saat <em>safe area</em> berubah.</li>
+<li><strong>Guard <code>isRestoringScroll</code></strong>: Variabel penanda pada <code>iOSCustomIbarotTextView</code> memblokir delegasi gulir pengguna selama fase restorasi berlangsung, mencegah pembaruan status liar (<em>stale scroll state</em>) saat TextKit 2 menghitung fragmen tata letak.</li>
+<li><strong>Penangguhan Restorasi (<code>pendingRestoreOffset</code>)</strong>: Penerapan offset ditangguhkan hingga tata letak teks dan batas kontainer (<em>bounds</em>) mapan di <code>layoutSubviews()</code>, kemudian dieksekusi secara presisi melalui <code>applyPendingScrollRestore()</code>.</li>
+<li><strong>Retensi Caching Coordinator</strong>: Objek <code>Coordinator</code> menyimpan <code>lastKnownScrollPosition</code> pada setiap event delegasi gulir (<code>scrollViewDidScroll</code>, <code>scrollViewDidEndDecelerating</code>, dll.). Saat tampilan bertransisi atau belum terpasang di jendela (<code>window == nil</code>), fungsi <code>fetchScrollPosition</code> mengembalikan nilai cache ini sehingga posisi bacaan tidak pernah hilang (<em>zero scroll loss</em>).</li>
+<li><strong><code>Coordinator</code> (<code>UITextViewDelegate</code>)</strong>: Menangani interaksi seleksi teks untuk menu <em>highlight/underline</em>, mencegat ketukan anotasi (<code>onTapAnnotation</code>), serta mengisolasi status de-duplikasi animasi event pencarian dan anotasi (<code>lastHandledSearchEventId</code>, <code>lastHandledAnnotationEventId</code>) per <em>instance</em> aktif.</li>
 <li><strong>Pencegahan Reset Gulir (<em>Scroll Reset</em>) pada Halaman Aktif</strong>: Pemuatan konten (<code>fetchContentById</code> dan <code>iOSNavigationManager.openBookInActiveTab</code>) memverifikasi apakah <em>tab</em> aktif telah menampilkan buku dan <code>contentId</code> yang dituju. Jika identik, sistem melewati pemuatan ulang dan <em>layout pass</em>, mencegah posisi gulir teks pembaca melompat kembali ke atas saat berinteraksi dengan anotasi pada halaman aktif.</li>
 </ul>
 <h3 id="c-penanganan-ekstensi-ui-mode-membaca-layar-penuh-fullscreen">C. Penanganan Ekstensi UI &amp; Mode Membaca Layar Penuh (<em>Fullscreen</em>)</h3>

@@ -2895,6 +2895,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-manajemen-status-lembar-anotasi-ios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Manajemen Status Lembar Anotasi iOS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Manajemen Status Lembar Anotasi iOS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bookannotationsviewmodel-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BookAnnotationsViewModel (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3633,6 +3661,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-manajemen-status-lembar-anotasi-ios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Manajemen Status Lembar Anotasi iOS
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Manajemen Status Lembar Anotasi iOS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bookannotationsviewmodel-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BookAnnotationsViewModel (Class)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3755,6 +3811,16 @@
 <td style="text-align: left;"><code>ReaderAnnotationEvent?</code></td>
 <td style="text-align: left;">Event pemicu <em>scroll-to-target</em> otomatis dan animasi sorotan pada anotasi yang dipilih di iOS.</td>
 </tr>
+<tr>
+<td style="text-align: left;"><code>bookAnnotationsViewModel</code></td>
+<td style="text-align: left;"><code>BookAnnotationsViewModel?</code></td>
+<td style="text-align: left;">Menyimpan <em>instance</em> status pencarian dan navigasi lembar anotasi buku di iOS.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>needsScrollRestore</code></td>
+<td style="text-align: left;"><code>Bool</code></td>
+<td style="text-align: left;">Penanda kebutuhan restorasi posisi gulir saat layar pembaca muncul kembali.</td>
+</tr>
 </tbody>
 </table>
 <blockquote>
@@ -3762,6 +3828,29 @@
 <strong>Siklus Hidup Event &amp; Perpindahan Halaman:</strong>
 Pada metode <code>updateContentState(with:)</code>, jika halaman berpindah ke <code>content.id</code> yang berbeda dari <code>searchEvent?.contentId</code> atau <code>annotationEvent?.annotation.contentId</code>, kedua event tersebut otomatis dinetralkan (<code>nil</code>). Hal ini menjamin halaman berikutnya tetap bersih dari residu sorotan pencarian. De-duplikasi eksekusi event dikelola pada level <em>instance</em> <code>Coordinator</code> di <code>iOSIbarotTextView</code> agar tidak ditelan oleh <em>view</em> di <em>background tab</em>.</p>
 </blockquote>
+<hr />
+<h2 id="4-manajemen-status-lembar-anotasi-ios">4. Manajemen Status Lembar Anotasi iOS</h2>
+<p>Untuk mengisolasi alur pencarian dan penyaringan anotasi per-kitab pada lembar modal iOS (<code>iOSBookAnnotationsView</code>), sistem menyediakan <em>class</em> pembantu terdedikasi:</p>
+<h3 id="bookannotationsviewmodel-class">BookAnnotationsViewModel (Class)</h3>
+<p>Objek ini dikelola di bawah isolasi <code>@Observable @MainActor</code> dan diretensi langsung oleh <code>ReaderViewModel.bookAnnotationsViewModel</code>:</p>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">@</span><span class="n">Observable</span><span class="w"> </span><span class="p">@</span><span class="n">MainActor</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">BookAnnotationsViewModel</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">?</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">bookAnnotations</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">Annotation</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">filteredAnnotations</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">Annotation</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">scrollPositionId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="kd">private</span><span class="p">(</span><span class="kr">set</span><span class="p">)</span><span class="w"> </span><span class="kd">var</span><span class="w"> </span><span class="nv">hasLoaded</span><span class="p">:</span><span class="w"> </span><span class="nb">Bool</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">searchText</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">""</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">}</span>
+</span></code></pre></div>
+<ul>
+<li><strong>Penyaringan Ber-debounce (<em>Debounced Search</em>)</strong>: Modifikasi pada <code>searchText</code> membatalkan <code>searchDebounceTask</code> yang sedang berjalan dan menerapkan jeda 0,5 detik (<code>Task.sleep(for: .seconds(0.5))</code>).</li>
+<li><strong>Normalisasi Teks Arab</strong>: Pencarian mencocokkan kueri terhadap catatan (<code>note</code>) maupun konteks kutipan (<code>context</code>) dengan normalisasi harakat (<code>normalizeArabic(false)</code>).</li>
+<li><strong>Offloading Kueri Pohon Anotasi</strong>: Pembacaan data dari <code>AnnotationTreeBuilder</code> atau <code>AnnotationStore</code> dieksekusi secara asinkron menggunakan <code>Task.detached(priority: .userInitiated)</code> agar tidak membebani aktor utama (<em>main actor</em>).</li>
+<li><strong>Sinkronisasi Reaktif</strong>: Mengamati mutasi data secara global melalui langganan Combine pada <code>AnnotationStore.shared.events</code> untuk memicu pemuatan ulang otomatis saat anotasi ditambah, disunting, atau dihapus.</li>
+<li><strong>Preservasi Status Sheet</strong>: Retensi <em>instance</em> di dalam <code>ReaderViewModel</code> menjamin riwayat kueri pencarian dan posisi baris yang disorot (<code>scrollPositionId</code>) tetap terjaga saat lembar modal ditutup dan dibuka kembali.</li>
+</ul>
 
 
 

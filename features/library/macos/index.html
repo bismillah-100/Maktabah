@@ -2014,10 +2014,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-libraryvc-nsviewcontroller" class="md-nav__link">
+  <a href="#b-libraryvc-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. LibraryVC (NSViewController)
+        B. LibraryVC (Class)
       
     </span>
   </a>
@@ -2047,10 +2047,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-bulkdownloadvc-nsviewcontroller" class="md-nav__link">
+  <a href="#e-bulkdownloadvc-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. BulkDownloadVC (NSViewController)
+        E. BulkDownloadVC (Class)
       
     </span>
   </a>
@@ -3729,10 +3729,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#b-libraryvc-nsviewcontroller" class="md-nav__link">
+  <a href="#b-libraryvc-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        B. LibraryVC (NSViewController)
+        B. LibraryVC (Class)
       
     </span>
   </a>
@@ -3762,10 +3762,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-bulkdownloadvc-nsviewcontroller" class="md-nav__link">
+  <a href="#e-bulkdownloadvc-class" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. BulkDownloadVC (NSViewController)
+        E. BulkDownloadVC (Class)
       
     </span>
   </a>
@@ -3937,19 +3937,21 @@ deactivate TV</code></pre>
 <li><strong>Segment 3 (<code>arrow.down.circle.fill</code>)</strong>: Mode khusus unduhan (tersedia saat <code>AppConfig.isUsingBundleMode</code> aktif) untuk menyaring hanya kitab yang berkas arsip SQLite-nya telah diunduh secara lokal.</li>
 <li><strong>Manajemen Inset ScrollView (<code>updateScrollViewConstraint</code>)</strong>: Ketinggian kontainer kapsul dihitung secara otomatis untuk menyesuaikan <code>scrollView.contentInsets.bottom</code> (atau <code>scrollViewBottomConstraint</code>), mencegah baris terbawah tabel tertutup oleh tombol segmentasi.</li>
 </ul>
-<h3 id="b-libraryvc-nsviewcontroller">B. LibraryVC (NSViewController)</h3>
+<h3 id="b-libraryvc-class">B. LibraryVC (Class)</h3>
 <ul>
 <li>Mengelola siklus hidup tampilan <em>sidebar</em>, kaitan <em>constraint</em> pencarian, dan inisialisasi awal dataset secara asinkron (<code>dataVM.prepareData</code>).</li>
 <li>Mengamati notifikasi <code>.libraryFolderChanged</code> untuk mereset seleksi dan memuat ulang struktur direktori saat folder basis data beralih.</li>
+<li><strong>Pencegahan Re-setup Redundan</strong>: Mengeliminasi pemanggilan berulang <code>setupUI()</code> selama progress pemuatan berlangsung, menjaga kestabilan <em>layout hierarchy</em>.</li>
 </ul>
 <h3 id="c-libraryviewmanager-class-render-baris-kustom">C. LibraryViewManager (Class) &amp; Render Baris Kustom</h3>
 <ul>
 <li>Mengimplementasikan <code>NSOutlineViewDataSource</code> dan <code>NSOutlineViewDelegate</code>.</li>
 <li>Menyediakan <em>context menu</em> klik kanan:</li>
-<li><strong>Buka di <em>Tab</em> Baru (<code>openBookInNewTab</code>)</strong>: Tersedia khusus untuk kitab yang telah terunduh/terintegrasi secara lokal (<code>isBookIntegrated</code>), mendelegasikan pembuatan <em>window controller</em> baru ke <code>MainWindow.openBookInNewTab</code>.</li>
+<li><strong>Buka di <em>Tab</em> Baru (<code>openBookInNewTab</code>)</strong>: Tersedia untuk kitab yang telah terunduh/terintegrasi secara lokal (<code>isBookIntegrated</code>), mendelegasikan pembuatan <em>window controller</em> baru ke <code>MainWindow.openBookInNewTab</code>.</li>
 <li><strong>Hapus Unduhan</strong>: Menghapus arsip SQLite lokal dari <em>disk</em>.</li>
-<li><strong>Informasi Kitab</strong>: Menampilkan <em>popover</em> informasi bibliografi kitab (<code>BookInfoPopoverVC</code>).</li>
+<li><strong>Informasi Kitab</strong>: Menampilkan <em>popover</em> informasi bibliografi kitab <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Library/macOS/LibraryViewManager.swift#L560"><code>BookInfo</code></a> yang terjangkar presisi via helper <code>outlineView.cellAnchor(forRow:)</code>.</li>
 <li><strong>Favorit</strong>: Menambah atau menghapus kitab dari daftar favorit.</li>
+<li><strong>Preservasi Status Outline (<code>isUpdatingOutline</code>)</strong>: Menggunakan blok <code>defer { isUpdatingOutline = previousUpdatingOutline }</code> untuk menjaga integritas status pembaruan saat ekspansi kategori dan pemulihan seleksi, mencegah siklus reset seleksi prematur.</li>
 <li><strong>Preservasi Seleksi Flat List (<code>restoreFlatSelection</code>)</strong>: Pada mode daftar datar (seperti hasil filter pencarian dan riwayat), seleksi dipulihkan menggunakan indeks baris langsung (<code>selectFlatRow</code>) untuk mencegah hilangnya fokus item yang aktif.</li>
 </ul>
 <h3 id="d-animasi-batch-inkremental-debouncing-histori-libraryviewdiffing">D. Animasi Batch Inkremental &amp; Debouncing Histori (<code>LibraryView+Diffing</code>)</h3>
@@ -3959,7 +3961,7 @@ deactivate TV</code></pre>
 <li><strong>Debounce Pembaruan Histori (3 Detik)</strong>: Notifikasi <code>.historyDidChange</code> di-<em>debounce</em> selama 3 detik pada <code>RunLoop.main</code> sebelum memicu penataan ulang baris. Hal ini mencegah outline view melompat-lompat (<em>jitter</em>) ketika pengguna menavigasi beberapa kitab secara cepat, sementara ID kitab tetap tercatat ke basis data histori secara instan.</li>
 <li><strong>Mutasi Terarah</strong>: Menjalankan mutasi <em>native</em> AppKit secara presisi: <code>outlineView.insertItems(at:inParent:withAnimation:)</code> dan <code>outlineView.removeItems(at:inParent:withAnimation:)</code>.</li>
 </ul>
-<h3 id="e-bulkdownloadvc-nsviewcontroller">E. BulkDownloadVC (NSViewController)</h3>
+<h3 id="e-bulkdownloadvc-class">E. BulkDownloadVC (Class)</h3>
 <ul>
 <li>Panel <em>sheet</em> modal yang menampilkan status antrean unduhan kitab massal.</li>
 <li>Memuat bilah progres menyeluruh (<em>aggregate progress bar</em>), kecepatan jaringan aktual, dan kontrol jeda/batalkan.</li>

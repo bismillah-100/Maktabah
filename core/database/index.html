@@ -4107,6 +4107,7 @@
 <ul>
 <li>Menggunakan arsitektur <code>AsyncThrowingStream</code> yang dibungkus di dalam <code>class</code> delegasi pembantu (<code>CoreDownloadDelegate: URLSessionDownloadDelegate</code>).</li>
 <li>Mengekstrak dan mengonversi berkas arsip Zstandard (<code>.zst</code>) menjadi basis data <code>.sqlite</code> secara langsung (<em>on-the-fly</em>).</li>
+<li><strong>Resolusi Direktori &amp; Fallback Jalur</strong>: Saat mengeksekusi <code>downloadSingleFile</code>, sistem memeriksa direktori tujuan melalui <code>AppConfig.coreDatabasePath</code>. Jika belum tersedia atau bernilai <code>nil</code>, sistem menerapkan <em>fallback</em> aman ke <code>AppConfig.archiveCachePath</code>. Eksistensi direktori dibuat secara eksplisit menggunakan <code>fileManager.createDirectory(atPath: destDir, withIntermediateDirectories: true)</code> sebelum pengunduhan dan penulisan berkas diproses.</li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Modal Pengunduhan Spesifik Platform</p>
@@ -4153,7 +4154,7 @@
 <hr />
 <h2 id="enum-dan-error-types">Enum dan Error Types</h2>
 <p>Seluruh notifikasi galat yang ditimbulkan subsistem ini distandarisasi dengan <em>custom error enum</em> menggunakan <em>protocol</em> <code>LocalizedError</code>.</p>
-<h3 id="archiveerror-enum"><code>ArchiveError</code> (Enum)</h3>
+<h3 id="archiveerror-enum">ArchiveError (Enum)</h3>
 <p>Menggambarkan permasalahan status sistem berkas pada repositori buku (arsip berkas SQLite 1–20).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">ArchiveError</span><span class="p">:</span><span class="w"> </span><span class="n">LocalizedError</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">archiveNotAvailable</span><span class="p">(</span><span class="n">archiveId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">)</span>
@@ -4166,7 +4167,7 @@
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">connectionFailed</span><span class="p">(</span><span class="nb">String</span><span class="p">)</span>
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="databaseerror-enum"><code>DatabaseError</code> (Enum)</h3>
+<h3 id="databaseerror-enum">DatabaseError (Enum)</h3>
 <p>Pengecualian (<em>exception</em>) spesifik ketika terjadi kendala kueri pada manajer utama.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">DatabaseError</span><span class="p">:</span><span class="w"> </span><span class="n">Error</span><span class="p">,</span><span class="w"> </span><span class="n">LocalizedError</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">noConnection</span>
@@ -4175,7 +4176,7 @@
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">other</span><span class="p">(</span><span class="nb">String</span><span class="p">)</span>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="dbconnectiontype-protocol"><code>DBConnectionType</code> (Protocol)</h3>
+<h3 id="dbconnectiontype-protocol">DBConnectionType (Protocol)</h3>
 <p><em>Protocol</em> <code>Sendable</code> standar yang berfungsi sebagai antarmuka abstrak bagi pembungkus SQLite agar komponen data tidak bergantung langsung pada <code>class</code> konkret.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">protocol</span><span class="w"> </span><span class="nc">DBConnectionType</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="kd">func</span><span class="w"> </span><span class="nf">queryRows</span><span class="p">(</span><span class="n">sql</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="n">params</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">SQLValue</span><span class="p">])</span><span class="w"> </span><span class="kr">throws</span><span class="w"> </span><span class="p">-&gt;</span><span class="w"> </span><span class="p">[[</span><span class="nb">String</span><span class="p">:</span><span class="w"> </span><span class="nb">Any</span><span class="p">?]]</span>

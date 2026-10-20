@@ -4196,6 +4196,10 @@
 </ul>
 </li>
 <li><strong><code>hasContent</code></strong>: Properti terhitung untuk memvalidasi apakah layar pembaca sedang memuat naskah aktif atau dalam status kosong (<em>placeholder</em>).</li>
+<li><strong>Evaluasi Kesetaraan Kustom (<code>Equatable</code>)</strong>:<ul>
+<li>Implementasi kustom <code>static func ==</code> turut membandingkan <code>lhs.scrollPosition == rhs.scrollPosition</code> dan <code>lhs.sidebarScrollPosition == rhs.sidebarScrollPosition</code>. Hal ini menjamin bahwa status gulir terkini pembaca dan <em>sidebar</em> diikutsertakan dalam perbandingan <em>snapshot</em> sesi multi-tab untuk mencegah siklus simpan atau restorasi redundan.</li>
+</ul>
+</li>
 </ul>
 <h3 id="tabstatesnapshot-struct">TabStateSnapshot (Struct)</h3>
 <p>Model persistensi sesi multi-tab untuk mengisolasi memori navigasi antar-tab jendela macOS:</p>

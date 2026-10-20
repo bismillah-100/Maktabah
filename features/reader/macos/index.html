@@ -2823,10 +2823,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-navigasi-terisolasi-perekaman-histori-bersyarat-ibarottextvc" class="md-nav__link">
+  <a href="#e-navigasi-terisolasi-state-component-perekaman-histori-bersyarat-ibarottextvc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. Navigasi Terisolasi &amp; Perekaman Histori Bersyarat (IbarotTextVC)
+        E. Navigasi Terisolasi, State Component &amp; Perekaman Histori Bersyarat (IbarotTextVC)
       
     </span>
   </a>
@@ -3739,10 +3739,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#e-navigasi-terisolasi-perekaman-histori-bersyarat-ibarottextvc" class="md-nav__link">
+  <a href="#e-navigasi-terisolasi-state-component-perekaman-histori-bersyarat-ibarottextvc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        E. Navigasi Terisolasi &amp; Perekaman Histori Bersyarat (IbarotTextVC)
+        E. Navigasi Terisolasi, State Component &amp; Perekaman Histori Bersyarat (IbarotTextVC)
       
     </span>
   </a>
@@ -3927,18 +3927,22 @@
 <li><strong>Pencarian Kontekstual</strong>: Opsi mencari frasa yang diseleksi di dalam kitab aktif (<em>In-Book Search</em>) atau di seluruh katalog perpustakaan (<em>Global FTS</em>).</li>
 <li><strong>Menu Penampilan Teks</strong>: Menyesuaikan ukuran font, famili font Arab (<em>Traditional Arabic</em>, <em>Scheherazade</em>, <em>Amiri</em>), dan tema latar belakang (<em>Sepia</em>, <em>Dark Sepia</em>, <em>White</em>, <em>Black</em>).</li>
 </ul>
-<h3 id="e-navigasi-terisolasi-perekaman-histori-bersyarat-ibarottextvc">E. Navigasi Terisolasi &amp; Perekaman Histori Bersyarat (IbarotTextVC)</h3>
+<h3 id="e-navigasi-terisolasi-state-component-perekaman-histori-bersyarat-ibarottextvc">E. Navigasi Terisolasi, State Component &amp; Perekaman Histori Bersyarat (IbarotTextVC)</h3>
 <p><code>IbarotTextVC</code> menyediakan API navigasi asinkron tingkat tinggi yang aman dari <em>race condition</em> untuk membuka anotasi dan riwayat:</p>
 <ul>
 <li><strong><code>openAnnotation(_ annotation: Annotation) async throws</code></strong>: Membatalkan <code>pendingRestoreTask</code>, memastikan kitab terkait terbuka, berpindah ke <code>contentId</code>, dan menginstruksikan perender teks untuk menggulir serta menyorot anotasi.</li>
 <li><strong><code>openHistory(book: BooksData, contentId: Int?) async throws</code></strong>: Membuka buku dan melompat ke posisi bacaan terakhir.</li>
+<li><strong>Proteksi Status Restorasi pada ReaderStateComponent</strong>: Pada metode <code>updateState(_:)</code>, perekaman koordinat <code>state.scrollPosition = scrollView.contentView.bounds.origin</code> diproteksi dengan guard <code>pendingRestoreTask == nil</code>. Hal ini mencegah koordinat sementara yang belum tuntas (<em>intermediate scroll position</em>) tersimpan secara keliru ke dalam <code>ReaderState</code> saat pemulihan posisi sedang berjalan.</li>
+<li><strong>Pemulihan Seleksi Outline Seketika</strong>: Saat beralih tab (<code>applyState</code>), apabila <code>libraryVC?.dataVM.isSetupComplete == true</code>, sistem langsung memanggil <code>libraryVC?.dataVM.restoreSelection(byBookName: book.book)</code> agar baris kitab aktif pada <em>outline view</em> segera tersorot tanpa jeda.</li>
 <li><strong>Perekaman Histori Bersyarat</strong>: Pembaruan seleksi buku ke <code>LibraryViewModel</code> membedakan antara aksi navigasi aktif dan pemuatan pratinjau:
   <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">if</span><span class="w"> </span><span class="n">viewModel</span><span class="p">.</span><span class="n">recordHistory</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">viewModel</span><span class="p">.</span><span class="n">handleBookSelection</span><span class="p">(</span><span class="n">book</span><span class="p">:</span><span class="w"> </span><span class="n">book</span><span class="p">)</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">viewModel</span><span class="p">.</span><span class="n">selectedBookName</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">book</span><span class="p">.</span><span class="n">book</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">restoreSelection</span><span class="p">(</span><span class="n">byBookName</span><span class="p">:</span><span class="w"> </span><span class="n">book</span><span class="p">.</span><span class="n">book</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="k">if</span><span class="w"> </span><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">isSetupComplete</span><span class="w"> </span><span class="p">==</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="n">libraryVC</span><span class="p">?.</span><span class="n">dataVM</span><span class="p">.</span><span class="n">restoreSelection</span><span class="p">(</span><span class="n">byBookName</span><span class="p">:</span><span class="w"> </span><span class="n">book</span><span class="p">.</span><span class="n">book</span><span class="p">)</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
 </span></code></pre></div>
   <code>handleBookSelection</code> (yang mengunggah riwayat ke CloudKit) hanya dipanggil jika <code>recordHistory == true</code>, mencegah pencatatan histori palsu saat sekadar memulihkan state jendela.</li>
 </ul>

@@ -3163,10 +3163,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-sub-komponen-modular-searchcomponentsswift" class="md-nav__link">
+  <a href="#2-sub-komponen-modular-searchcomponents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Sub-Komponen Modular (SearchComponents.swift)
+        2. Sub-Komponen Modular (SearchComponents)
       
     </span>
   </a>
@@ -3696,10 +3696,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-sub-komponen-modular-searchcomponentsswift" class="md-nav__link">
+  <a href="#2-sub-komponen-modular-searchcomponents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Sub-Komponen Modular (SearchComponents.swift)
+        2. Sub-Komponen Modular (SearchComponents)
       
     </span>
   </a>
@@ -3856,7 +3856,7 @@
 <li>Menjadi kontainer utama antarmuka pencarian yang mengelola lapisan <code>ZStack</code> dan <code>Overlay</code>.</li>
 <li>Mengatur <em>toolbar</em> pengurutan dinamis, penyajian lembar modal (<em>sheets</em>) menuju histori pencarian tersimpan (<em>Saved Results</em>), dan pemberitahuan migrasi basis data FTS bila diperlukan.</li>
 </ul>
-<h3 id="2-sub-komponen-modular-searchcomponentsswift">2. Sub-Komponen Modular (<code>SearchComponents.swift</code>)</h3>
+<h3 id="2-sub-komponen-modular-searchcomponents">2. Sub-Komponen Modular (SearchComponents)</h3>
 <ul>
 <li><strong><code>SearchInputBar</code></strong>: Kolom input pencarian utama dengan integrasi <code>@FocusState</code> untuk manajemen <em>keyboard</em>, tombol pembersih teks instan, dan indikator status aktif.</li>
 <li><strong><code>SearchHistoryOverlay</code></strong>: Hamparan mengambang yang menampilkan daftar 20 kueri pencarian terakhir saat kolom teks aktif, memudahkan pencarian berulang tanpa mengetik ulang.</li>
@@ -3870,8 +3870,9 @@
 </ul>
 <h3 id="4-iossearchfilterviewcontroller-class-penyaring-cakupan-scope">4. iOSSearchFilterViewController (Class) - Penyaring Cakupan / Scope</h3>
 <ul>
-<li>Menggunakan <code>UIViewControllerRepresentable</code> untuk memuat struktur hierarki pustaka UIKit (<em>hierarchical outline</em>).</li>
+<li>Menggunakan <code>UIViewControllerRepresentable</code> (<code>SearchFilterUIKitView</code>) untuk memuat struktur hierarki pustaka UIKit (<em>hierarchical outline</em>).</li>
 <li>Menangani seleksi multi-pilihan kategori atau kitab dengan performa tinggi saat menyaring ratusan kategori secara bersamaan.</li>
+<li>Menyalurkan aksi menu konteks "Informasi Kitab" via <em>callback</em> <code>onShowBookInfo</code> yang diteruskan ke <code>navigationManager.selectedBookForInfo</code> untuk disajikan di tingkat root <code>iOSMainView</code>.</li>
 </ul>
 
 

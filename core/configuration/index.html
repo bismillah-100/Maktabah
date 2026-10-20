@@ -3931,7 +3931,7 @@
 </ol>
 <hr />
 <h2 id="bedah-komponen-teknis">Bedah Komponen Teknis</h2>
-<h3 id="appconfig-enum"><code>AppConfig</code> (Enum)</h3>
+<h3 id="appconfig-enum">AppConfig (Enum)</h3>
 <p>Objek <code>AppConfig</code> direpresentasikan sebagai <code>enum</code> tanpa <em>case</em> sehingga tidak dapat diinstansiasi. Komponen ini menyimpan seluruh letak kunci preferensi konfigurasi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AppConfig</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">static</span><span class="w"> </span><span class="kd">let</span><span class="w"> </span><span class="nv">storageKey</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">"selected_shamela_bookmark"</span><span class="w"> </span><span class="c1">// (1)!</span>
@@ -3952,13 +3952,20 @@
 <li><em>Computed property</em> Boolean yang mengabstraksi pemanggilan <code>UserDefaults</code> secara langsung.</li>
 <li>Properti opsional untuk menentukan resolusi <em>path</em> internal (seperti folder <em>Cache</em>).</li>
 </ol>
-<p><strong>Penjelasan Properti Utama Lainnya:</strong></p>
+<p><strong>Penjelasan Properti &amp; Fungsi Integritas Utama:</strong></p>
 <ul>
 <li><code>databaseFilesPath</code>: Memeriksa ketersediaan <code>customDatabasePath</code>; jika tidak ada, sistem menggunakan <code>coreDatabasePath</code>.</li>
 <li><code>bookReleaseBaseURL</code>: Menampung tautan GitHub Releases yang dipakai sebagai <em>base URL</em> pengunduhan berkas buku.</li>
 <li><code>shouldCheckCoreVersion</code>: Memeriksa apakah jeda waktu dari pemeriksaan versi inti (<em>core</em>) terakhir telah melampaui enam bulan.</li>
+<li><code>ensureHasArchiveFiles(folderUrl:)</code>: Memvalidasi kelengkapan 20 berkas arsip SQLite (<code>1.sqlite</code> sampai <code>20.sqlite</code>) di dalam folder tujuan sebelum migrasi ke <em>Custom Mode</em> diizinkan.</li>
+<li><code>hasCustomDatabaseFolder()</code>: Memverifikasi ketersediaan direktori kustom dan keberadaan fisik jalurnya di sistem berkas melalui <code>FileManager.fileExists(atPath:)</code>, memastikan aplikasi tidak terkunci dalam status rusak jika media eksternal dilepas.</li>
+<li><code>resolvedPath(for:)</code>: Menyelesaikan <em>security-scoped bookmark</em> dari <code>UserDefaults</code>. Fungsi memvalidasi data tidak kosong (<code>!data.isEmpty</code>), mengaktifkan akses sumber daya aman via <code>startAccessingSecurityScopedResource()</code>, dan secara otomatis memperbarui serta menyimpan ulang bookmark apabila terdeteksi usang (<code>bookmarkDataIsStale == true</code>).</li>
 </ul>
-<h3 id="settingsactions-enum"><code>SettingsActions</code> (Enum)</h3>
+<div class="admonition tip">
+<p class="admonition-title">Pemulihan Mode Bundel Otomatis (BootstrapManager)</p>
+<p>Pada siklus inisialisasi aplikasi (khususnya di iOS melalui <code>BootstrapManager</code>), apabila konfigurasi diarahkan ke <em>Custom Mode</em> namun validasi <code>hasCustomDatabaseFolder()</code> gagal menemukan direktori fisik yang sah, sistem secara aman mengalihkan konfigurasi kembali ke <em>Bundle Mode</em> (<code>isUsingBundleMode = true</code>) guna mencegah kegagalan peluncuran (<em>crash/unresponsive launch</em>).</p>
+</div>
+<h3 id="settingsactions-enum">SettingsActions (Enum)</h3>
 <p><code>SettingsActions</code> memfasilitasi interaksi I/O eksternal dan pemindahan berkas.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">SettingsActions</span><span class="w"> </span><span class="p">{</span>
@@ -3993,7 +4000,7 @@
 <li><code>selectLibraryFolder</code>: Berfungsi dalam transisi penyimpanan basis data inti. Parameter validasi memeriksa apakah folder yang dipilih merupakan direktori pustaka yang valid.</li>
 <li><code>switchToBundleMode</code>: Menangani aksi peralihan sistem berkas kembali ke <em>bundle mode</em> dan memeriksa kelengkapan berkas menggunakan <code>CoreDatabaseDownloader</code>.</li>
 </ul>
-<h3 id="settingsviewmodel-class"><code>SettingsViewModel</code> (Class)</h3>
+<h3 id="settingsviewmodel-class">SettingsViewModel (Class)</h3>
 <p><em>ViewModel</em> tunggal (<em>singleton</em>) ini menggunakan <code>@Observable</code> agar propertinya dapat dipantau langsung oleh antarmuka SwiftUI.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">@</span><span class="n">Observable</span><span class="w"> </span><span class="p">@</span><span class="n">MainActor</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">SettingsViewModel</span><span class="w"> </span><span class="p">{</span>
@@ -4015,7 +4022,7 @@
 <hr />
 <h2 id="status-enum-dan-kesalahan-error-types">Status Enum dan Kesalahan (<em>Error Types</em>)</h2>
 <p>Sistem konfigurasi membungkus galat ke dalam <em>enum</em> yang terstruktur.</p>
-<h3 id="appconfigmigrationresolution-enum"><code>AppConfig.MigrationResolution</code> (Enum)</h3>
+<h3 id="appconfigmigrationresolution-enum">AppConfig.MigrationResolution (Enum)</h3>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">MigrationResolution</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">ask</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">keepDestination</span>
@@ -4028,7 +4035,7 @@
 <li><code>keepDestination</code>: Metode migrasi mempertahankan berkas yang sudah ada di direktori tujuan dan menghapus berkas asal.</li>
 <li><code>overwriteDestination</code>: Metode migrasi memindahkan berkas dari direktori sumber dan menimpa berkas yang ada di direktori tujuan.</li>
 </ul>
-<h3 id="storageerror-enum"><code>StorageError</code> (Enum)</h3>
+<h3 id="storageerror-enum">StorageError (Enum)</h3>
 <p>Sistem melemparkan (<code>throw</code>) jenis enum <code>StorageError</code> apabila instruksi I/O mengalami kegagalan. Karena mengadopsi <em>protocol</em> <code>LocalizedError</code>, setiap <em>case</em> menyediakan deskripsi pesan galat standar.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">StorageError</span><span class="p">:</span><span class="w"> </span><span class="n">Error</span><span class="p">,</span><span class="w"> </span><span class="n">LocalizedError</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">invalidDirectory</span>

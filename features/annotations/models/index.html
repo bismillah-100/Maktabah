@@ -3810,7 +3810,7 @@
 <p>Bagian ini membedah berbagai <code>struct</code>, <code>class</code>, dan <code>enum</code> murni yang berada di folder <code>Models/</code>. Model-model ini dirancang bebas dari ketergantungan sistem luar agar ringan dan <em>thread-safe</em> (mengadopsi <em>protocol</em> <code>Sendable</code>).</p>
 <h2 id="annotation-struct">Annotation (Struct)</h2>
 <p>Entitas utama yang merepresentasikan sebuah anotasi (<em>highlight</em>, <em>underline</em>, atau <em>note</em>).</p>
-<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">Annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
+<div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">Annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span><span class="w"> </span><span class="c1">// (1)!</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span><span class="c1">// (2)!</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">contentId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="w"> </span>
@@ -3849,6 +3849,7 @@
 <p>Untuk menjaga modularitas dan prinsip DRY, <code>Annotation</code> menyediakan <em>computed property</em> pembantu:</p>
 <ul>
 <li><code>displayTitle: String</code>: Mengembalikan teks catatan (<code>note</code>) jika tidak kosong, atau <em>fallback</em> ke teks kutipan (<code>context</code>).</li>
+<li><code>stableId: Int64</code>: Mengembalikan <code>id ?? 0</code> sebagai pengidentifikasi stabil (<em>stable identity</em>) untuk keperluan <em>diffing</em> <code>ThemeList</code> dan preservasi ID posisi <em>scroll</em> antarmuka di iOS.</li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Metadata Buku Diinjeksi ke Node</p>
