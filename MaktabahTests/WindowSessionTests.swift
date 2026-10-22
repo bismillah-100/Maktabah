@@ -60,6 +60,23 @@ struct ReaderStateModelTests {
         #expect(state1 != state2)
     }
 
+    @Test("Equatable implementation: membedakan state berdasarkan selectedRange")
+    func testEquatable_differentiatesSelectedRange() {
+        var state1 = ReaderState()
+        state1.selectedRange = NSRange(location: 10, length: 20)
+
+        var state2 = ReaderState()
+        state2.selectedRange = NSRange(location: 10, length: 20)
+
+        #expect(state1 == state2)
+
+        state2.selectedRange = NSRange(location: 10, length: 25)
+        #expect(state1 != state2)
+
+        state2.selectedRange = nil
+        #expect(state1 != state2)
+    }
+
     @Test("TabStateSnapshot & WindowTabsSession: roundtrip Codable serialization")
     func testTabSnapshotAndSessionRoundtrip() throws {
         var viewerState = ReaderState()

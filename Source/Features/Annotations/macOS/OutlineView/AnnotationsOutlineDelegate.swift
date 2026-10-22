@@ -120,6 +120,8 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         let row = outlineView.selectedRow
         onSelectItem?(row)
 
+        guard outlineView.window?.isKeyWindow == true else { return }
+
         guard let item = outlineView.item(atRow: row) as? AnnotationNode,
               let annotation = item.annotation
         else {
