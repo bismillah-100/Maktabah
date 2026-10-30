@@ -621,10 +621,13 @@ extension IbarotTextVC: TarjamahBDelegate {
 extension IbarotTextVC: ReaderStateComponent {
     func updateState(_ state: inout ReaderState) {
         if let textView, let ts = textView.textStorage, ts.length > 0 {
-            state.selectedRange = textView.selectedRange()
+            if pendingRestoreTask == nil {
+                let sel = textView.selectedRange()
+                state.selectedRange = (sel.location != NSNotFound && sel.length > 0) ? sel : nil
 
-            if pendingRestoreTask == nil, let scrollView = textView.enclosingScrollView {
-                state.scrollPosition = scrollView.contentView.bounds.origin
+                if let scrollView = textView.enclosingScrollView {
+                    state.scrollPosition = scrollView.contentView.bounds.origin
+                }
             }
         }
 
@@ -678,13 +681,6 @@ extension IbarotTextVC: ReaderStateComponent {
 
             viewModel.restore(from: state)
 
-            if let range = state.selectedRange {
-                textView.setSelectedRange(range)
-                if view.window?.isKeyWindow == true {
-                    view.window?.makeFirstResponder(textView)
-                }
-            }
-
             if let query = state.searchQuery {
                 let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
                 let nearDistance = state.searchNearDistance ?? 10
@@ -694,11 +690,15 @@ extension IbarotTextVC: ReaderStateComponent {
             guard !Task.isCancelled else { return }
 
             if let scrollPos = state.scrollPosition {
-                await textDelegate?.scrollTo(scrollPos)            
+                await textDelegate?.scrollTo(scrollPos)
+            }
+
+            if let range = state.selectedRange {
+                await textDelegate?.restoreSelectedRange(range)
             }
 
             if !Task.isCancelled {
-                self.pendingRestoreTask = nil
+                pendingRestoreTask = nil
             }
         }
     }
