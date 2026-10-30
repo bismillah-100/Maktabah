@@ -850,7 +850,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         var updatedAnnotations: [Annotation] = []
 
         let ckIdsToSave = annotationsToSave.compactMap(\.ckRecordId)
-        let existingAnnotations = try fetchExistingAnnotationMetadata(db: _db, ckIds: ckIdsToSave)
+        let existingAnnotations = try fetchExistingAnnotations(db: _db, ckIds: ckIdsToSave)
 
         for ann in annotationsToSave {
             guard let ckId = ann.ckRecordId else { continue }
@@ -867,35 +867,57 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         return (addedAnnotations, updatedAnnotations)
     }
 
-    private func fetchExistingAnnotationMetadata(
+    private func fetchExistingAnnotations(
         db: SQLiteDatabase,
         ckIds: [String]
-    ) throws -> [String: (id: Int64, lastModified: Int64)] {
-        var existingAnnotations: [String: (id: Int64, lastModified: Int64)] = [:]
+    ) throws -> [String: Annotation] {
+        var existingAnnotations: [String: Annotation] = [:]
         guard !ckIds.isEmpty else { return existingAnnotations }
 
+        var rows: [Annotation] = []
         for chunk in ckIds.chunked(into: 500) {
             let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
-            let findSql = "SELECT \(colAnnCkRecordId), \(colAnnId), \(colAnnLastModified) FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IN (\(placeholders))"
-            let rows = try db.fetch(query: findSql, parameters: chunk, mapping: { ($0.string(at: 0) ?? "", $0.int64(at: 1), $0.int64(at: 2)) })
-            for row in rows {
-                existingAnnotations[row.0] = (id: row.1, lastModified: row.2)
+            let findSql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnCkRecordId) IN (\(placeholders))"
+            let chunkRows = try db.fetch(query: findSql, parameters: chunk) { self.makeAnnotation(from: $0) }
+            rows.append(contentsOf: chunkRows)
+        }
+
+        let populated = try populateTags(for: rows)
+        for ann in populated {
+            if let ckId = ann.ckRecordId {
+                existingAnnotations[ckId] = ann
             }
         }
         return existingAnnotations
     }
 
+    private func hasCloudKitContentChanged(local: Annotation, remote: Annotation) -> Bool {
+        local.bkId != remote.bkId
+            || local.contentId != remote.contentId
+            || local.range != remote.range
+            || local.rangeDiacritics != remote.rangeDiacritics
+            || local.colorHex != remote.colorHex
+            || local.type != remote.type
+            || local.note != remote.note
+            || local.part != remote.part
+            || local.page != remote.page
+            || local.tags != sanitizeTagNames(remote.tags)
+    }
+
     private func processCloudKitSave(
         db: SQLiteDatabase,
         ann: Annotation,
-        existing: (id: Int64, lastModified: Int64)?
+        existing: Annotation?
     ) throws -> (added: Annotation?, updated: Annotation?) {
         guard ann.ckRecordId != nil else { return (nil, nil) }
 
-        if let existing {
+        if let existing, let existingId = existing.id {
             let remoteLastMod = ann.lastModified ?? 0
-            if remoteLastMod >= existing.lastModified {
-                let updated = try updateCloudKitAnnotation(db: db, ann: ann, existingId: existing.id)
+            let localLastMod = existing.lastModified ?? 0
+            if remoteLastMod >= localLastMod,
+               hasCloudKitContentChanged(local: existing, remote: ann)
+            {
+                let updated = try updateCloudKitAnnotation(db: db, ann: ann, existingId: existingId)
                 return (nil, updated)
             }
             return (nil, nil)

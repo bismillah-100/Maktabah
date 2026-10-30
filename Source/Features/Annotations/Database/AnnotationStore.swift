@@ -213,6 +213,16 @@ final class AnnotationStore: Sendable {
     }
 
     func updateAnnotation(_ annotation: Annotation) throws {
+        if let id = annotation.id,
+           let cached = cache.withLock({ $0.cacheById[id] }),
+           cached.colorHex == annotation.colorHex,
+           cached.type == annotation.type,
+           cached.note == annotation.note,
+           cached.tags == repository.sanitizeTagNames(annotation.tags)
+        {
+            return
+        }
+
         let updated = try repository.updateAnnotationRow(annotation)
 
         updateCacheAfterUpdate(updated)

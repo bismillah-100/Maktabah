@@ -120,7 +120,8 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         let row = outlineView.selectedRow
         onSelectItem?(row)
 
-        guard let item = outlineView.item(atRow: row) as? AnnotationNode,
+        guard outlineView.selectedRowIndexes.count == 1,
+              let item = outlineView.item(atRow: row) as? AnnotationNode,
               let annotation = item.annotation
         else {
             Logger.annotations.debug("outlineView item not as Annotations")
