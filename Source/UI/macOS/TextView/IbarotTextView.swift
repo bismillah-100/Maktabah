@@ -31,6 +31,7 @@ class IbarotTextView: NSTextView {
     private var annotationClickSetting: NSObjectProtocol?
     private var annotationCancellable: AnyCancellable?
     private let taskQueue = SerialTaskQueue()
+    private var loadGeneration = 0
 
     override var string: String {
         didSet {
@@ -947,6 +948,8 @@ extension IbarotTextView: TextViewRenderable {
         guard let scrollView = enclosingScrollView else { return }
         ReusableFunc.showProgressWindow(scrollView.contentView)
         taskQueue.cancelAll()
+        loadGeneration &+= 1
+        let generation = loadGeneration
 
         var scrollPercentage: CGFloat = 0
         var visibleRect: NSRect = .zero
@@ -957,27 +960,35 @@ extension IbarotTextView: TextViewRenderable {
 
         let targetBkId = options.content != nil ? bkId : (viewModel?.currentBook?.id ?? bkId)
         let targetContentId = options.content?.id ?? (viewModel?.currentContentId ?? contentId)
+        let showHarakat = state.showHarakat
+        let isMultiLanguage = options.isMultiLanguage ?? false
+        let isImported = options.isImported ?? false
+        let highlightColor = options.color ?? .header
 
         taskQueue.enqueue { [weak self] in
-            guard let self, !Task.isCancelled else { return }
-
-            let renderResult = renderer.render(
-                bookId: targetBkId,
-                contentId: targetContentId,
-                text: text,
-                highlightColor: options.color ?? .header,
-                showHarakat: state.showHarakat,
-                isMultiLanguage: options.isMultiLanguage ?? false,
-                isImported: options.isImported ?? false
-            )
-
-            if Task.isCancelled {
-                return
+            let renderResult: ArabicRenderResult?
+            if let self, !Task.isCancelled {
+                renderResult = renderer.render(
+                    bookId: targetBkId,
+                    contentId: targetContentId,
+                    text: text,
+                    highlightColor: highlightColor,
+                    showHarakat: showHarakat,
+                    isMultiLanguage: isMultiLanguage,
+                    isImported: isImported
+                )
+            } else {
+                renderResult = nil
             }
 
             await MainActor.run { [weak self] in
+                guard let self else {
+                    ReusableFunc.closeProgressWindow(scrollView.contentView)
+                    return
+                }
+                guard generation == loadGeneration else { return }
                 defer { ReusableFunc.closeProgressWindow(scrollView.contentView) }
-                guard let self, !Task.isCancelled else { return }
+                guard let renderResult, !Task.isCancelled else { return }
                 applyRenderedContent(
                     renderResult: renderResult,
                     options: options,
