@@ -814,7 +814,7 @@ class IbarotTextView: NSTextView {
         pop.contentViewController = editor
         pop.behavior = .transient
 
-        editor.onSave = { [weak pop] updated in
+        editor.onSave = { [weak self, weak pop] updated in
             do {
                 if updated.id == nil {
                     try AnnotationStore.shared.addAnnotation(updated)
@@ -823,6 +823,9 @@ class IbarotTextView: NSTextView {
                 }
             } catch {
                 Logger.annotations.error("Gagal menyimpan/update anotasi: \(error.localizedDescription, privacy: .public)")
+            }
+            if let sel = self?.selectedRange(), sel.length > 0, NSEqualRanges(sel, displayedRange) {
+                self?.setSelectedRange(NSRange(location: sel.location, length: 0))
             }
             pop?.performClose(nil)
         }
@@ -883,7 +886,7 @@ class IbarotTextView: NSTextView {
         currentRenderResult?.sourceText ?? string
     }
 
-    private func handleAnnotationEvent(_ event: AnnotationEvent) {
+    func handleAnnotationEvent(_ event: AnnotationEvent) {
         guard let ts = textStorage else { return }
         func isCurrentPage(for annotation: Annotation) -> Bool {
             annotation.bkId == bkId && annotation.contentId == contentId
@@ -926,11 +929,6 @@ class IbarotTextView: NSTextView {
 
         needsDisplay = true
 
-        // UI Cleanup
-        let sel = selectedRange()
-        if sel.length > 0 {
-            setSelectedRange(NSRange(location: sel.location, length: 0))
-        }
         colorMenuView.reloadColors()
     }
 
@@ -1085,6 +1083,28 @@ extension IbarotTextView: TextViewRenderable {
                 scrollView.contentView.scroll(to: NSPoint(x: .zero, y: max(0, scrollPos.y)))
                 scrollView.reflectScrolledClipView(scrollView.contentView)
                 tlm.textViewportLayoutController.layoutViewport()
+            }
+        }.value
+    }
+
+    func restoreSelectedRange(_ range: NSRange) async {
+        await taskQueue.enqueue { [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            await MainActor.run { [weak self] in
+                guard let self, let ts = textStorage, ts.length > 0,
+                      range.location != NSNotFound, range.length > 0
+                else { return }
+
+                let maxLen = ts.length
+                guard range.location < maxLen else { return }
+                let clampedLen = min(range.length, maxLen - range.location)
+                guard clampedLen > 0 else { return }
+                let validRange = NSRange(location: range.location, length: clampedLen)
+                textLayoutManager?.ensureLayout(for: validRange)
+                setSelectedRange(validRange)
+                if window?.isKeyWindow == true {
+                    window?.makeFirstResponder(self)
+                }
             }
         }.value
     }

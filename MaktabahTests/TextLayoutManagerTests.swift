@@ -137,6 +137,56 @@ struct TextLayoutManagerTests {
         }
     }
 
+    @Test("IbarotTextView restoreSelectedRange memulihkan seleksi setelah loadIbarotText di taskQueue")
+    @MainActor
+    func testIbarotTextViewRestoreSelectedRange() async {
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 500, height: 700))
+        let textView = IbarotTextView(frame: NSRect(x: 0, y: 0, width: 500, height: 700))
+        scrollView.documentView = textView
+
+        let text = "هذا نص تجريبي لاختبار استعادة التحديد بعد تبديل الأنماط في واجهة القارئ."
+        let targetRange = NSRange(location: 4, length: 11)
+
+        textView.loadIbarotText(text)
+        await textView.restoreSelectedRange(targetRange)
+
+        #expect(textView.selectedRange() == targetRange)
+    }
+
+    @Test("IbarotTextView handleAnnotationEvent tidak menghapus selectedRange yang sedang aktif")
+    @MainActor
+    func testHandleAnnotationEventPreservesSelection() async {
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 500, height: 700))
+        let textView = IbarotTextView(frame: NSRect(x: 0, y: 0, width: 500, height: 700))
+        scrollView.documentView = textView
+
+        let text = "هذا نص تجريبي لاختبار ثبات التحديد عند استقبال أحداث التعليقات التوضيحية."
+        let targetRange = NSRange(location: 4, length: 11)
+
+        textView.loadIbarotText(text)
+        await textView.restoreSelectedRange(targetRange)
+        #expect(textView.selectedRange() == targetRange)
+
+        let mockAnnotation = Annotation(
+            id: 9999,
+            bkId: 1,
+            contentId: 1,
+            range: NSRange(location: 0, length: 3),
+            rangeDiacritics: NSRange(location: 0, length: 3),
+            colorHex: "FF0000",
+            type: .highlight,
+            note: nil,
+            createdAt: 12345,
+            context: "هذا",
+            page: 1,
+            part: 1,
+            tags: []
+        )
+
+        textView.handleAnnotationEvent(.added(mockAnnotation))
+        #expect(textView.selectedRange() == targetRange)
+    }
+
     @Test("NSTextView printView sementara menggunakan TextKit 2 tanpa fallback TextKit 1")
     @MainActor
     func testPrintViewTemporaryTextViewUsesTextKit2() {

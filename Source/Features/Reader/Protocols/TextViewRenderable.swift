@@ -20,8 +20,10 @@ protocol TextViewRenderable: AnyObject {
     func highlightAndScrollToText(_ searchText: String, mode: SearchMode?, nearDistance: Int) async
     func scrollToTOC(title: String) async
     func scrollTo(_ scrollPos: CGPoint) async
+    func restoreSelectedRange(_ range: NSRange) async
 }
 
 extension TextViewRenderable {
     func scrollToTOC(title: String) async {}
+    func restoreSelectedRange(_ range: NSRange) async {}
 }

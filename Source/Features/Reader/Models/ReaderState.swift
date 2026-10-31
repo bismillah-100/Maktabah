@@ -141,6 +141,7 @@ extension ReaderState: Equatable {
             && lhs.searchNearDistance == rhs.searchNearDistance
             && lhs.authorSearchQuery == rhs.authorSearchQuery
             && lhs.scrollPosition == rhs.scrollPosition
+            && lhs.selectedRange == rhs.selectedRange
             && lhs.sidebarScrollPosition == rhs.sidebarScrollPosition
     }
 }
