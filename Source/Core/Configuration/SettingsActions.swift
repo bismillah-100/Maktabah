@@ -345,11 +345,28 @@ enum SettingsActions {
             newURL.stopAccessingSecurityScopedResource()
         }
 
+        // 1. Cek collision SEBELUM memutus koneksi database aktif
+        if let oldURL, fm.fileExists(atPath: oldURL.path), resolution == .ask {
+            try checkDatabaseFileCollisions(from: oldURL, to: newURL, fm: fm)
+        }
+
+        // 2. Putus koneksi aktif
         AnnotationStore.shared.disconnect()
         ResultsHandler.shared.disconnect()
+        HistoryDatabaseManager.shared.disconnect()
 
-        if let oldURL, fm.fileExists(atPath: oldURL.path) {
-            try migrateDatabaseFiles(from: oldURL, to: newURL, resolution: resolution, fm: fm)
+        // 3. Migrasi file dengan fallback reconnect ke oldURL jika gagal
+        do {
+            if let oldURL, fm.fileExists(atPath: oldURL.path) {
+                try migrateDatabaseFiles(from: oldURL, to: newURL, resolution: resolution, fm: fm)
+            }
+        } catch {
+            if let oldURL {
+                try? AnnotationStore.shared.setup(at: oldURL)
+                try? ResultsHandler.shared.setupResultDatabase(at: oldURL)
+                HistoryDatabaseManager.shared.setupDatabase()
+            }
+            throw error
         }
 
         AppConfig.saveBookmark(
@@ -359,6 +376,7 @@ enum SettingsActions {
 
         try AnnotationStore.shared.setup(at: newURL)
         try ResultsHandler.shared.setupResultDatabase(at: newURL)
+        HistoryDatabaseManager.shared.setupDatabase()
     }
 
     private static func validateNewDirectoryURL(_ newURL: URL, fm: FileManager) throws {
@@ -370,49 +388,119 @@ enum SettingsActions {
         }
     }
 
-    private static func migrateDatabaseFiles(
+    static let databaseFilesToMove: [String] = [
+        "Annotations.sqlite", "SearchResults.sqlite", "History.sqlite",
+        "Annotations.sqlite-wal", "Annotations.sqlite-shm",
+        "SearchResults.sqlite-wal", "SearchResults.sqlite-shm",
+        "History.sqlite-wal", "History.sqlite-shm",
+    ]
+
+    static func checkDatabaseFileCollisions(
+        from oldURL: URL,
+        to newURL: URL,
+        fm: FileManager = .default
+    ) throws {
+        for fileName in databaseFilesToMove {
+            let sourceFile = oldURL.appendingPathComponent(fileName)
+            guard fm.fileExists(atPath: sourceFile.path) else { continue }
+
+            let destFile = newURL.appendingPathComponent(fileName)
+            if fm.fileExists(atPath: destFile.path) {
+                throw StorageError.collision(newURL)
+            }
+        }
+    }
+
+    private struct MigrationStaging {
+        var copiedDestFiles: [URL] = []
+        var overwrittenBackups: [(dest: URL, backup: URL)] = []
+        var sourceFilesToRemove: [URL] = []
+    }
+
+    static func migrateDatabaseFiles(
         from oldURL: URL,
         to newURL: URL,
         resolution: AppConfig.MigrationResolution,
-        fm: FileManager
+        fm: FileManager = .default
     ) throws {
-        let filesToMove = [
-            "Annotations.sqlite", "SearchResults.sqlite", "History.sqlite",
-            "Annotations.sqlite-wal", "Annotations.sqlite-shm",
-            "SearchResults.sqlite-wal", "SearchResults.sqlite-shm",
-            "History.sqlite-wal", "History.sqlite-shm",
-        ]
-
-        // Phase 1: Check for collisions
         if resolution == .ask {
-            for fileName in filesToMove {
-                let sourceFile = oldURL.appendingPathComponent(fileName)
-                guard fm.fileExists(atPath: sourceFile.path) else { continue }
+            try checkDatabaseFileCollisions(from: oldURL, to: newURL, fm: fm)
+        }
 
-                let destFile = newURL.appendingPathComponent(fileName)
-                if fm.fileExists(atPath: destFile.path) {
-                    throw StorageError.collision(newURL)
-                }
+        var staging = MigrationStaging()
+
+        do {
+            for fileName in databaseFilesToMove {
+                try stageDatabaseFile(
+                    sourceFile: oldURL.appendingPathComponent(fileName),
+                    destFile: newURL.appendingPathComponent(fileName),
+                    resolution: resolution,
+                    fm: fm,
+                    staging: &staging
+                )
+            }
+        } catch {
+            rollbackMigration(staging: staging, fm: fm)
+            throw error
+        }
+
+        finalizeMigration(staging: staging, fm: fm)
+    }
+
+    private static func stageDatabaseFile(
+        sourceFile: URL,
+        destFile: URL,
+        resolution: AppConfig.MigrationResolution,
+        fm: FileManager,
+        staging: inout MigrationStaging
+    ) throws {
+        guard fm.fileExists(atPath: sourceFile.path) else { return }
+
+        if fm.fileExists(atPath: destFile.path) {
+            switch resolution {
+            case .keepDestination:
+                staging.sourceFilesToRemove.append(sourceFile)
+                return
+            case .overwriteDestination:
+                let backupFile = destFile.appendingPathExtension("rollback-bak")
+                try? fm.removeItem(at: backupFile)
+                try fm.moveItem(at: destFile, to: backupFile)
+                staging.overwrittenBackups.append((dest: destFile, backup: backupFile))
+                try fm.copyItem(at: sourceFile, to: destFile)
+                staging.sourceFilesToRemove.append(sourceFile)
+                return
+            case .ask:
+                break
             }
         }
 
-        // Phase 2: Execute migration
-        for fileName in filesToMove {
-            let sourceFile = oldURL.appendingPathComponent(fileName)
-            let destFile = newURL.appendingPathComponent(fileName)
+        try fm.copyItem(at: sourceFile, to: destFile)
+        staging.copiedDestFiles.append(destFile)
+        staging.sourceFilesToRemove.append(sourceFile)
+    }
 
-            guard fm.fileExists(atPath: sourceFile.path) else { continue }
+    private static func rollbackMigration(
+        staging: MigrationStaging,
+        fm: FileManager
+    ) {
+        for destFile in staging.copiedDestFiles {
+            try? fm.removeItem(at: destFile)
+        }
+        for entry in staging.overwrittenBackups {
+            try? fm.removeItem(at: entry.dest)
+            try? fm.moveItem(at: entry.backup, to: entry.dest)
+        }
+    }
 
-            if fm.fileExists(atPath: destFile.path) {
-                if resolution == .keepDestination {
-                    try? fm.removeItem(at: sourceFile)
-                    continue
-                } else if resolution == .overwriteDestination {
-                    try? fm.removeItem(at: destFile)
-                }
-            }
-
-            try fm.moveItem(at: sourceFile, to: destFile)
+    private static func finalizeMigration(
+        staging: MigrationStaging,
+        fm: FileManager
+    ) {
+        for entry in staging.overwrittenBackups {
+            try? fm.removeItem(at: entry.backup)
+        }
+        for sourceFile in staging.sourceFilesToRemove {
+            try? fm.removeItem(at: sourceFile)
         }
     }
 
