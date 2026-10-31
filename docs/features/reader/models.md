@@ -123,11 +123,10 @@ final class TOCNode: Identifiable, @unchecked Sendable {
     let sub: Int
     let id: Int
     var children: [TOCNode] = []
-    var endID: Int = .max
 }
 ```
 
-* **`endID`**: Menandai batas akhir rentang halaman/baris untuk bab tersebut. Digunakan oleh *reader* untuk mendeteksi bab yang sedang aktif dibaca berdasarkan `currentContentId`.
+* **Imutabilitas *Tree***: Batas rentang halaman/baris antar-bab dihitung secara terpisah melalui struct `TOCRange` di `BookTOCViewModel` sehingga *instance* `TOCNode` yang di-*cache* tidak dimutasi lintas jendela.
 * **Konversi Angka Arab**: Nilai `bab` otomatis dinormalisasi angka Latin-nya menjadi angka Arab (`convertToArabicDigits()`).
 
 ---
