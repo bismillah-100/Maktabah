@@ -411,6 +411,12 @@ enum SettingsActions {
         }
     }
 
+    private struct MigrationStaging {
+        var copiedDestFiles: [URL] = []
+        var overwrittenBackups: [(dest: URL, backup: URL)] = []
+        var sourceFilesToRemove: [URL] = []
+    }
+
     static func migrateDatabaseFiles(
         from oldURL: URL,
         to newURL: URL,
@@ -421,51 +427,79 @@ enum SettingsActions {
             try checkDatabaseFileCollisions(from: oldURL, to: newURL, fm: fm)
         }
 
-        var copiedDestFiles: [URL] = []
-        var overwrittenBackups: [(dest: URL, backup: URL)] = []
-        var sourceFilesToRemove: [URL] = []
+        var staging = MigrationStaging()
 
         do {
             for fileName in databaseFilesToMove {
-                let sourceFile = oldURL.appendingPathComponent(fileName)
-                let destFile = newURL.appendingPathComponent(fileName)
-
-                guard fm.fileExists(atPath: sourceFile.path) else { continue }
-
-                if fm.fileExists(atPath: destFile.path) {
-                    if resolution == .keepDestination {
-                        sourceFilesToRemove.append(sourceFile)
-                        continue
-                    } else if resolution == .overwriteDestination {
-                        let backupFile = destFile.appendingPathExtension("rollback-bak")
-                        try? fm.removeItem(at: backupFile)
-                        try fm.moveItem(at: destFile, to: backupFile)
-                        overwrittenBackups.append((dest: destFile, backup: backupFile))
-                        try fm.copyItem(at: sourceFile, to: destFile)
-                        sourceFilesToRemove.append(sourceFile)
-                        continue
-                    }
-                }
-
-                try fm.copyItem(at: sourceFile, to: destFile)
-                copiedDestFiles.append(destFile)
-                sourceFilesToRemove.append(sourceFile)
+                try stageDatabaseFile(
+                    sourceFile: oldURL.appendingPathComponent(fileName),
+                    destFile: newURL.appendingPathComponent(fileName),
+                    resolution: resolution,
+                    fm: fm,
+                    staging: &staging
+                )
             }
         } catch {
-            for destFile in copiedDestFiles {
-                try? fm.removeItem(at: destFile)
-            }
-            for entry in overwrittenBackups {
-                try? fm.removeItem(at: entry.dest)
-                try? fm.moveItem(at: entry.backup, to: entry.dest)
-            }
+            rollbackMigration(staging: staging, fm: fm)
             throw error
         }
 
-        for entry in overwrittenBackups {
+        finalizeMigration(staging: staging, fm: fm)
+    }
+
+    private static func stageDatabaseFile(
+        sourceFile: URL,
+        destFile: URL,
+        resolution: AppConfig.MigrationResolution,
+        fm: FileManager,
+        staging: inout MigrationStaging
+    ) throws {
+        guard fm.fileExists(atPath: sourceFile.path) else { return }
+
+        if fm.fileExists(atPath: destFile.path) {
+            switch resolution {
+            case .keepDestination:
+                staging.sourceFilesToRemove.append(sourceFile)
+                return
+            case .overwriteDestination:
+                let backupFile = destFile.appendingPathExtension("rollback-bak")
+                try? fm.removeItem(at: backupFile)
+                try fm.moveItem(at: destFile, to: backupFile)
+                staging.overwrittenBackups.append((dest: destFile, backup: backupFile))
+                try fm.copyItem(at: sourceFile, to: destFile)
+                staging.sourceFilesToRemove.append(sourceFile)
+                return
+            case .ask:
+                break
+            }
+        }
+
+        try fm.copyItem(at: sourceFile, to: destFile)
+        staging.copiedDestFiles.append(destFile)
+        staging.sourceFilesToRemove.append(sourceFile)
+    }
+
+    private static func rollbackMigration(
+        staging: MigrationStaging,
+        fm: FileManager
+    ) {
+        for destFile in staging.copiedDestFiles {
+            try? fm.removeItem(at: destFile)
+        }
+        for entry in staging.overwrittenBackups {
+            try? fm.removeItem(at: entry.dest)
+            try? fm.moveItem(at: entry.backup, to: entry.dest)
+        }
+    }
+
+    private static func finalizeMigration(
+        staging: MigrationStaging,
+        fm: FileManager
+    ) {
+        for entry in staging.overwrittenBackups {
             try? fm.removeItem(at: entry.backup)
         }
-        for sourceFile in sourceFilesToRemove {
+        for sourceFile in staging.sourceFilesToRemove {
             try? fm.removeItem(at: sourceFile)
         }
     }
