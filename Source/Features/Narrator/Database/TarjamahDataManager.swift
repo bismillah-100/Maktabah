@@ -499,7 +499,9 @@ class TarjamahGlobalManager: @unchecked Sendable {
             }
             let task = Task<[TarjamahMen], Never> { [weak self] in
                 guard let self else { return [] }
-                return await fetchTarjamahFromDB(conn: conn, rowaId: rowaId)
+                let results = await fetchTarjamahFromDB(conn: conn, rowaId: rowaId)
+                cacheRowaResults(results, forRowa: rowaId)
+                return results
             }
             state.rowaInFlight[rowaId] = task
             return .inFlight(task)
@@ -511,9 +513,7 @@ class TarjamahGlobalManager: @unchecked Sendable {
         case .noConnection:
             return []
         case let .inFlight(task):
-            let results = await task.value
-            cacheRowaResults(results, forRowa: rowaId)
-            return results
+            return await task.value
         }
     }
 
@@ -527,9 +527,15 @@ class TarjamahGlobalManager: @unchecked Sendable {
             ORDER BY Bk, Id
             """
             let tarjamahs = try await conn.queryTarjamah(sql: sql, params: [.int(rowaId)], isIsoName: false)
+            let uniqueBookIds = Array(Set(tarjamahs.map(\.bk)))
+            let booksById = Dictionary(
+                LibraryDataManager.shared.getBook(uniqueBookIds).map { ($0.id, $0) },
+                uniquingKeysWith: { first, _ in first }
+            )
+            results.reserveCapacity(tarjamahs.count)
             for t in tarjamahs {
                 var item = t
-                if let bookData = LibraryDataManager.shared.getBook([item.bk]).first {
+                if let bookData = booksById[item.bk] {
                     item.bookTitle = bookData.book
                     item.archive = bookData.archive
                 }
