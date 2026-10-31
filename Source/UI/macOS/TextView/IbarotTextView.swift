@@ -967,7 +967,7 @@ extension IbarotTextView: TextViewRenderable {
         let isImported = options.isImported ?? false
         let highlightColor = options.color ?? .header
 
-        taskQueue.enqueue { [weak self] in
+        taskQueue.enqueue { [weak self, weak scrollView] in
             let renderResult: ArabicRenderResult? = if let self, !Task.isCancelled {
                 renderer.render(
                     bookId: targetBkId,
@@ -982,16 +982,22 @@ extension IbarotTextView: TextViewRenderable {
                 nil
             }
 
-            await MainActor.run { [weak self] in
+            await MainActor.run { [weak self, weak scrollView] in
                 guard let self else {
-                    ReusableFunc.closeProgressWindow(scrollView.contentView)
+                    if let contentView = scrollView?.contentView {
+                        ReusableFunc.closeProgressWindow(contentView)
+                    }
                     return
                 }
                 guard generation == loadGeneration else { return }
                 progressOverlayTask?.cancel()
                 progressOverlayTask = nil
-                defer { ReusableFunc.closeProgressWindow(scrollView.contentView) }
-                guard let renderResult, !Task.isCancelled else { return }
+                defer {
+                    if let contentView = scrollView?.contentView {
+                        ReusableFunc.closeProgressWindow(contentView)
+                    }
+                }
+                guard let renderResult, let scrollView, !Task.isCancelled else { return }
                 applyRenderedContent(
                     renderResult: renderResult,
                     options: options,
