@@ -644,9 +644,10 @@ extension IbarotTextVC: ReaderStateComponent {
               let optionSearchVC = splitVC.optionSearchVC
         else { return }
 
-        while optionSearchVC.viewModel.state != .loaded {
-            await Task.yield()
-            guard !Task.isCancelled else { return }
+        let deadline = ContinuousClock.now + .seconds(5)
+        while optionSearchVC.viewModel.state == .loading {
+            guard !Task.isCancelled, ContinuousClock.now < deadline else { return }
+            try? await Task.sleep(for: .milliseconds(50))
         }
 
         // Tambahkan sedikit delay agar layout split view benar-benar settle

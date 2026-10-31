@@ -31,6 +31,8 @@ class IbarotTextView: NSTextView {
     private var annotationClickSetting: NSObjectProtocol?
     private var annotationCancellable: AnyCancellable?
     private let taskQueue = SerialTaskQueue()
+    private var loadGeneration = 0
+    private var progressOverlayTask: Task<Void, Never>?
 
     override var string: String {
         didSet {
@@ -945,8 +947,11 @@ extension IbarotTextView: TextViewRenderable {
         options: IbarotTextOptions = .init()
     ) {
         guard let scrollView = enclosingScrollView else { return }
-        ReusableFunc.showProgressWindow(scrollView.contentView)
         taskQueue.cancelAll()
+
+        loadGeneration &+= 1
+        let generation = loadGeneration
+        scheduleProgressOverlay(for: scrollView, generation: generation)
 
         var scrollPercentage: CGFloat = 0
         var visibleRect: NSRect = .zero
@@ -957,27 +962,42 @@ extension IbarotTextView: TextViewRenderable {
 
         let targetBkId = options.content != nil ? bkId : (viewModel?.currentBook?.id ?? bkId)
         let targetContentId = options.content?.id ?? (viewModel?.currentContentId ?? contentId)
+        let showHarakat = state.showHarakat
+        let isMultiLanguage = options.isMultiLanguage ?? false
+        let isImported = options.isImported ?? false
+        let highlightColor = options.color ?? .header
 
-        taskQueue.enqueue { [weak self] in
-            guard let self, !Task.isCancelled else { return }
-
-            let renderResult = renderer.render(
-                bookId: targetBkId,
-                contentId: targetContentId,
-                text: text,
-                highlightColor: options.color ?? .header,
-                showHarakat: state.showHarakat,
-                isMultiLanguage: options.isMultiLanguage ?? false,
-                isImported: options.isImported ?? false
-            )
-
-            if Task.isCancelled {
-                return
+        taskQueue.enqueue { [weak self, weak scrollView] in
+            let renderResult: ArabicRenderResult? = if let self, !Task.isCancelled {
+                renderer.render(
+                    bookId: targetBkId,
+                    contentId: targetContentId,
+                    text: text,
+                    highlightColor: highlightColor,
+                    showHarakat: showHarakat,
+                    isMultiLanguage: isMultiLanguage,
+                    isImported: isImported
+                )
+            } else {
+                nil
             }
 
-            await MainActor.run { [weak self] in
-                defer { ReusableFunc.closeProgressWindow(scrollView.contentView) }
-                guard let self, !Task.isCancelled else { return }
+            await MainActor.run { [weak self, weak scrollView] in
+                guard let self else {
+                    if let contentView = scrollView?.contentView {
+                        ReusableFunc.closeProgressWindow(contentView)
+                    }
+                    return
+                }
+                guard generation == loadGeneration else { return }
+                progressOverlayTask?.cancel()
+                progressOverlayTask = nil
+                defer {
+                    if let contentView = scrollView?.contentView {
+                        ReusableFunc.closeProgressWindow(contentView)
+                    }
+                }
+                guard let renderResult, let scrollView, !Task.isCancelled else { return }
                 applyRenderedContent(
                     renderResult: renderResult,
                     options: options,
@@ -986,6 +1006,15 @@ extension IbarotTextView: TextViewRenderable {
                     scrollView: scrollView
                 )
             }
+        }
+    }
+
+    private func scheduleProgressOverlay(for scrollView: NSScrollView, generation: Int) {
+        progressOverlayTask?.cancel()
+        progressOverlayTask = Task { @MainActor [weak self, weak scrollView] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled, let self, let scrollView, generation == loadGeneration else { return }
+            ReusableFunc.showProgressWindow(scrollView.contentView)
         }
     }
 
