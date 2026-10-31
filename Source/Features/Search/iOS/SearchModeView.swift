@@ -114,7 +114,7 @@ struct SearchModeView: View {
                 }
             )
             .themeTint()
-            .ignoresSafeArea(edges: .vertical)
+            .ignoresSafeArea(edges: [.vertical, .horizontal])
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 ftsMigrationBanner()
             }

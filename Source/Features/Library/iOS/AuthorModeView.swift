@@ -15,7 +15,7 @@ struct AuthorModeView: View {
             } else {
                 iOSRowiSidebarView(viewModel: viewModel, searchQuery: viewModel.lastSearchQuery)
                     .themeTint()
-                    .ignoresSafeArea(edges: [.vertical])
+                    .ignoresSafeArea(edges: [.vertical, .horizontal])
                     .onChange(of: viewModel.currentRowi) { _, newRowi in
                         if newRowi != nil {
                             navigateToReader = true

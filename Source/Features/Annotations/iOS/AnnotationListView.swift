@@ -42,7 +42,7 @@ struct AnnotationListView: View {
             onShowBookInfo: { navigationManager.selectedBookForInfo = $0 }
         )
         .themeTint()
-        .ignoresSafeArea(edges: .vertical)
+        .ignoresSafeArea(edges: [.vertical, .horizontal])
         .annotationSearch(viewModel: viewModel)
         .missingBookAlert(
             missingBookId: $missingBookId,
@@ -211,7 +211,7 @@ private extension View {
         @Bindable var viewModel = viewModel
         return searchable(
             text: $viewModel.searchText,
-            placement: .navigationBarDrawer(displayMode: .always),
+            placement: .toolbar,
             prompt: Text(.Annotation.searchAnnotations)
         )
         .searchScopes($viewModel.searchScope) {
