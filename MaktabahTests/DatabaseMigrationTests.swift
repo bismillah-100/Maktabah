@@ -156,6 +156,51 @@ struct DatabaseMigrationTests {
         #expect(!fm.fileExists(atPath: sourceDir.appendingPathComponent("SearchResults.sqlite").path))
     }
 
+    @Test("migrateDatabaseFiles: rollback memulihkan file tujuan dan menjaga file sumber tetap utuh jika gagal di tengah proses")
+    func testMigrateDatabaseFiles_rollsBackOnPartialFailure() throws {
+        final class FailingCopyFileManager: FileManager {
+            var copyCount = 0
+            override func copyItem(at srcURL: URL, to dstURL: URL) throws {
+                copyCount += 1
+                if copyCount >= 2 {
+                    throw NSError(domain: NSCocoaErrorDomain, code: NSFileWriteUnknownError)
+                }
+                try super.copyItem(at: srcURL, to: dstURL)
+            }
+        }
+
+        let sourceDir = try createTempDirectory()
+        let destDir = try createTempDirectory()
+        let fm = FileManager.default
+        defer {
+            try? fm.removeItem(at: sourceDir)
+            try? fm.removeItem(at: destDir)
+        }
+
+        try createDummyFiles(at: sourceDir, filenames: ["Annotations.sqlite", "History.sqlite"])
+        let existingDest = destDir.appendingPathComponent("Annotations.sqlite")
+        try Data("original-dest-annotations".utf8).write(to: existingDest)
+
+        let failingFM = FailingCopyFileManager()
+        #expect(throws: (any Error).self) {
+            try SettingsActions.migrateDatabaseFiles(
+                from: sourceDir,
+                to: destDir,
+                resolution: .overwriteDestination,
+                fm: failingFM
+            )
+        }
+
+        // File sumber harus tetap utuh 100% di sourceDir
+        #expect(fm.fileExists(atPath: sourceDir.appendingPathComponent("Annotations.sqlite").path))
+        #expect(fm.fileExists(atPath: sourceDir.appendingPathComponent("History.sqlite").path))
+
+        // File tujuan yang sempat tertimpa harus ter-rollback ke isi semula, dan file ke-2 tidak ada
+        let restoredData = try Data(contentsOf: existingDest)
+        #expect(String(data: restoredData, encoding: .utf8) == "original-dest-annotations")
+        #expect(!fm.fileExists(atPath: destDir.appendingPathComponent("History.sqlite").path))
+    }
+
     @Test("HistoryDatabaseManager: disconnect menutup database dan setupDatabase menyambung kembali")
     func testHistoryDatabaseManager_disconnectAndReconnect() {
         let manager = HistoryDatabaseManager.shared

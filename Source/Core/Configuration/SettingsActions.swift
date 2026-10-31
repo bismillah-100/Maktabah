@@ -421,22 +421,52 @@ enum SettingsActions {
             try checkDatabaseFileCollisions(from: oldURL, to: newURL, fm: fm)
         }
 
-        for fileName in databaseFilesToMove {
-            let sourceFile = oldURL.appendingPathComponent(fileName)
-            let destFile = newURL.appendingPathComponent(fileName)
+        var copiedDestFiles: [URL] = []
+        var overwrittenBackups: [(dest: URL, backup: URL)] = []
+        var sourceFilesToRemove: [URL] = []
 
-            guard fm.fileExists(atPath: sourceFile.path) else { continue }
+        do {
+            for fileName in databaseFilesToMove {
+                let sourceFile = oldURL.appendingPathComponent(fileName)
+                let destFile = newURL.appendingPathComponent(fileName)
 
-            if fm.fileExists(atPath: destFile.path) {
-                if resolution == .keepDestination {
-                    try? fm.removeItem(at: sourceFile)
-                    continue
-                } else if resolution == .overwriteDestination {
-                    try? fm.removeItem(at: destFile)
+                guard fm.fileExists(atPath: sourceFile.path) else { continue }
+
+                if fm.fileExists(atPath: destFile.path) {
+                    if resolution == .keepDestination {
+                        sourceFilesToRemove.append(sourceFile)
+                        continue
+                    } else if resolution == .overwriteDestination {
+                        let backupFile = destFile.appendingPathExtension("rollback-bak")
+                        try? fm.removeItem(at: backupFile)
+                        try fm.moveItem(at: destFile, to: backupFile)
+                        overwrittenBackups.append((dest: destFile, backup: backupFile))
+                        try fm.copyItem(at: sourceFile, to: destFile)
+                        sourceFilesToRemove.append(sourceFile)
+                        continue
+                    }
                 }
-            }
 
-            try fm.moveItem(at: sourceFile, to: destFile)
+                try fm.copyItem(at: sourceFile, to: destFile)
+                copiedDestFiles.append(destFile)
+                sourceFilesToRemove.append(sourceFile)
+            }
+        } catch {
+            for destFile in copiedDestFiles {
+                try? fm.removeItem(at: destFile)
+            }
+            for entry in overwrittenBackups {
+                try? fm.removeItem(at: entry.dest)
+                try? fm.moveItem(at: entry.backup, to: entry.dest)
+            }
+            throw error
+        }
+
+        for entry in overwrittenBackups {
+            try? fm.removeItem(at: entry.backup)
+        }
+        for sourceFile in sourceFilesToRemove {
+            try? fm.removeItem(at: sourceFile)
         }
     }
 
