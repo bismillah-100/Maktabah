@@ -12,8 +12,6 @@ final class TOCNode: Identifiable, @unchecked Sendable {
     let id: Int
     var children: [TOCNode] = []
 
-    var endID: Int = .max
-
     init(from toc: TOC) {
         bab = toc.bab.convertToArabicDigits()
         level = toc.level

@@ -491,11 +491,6 @@ extension BookConnection {
         let success = attachTOCNodesToParents(levelStacks: levelStacks, rootNodes: &rootNodes)
         guard success else { return [] }
 
-        #if os(iOS)
-        // Pass 4: Hitung endID berdasarkan urutan flat list
-        calculateTOCEndIDs(allNodes: allNodes)
-        #endif
-
         Self.tocTreeCache.setObject(rootNodes as NSArray, forKey: key)
         return rootNodes
     }
@@ -529,18 +524,6 @@ extension BookConnection {
         }
         return true
     }
-
-    #if os(iOS)
-    private func calculateTOCEndIDs(allNodes: [TOCNode]) {
-        for (i, node) in allNodes.enumerated() {
-            if i < allNodes.count - 1 {
-                node.endID = allNodes[i + 1].id - 1
-            } else {
-                node.endID = Int.max
-            }
-        }
-    }
-    #endif
 
     static func invalidateTOC(for bookId: Int) {
         tocTreeCache.removeObject(forKey: NSNumber(value: bookId))
