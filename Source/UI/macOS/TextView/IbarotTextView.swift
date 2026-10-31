@@ -32,6 +32,7 @@ class IbarotTextView: NSTextView {
     private var annotationCancellable: AnyCancellable?
     private let taskQueue = SerialTaskQueue()
     private var loadGeneration = 0
+    private var progressOverlayTask: Task<Void, Never>?
 
     override var string: String {
         didSet {
@@ -946,10 +947,11 @@ extension IbarotTextView: TextViewRenderable {
         options: IbarotTextOptions = .init()
     ) {
         guard let scrollView = enclosingScrollView else { return }
-        ReusableFunc.showProgressWindow(scrollView.contentView)
         taskQueue.cancelAll()
+
         loadGeneration &+= 1
         let generation = loadGeneration
+        scheduleProgressOverlay(for: scrollView, generation: generation)
 
         var scrollPercentage: CGFloat = 0
         var visibleRect: NSRect = .zero
@@ -966,9 +968,8 @@ extension IbarotTextView: TextViewRenderable {
         let highlightColor = options.color ?? .header
 
         taskQueue.enqueue { [weak self] in
-            let renderResult: ArabicRenderResult?
-            if let self, !Task.isCancelled {
-                renderResult = renderer.render(
+            let renderResult: ArabicRenderResult? = if let self, !Task.isCancelled {
+                renderer.render(
                     bookId: targetBkId,
                     contentId: targetContentId,
                     text: text,
@@ -978,7 +979,7 @@ extension IbarotTextView: TextViewRenderable {
                     isImported: isImported
                 )
             } else {
-                renderResult = nil
+                nil
             }
 
             await MainActor.run { [weak self] in
@@ -987,6 +988,8 @@ extension IbarotTextView: TextViewRenderable {
                     return
                 }
                 guard generation == loadGeneration else { return }
+                progressOverlayTask?.cancel()
+                progressOverlayTask = nil
                 defer { ReusableFunc.closeProgressWindow(scrollView.contentView) }
                 guard let renderResult, !Task.isCancelled else { return }
                 applyRenderedContent(
@@ -997,6 +1000,15 @@ extension IbarotTextView: TextViewRenderable {
                     scrollView: scrollView
                 )
             }
+        }
+    }
+
+    private func scheduleProgressOverlay(for scrollView: NSScrollView, generation: Int) {
+        progressOverlayTask?.cancel()
+        progressOverlayTask = Task { @MainActor [weak self, weak scrollView] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled, let self, let scrollView, generation == loadGeneration else { return }
+            ReusableFunc.showProgressWindow(scrollView.contentView)
         }
     }
 
