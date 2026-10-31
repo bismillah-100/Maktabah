@@ -103,6 +103,7 @@ struct iOSMainView: View {
         .sheet(isPresented: $bManager.showingTabsList) {
             iOSReaderTabsPopoverView(bManager: bManager, isPresented: $bManager.showingTabsList)
                 .environment(navigationManager)
+                .tint(Color.iosTint)
         }
         .alert(item: $navigationManager.alertMessage) { item in
             Alert(
