@@ -114,27 +114,22 @@ struct ReaderStateModelTests {
 
 // MARK: - 2. ReaderStateManager Suite (In-Memory Isolation & Disk Persistence)
 
-@Suite("ReaderStateManager: Per-Tab Isolation, Disk Persistence, and Migration")
+@MainActor
+func withTemporaryStatesDirectory<T>(_ body: (URL) throws -> T) rethrows -> T {
+    let temp = FileManager.default.temporaryDirectory
+        .appendingPathComponent("MaktabahTests-\(UUID().uuidString)")
+    try? FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+    ReaderStateManager.setCustomStatesDirectoryForTesting(temp)
+    defer {
+        ReaderStateManager.setCustomStatesDirectoryForTesting(nil)
+        try? FileManager.default.removeItem(at: temp)
+    }
+    return try body(temp)
+}
+
+@Suite("ReaderStateManager: Per-Tab Isolation, Disk Persistence, and Migration", .serialized)
 @MainActor
 struct ReaderStateManagerTests {
-    private static var statesDirectory: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return appSupport.appendingPathComponent("Maktabah/States")
-    }
-
-    private static var tabsSessionFileURL: URL {
-        statesDirectory.appendingPathComponent("tabs_session.json")
-    }
-
-    private static func legacyStateFileURL(for mode: AppMode) -> URL {
-        let filename = switch mode {
-        case .viewer: "viewer_state.json"
-        case .search: "search_state.json"
-        case .narrator: "author_state.json"
-        }
-        return statesDirectory.appendingPathComponent(filename)
-    }
-
     @Test("In-memory per-tab isolation: instance ReaderStateManager terpisah tidak saling mengontaminasi")
     func testInMemoryPerTabIsolation() {
         let tab1Manager = ReaderStateManager()
@@ -151,104 +146,65 @@ struct ReaderStateManagerTests {
         #expect(tab2Manager.getState(for: .viewer).currentPage == nil)
     }
 
-    @Test("Disk Persistence: simpan dan muat WindowTabsSession dengan aman (Backup & Restore)")
+    @Test("Disk Persistence: simpan dan muat WindowTabsSession dengan aman (Terisolasi)")
     func testDiskPersistence_saveAndLoadTabsSession() {
-        let sessionFile = Self.tabsSessionFileURL
-        let backupFile = sessionFile.deletingLastPathComponent().appendingPathComponent("tabs_session_test_backup.json")
-        let fileManager = FileManager.default
+        withTemporaryStatesDirectory { _ in
+            // 1. Simpan sesi dummy
+            var state1 = ReaderState()
+            state1.currentPage = 101
+            let snap1 = TabStateSnapshot(currentModeRaw: AppMode.viewer.rawValue, viewerState: state1, searchState: ReaderState(), authorState: ReaderState())
 
-        // 1. Backup file sesi asli jika ada
-        let originalExists = fileManager.fileExists(atPath: sessionFile.path)
-        if originalExists {
-            try? fileManager.copyItem(at: sessionFile, to: backupFile)
+            var state2 = ReaderState()
+            state2.currentPage = 202
+            let snap2 = TabStateSnapshot(currentModeRaw: AppMode.search.rawValue, viewerState: state2, searchState: ReaderState(), authorState: ReaderState())
+
+            let testSession = WindowTabsSession(selectedTabIndex: 1, tabs: [snap1, snap2])
+            ReaderStateManager.saveTabsSession(testSession)
+
+            // 2. Muat kembali sesi dari disk
+            let loadedSession = ReaderStateManager.loadTabsSession()
+            #expect(loadedSession != nil)
+            #expect(loadedSession?.selectedTabIndex == 1)
+            #expect(loadedSession?.tabs.count == 2)
+            #expect(loadedSession?.tabs[0].viewerState.currentPage == 101)
+            #expect(loadedSession?.tabs[1].viewerState.currentPage == 202)
         }
-
-        defer {
-            // Restore file sesi asli setelah test selesai
-            try? fileManager.removeItem(at: sessionFile)
-            if originalExists {
-                try? fileManager.moveItem(at: backupFile, to: sessionFile)
-            }
-        }
-
-        // 2. Simpan sesi dummy
-        var state1 = ReaderState()
-        state1.currentPage = 101
-        let snap1 = TabStateSnapshot(currentModeRaw: AppMode.viewer.rawValue, viewerState: state1, searchState: ReaderState(), authorState: ReaderState())
-
-        var state2 = ReaderState()
-        state2.currentPage = 202
-        let snap2 = TabStateSnapshot(currentModeRaw: AppMode.search.rawValue, viewerState: state2, searchState: ReaderState(), authorState: ReaderState())
-
-        let testSession = WindowTabsSession(selectedTabIndex: 1, tabs: [snap1, snap2])
-        ReaderStateManager.saveTabsSession(testSession)
-
-        // 3. Muat kembali sesi dari disk
-        let loadedSession = ReaderStateManager.loadTabsSession()
-        #expect(loadedSession != nil)
-        #expect(loadedSession?.selectedTabIndex == 1)
-        #expect(loadedSession?.tabs.count == 2)
-        #expect(loadedSession?.tabs[0].viewerState.currentPage == 101)
-        #expect(loadedSession?.tabs[1].viewerState.currentPage == 202)
     }
 
     @Test("Legacy Migration & Cleanup: memigrasikan file lama ke tabs_session.json dan membersihkan file lama")
     func testLegacyMigrationAndCleanup() throws {
-        let sessionFile = Self.tabsSessionFileURL
-        let backupFile = sessionFile.deletingLastPathComponent().appendingPathComponent("tabs_session_mig_backup.json")
-        let fileManager = FileManager.default
+        try withTemporaryStatesDirectory { _ in
+            let sessionFile = ReaderStateManager.tabsSessionFileURL
+            let legacyViewerFile = ReaderStateManager.legacyStateFileURL(for: .viewer)
+            let fileManager = FileManager.default
 
-        // 1. Backup file sesi asli
-        let originalExists = fileManager.fileExists(atPath: sessionFile.path)
-        if originalExists {
-            try? fileManager.moveItem(at: sessionFile, to: backupFile)
+            // 1. Tulis file legacy dummy
+            var legacyState = ReaderState()
+            legacyState.currentPage = 777
+            let data = try JSONEncoder().encode(legacyState)
+            try data.write(to: legacyViewerFile)
+
+            // Pastikan tabs_session.json belum ada
+            #expect(!fileManager.fileExists(atPath: sessionFile.path))
+
+            // 2. Muat sesi: harus memicu migrasi
+            let migratedSession = ReaderStateManager.loadTabsSession()
+            #expect(migratedSession != nil)
+            #expect(migratedSession?.tabs.count == 1)
+            #expect(migratedSession?.tabs[0].viewerState.currentPage == 777)
+
+            // 3. Verifikasi bahwa tabs_session.json sekarang telah dibuat
+            #expect(fileManager.fileExists(atPath: sessionFile.path))
+
+            // 4. Verifikasi bahwa file legacy telah dibersihkan otomatis
+            #expect(!fileManager.fileExists(atPath: legacyViewerFile.path))
         }
-
-        let legacyViewerFile = Self.legacyStateFileURL(for: .viewer)
-        let legacyBackup = legacyViewerFile.deletingLastPathComponent().appendingPathComponent("viewer_state_mig_backup.json")
-        let originalLegacyExists = fileManager.fileExists(atPath: legacyViewerFile.path)
-        if originalLegacyExists {
-            try? fileManager.moveItem(at: legacyViewerFile, to: legacyBackup)
-        }
-
-        defer {
-            // Restore file asli
-            try? fileManager.removeItem(at: sessionFile)
-            try? fileManager.removeItem(at: legacyViewerFile)
-            if originalExists {
-                try? fileManager.moveItem(at: backupFile, to: sessionFile)
-            }
-            if originalLegacyExists {
-                try? fileManager.moveItem(at: legacyBackup, to: legacyViewerFile)
-            }
-        }
-
-        // 2. Tulis file legacy dummy
-        var legacyState = ReaderState()
-        legacyState.currentPage = 777
-        let data = try JSONEncoder().encode(legacyState)
-        try data.write(to: legacyViewerFile)
-
-        // Pastikan tabs_session.json belum ada
-        #expect(!fileManager.fileExists(atPath: sessionFile.path))
-
-        // 3. Muat sesi: harus memicu migrasi
-        let migratedSession = ReaderStateManager.loadTabsSession()
-        #expect(migratedSession != nil)
-        #expect(migratedSession?.tabs.count == 1)
-        #expect(migratedSession?.tabs[0].viewerState.currentPage == 777)
-
-        // 4. Verifikasi bahwa tabs_session.json sekarang telah dibuat
-        #expect(fileManager.fileExists(atPath: sessionFile.path))
-
-        // 5. Verifikasi bahwa file legacy telah dibersihkan otomatis
-        #expect(!fileManager.fileExists(atPath: legacyViewerFile.path))
     }
 }
 
 // MARK: - 3. AppDelegate Lifecycle Hardening Suite
 
-@Suite("AppDelegate Lifecycle: Quit Handling, Termination Flag, and Deep Link Safety")
+@Suite("AppDelegate Lifecycle: Quit Handling, Termination Flag, and Deep Link Safety", .serialized)
 @MainActor
 struct AppDelegateLifecycleTests {
     @Test("applicationShouldTerminate: menyetel isTerminating dan mengembalikan .terminateNow")
@@ -308,30 +264,32 @@ struct AppDelegateLifecycleTests {
 
     @Test("Full Workspace Preservation: windowObserverWillCloseNotification tidak menghapus atau menimpa sesi saat seluruh jendela ditutup")
     func testWindowWillClose_preservesSessionWhenLastWindowCloses() {
-        let appDelegate = AppDelegate()
+        withTemporaryStatesDirectory { _ in
+            let appDelegate = AppDelegate()
 
-        // 1. Simpan sesi awal dengan 2 tab
-        let snap1 = TabStateSnapshot(currentModeRaw: 0, viewerState: ReaderState(), searchState: ReaderState(), authorState: ReaderState())
-        let snap2 = TabStateSnapshot(currentModeRaw: 1, viewerState: ReaderState(), searchState: ReaderState(), authorState: ReaderState())
-        let initialSession = WindowTabsSession(selectedTabIndex: 0, tabs: [snap1, snap2])
-        ReaderStateManager.saveTabsSession(initialSession)
+            // 1. Simpan sesi awal dengan 2 tab
+            let snap1 = TabStateSnapshot(currentModeRaw: 0, viewerState: ReaderState(), searchState: ReaderState(), authorState: ReaderState())
+            let snap2 = TabStateSnapshot(currentModeRaw: 1, viewerState: ReaderState(), searchState: ReaderState(), authorState: ReaderState())
+            let initialSession = WindowTabsSession(selectedTabIndex: 0, tabs: [snap1, snap2])
+            ReaderStateManager.saveTabsSession(initialSession)
 
-        // 2. Buat dummy window terakhir yang sedang menutup
-        let window = MainWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        let notification = Notification(name: NSWindow.willCloseNotification, object: window)
+            // 2. Buat dummy window terakhir yang sedang menutup
+            let window = MainWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            let notification = Notification(name: NSWindow.willCloseNotification, object: window)
 
-        // 3. Panggil willCloseNotification (simulasi jendela terakhir menutup tanpa terminasi)
-        appDelegate.windowObserverWillCloseNotification(notification)
+            // 3. Panggil willCloseNotification (simulasi jendela terakhir menutup tanpa terminasi)
+            appDelegate.windowObserverWillCloseNotification(notification)
 
-        // 4. Verifikasi bahwa sesi disk tetap utuh (2 tab), tidak tertimpa menjadi 1 tab atau kosong
-        let loadedSession = ReaderStateManager.loadTabsSession()
-        #expect(loadedSession != nil)
-        #expect(loadedSession?.tabs.count == 2)
+            // 4. Verifikasi bahwa sesi disk tetap utuh (2 tab), tidak tertimpa menjadi 1 tab atau kosong
+            let loadedSession = ReaderStateManager.loadTabsSession()
+            #expect(loadedSession != nil)
+            #expect(loadedSession?.tabs.count == 2)
+        }
     }
 
     @Test("Debounced Session Save: scheduleSessionSave tidak melakukan save seketika ke disk")

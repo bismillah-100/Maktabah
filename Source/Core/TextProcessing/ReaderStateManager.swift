@@ -19,7 +19,9 @@ class ReaderStateManager {
 
     private static let fileManager = FileManager.default
 
-    private static let statesDirectory: URL = {
+    private static var customStatesDirectory: URL?
+
+    private static let defaultStatesDirectory: URL = {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let maktabahDir = appSupport.appendingPathComponent("Maktabah/States")
         if !fileManager.fileExists(atPath: maktabahDir.path) {
@@ -28,11 +30,21 @@ class ReaderStateManager {
         return maktabahDir
     }()
 
-    private static var tabsSessionFileURL: URL {
+    static var statesDirectory: URL {
+        customStatesDirectory ?? defaultStatesDirectory
+    }
+
+    #if DEBUG
+    static func setCustomStatesDirectoryForTesting(_ url: URL?) {
+        customStatesDirectory = url
+    }
+    #endif
+
+    static var tabsSessionFileURL: URL {
         statesDirectory.appendingPathComponent("tabs_session.json")
     }
 
-    private static func legacyStateFileURL(for mode: AppMode) -> URL {
+    static func legacyStateFileURL(for mode: AppMode) -> URL {
         let filename: String
         switch mode {
         case .viewer: filename = "viewer_state.json"
