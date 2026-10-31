@@ -4,34 +4,47 @@
 //
 
 import Foundation
+import Synchronization
 
-class TabaqaGroup: @unchecked Sendable {
+final class TabaqaGroup: Sendable {
     let code: String
     let name: String
-    var rowis: [Rowi]
-    var displayedRowis: [Rowi] = [] // Yang ditampilkan
-    var hasMore: Bool {
-        rowis.count > displayedRowis.count
+    let rowis: [Rowi]
+    let pageSize = 50
+
+    private let displayedState: Mutex<[Rowi]>
+
+    var displayedRowis: [Rowi] {
+        displayedState.withLock { $0 }
     }
 
-    let pageSize = 50
+    var hasMore: Bool {
+        displayedState.withLock { rowis.count > $0.count }
+    }
 
     init(code: String, name: String, rowis: [Rowi]) {
         self.code = code
         self.name = name
         self.rowis = rowis
+        displayedState = Mutex(Array(rowis.prefix(pageSize)))
     }
 
-    func loadMore() {
-        let currentCount = displayedRowis.count
-        let remaining = rowis.count - currentCount
-        let toLoad = min(remaining, pageSize)
-
-        displayedRowis.append(contentsOf: rowis[currentCount ..< (currentCount + toLoad)])
+    @discardableResult
+    func loadMore() -> Int {
+        displayedState.withLock { displayed in
+            let currentCount = displayed.count
+            let remaining = rowis.count - currentCount
+            let toLoad = min(remaining, pageSize)
+            guard toLoad > 0 else { return 0 }
+            displayed.append(contentsOf: rowis[currentCount ..< (currentCount + toLoad)])
+            return toLoad
+        }
     }
 
     func initialLoad() {
-        displayedRowis = Array(rowis.prefix(pageSize))
+        displayedState.withLock { displayed in
+            displayed = Array(rowis.prefix(pageSize))
+        }
     }
 
     static let tabaqaMapping: [String: String] = [

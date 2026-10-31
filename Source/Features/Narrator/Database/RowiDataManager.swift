@@ -8,8 +8,9 @@
 import Foundation
 import OSLog
 import SQLite3
+import Synchronization
 
-class RowiDataManager: @unchecked Sendable {
+final class RowiDataManager: Sendable {
     static let shared = RowiDataManager()
 
     private let tableName = "rowa"
@@ -26,8 +27,16 @@ class RowiDataManager: @unchecked Sendable {
     private let colWulida = "birth"
     private let colTuwuffi = "death"
 
-    private(set) var tabaqaGroups: [TabaqaGroup] = []
-    private var allRowis: [Rowi] = []
+    private struct State: Sendable {
+        var tabaqaGroups: [TabaqaGroup] = []
+        var allRowis: [Rowi] = []
+    }
+
+    private let state = Mutex(State())
+
+    var tabaqaGroups: [TabaqaGroup] {
+        state.withLock { $0.tabaqaGroups }
+    }
 
     private init() {}
 
@@ -38,10 +47,9 @@ class RowiDataManager: @unchecked Sendable {
         }
 
         let sql = "SELECT \(colId), \(colTabaqa), \(colIsoName) FROM \(tableName)"
-        allRowis.removeAll()
 
         do {
-            allRowis = try db.fetch(query: sql) { row -> Rowi in
+            let fetched = try db.fetch(query: sql) { row -> Rowi in
                 let id = row.int(at: 0)
                 let tabaqa = row.string(at: 1)
                 let isoName = row.string(at: 2) ?? ""
@@ -52,7 +60,11 @@ class RowiDataManager: @unchecked Sendable {
                     isoName: isoName
                 )
             }
-            groupByTabaqa()
+            let groups = Self.makeTabaqaGroups(from: fetched)
+            state.withLock { s in
+                s.allRowis = fetched
+                s.tabaqaGroups = groups
+            }
         } catch {
             Logger.narrator.error("Error loading data: \(error.localizedDescription, privacy: .public)")
         }
@@ -109,16 +121,16 @@ class RowiDataManager: @unchecked Sendable {
         }
     }
 
-    private func buildTabaqaGroups(from rowis: [Rowi]) {
+    private static func makeTabaqaGroups(from rowis: [Rowi]) -> [TabaqaGroup] {
         var grouped = Dictionary(grouping: rowis, by: { $0.getNormalizedTabaqaCode() })
-        tabaqaGroups.removeAll()
+        var result: [TabaqaGroup] = []
 
         for code in TabaqaGroup.orderedCodes {
             if let items = grouped[code], !items.isEmpty {
                 let name = TabaqaGroup.getNormalizedTabaqaName(for: code)
                 let group = TabaqaGroup(code: code, name: name, rowis: items)
                 group.initialLoad()
-                tabaqaGroups.append(group)
+                result.append(group)
                 grouped.removeValue(forKey: code)
             }
         }
@@ -129,38 +141,28 @@ class RowiDataManager: @unchecked Sendable {
                 : (TabaqaGroup.tabaqaMapping[code] ?? code)
             let group = TabaqaGroup(code: code, name: name, rowis: items)
             group.initialLoad()
-            tabaqaGroups.append(group)
+            result.append(group)
         }
+
+        return result
     }
 
     private func groupByTabaqa() {
-        buildTabaqaGroups(from: allRowis)
+        let rowis = state.withLock { $0.allRowis }
+        let groups = Self.makeTabaqaGroups(from: rowis)
+        state.withLock { $0.tabaqaGroups = groups }
     }
 
     /// Ubah completion handler agar mengembalikan jumlah item yang dimuat
     func loadMore(_ parent: TabaqaGroup, completion: @escaping @Sendable (Int?) -> Void) {
-        // Cek jumlah item sebelum dimuat
-        let previousCount = parent.displayedRowis.count
-
-        // Lakukan pembaruan pada Main Thread jika Data Manager diakses dari background
-        Task.detached { [weak self] in
+        Task { @MainActor [weak self] in
             guard let self else { return }
-            if let index = self.tabaqaGroups.firstIndex(where: { $0.code == parent.code }) {
-                self.tabaqaGroups[index].loadMore() // Memperbarui data model
-
-                // Cek jumlah item setelah dimuat
-                let newCount = self.tabaqaGroups[index].displayedRowis.count
-                let itemsLoaded = newCount - previousCount
-
-                // Panggil completion handler di Main Thread dengan jumlah item yang dimuat
-                await MainActor.run {
-                    completion(itemsLoaded)
-                }
+            let groups = state.withLock { $0.tabaqaGroups }
+            if let index = groups.firstIndex(where: { $0.code == parent.code }) {
+                let itemsLoaded = groups[index].loadMore()
+                completion(itemsLoaded)
             } else {
-                // Item induk tidak ditemukan
-                await MainActor.run {
-                    completion(nil)
-                }
+                completion(nil)
             }
         }
     }
@@ -172,9 +174,11 @@ class RowiDataManager: @unchecked Sendable {
         }
 
         let normalizedQuery = query.normalizeArabic()
-        let filtered = allRowis.filter { rowi in
+        let rowis = state.withLock { $0.allRowis }
+        let filtered = rowis.filter { rowi in
             rowi.isoName.normalizeArabic().localizedCaseInsensitiveContains(normalizedQuery)
         }
-        buildTabaqaGroups(from: filtered)
+        let groups = Self.makeTabaqaGroups(from: filtered)
+        state.withLock { $0.tabaqaGroups = groups }
     }
 }
