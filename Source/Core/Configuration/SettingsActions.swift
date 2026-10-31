@@ -345,11 +345,28 @@ enum SettingsActions {
             newURL.stopAccessingSecurityScopedResource()
         }
 
+        // 1. Cek collision SEBELUM memutus koneksi database aktif
+        if let oldURL, fm.fileExists(atPath: oldURL.path), resolution == .ask {
+            try checkDatabaseFileCollisions(from: oldURL, to: newURL, fm: fm)
+        }
+
+        // 2. Putus koneksi aktif
         AnnotationStore.shared.disconnect()
         ResultsHandler.shared.disconnect()
+        HistoryDatabaseManager.shared.disconnect()
 
-        if let oldURL, fm.fileExists(atPath: oldURL.path) {
-            try migrateDatabaseFiles(from: oldURL, to: newURL, resolution: resolution, fm: fm)
+        // 3. Migrasi file dengan fallback reconnect ke oldURL jika gagal
+        do {
+            if let oldURL, fm.fileExists(atPath: oldURL.path) {
+                try migrateDatabaseFiles(from: oldURL, to: newURL, resolution: resolution, fm: fm)
+            }
+        } catch {
+            if let oldURL {
+                try? AnnotationStore.shared.setup(at: oldURL)
+                try? ResultsHandler.shared.setupResultDatabase(at: oldURL)
+                HistoryDatabaseManager.shared.setupDatabase()
+            }
+            throw error
         }
 
         AppConfig.saveBookmark(
@@ -359,6 +376,7 @@ enum SettingsActions {
 
         try AnnotationStore.shared.setup(at: newURL)
         try ResultsHandler.shared.setupResultDatabase(at: newURL)
+        HistoryDatabaseManager.shared.setupDatabase()
     }
 
     private static func validateNewDirectoryURL(_ newURL: URL, fm: FileManager) throws {
@@ -370,34 +388,40 @@ enum SettingsActions {
         }
     }
 
-    private static func migrateDatabaseFiles(
+    static let databaseFilesToMove: [String] = [
+        "Annotations.sqlite", "SearchResults.sqlite", "History.sqlite",
+        "Annotations.sqlite-wal", "Annotations.sqlite-shm",
+        "SearchResults.sqlite-wal", "SearchResults.sqlite-shm",
+        "History.sqlite-wal", "History.sqlite-shm",
+    ]
+
+    static func checkDatabaseFileCollisions(
+        from oldURL: URL,
+        to newURL: URL,
+        fm: FileManager = .default
+    ) throws {
+        for fileName in databaseFilesToMove {
+            let sourceFile = oldURL.appendingPathComponent(fileName)
+            guard fm.fileExists(atPath: sourceFile.path) else { continue }
+
+            let destFile = newURL.appendingPathComponent(fileName)
+            if fm.fileExists(atPath: destFile.path) {
+                throw StorageError.collision(newURL)
+            }
+        }
+    }
+
+    static func migrateDatabaseFiles(
         from oldURL: URL,
         to newURL: URL,
         resolution: AppConfig.MigrationResolution,
-        fm: FileManager
+        fm: FileManager = .default
     ) throws {
-        let filesToMove = [
-            "Annotations.sqlite", "SearchResults.sqlite", "History.sqlite",
-            "Annotations.sqlite-wal", "Annotations.sqlite-shm",
-            "SearchResults.sqlite-wal", "SearchResults.sqlite-shm",
-            "History.sqlite-wal", "History.sqlite-shm",
-        ]
-
-        // Phase 1: Check for collisions
         if resolution == .ask {
-            for fileName in filesToMove {
-                let sourceFile = oldURL.appendingPathComponent(fileName)
-                guard fm.fileExists(atPath: sourceFile.path) else { continue }
-
-                let destFile = newURL.appendingPathComponent(fileName)
-                if fm.fileExists(atPath: destFile.path) {
-                    throw StorageError.collision(newURL)
-                }
-            }
+            try checkDatabaseFileCollisions(from: oldURL, to: newURL, fm: fm)
         }
 
-        // Phase 2: Execute migration
-        for fileName in filesToMove {
+        for fileName in databaseFilesToMove {
             let sourceFile = oldURL.appendingPathComponent(fileName)
             let destFile = newURL.appendingPathComponent(fileName)
 

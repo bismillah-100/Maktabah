@@ -580,12 +580,10 @@ enum AppConfig {
     }
 
     static func ensureHasArchiveFiles(folderUrl: URL) -> Bool {
-        let hasArchiveFiles = (1...20).allSatisfy { id in
+        (1 ... 20).allSatisfy { id in
             let fileURL = folderUrl.appendingPathComponent("\(id).sqlite")
             return fm.fileExists(atPath: fileURL.path)
         }
-
-        return hasArchiveFiles
     }
 
     /// Check jika user sudah setup custom database folder
@@ -636,13 +634,20 @@ enum AppConfig {
         let exts = ["", "-wal", "-shm"]
 
         for file in files {
-            for ext in exts {
-                let fullFile = file + ext
-                let source = sourceURL.appendingPathComponent(fullFile)
-                let destination = destURL.appendingPathComponent(fullFile)
+            let sourceMain = sourceURL.appendingPathComponent(file)
+            let destMain = destURL.appendingPathComponent(file)
+            guard fm.fileExists(atPath: sourceMain.path),
+                  !fm.fileExists(atPath: destMain.path)
+            else { continue }
 
-                if fm.fileExists(atPath: source.path), !fm.fileExists(atPath: destination.path) {
-                    try? fm.moveItem(at: source, to: destination)
+            for ext in exts {
+                let source = sourceURL.appendingPathComponent(file + ext)
+                let destination = destURL.appendingPathComponent(file + ext)
+                guard fm.fileExists(atPath: source.path) else { continue }
+                do {
+                    try fm.moveItem(at: source, to: destination)
+                } catch {
+                    Logger.app.error("migrateFiles \(file + ext, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 }
             }
         }
@@ -666,27 +671,37 @@ enum AppConfig {
         completion: @escaping @Sendable (Error?) -> Void
     ) {
         let oldFolder = AppConfig.folder(for: annotationsAndResultsFolder)
+        let destFolder = appSupportDir
         useICloud = use
 
         if use {
-            // 1. Move files from CURRENT folder (could be custom or old iCloud Drive) to appSupportDir
-            if let source = oldFolder, let dest = appSupportDir, source.standardized != dest.standardized {
-                migrateFiles(from: source, to: dest)
+            Task.detached(priority: .userInitiated) {
+                // 1. Disconnect active connections before moving files
+                AnnotationStore.shared.disconnect()
+                ResultsHandler.shared.disconnect()
+                HistoryDatabaseManager.shared.disconnect()
+
+                // 2. Move files from CURRENT folder (could be custom or old iCloud Drive) to appSupportDir
+                if let source = oldFolder, let dest = destFolder, source.standardized != dest.standardized {
+                    migrateFiles(from: source, to: dest)
+                }
+
+                // 3. Reset bookmark to default local storage to avoid iCloud Drive conflicts
+                UserDefaults.standard.removeObject(forKey: annotationsAndResultsFolder)
+
+                // 4. Re-initialize databases at the default location
+                setupAnnotationsAndResults()
+                HistoryDatabaseManager.shared.setupDatabase()
+
+                CloudKitSyncManager.shared.setupAndInitialSync()
+                await MainActor.run { completion(nil) }
             }
-
-            // 2. Reset bookmark to default local storage to avoid iCloud Drive conflicts
-            UserDefaults.standard.removeObject(forKey: annotationsAndResultsFolder)
-
-            // 3. Re-initialize databases at the default location
-            setupAnnotationsAndResults()
-
-            CloudKitSyncManager.shared.setupAndInitialSync()
         } else {
             // Reset flag agar saat re-enable, uploadAllLocalData jalan kembali
             // sehingga data yang dibuat saat CloudKit off tidak terlewat
             UserDefaults.standard.removeObject(forKey: "CloudKitSyncManager_InitialUploadDone")
+            Task { @MainActor in completion(nil) }
         }
-        Task { @MainActor in completion(nil) }
     }
 }
 

@@ -39,6 +39,16 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
         setupDatabase()
     }
 
+    func disconnect() {
+        writeQueue.sync {
+            state.withLock { s in
+                s.db?.checkpoint()
+                s.db = nil
+                s.syncPendingStore = nil
+            }
+        }
+    }
+
     func setupDatabase() {
         guard let folderURL = AppConfig.folder(for: AppConfig.annotationsAndResultsFolder) else {
             Logger.history.error("HistoryDatabaseManager: No folder URL available for History database")
@@ -52,18 +62,20 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
 
         let url = folderURL.appendingPathComponent("History.sqlite")
 
-        do {
-            let db = try SQLiteDatabase(path: url.path)
-            db.enableWALMode()
-            db.checkpoint() // Ensure WAL is committed and truncated
-            let store = SyncPendingStore(database: db)
-            state.withLock { s in
-                s.db = db
-                s.syncPendingStore = store
+        writeQueue.sync {
+            do {
+                let db = try SQLiteDatabase(path: url.path)
+                db.enableWALMode()
+                db.checkpoint() // Ensure WAL is committed and truncated
+                let store = SyncPendingStore(database: db)
+                state.withLock { s in
+                    s.db = db
+                    s.syncPendingStore = store
+                }
+                try createTables()
+            } catch {
+                Logger.history.error("HistoryDatabaseManager: Failed to setup database: \(error.localizedDescription, privacy: .public)")
             }
-            try createTables()
-        } catch {
-            Logger.history.error("HistoryDatabaseManager: Failed to setup database: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -97,7 +109,10 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
     // MARK: - SQLite Helpers
 
     private func exec(_ sql: String, parameters: [Any] = []) throws {
-        guard let _db else { return }
+        guard let _db else {
+            Logger.history.warning("HistoryDatabaseManager: exec skipped because database is disconnected")
+            return
+        }
         try _db.execute(query: sql, parameters: parameters)
     }
 
@@ -109,7 +124,10 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
     }
 
     func transaction(_ block: () throws -> Void) throws {
-        guard let _db else { return }
+        guard let _db else {
+            Logger.history.warning("HistoryDatabaseManager: transaction skipped because database is disconnected")
+            return
+        }
         try _db.transaction(block)
     }
 
