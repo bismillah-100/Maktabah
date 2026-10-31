@@ -551,6 +551,11 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
+    func tagsEqual(_ lhs: [String], _ rhs: [String]) -> Bool {
+        if lhs.isEmpty, rhs.isEmpty { return true }
+        return Set(sanitizeTagNames(lhs).map(normalizedTagName)) == Set(sanitizeTagNames(rhs).map(normalizedTagName))
+    }
+
     private func saveAndQueueAnnotationChanges(
         _ annotation: Annotation,
         updatedTags: [String]? = nil,
@@ -901,7 +906,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
             || local.note != remote.note
             || local.part != remote.part
             || local.page != remote.page
-            || local.tags != sanitizeTagNames(remote.tags)
+            || !tagsEqual(local.tags, remote.tags)
     }
 
     private func processCloudKitSave(

@@ -218,7 +218,7 @@ final class AnnotationStore: Sendable {
            cached.colorHex == annotation.colorHex,
            cached.type == annotation.type,
            cached.note == annotation.note,
-           cached.tags == repository.sanitizeTagNames(annotation.tags)
+           repository.tagsEqual(cached.tags, annotation.tags)
         {
             return
         }
