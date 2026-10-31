@@ -471,13 +471,11 @@ extension BookConnection {
         }
 
         // Pass 1: Buat semua node dulu, simpan dalam dictionary
-        var allNodes: [TOCNode] = []
         var levelStacks: [Int: [TOCNode]] = [:]
 
         for toc in flatTOCs {
             if Task.isCancelled { return [] }
             let node = TOCNode(from: toc)
-            allNodes.append(node)
             levelStacks[node.level, default: []].append(node)
         }
 
