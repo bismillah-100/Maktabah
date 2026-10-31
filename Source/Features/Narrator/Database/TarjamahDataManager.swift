@@ -9,6 +9,7 @@
 import Foundation
 import OSLog
 import SQLite3
+import Synchronization
 
 actor TarjamahDatabaseActor {
     private let conn: SQLiteConnection
@@ -43,14 +44,18 @@ class TarjamahGlobalManager: @unchecked Sendable {
     private var connectionPools: [Int: SQLiteConnectionPool] = [:]
     private let poolLock = NSLock()
 
-    /// Cache hasil pencarian Rowa (Query by ID) - Sangat efektif di-cache
-    private var rowaCache: [Int: [TarjamahMen]] = [:]
+    private struct Shared: Sendable {
+        var rowaCache: [Int: [TarjamahMen]] = [:]
+        var rowaInFlight: [Int: Task<[TarjamahMen], Never>] = [:]
+        var searchStringCache: [String: [TarjamahMen]] = [:]
+        var dbActor: TarjamahDatabaseActor?
+    }
 
-    /// Cache hasil pencarian text (Query String) - Optional, hati-hati memori
-    private var searchStringCache: [String: [TarjamahMen]] = [:]
+    private let shared = Mutex(Shared())
 
-    /// Ganti dbConnect & dbLock dengan Actor
-    private var dbActor: TarjamahDatabaseActor?
+    private var dbActor: TarjamahDatabaseActor? {
+        shared.withLock { $0.dbActor }
+    }
 
     /// SQLITE_TRANSIENT unsafeBitCast
     private let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
@@ -63,7 +68,8 @@ class TarjamahGlobalManager: @unchecked Sendable {
         guard let specialPath = AppConfig.specialDatabasePath else { return }
 
         // Inisialisasi actor
-        dbActor = try? TarjamahDatabaseActor(dbPath: specialPath)
+        let actor = try? TarjamahDatabaseActor(dbPath: specialPath)
+        shared.withLock { $0.dbActor = actor }
     }
 
     #if os(macOS)
@@ -90,7 +96,8 @@ class TarjamahGlobalManager: @unchecked Sendable {
         populateMenBFts(db: db)
         vacuumAndDetachFts(db: db)
 
-        dbActor = try? TarjamahDatabaseActor(dbPath: mainDbPath)
+        let actor = try? TarjamahDatabaseActor(dbPath: mainDbPath)
+        shared.withLock { $0.dbActor = actor }
     }
 
     private func ensureSpecialIndices(mainDbPath: String) {
@@ -277,7 +284,8 @@ class TarjamahGlobalManager: @unchecked Sendable {
 
         guard let sanitizedQuery = sanitize(query: query) else { return }
 
-        if let cached = searchStringCache[sanitizedQuery] {
+        let cached = shared.withLock { $0.searchStringCache[sanitizedQuery] }
+        if let cached {
             Logger.narrator.debug("📦 Cache Hit for query: \(sanitizedQuery, privacy: .public)")
             await onBatchResult(cached)
             return
@@ -295,7 +303,14 @@ class TarjamahGlobalManager: @unchecked Sendable {
             stopFlag: stopFlag,
             onBatchResult: onBatchResult
         )
-        searchStringCache[sanitizedQuery] = results
+        if !stopFlag(), !Task.isCancelled {
+            shared.withLock { state in
+                if state.searchStringCache.count >= 100 {
+                    state.searchStringCache.removeAll(keepingCapacity: true)
+                }
+                state.searchStringCache[sanitizedQuery] = results
+            }
+        }
     }
 
     private func sanitize(query: String) -> String? {
@@ -466,13 +481,44 @@ class TarjamahGlobalManager: @unchecked Sendable {
 
     /// Load daftar tarjamah berdasarkan ID Rawi (Rowa)
     func loadTarjamahList(forRowa rowaId: Int) async -> [TarjamahMen] {
-        if let cached = rowaCache[rowaId] {
-            return cached
+        enum LookupState {
+            case cached([TarjamahMen])
+            case inFlight(Task<[TarjamahMen], Never>)
+            case noConnection
         }
 
-        guard let conn = dbActor else { return [] }
-        var results: [TarjamahMen] = []
+        let lookup: LookupState = shared.withLock { state in
+            if let cached = state.rowaCache[rowaId] {
+                return .cached(cached)
+            }
+            if let existingTask = state.rowaInFlight[rowaId] {
+                return .inFlight(existingTask)
+            }
+            guard let conn = state.dbActor else {
+                return .noConnection
+            }
+            let task = Task<[TarjamahMen], Never> { [weak self] in
+                guard let self else { return [] }
+                return await fetchTarjamahFromDB(conn: conn, rowaId: rowaId)
+            }
+            state.rowaInFlight[rowaId] = task
+            return .inFlight(task)
+        }
 
+        switch lookup {
+        case let .cached(items):
+            return items
+        case .noConnection:
+            return []
+        case let .inFlight(task):
+            let results = await task.value
+            cacheRowaResults(results, forRowa: rowaId)
+            return results
+        }
+    }
+
+    private func fetchTarjamahFromDB(conn: TarjamahDatabaseActor, rowaId: Int) async -> [TarjamahMen] {
+        var results: [TarjamahMen] = []
         do {
             let sql = """
             SELECT Name, '', Bk, Id, ManId
@@ -480,26 +526,30 @@ class TarjamahGlobalManager: @unchecked Sendable {
             WHERE Manid = ?
             ORDER BY Bk, Id
             """
-
             let tarjamahs = try await conn.queryTarjamah(sql: sql, params: [.int(rowaId)], isIsoName: false)
-
             for t in tarjamahs {
-                var tVar = t
-                if let bookData = LibraryDataManager.shared.getBook([tVar.bk]).first {
-                    tVar.bookTitle = bookData.book
-                    tVar.archive = bookData.archive
+                var item = t
+                if let bookData = LibraryDataManager.shared.getBook([item.bk]).first {
+                    item.bookTitle = bookData.book
+                    item.archive = bookData.archive
                 }
-                results.append(tVar)
-            }
-
-            if !results.isEmpty {
-                rowaCache[rowaId] = results
+                results.append(item)
             }
         } catch {
             Logger.narrator.error("❌ Error loadTarjamahList: \(error.localizedDescription, privacy: .public)")
         }
-
         return results
+    }
+
+    private func cacheRowaResults(_ results: [TarjamahMen], forRowa rowaId: Int) {
+        shared.withLock { state in
+            state.rowaInFlight[rowaId] = nil
+            guard !results.isEmpty else { return }
+            if state.rowaCache.count >= 500 {
+                state.rowaCache.removeAll(keepingCapacity: true)
+            }
+            state.rowaCache[rowaId] = results
+        }
     }
 
     // MARK: - 3. Content Loading with Pause & Streaming
