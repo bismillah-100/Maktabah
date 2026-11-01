@@ -49,7 +49,6 @@ struct iOSReaderView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
-            if !isRegularLayout {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: {
                     showingSearch = true
@@ -58,20 +57,9 @@ struct iOSReaderView: View {
                 }
                 .accessibilityLabel(String(localized: "Search"))
                 .help(String(localized: "Search"))
-                .sheet(isPresented: $showingSearch) {
-                    if let book = viewModel.currentBook {
-                        iOSBookSearchView(
-                            book: book,
-                            onSelect: { contentId, query in
-                                viewModel.didSelectSearch(query: query, contentId: contentId)
-                                showingSearch = false
-                            },
-                            viewModel: viewModel.searchViewModel
-                        )
-                    }
-                }
             }
 
+            if !isRegularLayout {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         bManager.showingTabsList.toggle()
@@ -124,7 +112,7 @@ struct iOSReaderView: View {
             }
         }
         .onChange(of: showingOptions) { _, newValue in
-            viewModel.isPopoverPresented = newValue
+            viewModel.isShowingOptionsPopover = newValue
         }
         .onChange(of: initialContentId) { _, newValue in
             if viewModel.contentText.isEmpty {
@@ -136,6 +124,18 @@ struct iOSReaderView: View {
         }
         .onDisappear {
             viewModel.saveCurrentState()
+        }
+        .sheet(isPresented: $showingSearch) {
+            if let book = viewModel.currentBook {
+                iOSBookSearchView(
+                    book: book,
+                    onSelect: { contentId, query in
+                        viewModel.didSelectSearch(query: query, contentId: contentId)
+                        showingSearch = false
+                    },
+                    viewModel: viewModel.searchViewModel
+                )
+            }
         }
         .sheet(isPresented: $showingBookInfo) {
             iOSBookInfoView(book: book)

@@ -32,7 +32,7 @@ struct iOSReaderBottomToolbarView: View {
                 .presentationCompactAdaptation(.popover)
         }
         .onChange(of: showingNavigation) { _, newValue in
-            viewModel.isPopoverPresented = newValue
+            viewModel.isShowingNavigationPopover = newValue
         }
 
         Spacer()
