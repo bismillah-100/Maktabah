@@ -244,6 +244,20 @@ final class AnnotationStore: Sendable {
         emit(.deleted(id: id, annotation: deleted))
     }
 
+    func deleteAnnotations(ids: [Int64]) throws {
+        guard !ids.isEmpty else { return }
+        let deleted = try repository.deleteAnnotationRows(ids: ids)
+
+        updateCacheAfterBatchDelete(ids: ids, annotations: deleted)
+
+        let ckRecordIds = deleted.compactMap(\.ckRecordId)
+        if !ckRecordIds.isEmpty {
+            CloudKitSyncManager.shared.delete(ckRecordIds: ckRecordIds, target: .annotation, trackPending: false)
+        }
+
+        emit(.batchDeleted(ids: ids, annotations: deleted))
+    }
+
     @discardableResult
     func updateAnnotationsBookId(oldId: Int, newId: Int) throws -> [Annotation] {
         let updated = try repository.updateAnnotationsBookId(oldId: oldId, newId: newId)
@@ -428,6 +442,26 @@ final class AnnotationStore: Sendable {
                     copy.remove(at: idx)
                     state.cacheByContent[key] = copy
                 }
+            }
+        }
+    }
+
+    private func updateCacheAfterBatchDelete(ids: [Int64], annotations: [Annotation]) {
+        let idSet = Set(ids)
+        let affectedBookIds = Set(annotations.map(\.bkId))
+        let affectedContentKeys = Set(annotations.map { ContentKey(bkId: $0.bkId, contentId: $0.contentId) })
+
+        cache.withLock { state in
+            state.cachedAllTagNames = nil
+            for id in idSet {
+                state.cacheById.removeValue(forKey: id)
+                state.cacheTagsByAnnotationId.removeValue(forKey: id)
+            }
+            for bkId in affectedBookIds {
+                state.cacheByBook[bkId]?.removeAll { $0.id.map(idSet.contains) ?? false }
+            }
+            for key in affectedContentKeys {
+                state.cacheByContent[key]?.removeAll { $0.id.map(idSet.contains) ?? false }
             }
         }
     }

@@ -31,6 +31,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         deleteMenuItem.isHidden = shouldHideDelete
         deleteMenuItem.target = self
         deleteMenuItem.action = #selector(deleteItem(_:))
+        deleteMenuItem.representedObject = nil
 
         if !shouldHideDelete {
             updateDeleteMenuItemTitle(hasAnnotations: hasAnnotations, hasTagRoots: hasTagRoots, hasBookRoots: hasBookRoots)
@@ -272,6 +273,7 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
     // MARK: - Delete Action
 
     @objc func deleteItem(_ sender: NSMenuItem) {
+        defer { sender.representedObject = nil }
         guard let outlineView else { return }
 
         let nodes: [AnnotationNode] = if let row = sender.representedObject as? Int,
@@ -291,10 +293,9 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
         if groupingMode == .tag {
             performDeleteTagRoots(tagRootNodes)
             performDeleteAnnotations(annotationNodes)
-        } else if !annotationNodes.isEmpty {
-            performDeleteAnnotations(annotationNodes)
-        } else if !bookRootNodes.isEmpty {
-            performDeleteBookRoots(bookRootNodes)
+        } else {
+            let bookChildren = bookRootNodes.flatMap(\.children)
+            performDeleteAnnotations(annotationNodes + bookChildren)
         }
     }
 
@@ -309,19 +310,13 @@ extension AnnotationOutlineDataSource: NSMenuDelegate {
     }
 
     private func performDeleteAnnotations(_ nodes: [AnnotationNode]) {
-        for node in nodes {
-            guard let annotation = node.annotation, let id = annotation.id else { continue }
-            do {
-                try AnnotationStore.shared.deleteAnnotation(id: id)
-            } catch {
-                Logger.annotations.error("Error deleting annotation \(id): \(error.localizedDescription, privacy: .public)")
-            }
-        }
-    }
-
-    private func performDeleteBookRoots(_ nodes: [AnnotationNode]) {
-        for bookNode in nodes where bookNode.kind == .book {
-            performDeleteAnnotations(bookNode.children)
+        var seen = Set<Int64>()
+        let ids = nodes.compactMap { $0.annotation?.id }.filter { seen.insert($0).inserted }
+        guard !ids.isEmpty else { return }
+        do {
+            try AnnotationStore.shared.deleteAnnotations(ids: ids)
+        } catch {
+            Logger.annotations.error("Error deleting annotations \(ids): \(error.localizedDescription, privacy: .public)")
         }
     }
 }

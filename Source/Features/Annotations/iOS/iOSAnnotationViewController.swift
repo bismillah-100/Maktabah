@@ -67,7 +67,7 @@ class iOSAnnotationViewController: UIViewController {
         case .updated:
             handleUpdatedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff)
         case .deleted:
-            handleDeletedAnnotation(annotationId: diff.annotationId, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
+            handleDeletedAnnotation(diff: diff)
         }
     }
 
@@ -196,8 +196,21 @@ class iOSAnnotationViewController: UIViewController {
         }
     }
 
-    private func handleDeletedAnnotation(annotationId: Int64?, oldParentIndex: Int?, newParentIndex: Int?) {
-        guard let annotationId else {
+    private func handleDeletedAnnotation(diff: AnnotationTreeDiff) {
+        if let tagDiff = diff.tagDiff {
+            handleTagDiff(tagDiff)
+            return
+        }
+
+        let idsToDelete: Set<Int64> = if let bookDiff = diff.bookDeletionDiff {
+            Set(bookDiff.removedChildren.compactMap { $0.annotationNode.annotation?.id })
+        } else if let annotationId = diff.annotationId {
+            [annotationId]
+        } else {
+            []
+        }
+
+        guard !idsToDelete.isEmpty else {
             onNeedFullReload?()
             return
         }
@@ -206,8 +219,8 @@ class iOSAnnotationViewController: UIViewController {
             var sectionSnap = dataSource.snapshot(for: sectionID)
 
             let itemsToDelete = sectionSnap.items.filter {
-                if case let .annotation(node) = $0 {
-                    return node.annotation?.id == annotationId
+                if case let .annotation(node) = $0, let id = node.annotation?.id {
+                    return idsToDelete.contains(id)
                 }
                 return false
             }
@@ -445,50 +458,57 @@ class iOSAnnotationViewController: UIViewController {
             dataSource.apply(rootSnapshot, animatingDifferences: false)
         }
 
+        let isSearching = !(viewModel?.searchText.isEmpty ?? true)
         for node in uniqueNodes {
             let sectionID = node.id
             let existing = dataSource.snapshot(for: sectionID)
-
-            var sectionSnapshot = NSDiffableDataSourceSectionSnapshot<AnnotationItem>()
-            let groupItem = AnnotationItem.group(node)
-            sectionSnapshot.append([groupItem])
-
-            let isSearching = !(viewModel?.searchText.isEmpty ?? true)
-            let isExpanded = isSearching || expandedGroups.contains(sectionID)
-
-            if let children = node.children, !children.isEmpty {
-                var seenItemIDs = Set<String>()
-                var childItems: [AnnotationItem] = []
-                for child in children where seenItemIDs.insert(child.id).inserted {
-                    childItems.append(AnnotationItem.annotation(child))
-                }
-                sectionSnapshot.append(childItems, to: groupItem)
-                if isExpanded {
-                    sectionSnapshot.expand([groupItem])
-                }
-            }
-
-            // Ambil expanded state dari existing snapshot agar tidak konflik
-            if !isSearching, !existing.items.isEmpty {
-                let existingExpanded = existing.isExpanded(groupItem)
-                if existingExpanded != isExpanded {
-                    if existingExpanded {
-                        expandedGroups.insert(sectionID)
-                        sectionSnapshot.expand([groupItem])
-                    } else {
-                        expandedGroups.remove(sectionID)
-                    }
-                }
-            }
+            let sectionSnapshot = buildSectionSnapshot(for: node, existing: existing, isSearching: isSearching)
 
             guard existing.items != sectionSnapshot.items ||
                 existing.visibleItems != sectionSnapshot.visibleItems
-            else {
-                continue
-            }
+            else { continue }
 
             dataSource.apply(sectionSnapshot, to: sectionID, animatingDifferences: animated)
         }
+    }
+
+    private func buildSectionSnapshot(
+        for node: SwiftUIAnnotationNode,
+        existing: NSDiffableDataSourceSectionSnapshot<AnnotationItem>,
+        isSearching: Bool
+    ) -> NSDiffableDataSourceSectionSnapshot<AnnotationItem> {
+        let sectionID = node.id
+        var sectionSnapshot = NSDiffableDataSourceSectionSnapshot<AnnotationItem>()
+        let groupItem = AnnotationItem.group(node)
+        sectionSnapshot.append([groupItem])
+
+        let isExpanded = isSearching || expandedGroups.contains(sectionID)
+
+        if let children = node.children, !children.isEmpty {
+            var seenItemIDs = Set<String>()
+            var childItems: [AnnotationItem] = []
+            for child in children where seenItemIDs.insert(child.id).inserted {
+                childItems.append(AnnotationItem.annotation(child))
+            }
+            sectionSnapshot.append(childItems, to: groupItem)
+            if isExpanded {
+                sectionSnapshot.expand([groupItem])
+            }
+        }
+
+        if !isSearching, !existing.items.isEmpty {
+            let existingExpanded = existing.isExpanded(groupItem)
+            if existingExpanded != isExpanded {
+                if existingExpanded {
+                    expandedGroups.insert(sectionID)
+                    sectionSnapshot.expand([groupItem])
+                } else {
+                    expandedGroups.remove(sectionID)
+                }
+            }
+        }
+
+        return sectionSnapshot
     }
 
     // MARK: - Expand / Collapse

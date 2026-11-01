@@ -890,48 +890,50 @@ class IbarotTextView: NSTextView {
 
     func handleAnnotationEvent(_ event: AnnotationEvent) {
         guard let ts = textStorage else { return }
-        func isCurrentPage(for annotation: Annotation) -> Bool {
-            annotation.bkId == bkId && annotation.contentId == contentId
-        }
 
         switch event {
-        case let .added(annotation):
-            guard isCurrentPage(for: annotation) else { return }
-            ts.beginEditing()
-            renderer.applyAnnotations(
-                [annotation],
-                to: ts,
-                showHarakat: state.showHarakat,
-                replacementEvents: currentRenderResult?.replacementEvents ?? []
-            )
-            ts.endEditing()
-
-        case let .updated(annotation):
-            guard isCurrentPage(for: annotation), let id = annotation.id else { return }
-            ts.beginEditing()
-            performRemoveAttributes(forAnnotationId: id, in: ts)
-            renderer.applyAnnotations(
-                [annotation],
-                to: ts,
-                showHarakat: state.showHarakat,
-                replacementEvents: currentRenderResult?.replacementEvents ?? []
-            )
-            ts.endEditing()
-
+        case let .added(ann):
+            applyAnnotationsToCurrentPage([ann], in: ts)
+        case let .updated(ann):
+            if let id = ann.id { removeAnnotationsFromCurrentPage([id], in: ts) }
+            applyAnnotationsToCurrentPage([ann], in: ts)
         case let .deleted(id, _):
-            // id is unique from database
-            ts.beginEditing()
-            performRemoveAttributes(forAnnotationId: id, in: ts)
-            ts.endEditing()
-
+            removeAnnotationsFromCurrentPage([id], in: ts)
+        case let .batchDeleted(ids, _):
+            removeAnnotationsFromCurrentPage(ids, in: ts)
         case .batchUpdated, .treeInvalidated:
             refreshAnnotations()
             return
         }
 
         needsDisplay = true
-
         colorMenuView.reloadColors()
+    }
+
+    private func isCurrentPage(for annotation: Annotation) -> Bool {
+        annotation.bkId == bkId && annotation.contentId == contentId
+    }
+
+    private func applyAnnotationsToCurrentPage(_ annotations: [Annotation], in ts: NSTextStorage) {
+        let pageAnns = annotations.filter(isCurrentPage)
+        guard !pageAnns.isEmpty else { return }
+        ts.beginEditing()
+        renderer.applyAnnotations(
+            pageAnns,
+            to: ts,
+            showHarakat: state.showHarakat,
+            replacementEvents: currentRenderResult?.replacementEvents ?? []
+        )
+        ts.endEditing()
+    }
+
+    private func removeAnnotationsFromCurrentPage(_ ids: [Int64], in ts: NSTextStorage) {
+        guard !ids.isEmpty else { return }
+        ts.beginEditing()
+        for id in ids {
+            performRemoveAttributes(forAnnotationId: id, in: ts)
+        }
+        ts.endEditing()
     }
 
     private func performRemoveAttributes(forAnnotationId id: Int64, in ts: NSTextStorage) {
@@ -983,30 +985,41 @@ extension IbarotTextView: TextViewRenderable {
             }
 
             await MainActor.run { [weak self, weak scrollView] in
-                guard let self else {
-                    if let contentView = scrollView?.contentView {
-                        ReusableFunc.closeProgressWindow(contentView)
-                    }
-                    return
-                }
-                guard generation == loadGeneration else { return }
-                progressOverlayTask?.cancel()
-                progressOverlayTask = nil
-                defer {
-                    if let contentView = scrollView?.contentView {
-                        ReusableFunc.closeProgressWindow(contentView)
-                    }
-                }
-                guard let renderResult, let scrollView, !Task.isCancelled else { return }
-                applyRenderedContent(
+                self?.handleRenderFinished(
+                    generation: generation,
                     renderResult: renderResult,
                     options: options,
-                    scrollPercentage: scrollPercentage,
-                    visibleRect: visibleRect,
+                    scrollState: (scrollPercentage, visibleRect),
                     scrollView: scrollView
                 )
             }
         }
+    }
+
+    @MainActor
+    private func handleRenderFinished(
+        generation: Int,
+        renderResult: ArabicRenderResult?,
+        options: IbarotTextOptions,
+        scrollState: (percentage: CGFloat, rect: NSRect),
+        scrollView: NSScrollView?
+    ) {
+        guard generation == loadGeneration else { return }
+        progressOverlayTask?.cancel()
+        progressOverlayTask = nil
+        defer {
+            if let contentView = scrollView?.contentView {
+                ReusableFunc.closeProgressWindow(contentView)
+            }
+        }
+        guard let renderResult, let scrollView, !Task.isCancelled else { return }
+        applyRenderedContent(
+            renderResult: renderResult,
+            options: options,
+            scrollPercentage: scrollState.percentage,
+            visibleRect: scrollState.rect,
+            scrollView: scrollView
+        )
     }
 
     private func scheduleProgressOverlay(for scrollView: NSScrollView, generation: Int) {

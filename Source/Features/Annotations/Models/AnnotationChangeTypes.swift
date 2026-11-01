@@ -26,6 +26,29 @@ struct TagUpdateDiff {
     let updated: [AnnotationNode] // annotation node yang hanya di-update teks/warna
 }
 
+struct BookDeletionDiff {
+    struct RemovedChild {
+        let annotationNode: AnnotationNode
+        let parentNode: AnnotationNode
+        let oldChildIndex: Int
+    }
+
+    struct RemovedParent {
+        let parentNode: AnnotationNode
+        let oldRootIndex: Int
+    }
+
+    struct MovedParent {
+        let parentNode: AnnotationNode
+        let oldIndex: Int
+        let newIndex: Int
+    }
+
+    let removedChildren: [RemovedChild]
+    let removedParents: [RemovedParent]
+    let movedParents: [MovedParent]
+}
+
 struct AnnotationTreeDiff {
     enum ChangeType {
         case added
@@ -39,6 +62,7 @@ struct AnnotationTreeDiff {
     let oldParentIndex: Int?
     let newParentIndex: Int?
     let tagDiff: TagUpdateDiff?
+    let bookDeletionDiff: BookDeletionDiff?
 
     init(
         changeType: ChangeType,
@@ -46,7 +70,8 @@ struct AnnotationTreeDiff {
         annotationId: Int64? = nil,
         oldParentIndex: Int? = nil,
         newParentIndex: Int? = nil,
-        tagDiff: TagUpdateDiff? = nil
+        tagDiff: TagUpdateDiff? = nil,
+        bookDeletionDiff: BookDeletionDiff? = nil
     ) {
         self.changeType = changeType
         self.annotation = annotation
@@ -54,5 +79,6 @@ struct AnnotationTreeDiff {
         self.oldParentIndex = oldParentIndex
         self.newParentIndex = newParentIndex
         self.tagDiff = tagDiff
+        self.bookDeletionDiff = bookDeletionDiff
     }
 }

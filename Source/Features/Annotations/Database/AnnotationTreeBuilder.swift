@@ -106,6 +106,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 handleUpdate(annotation)
             case let .deleted(id, annotation):
                 handleDelete(id: id, annotation: annotation)
+            case let .batchDeleted(ids, annotations):
+                handleBatchDelete(ids: ids, annotations: annotations)
             case let .batchUpdated(annotations):
                 handleBatchUpdate(annotations)
             case .treeInvalidated:
@@ -240,71 +242,150 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     }
 
     private func handleDelete(id: Int64, annotation: Annotation?) {
+        let annotations = annotation != nil ? [annotation!] : []
+        handleBatchDelete(ids: [id], annotations: annotations)
+    }
+
+    private func handleBatchDelete(ids: [Int64], annotations: [Annotation]) {
         guard let root = rootNode else {
             rebuildTree()
             diffPublisher.send(nil)
             return
         }
 
-        if UserDefaults.standard.hideMissingBookAnnotations,
-           let bkId = annotation?.bkId,
-           LibraryDataManager.shared.getBook([bkId]).isEmpty
-        {
-            return
+        var effectiveIds = ids
+        var effectiveAnnotations = annotations
+        if UserDefaults.standard.hideMissingBookAnnotations, !annotations.isEmpty {
+            let uniqueBkIds = Array(Set(annotations.map(\.bkId)))
+            let existingBkIds = Set(LibraryDataManager.shared.getBook(uniqueBkIds).map(\.id))
+            effectiveAnnotations = annotations.filter { existingBkIds.contains($0.bkId) }
+            let validIds = Set(effectiveAnnotations.compactMap(\.id))
+            effectiveIds = ids.filter { validIds.contains($0) }
         }
+        guard !effectiveIds.isEmpty else { return }
 
         switch groupingMode {
         case .book:
-            let diff = deleteAnnotationFromBookTree(id: id, annotation: annotation, root: root)
-            diffPublisher.send(diff)
-        case .tag, .timeline:
-            let tagDiff = removeAnnotationFromTagTree(id: id, root: root)
+            let bookDiff = deleteAnnotationsFromBookTree(ids: effectiveIds, root: root)
             let diff = AnnotationTreeDiff(
                 changeType: .deleted,
-                annotation: annotation,
-                annotationId: id,
+                annotation: effectiveAnnotations.first,
+                annotationId: effectiveIds.count == 1 ? effectiveIds.first : nil,
+                bookDeletionDiff: bookDiff
+            )
+            diffPublisher.send(diff)
+        case .tag, .timeline:
+            let tagDiff = removeAnnotationsFromTagTree(ids: effectiveIds, root: root)
+            let diff = AnnotationTreeDiff(
+                changeType: .deleted,
+                annotation: effectiveAnnotations.first,
+                annotationId: effectiveIds.count == 1 ? effectiveIds.first : nil,
                 tagDiff: tagDiff
             )
             diffPublisher.send(diff)
         }
     }
 
-    private func deleteAnnotationFromBookTree(id: Int64, annotation: Annotation?, root: AnnotationNode) -> AnnotationTreeDiff {
-        for bookNode in root.children {
-            guard let index = bookNode.children.firstIndex(where: { $0.annotation?.id == id }) else { continue }
-            bookNode.children.remove(at: index)
+    func deleteAnnotationsFromBookTree(ids: [Int64], root: AnnotationNode) -> BookDeletionDiff {
+        let idSet = Set(ids)
+        var removedChildren: [BookDeletionDiff.RemovedChild] = []
+        var removedParents: [BookDeletionDiff.RemovedParent] = []
+        var affectedNonEmptyBooks: [AnnotationNode] = []
 
-            var oldParentIdx: Int?
-            var newParentIdx: Int?
-
-            if bookNode.children.isEmpty {
-                if let bookIndex = root.children.firstIndex(where: { $0 === bookNode }) {
-                    root.children.remove(at: bookIndex)
-                }
-            } else if sortOption.field == .createdAt {
-                if let oldIdx = root.children.firstIndex(where: { $0 === bookNode }) {
-                    oldParentIdx = oldIdx
-                    root.children.remove(at: oldIdx)
-                }
-                let newIdx = root.children.insertionIndex(for: bookNode, using: compareNodes)
-                root.children.insert(bookNode, at: newIdx)
-                newParentIdx = newIdx
+        // Phase 1: Remove children from each bookNode and record original root indices for empty parents
+        for (rootIdx, bookNode) in root.children.enumerated() {
+            var indicesToRemove: [(node: AnnotationNode, index: Int)] = []
+            for (idx, child) in bookNode.children.enumerated() where child.annotation?.id.map(idSet.contains) == true {
+                indicesToRemove.append((node: child, index: idx))
             }
 
-            return AnnotationTreeDiff(
-                changeType: .deleted,
-                annotation: annotation,
-                annotationId: id,
-                oldParentIndex: oldParentIdx,
-                newParentIndex: newParentIdx
-            )
+            guard !indicesToRemove.isEmpty else { continue }
+
+            for item in indicesToRemove {
+                removedChildren.append(.init(
+                    annotationNode: item.node,
+                    parentNode: bookNode,
+                    oldChildIndex: item.index
+                ))
+            }
+
+            for item in indicesToRemove.reversed() {
+                bookNode.children.remove(at: item.index)
+            }
+
+            if bookNode.children.isEmpty {
+                removedParents.append(.init(parentNode: bookNode, oldRootIndex: rootIdx))
+            } else {
+                affectedNonEmptyBooks.append(bookNode)
+            }
         }
 
-        return AnnotationTreeDiff(
-            changeType: .deleted,
-            annotation: annotation,
-            annotationId: id
+        // Phase 2: Remove empty parents from root.children in descending order of oldRootIndex
+        let sortedParents = removedParents.sorted { $0.oldRootIndex > $1.oldRootIndex }
+        for parentEntry in sortedParents {
+            root.children.remove(at: parentEntry.oldRootIndex)
+        }
+
+        // Phase 3: Re-sort affected non-empty books if sorted by createdAt (matching NSOutlineView execution order)
+        let movedParents = updateMovedParentsForDeletions(root: root, affectedBooks: affectedNonEmptyBooks)
+
+        return BookDeletionDiff(
+            removedChildren: removedChildren,
+            removedParents: removedParents,
+            movedParents: movedParents
         )
+    }
+
+    private func updateMovedParentsForDeletions(
+        root: AnnotationNode,
+        affectedBooks: [AnnotationNode]
+    ) -> [BookDeletionDiff.MovedParent] {
+        guard sortOption.field == .createdAt else { return [] }
+        var moved: [BookDeletionDiff.MovedParent] = []
+        for bookNode in affectedBooks {
+            guard let oldIdx = root.children.firstIndex(where: { $0 === bookNode }) else { continue }
+            root.children.remove(at: oldIdx)
+            let newIdx = root.children.insertionIndex(for: bookNode, using: compareNodes)
+            root.children.insert(bookNode, at: newIdx)
+            if oldIdx != newIdx {
+                moved.append(.init(parentNode: bookNode, oldIndex: oldIdx, newIndex: newIdx))
+            }
+        }
+        return moved
+    }
+
+    func removeAnnotationsFromTagTree(ids: [Int64], root: AnnotationNode) -> TagUpdateDiff {
+        let idSet = Set(ids)
+        var removedEntries: [TagUpdateDiff.RemovedEntry] = []
+
+        for (rootIdx, tagNode) in root.children.enumerated() {
+            var indicesToRemove: [(node: AnnotationNode, index: Int)] = []
+            for (idx, child) in tagNode.children.enumerated() {
+                if let childId = child.annotation?.id, idSet.contains(childId) {
+                    indicesToRemove.append((node: child, index: idx))
+                }
+            }
+
+            guard !indicesToRemove.isEmpty else { continue }
+
+            let becomesEmpty = indicesToRemove.count == tagNode.children.count
+            for item in indicesToRemove {
+                removedEntries.append(.init(
+                    annotationNode: item.node,
+                    tagNode: tagNode,
+                    tagNodeBecomesEmpty: becomesEmpty,
+                    oldIndex: becomesEmpty ? rootIdx : item.index
+                ))
+            }
+
+            for item in indicesToRemove.reversed() {
+                tagNode.children.remove(at: item.index)
+            }
+        }
+
+        root.children.removeAll { $0.children.isEmpty && $0.kind != .root }
+
+        return TagUpdateDiff(removed: removedEntries, added: [], updated: [])
     }
 
     private func handleBatchUpdate(_ annotations: [Annotation]) {
@@ -662,14 +743,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     }
 
     private func removeAnnotationFromTagTree(id: Int64, root: AnnotationNode) -> TagUpdateDiff {
-        var removedEntries: [TagUpdateDiff.RemovedEntry] = []
-        for tagNode in root.children {
-            if let entry = removeAnnotationFromTagNode(id: id, tagNode: tagNode, root: root) {
-                removedEntries.append(entry)
-            }
-        }
-
-        return TagUpdateDiff(removed: removedEntries, added: [], updated: [])
+        removeAnnotationsFromTagTree(ids: [id], root: root)
     }
 
     private func performBatchTagTreeUpdate(_ annotations: [Annotation], root: AnnotationNode) -> TagUpdateDiff {
