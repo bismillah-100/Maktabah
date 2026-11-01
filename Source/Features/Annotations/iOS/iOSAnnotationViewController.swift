@@ -280,7 +280,8 @@ class iOSAnnotationViewController: UIViewController {
     private func setupCollectionView() {
         let layout = createCompositionalLayout()
 
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
+        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.register(
             iOSTagFilterHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
@@ -295,8 +296,7 @@ class iOSAnnotationViewController: UIViewController {
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         collectionView.refreshControl = refreshControl
-
-        collectionView.pinToEdges(of: view)
+        view.addSubview(collectionView)
     }
 
     private func createCompositionalLayout() -> UICollectionViewLayout {
@@ -320,7 +320,8 @@ class iOSAnnotationViewController: UIViewController {
                 return NSCollectionLayoutSection.list(using: listConfig, layoutEnvironment: environment)
             }
             let section = NSCollectionLayoutSection.list(using: listConfig, layoutEnvironment: environment)
-            section.contentInsets = sectionInsets
+            section.contentInsets.top = sectionInsets.top
+            section.contentInsets.bottom = sectionInsets.bottom
             return section
         }, configuration: layoutConfig)
     }

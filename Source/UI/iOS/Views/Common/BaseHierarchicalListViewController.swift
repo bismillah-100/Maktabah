@@ -94,12 +94,13 @@ class BaseHierarchicalListViewController<ItemType: Hashable & Sendable>: UIViewC
     private func setupCollectionView() {
         let config = makeListConfiguration()
         let layout = UICollectionViewCompositionalLayout.list(using: config)
-        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
+        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.backgroundColor = SettingsViewModel.shared.useDefaultTheme
             ? .systemGroupedBackground : .appBackground
         collectionView.contentInsetAdjustmentBehavior = .automatic
         collectionView.semanticContentAttribute = .forceLeftToRight
-        collectionView.pinToEdges(of: view)
+        view.addSubview(collectionView)
     }
 
     private func makeListConfiguration() -> UICollectionLayoutListConfiguration {
