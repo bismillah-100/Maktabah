@@ -146,7 +146,7 @@ class iOSAnnotationViewController: UIViewController {
 
             var rootSnap = dataSource.snapshot()
             if !rootSnap.sectionIdentifiers.contains(sectionID) {
-                if let rootNodes = AnnotationTreeBuilder.shared.currentRootNode()?.children,
+                if let rootNodes = AnnotationTreeBuilder.shared.withRootNode({ $0?.children }),
                    let newIndex = rootNodes.firstIndex(where: { $0 === entry.tagNode }),
                    newIndex + 1 < rootNodes.count
                 {
@@ -430,7 +430,13 @@ class iOSAnnotationViewController: UIViewController {
     }
 
     private func rebuildSnapshot(animated: Bool) {
-        let newSectionIDs = currentNodes.map(\.id)
+        var seenSectionIDs = Set<String>()
+        var uniqueNodes: [SwiftUIAnnotationNode] = []
+        for node in currentNodes where seenSectionIDs.insert(node.id).inserted {
+            uniqueNodes.append(node)
+        }
+
+        let newSectionIDs = uniqueNodes.map(\.id)
         let currentSectionIDs = dataSource.snapshot().sectionIdentifiers
 
         if newSectionIDs != currentSectionIDs {
@@ -439,7 +445,7 @@ class iOSAnnotationViewController: UIViewController {
             dataSource.apply(rootSnapshot, animatingDifferences: false)
         }
 
-        for node in currentNodes {
+        for node in uniqueNodes {
             let sectionID = node.id
             let existing = dataSource.snapshot(for: sectionID)
 
@@ -451,7 +457,11 @@ class iOSAnnotationViewController: UIViewController {
             let isExpanded = isSearching || expandedGroups.contains(sectionID)
 
             if let children = node.children, !children.isEmpty {
-                let childItems = children.map { AnnotationItem.annotation($0) }
+                var seenItemIDs = Set<String>()
+                var childItems: [AnnotationItem] = []
+                for child in children where seenItemIDs.insert(child.id).inserted {
+                    childItems.append(AnnotationItem.annotation(child))
+                }
                 sectionSnapshot.append(childItems, to: groupItem)
                 if isExpanded {
                     sectionSnapshot.expand([groupItem])

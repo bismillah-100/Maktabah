@@ -43,8 +43,9 @@ struct AnnotationViewControllerWrapper: UIViewControllerRepresentable {
         viewModel.onIncrementalUpdate = { [weak vc] diff in
             vc?.handleIncrementalUpdate(diff: diff)
         }
-        viewModel.onTreeUpdate = { [weak vc] nodes, mode in
-            vc?.handleTreeUpdate(nodes: nodes.map { SwiftUIAnnotationNode(from: $0) }, groupingMode: mode)
+        viewModel.onTreeUpdate = { [weak vc, weak viewModel] _, mode in
+            guard let swiftUINodes = viewModel?.swiftUINodes else { return }
+            vc?.handleTreeUpdate(nodes: swiftUINodes, groupingMode: mode)
         }
         viewModel.onTagsChanged = { [weak vc] _ in
             vc?.updateTagFilterHeader()

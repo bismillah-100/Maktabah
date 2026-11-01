@@ -328,7 +328,7 @@ final class AnnotationStore: Sendable {
 
             let totalChanges = addedAnnotations.count + updatedAnnotations.count + deletedAnnotations.count
 
-            if totalChanges > 0, totalChanges < 100 {
+            if totalChanges == 1 {
                 applyIncrementalCloudKitCache(
                     added: addedAnnotations,
                     updated: updatedAnnotations,
@@ -346,6 +346,13 @@ final class AnnotationStore: Sendable {
                 for ann in updatedAnnotations {
                     emit(.updated(ann))
                 }
+            } else if totalChanges > 1, totalChanges < 100 {
+                applyIncrementalCloudKitCache(
+                    added: addedAnnotations,
+                    updated: updatedAnnotations,
+                    deleted: deletedAnnotations
+                )
+                emit(.treeInvalidated)
             } else if totalChanges >= 100 {
                 clearAllCaches()
                 emit(.treeInvalidated)

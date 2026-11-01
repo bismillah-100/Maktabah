@@ -51,6 +51,7 @@ enum AnnotationTreeFilter {
                         title: node.title,
                         kind: node.kind,
                         annotation: nil,
+                        bookId: node.bookId,
                         bookTitle: node.bookTitle,
                         normalizedBookTitle: node.normalizedBookTitle
                     )
@@ -88,6 +89,7 @@ enum AnnotationTreeFilter {
                     title: node.title,
                     kind: node.kind,
                     annotation: node.annotation,
+                    bookId: node.bookId,
                     bookTitle: node.bookTitle,
                     normalizedBookTitle: node.normalizedBookTitle
                 )
@@ -98,6 +100,7 @@ enum AnnotationTreeFilter {
                     title: node.title,
                     kind: node.kind,
                     annotation: node.annotation,
+                    bookId: node.bookId,
                     bookTitle: node.bookTitle,
                     normalizedBookTitle: node.normalizedBookTitle
                 )

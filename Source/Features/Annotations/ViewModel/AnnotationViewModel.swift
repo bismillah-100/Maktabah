@@ -60,6 +60,9 @@ struct SwiftUIAnnotationNode: Identifiable {
         if node.kind == .annotation, let ann = node.annotation, let annId = ann.id {
             return "ann-\(annId)"
         }
+        if node.kind == .book, let bkId = node.bookId ?? node.children.first?.annotation?.bkId {
+            return "group-book-\(bkId)"
+        }
         return "group-\(node.kind)-\(node.title)"
     }
 
@@ -88,12 +91,16 @@ class AnnotationViewModel: ViewModelBase {
         if let cached = cachedFilteredNodes {
             return cached
         }
-        return AnnotationTreeBuilder.shared.currentRootNode()?.children ?? []
+        return AnnotationTreeBuilder.shared.withRootNode { $0?.children ?? [] }
     }
 
     /// SwiftUI tree
     var swiftUINodes: [SwiftUIAnnotationNode] {
-        filteredNodes.map { SwiftUIAnnotationNode(from: $0) }
+        if let cached = cachedFilteredNodes {
+            return cached.map { SwiftUIAnnotationNode(from: $0) }
+        }
+        let children = AnnotationTreeBuilder.shared.withRootNode { $0?.children ?? [] }
+        return children.map { SwiftUIAnnotationNode(from: $0) }
     }
 
     private var searchTask: Task<Void, Never>?
@@ -175,15 +182,17 @@ class AnnotationViewModel: ViewModelBase {
     }
 
     func availableTags(for tags: Set<String>) -> [String] {
-        guard let root = AnnotationTreeBuilder.shared.currentRootNode() else {
-            return allTags
+        AnnotationTreeBuilder.shared.withRootNode { root in
+            guard let root else {
+                return allTags
+            }
+            return AnnotationTreeFilter.availableTags(
+                for: tags,
+                in: root.children,
+                allTags: allTags,
+                mode: tagFilterMode
+            )
         }
-        return AnnotationTreeFilter.availableTags(
-            for: tags,
-            in: root.children,
-            allTags: allTags,
-            mode: tagFilterMode
-        )
     }
 
     var onTagsChanged: (@MainActor ([String]) -> Void)?
@@ -293,7 +302,8 @@ class AnnotationViewModel: ViewModelBase {
     }
 
     private func reloadFromTree() {
-        guard let coreNodes = AnnotationTreeBuilder.shared.currentRootNode()?.children else { return }
+        let hasRoot = AnnotationTreeBuilder.shared.withRootNode { $0 != nil }
+        guard hasRoot else { return }
 
         let currentAllTags = Set(allTags)
         let validSelected = selectedTags.filter { currentAllTags.contains($0) }
@@ -304,13 +314,18 @@ class AnnotationViewModel: ViewModelBase {
 
         let isFiltered = !selectedTags.isEmpty || !searchText.isEmpty
         if isFiltered {
-            cachedFilteredNodes = AnnotationTreeFilter.filter(
-                nodes: coreNodes,
-                selectedTags: selectedTags,
-                tagFilterMode: tagFilterMode,
-                searchText: searchText,
-                searchScope: searchScope
-            )
+            let coreNodes = AnnotationTreeBuilder.shared.withRootNode { $0?.children }
+            if let coreNodes {
+                cachedFilteredNodes = AnnotationTreeFilter.filter(
+                    nodes: coreNodes,
+                    selectedTags: selectedTags,
+                    tagFilterMode: tagFilterMode,
+                    searchText: searchText,
+                    searchScope: searchScope
+                )
+            } else {
+                cachedFilteredNodes = nil
+            }
         } else {
             cachedFilteredNodes = nil
         }

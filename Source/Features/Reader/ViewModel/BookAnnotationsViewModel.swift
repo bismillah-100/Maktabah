@@ -58,18 +58,20 @@ final class BookAnnotationsViewModel {
     func loadBookAnnotations(bookId: Int) async {
         self.bookId = bookId
         let anns: [Annotation] = await Task.detached(priority: .userInitiated) {
-            if let bookNode = AnnotationTreeBuilder.shared.currentRootNode()?.children.first(where: {
-                $0.kind == .book && $0.children.first?.annotation?.bkId == bookId
-            }) {
+            let treeAnns: [Annotation]? = AnnotationTreeBuilder.shared.withRootNode { root in
+                guard let bookNode = root?.children.first(where: {
+                    $0.kind == .book && ($0.bookId == bookId || $0.children.first?.annotation?.bkId == bookId)
+                }) else {
+                    return nil
+                }
                 return bookNode.children.compactMap(\.annotation)
-            } else {
-                return AnnotationStore.shared.loadAnnotations(bkId: bookId)
             }
+            return treeAnns ?? AnnotationStore.shared.loadAnnotations(bkId: bookId)
         }.value
 
-        self.bookAnnotations = anns
-        self.filterAnnotations(with: self.searchText)
-        self.hasLoaded = true
+        bookAnnotations = anns
+        filterAnnotations(with: searchText)
+        hasLoaded = true
     }
 
     private func filterAnnotations(with query: String) {
