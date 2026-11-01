@@ -36,6 +36,45 @@
 </head>
 <body>
 
+<h2>Version 4.2.1</h2>
+<p class="version">November 01, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Incremental CloudKit sync and tree updates for annotations on macOS and iOS, applying additions, edits, and deletions without full hierarchy reloads.</li>
+  <li>Batch deletion support for multiple annotations with incremental outline and collection view updates.</li>
+  <li>Reorganized iOS reader toolbars: compact rounded tab count badge on iPhone, persistent book title in navigation bar, view options moved to top menu, and streamlined bottom action bar.</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Move iOS reader view options into top navigation bar menu alongside book information.</li>
+  <li>Align iOS Table of Contents entries and annotation note text to RTL leading edge.</li>
+  <li>Relocate annotation search field to the navigation toolbar on iOS.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Prevent duplicate section ID crashes and race conditions during CloudKit annotation synchronization.</li>
+  <li>Preserve active reader text selection during annotation operations and state restoration on macOS.</li>
+  <li>Settle layout infinite loop in reader search and coordinate loading progress overlay display.</li>
+  <li>Anchor book info popover to clicked cell and remove unnecessary outline indentation in macOS library flat mode.</li>
+  <li>Close database connections and migrate sidecar files atomically with automatic rollback on custom storage failure.</li>
+  <li>Fix safe area insets and collection view layout distortion during screen rotation on iOS.</li>
+  <li>Resolve concurrency and thread-safety race conditions in Hadith narrator `RowiDataManager` and biography TarjamahDataManager managers.</li>
+  <li>Skip redundant annotation saves and eliminate CloudKit self-echo sync loops.</li>
+  <li>Synchronize reader scroll position to view model state across scroll changes on iOS.</li>
+  <li>Compute Table of Contents ranges immutably without mutating cached nodes.</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Faster CloudKit sync processing and smoother list rendering by handling sub-100 changes incrementally.</li>
+  <li>Protect Tarjamah caches with `Mutex`, cache narrator lookups in background tasks, and bulk-fetch books to prevent main thread stalls.</li>
+  <li>Defer reader loading progress overlay until load time exceeds 3 seconds to eliminate visual flashing on fast loads.</li>
+  <li>Reduce view model re-evaluations during reader scrolling by isolating reader state observation.</li>
+  <li>Optimize outline view virtualization and eliminate duplicate snapshot logic in diffable data sources.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 4.2</h2>
 <p class="version">October 20, 2026</p>
 <h3>New</h3>
