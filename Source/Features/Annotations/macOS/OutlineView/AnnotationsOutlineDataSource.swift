@@ -262,7 +262,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                         }
                     }
                 }
-            } else {
+            } else if !insertedNewTagNodes.contains(ObjectIdentifier(entry.tagNode)) {
                 if let annIdx = entry.tagNode.children.firstIndex(where: { $0 === entry.annotationNode }) {
                     childrenByTagNode[entry.tagNode, default: []].append(annIdx)
                 }
@@ -284,26 +284,21 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             return
         }
 
-        let totalChanges = diff.addedParents.count + diff.addedChildren.count
-        if totalChanges > 100 {
+        let totalChanges = diff.addedParents.count + diff.addedChildren.count + diff.movedParents.count
+        if totalChanges > 100 || !diff.movedParents.isEmpty {
             outlineView.reloadData()
             return
         }
 
         outlineView.beginUpdates()
 
-        // 1. Move existing parents whose position changed
-        for moved in diff.movedParents where moved.oldIndex != moved.newIndex {
-            outlineView.moveItem(at: moved.oldIndex, inParent: nil, to: moved.newIndex, inParent: nil)
+        // 1. Insert new parents into root
+        let parentIndices = IndexSet(diff.addedParents.map(\.newRootIndex))
+        if !parentIndices.isEmpty {
+            outlineView.insertItems(at: parentIndices, inParent: nil, withAnimation: .slideDown)
         }
 
-        // 2. Insert new parents into root
-        let sortedNewParents = diff.addedParents.sorted { $0.newRootIndex < $1.newRootIndex }
-        for parentEntry in sortedNewParents {
-            outlineView.insertItems(at: IndexSet(integer: parentEntry.newRootIndex), inParent: nil, withAnimation: .slideDown)
-        }
-
-        // 3. Insert children into existing parents
+        // 2. Insert children into existing parents
         var childrenByParent: [AnnotationNode: [Int]] = [:]
         for childEntry in diff.addedChildren {
             childrenByParent[childEntry.parentNode, default: []].append(childEntry.newChildIndex)

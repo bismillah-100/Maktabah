@@ -94,6 +94,23 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         }
     }
 
+    func setSortOptionForTesting(_ option: AnnotationSortOption) {
+        if DispatchQueue.getSpecific(key: treeQueueKey) != nil {
+            sortOption = option
+        } else {
+            treeQueue.sync {
+                sortOption = option
+            }
+        }
+    }
+
+    func currentSortOptionForTesting() -> AnnotationSortOption {
+        if DispatchQueue.getSpecific(key: treeQueueKey) != nil {
+            return sortOption
+        }
+        return treeQueue.sync { sortOption }
+    }
+
     // MARK: - Event Handling
 
     private func handle(event: AnnotationEvent) {
@@ -1080,7 +1097,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         return (removedEntries, updatedNodes)
     }
 
-    private func processBatchTagAdditions(
+    func processBatchTagAdditions(
         root: AnnotationNode,
         annotations: [Annotation]
     ) -> [TagUpdateDiff.AddedEntry] {

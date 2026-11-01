@@ -188,4 +188,75 @@ struct AnnotationTreeDiffTests {
         #expect(root.children.count == 2)
         #expect(bookNode10.children.count == 2)
     }
+
+    @Test("addAnnotationsToBookTree detects movedParents when parent position changes by createdAt")
+    func testBatchAdditionInBookTreeDetectsMovedParentsWhenCreatedAtChanges() {
+        let originalSort = AnnotationTreeBuilder.shared.currentSortOptionForTesting()
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .createdAt, isAscending: false))
+        defer { AnnotationTreeBuilder.shared.setSortOptionForTesting(originalSort) }
+
+        let annA = Annotation(id: 1, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 3000, context: "Ann 1", page: 1, part: 1)
+        let childA = AnnotationNode(title: "Child A", kind: .annotation, annotation: annA)
+        let bookA = AnnotationNode(title: "Book 10", kind: .book, bookId: 10)
+        bookA.children = [childA]
+
+        let annB = Annotation(id: 2, bkId: 20, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 1000, context: "Ann 2", page: 1, part: 1)
+        let childB = AnnotationNode(title: "Child B", kind: .annotation, annotation: annB)
+        let bookB = AnnotationNode(title: "Book 20", kind: .book, bookId: 20)
+        bookB.children = [childB]
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        root.children = [bookA, bookB]
+
+        let annBNew = Annotation(id: 3, bkId: 20, contentId: 2, range: NSRange(location: 10, length: 5), rangeDiacritics: NSRange(location: 10, length: 5), colorHex: "#0000FF", type: .highlight, createdAt: 5000, context: "Ann 3", page: 2, part: 1)
+
+        let diff = AnnotationTreeBuilder.shared.addAnnotationsToBookTree([annBNew], root: root)
+
+        #expect(diff.addedChildren.count == 1)
+        #expect(diff.addedParents.isEmpty)
+        #expect(!diff.movedParents.isEmpty)
+        #expect(root.children.first?.bookId == 20)
+        #expect(root.children.last?.bookId == 10)
+    }
+
+    @Test("processBatchTagAdditions marks first entry as new tag and subsequent entry as existing")
+    func testBatchTagAdditionsForSameNewTagDoesNotMarkSubsequentEntriesAsNew() {
+        let ann1 = Annotation(id: 11, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, note: nil, createdAt: 1000, context: "Ann 11", page: 1, part: 1, tags: ["FiqhNew"])
+        let ann2 = Annotation(id: 12, bkId: 10, contentId: 2, range: NSRange(location: 10, length: 5), rangeDiacritics: NSRange(location: 10, length: 5), colorHex: "#00FF00", type: .highlight, note: nil, createdAt: 2000, context: "Ann 12", page: 2, part: 1, tags: ["FiqhNew"])
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        let entries = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [ann1, ann2])
+
+        #expect(entries.count == 2)
+        #expect(entries[0].tagNodeIsNew == true)
+        #expect(entries[1].tagNodeIsNew == false)
+        #expect(entries[0].tagNode === entries[1].tagNode)
+        #expect(entries[0].tagNode.children.count == 2)
+    }
+
+    @Test("AnnotationViewModel forwards batch additions when missing book check is enabled")
+    @MainActor
+    func testViewModelForwardsBatchAdditionsWithMissingBookCheck() {
+        let vm = AnnotationViewModel()
+        var receivedDiff: AnnotationTreeDiff?
+        vm.onIncrementalUpdate = { diff in
+            receivedDiff = diff
+        }
+
+        let bookDiff = BookAdditionDiff(addedChildren: [], addedParents: [], movedParents: [])
+        let dummyAnn = Annotation(id: 9999, bkId: 99999, contentId: 1, range: NSRange(location: 0, length: 1), rangeDiacritics: NSRange(location: 0, length: 1), colorHex: "#FF0000", type: .highlight, createdAt: 1000, context: "Context", page: 1, part: 1)
+        let diff = AnnotationTreeDiff(
+            changeType: .added,
+            annotation: dummyAnn,
+            annotationId: nil,
+            bookAdditionDiff: bookDiff
+        )
+
+        let originalHideMissing = UserDefaults.standard.hideMissingBookAnnotations
+        UserDefaults.standard.hideMissingBookAnnotations = true
+        defer { UserDefaults.standard.hideMissingBookAnnotations = originalHideMissing }
+
+        vm.handleTreeDiff(diff)
+        #expect(receivedDiff != nil)
+    }
 }
