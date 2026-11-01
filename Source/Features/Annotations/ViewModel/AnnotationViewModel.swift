@@ -99,9 +99,8 @@ class AnnotationViewModel: ViewModelBase {
         if let cached = cachedFilteredNodes {
             return cached.map { SwiftUIAnnotationNode(from: $0) }
         }
-        return AnnotationTreeBuilder.shared.withRootNode { root in
-            (root?.children ?? []).map { SwiftUIAnnotationNode(from: $0) }
-        }
+        let children = AnnotationTreeBuilder.shared.withRootNode { $0?.children ?? [] }
+        return children.map { SwiftUIAnnotationNode(from: $0) }
     }
 
     private var searchTask: Task<Void, Never>?
@@ -315,15 +314,17 @@ class AnnotationViewModel: ViewModelBase {
 
         let isFiltered = !selectedTags.isEmpty || !searchText.isEmpty
         if isFiltered {
-            cachedFilteredNodes = AnnotationTreeBuilder.shared.withRootNode { root in
-                guard let coreNodes = root?.children else { return nil }
-                return AnnotationTreeFilter.filter(
+            let coreNodes = AnnotationTreeBuilder.shared.withRootNode { $0?.children }
+            if let coreNodes {
+                cachedFilteredNodes = AnnotationTreeFilter.filter(
                     nodes: coreNodes,
                     selectedTags: selectedTags,
                     tagFilterMode: tagFilterMode,
                     searchText: searchText,
                     searchScope: searchScope
                 )
+            } else {
+                cachedFilteredNodes = nil
             }
         } else {
             cachedFilteredNodes = nil

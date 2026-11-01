@@ -2,7 +2,7 @@
 
 Bagian ini membedah berbagai `struct`, `class`, dan `enum` murni yang berada di folder `Models/`. Model-model ini dirancang bebas dari ketergantungan sistem luar agar ringan dan *thread-safe* (mengadopsi *protocol* `Sendable`).
 
-## Annotation (Struct)
+### Annotation (Struct)
 
 Entitas utama yang merepresentasikan sebuah anotasi (*highlight*, *underline*, atau *note*).
 
@@ -42,7 +42,7 @@ struct Annotation: Sendable, Equatable, Identifiable {
 - *Protocol* `Sendable`: `Annotation` dijamin aman untuk diteruskan antar-*thread* (Task/Actor) secara konkuren tanpa risiko *data race*.
 - Teks Konteks (`context`): Menyimpan salinan denormalisasi potongan teks agar saat pencarian/filter tidak perlu membaca basis data buku utama secara berulang.
 
-### Helper & Computed Properties
+#### Helper & Computed Properties
 
 Untuk menjaga modularitas dan prinsip DRY, `Annotation` menyediakan *computed property* pembantu:
 
@@ -52,7 +52,7 @@ Untuk menjaga modularitas dan prinsip DRY, `Annotation` menyediakan *computed pr
 !!! note "Metadata Buku Diinjeksi ke Node"
     Properti metadata buku (`bookTitle`, `normalizedBookTitle`) tidak lagi berada pada model `Annotation` untuk mencegah *query* SQLite yang memblokir *main thread*. Metadata tersebut di-*resolve* di *background queue* (misalnya via `AnnotationTreeBuilder`) dan diinjeksikan langsung ke `AnnotationNode`.
 
-## ContentKey (Struct)
+### ContentKey (Struct)
 
 Kunci untuk *in-memory cache map* (`AnnotationStore`).
 
@@ -65,7 +65,7 @@ struct ContentKey: Hashable, Sendable {
 
 Digunakan sebagai *key* pada kamus *caching* per konten buku `[ContentKey: [Annotation]]` agar operasi *lookup* berjalan dalam kompleksitas waktu $O(1)$.
 
-## AnnotationNode (Class)
+### AnnotationNode (Class)
 
 Digunakan untuk membentuk struktur hierarki (*tree*) pada antarmuka `NSOutlineView` atau `SwiftUI List`.
 
@@ -116,7 +116,7 @@ enum DateBucket: Hashable, Comparable {
 
 Tipe ini mengadopsi `Comparable` untuk memudahkan pengurutan (*sorting*) kelompok waktu secara kronologis.
 
-## Status & Filter (Enum)
+## Status & Filter
 
 ### AnnotationMode (Enum)
 
@@ -184,7 +184,7 @@ enum AnnotationSearchScope: Int, CaseIterable, Sendable {
 - `.tag`: Membatasi pencarian hanya pada label/tag yang terpasang pada anotasi.
 - **Lokalisasi**: String antarmuka dimuat secara dinamis dari String Catalog `Annotation.xcstrings` (mendukung lokalisasi EN, AR, ID).
 
-## AnnotationEvent (Enum)
+### AnnotationEvent (Enum)
 
 Menggunakan tipe data aljabar (*algebraic data types* / enum dengan *associated values*) untuk dipancarkan melalui `PassthroughSubject` di Combine.
 
