@@ -16,6 +16,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     // MARK: - State & Queues
 
     private let treeQueue = DispatchQueue(label: "com.maktab.annotationTreeBuilder.queue", qos: .userInitiated)
+    private let treeQueueKey = DispatchSpecificKey<Void>()
     private var rootNode: AnnotationNode?
 
     private var groupingMode: AnnotationGroupingMode = UserDefaults.standard.selectedAnnGroupingMode
@@ -28,6 +29,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     private var hideMissingObservation: NSKeyValueObservation?
 
     private init() {
+        treeQueue.setSpecific(key: treeQueueKey, value: ())
+
         AnnotationStore.shared.events
             .sink { [weak self] event in
                 self?.handle(event: event)
@@ -48,7 +51,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     // MARK: - Public API
 
     func currentRootNode() -> AnnotationNode? {
-        treeQueue.sync { rootNode }
+        withRootNode { $0 }
+    }
+
+    func withRootNode<T>(_ body: (AnnotationNode?) -> T) -> T {
+        if DispatchQueue.getSpecific(key: treeQueueKey) != nil {
+            return body(rootNode)
+        }
+        return treeQueue.sync { body(rootNode) }
     }
 
     func buildAnnotationTree() {
@@ -378,6 +388,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             let bookNode = AnnotationNode(
                 title: bookTitle,
                 kind: .book,
+                bookId: bkId,
                 bookTitle: bookTitle,
                 normalizedBookTitle: bookTitle.normalizeArabic(false)
             )
@@ -546,6 +557,9 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
     private func findOrCreateBookNode(for bkId: Int, in root: AnnotationNode) -> AnnotationNode {
         if let existing = root.children.first(where: { node in
+            if node.kind == .book, let nodeBkId = node.bookId, nodeBkId == bkId {
+                return true
+            }
             guard let firstChild = node.children.first,
                   let annotation = firstChild.annotation else { return false }
             return annotation.bkId == bkId
@@ -554,7 +568,14 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         }
 
         guard let book = LibraryDataManager.shared.getBook([bkId]).first else {
-            let fallbackNode = AnnotationNode(title: "Unknown Book", kind: .book)
+            let fallbackTitle = "Unknown Book (\(bkId))"
+            let fallbackNode = AnnotationNode(
+                title: fallbackTitle,
+                kind: .book,
+                bookId: bkId,
+                bookTitle: fallbackTitle,
+                normalizedBookTitle: fallbackTitle.normalizeArabic(false)
+            )
             let idx = root.children.insertionIndex(for: fallbackNode, using: compareNodes)
             root.children.insert(fallbackNode, at: idx)
             return fallbackNode
@@ -563,6 +584,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         let bookNode = AnnotationNode(
             title: book.book,
             kind: .book,
+            bookId: bkId,
             bookTitle: book.book,
             normalizedBookTitle: book.normalizedBook
         )

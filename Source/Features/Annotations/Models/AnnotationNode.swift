@@ -119,6 +119,7 @@ final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
     var children: [AnnotationNode] = []
     var annotation: Annotation? // optional, kalau node ini representasi annotation
     var kind: AnnotationNodeKind
+    var bookId: Int?
     var bookTitle: String?
     var normalizedBookTitle: String?
 
@@ -126,12 +127,14 @@ final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
         title: String,
         kind: AnnotationNodeKind = .book,
         annotation: Annotation? = nil,
+        bookId: Int? = nil,
         bookTitle: String? = nil,
         normalizedBookTitle: String? = nil
     ) {
         self.title = title
         self.kind = kind
         self.annotation = annotation
+        self.bookId = bookId
         self.bookTitle = bookTitle
         self.normalizedBookTitle = normalizedBookTitle
     }

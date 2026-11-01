@@ -75,6 +75,7 @@ final class AnnotationNode: Equatable, Hashable, @unchecked Sendable {
     var children: [AnnotationNode] = []
     var annotation: Annotation? 
     var kind: AnnotationNodeKind
+    var bookId: Int?
     var bookTitle: String?
     var normalizedBookTitle: String?
     
