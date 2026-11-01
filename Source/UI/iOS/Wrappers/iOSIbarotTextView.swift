@@ -812,7 +812,9 @@ struct iOSIbarotTextView: UIViewRepresentable {
             else { return }
             let topInset = max(scrollView.adjustedContentInset.top, scrollView.safeAreaInsets.top)
             let docY = max(0, scrollView.contentOffset.y + topInset)
-            lastKnownScrollPosition = CGPoint(x: 0, y: docY)
+            let pos = CGPoint(x: 0, y: docY)
+            lastKnownScrollPosition = pos
+            parent.viewModel.readerState.scrollPosition = pos
         }
 
         func scrollViewDidScrollToTop(_ scrollView: UIScrollView) {
