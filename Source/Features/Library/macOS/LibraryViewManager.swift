@@ -31,6 +31,11 @@ class LibraryViewManager: NSObject {
     private let selectionSubject = PassthroughSubject<Int, Never>()
     private var bookInfoPopover: NSPopover?
 
+    private struct BookInfoContext {
+        let book: BooksData
+        let row: Int
+    }
+
     init(
         outlineView: NSOutlineView,
         searchField: DSFSearchField,
@@ -47,6 +52,7 @@ class LibraryViewManager: NSObject {
         self.downloadView = downloadView
         self.searchField = searchField
         super.init()
+        applyOutlineIndentation()
         setupDSFSearchField()
         setupContextMenu()
         bindToViewModel()
@@ -85,6 +91,7 @@ class LibraryViewManager: NSObject {
     private func handleViewModelUpdate(_ update: LibraryUpdate) {
         switch update {
         case .reloadData:
+            applyOutlineIndentation()
             outlineView.reloadData()
             restoreSelection(byBookName: viewModel.selectedBookName)
         case let .reloadItem(item, reloadChildren):
@@ -147,11 +154,16 @@ class LibraryViewManager: NSObject {
         }
     }
 
+    func applyOutlineIndentation() {
+        outlineView?.indentationPerLevel = viewModel.isFlatMode ? 0 : 12
+    }
+
     func reloadOutlineData() {
         if initialLoad, searchView {
             viewModel.selectAllBook(state: true)
             initialLoad = false
         }
+        applyOutlineIndentation()
         outlineView.reloadData()
         let query = viewModel.searchQuery
         if !query.isEmpty {
@@ -162,6 +174,7 @@ class LibraryViewManager: NSObject {
 
     func applyFilter(_ mode: LibraryFilterMode) {
         viewModel.applyFilter(mode)
+        applyOutlineIndentation()
         if mode == .favorites || mode == .history {
             outlineView?.expandItem(nil, expandChildren: true)
         }
@@ -422,6 +435,13 @@ extension LibraryViewManager: NSOutlineViewDelegate {
         26
     }
 
+    func outlineView(_ outlineView: NSOutlineView, shouldShowOutlineCellForItem item: Any) -> Bool {
+        if viewModel.isFlatMode {
+            return false
+        }
+        return self.outlineView(outlineView, isItemExpandable: item)
+    }
+
     @objc func deleteBookAction(_ sender: NSMenuItem) {
         guard let books = sender.representedObject as? [BooksData] else { return }
         let alert = NSAlert()
@@ -479,7 +499,7 @@ extension LibraryViewManager: NSMenuDelegate {
                 keyEquivalent: ""
             )
             bookInfoItem.target = self
-            bookInfoItem.representedObject = clickedBook
+            bookInfoItem.representedObject = BookInfoContext(book: clickedBook, row: clickedRow)
             menu.addItem(bookInfoItem)
         }
 
@@ -539,22 +559,54 @@ extension LibraryViewManager: NSMenuDelegate {
     }
 
     @objc func showBookInfoAction(_ sender: NSMenuItem) {
-        guard let book = sender.representedObject as? BooksData else { return }
-        showBookInfo(for: book)
-    }
-
-    func showBookInfo(for book: BooksData) {
-        LibraryDataManager.shared.loadBookInfo(book.id) { [weak self] in
-            guard let self else { return }
-            let resolvedBook = LibraryDataManager.shared.booksById[book.id] ?? book
-            presentBookInfoPopover(for: resolvedBook)
+        if let context = sender.representedObject as? BookInfoContext {
+            showBookInfo(for: context.book, atRow: context.row)
+        } else if let book = sender.representedObject as? BooksData {
+            showBookInfo(for: book)
         }
     }
 
-    private func presentBookInfoPopover(for book: BooksData) {
+    func showBookInfo(for book: BooksData, atRow targetRow: Int? = nil) {
+        LibraryDataManager.shared.loadBookInfo(book.id) { [weak self] in
+            guard let self else { return }
+            let resolvedBook = LibraryDataManager.shared.booksById[book.id] ?? book
+            if book !== resolvedBook {
+                book.info = resolvedBook.info
+                book.bithoqoh = resolvedBook.bithoqoh
+                book.tafseerNam = resolvedBook.tafseerNam
+            }
+            presentBookInfoPopover(for: resolvedBook, originalBook: book, atRow: targetRow)
+        }
+    }
+
+    private func presentBookInfoPopover(
+        for book: BooksData,
+        originalBook: BooksData? = nil,
+        atRow targetRow: Int? = nil
+    ) {
         bookInfoPopover?.performClose(nil)
 
-        let row = outlineView.row(forItem: book)
+        let row: Int
+        if let targetRow, targetRow >= 0, targetRow < outlineView.numberOfRows {
+            row = targetRow
+        } else {
+            var itemRow = outlineView.row(forItem: book)
+            if itemRow == -1, let originalBook {
+                itemRow = outlineView.row(forItem: originalBook)
+            }
+            if itemRow == -1 {
+                if viewModel.isFlatMode, let firstCat = viewModel.displayedCategories.first {
+                    itemRow = firstCat.children.firstIndex(where: { ($0 as? BooksData)?.id == book.id }) ?? -1
+                } else {
+                    let categories = viewModel.displayedCategories
+                    if let found = findCategoryPathAndBook(for: book.book, in: categories) {
+                        itemRow = outlineView.row(forItem: found.book)
+                    }
+                }
+            }
+            row = itemRow
+        }
+
         let anchor = outlineView.cellAnchor(forRow: row)
 
         let bookInfoVC = BookInfo()

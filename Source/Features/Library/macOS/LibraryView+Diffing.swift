@@ -68,6 +68,7 @@ extension LibraryViewManager {
         fallbackCategoryId: Int,
         fallbackCategoryName: String
     ) {
+        applyOutlineIndentation()
         guard let firstCat = viewModel.displayedCategories.first else {
             viewModel.displayedCategories = newBooks.isEmpty ? [] : [{
                 let cat = CategoryData(id: fallbackCategoryId, name: fallbackCategoryName, level: 1, order: 0)
