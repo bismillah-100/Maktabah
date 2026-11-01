@@ -988,10 +988,9 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationNode (Class)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#annotationnodekind-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1001,8 +1000,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#datebucket-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1012,22 +1011,17 @@
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
         <li class="md-nav__item">
-  <a href="#status-filter-enum" class="md-nav__link">
+  <a href="#status-filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Status &amp; Filter (Enum)
+        Status &amp; Filter
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Status &amp; Filter (Enum)">
+    <nav class="md-nav" aria-label="Status &amp; Filter">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1063,12 +1057,7 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
+          <li class="md-nav__item">
   <a href="#annotationevent-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1076,6 +1065,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3698,10 +3692,9 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="AnnotationNode (Class)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#annotationnodekind-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3711,8 +3704,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#datebucket-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3722,22 +3715,17 @@
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
         <li class="md-nav__item">
-  <a href="#status-filter-enum" class="md-nav__link">
+  <a href="#status-filter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Status &amp; Filter (Enum)
+        Status &amp; Filter
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Status &amp; Filter (Enum)">
+    <nav class="md-nav" aria-label="Status &amp; Filter">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3773,12 +3761,7 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
+          <li class="md-nav__item">
   <a href="#annotationevent-enum" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3786,6 +3769,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3808,7 +3796,7 @@
 
 <h1 id="data-models-state-types">Data Models &amp; State Types</h1>
 <p>Bagian ini membedah berbagai <code>struct</code>, <code>class</code>, dan <code>enum</code> murni yang berada di folder <code>Models/</code>. Model-model ini dirancang bebas dari ketergantungan sistem luar agar ringan dan <em>thread-safe</em> (mengadopsi <em>protocol</em> <code>Sendable</code>).</p>
-<h2 id="annotation-struct">Annotation (Struct)</h2>
+<h3 id="annotation-struct">Annotation (Struct)</h3>
 <p>Entitas utama yang merepresentasikan sebuah anotasi (<em>highlight</em>, <em>underline</em>, atau <em>note</em>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">Annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="p">,</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="n">Identifiable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">id</span><span class="p">:</span><span class="w"> </span><span class="nb">Int64</span><span class="p">?</span><span class="w"> </span><span class="c1">// (1)!</span>
@@ -3845,7 +3833,7 @@
 <li><em>Protocol</em> <code>Sendable</code>: <code>Annotation</code> dijamin aman untuk diteruskan antar-<em>thread</em> (Task/Actor) secara konkuren tanpa risiko <em>data race</em>.</li>
 <li>Teks Konteks (<code>context</code>): Menyimpan salinan denormalisasi potongan teks agar saat pencarian/filter tidak perlu membaca basis data buku utama secara berulang.</li>
 </ul>
-<h3 id="helper-computed-properties">Helper &amp; Computed Properties</h3>
+<h4 id="helper-computed-properties">Helper &amp; Computed Properties</h4>
 <p>Untuk menjaga modularitas dan prinsip DRY, <code>Annotation</code> menyediakan <em>computed property</em> pembantu:</p>
 <ul>
 <li><code>displayTitle: String</code>: Mengembalikan teks catatan (<code>note</code>) jika tidak kosong, atau <em>fallback</em> ke teks kutipan (<code>context</code>).</li>
@@ -3855,7 +3843,7 @@
 <p class="admonition-title">Metadata Buku Diinjeksi ke Node</p>
 <p>Properti metadata buku (<code>bookTitle</code>, <code>normalizedBookTitle</code>) tidak lagi berada pada model <code>Annotation</code> untuk mencegah <em>query</em> SQLite yang memblokir <em>main thread</em>. Metadata tersebut di-<em>resolve</em> di <em>background queue</em> (misalnya via <code>AnnotationTreeBuilder</code>) dan diinjeksikan langsung ke <code>AnnotationNode</code>.</p>
 </div>
-<h2 id="contentkey-struct">ContentKey (Struct)</h2>
+<h3 id="contentkey-struct">ContentKey (Struct)</h3>
 <p>Kunci untuk <em>in-memory cache map</em> (<code>AnnotationStore</code>).</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">struct</span><span class="w"> </span><span class="nc">ContentKey</span><span class="p">:</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nv">bkId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span>
@@ -3863,18 +3851,19 @@
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Digunakan sebagai <em>key</em> pada kamus <em>caching</em> per konten buku <code>[ContentKey: [Annotation]]</code> agar operasi <em>lookup</em> berjalan dalam kompleksitas waktu $O(1)$.</p>
-<h2 id="annotationnode-class">AnnotationNode (Class)</h2>
+<h3 id="annotationnode-class">AnnotationNode (Class)</h3>
 <p>Digunakan untuk membentuk struktur hierarki (<em>tree</em>) pada antarmuka <code>NSOutlineView</code> atau <code>SwiftUI List</code>.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kr">final</span><span class="w"> </span><span class="kd">class</span><span class="w"> </span><span class="nc">AnnotationNode</span><span class="p">:</span><span class="w"> </span><span class="nb">Equatable</span><span class="p">,</span><span class="w"> </span><span class="nb">Hashable</span><span class="p">,</span><span class="w"> </span><span class="p">@</span><span class="n">unchecked</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">title</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">children</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="n">AnnotationNode</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">annotation</span><span class="p">:</span><span class="w"> </span><span class="n">Annotation</span><span class="p">?</span><span class="w"> </span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">kind</span><span class="p">:</span><span class="w"> </span><span class="n">AnnotationNodeKind</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">bookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">normalizedBookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">bookId</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">?</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">bookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nv">normalizedBookTitle</span><span class="p">:</span><span class="w"> </span><span class="nb">String</span><span class="p">?</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="c1">// ...</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">}</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Catatan Thread-Safety</p>
@@ -3902,7 +3891,7 @@
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Tipe ini mengadopsi <code>Comparable</code> untuk memudahkan pengurutan (<em>sorting</em>) kelompok waktu secara kronologis.</p>
-<h2 id="status-filter-enum">Status &amp; Filter (Enum)</h2>
+<h2 id="status-filter">Status &amp; Filter</h2>
 <h3 id="annotationmode-enum">AnnotationMode (Enum)</h3>
 <p>Menentukan bentuk visual anotasi.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationMode</span><span class="p">:</span><span class="w"> </span><span class="nb">Int</span><span class="p">,</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
@@ -3958,7 +3947,7 @@
 <li><code>.tag</code>: Membatasi pencarian hanya pada label/tag yang terpasang pada anotasi.</li>
 <li><strong>Lokalisasi</strong>: String antarmuka dimuat secara dinamis dari String Catalog <code>Annotation.xcstrings</code> (mendukung lokalisasi EN, AR, ID).</li>
 </ul>
-<h2 id="annotationevent-enum">AnnotationEvent (Enum)</h2>
+<h3 id="annotationevent-enum">AnnotationEvent (Enum)</h3>
 <p>Menggunakan tipe data aljabar (<em>algebraic data types</em> / enum dengan <em>associated values</em>) untuk dipancarkan melalui <code>PassthroughSubject</code> di Combine.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">AnnotationEvent</span><span class="p">:</span><span class="w"> </span><span class="n">Sendable</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">added</span><span class="p">(</span><span class="n">Annotation</span><span class="p">)</span>
