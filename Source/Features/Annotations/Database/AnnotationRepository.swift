@@ -348,6 +348,28 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
         return deletedAnnotation
     }
 
+    func deleteAnnotationRows(ids: [Int64]) throws -> [Annotation] {
+        guard _db != nil, !ids.isEmpty else { return [] }
+        let deleted = try loadAnnotationsByIds(ids)
+        guard !deleted.isEmpty else { return [] }
+
+        try transaction(cleanupTags: true) {
+            for chunk in ids.chunked(into: 500) {
+                let placeholders = String(repeating: "?,", count: chunk.count).dropLast()
+                try exec("DELETE FROM \(annotationTagsTable) WHERE \(colAnnotationTagAnnotationId) IN (\(placeholders));", parameters: chunk)
+                try exec("DELETE FROM \(annotationsTable) WHERE \(colAnnId) IN (\(placeholders));", parameters: chunk)
+            }
+
+            for ann in deleted {
+                if let ckId = ann.ckRecordId {
+                    try self.addPendingSync(ckRecordId: ckId, operation: "delete")
+                }
+            }
+        }
+
+        return deleted
+    }
+
     func loadAnnotations(bkId: Int, contentId: Int) throws -> [Annotation] {
         guard let _db else { return [] }
         let sql = "SELECT * FROM \(annotationsTable) WHERE \(colAnnBkId) = ? AND \(colAnnContentId) = ? ORDER BY \(colAnnStart) ASC;"
@@ -750,7 +772,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
                     updated.append(updatedAnn)
                 }
             }
-            if cleanupTags && !updated.isEmpty {
+            if cleanupTags, !updated.isEmpty {
                 try self.deleteUnusedTags()
             }
         }

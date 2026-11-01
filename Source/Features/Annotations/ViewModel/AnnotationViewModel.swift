@@ -335,10 +335,15 @@ class AnnotationViewModel: ViewModelBase {
     }
 
     func deleteAnnotation(id: Int64) {
+        deleteAnnotations(ids: [id])
+    }
+
+    func deleteAnnotations(ids: [Int64]) {
+        guard !ids.isEmpty else { return }
         do {
-            try AnnotationStore.shared.deleteAnnotation(id: id)
+            try AnnotationStore.shared.deleteAnnotations(ids: ids)
         } catch {
-            Logger.annotations.error("Failed to delete annotation: \(error.localizedDescription, privacy: .public)")
+            Logger.annotations.error("Failed to delete annotations: \(error.localizedDescription, privacy: .public)")
         }
     }
 
