@@ -894,14 +894,20 @@ class IbarotTextView: NSTextView {
         switch event {
         case let .added(ann):
             applyAnnotationsToCurrentPage([ann], in: ts)
+        case let .batchAdded(anns):
+            applyAnnotationsToCurrentPage(anns, in: ts)
         case let .updated(ann):
             if let id = ann.id { removeAnnotationsFromCurrentPage([id], in: ts) }
             applyAnnotationsToCurrentPage([ann], in: ts)
+        case let .batchUpdated(anns):
+            let pageAnns = anns.filter(isCurrentPage)
+            removeAnnotationsFromCurrentPage(pageAnns.compactMap(\.id), in: ts)
+            applyAnnotationsToCurrentPage(pageAnns, in: ts)
         case let .deleted(id, _):
             removeAnnotationsFromCurrentPage([id], in: ts)
         case let .batchDeleted(ids, _):
             removeAnnotationsFromCurrentPage(ids, in: ts)
-        case .batchUpdated, .treeInvalidated:
+        case .treeInvalidated:
             refreshAnnotations()
             return
         }

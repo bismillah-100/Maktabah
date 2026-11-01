@@ -49,6 +49,23 @@ struct BookDeletionDiff {
     let movedParents: [MovedParent]
 }
 
+struct BookAdditionDiff {
+    struct AddedChild {
+        let annotationNode: AnnotationNode
+        let parentNode: AnnotationNode
+        let newChildIndex: Int
+    }
+
+    struct AddedParent {
+        let parentNode: AnnotationNode
+        let newRootIndex: Int
+    }
+
+    let addedChildren: [AddedChild]
+    let addedParents: [AddedParent]
+    let movedParents: [BookDeletionDiff.MovedParent]
+}
+
 struct AnnotationTreeDiff {
     enum ChangeType {
         case added
@@ -63,6 +80,8 @@ struct AnnotationTreeDiff {
     let newParentIndex: Int?
     let tagDiff: TagUpdateDiff?
     let bookDeletionDiff: BookDeletionDiff?
+    let bookAdditionDiff: BookAdditionDiff?
+    let updatedAnnotations: [Annotation]
 
     init(
         changeType: ChangeType,
@@ -71,7 +90,9 @@ struct AnnotationTreeDiff {
         oldParentIndex: Int? = nil,
         newParentIndex: Int? = nil,
         tagDiff: TagUpdateDiff? = nil,
-        bookDeletionDiff: BookDeletionDiff? = nil
+        bookDeletionDiff: BookDeletionDiff? = nil,
+        bookAdditionDiff: BookAdditionDiff? = nil,
+        updatedAnnotations: [Annotation] = []
     ) {
         self.changeType = changeType
         self.annotation = annotation
@@ -80,5 +101,7 @@ struct AnnotationTreeDiff {
         self.newParentIndex = newParentIndex
         self.tagDiff = tagDiff
         self.bookDeletionDiff = bookDeletionDiff
+        self.bookAdditionDiff = bookAdditionDiff
+        self.updatedAnnotations = updatedAnnotations
     }
 }

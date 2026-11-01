@@ -102,6 +102,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             switch event {
             case let .added(annotation):
                 handleAdd(annotation)
+            case let .batchAdded(annotations):
+                handleBatchAdd(annotations)
             case let .updated(annotation):
                 handleUpdate(annotation)
             case let .deleted(id, annotation):
@@ -413,7 +415,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             let diff = AnnotationTreeDiff(
                 changeType: .updated,
                 annotation: effectiveAnnotations.first,
-                annotationId: repId
+                annotationId: repId,
+                updatedAnnotations: effectiveAnnotations
             )
             diffPublisher.send(diff)
         case .tag:
@@ -423,10 +426,146 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 changeType: .updated,
                 annotation: effectiveAnnotations.first,
                 annotationId: repId,
+                tagDiff: tagDiff,
+                updatedAnnotations: effectiveAnnotations
+            )
+            diffPublisher.send(diff)
+        }
+    }
+
+    private func handleBatchAdd(_ annotations: [Annotation]) {
+        guard let root = rootNode else {
+            rebuildTree()
+            diffPublisher.send(nil)
+            return
+        }
+
+        let effectiveAnnotations = filterNewAnnotations(annotations, in: root)
+        guard !effectiveAnnotations.isEmpty else { return }
+
+        let repId: Int64? = effectiveAnnotations.count == 1 ? effectiveAnnotations.first?.id : nil
+
+        switch groupingMode {
+        case .book:
+            let bookDiff = addAnnotationsToBookTree(effectiveAnnotations, root: root)
+            let diff = AnnotationTreeDiff(
+                changeType: .added,
+                annotation: effectiveAnnotations.first,
+                annotationId: repId,
+                bookAdditionDiff: bookDiff
+            )
+            diffPublisher.send(diff)
+
+        case .tag:
+            let addedEntries = processBatchTagAdditions(root: root, annotations: effectiveAnnotations)
+            let tagDiff = TagUpdateDiff(removed: [], added: addedEntries, updated: [])
+            let diff = AnnotationTreeDiff(
+                changeType: .added,
+                annotation: effectiveAnnotations.first,
+                annotationId: repId,
+                tagDiff: tagDiff
+            )
+            diffPublisher.send(diff)
+
+        case .timeline:
+            let allAddedEntries = effectiveAnnotations.flatMap { addAnnotationToTimelineTree($0, root: root).added }
+            let tagDiff = TagUpdateDiff(removed: [], added: allAddedEntries, updated: [])
+            let diff = AnnotationTreeDiff(
+                changeType: .added,
+                annotation: effectiveAnnotations.first,
+                annotationId: repId,
                 tagDiff: tagDiff
             )
             diffPublisher.send(diff)
         }
+    }
+
+    private func filterNewAnnotations(_ annotations: [Annotation], in root: AnnotationNode) -> [Annotation] {
+        var effective = annotations
+        if UserDefaults.standard.hideMissingBookAnnotations {
+            let uniqueBkIds = Array(Set(effective.map(\.bkId)))
+            let existingBkIds = Set(LibraryDataManager.shared.getBook(uniqueBkIds).map(\.id))
+            effective = effective.filter { existingBkIds.contains($0.bkId) }
+        }
+
+        let existingIds = Set(root.children.flatMap { parent in
+            parent.children.compactMap { $0.annotation?.id }
+        })
+        return effective.filter { ann in
+            guard let id = ann.id else { return false }
+            return !existingIds.contains(id)
+        }
+    }
+
+    func addAnnotationsToBookTree(_ annotations: [Annotation], root: AnnotationNode) -> BookAdditionDiff {
+        let initialParents = root.children
+        let initialParentSet = Set(initialParents.map { ObjectIdentifier($0) })
+        let initialParentIndices = Dictionary(uniqueKeysWithValues: initialParents.enumerated().map { (ObjectIdentifier($0.element), $0.offset) })
+
+        var affectedExistingParents = Set<AnnotationNode>()
+
+        for annotation in annotations {
+            let bookNode = findOrCreateBookNode(for: annotation.bkId, in: root)
+            if initialParentSet.contains(ObjectIdentifier(bookNode)) {
+                affectedExistingParents.insert(bookNode)
+            }
+
+            let bTitle = bookNode.title
+            let annotationNode = AnnotationNode(
+                title: displayTitle(for: annotation),
+                kind: .annotation,
+                annotation: annotation,
+                bookTitle: bTitle,
+                normalizedBookTitle: bTitle.normalizeArabic(false)
+            )
+            let insertIdx = bookNode.children.insertionIndex(for: annotationNode, using: compareNodes)
+            bookNode.children.insert(annotationNode, at: insertIdx)
+        }
+
+        let movedParents = calculateMovedParents(
+            root: root,
+            initialParentSet: initialParentSet,
+            initialParentIndices: initialParentIndices
+        )
+
+        var addedParents: [BookAdditionDiff.AddedParent] = []
+        for (idx, node) in root.children.enumerated() where !initialParentSet.contains(ObjectIdentifier(node)) {
+            addedParents.append(.init(parentNode: node, newRootIndex: idx))
+        }
+
+        let addedAnnIds = Set(annotations.compactMap(\.id))
+        var addedChildren: [BookAdditionDiff.AddedChild] = []
+        for parent in affectedExistingParents {
+            for (childIdx, child) in parent.children.enumerated() where child.annotation?.id.map(addedAnnIds.contains) == true {
+                addedChildren.append(.init(annotationNode: child, parentNode: parent, newChildIndex: childIdx))
+            }
+        }
+
+        return BookAdditionDiff(
+            addedChildren: addedChildren,
+            addedParents: addedParents,
+            movedParents: movedParents
+        )
+    }
+
+    private func calculateMovedParents(
+        root: AnnotationNode,
+        initialParentSet: Set<ObjectIdentifier>,
+        initialParentIndices: [ObjectIdentifier: Int]
+    ) -> [BookDeletionDiff.MovedParent] {
+        guard sortOption.field == .createdAt else { return [] }
+        var existingParents = root.children.filter { initialParentSet.contains(ObjectIdentifier($0)) }
+        var cache = [ObjectIdentifier: Int64]()
+        existingParents.sort { compareNodes($0, $1, cache: &cache) }
+
+        var moved: [BookDeletionDiff.MovedParent] = []
+        for (newIdx, node) in existingParents.enumerated() where initialParentIndices[ObjectIdentifier(node)] != newIdx {
+            if let oldIdx = initialParentIndices[ObjectIdentifier(node)] {
+                moved.append(.init(parentNode: node, oldIndex: oldIdx, newIndex: newIdx))
+            }
+        }
+        root.children.sort { compareNodes($0, $1, cache: &cache) }
+        return moved
     }
 
     // MARK: - Tree Rebuilding

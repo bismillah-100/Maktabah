@@ -165,4 +165,27 @@ struct AnnotationTreeDiffTests {
         #expect(tagA.children.count == 1)
         #expect(tagA.children.first?.annotation?.id == 3)
     }
+
+    @Test("addAnnotationsToBookTree produces correct BookAdditionDiff for existing and new parents")
+    func testBatchAdditionInBookTree() {
+        let ann1 = Annotation(id: 1, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 1000, context: "Ann 1", page: 1, part: 1)
+        let child1 = AnnotationNode(title: "Child 1", kind: .annotation, annotation: ann1)
+        let bookNode10 = AnnotationNode(title: "Book 10", kind: .book, bookId: 10)
+        bookNode10.children = [child1]
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        root.children = [bookNode10]
+
+        let ann2 = Annotation(id: 2, bkId: 10, contentId: 2, range: NSRange(location: 10, length: 5), rangeDiacritics: NSRange(location: 10, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 2000, context: "Ann 2", page: 2, part: 1)
+        let ann3 = Annotation(id: 3, bkId: 20, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#0000FF", type: .highlight, createdAt: 3000, context: "Ann 3", page: 1, part: 1)
+
+        let diff = AnnotationTreeBuilder.shared.addAnnotationsToBookTree([ann2, ann3], root: root)
+
+        #expect(diff.addedChildren.count == 1)
+        #expect(diff.addedChildren.first?.annotationNode.annotation?.id == 2)
+        #expect(diff.addedParents.count == 1)
+        #expect(diff.addedParents.first?.parentNode.bookId == 20)
+        #expect(root.children.count == 2)
+        #expect(bookNode10.children.count == 2)
+    }
 }

@@ -65,7 +65,7 @@ class iOSAnnotationViewController: UIViewController {
         case .added:
             handleAddedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
         case .updated:
-            handleUpdatedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff)
+            handleUpdatedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff, updatedAnnotations: diff.updatedAnnotations)
         case .deleted:
             handleDeletedAnnotation(diff: diff)
         }
@@ -83,14 +83,18 @@ class iOSAnnotationViewController: UIViewController {
         onNeedFullReload?()
     }
 
-    private func handleUpdatedAnnotation(annotationId: Int64?, diff: TagUpdateDiff?) {
+    private func handleUpdatedAnnotation(annotationId: Int64?, diff: TagUpdateDiff?, updatedAnnotations: [Annotation] = []) {
         if let diff {
             handleTagDiff(diff)
             return
         }
 
         // Book mode fallback
-        if let annotationId {
+        if !updatedAnnotations.isEmpty {
+            for ann in updatedAnnotations {
+                updateItemInSections(with: ann)
+            }
+        } else if let annotationId {
             guard let updatedAnnotation = AnnotationStore.shared.loadAnnotationById(annotationId) else {
                 onNeedFullReload?()
                 return

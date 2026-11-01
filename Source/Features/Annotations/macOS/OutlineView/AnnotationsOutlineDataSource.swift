@@ -114,17 +114,21 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
         switch diff.changeType {
         case .added:
-            guard let annotationId = diff.annotationId else {
+            if let bookDiff = diff.bookAdditionDiff, let outlineView {
+                applyBookModeAdditions(diff: bookDiff, in: outlineView)
+            } else if let annotationId = diff.annotationId {
+                handleAddedAnnotation(annotationId: annotationId, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
+            } else {
                 outlineView?.reloadData()
-                return
             }
-            handleAddedAnnotation(annotationId: annotationId, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
         case .updated:
-            guard let annotationId = diff.annotationId else {
+            if !diff.updatedAnnotations.isEmpty {
+                handleUpdatedAnnotations(diff.updatedAnnotations)
+            } else if let annotationId = diff.annotationId {
+                handleUpdatedAnnotation(annotationId: annotationId)
+            } else {
                 outlineView?.reloadData()
-                return
             }
-            handleUpdatedAnnotation(annotationId: annotationId)
         case .deleted:
             if let bookDiff = diff.bookDeletionDiff, let outlineView {
                 applyBookModeDeletions(diff: bookDiff, in: outlineView)
@@ -169,6 +173,22 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
         let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
         outlineView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: columns)
+    }
+
+    private func handleUpdatedAnnotations(_ annotations: [Annotation]) {
+        guard let outlineView else { return }
+        var rowsToReload = IndexSet()
+        for ann in annotations {
+            if let id = ann.id, let row = rowIndex(forAnnotationId: id) {
+                rowsToReload.insert(row)
+            }
+        }
+        if !rowsToReload.isEmpty {
+            let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
+            outlineView.reloadData(forRowIndexes: rowsToReload, columnIndexes: columns)
+        } else {
+            outlineView.reloadData()
+        }
     }
 
     private func handleTagModeUpdate(diff: TagUpdateDiff?) {
@@ -225,23 +245,80 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     }
 
     private func applyTagModeAdditions(entries: [TagUpdateDiff.AddedEntry], in outlineView: NSOutlineView) {
-        let root = treeBuilder.currentRootNode()
+        guard let root = treeBuilder.currentRootNode() else { return }
+
+        var insertedNewTagNodes = Set<ObjectIdentifier>()
+        var childrenByTagNode: [AnnotationNode: [Int]] = [:]
+
         for entry in entries {
             if entry.tagNodeIsNew {
-                if let rootIdx = root?.children.firstIndex(where: { $0 === entry.tagNode }) {
-                    outlineView.insertItems(at: IndexSet(integer: rootIdx), inParent: nil, withAnimation: .slideDown)
-                    if groupingMode == .timeline {
-                        outlineView.expandItem(entry.tagNode, expandChildren: true)
+                let tagId = ObjectIdentifier(entry.tagNode)
+                if !insertedNewTagNodes.contains(tagId) {
+                    insertedNewTagNodes.insert(tagId)
+                    if let rootIdx = root.children.firstIndex(where: { $0 === entry.tagNode }) {
+                        outlineView.insertItems(at: IndexSet(integer: rootIdx), inParent: nil, withAnimation: .slideDown)
+                        if groupingMode == .timeline {
+                            outlineView.expandItem(entry.tagNode, expandChildren: true)
+                        }
                     }
                 }
-            } else if outlineView.isItemExpanded(entry.tagNode) {
-                if let annIdx = entry.tagNode.children.firstIndex(where: { $0 === entry.annotationNode }) {
-                    outlineView.insertItems(at: IndexSet(integer: annIdx), inParent: entry.tagNode, withAnimation: .slideDown)
-                }
             } else {
-                outlineView.reloadItem(entry.tagNode, reloadChildren: false)
+                if let annIdx = entry.tagNode.children.firstIndex(where: { $0 === entry.annotationNode }) {
+                    childrenByTagNode[entry.tagNode, default: []].append(annIdx)
+                }
             }
         }
+
+        for (tagNode, indices) in childrenByTagNode {
+            if outlineView.isItemExpanded(tagNode) {
+                let sortedIndices = indices.sorted()
+                outlineView.insertItems(at: IndexSet(sortedIndices), inParent: tagNode, withAnimation: .slideDown)
+            } else {
+                outlineView.reloadItem(tagNode, reloadChildren: false)
+            }
+        }
+    }
+
+    private func applyBookModeAdditions(diff: BookAdditionDiff, in outlineView: NSOutlineView) {
+        if diff.addedParents.isEmpty, diff.addedChildren.isEmpty, diff.movedParents.isEmpty {
+            return
+        }
+
+        let totalChanges = diff.addedParents.count + diff.addedChildren.count
+        if totalChanges > 100 {
+            outlineView.reloadData()
+            return
+        }
+
+        outlineView.beginUpdates()
+
+        // 1. Move existing parents whose position changed
+        for moved in diff.movedParents where moved.oldIndex != moved.newIndex {
+            outlineView.moveItem(at: moved.oldIndex, inParent: nil, to: moved.newIndex, inParent: nil)
+        }
+
+        // 2. Insert new parents into root
+        let sortedNewParents = diff.addedParents.sorted { $0.newRootIndex < $1.newRootIndex }
+        for parentEntry in sortedNewParents {
+            outlineView.insertItems(at: IndexSet(integer: parentEntry.newRootIndex), inParent: nil, withAnimation: .slideDown)
+        }
+
+        // 3. Insert children into existing parents
+        var childrenByParent: [AnnotationNode: [Int]] = [:]
+        for childEntry in diff.addedChildren {
+            childrenByParent[childEntry.parentNode, default: []].append(childEntry.newChildIndex)
+        }
+
+        for (parent, indices) in childrenByParent {
+            if outlineView.isItemExpanded(parent) {
+                let sortedIndices = indices.sorted()
+                outlineView.insertItems(at: IndexSet(sortedIndices), inParent: parent, withAnimation: .slideDown)
+            } else {
+                outlineView.reloadItem(parent, reloadChildren: false)
+            }
+        }
+
+        outlineView.endUpdates()
     }
 
     private func applyBookModeDeletions(diff: BookDeletionDiff, in outlineView: NSOutlineView) {
