@@ -42,7 +42,7 @@ struct AnnotationListView: View {
             onShowBookInfo: { navigationManager.selectedBookForInfo = $0 }
         )
         .themeTint()
-        .ignoresSafeArea(edges: [.vertical, .horizontal])
+        .ignoresSafeArea()
         .annotationSearch(viewModel: viewModel)
         .missingBookAlert(
             missingBookId: $missingBookId,

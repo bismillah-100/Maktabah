@@ -94,7 +94,7 @@ struct iOSLibraryView: View {
             }
         )
         .themeTint()
-        .ignoresSafeArea(edges: [.vertical, .horizontal])
+        .ignoresSafeArea()
         .overlay {
             if viewModel.state == .loading {
                 ProgressView {

@@ -296,8 +296,7 @@ class iOSAnnotationViewController: UIViewController {
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         collectionView.refreshControl = refreshControl
-
-        collectionView.pinToEdges(of: view)
+        view.addSubview(collectionView)
     }
 
     private func createCompositionalLayout() -> UICollectionViewLayout {
