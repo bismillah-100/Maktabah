@@ -63,9 +63,9 @@ class iOSAnnotationViewController: UIViewController {
 
         switch diff.changeType {
         case .added:
-            handleAddedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff, oldParentIndex: diff.oldParentIndex, newParentIndex: diff.newParentIndex)
+            handleAddedAnnotation(diff: diff)
         case .updated:
-            handleUpdatedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff)
+            handleUpdatedAnnotation(annotationId: diff.annotationId, diff: diff.tagDiff, updatedAnnotations: diff.updatedAnnotations)
         case .deleted:
             handleDeletedAnnotation(diff: diff)
         }
@@ -73,9 +73,14 @@ class iOSAnnotationViewController: UIViewController {
 
     // MARK: - Incremental Updates
 
-    private func handleAddedAnnotation(annotationId: Int64?, diff: TagUpdateDiff?, oldParentIndex: Int?, newParentIndex: Int?) {
-        if let diff {
+    private func handleAddedAnnotation(diff: AnnotationTreeDiff) {
+        if let diff = diff.tagDiff {
             handleTagDiff(diff)
+            return
+        }
+
+        if let bookDiff = diff.bookAdditionDiff {
+            processBookAdditionDiff(bookDiff)
             return
         }
 
@@ -83,14 +88,18 @@ class iOSAnnotationViewController: UIViewController {
         onNeedFullReload?()
     }
 
-    private func handleUpdatedAnnotation(annotationId: Int64?, diff: TagUpdateDiff?) {
+    private func handleUpdatedAnnotation(annotationId: Int64?, diff: TagUpdateDiff?, updatedAnnotations: [Annotation] = []) {
         if let diff {
             handleTagDiff(diff)
             return
         }
 
         // Book mode fallback
-        if let annotationId {
+        if !updatedAnnotations.isEmpty {
+            for ann in updatedAnnotations {
+                updateItemInSections(with: ann)
+            }
+        } else if let annotationId {
             guard let updatedAnnotation = AnnotationStore.shared.loadAnnotationById(annotationId) else {
                 onNeedFullReload?()
                 return
@@ -140,52 +149,58 @@ class iOSAnnotationViewController: UIViewController {
         }
     }
 
-    private func processTagDiffAdditions(_ added: [TagUpdateDiff.AddedEntry]) {
-        for entry in added {
-            let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
-
-            var rootSnap = dataSource.snapshot()
-            if !rootSnap.sectionIdentifiers.contains(sectionID) {
-                if let rootNodes = AnnotationTreeBuilder.shared.withRootNode({ $0?.children }),
-                   let newIndex = rootNodes.firstIndex(where: { $0 === entry.tagNode }),
-                   newIndex + 1 < rootNodes.count
-                {
-                    let nextNode = rootNodes[newIndex + 1]
-                    let nextSectionID = SwiftUIAnnotationNode.id(from: nextNode)
-                    if rootSnap.sectionIdentifiers.contains(nextSectionID) {
-                        rootSnap.insertSections([sectionID], beforeSection: nextSectionID)
-                    } else {
-                        rootSnap.appendSections([sectionID])
-                    }
+    @discardableResult
+    private func ensureSectionExists(for node: AnnotationNode, sectionID: String) -> AnnotationItem {
+        var rootSnap = dataSource.snapshot()
+        if !rootSnap.sectionIdentifiers.contains(sectionID) {
+            if let rootNodes = AnnotationTreeBuilder.shared.withRootNode({ $0?.children }),
+               let newIndex = rootNodes.firstIndex(where: { $0 === node }),
+               newIndex + 1 < rootNodes.count
+            {
+                let nextNode = rootNodes[newIndex + 1]
+                let nextSectionID = SwiftUIAnnotationNode.id(from: nextNode)
+                if rootSnap.sectionIdentifiers.contains(nextSectionID) {
+                    rootSnap.insertSections([sectionID], beforeSection: nextSectionID)
                 } else {
                     rootSnap.appendSections([sectionID])
                 }
-                dataSource.apply(rootSnap, animatingDifferences: true)
+            } else {
+                rootSnap.appendSections([sectionID])
             }
+            dataSource.apply(rootSnap, animatingDifferences: true)
+        }
+
+        var sectionSnap = dataSource.snapshot(for: sectionID)
+        let existingGroupItem = sectionSnap.items.first {
+            if case .group = $0 {
+                return true
+            }
+            return false
+        }
+
+        if let existing = existingGroupItem {
+            return existing
+        } else {
+            let groupNode = SwiftUIAnnotationNode(
+                id: sectionID,
+                title: node.title,
+                kind: node.kind,
+                annotation: nil,
+                children: nil
+            )
+            let groupItem = AnnotationItem.group(groupNode)
+            sectionSnap.append([groupItem])
+            dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
+            return groupItem
+        }
+    }
+
+    private func processTagDiffAdditions(_ added: [TagUpdateDiff.AddedEntry]) {
+        for entry in added {
+            let sectionID = SwiftUIAnnotationNode.id(from: entry.tagNode)
+            let groupItem = ensureSectionExists(for: entry.tagNode, sectionID: sectionID)
 
             var sectionSnap = dataSource.snapshot(for: sectionID)
-            let existingGroupItem = sectionSnap.items.first {
-                if case .group = $0 {
-                    return true
-                }
-                return false
-            }
-
-            let groupItem: AnnotationItem
-            if let existing = existingGroupItem {
-                groupItem = existing
-            } else {
-                let groupNode = SwiftUIAnnotationNode(
-                    id: sectionID,
-                    title: entry.tagNode.title,
-                    kind: entry.tagNode.kind,
-                    annotation: nil,
-                    children: nil
-                )
-                groupItem = AnnotationItem.group(groupNode)
-                sectionSnap.append([groupItem])
-            }
-
             let newNode = SwiftUIAnnotationNode(from: entry.annotationNode, parentId: sectionID)
             let newItem = AnnotationItem.annotation(newNode)
 
@@ -193,6 +208,55 @@ class iOSAnnotationViewController: UIViewController {
                 sectionSnap.append([newItem], to: groupItem)
                 dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
             }
+        }
+    }
+
+    private func appendChildNodes(
+        _ childNodes: [AnnotationNode],
+        toParent parentNode: AnnotationNode
+    ) {
+        guard !childNodes.isEmpty else { return }
+        let sectionID = SwiftUIAnnotationNode.id(from: parentNode)
+        let groupItem = ensureSectionExists(for: parentNode, sectionID: sectionID)
+
+        var sectionSnap = dataSource.snapshot(for: sectionID)
+        var newChildItems: [AnnotationItem] = []
+        for childNode in childNodes {
+            let newNode = SwiftUIAnnotationNode(from: childNode, parentId: sectionID)
+            if !sectionSnap.items.contains(where: { $0.node.annotation?.id == newNode.annotation?.id }) {
+                newChildItems.append(.annotation(newNode))
+            }
+        }
+
+        guard !newChildItems.isEmpty else { return }
+        sectionSnap.append(newChildItems, to: groupItem)
+        let isExpanded = !(viewModel?.searchText.isEmpty ?? true) || expandedGroups.contains(sectionID)
+        if isExpanded {
+            sectionSnap.expand([groupItem])
+        }
+        dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
+    }
+
+    private func processBookAdditionDiff(_ diff: BookAdditionDiff) {
+        guard !diff.isEmpty else { return }
+        if diff.requiresFullReload {
+            onNeedFullReload?()
+            return
+        }
+
+        // 1. Insert new parent sections with initial children
+        for parentEntry in diff.addedParents {
+            appendChildNodes(parentEntry.parentNode.children, toParent: parentEntry.parentNode)
+        }
+
+        // 2. Insert children into existing parents
+        var childrenByParent: [AnnotationNode: [AnnotationNode]] = [:]
+        for childEntry in diff.addedChildren {
+            childrenByParent[childEntry.parentNode, default: []].append(childEntry.annotationNode)
+        }
+
+        for (parentNode, childNodes) in childrenByParent {
+            appendChildNodes(childNodes, toParent: parentNode)
         }
     }
 

@@ -235,7 +235,7 @@ class AnnotationViewModel: ViewModelBase {
         }
     }
 
-    private func handleTreeDiff(_ diff: AnnotationTreeDiff?) {
+    func handleTreeDiff(_ diff: AnnotationTreeDiff?) {
         guard let diff else {
             reloadFromTree()
             onTreeUpdate?(filteredNodes, groupingMode)
@@ -250,8 +250,8 @@ class AnnotationViewModel: ViewModelBase {
             return
         }
 
-        // Check if annotation belongs to a missing book
-        if UserDefaults.standard.hideMissingBookAnnotations {
+        // Check if annotation belongs to a missing book (for single-item diffs)
+        if UserDefaults.standard.hideMissingBookAnnotations, diff.bookAdditionDiff == nil, diff.bookDeletionDiff == nil, diff.updatedAnnotations.isEmpty {
             let targetAnn = diff.annotation ?? diff.annotationId.flatMap { AnnotationStore.shared.loadAnnotationById($0) }
             if let bkId = targetAnn?.bkId, LibraryDataManager.shared.getBook([bkId]).isEmpty {
                 return

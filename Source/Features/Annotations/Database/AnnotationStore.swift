@@ -342,31 +342,31 @@ final class AnnotationStore: Sendable {
 
             let totalChanges = addedAnnotations.count + updatedAnnotations.count + deletedAnnotations.count
 
-            if totalChanges == 1 {
+            if totalChanges > 0, totalChanges < 100 {
                 applyIncrementalCloudKitCache(
                     added: addedAnnotations,
                     updated: updatedAnnotations,
                     deleted: deletedAnnotations
                 )
 
-                for ann in deletedAnnotations {
-                    if let id = ann.id {
-                        emit(.deleted(id: id, annotation: ann))
-                    }
+                if deletedAnnotations.count == 1, let id = deletedAnnotations.first?.id {
+                    emit(.deleted(id: id, annotation: deletedAnnotations.first))
+                } else if deletedAnnotations.count > 1 {
+                    let deletedIds = deletedAnnotations.compactMap(\.id)
+                    emit(.batchDeleted(ids: deletedIds, annotations: deletedAnnotations))
                 }
-                for ann in addedAnnotations {
-                    emit(.added(ann))
-                }
-                for ann in updatedAnnotations {
+
+                if updatedAnnotations.count == 1, let ann = updatedAnnotations.first {
                     emit(.updated(ann))
+                } else if updatedAnnotations.count > 1 {
+                    emit(.batchUpdated(updatedAnnotations))
                 }
-            } else if totalChanges > 1, totalChanges < 100 {
-                applyIncrementalCloudKitCache(
-                    added: addedAnnotations,
-                    updated: updatedAnnotations,
-                    deleted: deletedAnnotations
-                )
-                emit(.treeInvalidated)
+
+                if addedAnnotations.count == 1, let ann = addedAnnotations.first {
+                    emit(.added(ann))
+                } else if addedAnnotations.count > 1 {
+                    emit(.batchAdded(addedAnnotations))
+                }
             } else if totalChanges >= 100 {
                 clearAllCaches()
                 emit(.treeInvalidated)
