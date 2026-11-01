@@ -211,69 +211,52 @@ class iOSAnnotationViewController: UIViewController {
         }
     }
 
-    private func processBookAdditionDiff(_ diff: BookAdditionDiff) {
-        if diff.addedParents.isEmpty, diff.addedChildren.isEmpty, diff.movedParents.isEmpty {
-            return
+    private func appendChildNodes(
+        _ childNodes: [AnnotationNode],
+        toParent parentNode: AnnotationNode
+    ) {
+        guard !childNodes.isEmpty else { return }
+        let sectionID = SwiftUIAnnotationNode.id(from: parentNode)
+        let groupItem = ensureSectionExists(for: parentNode, sectionID: sectionID)
+
+        var sectionSnap = dataSource.snapshot(for: sectionID)
+        var newChildItems: [AnnotationItem] = []
+        for childNode in childNodes {
+            let newNode = SwiftUIAnnotationNode(from: childNode, parentId: sectionID)
+            if !sectionSnap.items.contains(where: { $0.node.annotation?.id == newNode.annotation?.id }) {
+                newChildItems.append(.annotation(newNode))
+            }
         }
 
-        let totalChanges = diff.addedParents.count + diff.addedChildren.count + diff.movedParents.count
-        if totalChanges > 100 || !diff.movedParents.isEmpty {
+        guard !newChildItems.isEmpty else { return }
+        sectionSnap.append(newChildItems, to: groupItem)
+        let isExpanded = !(viewModel?.searchText.isEmpty ?? true) || expandedGroups.contains(sectionID)
+        if isExpanded {
+            sectionSnap.expand([groupItem])
+        }
+        dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
+    }
+
+    private func processBookAdditionDiff(_ diff: BookAdditionDiff) {
+        guard !diff.isEmpty else { return }
+        if diff.requiresFullReload {
             onNeedFullReload?()
             return
         }
 
         // 1. Insert new parent sections with initial children
         for parentEntry in diff.addedParents {
-            let parentNode = parentEntry.parentNode
-            let sectionID = SwiftUIAnnotationNode.id(from: parentNode)
-            let groupItem = ensureSectionExists(for: parentNode, sectionID: sectionID)
-
-            var sectionSnap = dataSource.snapshot(for: sectionID)
-            var newChildItems: [AnnotationItem] = []
-            for childNode in parentNode.children {
-                let newNode = SwiftUIAnnotationNode(from: childNode, parentId: sectionID)
-                if !sectionSnap.items.contains(where: { $0.node.annotation?.id == newNode.annotation?.id }) {
-                    newChildItems.append(.annotation(newNode))
-                }
-            }
-
-            if !newChildItems.isEmpty {
-                sectionSnap.append(newChildItems, to: groupItem)
-                let isExpanded = !(viewModel?.searchText.isEmpty ?? true) || expandedGroups.contains(sectionID)
-                if isExpanded {
-                    sectionSnap.expand([groupItem])
-                }
-                dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
-            }
+            appendChildNodes(parentEntry.parentNode.children, toParent: parentEntry.parentNode)
         }
 
         // 2. Insert children into existing parents
-        var childrenByParent: [AnnotationNode: [BookAdditionDiff.AddedChild]] = [:]
+        var childrenByParent: [AnnotationNode: [AnnotationNode]] = [:]
         for childEntry in diff.addedChildren {
-            childrenByParent[childEntry.parentNode, default: []].append(childEntry)
+            childrenByParent[childEntry.parentNode, default: []].append(childEntry.annotationNode)
         }
 
-        for (parentNode, childEntries) in childrenByParent {
-            let sectionID = SwiftUIAnnotationNode.id(from: parentNode)
-            let groupItem = ensureSectionExists(for: parentNode, sectionID: sectionID)
-
-            var sectionSnap = dataSource.snapshot(for: sectionID)
-            var newChildItems: [AnnotationItem] = []
-            for childEntry in childEntries {
-                let newNode = SwiftUIAnnotationNode(from: childEntry.annotationNode, parentId: sectionID)
-                if !sectionSnap.items.contains(where: { $0.node.annotation?.id == newNode.annotation?.id }) {
-                    newChildItems.append(.annotation(newNode))
-                }
-            }
-
-            if !newChildItems.isEmpty {
-                sectionSnap.append(newChildItems, to: groupItem)
-                let isExpanded = !(viewModel?.searchText.isEmpty ?? true) || expandedGroups.contains(sectionID)
-                if isExpanded {
-                    sectionSnap.expand([groupItem])
-                }
-                dataSource.apply(sectionSnap, to: sectionID, animatingDifferences: true)
-            }
+        for (parentNode, childNodes) in childrenByParent {
+            appendChildNodes(childNodes, toParent: parentNode)
         }
     }
 

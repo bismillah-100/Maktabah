@@ -183,12 +183,9 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                 rowsToReload.insert(row)
             }
         }
-        if !rowsToReload.isEmpty {
-            let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
-            outlineView.reloadData(forRowIndexes: rowsToReload, columnIndexes: columns)
-        } else {
-            outlineView.reloadData()
-        }
+        guard !rowsToReload.isEmpty else { return }
+        let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
+        outlineView.reloadData(forRowIndexes: rowsToReload, columnIndexes: columns)
     }
 
     private func handleTagModeUpdate(diff: TagUpdateDiff?) {
@@ -246,9 +243,13 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     private func applyTagModeAdditions(entries: [TagUpdateDiff.AddedEntry], in outlineView: NSOutlineView) {
         guard let root = treeBuilder.currentRootNode() else { return }
+        guard !entries.isEmpty else { return }
 
         var insertedNewTagNodes = Set<ObjectIdentifier>()
         var childrenByTagNode: [AnnotationNode: [Int]] = [:]
+        var nodesToExpand: [AnnotationNode] = []
+
+        outlineView.beginUpdates()
 
         for entry in entries {
             if entry.tagNodeIsNew {
@@ -258,7 +259,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                     if let rootIdx = root.children.firstIndex(where: { $0 === entry.tagNode }) {
                         outlineView.insertItems(at: IndexSet(integer: rootIdx), inParent: nil, withAnimation: .slideDown)
                         if groupingMode == .timeline {
-                            outlineView.expandItem(entry.tagNode, expandChildren: true)
+                            nodesToExpand.append(entry.tagNode)
                         }
                     }
                 }
@@ -277,15 +278,17 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                 outlineView.reloadItem(tagNode, reloadChildren: false)
             }
         }
+
+        outlineView.endUpdates()
+
+        for node in nodesToExpand {
+            outlineView.expandItem(node, expandChildren: true)
+        }
     }
 
     private func applyBookModeAdditions(diff: BookAdditionDiff, in outlineView: NSOutlineView) {
-        if diff.addedParents.isEmpty, diff.addedChildren.isEmpty, diff.movedParents.isEmpty {
-            return
-        }
-
-        let totalChanges = diff.addedParents.count + diff.addedChildren.count + diff.movedParents.count
-        if totalChanges > 100 || !diff.movedParents.isEmpty {
+        guard !diff.isEmpty else { return }
+        if diff.requiresFullReload {
             outlineView.reloadData()
             return
         }

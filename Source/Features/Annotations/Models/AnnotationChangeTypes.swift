@@ -64,6 +64,18 @@ struct BookAdditionDiff {
     let addedChildren: [AddedChild]
     let addedParents: [AddedParent]
     let movedParents: [BookDeletionDiff.MovedParent]
+
+    var isEmpty: Bool {
+        addedChildren.isEmpty && addedParents.isEmpty && movedParents.isEmpty
+    }
+
+    var totalChanges: Int {
+        addedChildren.count + addedParents.count + movedParents.count
+    }
+
+    var requiresFullReload: Bool {
+        totalChanges > 100 || !movedParents.isEmpty
+    }
 }
 
 struct AnnotationTreeDiff {
