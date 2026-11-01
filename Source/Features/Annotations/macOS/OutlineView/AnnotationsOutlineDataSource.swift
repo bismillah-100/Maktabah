@@ -205,7 +205,13 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             let parent = entry.tagNodeBecomesEmpty ? nil : entry.tagNode
             removalsByParent[parent, default: []].append(entry.oldIndex)
         }
+        applyRemovals(removalsByParent, in: outlineView)
+    }
 
+    private func applyRemovals(
+        _ removalsByParent: [AnnotationNode?: [Int]],
+        in outlineView: NSOutlineView
+    ) {
         for (parent, indices) in removalsByParent {
             if parent == nil || outlineView.isItemExpanded(parent) {
                 let indexSet = IndexSet(indices.filter { $0 != -1 })
@@ -254,21 +260,11 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         let removedParentIdentifiers = Set(diff.removedParents.map { ObjectIdentifier($0.parentNode) })
 
         // 1. Group removed children by parent (only for parents that aren't themselves removed)
-        var removalsByParent: [AnnotationNode: [Int]] = [:]
+        var removalsByParent: [AnnotationNode?: [Int]] = [:]
         for removed in diff.removedChildren where !removedParentIdentifiers.contains(ObjectIdentifier(removed.parentNode)) {
             removalsByParent[removed.parentNode, default: []].append(removed.oldChildIndex)
         }
-
-        for (parent, indices) in removalsByParent {
-            if outlineView.isItemExpanded(parent) {
-                let indexSet = IndexSet(indices.filter { $0 != -1 })
-                if !indexSet.isEmpty {
-                    outlineView.removeItems(at: indexSet, inParent: parent, withAnimation: .slideUp)
-                }
-            } else {
-                outlineView.reloadItem(parent, reloadChildren: false)
-            }
-        }
+        applyRemovals(removalsByParent, in: outlineView)
 
         // 2. Remove empty parents from root (sorted descending by oldRootIndex to keep indices valid)
         let sortedParents = diff.removedParents.sorted { $0.oldRootIndex > $1.oldRootIndex }
