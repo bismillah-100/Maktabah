@@ -69,9 +69,9 @@ final class BookAnnotationsViewModel {
             return treeAnns ?? AnnotationStore.shared.loadAnnotations(bkId: bookId)
         }.value
 
-        self.bookAnnotations = anns
-        self.filterAnnotations(with: self.searchText)
-        self.hasLoaded = true
+        bookAnnotations = anns
+        filterAnnotations(with: searchText)
+        hasLoaded = true
     }
 
     private func filterAnnotations(with query: String) {
