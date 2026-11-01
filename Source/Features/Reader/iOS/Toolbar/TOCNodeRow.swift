@@ -84,6 +84,7 @@ struct TOCNodeRow: View {
         }) {
             Text(item.bab)
                 .font(ReaderViewModel.kfgqpcTitle)
+                .multilineTextAlignment(.leading)
                 .foregroundColor(
                     item.id == selectedId ? .accentColor : .primary
                 )

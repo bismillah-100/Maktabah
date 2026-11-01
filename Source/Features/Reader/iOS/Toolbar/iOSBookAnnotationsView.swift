@@ -81,7 +81,8 @@ struct iOSBookAnnotationsView: View {
                         Text(note)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(3)
                             .truncationMode(.middle)
                     }

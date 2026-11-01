@@ -60,6 +60,7 @@ struct iOSTOCView: View {
                         )
                     }
                 }
+                .environment(\.layoutDirection, .rightToLeft)
                 .searchable(text: $searchText, prompt: "Search Contents")
                 .navigationTitle("Table of Contents")
                 .toolbar {
