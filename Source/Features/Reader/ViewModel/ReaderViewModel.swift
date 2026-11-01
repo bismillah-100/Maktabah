@@ -84,6 +84,7 @@ class ReaderViewModel: ViewModelBase {
 
     var searchViewModel = SearchViewModel()
     var bookAnnotationsViewModel = BookAnnotationsViewModel()
+    @ObservationIgnored
     var readerState: ReaderState = .init()
     @ObservationIgnored
     var needsScrollRestore: Bool = false
