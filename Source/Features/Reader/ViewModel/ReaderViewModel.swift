@@ -91,7 +91,11 @@ class ReaderViewModel: ViewModelBase {
     var fetchScrollPosition: (() -> CGPoint?)?
     @ObservationIgnored
     var fetchSelectedRange: (() -> NSRange?)?
-    var isPopoverPresented: Bool = false
+    var isShowingNavigationPopover: Bool = false
+    var isShowingOptionsPopover: Bool = false
+    var isPopoverPresented: Bool {
+        isShowingNavigationPopover || isShowingOptionsPopover
+    }
     #endif
 
     // MARK: - Computed Properties

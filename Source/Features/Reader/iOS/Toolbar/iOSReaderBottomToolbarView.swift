@@ -11,10 +11,8 @@ struct iOSReaderBottomToolbarView: View {
     @Bindable var viewModel: ReaderViewModel
     var textViewState = TextViewState.shared
     @State private var showingNavigation = false
-    @State private var showingOptions = false
     @State private var showingTOC = false
     @State private var showingAnnotationsList = false
-    @State private var showingSearch = false
 
     @Environment(\.layoutDirection) private var layoutDirection
 
@@ -34,7 +32,7 @@ struct iOSReaderBottomToolbarView: View {
                 .presentationCompactAdaptation(.popover)
         }
         .onChange(of: showingNavigation) { _, newValue in
-            viewModel.isPopoverPresented = newValue || showingOptions
+            viewModel.isShowingNavigationPopover = newValue
         }
 
         Spacer()
@@ -52,78 +50,12 @@ struct iOSReaderBottomToolbarView: View {
         Spacer()
 
         Button(action: {
-            showingSearch = true
+            showingAnnotationsList = true
         }) {
-            Image(systemName: "magnifyingglass")
+            Image(systemName: "quote.closing")
         }
-        .accessibilityLabel(String(localized: "Search"))
-        .help(String(localized: "Search"))
-
-        Menu {
-            Button(action: {
-                DispatchQueue.main.async {
-                    showingOptions = true
-                }
-            }) {
-                Label("View Options", systemImage: "textformat")
-            }
-            .accessibilityLabel(String(localized: "Text Options"))
-            .help(String(localized: "Text Options"))
-
-            Button(action: {
-                DispatchQueue.main.async {
-                    showingTOC = true
-                }
-            }) {
-                Label("Table of Contents", systemImage: "list.bullet")
-            }
-            .accessibilityLabel(String(localized: "Table of Contents"))
-            .help(String(localized: "Table of Contents"))
-
-            Button(action: {
-                DispatchQueue.main.async {
-                    showingAnnotationsList = true
-                }
-            }) {
-                Label("Annotations", systemImage: "quote.closing")
-            }
-            .accessibilityLabel(String(localized: "Annotations"))
-            .help(String(localized: "Annotations"))
-        } label: {
-            Image(systemName: "ellipsis")
-        }
-        .popover(isPresented: $showingOptions) {
-            ViewOptionsView()
-                .frame(width: 300, height: 500)
-                .presentationCompactAdaptation(.popover)
-        }
-        .onChange(of: showingOptions) { _, newValue in
-            viewModel.isPopoverPresented = newValue || showingNavigation
-        }
-        .sheet(isPresented: $showingSearch) {
-            if let book = viewModel.currentBook {
-                iOSBookSearchView(
-                    book: book,
-                    onSelect: { contentId, query in
-                        viewModel.didSelectSearch(query: query, contentId: contentId)
-                        showingSearch = false
-                    },
-                    viewModel: viewModel.searchViewModel
-                )
-            }
-        }
-        .sheet(isPresented: $showingTOC) {
-            iOSTOCView(
-                tocViewModel: viewModel.tocViewModel,
-                selectedId: viewModel.tocViewModel.findNode(
-                    forContentId: viewModel.currentContentId
-                )?.id,
-                onSelect: { id, title in
-                    viewModel.didSelectTOCNode(id: id, title: title)
-                    showingTOC = false
-                }
-            )
-        }
+        .accessibilityLabel(String(localized: "Annotations"))
+        .help(String(localized: "Annotations"))
         .sheet(isPresented: $showingAnnotationsList) {
             if let book = viewModel.currentBook {
                 iOSBookAnnotationsView(
@@ -143,6 +75,26 @@ struct iOSReaderBottomToolbarView: View {
                     }
                 )
             }
+        }
+
+        Button(action: {
+            showingTOC = true
+        }) {
+            Image(systemName: "list.bullet")
+        }
+        .accessibilityLabel(String(localized: "Table of Contents"))
+        .help(String(localized: "Table of Contents"))
+        .sheet(isPresented: $showingTOC) {
+            iOSTOCView(
+                tocViewModel: viewModel.tocViewModel,
+                selectedId: viewModel.tocViewModel.findNode(
+                    forContentId: viewModel.currentContentId
+                )?.id,
+                onSelect: { id, title in
+                    viewModel.didSelectTOCNode(id: id, title: title)
+                    showingTOC = false
+                }
+            )
         }
     }
 

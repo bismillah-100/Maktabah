@@ -13,7 +13,9 @@ struct iOSReaderView: View {
     }
 
     @State private var showingBookInfo = false
+    @State private var showingOptions = false
     @State private var showingAnnotationActionSheet = false
+    @State private var showingSearch = false
     @State private var tappedAnnotationId: Int64?
 
     init(book: BooksData,
@@ -33,10 +35,6 @@ struct iOSReaderView: View {
         textViewState.isDarkMode
     }
 
-    private var resolvedNavigationTitle: String {
-        bManager.openTabs.count > 1 ? "" : book.book
-    }
-
     var body: some View {
         _ReaderTextContentView(
             book: book,
@@ -47,40 +45,74 @@ struct iOSReaderView: View {
         )
         .equatable()
         .preferredColorScheme(isDarkMode ? .dark : .light)
-        .navigationTitle(resolvedNavigationTitle)
+        .navigationTitle(book.book)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
-            if !isRegularLayout, bManager.openTabs.count > 1 {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: {
+                    showingSearch = true
+                }) {
+                    Image(systemName: "magnifyingglass")
+                }
+                .accessibilityLabel(String(localized: "Search"))
+                .help(String(localized: "Search"))
+            }
+
+            if !isRegularLayout {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         bManager.showingTabsList.toggle()
                     } label: {
-                        Text(book.book)
-                            .lineLimit(1)
-                            .frame(maxWidth: 190)
-                            .contentShape(Rectangle())
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(lineWidth: 1.5)
+                                .frame(width: 20, height: 20)
+                            Text("\(max(1, bManager.openTabs.count))")
+                                .font(.system(size: 11, weight: .bold))
+                        }
+                        .contentShape(Rectangle())
                     }
                     .accessibilityLabel(String(localized: "Opened Books"))
                     .help(String(localized: "Opened Books"))
                 }
             }
 
-            CustomToolbarSpacer(placement: .topBarTrailing)
-
             ToolbarItem(placement: .topBarTrailing) {
-                Button(action: {
-                    showingBookInfo = true
-                }) {
-                    Label(.Library.bookInfo, systemImage: "info.circle")
+                Menu {
+                    Button(action: {
+                        DispatchQueue.main.async {
+                            showingOptions = true
+                        }
+                    }) {
+                        Label("View Options", systemImage: "textformat")
+                    }
+                    .accessibilityLabel(String(localized: "Text Options"))
+                    .help(String(localized: "Text Options"))
+
+                    Button(action: {
+                        showingBookInfo = true
+                    }) {
+                        Label(.Library.bookInfo, systemImage: "info.circle")
+                    }
+                    .accessibilityLabel(String(localized: .Library.bookInfo))
+                    .help(String(localized: .Library.bookInfo))
+                } label: {
+                    Image(systemName: "ellipsis")
                 }
-                .accessibilityLabel(String(localized: .Library.bookInfo))
-                .help(String(localized: .Library.bookInfo))
+                .popover(isPresented: $showingOptions) {
+                    ViewOptionsView()
+                        .frame(width: 300, height: 500)
+                        .presentationCompactAdaptation(.popover)
+                }
             }
 
             ToolbarItemGroup(placement: .bottomBar) {
                 iOSReaderBottomToolbarView(viewModel: viewModel)
             }
+        }
+        .onChange(of: showingOptions) { _, newValue in
+            viewModel.isShowingOptionsPopover = newValue
         }
         .onChange(of: initialContentId) { _, newValue in
             if viewModel.contentText.isEmpty {
@@ -92,6 +124,18 @@ struct iOSReaderView: View {
         }
         .onDisappear {
             viewModel.saveCurrentState()
+        }
+        .sheet(isPresented: $showingSearch) {
+            if let book = viewModel.currentBook {
+                iOSBookSearchView(
+                    book: book,
+                    onSelect: { contentId, query in
+                        viewModel.didSelectSearch(query: query, contentId: contentId)
+                        showingSearch = false
+                    },
+                    viewModel: viewModel.searchViewModel
+                )
+            }
         }
         .sheet(isPresented: $showingBookInfo) {
             iOSBookInfoView(book: book)
