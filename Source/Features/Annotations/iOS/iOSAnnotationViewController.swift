@@ -432,10 +432,8 @@ class iOSAnnotationViewController: UIViewController {
     private func rebuildSnapshot(animated: Bool) {
         var seenSectionIDs = Set<String>()
         var uniqueNodes: [SwiftUIAnnotationNode] = []
-        for node in currentNodes {
-            if seenSectionIDs.insert(node.id).inserted {
-                uniqueNodes.append(node)
-            }
+        for node in currentNodes where seenSectionIDs.insert(node.id).inserted {
+            uniqueNodes.append(node)
         }
 
         let newSectionIDs = uniqueNodes.map(\.id)
@@ -461,10 +459,8 @@ class iOSAnnotationViewController: UIViewController {
             if let children = node.children, !children.isEmpty {
                 var seenItemIDs = Set<String>()
                 var childItems: [AnnotationItem] = []
-                for child in children {
-                    if seenItemIDs.insert(child.id).inserted {
-                        childItems.append(AnnotationItem.annotation(child))
-                    }
+                for child in children where seenItemIDs.insert(child.id).inserted {
+                    childItems.append(AnnotationItem.annotation(child))
                 }
                 sectionSnapshot.append(childItems, to: groupItem)
                 if isExpanded {
