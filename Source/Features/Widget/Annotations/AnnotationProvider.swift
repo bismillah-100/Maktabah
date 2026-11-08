@@ -62,7 +62,7 @@ struct AnnotationProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: AnnotationConfigurationIntent, in context: Context) async -> Timeline<AnnotationEntry> {
-        let snapshot: AnnotationSnapshot? = await CloudKitFetcher.shared.fetchActive()
+        let snapshot: AnnotationSnapshot? = await CloudKitFetcher.shared.fetchActive() ?? (await AnnotationSnapshot.loadLocal())
         let items = snapshot.map(mapAnnotationItems) ?? []
         let entry = AnnotationEntry(date: Date(), annotations: items)
         return Timeline(entries: [entry], policy: .nextRefresh)

@@ -96,7 +96,7 @@ Setiap provider mengimplementasikan 3 *protocol* esensial:
 
 1. **`placeholder(in:)`**: Menghasilkan data dummy instan (`Kitab Al-Umm`) saat widget pertama kali ditambahkan ke galeri widget sebelum data nyata terbaca.
 2. **`snapshot(for:in:)`**: Mengambil data snapshot tercepat via `Snapshot.loadLocal()` dari file JSON di App Group container untuk ditampilkan pada pratinjau galeri widget.
-3. **`timeline(for:in:)`**: Memanggil `CloudKitFetcher.shared.fetchActive()` (yang memprioritaskan App Group lokal lalu remote fallback), memetakan item menjadi `TimelineEntry`, dan mengembalikan `Timeline(entries: [entry], policy: .nextRefresh)`.
+3. **`timeline(for:in:)`**: Memanggil `CloudKitFetcher.shared.fetchActive()` (yang memuat data App Group lokal secara instan sebagai *local-first*, diikuti sinkronisasi remote dengan batas waktu maksimal 5.0 detik), memetakan item menjadi `TimelineEntry`, dan mengembalikan `Timeline(entries: [entry], policy: .nextRefresh)`.
 
 ### Kebijakan Refresh (`.nextRefresh`)
 Kebijakan `.nextRefresh` menyerahkan kendali jadwal evaluasi ulang kepada sistem operasi berdasarkan frekuensi keterlihatan (*widget budget*), sambil tetap mengizinkan invalidasi instan secara terprogram dari Host App melalui `WidgetCenter.shared.reloadTimelines`.

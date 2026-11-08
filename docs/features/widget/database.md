@@ -94,6 +94,10 @@ let isRemoteNewer: Bool = if remote.generation != currentLocal.generation {
 }
 
 if isRemoteNewer {
+    // Guard: Jangan izinkan remote kosong menimpa snapshot lokal yang memiliki item aktif
+    if remote.items.isEmpty, !currentLocal.items.isEmpty {
+        return (currentLocal, false)
+    }
     let itemsChanged = remote.items != currentLocal.items
     await remote.saveLocal()
     return (remote, itemsChanged)

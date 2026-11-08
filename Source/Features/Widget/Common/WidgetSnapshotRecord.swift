@@ -27,6 +27,11 @@ public final class FileCoordinator: Sendable {
                     fileData = try? Data(contentsOf: newURL)
                 }
 
+                if fileData == nil {
+                    // Fallback pembacaan langsung jika NSFileCoordinator gagal atau koordinasi diblokir
+                    fileData = try? Data(contentsOf: url)
+                }
+
                 continuation.resume(returning: fileData)
             }
         }
@@ -137,26 +142,30 @@ public extension WidgetSnapshotRecord {
 
     /// Lokasi file JSON di App Group dengan resolusi toleran terhadap prefix
     static var appGroupURL: URL? {
-        var groupURL: URL?
-        for identifier in candidateAppGroupIdentifiers {
-            if let url = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: identifier
-            ) {
-                groupURL = url
-                break
-            }
-        }
-
-        guard let groupURL else { return nil }
-
-        // Use Application Support directory for isolation
-        let appSupportURL = groupURL.appendingPathComponent("Library/Application Support", isDirectory: true)
+        var firstValidURL: URL?
         #if DEBUG
         let targetFileName = "debug_\(fileName)"
         #else
         let targetFileName = fileName
         #endif
-        return appSupportURL.appendingPathComponent(targetFileName)
+
+        for identifier in candidateAppGroupIdentifiers {
+            if let groupURL = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: identifier
+            ) {
+                // Use Application Support directory for isolation
+                let appSupportURL = groupURL.appendingPathComponent("Library/Application Support", isDirectory: true)
+                let fileURL = appSupportURL.appendingPathComponent(targetFileName)
+                if FileManager.default.fileExists(atPath: fileURL.path) {
+                    return fileURL
+                }
+                if firstValidURL == nil {
+                    firstValidURL = fileURL
+                }
+            }
+        }
+
+        return firstValidURL
     }
 
     /// Membaca snapshot lokal dari App Group container
@@ -210,6 +219,10 @@ public extension WidgetSnapshotRecord {
         }
 
         if isRemoteNewer {
+            // Guard: Jangan izinkan remote kosong menimpa snapshot lokal yang memiliki item aktif
+            if remote.items.isEmpty, !currentLocal.items.isEmpty {
+                return (currentLocal, false)
+            }
             let itemsChanged = remote.items != currentLocal.items
             await remote.saveLocal()
             return (remote, itemsChanged)

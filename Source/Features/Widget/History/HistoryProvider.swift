@@ -78,7 +78,7 @@ struct HistoryProvider: AppIntentTimelineProvider {
     }
 
     func timeline(for configuration: HistoryConfigurationIntent, in context: Context) async -> Timeline<HistoryEntry> {
-        let snapshot: HistorySnapshot? = await CloudKitFetcher.shared.fetchActive()
+        let snapshot: HistorySnapshot? = await CloudKitFetcher.shared.fetchActive() ?? (await HistorySnapshot.loadLocal())
         let items = snapshot.map(mapHistoryItems) ?? []
         let entry = HistoryEntry(date: Date(), history: items)
         return Timeline(entries: [entry], policy: .nextRefresh)
