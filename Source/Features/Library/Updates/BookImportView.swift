@@ -319,13 +319,9 @@ struct OfflineImportFormView: View {
 
         Toggle("Multi-Language", isOn: $viewModel.isMultiLanguage)
 
-        AdaptiveLabeledContent("Edition") {
-            TextField("", text: $viewModel.betaka, prompt: Text("Optional"))
-        }
+        AdaptiveMultilineField("Edition", text: $viewModel.betaka)
 
-        AdaptiveLabeledContent(.Library.informationInf) {
-            TextField("", text: $viewModel.inf, prompt: Text("Optional"))
-        }
+        AdaptiveMultilineField(.Library.informationInf, text: $viewModel.inf)
 
         AdaptiveLabeledContent("Tafseer Name") {
             TextField("", text: $viewModel.tafseerNam, prompt: Text("Optional"))
@@ -380,13 +376,9 @@ struct OfflineImportFormView: View {
             TextField("", text: $viewModel.authorName, prompt: Text(.Library.placeholderAuthorName))
         }
 
-        AdaptiveLabeledContent(.Library.authorInfo) {
-            TextField("", text: $viewModel.authorInf, prompt: Text("Optional"))
-        }
+        AdaptiveMultilineField(.Library.authorInfo, text: $viewModel.authorInf)
 
-        AdaptiveLabeledContent(.Library.fullNameLng) {
-            TextField("", text: $viewModel.authorLng, prompt: Text("Optional"))
-        }
+        AdaptiveMultilineField(.Library.fullNameLng, text: $viewModel.authorLng)
 
         AdaptiveLabeledContent(.Library.deathYear) {
             TextField("", text: $viewModel.authorHigriD, prompt: Text(.Library.placeholderDeathYear))
