@@ -25,9 +25,9 @@ struct iPadLayout: View {
         if sidebarSearchText.isEmpty || !path.isEmpty {
             return books
         }
-        let normalized = sidebarSearchText.normalizeArabic(false)
+        let normalized = sidebarSearchText.normalizeArabic()
         return books.filter {
-            $0.book.normalizeArabic(false).contains(normalized)
+            $0.normalizedBook.contains(normalized)
         }
     }
 

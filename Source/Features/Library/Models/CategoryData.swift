@@ -17,7 +17,7 @@ class CategoryData: @unchecked Sendable {
     init(id: Int, name: String, level: Int, order: Int) {
         self.id = id
         self.name = StringInterner.shared.intern(name)
-        normalizedName = name.normalizeArabic(false)
+        normalizedName = name.normalizeArabic()
         self.level = level
         self.order = order
     }

@@ -15,9 +15,9 @@ class HistoryViewModel: ViewModelBase {
 
     func filterBooks(_ books: [BooksData]) -> [BooksData] {
         guard !searchText.isEmpty else { return books }
-        let normalizedSearchText = searchText.normalizeArabic(false)
+        let normalizedSearchText = searchText.normalizeArabic()
         return books.filter { book in
-            book.book.normalizeArabic(false).localizedStandardContains(normalizedSearchText)
+            book.normalizedBook.contains(normalizedSearchText)
         }
     }
 
