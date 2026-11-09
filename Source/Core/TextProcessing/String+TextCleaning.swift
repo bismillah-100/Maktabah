@@ -272,6 +272,10 @@ extension String {
             pattern: #"<span[^>]*data-type=(?:[\'\"]?)title(?:[\'\"]?)[^>]*>(.*?)</span>"#,
             options: [.dotMatchesLineSeparators]
         )
+        static let ayaTag = try? NSRegularExpression(
+            pattern: #"<span[^>]*id=(?:[\'\"]?)aya-[^>\'\"]*(?:[\'\"]?)[^>]*(?:>(.*?)</span|/)>"#,
+            options: [.dotMatchesLineSeparators]
+        )
         static let anchorTag = try? NSRegularExpression(
             pattern: #"<a\s[^>]*href="inr://[^"]*"[^>]*>(.*?)</a>"#,
             options: [.dotMatchesLineSeparators]
@@ -344,6 +348,13 @@ extension String {
             allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: inner)))
         }
 
+        Cached.ayaTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+            guard let match else { return }
+            let innerRange = match.range(at: 1)
+            let inner = (innerRange.location != NSNotFound) ? nsSelf.substring(with: innerRange) : ""
+            allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: inner)))
+        }
+
         Cached.anchorTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             guard let match else { return }
             let inner = nsSelf.substring(with: match.range(at: 1))
@@ -385,7 +396,7 @@ extension String {
             let replacement = m.type.replacementText
             let newLength = (replacement as NSString).length
 
-            if case .header = m.type {
+            if case .header = m.type, newLength > 0 {
                 let newLocation = m.range.location + deltaOffset
                 headerRanges.append(NSRange(location: newLocation, length: newLength))
             }

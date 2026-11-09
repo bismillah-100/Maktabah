@@ -91,4 +91,29 @@ struct ArabicRangeCalculatorTests {
         )
         #expect(resLast.withDiacritics == lastDiac)
     }
+
+    @Test("Span tag aya-<number> dihapus dan jika ada teks diberi warna saat render")
+    func testAyaSpanTags_strippedAndColored() {
+        let rawText = "نعت منصوب.<span id=\"aya-٢٠٥٣\"></span><span data-type=\"title\">{وَاِخْفِضْ لَهُما}</span> الإعراب"
+        let (cleanedText, headerRanges) = rawText.stripSpanTagsWithRanges()
+        #expect(!cleanedText.contains("aya-٢٠٥٣"))
+        #expect(!cleanedText.contains("<span"))
+        #expect(cleanedText.contains("{وَاِخْفِضْ لَهُما}"))
+        #expect(headerRanges.count == 1)
+
+        let renderer = ArabicTextRenderer()
+        let result = renderer.render(
+            text: rawText,
+            showHarakat: true,
+            isImported: true
+        )
+        #expect(!result.attributedString.string.contains("aya-٢٠٥٣"))
+        #expect(!result.attributedString.string.contains("<span"))
+
+        let rawTextWithInner = "<span id=\"aya-٢٠٥٣\">بِسْمِ اللَّهِ</span>"
+        let (cleanedInner, innerRanges) = rawTextWithInner.stripSpanTagsWithRanges()
+        #expect(cleanedInner == "بِسْمِ اللَّهِ")
+        #expect(innerRanges.count == 1)
+        #expect(innerRanges.first == NSRange(location: 0, length: (cleanedInner as NSString).length))
+    }
 }
