@@ -22,20 +22,21 @@ final class CloudKitFetcher: @unchecked Sendable {
         // 1. Muat snapshot lokal terlebih dahulu secara instan (< 2ms)
         let localSnapshot = await T.loadLocal()
 
-        // 2. Coba sinkronisasi data remote dari CloudKit dengan batas waktu 5.0 detik
-        let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self, timeoutSeconds: 5.0)
+        // 2. Coba sinkronisasi data remote dari CloudKit dengan batas waktu 3.0 detik
+        let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self, timeoutSeconds: 3.0)
 
         guard let remoteSnapshot else {
             return localSnapshot
         }
 
-        let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: localSnapshot)
+        // 3. Resolve remote terhadap snapshot lokal terbaru di disk untuk mencegah TOCTOU overwrite
+        let (resolved, _) = await T.resolve(remote: remoteSnapshot)
         return resolved ?? localSnapshot
     }
 
     private func fetchRemoteWithTimeout<T: WidgetSnapshotRecord>(
         type: T.Type,
-        timeoutSeconds: Double = 5.0
+        timeoutSeconds: Double = 3.0
     ) async -> T? {
         let recordId = CKRecord.ID(recordName: T.ckRecordName, zoneID: customZoneID)
 
@@ -58,10 +59,9 @@ final class CloudKitFetcher: @unchecked Sendable {
                 }
             }
 
-            // Task 2: Batas Waktu 5 Detik
+            // Task 2: Batas Waktu
             group.addTask {
-                let nanoseconds = UInt64(timeoutSeconds * 1_000_000_000)
-                try? await Task.sleep(nanoseconds: nanoseconds)
+                try? await Task.sleep(for: .seconds(timeoutSeconds))
                 return nil
             }
 

@@ -133,11 +133,17 @@ public extension WidgetSnapshotRecord {
 
     /// Daftar kandidat identifier App Group untuk toleransi Direct vs App Store builds
     private static var candidateAppGroupIdentifiers: [String] {
+        #if DIRECT_DISTRIBUTION
         [
-            appGroupIdentifier,
             "Q37L5CJ4ZG.group.com.Drn.maktabah",
             "group.com.Drn.maktabah",
         ]
+        #else
+        [
+            "group.com.Drn.maktabah",
+            "Q37L5CJ4ZG.group.com.Drn.maktabah",
+        ]
+        #endif
     }
 
     /// Lokasi file JSON di App Group dengan resolusi toleran terhadap prefix
@@ -219,10 +225,6 @@ public extension WidgetSnapshotRecord {
         }
 
         if isRemoteNewer {
-            // Guard: Jangan izinkan remote kosong menimpa snapshot lokal yang memiliki item aktif
-            if remote.items.isEmpty, !currentLocal.items.isEmpty {
-                return (currentLocal, false)
-            }
             let itemsChanged = remote.items != currentLocal.items
             await remote.saveLocal()
             return (remote, itemsChanged)

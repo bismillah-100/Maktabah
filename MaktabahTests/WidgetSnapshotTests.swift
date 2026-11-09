@@ -36,10 +36,10 @@ struct WidgetSnapshotTests {
         )
     }
 
-    // MARK: - 1. Resolve & Empty Remote Protection Tests
+    // MARK: - 1. Resolve & Generational Precedence Tests
 
-    @Test("Resolve: Mencegah remote kosong menimpa snapshot lokal yang sudah terisi (History)")
-    func testResolve_protectsLocalHistoryFromEmptyRemote() async {
+    @Test("Resolve: Menerapkan remote kosong jika generasi remote lebih tinggi (Aksi Clear History yang sah)")
+    func testResolve_appliesEmptyRemoteWhenRemoteGenerationIsHigher() async {
         let localItem1 = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Al-Umm")
         let localItem2 = makeHistoryItem(id: "h2", bookId: 102, title: "Sahih Al-Bukhari")
 
@@ -47,7 +47,7 @@ struct WidgetSnapshotTests {
         localSnapshot.generation = 1
         localSnapshot.lastUpdated = Date(timeIntervalSince1970: 1000)
 
-        // Remote lebih baru (generasi 2) namun items kosong (misal perangkat baru atau sync glitch)
+        // Remote kosong dengan generasi lebih tinggi (penghapusan riwayat dari perangkat lain)
         var remoteSnapshot = HistorySnapshot(items: [])
         remoteSnapshot.generation = 2
         remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 2000)
@@ -57,24 +57,23 @@ struct WidgetSnapshotTests {
             local: localSnapshot
         )
 
-        // Snapshot tidak boleh menjadi kosong
+        // Snapshot remote kosong yang sah harus diterapkan
         #expect(resolved != nil)
-        #expect(resolved?.items.count == 2)
-        #expect(resolved?.items.first?.id == "h1")
-        #expect(didChange == false)
+        #expect(resolved?.items.isEmpty == true)
+        #expect(didChange == true)
     }
 
-    @Test("Resolve: Mencegah remote kosong menimpa snapshot lokal yang sudah terisi (Annotation)")
-    func testResolve_protectsLocalAnnotationFromEmptyRemote() async {
+    @Test("Resolve: Mengabaikan remote kosong jika generasi remote lebih rendah atau usang")
+    func testResolve_protectsLocalAnnotationFromStaleEmptyRemote() async {
         let localAnno = makeAnnotationItem(id: "a1", bookId: 201, content: "Kutipan Penting")
 
         var localSnapshot = AnnotationSnapshot(items: [localAnno])
-        localSnapshot.generation = 2
+        localSnapshot.generation = 5
         localSnapshot.lastUpdated = Date(timeIntervalSince1970: 5000)
 
         var remoteSnapshot = AnnotationSnapshot(items: [])
-        remoteSnapshot.generation = 5
-        remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 8000)
+        remoteSnapshot.generation = 2
+        remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 2000)
 
         let (resolved, didChange) = await AnnotationSnapshot.resolve(
             remote: remoteSnapshot,
