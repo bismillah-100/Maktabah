@@ -26,12 +26,13 @@ final class CloudKitFetcher: @unchecked Sendable {
         let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self, timeoutSeconds: 3.0)
 
         guard let remoteSnapshot else {
-            return localSnapshot
+            return await T.loadLocal() ?? localSnapshot
         }
 
-        // 3. Resolve remote terhadap snapshot lokal terbaru di disk untuk mencegah TOCTOU overwrite
-        let (resolved, _) = await T.resolve(remote: remoteSnapshot)
-        return resolved ?? localSnapshot
+        // 3. Baca ulang snapshot lokal terbaru untuk mencegah TOCTOU tanpa menulis ulang dari ekstensi sandbox
+        let latestLocal = await T.loadLocal() ?? localSnapshot
+        let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: latestLocal, persistToLocal: false)
+        return resolved ?? latestLocal
     }
 
     private func fetchRemoteWithTimeout<T: WidgetSnapshotRecord>(

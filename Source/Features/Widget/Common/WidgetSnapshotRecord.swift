@@ -7,6 +7,36 @@
 
 import Foundation
 import OSLog
+#if os(macOS)
+import Security
+#endif
+
+private enum AppGroupEntitlementResolver {
+    static let entitledGroups: [String] = {
+        #if os(macOS)
+        var code: SecCode?
+        var staticCode: SecStaticCode?
+        if SecCodeCopySelf([], &code) == errSecSuccess, let code {
+            SecCodeCopyStaticCode(code, [], &staticCode)
+        }
+        if staticCode == nil {
+            SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &staticCode)
+        }
+        guard let staticCode else { return [] }
+        var info: CFDictionary?
+        guard SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let dict = info as? [String: Any],
+              let entitlements = dict[kSecCodeInfoEntitlementsDict as String] as? [String: Any],
+              let groups = entitlements["com.apple.security.application-groups"] as? [String]
+        else {
+            return []
+        }
+        return groups
+        #else
+        return []
+        #endif
+    }()
+}
 
 /// Pengelola sinkronisasi file I/O secara aman tanpa memblokir cooperative thread pool Swift Concurrency.
 public final class FileCoordinator: Sendable {
@@ -145,6 +175,11 @@ public struct WidgetSnapshot<Descriptor: WidgetSnapshotDescriptor>: WidgetSnapsh
 public extension WidgetSnapshotRecord {
     /// Identifier App Group sesuai platform (macOS membutuhkan Team ID prefix)
     static var appGroupIdentifier: String {
+        #if os(macOS)
+        if let entitled = AppGroupEntitlementResolver.entitledGroups.first {
+            return entitled
+        }
+        #endif
         #if DIRECT_DISTRIBUTION
         return "Q37L5CJ4ZG.group.com.Drn.maktabah"
         #else
@@ -154,13 +189,19 @@ public extension WidgetSnapshotRecord {
 
     /// Daftar kandidat identifier App Group untuk toleransi Direct vs App Store builds
     private static var candidateAppGroupIdentifiers: [String] {
+        #if os(macOS)
+        let entitledGroups = AppGroupEntitlementResolver.entitledGroups
+        if !entitledGroups.isEmpty {
+            return entitledGroups
+        }
+        #endif
         #if DIRECT_DISTRIBUTION
-        [
+        return [
             "Q37L5CJ4ZG.group.com.Drn.maktabah",
             "group.com.Drn.maktabah",
         ]
         #else
-        [
+        return [
             "group.com.Drn.maktabah",
             "Q37L5CJ4ZG.group.com.Drn.maktabah",
         ]
@@ -183,7 +224,7 @@ public extension WidgetSnapshotRecord {
                 // Use Application Support directory for isolation
                 let appSupportURL = groupURL.appendingPathComponent("Library/Application Support", isDirectory: true)
                 let fileURL = appSupportURL.appendingPathComponent(targetFileName)
-                if FileManager.default.fileExists(atPath: fileURL.path) {
+                if FileManager.default.isReadableFile(atPath: fileURL.path) {
                     return fileURL
                 }
                 if firstValidURL == nil {
@@ -259,14 +300,17 @@ public extension WidgetSnapshotRecord {
     @discardableResult
     static func resolve(
         remote: Self?,
-        local: Self? = nil
+        local: Self? = nil,
+        persistToLocal: Bool = true
     ) async -> (snapshot: Self?, didChange: Bool) {
         let currentLocal = await (local != nil ? local : Self.loadLocal())
 
         guard let remote else { return (currentLocal, false) }
         guard let currentLocal else {
-            await remote.saveLocal()
-            return (remote, true)
+            if persistToLocal, local == nil, !remote.items.isEmpty {
+                await remote.saveLocal()
+            }
+            return (remote, !remote.items.isEmpty)
         }
 
         let isRemoteNewer: Bool = if remote.generation != currentLocal.generation {
@@ -276,15 +320,14 @@ public extension WidgetSnapshotRecord {
         }
 
         if isRemoteNewer {
-            // Guard: Tolak remote kosong jika generasinya tidak valid / tidak lebih tinggi secara sah.
-            // Mencegah snapshot lokal yang valid tertimpa oleh record kosong tak terinisialisasi (generation == 0 atau generation <= currentLocal).
+            // Guard: Jangan izinkan remote kosong menimpa snapshot lokal yang memiliki item aktif
             if remote.items.isEmpty, !currentLocal.items.isEmpty {
-                if remote.generation <= currentLocal.generation || remote.generation == 0 {
-                    return (currentLocal, false)
-                }
+                return (currentLocal, false)
             }
             let itemsChanged = remote.items != currentLocal.items
-            await remote.saveLocal()
+            if persistToLocal, local == nil {
+                await remote.saveLocal()
+            }
             return (remote, itemsChanged)
         } else {
             return (currentLocal, false)

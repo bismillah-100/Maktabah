@@ -40,15 +40,24 @@ class HistoryViewModel: ViewModelBase {
 
     private var saveDebounceTask: Task<Void, Never>?
     private var reloadDebounceTask: Task<Void, Never>?
+    var hasExplicitlyClearedHistory = false
 
     var historyBookIds: [Int] {
         get { historyOrder }
         set {
             historyOrder = Array(newValue.prefix(maxHistoryCount))
+            hasExplicitlyClearedHistory = historyOrder.isEmpty
             scheduleSave()
             loadBooksData()
             notifyHistoryChanged()
         }
+    }
+
+    func flushPendingSaveSync() {
+        guard saveDebounceTask != nil else { return }
+        saveDebounceTask?.cancel()
+        saveDebounceTask = nil
+        HistoryDatabaseManager.shared.saveHistoryOrder(historyOrder)
     }
 
     private func scheduleSave() {
@@ -153,6 +162,7 @@ class HistoryViewModel: ViewModelBase {
     // MARK: - Notifications
 
     func notifyHistoryChanged() {
+        WidgetUpdateCoordinator.shared.markHistoryDirty()
         NotificationCenter.default.post(name: .historyDidChange, object: self)
     }
 }

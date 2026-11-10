@@ -140,6 +140,10 @@ final class HistoryDatabaseManager: SyncPendingManaging, Sendable {
         }
     }
 
+    func syncWriteQueue() {
+        writeQueue.sync {}
+    }
+
     func upsertEntry(_ entry: ReadingEntry) {
         try? upsertEntries([entry])
     }

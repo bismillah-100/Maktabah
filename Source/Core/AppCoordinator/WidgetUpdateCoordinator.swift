@@ -21,6 +21,8 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     private var isHistoryDirty = false
     private var isAnnotationDirty = false
+    private var isFlushingHistoryLocally = false
+    private var isFlushingAnnotationLocally = false
     private let lock = NSLock()
     private var cancellables = Set<AnyCancellable>()
 
@@ -46,7 +48,6 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     private func setupObservers() {
         AnnotationStore.shared.events
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.markAnnotationDirty()
             }
@@ -55,7 +56,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         NotificationCenter.default.addObserver(
             forName: .historyDidChange,
             object: nil,
-            queue: .main
+            queue: nil
         ) { [weak self] _ in
             self?.markHistoryDirty()
         }
@@ -83,52 +84,46 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     /// Menjalankan flush secara sinkron untuk memastikan berkas snapshot tertulis ke disk
     /// sebelum proses aplikasi dimatikan oleh sistem operasi (misal pada `applicationWillTerminate`).
+    @MainActor
     func flushPendingUpdatesSync() {
         let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
-            let result = (isHistoryDirty, isAnnotationDirty)
+            let result = (
+                isHistoryDirty || isFlushingHistoryLocally,
+                isAnnotationDirty || isFlushingAnnotationLocally
+            )
             isHistoryDirty = false
             isAnnotationDirty = false
+            isFlushingHistoryLocally = false
+            isFlushingAnnotationLocally = false
             return result
         }
 
         guard historyNeeded || annotationNeeded else { return }
 
         if historyNeeded {
-            var snapshot = compileHistorySnapshot()
-            let currentLocal = HistorySnapshot.loadLocalSync()
-            if let currentLocal {
-                snapshot.generation = currentLocal.generation + 1
-            } else {
-                snapshot.generation = 1
-            }
-            let didChange = snapshot.saveIfChangedSync(comparingWith: currentLocal)
-            if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
-            }
+            let compiled = compileHistorySnapshotOnMain()
+            _ = saveHistorySnapshotLocallySync(compiled: compiled)
         }
 
         if annotationNeeded {
-            var snapshot = compileAnnotationSnapshot()
-            let currentLocal = AnnotationSnapshot.loadLocalSync()
-            if let currentLocal {
-                snapshot.generation = currentLocal.generation + 1
-            } else {
-                snapshot.generation = 1
-            }
-            let didChange = snapshot.saveIfChangedSync(comparingWith: currentLocal)
-            if didChange {
-                WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
-            }
+            _ = saveAnnotationSnapshotLocallySync()
         }
     }
 
     func flushPendingUpdates(forceCloudKit: Bool = false) async {
-        // Read dan langsung reset flag secara atomik
+        // Read dan langsung reset flag secara atomik sambil menandai flush lokal berjalan
         let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
-            let result = (isHistoryDirty, isAnnotationDirty)
-            isHistoryDirty = false
-            isAnnotationDirty = false
-            return result
+            let h = isHistoryDirty
+            let a = isAnnotationDirty
+            if h {
+                isHistoryDirty = false
+                isFlushingHistoryLocally = true
+            }
+            if a {
+                isAnnotationDirty = false
+                isFlushingAnnotationLocally = true
+            }
+            return (h, a)
         }
 
         guard historyNeeded || annotationNeeded else { return }
@@ -143,18 +138,10 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     }
 
     private func flushHistory(bypassThrottle: Bool) async {
-        var snapshot = compileHistorySnapshot()
-        let currentLocal = await HistorySnapshot.loadLocal()
-        if let currentLocal {
-            snapshot.generation = currentLocal.generation + 1
-        } else {
-            snapshot.generation = 1
-        }
-
-        let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
-
-        if didChange {
-            WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
+        let compiled = await compileHistorySnapshotOnMain()
+        let (snapshot, didChange) = saveHistorySnapshotLocallySync(compiled: compiled)
+        lock.withLock {
+            isFlushingHistoryLocally = false
         }
 
         let lastUpload = defaults.object(forKey: lastHistoryUploadKey) as? Date ?? .distantPast
@@ -167,18 +154,9 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     }
 
     private func flushAnnotations(bypassThrottle: Bool) async {
-        var snapshot = compileAnnotationSnapshot()
-        let currentLocal = await AnnotationSnapshot.loadLocal()
-        if let currentLocal {
-            snapshot.generation = currentLocal.generation + 1
-        } else {
-            snapshot.generation = 1
-        }
-
-        let didChange = await snapshot.saveIfChanged(comparingWith: currentLocal)
-
-        if didChange {
-            WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
+        let (snapshot, didChange) = saveAnnotationSnapshotLocallySync()
+        lock.withLock {
+            isFlushingAnnotationLocally = false
         }
 
         let lastUpload = defaults.object(forKey: lastAnnotationUploadKey) as? Date ?? .distantPast
@@ -190,17 +168,80 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         }
     }
 
+    @discardableResult
+    private func saveHistorySnapshotLocallySync(
+        compiled: (snapshot: HistorySnapshot, allowEmptyOverwrite: Bool)
+    ) -> (snapshot: HistorySnapshot, didChange: Bool) {
+        var nextSnapshot = compiled.snapshot
+        let currentLocal = HistorySnapshot.loadLocalSync()
+
+        if nextSnapshot.items.isEmpty, !compiled.allowEmptyOverwrite,
+           let currentLocal, !currentLocal.items.isEmpty
+        {
+            return (currentLocal, false)
+        }
+
+        let epochMs = Int64(Date().timeIntervalSince1970 * 1000)
+        nextSnapshot.generation = max(currentLocal?.generation ?? 0, epochMs) + 1
+        let didChange = nextSnapshot.saveIfChangedSync(comparingWith: currentLocal)
+        if didChange {
+            WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
+        }
+        return (nextSnapshot, didChange)
+    }
+
+    @discardableResult
+    private func saveAnnotationSnapshotLocallySync() -> (snapshot: AnnotationSnapshot, didChange: Bool) {
+        var snapshot = compileAnnotationSnapshot()
+        let currentLocal = AnnotationSnapshot.loadLocalSync()
+        let epochMs = Int64(Date().timeIntervalSince1970 * 1000)
+        snapshot.generation = max(currentLocal?.generation ?? 0, epochMs) + 1
+        let didChange = snapshot.saveIfChangedSync(comparingWith: currentLocal)
+        if didChange {
+            WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
+        }
+        return (snapshot, didChange)
+    }
+
     // MARK: - Snapshot Compilation
 
-    private func compileHistorySnapshot() -> HistorySnapshot {
-        let (entries, historyOrder) = HistoryDatabaseManager.shared.loadFromDatabase()
-        let entryMap = Dictionary(entries.map { ($0.bookId, $0) }, uniquingKeysWith: { first, _ in first })
+    @MainActor
+    private func compileHistorySnapshotOnMain() -> (snapshot: HistorySnapshot, allowEmptyOverwrite: Bool) {
+        let vm = HistoryViewModel.shared
+        vm.flushPendingSaveSync()
+        HistoryDatabaseManager.shared.syncWriteQueue()
 
-        // Jika database belum mengembalikan data (misal saat early launch) namun snapshot lokal lama sudah ada isinya,
-        // pertahankan data lokal lama agar widget tidak terhapus menjadi kosong secara prematur.
-        if entries.isEmpty, historyOrder.isEmpty, let existingLocal = HistorySnapshot.loadLocalSync(), !existingLocal.items.isEmpty {
-            return existingLocal
+        let inMemoryEntries = Array(vm.entriesByBookId.values)
+        let inMemoryOrder = vm.historyOrder
+        let allowEmpty = vm.hasExplicitlyClearedHistory
+
+        let entries: [ReadingEntry]
+        let historyOrder: [Int]
+
+        if !inMemoryEntries.isEmpty || !inMemoryOrder.isEmpty || allowEmpty {
+            entries = inMemoryEntries
+            historyOrder = inMemoryOrder
+        } else {
+            let dbData = HistoryDatabaseManager.shared.loadFromDatabase()
+            entries = dbData.entries
+            historyOrder = dbData.historyOrder
         }
+
+        if entries.isEmpty, historyOrder.isEmpty, !allowEmpty,
+           let existingLocal = HistorySnapshot.loadLocalSync(), !existingLocal.items.isEmpty
+        {
+            return (existingLocal, false)
+        }
+
+        if allowEmpty, historyOrder.isEmpty {
+            return (HistorySnapshot(items: []), true)
+        }
+
+        return (buildHistorySnapshot(entries: entries, historyOrder: historyOrder), allowEmpty)
+    }
+
+    private func buildHistorySnapshot(entries: [ReadingEntry], historyOrder: [Int]) -> HistorySnapshot {
+        let entryMap = Dictionary(entries.map { ($0.bookId, $0) }, uniquingKeysWith: { first, _ in first })
 
         var orderedEntries: [ReadingEntry] = []
         for bookId in historyOrder {
@@ -212,7 +253,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         if orderedEntries.count < 6 {
             let existingIds = Set(orderedEntries.map(\.bookId))
             let remaining = entries
-                .filter { !existingIds.contains($0.bookId) }
+                .filter { $0.lastOpenedAt != nil && !existingIds.contains($0.bookId) }
                 .sorted {
                     let d1 = $0.lastOpenedAt ?? $0.positionUpdatedAt ?? $0.updatedAt
                     let d2 = $1.lastOpenedAt ?? $1.positionUpdatedAt ?? $1.updatedAt

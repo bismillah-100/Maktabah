@@ -233,6 +233,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        flushPendingWidgetUpdates(cloudKit: true)
         mainWindowController = nil
         return false
     }

@@ -18,6 +18,9 @@ extension HistoryViewModel {
         let data = HistoryDatabaseManager.shared.loadFromDatabase()
         entriesByBookId = Dictionary(uniqueKeysWithValues: data.entries.map { ($0.bookId, $0) })
         historyOrder = data.historyOrder
+        if !historyOrder.isEmpty {
+            hasExplicitlyClearedHistory = false
+        }
     }
 
     func saveClearedHistoryInDatabase(

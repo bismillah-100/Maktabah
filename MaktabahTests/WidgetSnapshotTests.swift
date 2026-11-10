@@ -7,6 +7,9 @@
 
 import Foundation
 @testable import Maktabah_Debug
+#if os(macOS)
+import Security
+#endif
 import Testing
 
 @Suite("Widget Snapshot & Local-First Resilience Suite", .serialized)
@@ -38,8 +41,8 @@ struct WidgetSnapshotTests {
 
     // MARK: - 1. Resolve & Generational Precedence Tests
 
-    @Test("Resolve: Menerapkan remote kosong jika generasi remote lebih tinggi (Aksi Clear History yang sah)")
-    func testResolve_appliesEmptyRemoteWhenRemoteGenerationIsHigher() async {
+    @Test("Resolve: Mengabaikan remote kosong meskipun generasi remote lebih tinggi (Melindungi data lokal aktif)")
+    func testResolve_protectsNonEmptyLocalFromEmptyRemoteEvenWhenRemoteGenerationIsHigher() async {
         let localItem1 = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Al-Umm")
         let localItem2 = makeHistoryItem(id: "h2", bookId: 102, title: "Sahih Al-Bukhari")
 
@@ -47,9 +50,9 @@ struct WidgetSnapshotTests {
         localSnapshot.generation = 1
         localSnapshot.lastUpdated = Date(timeIntervalSince1970: 1000)
 
-        // Remote kosong dengan generasi lebih tinggi (penghapusan riwayat dari perangkat lain)
+        // Remote kosong dengan generasi jauh lebih tinggi (misal record CloudKit lama dengan generasi milidetik)
         var remoteSnapshot = HistorySnapshot(items: [])
-        remoteSnapshot.generation = 2
+        remoteSnapshot.generation = 1_793_450_934_546
         remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 2000)
 
         let (resolved, didChange) = await HistorySnapshot.resolve(
@@ -57,10 +60,11 @@ struct WidgetSnapshotTests {
             local: localSnapshot
         )
 
-        // Snapshot remote kosong yang sah harus diterapkan
+        // Snapshot lokal aktif harus dipertahankan
         #expect(resolved != nil)
-        #expect(resolved?.items.isEmpty == true)
-        #expect(didChange == true)
+        #expect(resolved?.items.count == 2)
+        #expect(resolved?.items.first?.id == "h1")
+        #expect(didChange == false)
     }
 
     @Test("Resolve: Mengabaikan remote kosong jika generasi remote lebih rendah atau usang")
@@ -172,6 +176,55 @@ struct WidgetSnapshotTests {
 
         #expect(resolved?.items.isEmpty == true)
         #expect(didChange == false)
+    }
+
+    @Test("AppGroup: Memilih container yang sesuai dengan entitlement sandbox macOS")
+    func testAppGroupIdentifier_matchesEntitledGroupOnMacOS() {
+        #if os(macOS)
+        var staticCode: SecStaticCode?
+        SecStaticCodeCreateWithPath(Bundle.main.bundleURL as CFURL, [], &staticCode)
+        var info: CFDictionary?
+        let entitledGroups: [String] = if let staticCode,
+                                          SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+                                          let dict = info as? [String: Any],
+                                          let entitlements = dict[kSecCodeInfoEntitlementsDict as String] as? [String: Any],
+                                          let groups = entitlements["com.apple.security.application-groups"] as? [String]
+        {
+            groups
+        } else {
+            []
+        }
+
+        let identifier = HistorySnapshot.appGroupIdentifier
+        let url = HistorySnapshot.appGroupURL
+        #expect(url != nil)
+        #expect(url?.path.contains("/\(identifier)/Library/Application Support/") == true)
+        if !entitledGroups.isEmpty {
+            #expect(entitledGroups.contains(identifier))
+        }
+        #endif
+    }
+
+    @Test("Resolve: Mempertahankan lokal saat persistToLocal bernilai false meski remote punya item baru")
+    func testResolve_returnsRemoteWithoutDiskWriteWhenPersistDisabled() async {
+        let localItem = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Lokal")
+        var localSnapshot = HistorySnapshot(items: [localItem])
+        localSnapshot.generation = 1
+        localSnapshot.lastUpdated = Date(timeIntervalSince1970: 1000)
+
+        let remoteItem = makeHistoryItem(id: "h2", bookId: 102, title: "Kitab Remote")
+        var remoteSnapshot = HistorySnapshot(items: [remoteItem])
+        remoteSnapshot.generation = 2
+        remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 2000)
+
+        let (resolved, didChange) = await HistorySnapshot.resolve(
+            remote: remoteSnapshot,
+            local: localSnapshot,
+            persistToLocal: false
+        )
+
+        #expect(resolved?.items.first?.id == "h2")
+        #expect(didChange == true)
     }
 
     // MARK: - 2. FileCoordinator Tests
