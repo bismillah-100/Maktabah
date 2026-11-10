@@ -18,44 +18,65 @@ public final class FileCoordinator: Sendable {
     public func read(url: URL) async -> Data? {
         await withCheckedContinuation { continuation in
             ioQueue.async {
-                var error: NSError?
-                var fileData: Data?
-
-                let coordinator = NSFileCoordinator(filePresenter: nil)
-                coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { newURL in
-                    // Pada first-launch, berkas mungkin belum ada. `try?` aman mengembalikan nil.
-                    fileData = try? Data(contentsOf: newURL)
-                }
-
-                if fileData == nil {
-                    // Fallback pembacaan langsung jika NSFileCoordinator gagal atau koordinasi diblokir
-                    fileData = try? Data(contentsOf: url)
-                }
-
-                continuation.resume(returning: fileData)
+                continuation.resume(returning: self.performRead(url: url))
             }
         }
+    }
+
+    /// Membaca berkas secara sinkron
+    public func readSync(url: URL) -> Data? {
+        ioQueue.sync {
+            self.performRead(url: url)
+        }
+    }
+
+    private func performRead(url: URL) -> Data? {
+        var error: NSError?
+        var fileData: Data?
+
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { newURL in
+            // Pada first-launch, berkas mungkin belum ada. `try?` aman mengembalikan nil.
+            fileData = try? Data(contentsOf: newURL)
+        }
+
+        if fileData == nil {
+            // Fallback pembacaan langsung jika NSFileCoordinator gagal atau koordinasi diblokir
+            fileData = try? Data(contentsOf: url)
+        }
+
+        return fileData
     }
 
     public func write(data: Data, to url: URL) async {
         await withCheckedContinuation { continuation in
             ioQueue.async {
-                // Ensure directory exists
-                let dirURL = url.deletingLastPathComponent()
-                try? FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
-
-                var error: NSError?
-                let coordinator = NSFileCoordinator(filePresenter: nil)
-
-                coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
-                    do {
-                        try data.write(to: newURL, options: .atomic)
-                    } catch {
-                        Logger.widget.error("Failed to write coordinated data: \(error.localizedDescription, privacy: .public)")
-                    }
-                }
-
+                self.performWrite(data: data, to: url)
                 continuation.resume()
+            }
+        }
+    }
+
+    /// Menulis berkas secara sinkron. Digunakan saat terminasi aplikasi untuk memastikan file tertulis sebelum proses dimatikan.
+    public func writeSync(data: Data, to url: URL) {
+        ioQueue.sync {
+            self.performWrite(data: data, to: url)
+        }
+    }
+
+    private func performWrite(data: Data, to url: URL) {
+        // Ensure directory exists
+        let dirURL = url.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
+
+        var error: NSError?
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+
+        coordinator.coordinate(writingItemAt: url, options: .forReplacing, error: &error) { newURL in
+            do {
+                try data.write(to: newURL, options: .atomic)
+            } catch {
+                Logger.widget.error("Failed to write coordinated data: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -181,11 +202,41 @@ public extension WidgetSnapshotRecord {
         return try? JSONDecoder().decode(Self.self, from: data)
     }
 
+    /// Membaca snapshot lokal dari App Group container secara sinkron
+    static func loadLocalSync() -> Self? {
+        guard let url = appGroupURL else { return nil }
+        guard let data = FileCoordinator.shared.readSync(url: url) else { return nil }
+        return try? JSONDecoder().decode(Self.self, from: data)
+    }
+
     /// Menyimpan snapshot ke App Group container
     func saveLocal() async {
         guard let url = Self.appGroupURL,
               let data = try? JSONEncoder().encode(self) else { return }
         await FileCoordinator.shared.write(data: data, to: url)
+    }
+
+    /// Menyimpan snapshot ke App Group container secara sinkron
+    func saveLocalSync() {
+        guard let url = Self.appGroupURL,
+              let data = try? JSONEncoder().encode(self) else { return }
+        FileCoordinator.shared.writeSync(data: data, to: url)
+    }
+
+    /// Bandingkan data lokal dan baru berdasarkan items secara sinkron.
+    @discardableResult
+    func saveIfChangedSync(comparingWith current: Self? = nil) -> Bool {
+        let currentLocal = current ?? Self.loadLocalSync()
+
+        guard let currentLocal else {
+            saveLocalSync()
+            return true
+        }
+        if items != currentLocal.items {
+            saveLocalSync()
+            return true
+        }
+        return false
     }
 
     /// Bandingkan data lokal dan baru berdasarkan items. Simpan dan kembalikan true HANYA jika items berbeda.
@@ -225,6 +276,13 @@ public extension WidgetSnapshotRecord {
         }
 
         if isRemoteNewer {
+            // Guard: Tolak remote kosong jika generasinya tidak valid / tidak lebih tinggi secara sah.
+            // Mencegah snapshot lokal yang valid tertimpa oleh record kosong tak terinisialisasi (generation == 0 atau generation <= currentLocal).
+            if remote.items.isEmpty, !currentLocal.items.isEmpty {
+                if remote.generation <= currentLocal.generation || remote.generation == 0 {
+                    return (currentLocal, false)
+                }
+            }
             let itemsChanged = remote.items != currentLocal.items
             await remote.saveLocal()
             return (remote, itemsChanged)

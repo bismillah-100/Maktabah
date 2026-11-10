@@ -115,7 +115,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(forceCloudKit: true)
+        WidgetUpdateCoordinator.shared.flushPendingUpdatesSync()
         CloudKitCoreManager.shared.syncWorker()
     }
 }

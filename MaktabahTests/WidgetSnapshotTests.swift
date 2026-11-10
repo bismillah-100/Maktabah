@@ -86,6 +86,31 @@ struct WidgetSnapshotTests {
         #expect(didChange == false)
     }
 
+    @Test("Resolve: Mengabaikan remote kosong jika generasinya tidak terinisialisasi (generation == 0)")
+    func testResolve_protectsLocalFromUninitializedEmptyRemote() async {
+        let localItem = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Al-Umm")
+
+        var localSnapshot = HistorySnapshot(items: [localItem])
+        localSnapshot.generation = 1
+        localSnapshot.lastUpdated = Date(timeIntervalSince1970: 1000)
+
+        // Remote kosong dengan generation 0 (belum diinisialisasi atau record default CloudKit)
+        // walaupun stempel waktu lastUpdated lebih baru
+        var remoteSnapshot = HistorySnapshot(items: [])
+        remoteSnapshot.generation = 0
+        remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 5000)
+
+        let (resolved, didChange) = await HistorySnapshot.resolve(
+            remote: remoteSnapshot,
+            local: localSnapshot
+        )
+
+        #expect(resolved != nil)
+        #expect(resolved?.items.count == 1)
+        #expect(resolved?.items.first?.id == "h1")
+        #expect(didChange == false)
+    }
+
     @Test("Resolve: Menerapkan remote jika memiliki data baru yang valid dan generasi lebih tinggi")
     func testResolve_appliesNewerRemoteWhenPopulated() async {
         let localItem = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Lama")

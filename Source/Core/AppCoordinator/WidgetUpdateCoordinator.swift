@@ -81,6 +81,47 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         }
     }
 
+    /// Menjalankan flush secara sinkron untuk memastikan berkas snapshot tertulis ke disk
+    /// sebelum proses aplikasi dimatikan oleh sistem operasi (misal pada `applicationWillTerminate`).
+    func flushPendingUpdatesSync() {
+        let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
+            let result = (isHistoryDirty, isAnnotationDirty)
+            isHistoryDirty = false
+            isAnnotationDirty = false
+            return result
+        }
+
+        guard historyNeeded || annotationNeeded else { return }
+
+        if historyNeeded {
+            var snapshot = compileHistorySnapshot()
+            let currentLocal = HistorySnapshot.loadLocalSync()
+            if let currentLocal {
+                snapshot.generation = currentLocal.generation + 1
+            } else {
+                snapshot.generation = 1
+            }
+            let didChange = snapshot.saveIfChangedSync(comparingWith: currentLocal)
+            if didChange {
+                WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
+            }
+        }
+
+        if annotationNeeded {
+            var snapshot = compileAnnotationSnapshot()
+            let currentLocal = AnnotationSnapshot.loadLocalSync()
+            if let currentLocal {
+                snapshot.generation = currentLocal.generation + 1
+            } else {
+                snapshot.generation = 1
+            }
+            let didChange = snapshot.saveIfChangedSync(comparingWith: currentLocal)
+            if didChange {
+                WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
+            }
+        }
+    }
+
     func flushPendingUpdates(forceCloudKit: Bool = false) async {
         // Read dan langsung reset flag secara atomik
         let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
@@ -154,6 +195,12 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     private func compileHistorySnapshot() -> HistorySnapshot {
         let (entries, historyOrder) = HistoryDatabaseManager.shared.loadFromDatabase()
         let entryMap = Dictionary(entries.map { ($0.bookId, $0) }, uniquingKeysWith: { first, _ in first })
+
+        // Jika database belum mengembalikan data (misal saat early launch) namun snapshot lokal lama sudah ada isinya,
+        // pertahankan data lokal lama agar widget tidak terhapus menjadi kosong secara prematur.
+        if entries.isEmpty, historyOrder.isEmpty, let existingLocal = HistorySnapshot.loadLocalSync(), !existingLocal.items.isEmpty {
+            return existingLocal
+        }
 
         var orderedEntries: [ReadingEntry] = []
         for bookId in historyOrder {

@@ -222,7 +222,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ aNotification: Notification) {
         isTerminating = true
-        flushPendingWidgetUpdates(cloudKit: true)
+        WidgetUpdateCoordinator.shared.flushPendingUpdatesSync()
         CloudKitCoreManager.shared.syncWorker()
         CloudKitSyncManager.shared.resetSyncingKey(syncing: false)
         ScreenTimeManager.shared.cancel()
