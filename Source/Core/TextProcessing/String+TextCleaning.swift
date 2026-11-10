@@ -268,24 +268,8 @@ extension String {
     }
 
     private enum Cached {
-        static let spanTag = try? NSRegularExpression(
-            pattern: #"<span[^>]*data-type=(?:[\'\"]?)title(?:[\'\"]?)[^>]*>(.*?)</span>"#,
-            options: [.dotMatchesLineSeparators]
-        )
-        static let ayaTag = try? NSRegularExpression(
-            pattern: #"<span[^>]*id=(?:[\'\"]?)aya-[^>\'\"]*(?:[\'\"]?)[^>]*(?:>(.*?)</span|/)>"#,
-            options: [.dotMatchesLineSeparators]
-        )
-        static let anchorTag = try? NSRegularExpression(
-            pattern: #"<a\s[^>]*href="inr://[^"]*"[^>]*>(.*?)</a>"#,
-            options: [.dotMatchesLineSeparators]
-        )
-        static let hadeethTag = try? NSRegularExpression(
-            pattern: #"<hadeeth[^>]*>"#,
-            options: []
-        )
-        static let manTag = try? NSRegularExpression(
-            pattern: #"<man[^>]*>(.*?)</man>"#,
+        static let unifiedTag = try? NSRegularExpression(
+            pattern: #"<span[^>]*(?:data-type=(?:[\'\"]?)title(?:[\'\"]?)|id=(?:[\'\"]?)aya-[^>\'\"]*(?:[\'\"]?))[^>]*(?:>(.*?)</span|/)>|<a\s[^>]*href="inr://[^"]*"[^>]*>(.*?)</a>|(<hadeeth[^>]*>)|<man[^>]*>(.*?)</man>"#,
             options: [.dotMatchesLineSeparators]
         )
     }
@@ -342,37 +326,39 @@ extension String {
     private static func collectTagMatches(in nsSelf: NSString, text: String, fullRange: NSRange) -> [TagMatchItem] {
         var allMatches: [TagMatchItem] = []
 
-        Cached.spanTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
+        Cached.unifiedTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
             guard let match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: inner)))
+
+            let headerRange = match.range(at: 1)
+            if headerRange.location != NSNotFound {
+                let inner = nsSelf.substring(with: headerRange)
+                allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: inner)))
+                return
+            }
+
+            let anchorRange = match.range(at: 2)
+            if anchorRange.location != NSNotFound {
+                let inner = nsSelf.substring(with: anchorRange)
+                allMatches.append(TagMatchItem(range: match.range, type: .anchor(innerText: inner)))
+                return
+            }
+
+            let hadeethRange = match.range(at: 3)
+            if hadeethRange.location != NSNotFound {
+                allMatches.append(TagMatchItem(range: match.range, type: .hadeeth))
+                return
+            }
+
+            let manRange = match.range(at: 4)
+            if manRange.location != NSNotFound {
+                let inner = nsSelf.substring(with: manRange)
+                allMatches.append(TagMatchItem(range: match.range, type: .man(innerText: inner)))
+                return
+            }
+
+            allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: "")))
         }
 
-        Cached.ayaTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            let innerRange = match.range(at: 1)
-            let inner = (innerRange.location != NSNotFound) ? nsSelf.substring(with: innerRange) : ""
-            allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: inner)))
-        }
-
-        Cached.anchorTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append(TagMatchItem(range: match.range, type: .anchor(innerText: inner)))
-        }
-
-        Cached.hadeethTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            allMatches.append(TagMatchItem(range: match.range, type: .hadeeth))
-        }
-
-        Cached.manTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append(TagMatchItem(range: match.range, type: .man(innerText: inner)))
-        }
-
-        allMatches.sort { $0.range.location < $1.range.location }
         return allMatches
     }
 
@@ -408,7 +394,7 @@ extension String {
     }
 
     func stripSpanTagsWithRanges() -> (text: String, headerRanges: [NSRange]) {
-        guard !isEmpty else { return (self, []) }
+        guard !isEmpty, contains("<") else { return (self, []) }
 
         let nsSelf = self as NSString
         let fullRange = NSRange(location: 0, length: nsSelf.length)
