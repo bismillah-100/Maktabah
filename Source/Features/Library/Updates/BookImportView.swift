@@ -15,7 +15,7 @@ struct OfflineImportFormView: View {
 
     init(onImport: @escaping (URL, BookMetadata, [String: any Sendable]?) async -> Void) {
         self.onImport = onImport
-        _viewModel = .init(wrappedValue: BookImportViewModel.init())
+        _viewModel = .init(wrappedValue: BookImportViewModel())
     }
 
     var body: some View {
