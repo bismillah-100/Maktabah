@@ -231,6 +231,7 @@ struct DatabaseMigrationTests {
         }
     }
 
+    #if os(macOS)
     @Test("BookImport: textview dan metadata multiline tersimpan sebagai plain String dengan newline utuh")
     func testBookImportMultilinePlainStringAndNewlines() {
         let multiline = "السطر الأول: بطاقة الكتاب\nالسطر الثاني: دار النشر، بيروت\nLine 3: Tahqiq"
@@ -270,4 +271,5 @@ struct DatabaseMigrationTests {
         #expect(metadata.inf == multiline)
         #expect(metadata.betaka?.contains("\n") == true)
     }
+    #endif
 }

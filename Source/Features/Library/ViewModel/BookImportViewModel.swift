@@ -128,7 +128,6 @@ final class BookImportViewModel: @unchecked Sendable {
     @MainActor
     func setupData(force: Bool = false) async {
         guard !hasLoadedData || force else { return }
-        hasLoadedData = true
         isLoadingData = true
         defer { isLoadingData = false }
 
@@ -146,12 +145,15 @@ final class BookImportViewModel: @unchecked Sendable {
             return (maxBkid, maxAuthid, categories, authors, books)
         }.value
 
+        guard !Task.isCancelled else { return }
+
         maxBkid = results.0
         maxAuthid = results.1
         categories = results.2
         authors = results.3
         books = results.4
         customBookIdText = "\(results.0 + 1)"
+        hasLoadedData = true
     }
 
     // MARK: - Selection Helpers

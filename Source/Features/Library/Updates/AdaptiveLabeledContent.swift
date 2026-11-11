@@ -94,8 +94,8 @@ struct AdaptiveMultilineField: View {
         prompt: String = "Optional",
         text: Binding<String>
     ) {
-        title = Text(titleString)
-        self.prompt = Text(prompt)
+        title = Text(LocalizedStringKey(titleString))
+        self.prompt = Text(LocalizedStringKey(prompt))
         _text = text
     }
 
@@ -237,6 +237,7 @@ struct macOSAutoDirectionTextView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSScrollView, context: Context) {
+        context.coordinator.parent = self
         guard let textView = nsView.documentView as? NSTextView else { return }
         if textView.string != text {
             textView.string = text
@@ -244,6 +245,7 @@ struct macOSAutoDirectionTextView: NSViewRepresentable {
         }
     }
 
+    @MainActor
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: macOSAutoDirectionTextView
         var isUpdating = false
@@ -289,14 +291,14 @@ struct MacMultilineTextEditorSheet: View {
                         text = ""
                     }
                     .foregroundStyle(.red)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                     .padding(.trailing, 8)
                 }
                 Button("Done") {
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
+                .keyboardShortcut(.return, modifiers: .command)
             }
             .padding()
 
