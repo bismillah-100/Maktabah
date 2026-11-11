@@ -144,8 +144,10 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     ) async {
         let lastUpload = defaults.object(forKey: lastUploadKey) as? Date ?? .distantPast
         guard bypassThrottle || Date().timeIntervalSince(lastUpload) >= uploadThrottleInterval else { return }
-        await uploadSnapshotToCloudKit(snapshot, taskName: taskName)
-        defaults.set(Date(), forKey: lastUploadKey)
+        let success = await uploadSnapshotToCloudKit(snapshot, taskName: taskName)
+        if success {
+            defaults.set(Date(), forKey: lastUploadKey)
+        }
     }
 
     // MARK: - Snapshot Compilation
@@ -228,12 +230,12 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     // MARK: - CloudKit Upload
 
-    private func uploadSnapshotToCloudKit<T: WidgetSnapshotRecord>(_ snapshot: T, taskName: String) async {
-        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+    private func uploadSnapshotToCloudKit<T: WidgetSnapshotRecord>(_ snapshot: T, taskName: String) async -> Bool {
+        guard let data = try? JSONEncoder().encode(snapshot) else { return false }
         let recordId = CKRecord.ID(recordName: T.ckRecordName, zoneID: CloudKitCoreManager.shared.zoneId)
         let record = CKRecord(recordType: T.ckRecordType, recordID: recordId)
         record["payload"] = data as NSData
-        await saveRecordToCloudKit(record: record, payloadData: data, taskName: taskName)
+        return await saveRecordToCloudKit(record: record, payloadData: data, taskName: taskName)
     }
 
     #if canImport(UIKit)
@@ -243,7 +245,7 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     #endif
 
     @MainActor
-    private func saveRecordToCloudKit(record: CKRecord, payloadData: Data, taskName: String) async {
+    private func saveRecordToCloudKit(record: CKRecord, payloadData: Data, taskName: String) async -> Bool {
         #if canImport(UIKit)
         let box = TaskBox()
         box.id = UIApplication.shared.beginBackgroundTask(withName: taskName) {
@@ -271,18 +273,21 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
                 atomically: false
             )
             Logger.widget.debug("WidgetUpdateCoordinator: Uploaded \(taskName, privacy: .public) to CloudKit")
+            return true
         } catch let error as CKError where error.code == .serverRecordChanged {
             if let serverRecord = error.serverRecord {
                 serverRecord["payload"] = payloadData as NSData
                 // Retry recursively
-                await saveRecordToCloudKit(
+                return await saveRecordToCloudKit(
                     record: serverRecord,
                     payloadData: payloadData,
                     taskName: taskName
                 )
             }
+            return false
         } catch {
             Logger.widget.error("WidgetUpdateCoordinator: CloudKit upload error for \(taskName, privacy: .public) - \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 

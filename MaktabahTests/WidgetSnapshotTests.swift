@@ -57,7 +57,8 @@ struct WidgetSnapshotTests {
 
         let (resolved, didChange) = await HistorySnapshot.resolve(
             remote: remoteSnapshot,
-            local: localSnapshot
+            local: localSnapshot,
+            persistToLocal: false
         )
 
         // Snapshot lokal aktif harus dipertahankan
@@ -81,7 +82,8 @@ struct WidgetSnapshotTests {
 
         let (resolved, didChange) = await AnnotationSnapshot.resolve(
             remote: remoteSnapshot,
-            local: localSnapshot
+            local: localSnapshot,
+            persistToLocal: false
         )
 
         #expect(resolved != nil)
@@ -106,7 +108,8 @@ struct WidgetSnapshotTests {
 
         let (resolved, didChange) = await HistorySnapshot.resolve(
             remote: remoteSnapshot,
-            local: localSnapshot
+            local: localSnapshot,
+            persistToLocal: false
         )
 
         #expect(resolved != nil)
@@ -130,7 +133,8 @@ struct WidgetSnapshotTests {
 
         let (resolved, didChange) = await HistorySnapshot.resolve(
             remote: remoteSnapshot,
-            local: localSnapshot
+            local: localSnapshot,
+            persistToLocal: false
         )
 
         #expect(resolved != nil)
@@ -152,7 +156,8 @@ struct WidgetSnapshotTests {
 
         let (resolved, didChange) = await HistorySnapshot.resolve(
             remote: remoteSnapshot,
-            local: localSnapshot
+            local: localSnapshot,
+            persistToLocal: false
         )
 
         #expect(resolved?.items.first?.id == "h1")
@@ -171,7 +176,8 @@ struct WidgetSnapshotTests {
 
         let (resolved, didChange) = await HistorySnapshot.resolve(
             remote: remoteSnapshot,
-            local: localSnapshot
+            local: localSnapshot,
+            persistToLocal: false
         )
 
         #expect(resolved?.items.isEmpty == true)
@@ -205,7 +211,7 @@ struct WidgetSnapshotTests {
         #endif
     }
 
-    @Test("Resolve: Mempertahankan lokal saat persistToLocal bernilai false meski remote punya item baru")
+    @Test("Resolve: Mengembalikan remote tanpa menulis ke disk saat persistToLocal bernilai false")
     func testResolve_returnsRemoteWithoutDiskWriteWhenPersistDisabled() async {
         let localItem = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Lokal")
         var localSnapshot = HistorySnapshot(items: [localItem])

@@ -109,6 +109,11 @@ public final class FileCoordinator: Sendable {
                 Logger.widget.error("Failed to write coordinated data: \(error.localizedDescription, privacy: .public)")
             }
         }
+
+        if let error {
+            Logger.widget.error("Failed to coordinate write at \(url.path, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            try? data.write(to: url, options: .atomic)
+        }
     }
 }
 
@@ -307,7 +312,7 @@ public extension WidgetSnapshotRecord {
 
         guard let remote else { return (currentLocal, false) }
         guard let currentLocal else {
-            if persistToLocal, local == nil, !remote.items.isEmpty {
+            if persistToLocal, !remote.items.isEmpty {
                 await remote.saveLocal()
             }
             return (remote, !remote.items.isEmpty)
@@ -325,7 +330,7 @@ public extension WidgetSnapshotRecord {
                 return (currentLocal, false)
             }
             let itemsChanged = remote.items != currentLocal.items
-            if persistToLocal, local == nil {
+            if persistToLocal {
                 await remote.saveLocal()
             }
             return (remote, itemsChanged)
