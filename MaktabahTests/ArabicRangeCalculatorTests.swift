@@ -115,5 +115,10 @@ struct ArabicRangeCalculatorTests {
         #expect(cleanedInner == "بِسْمِ اللَّهِ")
         #expect(innerRanges.count == 1)
         #expect(innerRanges.first == NSRange(location: 0, length: (cleanedInner as NSString).length))
+
+        let selfClosingWithNextSpan = "نعت منصوب.<span id=\"aya-٢٠٥٣\"/> <span data-type=\"title\">{وَاِخْفِضْ لَهُما}</span> الإعراب"
+        let (cleanedSC, rangesSC) = selfClosingWithNextSpan.stripSpanTagsWithRanges()
+        #expect(cleanedSC == "نعت منصوب. {وَاِخْفِضْ لَهُما} الإعراب")
+        #expect(rangesSC.count == 1)
     }
 }

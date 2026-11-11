@@ -269,7 +269,7 @@ extension String {
 
     private enum Cached {
         static let unifiedTag = try? NSRegularExpression(
-            pattern: #"<span[^>]*(?:data-type=(?:[\'\"]?)title(?:[\'\"]?)|id=(?:[\'\"]?)aya-[^>\'\"]*(?:[\'\"]?))[^>]*(?:>(.*?)</span|/)>|<a\s[^>]*href="inr://[^"]*"[^>]*>(.*?)</a>|(<hadeeth[^>]*>)|<man[^>]*>(.*?)</man>"#,
+            pattern: #"<span[^>]*(?:data-type=(?:[\'\"]?)title(?:[\'\"]?)|id=(?:[\'\"]?)aya-[^>\'\"]*(?:[\'\"]?))[^>]*?(?:/>|>(.*?)</span\s*>)|<a\s[^>]*href="inr://[^"]*"[^>]*>(.*?)</a>|(<hadeeth[^>]*>)|<man[^>]*>(.*?)</man>"#,
             options: [.dotMatchesLineSeparators]
         )
     }
