@@ -17,7 +17,7 @@ class HistoryViewModel: ViewModelBase {
         guard !searchText.isEmpty else { return books }
         let normalizedSearchText = searchText.normalizeArabic()
         return books.filter { book in
-            book.normalizedBook.contains(normalizedSearchText)
+            book.normalizedBook.localizedCaseInsensitiveContains(normalizedSearchText)
         }
     }
 

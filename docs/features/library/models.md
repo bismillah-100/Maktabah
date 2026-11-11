@@ -28,7 +28,7 @@ final class BooksData: Codable, Identifiable, @unchecked Sendable {
 ```
 
 * **String Interning (`StringInterner.shared.intern`)**: Menghemat jejak memori pada puluhan ribu kitab yang memiliki *string* repetitif.
-* **Normalisasi Arab (`normalizedBook`)**: Dihasilkan via `book.normalizeArabic(false)` untuk mempercepat pencarian instan tanpa perlu normalisasi berulang.
+* **Normalisasi Arab (`normalizedBook`)**: Dihasilkan via `book.normalizeArabic()` untuk mempercepat pencarian instan tanpa perlu normalisasi berulang.
 * **Tipe Khusus (`pdfCs`)**:
     * `pdfCs == 3`: Menandakan kitab multibahasa (*Multi-Language*).
     * `pdfCs == 4`: Menandakan kitab hasil impor manual pengguna (*Imported Book*).

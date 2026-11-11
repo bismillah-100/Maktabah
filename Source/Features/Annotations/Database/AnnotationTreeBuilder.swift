@@ -823,7 +823,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             kind: .book,
             bookId: bkId,
             bookTitle: book.book,
-            normalizedBookTitle: book.normalizedBook
+            normalizedBookTitle: book.book.normalizeArabic(false)
         )
         let idx = root.children.insertionIndex(for: bookNode, using: compareNodes)
         root.children.insert(bookNode, at: idx)
