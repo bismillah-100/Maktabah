@@ -21,8 +21,6 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
 
     private var isHistoryDirty = false
     private var isAnnotationDirty = false
-    private var isFlushingHistoryLocally = false
-    private var isFlushingAnnotationLocally = false
     private let lock = NSLock()
     private var cancellables = Set<AnyCancellable>()
 
@@ -86,170 +84,79 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
     /// sebelum proses aplikasi dimatikan oleh sistem operasi (misal pada `applicationWillTerminate`).
     @MainActor
     func flushPendingUpdatesSync() {
-        let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
-            let result = (
-                isHistoryDirty || isFlushingHistoryLocally,
-                isAnnotationDirty || isFlushingAnnotationLocally
-            )
-            isHistoryDirty = false
-            isAnnotationDirty = false
-            isFlushingHistoryLocally = false
-            isFlushingAnnotationLocally = false
-            return result
-        }
-
-        guard historyNeeded || annotationNeeded else { return }
-
-        if historyNeeded {
-            let compiled = compileHistorySnapshotOnMain()
-            _ = saveHistorySnapshotLocallySync(compiled: compiled)
-        }
-
-        if annotationNeeded {
-            _ = saveAnnotationSnapshotLocallySync()
-        }
+        _ = flushLocalSnapshotsSync()
     }
 
     func flushPendingUpdates(forceCloudKit: Bool = false) async {
-        // Read dan langsung reset flag secara atomik sambil menandai flush lokal berjalan
+        let (historySnapshot, annotationSnapshot) = await flushLocalSnapshotsSync()
+
+        if let historySnapshot {
+            await uploadIfNeeded(
+                historySnapshot,
+                lastUploadKey: lastHistoryUploadKey,
+                taskName: "HistorySnapshotUpload",
+                bypassThrottle: forceCloudKit
+            )
+        }
+
+        if let annotationSnapshot {
+            await uploadIfNeeded(
+                annotationSnapshot,
+                lastUploadKey: lastAnnotationUploadKey,
+                taskName: "WidgetAnnotationSnapshotUpload",
+                bypassThrottle: forceCloudKit
+            )
+        }
+    }
+
+    @MainActor
+    private func flushLocalSnapshotsSync() -> (history: HistorySnapshot?, annotation: AnnotationSnapshot?) {
         let (historyNeeded, annotationNeeded) = lock.withLock { () -> (Bool, Bool) in
-            let h = isHistoryDirty
-            let a = isAnnotationDirty
-            if h {
-                isHistoryDirty = false
-                isFlushingHistoryLocally = true
-            }
-            if a {
-                isAnnotationDirty = false
-                isFlushingAnnotationLocally = true
-            }
-            return (h, a)
+            let result = (isHistoryDirty, isAnnotationDirty)
+            isHistoryDirty = false
+            isAnnotationDirty = false
+            return result
         }
 
-        guard historyNeeded || annotationNeeded else { return }
-
-        if historyNeeded {
-            await flushHistory(bypassThrottle: forceCloudKit)
-        }
-
-        if annotationNeeded {
-            await flushAnnotations(bypassThrottle: forceCloudKit)
-        }
+        let updatedHistory = historyNeeded ? saveLocalSnapshotSync(compileHistorySnapshot(), kind: historyKind) : nil
+        let updatedAnnotation = annotationNeeded ? saveLocalSnapshotSync(compileAnnotationSnapshot(), kind: annotationKind) : nil
+        return (updatedHistory, updatedAnnotation)
     }
 
-    private func flushHistory(bypassThrottle: Bool) async {
-        let compiled = await compileHistorySnapshotOnMain()
-        let (snapshot, didChange) = saveHistorySnapshotLocallySync(compiled: compiled)
-        lock.withLock {
-            isFlushingHistoryLocally = false
-        }
-
-        let lastUpload = defaults.object(forKey: lastHistoryUploadKey) as? Date ?? .distantPast
-        let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
-
-        if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
-            await uploadSnapshotToCloudKit(snapshot, taskName: "HistorySnapshotUpload")
-            defaults.set(Date(), forKey: lastHistoryUploadKey)
-        }
-    }
-
-    private func flushAnnotations(bypassThrottle: Bool) async {
-        let (snapshot, didChange) = saveAnnotationSnapshotLocallySync()
-        lock.withLock {
-            isFlushingAnnotationLocally = false
-        }
-
-        let lastUpload = defaults.object(forKey: lastAnnotationUploadKey) as? Date ?? .distantPast
-        let timeSinceLastUpload = Date().timeIntervalSince(lastUpload)
-
-        if didChange, bypassThrottle || timeSinceLastUpload >= uploadThrottleInterval {
-            await uploadSnapshotToCloudKit(snapshot, taskName: "WidgetAnnotationSnapshotUpload")
-            defaults.set(Date(), forKey: lastAnnotationUploadKey)
-        }
-    }
-
-    @discardableResult
-    private func saveHistorySnapshotLocallySync(
-        compiled: (snapshot: HistorySnapshot, allowEmptyOverwrite: Bool)
-    ) -> (snapshot: HistorySnapshot, didChange: Bool) {
-        var nextSnapshot = compiled.snapshot
-        let currentLocal = HistorySnapshot.loadLocalSync()
-
-        if nextSnapshot.items.isEmpty, !compiled.allowEmptyOverwrite,
-           let currentLocal, !currentLocal.items.isEmpty
-        {
-            return (currentLocal, false)
-        }
-
+    private func saveLocalSnapshotSync<T: WidgetSnapshotRecord>(
+        _ snapshot: T,
+        kind: String
+    ) -> T? {
+        var next = snapshot
+        let currentLocal = T.loadLocalSync()
         let epochMs = Int64(Date().timeIntervalSince1970 * 1000)
-        nextSnapshot.generation = max(currentLocal?.generation ?? 0, epochMs) + 1
-        let didChange = nextSnapshot.saveIfChangedSync(comparingWith: currentLocal)
-        if didChange {
-            WidgetCenter.shared.reloadTimelines(ofKind: historyKind)
-        }
-        return (nextSnapshot, didChange)
+        next.generation = max(currentLocal?.generation ?? 0, epochMs) + 1
+        guard next.saveIfChangedSync(comparingWith: currentLocal) else { return nil }
+        WidgetCenter.shared.reloadTimelines(ofKind: kind)
+        return next
     }
 
-    @discardableResult
-    private func saveAnnotationSnapshotLocallySync() -> (snapshot: AnnotationSnapshot, didChange: Bool) {
-        var snapshot = compileAnnotationSnapshot()
-        let currentLocal = AnnotationSnapshot.loadLocalSync()
-        let epochMs = Int64(Date().timeIntervalSince1970 * 1000)
-        snapshot.generation = max(currentLocal?.generation ?? 0, epochMs) + 1
-        let didChange = snapshot.saveIfChangedSync(comparingWith: currentLocal)
-        if didChange {
-            WidgetCenter.shared.reloadTimelines(ofKind: annotationKind)
-        }
-        return (snapshot, didChange)
+    private func uploadIfNeeded(
+        _ snapshot: some WidgetSnapshotRecord,
+        lastUploadKey: String,
+        taskName: String,
+        bypassThrottle: Bool
+    ) async {
+        let lastUpload = defaults.object(forKey: lastUploadKey) as? Date ?? .distantPast
+        guard bypassThrottle || Date().timeIntervalSince(lastUpload) >= uploadThrottleInterval else { return }
+        await uploadSnapshotToCloudKit(snapshot, taskName: taskName)
+        defaults.set(Date(), forKey: lastUploadKey)
     }
 
     // MARK: - Snapshot Compilation
 
     @MainActor
-    private func compileHistorySnapshotOnMain() -> (snapshot: HistorySnapshot, allowEmptyOverwrite: Bool) {
+    private func compileHistorySnapshot() -> HistorySnapshot {
         let vm = HistoryViewModel.shared
-        vm.flushPendingSaveSync()
-        HistoryDatabaseManager.shared.syncWriteQueue()
-
-        let inMemoryEntries = Array(vm.entriesByBookId.values)
-        let inMemoryOrder = vm.historyOrder
-        let allowEmpty = vm.hasExplicitlyClearedHistory
-
-        let entries: [ReadingEntry]
-        let historyOrder: [Int]
-
-        if !inMemoryEntries.isEmpty || !inMemoryOrder.isEmpty || allowEmpty {
-            entries = inMemoryEntries
-            historyOrder = inMemoryOrder
-        } else {
-            let dbData = HistoryDatabaseManager.shared.loadFromDatabase()
-            entries = dbData.entries
-            historyOrder = dbData.historyOrder
-        }
-
-        if entries.isEmpty, historyOrder.isEmpty, !allowEmpty,
-           let existingLocal = HistorySnapshot.loadLocalSync(), !existingLocal.items.isEmpty
-        {
-            return (existingLocal, false)
-        }
-
-        if allowEmpty, historyOrder.isEmpty {
-            return (HistorySnapshot(items: []), true)
-        }
-
-        return (buildHistorySnapshot(entries: entries, historyOrder: historyOrder), allowEmpty)
-    }
-
-    private func buildHistorySnapshot(entries: [ReadingEntry], historyOrder: [Int]) -> HistorySnapshot {
+        let entries = Array(vm.entriesByBookId.values)
         let entryMap = Dictionary(entries.map { ($0.bookId, $0) }, uniquingKeysWith: { first, _ in first })
 
-        var orderedEntries: [ReadingEntry] = []
-        for bookId in historyOrder {
-            if let entry = entryMap[bookId] {
-                orderedEntries.append(entry)
-            }
-        }
-
+        var orderedEntries = vm.historyOrder.compactMap { entryMap[$0] }
         if orderedEntries.count < 6 {
             let existingIds = Set(orderedEntries.map(\.bookId))
             let remaining = entries

@@ -39,7 +39,6 @@ extension HistoryViewModel {
 
         historyOrder.removeAll { $0 == bookId }
         historyOrder.insert(bookId, at: 0)
-        hasExplicitlyClearedHistory = false
 
         if historyOrder.count > maxHistoryCount {
             historyOrder = Array(historyOrder.prefix(maxHistoryCount))
@@ -78,9 +77,6 @@ extension HistoryViewModel {
 
     func removeHistory(for bookId: Int) {
         historyOrder.removeAll { $0 == bookId }
-        if historyOrder.isEmpty {
-            hasExplicitlyClearedHistory = true
-        }
         notifyHistoryChanged()
         guard let entry = entriesByBookId[bookId] else { return }
 
@@ -142,7 +138,6 @@ extension HistoryViewModel {
     func clearHistory() {
         let historyIdsToRemove = historyOrder
         historyOrder.removeAll()
-        hasExplicitlyClearedHistory = true
         notifyHistoryChanged()
 
         var ckIdsToDelete = [String]()

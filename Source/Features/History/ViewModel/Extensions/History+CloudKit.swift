@@ -148,11 +148,6 @@ extension HistoryViewModel {
             .sorted { ($0.lastOpenedAt ?? .distantPast) > ($1.lastOpenedAt ?? .distantPast) }
             .map(\.bookId)
         historyOrder = Array(sortedIds.prefix(maxHistoryCount))
-        if !historyOrder.isEmpty {
-            hasExplicitlyClearedHistory = false
-        } else if !deletedIds.isEmpty {
-            hasExplicitlyClearedHistory = true
-        }
 
         let finalOrder = historyOrder
         loadBooksData()
