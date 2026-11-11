@@ -22,14 +22,21 @@ final class CloudKitFetcher: @unchecked Sendable {
         // 1. Muat snapshot lokal terlebih dahulu secara instan (< 2ms)
         let localSnapshot = await T.loadLocal()
 
-        // 2. Coba sinkronisasi data remote dari CloudKit dengan batas waktu 3.0 detik
+        // 2. Cek apakah data lokal masih sangat baru (misal: diperbarui dalam 60 detik terakhir)
+        if let localSnapshot, !localSnapshot.items.isEmpty,
+           Date().timeIntervalSince(localSnapshot.lastUpdated) < 60 {
+            // Langsung kembalikan lokal instan, skip query CloudKit
+            return localSnapshot
+        }
+
+        // 3. Coba sinkronisasi data remote dari CloudKit dengan batas waktu 3.0 detik
         let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self, timeoutSeconds: 3.0)
 
         guard let remoteSnapshot else {
             return await T.loadLocal() ?? localSnapshot
         }
 
-        // 3. Baca ulang snapshot lokal terbaru untuk mencegah TOCTOU tanpa menulis ulang dari ekstensi sandbox
+        // 4. Baca ulang snapshot lokal terbaru untuk mencegah TOCTOU tanpa menulis ulang dari ekstensi sandbox
         let latestLocal = await T.loadLocal() ?? localSnapshot
         let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: latestLocal, persistToLocal: false)
         return resolved ?? latestLocal
