@@ -24,7 +24,8 @@ final class CloudKitFetcher: @unchecked Sendable {
 
         // 2. Cek apakah data lokal masih sangat baru (misal: diperbarui dalam 60 detik terakhir)
         if let localSnapshot, !localSnapshot.items.isEmpty,
-           Date().timeIntervalSince(localSnapshot.lastUpdated) < 60 {
+           Date().timeIntervalSince(localSnapshot.lastUpdated) < 60
+        {
             // Langsung kembalikan lokal instan, skip query CloudKit
             return localSnapshot
         }
