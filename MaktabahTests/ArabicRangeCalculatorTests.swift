@@ -91,4 +91,81 @@ struct ArabicRangeCalculatorTests {
         )
         #expect(resLast.withDiacritics == lastDiac)
     }
+
+    @Test("Span tag aya-<number> dihapus dan jika ada teks diberi warna saat render")
+    func testAyaSpanTags_strippedAndColored() {
+        let rawText = "نعت منصوب.<span id=\"aya-٢٠٥٣\"></span><span data-type=\"title\">{وَاِخْفِضْ لَهُما}</span> الإعراب"
+        let (cleanedText, headerRanges) = rawText.stripSpanTagsWithRanges()
+        #expect(!cleanedText.contains("aya-٢٠٥٣"))
+        #expect(!cleanedText.contains("<span"))
+        #expect(cleanedText.contains("{وَاِخْفِضْ لَهُما}"))
+        #expect(headerRanges.count == 1)
+
+        let renderer = ArabicTextRenderer()
+        let result = renderer.render(
+            text: rawText,
+            showHarakat: true,
+            isImported: true
+        )
+        #expect(!result.attributedString.string.contains("aya-٢٠٥٣"))
+        #expect(!result.attributedString.string.contains("<span"))
+
+        let rawTextWithInner = "<span id=\"aya-٢٠٥٣\">بِسْمِ اللَّهِ</span>"
+        let (cleanedInner, innerRanges) = rawTextWithInner.stripSpanTagsWithRanges()
+        #expect(cleanedInner == "بِسْمِ اللَّهِ")
+        #expect(innerRanges.count == 1)
+        #expect(innerRanges.first == NSRange(location: 0, length: (cleanedInner as NSString).length))
+
+        let selfClosingWithNextSpan = "نعت منصوب.<span id=\"aya-٢٠٥٣\"/> <span data-type=\"title\">{وَاِخْفِضْ لَهُما}</span> الإعراب"
+        let (cleanedSC, rangesSC) = selfClosingWithNextSpan.stripSpanTagsWithRanges()
+        #expect(cleanedSC == "نعت منصوب. {وَاِخْفِضْ لَهُما} الإعراب")
+        #expect(rangesSC.count == 1)
+
+        let selfClosingWithSpace = "نعت منصوب.<span id=\"aya-٢٠٥٣\" / > <span data-type=\"title\">{وَاِخْفِضْ لَهُما}</span> الإعراب"
+        let (cleanedSCS, rangesSCS) = selfClosingWithSpace.stripSpanTagsWithRanges()
+        #expect(cleanedSCS == "نعت منصوب. {وَاِخْفِضْ لَهُما} الإعراب")
+        #expect(rangesSCS.count == 1)
+    }
+
+    @Test("Nested title spans di-strip bersih dan header range dihitung tepat")
+    func testNestedTitleSpans() {
+        let rawIdentical = "<span data-type='title' id=toc-55><span data-type='title' id=toc-56>الْعَمَلُ فِي اخْتِلَافِ الرِّوَايَاتِ</span></span>"
+        let (cleanedIdentical, rangesIdentical) = rawIdentical.stripSpanTagsWithRanges()
+        #expect(cleanedIdentical == "الْعَمَلُ فِي اخْتِلَافِ الرِّوَايَاتِ")
+        #expect(!cleanedIdentical.contains("<span"))
+        #expect(!cleanedIdentical.contains("</span>"))
+        #expect(rangesIdentical.count == 1)
+        #expect(rangesIdentical.first == NSRange(location: 0, length: (cleanedIdentical as NSString).length))
+
+        let rawPartial = "<span data-type='title' id=toc-147>ثالثاً: متكلمة الصفاتية <span data-type='title' id=toc-148>(الكلابية </span>-الأشاعرة -الماتريدي</span>"
+        let (cleanedPartial, rangesPartial) = rawPartial.stripSpanTagsWithRanges()
+        #expect(cleanedPartial == "ثالثاً: متكلمة الصفاتية (الكلابية -الأشاعرة -الماتريدي")
+        #expect(!cleanedPartial.contains("<span"))
+        #expect(!cleanedPartial.contains("</span>"))
+        #expect(rangesPartial.count == 1)
+        #expect(rangesPartial.first == NSRange(location: 0, length: (cleanedPartial as NSString).length))
+    }
+
+    @Test("Span id=b-* penanda hadits/bookmark di-strip total tanpa meninggalkan spasi ganda")
+    func testSpanIdB_stripped() {
+        let rawStart = "<span id=\"b-١\"> </span>بسم الله الرحمن الرحيم"
+        let (cleanedStart, rangesStart) = rawStart.stripSpanTagsWithRanges()
+        #expect(cleanedStart == "بسم الله الرحمن الرحيم")
+        #expect(rangesStart.isEmpty)
+
+        let rawHadith = "١٣ - <span id=\"b-١٥\"> </span>قال رَضِيَ اللهُ عَنْهُ"
+        let (cleanedHadith, rangesHadith) = rawHadith.stripSpanTagsWithRanges()
+        #expect(cleanedHadith == "١٣ - قال رَضِيَ اللهُ عَنْهُ")
+        #expect(rangesHadith.isEmpty)
+    }
+
+    @Test("Anchor dan tag lain di dalam title span di-strip namun teks dalamnya tetap masuk header")
+    func testAnchorInsideTitleSpan() {
+        let raw = "<span data-type=\"title\">Surah <a href=\"inr://123\">Al-Baqarah</a></span>"
+        let (cleaned, ranges) = raw.stripSpanTagsWithRanges()
+        #expect(cleaned == "Surah Al-Baqarah")
+        #expect(!cleaned.contains("<a"))
+        #expect(ranges.count == 1)
+        #expect(ranges.first == NSRange(location: 0, length: (cleaned as NSString).length))
+    }
 }

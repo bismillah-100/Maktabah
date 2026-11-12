@@ -43,7 +43,7 @@ extension String {
     /// Membersihkan escape sequences (\n, \r\n, \r) dan karakter baris baru menjadi spasi (Single Pass O(N))
     func cleaningLineBreaks() -> String {
         guard !isEmpty else { return self }
-        if !contains("\\") && !contains("\n") && !contains("\r") {
+        if !contains("\\"), !contains("\n"), !contains("\r") {
             return self
         }
 
@@ -267,25 +267,6 @@ extension String {
         return self.index(after: nextIndex)
     }
 
-    private enum Cached {
-        static let spanTag = try? NSRegularExpression(
-            pattern: #"<span[^>]*data-type=(?:[\'\"]?)title(?:[\'\"]?)[^>]*>(.*?)</span>"#,
-            options: [.dotMatchesLineSeparators]
-        )
-        static let anchorTag = try? NSRegularExpression(
-            pattern: #"<a\s[^>]*href="inr://[^"]*"[^>]*>(.*?)</a>"#,
-            options: [.dotMatchesLineSeparators]
-        )
-        static let hadeethTag = try? NSRegularExpression(
-            pattern: #"<hadeeth[^>]*>"#,
-            options: []
-        )
-        static let manTag = try? NSRegularExpression(
-            pattern: #"<man[^>]*>(.*?)</man>"#,
-            options: [.dotMatchesLineSeparators]
-        )
-    }
-
     func stripSpanTags() -> String {
         guard !isEmpty else { return self }
         if !contains("<") {
@@ -314,101 +295,208 @@ extension String {
         return result
     }
 
-    private enum TagMatchType {
-        case header(innerText: String)
-        case anchor(innerText: String)
-        case hadeeth
-        case man(innerText: String)
+    private enum SpanTagKind {
+        case header
+        case anchorB
+        case other
+    }
 
-        var replacementText: String {
-            switch self {
-            case let .header(inner), let .anchor(inner), let .man(inner):
-                inner
-            case .hadeeth:
-                ""
+    private static func spanKind(from attributes: Substring) -> SpanTagKind {
+        guard !attributes.isEmpty else { return .other }
+        let lower = attributes.lowercased()
+        if lower.contains("data-type=\"title\"") ||
+            lower.contains("data-type='title'") ||
+            lower.contains("data-type=title") ||
+            lower.contains("id=\"aya-") ||
+            lower.contains("id='aya-") ||
+            lower.contains("id=aya-")
+        {
+            return .header
+        }
+        if lower.contains("id=\"b-") ||
+            lower.contains("id='b-") ||
+            lower.contains("id=b-")
+        {
+            return .anchorB
+        }
+        return .other
+    }
+
+    private struct ParsedTag {
+        let tagName: Substring
+        let attributes: Substring
+        let isClosing: Bool
+        let isSelfClosing: Bool
+
+        var isSpan: Bool {
+            tagName.caseInsensitiveCompare("span") == .orderedSame
+        }
+    }
+
+    @inline(__always)
+    private static func trimWhitespace(_ slice: Substring) -> Substring {
+        var start = slice.startIndex
+        var end = slice.endIndex
+        while start < end, slice[start].isWhitespace {
+            start = slice.index(after: start)
+        }
+        while end > start {
+            let prev = slice.index(before: end)
+            if slice[prev].isWhitespace {
+                end = prev
+            } else {
+                break
             }
         }
+        return slice[start ..< end]
     }
 
-    private struct TagMatchItem {
-        let range: NSRange
-        let type: TagMatchType
+    private static func parseTagDetails(from tagContent: Substring) -> ParsedTag {
+        let trimmed = trimWhitespace(tagContent)
+        let isClosing = trimmed.hasPrefix("/")
+        let isSelfClosing = trimmed.hasSuffix("/")
+
+        let body: Substring = if isClosing {
+            trimWhitespace(trimmed.dropFirst())
+        } else if isSelfClosing {
+            trimWhitespace(trimmed.dropLast())
+        } else {
+            trimmed
+        }
+
+        let firstDelim = body.firstIndex(where: { $0.isWhitespace || $0 == "/" }) ?? body.endIndex
+        let tagName = body[..<firstDelim]
+        let attributes = body[firstDelim...]
+
+        return ParsedTag(
+            tagName: tagName,
+            attributes: attributes,
+            isClosing: isClosing,
+            isSelfClosing: isSelfClosing
+        )
     }
 
-    private static func collectTagMatches(in nsSelf: NSString, text: String, fullRange: NSRange) -> [TagMatchItem] {
-        var allMatches: [TagMatchItem] = []
-
-        Cached.spanTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append(TagMatchItem(range: match.range, type: .header(innerText: inner)))
-        }
-
-        Cached.anchorTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append(TagMatchItem(range: match.range, type: .anchor(innerText: inner)))
-        }
-
-        Cached.hadeethTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            allMatches.append(TagMatchItem(range: match.range, type: .hadeeth))
-        }
-
-        Cached.manTag?.enumerateMatches(in: text, range: fullRange) { match, _, _ in
-            guard let match else { return }
-            let inner = nsSelf.substring(with: match.range(at: 1))
-            allMatches.append(TagMatchItem(range: match.range, type: .man(innerText: inner)))
-        }
-
-        allMatches.sort { $0.range.location < $1.range.location }
-        return allMatches
-    }
-
-    private static func applyTagReplacements(to nsSelf: NSString, matches: [TagMatchItem]) -> String {
-        guard let mutableString =
-            nsSelf.mutableCopy() as? NSMutableString
-        else { return nsSelf as String }
-
-        for m in matches.reversed() {
-            mutableString.replaceCharacters(in: m.range, with: m.type.replacementText)
-        }
-        return mutableString as String
-    }
-
-    private static func calculateAdjustedHeaderRanges(matches: [TagMatchItem]) -> [NSRange] {
+    private struct SpanTagScanner {
+        var finalString: String
         var headerRanges: [NSRange] = []
-        var deltaOffset = 0
+        private var headerDepth = 0
+        private var currentHeaderStart: Int?
+        private var skipInnerDepth = 0
+        private var currentUtf16Length = 0
 
-        for m in matches {
-            let oldLength = m.range.length
-            let replacement = m.type.replacementText
-            let newLength = (replacement as NSString).length
-
-            if case .header = m.type {
-                let newLocation = m.range.location + deltaOffset
-                headerRanges.append(NSRange(location: newLocation, length: newLength))
-            }
-
-            deltaOffset += (newLength - oldLength)
+        init(capacity: Int) {
+            finalString = ""
+            finalString.reserveCapacity(capacity)
         }
 
-        return headerRanges
+        mutating func processSpanTag(attributes: Substring, isClosing: Bool, isSelfClosing: Bool) {
+            if isClosing {
+                handleClosingSpan()
+            } else if !isSelfClosing {
+                handleOpeningSpan(attributes: attributes)
+            }
+        }
+
+        private mutating func handleClosingSpan() {
+            if skipInnerDepth > 0 {
+                skipInnerDepth -= 1
+            } else if headerDepth > 0 {
+                headerDepth -= 1
+                if headerDepth == 0, let start = currentHeaderStart {
+                    let len = currentUtf16Length - start
+                    if len > 0 {
+                        headerRanges.append(NSRange(location: start, length: len))
+                    }
+                    currentHeaderStart = nil
+                }
+            }
+        }
+
+        private mutating func handleOpeningSpan(attributes: Substring) {
+            switch String.spanKind(from: attributes) {
+            case .header:
+                headerDepth += 1
+                if headerDepth == 1 {
+                    currentHeaderStart = currentUtf16Length
+                }
+            case .anchorB:
+                skipInnerDepth += 1
+            case .other:
+                break
+            }
+        }
+
+        mutating func appendChunk(_ chunk: Substring) {
+            guard !chunk.isEmpty else { return }
+
+            if skipInnerDepth > 0 {
+                guard let newlineIdx = chunk.firstIndex(where: \.isNewline) else {
+                    return
+                }
+                skipInnerDepth = 0
+                let remaining = chunk[newlineIdx...]
+                finalString.append(contentsOf: remaining)
+                currentUtf16Length += remaining.utf16.count
+                return
+            }
+
+            finalString.append(contentsOf: chunk)
+            currentUtf16Length += chunk.utf16.count
+        }
+
+        mutating func finalize() -> (text: String, headerRanges: [NSRange]) {
+            if headerDepth > 0, let start = currentHeaderStart {
+                let len = currentUtf16Length - start
+                if len > 0 {
+                    headerRanges.append(NSRange(location: start, length: len))
+                }
+            }
+            return (finalString, headerRanges)
+        }
     }
 
     func stripSpanTagsWithRanges() -> (text: String, headerRanges: [NSRange]) {
-        guard !isEmpty else { return (self, []) }
+        let utf8 = utf8
+        guard let firstLt = utf8.firstIndex(of: UInt8(ascii: "<")) else {
+            return (self, [])
+        }
 
-        let nsSelf = self as NSString
-        let fullRange = NSRange(location: 0, length: nsSelf.length)
-        let matches = Self.collectTagMatches(in: nsSelf, text: self, fullRange: fullRange)
+        var scanner = SpanTagScanner(capacity: utf8.count)
+        var textStart = utf8.startIndex
+        var ltIndex = firstLt
 
-        guard !matches.isEmpty else { return (self, []) }
+        while true {
+            if textStart < ltIndex {
+                scanner.appendChunk(self[textStart ..< ltIndex])
+            }
 
-        let finalString = Self.applyTagReplacements(to: nsSelf, matches: matches)
-        let headerRanges = Self.calculateAdjustedHeaderRanges(matches: matches)
+            let afterLt = utf8.index(after: ltIndex)
+            guard let tagEnd = utf8[afterLt...].firstIndex(of: UInt8(ascii: ">")) else {
+                scanner.appendChunk(self[ltIndex...])
+                break
+            }
 
-        return (finalString, headerRanges)
+            let tag = Self.parseTagDetails(from: self[afterLt ..< tagEnd])
+            if tag.isSpan {
+                scanner.processSpanTag(
+                    attributes: tag.attributes,
+                    isClosing: tag.isClosing,
+                    isSelfClosing: tag.isSelfClosing
+                )
+            }
+
+            textStart = utf8.index(after: tagEnd)
+
+            guard let nextLt = utf8[textStart...].firstIndex(of: UInt8(ascii: "<")) else {
+                if textStart < utf8.endIndex {
+                    scanner.appendChunk(self[textStart...])
+                }
+                break
+            }
+            ltIndex = nextLt
+        }
+
+        return scanner.finalize()
     }
 
     private func structuralHighlightRanges() -> (colored: [NSRange], footnote: [NSRange]) {
