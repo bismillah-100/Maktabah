@@ -33,7 +33,7 @@ struct AdaptiveLabeledContent<Content: View>: View {
     }
 
     init(_ titleString: String, @ViewBuilder content: () -> Content) {
-        title = Text(titleString)
+        title = Text(LocalizedStringKey(titleString))
         self.content = content()
     }
 

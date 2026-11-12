@@ -230,7 +230,7 @@ struct OfflineImportFormView: View {
     }
 
     private var selectBookField: some View {
-        AdaptiveLabeledContent(String(localized: "Select Book")) {
+        AdaptiveLabeledContent("Select Book") {
             let title = viewModel.selectedBookId.flatMap { bookId in
                 LibraryDataManager.shared.booksById[bookId].map { "\($0.book) (ID: \(bookId))" }
             }
