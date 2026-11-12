@@ -36,6 +36,37 @@
 </head>
 <body>
 
+<h2>Version 4.2.2</h2>
+<p class="version">November 12, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Dedicated multiline editor sheets and views for book metadata (biography, descriptions, author details) with automatic RTL alignment in Book Import.</li>
+  <li>Quranic aya span styling in reader: automatically formats verse numbers, applies header styling to ayah text, and strips raw anchor tags.</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Update Sparkle updater framework to version 2.10.1 on macOS.</li>
+  <li>Streamline widget snapshot generation directly from in-memory history state to avoid SQLite queue delays.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Adopt local-first snapshot loading in widgets to eliminate watchdog timeouts and prevent empty remote states from clearing recent reading history.</li>
+  <li>Ensure synchronous widget history snapshot flush on application termination to prevent data loss on quit.</li>
+  <li>Resolve macOS sandboxed App Group container resolution for the widget extension.</li>
+  <li>Replace regex-based reader tag stripping with a linear single-pass scanner to safely handle nested titles, anchor spans, and self-closing tags without offset drift.</li>
+  <li>Unify Arabic text normalization across book titles, categories, and author hierarchies to ensure consistent search results regardless of hamza or diacritics.</li>
+  <li>Prevent unintended form state resets when returning from subviews in the book import workflow.</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Reduce remote CloudKit timeout to 5 seconds with automatic local file fallback when NSFileCoordinator encounters locks.</li>
+  <li>Eliminate visual artifacts and raw HTML/anchor tags leaking into the reader presentation.</li>
+  <li>Optimize Arabic search index filtering and query execution speed.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 4.2.1</h2>
 <p class="version">November 01, 2026</p>
 <h3>New</h3>
