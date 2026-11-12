@@ -48,6 +48,7 @@ final class BookImportViewModel: @unchecked Sendable {
     var showFilePicker: Bool = false
     var showHelpPopover: Bool = false
     var isLoadingData: Bool = true
+    var hasLoadedData: Bool = false
     var showAnnotationsPopover: Bool = false
 
     let converterURL = URL(
@@ -125,7 +126,8 @@ final class BookImportViewModel: @unchecked Sendable {
     // MARK: - Initial Setup
 
     @MainActor
-    func setupData() async {
+    func setupData(force: Bool = false) async {
+        guard !hasLoadedData || force else { return }
         isLoadingData = true
         defer { isLoadingData = false }
 
@@ -143,12 +145,15 @@ final class BookImportViewModel: @unchecked Sendable {
             return (maxBkid, maxAuthid, categories, authors, books)
         }.value
 
+        guard !Task.isCancelled else { return }
+
         maxBkid = results.0
         maxAuthid = results.1
         categories = results.2
         authors = results.3
         books = results.4
         customBookIdText = "\(results.0 + 1)"
+        hasLoadedData = true
     }
 
     // MARK: - Selection Helpers
@@ -296,7 +301,7 @@ final class BookImportViewModel: @unchecked Sendable {
             await reloadLocalCache(oldId: oldId, newId: newId)
             uploadToCloudKit(annotationsToSync: annotationsToSync, resultsToSync: resultsToSync)
 
-            await setupData()
+            await setupData(force: true)
             selectedBookId = newId
 
             NotificationCenter.default.post(

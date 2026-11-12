@@ -4,6 +4,9 @@
 //
 
 import Foundation
+#if canImport(AppKit)
+import AppKit
+#endif
 @testable import Maktabah_Debug
 import Testing
 
@@ -227,4 +230,46 @@ struct DatabaseMigrationTests {
             try manager.deleteEntries(bookIds: [999_999], trackPending: false)
         }
     }
+
+    #if os(macOS)
+    @Test("BookImport: textview dan metadata multiline tersimpan sebagai plain String dengan newline utuh")
+    func testBookImportMultilinePlainStringAndNewlines() {
+        let multiline = "السطر الأول: بطاقة الكتاب\nالسطر الثاني: دار النشر، بيروت\nLine 3: Tahqiq"
+
+        let textView = NSTextView()
+        textView.string = multiline
+        if let ts = textView.textStorage {
+            ts.applyAutoDirectionAlignments()
+        }
+
+        // Pastikan bukan NSAttributedString, melainkan plain Swift String
+        let rawString = textView.string
+        #expect(type(of: rawString) == String.self)
+
+        let lines = rawString.components(separatedBy: "\n")
+        #expect(lines.count == 3)
+        #expect(lines[0] == "السطر الأول: بطاقة الكتاب")
+        #expect(lines[1] == "السطر الثاني: دار النشر، بيروت")
+        #expect(lines[2] == "Line 3: Tahqiq")
+
+        // Validasi BookMetadata
+        let metadata = BookMetadata(
+            bkid: 999_999,
+            cat: 1,
+            bk: "Test Book",
+            archive: 1,
+            betaka: rawString,
+            authno: 1,
+            inf: rawString,
+            tafseerNam: nil,
+            bVer: 1,
+            link: nil,
+            pdfCs: 0
+        )
+
+        #expect(metadata.betaka == multiline)
+        #expect(metadata.inf == multiline)
+        #expect(metadata.betaka?.contains("\n") == true)
+    }
+    #endif
 }

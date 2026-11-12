@@ -948,7 +948,20 @@
       }
     },
     "Application Will Terminate because Folder Location Not Found on %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيتم إنهاء التطبيق لأن موقع المجلد غير موجود على %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikasi akan ditutup karena lokasi folder tidak ditemukan di %@"
+          }
+        }
+      }
     },
     "appNeedAccess" : {
       "localizations" : {
@@ -1044,7 +1057,20 @@
       }
     },
     "Author with ID %lld not found." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم العثور على المؤلف مع بطاقة الهوية %lld."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Author dengan ID %lld tidak ditemukan."
+          }
+        }
+      }
     },
     "Background" : {
       "localizations" : {
@@ -1184,6 +1210,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pilih Folder Perpustakaan..."
+          }
+        }
+      }
+    },
+    "Clear" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسح"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bersihkan"
           }
         }
       }
@@ -1777,7 +1819,20 @@
       }
     },
     "Database error: %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خطأ في قاعدة البيانات: %@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Basis data error: %@"
+          }
+        }
+      }
     },
     "Date Created" : {
       "extractionState" : "manual",
