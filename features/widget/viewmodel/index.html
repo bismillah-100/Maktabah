@@ -3831,7 +3831,7 @@
 <ol>
 <li><strong><code>placeholder(in:)</code></strong>: Menghasilkan data dummy instan (<code>Kitab Al-Umm</code>) saat widget pertama kali ditambahkan ke galeri widget sebelum data nyata terbaca.</li>
 <li><strong><code>snapshot(for:in:)</code></strong>: Mengambil data snapshot tercepat via <code>Snapshot.loadLocal()</code> dari file JSON di App Group container untuk ditampilkan pada pratinjau galeri widget.</li>
-<li><strong><code>timeline(for:in:)</code></strong>: Memanggil <code>CloudKitFetcher.shared.fetchActive()</code> (yang memprioritaskan App Group lokal lalu remote fallback), memetakan item menjadi <code>TimelineEntry</code>, dan mengembalikan <code>Timeline(entries: [entry], policy: .nextRefresh)</code>.</li>
+<li><strong><code>timeline(for:in:)</code></strong>: Memanggil <code>CloudKitFetcher.shared.fetchActive()</code> (yang memuat data App Group lokal secara instan sebagai <em>local-first</em>, diikuti sinkronisasi remote dengan batas waktu maksimal 3.0 detik), memetakan item menjadi <code>TimelineEntry</code>, dan mengembalikan <code>Timeline(entries: [entry], policy: .nextRefresh)</code>.</li>
 </ol>
 <h3 id="kebijakan-refresh-nextrefresh">Kebijakan Refresh (<code>.nextRefresh</code>)</h3>
 <p>Kebijakan <code>.nextRefresh</code> menyerahkan kendali jadwal evaluasi ulang kepada sistem operasi berdasarkan frekuensi keterlihatan (<em>widget budget</em>), sambil tetap mengizinkan invalidasi instan secara terprogram dari Host App melalui <code>WidgetCenter.shared.reloadTimelines</code>.</p>
