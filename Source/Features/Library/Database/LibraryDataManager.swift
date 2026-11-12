@@ -693,7 +693,11 @@ extension LibraryDataManager {
 
     /// Filter hierarchy untuk search (category mode)
     func filterCategory(_ category: CategoryData, searchText: String) -> CategoryData? {
-        let normalizedSearch = searchText.normalizeArabic(false)
+        let normalizedSearch = searchText.normalizeArabic()
+        return filterCategoryNormalized(category, normalizedSearch: normalizedSearch)
+    }
+
+    private func filterCategoryNormalized(_ category: CategoryData, normalizedSearch: String) -> CategoryData? {
         let categoryMatches = category.normalizedName.contains(normalizedSearch)
 
         // Jika kategori sendiri cocok, tampilkan semua children-nya tanpa filter
@@ -707,7 +711,7 @@ extension LibraryDataManager {
         // Jika kategori tidak cocok, filter children secara rekursif
         let filteredChildren = category.children.compactMap { child -> Any? in
             if let childCategory = child as? CategoryData {
-                return filterCategory(childCategory, searchText: normalizedSearch)
+                return filterCategoryNormalized(childCategory, normalizedSearch: normalizedSearch)
             } else if let book = child as? BooksData {
                 if book.normalizedBook.contains(normalizedSearch) {
                     return book
@@ -728,7 +732,8 @@ extension LibraryDataManager {
 
     /// Filter author hierarchy untuk search (author mode) - optimized version
     func filterAuthorHierarchy(_ categories: [CategoryData], searchText: String) -> [CategoryData] {
-        let normalizedSearch = searchText.normalizeArabic(false)
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+        let normalizedSearch = trimmed.normalizeArabic()
 
         // First: find exact author name matches (fast path)
         var matchedAuthors: [CategoryData] = []

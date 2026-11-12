@@ -42,7 +42,7 @@ final class BooksData: Codable, Identifiable, @unchecked Sendable {
     init(id: Int, book: String, archive: Int, muallif: Int, bithoqoh: String = "", info: String = "") {
         self.id = id
         self.book = StringInterner.shared.intern(book)
-        normalizedBook = book.normalizeArabic(false)
+        normalizedBook = book.normalizeArabic()
         self.archive = archive
         self.muallif = muallif
         self.bithoqoh = bithoqoh.convertToArabicDigits()

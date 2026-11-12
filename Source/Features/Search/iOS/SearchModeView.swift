@@ -155,10 +155,10 @@ struct SearchModeView: View {
         if kitabFilter.isEmpty {
             items = viewModel.results
         } else {
-            let normalizedFilter = kitabFilter.normalizeArabic(false)
+            let normalizedFilter = kitabFilter.normalizeArabic()
             items = viewModel.results.filter {
                 $0.bookTitle
-                    .normalizeArabic(false)
+                    .normalizeArabic()
                     .contains(normalizedFilter)
             }
         }

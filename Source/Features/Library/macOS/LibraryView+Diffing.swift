@@ -50,7 +50,7 @@ extension LibraryViewManager {
         if query.isEmpty {
             booksToDisplay = newBooks
         } else {
-            let normalizedQuery = query.normalizeArabic(false)
+            let normalizedQuery = query.normalizeArabic()
             booksToDisplay = newBooks.filter { book in
                 book.normalizedBook.contains(normalizedQuery)
             }
@@ -255,7 +255,7 @@ extension LibraryViewManager {
         if BookArchiveIntegrator.shared.isBookIntegrated(book) {
             let query = viewModel.searchQuery.trimmingCharacters(in: .whitespaces)
             if !query.isEmpty {
-                let normalizedQuery = query.normalizeArabic(false)
+                let normalizedQuery = query.normalizeArabic()
                 guard book.normalizedBook.contains(normalizedQuery) else { return }
             }
             insertIntegratedBookIntoDisplayed(book)
