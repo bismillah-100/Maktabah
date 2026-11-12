@@ -17,19 +17,36 @@ final class CloudKitFetcher: @unchecked Sendable {
 
     private init() {}
 
-    /// Mengambil snapshot aktif secara generik dari CloudKit atau fallback ke lokal
+    /// Mengambil snapshot aktif secara generik dari CloudKit atau fallback ke lokal dengan strategi local-first
     func fetchActive<T: WidgetSnapshotRecord>() async -> T? {
-        let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self)
+        // 1. Muat snapshot lokal terlebih dahulu secara instan (< 2ms)
+        let localSnapshot = await T.loadLocal()
 
-        guard let remoteSnapshot else {
-            return await T.loadLocal()
+        // 2. Cek apakah data lokal masih sangat baru (misal: diperbarui dalam 60 detik terakhir)
+        if let localSnapshot, !localSnapshot.items.isEmpty,
+           Date().timeIntervalSince(localSnapshot.lastUpdated) < 60
+        {
+            // Langsung kembalikan lokal instan, skip query CloudKit
+            return localSnapshot
         }
 
-        let (resolved, _) = await T.resolve(remote: remoteSnapshot)
-        return resolved
+        // 3. Coba sinkronisasi data remote dari CloudKit dengan batas waktu 3.0 detik
+        let remoteSnapshot = await fetchRemoteWithTimeout(type: T.self, timeoutSeconds: 3.0)
+
+        guard let remoteSnapshot else {
+            return await T.loadLocal() ?? localSnapshot
+        }
+
+        // 4. Baca ulang snapshot lokal terbaru untuk mencegah TOCTOU tanpa menulis ulang dari ekstensi sandbox
+        let latestLocal = await T.loadLocal() ?? localSnapshot
+        let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: latestLocal, persistToLocal: false)
+        return resolved ?? latestLocal
     }
 
-    private func fetchRemoteWithTimeout<T: WidgetSnapshotRecord>(type: T.Type) async -> T? {
+    private func fetchRemoteWithTimeout<T: WidgetSnapshotRecord>(
+        type: T.Type,
+        timeoutSeconds: Double = 3.0
+    ) async -> T? {
         let recordId = CKRecord.ID(recordName: T.ckRecordName, zoneID: customZoneID)
 
         return await withTaskGroup(of: T?.self) { group in
@@ -51,9 +68,9 @@ final class CloudKitFetcher: @unchecked Sendable {
                 }
             }
 
-            // Task 2: Batas Waktu 6 Detik
+            // Task 2: Batas Waktu
             group.addTask {
-                try? await Task.sleep(nanoseconds: 6_000_000_000)
+                try? await Task.sleep(for: .seconds(timeoutSeconds))
                 return nil
             }
 

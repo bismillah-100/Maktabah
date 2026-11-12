@@ -23,6 +23,8 @@ extension HistoryViewModel {
         if reloadUI {
             loadBooksData()
             notifyHistoryChanged()
+        } else {
+            WidgetUpdateCoordinator.shared.markHistoryDirty()
         }
         CloudKitSyncManager.shared.uploadHistory(entries: [entry], trackPending: false)
     }

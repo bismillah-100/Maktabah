@@ -97,7 +97,7 @@ struct MaktabahApp: App {
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
         _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         application.registerForRemoteNotifications()
         return true
@@ -115,7 +115,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        WidgetUpdateCoordinator.shared.flushPendingUpdatesTask(forceCloudKit: true)
+        WidgetUpdateCoordinator.shared.flushPendingUpdatesSync()
         CloudKitCoreManager.shared.syncWorker()
     }
 }
