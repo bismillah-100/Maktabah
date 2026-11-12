@@ -392,12 +392,59 @@ jobs:
           name: appcast-feed
           path: .
 
+      # Ekstrak pesan dari tag untuk body release
+      - name: Extract Tag Release Notes
+        env:
+          TAG_NAME: ${{ needs.build.outputs.tag_name }}
+        run: |
+          python3 - <<'PYEOF'
+          import os, re, subprocess
+
+          tag = os.environ.get('TAG_NAME', '')
+          res = subprocess.run(['git', 'tag', '-l', '--format=%(contents)', tag], capture_output=True, text=True)
+          msg = res.stdout
+
+          # Hapus SSH/PGP signature
+          msg = re.sub(
+              r'\n*-----BEGIN (?:SSH|PGP) SIGNATURE-----.*?-----END (?:SSH|PGP) SIGNATURE-----\n*',
+              '\n',
+              msg,
+              flags=re.DOTALL,
+          ).strip()
+
+          # Format section (New, Changes, Fixes, Improvements, dll.) menjadi ### Header
+          sections = ['new', 'changes', 'fixes', 'improvements', 'addition', 'additions', 'fix']
+          pattern = re.compile(rf'^(?:###\s*)?({"|".join(sections)}):?$', re.IGNORECASE)
+
+          formatted = []
+          skip_empty = False
+          for line in msg.splitlines():
+              stripped = line.strip()
+              m = pattern.match(stripped)
+              if m:
+                  if formatted and formatted[-1].strip():
+                      formatted.append('')
+                  formatted.append(f"### {m.group(1).capitalize()}")
+                  skip_empty = True
+              elif skip_empty:
+                  if not stripped:
+                      continue
+                  skip_empty = False
+                  formatted.append(line)
+              else:
+                  formatted.append(line)
+
+          with open('release_notes.md', 'w') as f:
+              f.write('\n'.join(formatted).strip() + '\n')
+          PYEOF
+
       # Upload ke GitHub Release
       - name: Upload Release Asset
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ needs.build.outputs.tag_name }}
+          body_path: release_notes.md
           files: build/${{ needs.build.outputs.zip_name }}
           draft: false
           prerelease: false
