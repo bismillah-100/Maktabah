@@ -47,7 +47,8 @@ extension BookUpdateManager {
         let betaka = columnText(stmt, index: 3)
         let inf = columnText(stmt, index: 4)
         let authno = Int(sqlite3_column_int64(stmt, 5))
-        let archive = Int(sqlite3_column_int64(stmt, 6))
+        let rawArchive = Int(sqlite3_column_int64(stmt, 6))
+        let archive = (1 ... 20).contains(rawArchive) ? rawArchive : 20
         let tafseerNam = columnText(stmt, index: 7)
         let bVer = Int(sqlite3_column_int64(stmt, 8))
         let link = columnText(stmt, index: 9)
