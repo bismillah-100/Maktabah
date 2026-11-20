@@ -97,4 +97,79 @@ struct LibraryFlatModeTests {
         })
         #expect(fallbackRow == 0)
     }
+
+    @Test("Flat mode incremental sync preserves existing BooksData instances when IDs and titles match")
+    func testFlatModeIncrementalSyncPreservesExistingInstances() {
+        let outlineView = NSOutlineView(frame: NSRect(x: 0, y: 0, width: 250, height: 400))
+        let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("col"))
+        outlineView.addTableColumn(col)
+        outlineView.outlineTableColumn = col
+        let searchField = DSFSearchField(frame: NSRect(x: 0, y: 0, width: 200, height: 30), recentsAutosaveName: nil)
+        let manager = LibraryViewManager(outlineView: outlineView, searchField: searchField)
+        outlineView.dataSource = manager
+        outlineView.delegate = manager
+
+        manager.viewModel.filterMode = .history
+        manager.viewModel.isFlatMode = true
+
+        let bookA1 = BooksData(id: 101, book: "Sahih al-Bukhari", archive: 1, muallif: 1)
+        let bookB1 = BooksData(id: 102, book: "Sahih Muslim", archive: 1, muallif: 2)
+
+        manager.updateFlatListIncrementally(
+            newBooks: [bookA1, bookB1],
+            fallbackCategoryId: -2,
+            fallbackCategoryName: "History"
+        )
+
+        #expect(outlineView.numberOfRows == 2)
+        #expect(outlineView.row(forItem: bookA1) == 0)
+        #expect(outlineView.row(forItem: bookB1) == 1)
+
+        outlineView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        manager.viewModel.selectedBookName = bookA1.book
+
+        // Distinct instances with identical IDs, titles, and order must keep existing rows
+        let bookA2 = BooksData(id: 101, book: "Sahih al-Bukhari", archive: 1, muallif: 1)
+        let bookB2 = BooksData(id: 102, book: "Sahih Muslim", archive: 1, muallif: 2)
+        manager.updateFlatListIncrementally(
+            newBooks: [bookA2, bookB2],
+            fallbackCategoryId: -2,
+            fallbackCategoryName: "History"
+        )
+
+        #expect(outlineView.numberOfRows == 2)
+        #expect(outlineView.row(forItem: bookA1) == 0)
+        #expect(outlineView.row(forItem: bookB1) == 1)
+        #expect(outlineView.row(forItem: bookA2) == -1)
+        #expect(outlineView.selectedRow == 0)
+
+        // Reorder + insert: moved books keep their original object identity; new book inserted cleanly
+        let bookC1 = BooksData(id: 103, book: "Sunan Abi Dawud", archive: 1, muallif: 3)
+        manager.updateFlatListIncrementally(
+            newBooks: [bookC1, bookB2, bookA2],
+            fallbackCategoryId: -2,
+            fallbackCategoryName: "History"
+        )
+
+        #expect(outlineView.numberOfRows == 3)
+        #expect(outlineView.row(forItem: bookC1) == 0)
+        #expect(outlineView.row(forItem: bookB1) == 1)
+        #expect(outlineView.row(forItem: bookA1) == 2)
+        #expect(outlineView.row(forItem: bookB2) == -1)
+        #expect(outlineView.row(forItem: bookA2) == -1)
+
+        // Renamed title at same ID replaces only that item
+        let bookARenamed = BooksData(id: 101, book: "Al-Jami' al-Sahih", archive: 1, muallif: 1)
+        manager.updateFlatListIncrementally(
+            newBooks: [bookC1, bookB2, bookARenamed],
+            fallbackCategoryId: -2,
+            fallbackCategoryName: "History"
+        )
+
+        #expect(outlineView.numberOfRows == 3)
+        #expect(outlineView.row(forItem: bookC1) == 0)
+        #expect(outlineView.row(forItem: bookB1) == 1)
+        #expect(outlineView.row(forItem: bookARenamed) == 2)
+        #expect(outlineView.row(forItem: bookA1) == -1)
+    }
 }

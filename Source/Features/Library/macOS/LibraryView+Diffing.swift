@@ -33,7 +33,7 @@ extension LibraryViewManager {
             .store(in: &cancellables)
     }
 
-    private func updateFlatList(
+    func updateFlatList(
         for mode: LibraryFilterMode,
         newBooks: [BooksData],
         categoryId: Int,
@@ -106,7 +106,7 @@ extension LibraryViewManager {
                     firstCat.children = currentBooks
                 }
 
-                if currentBooks[newIndex] !== newBook {
+                if currentBooks[newIndex] !== newBook, currentBooks[newIndex].book != newBook.book {
                     outlineView.removeItems(at: IndexSet(integer: newIndex), inParent: nil, withAnimation: [])
                     currentBooks[newIndex] = newBook
                     firstCat.children = currentBooks
