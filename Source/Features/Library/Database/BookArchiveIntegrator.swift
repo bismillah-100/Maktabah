@@ -223,7 +223,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     /// Menghapus kitab dari archive dan FTS.
     nonisolated func removeBookFromArchive(_ book: BooksData) async throws {
         guard AppConfig.isUsingBundleMode || LibraryDataManager.shouldRemoveBook(id: book.id),
-              book.archive > 0,
+              book.archive >= 0,
               let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: book.archive),
               let ftsDbPath = AppConfig.archiveFtsDatabasePath(archiveId: book.archive)
         else {
