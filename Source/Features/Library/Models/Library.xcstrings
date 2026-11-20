@@ -659,25 +659,71 @@
         }
       }
     },
+    "deleteCustomMultipleConfirmation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيتم حذف %lld من الكتب الإضافية (المستوردة / تحديثات الكتب) من التخزين المحلي والفهرس، بما في ذلك المؤلفين الجدد غير المستخدمين."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld additional book(s) (imported / Book Updates) will be removed from local storage and catalog, including unused new authors."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld buku tambahan (import / Pembaruan Buku) akan dihapus dari penyimpanan dan katalog lokal, termasuk author baru yang tidak lagi terpakai."
+          }
+        }
+      }
+    },
+    "deleteCustomSingleConfirmation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيتم حذف \"%@\" من التخزين المحلي والفهرس، بما في ذلك المؤلف الجديد إذا لم يعد مستخدمًا."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" will be removed from local storage and catalog, including its new author if no longer used."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" akan dihapus dari penyimpanan dan katalog lokal, termasuk author baru jika tidak lagi terpakai."
+          }
+        }
+      }
+    },
     "deleteDownloadedMultipleConfirmation" : {
       "extractionState" : "manual",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هل أنت متأكد من رغبتك في حذف المحتوى الذي تم تنزيله لـ %lld من الكتب؟"
+            "value" : "سيتم حذف المحتوى المحلّي لـ %lld من الكتب المنزّلة. ستبقى متاحة في الفهرس ويمكن تنزيلها مجددًا في أي وقت."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to delete the downloaded content for %lld books?"
+            "value" : "%lld downloaded book(s) will be removed from local storage. They will remain in the catalog and can be downloaded again later."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apakah Anda yakin ingin menghapus konten yang diunduh untuk %lld kitab?"
+            "value" : "%lld buku unduhan akan dihapus dari penyimpanan lokal. Buku tetap tersedia di katalog dan dapat diunduh ulang kapan saja."
           }
         }
       }
@@ -688,19 +734,42 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هل أنت متأكد من رغبتك في حذف المحتوى الذي تم تنزيله لـ \"%@\"؟"
+            "value" : "هل أنت متأكد من رغبتك في حذف المحتوى الذي تم تنزيله لـ \"%@\"؟ سيبقى الكتاب متاحًا في الفهرس ويمكن تنزيله مجددًا."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to delete the downloaded content for \"%@\"?"
+            "value" : "Are you sure you want to delete the downloaded content for \"%@\"? It will remain in the catalog and can be downloaded again later."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apakah Anda yakin ingin menghapus konten yang diunduh untuk \"%@\"?"
+            "value" : "Apakah Anda yakin ingin menghapus konten yang diunduh untuk \"%@\"? Buku tetap tersedia di katalog dan dapat diunduh ulang kapan saja."
+          }
+        }
+      }
+    },
+    "deleteMixedConfirmationHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكتب المحددة التي سيتم حذفها:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected books to be deleted:"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buku terpilih yang akan dihapus:"
           }
         }
       }

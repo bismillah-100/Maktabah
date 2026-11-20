@@ -7,6 +7,7 @@
 
 import Foundation
 import OSLog
+import Synchronization
 
 actor BookDownloadIndexCache {
     static let shared = BookDownloadIndexCache()
@@ -17,6 +18,23 @@ actor BookDownloadIndexCache {
     private let ttl: TimeInterval = 60 * 60 * 24 * 30
     private let etagKey = "book_index_etag"
     private let lastModifiedKey = "book_index_last_modified"
+    private nonisolated let coreIds = Mutex<(books: Set<Int>, authors: Set<Int>)?>(nil)
+
+    nonisolated var coreIndexIds: (books: Set<Int>, authors: Set<Int>)? {
+        coreIds.withLock { $0 }
+    }
+
+    #if DEBUG
+    nonisolated func setCoreIndexIdsForTesting(_ ids: (books: Set<Int>, authors: Set<Int>)?) {
+        coreIds.withLock { $0 = ids }
+    }
+    #endif
+
+    private func updateCoreIds(from entries: [BundleBookIndexEntry]) {
+        let books = Set(entries.map(\.bkid))
+        let authors = Set(entries.compactMap { ($0.authno ?? 0) > 0 ? $0.authno : nil })
+        coreIds.withLock { $0 = (books, authors) }
+    }
 
     func entry(
         for bookId: Int,
@@ -186,6 +204,7 @@ actor BookDownloadIndexCache {
         for entry in entries {
             mapped[entry.bkid] = entry
         }
+        updateCoreIds(from: entries)
 
         if let etag = http.value(forHTTPHeaderField: "ETag") {
             defaults.set(etag, forKey: etagKey)
@@ -218,10 +237,10 @@ actor BookDownloadIndexCache {
         var mapped: [Int: BundleBookIndexEntry] = [:]
         mapped.reserveCapacity(entries.count)
         for entry in entries {
-            _ = entry.bkid
             mapped[entry.bkid] = entry
         }
         cachedEntries = mapped
+        updateCoreIds(from: entries)
     }
 
     private func saveCachedIndex(data: Data) {

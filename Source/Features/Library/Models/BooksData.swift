@@ -17,6 +17,7 @@ final class BooksData: Codable, Identifiable, @unchecked Sendable {
     var compressedDownloadSize: Int64?
     var tafseerNam: String?
     var pdfCs: Int?
+    var oNum: Int?
     var isMultiLanguage: Bool {
         pdfCs == 3
     }
