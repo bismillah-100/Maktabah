@@ -313,11 +313,13 @@ struct BundleBookIndexEntry: Decodable {
     let filename: String
     let release: String
     let sizeZst: Int64?
+    let authno: Int?
 
     enum CodingKeys: String, CodingKey {
         case bkid
         case filename
         case release
         case sizeZst = "size_zst"
+        case authno
     }
 }

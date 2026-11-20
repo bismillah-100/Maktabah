@@ -914,31 +914,50 @@ extension LibraryDataManager {
         db.fetchBooksInfo(for: book)
     }
 
-    /// Cek apakah Book ID memenuhi syarat untuk dihapus berdasarkan versi core
+    static func isCoreBook(id: Int) -> Bool {
+        if AppConfig.isUsingBundleMode {
+            return BookDownloadIndexCache.shared.coreIndexIds?.books.contains(id) ?? true
+        }
+        return shared.booksById[id]?.oNum != nil
+    }
+
     static func shouldRemoveBook(id: Int) -> Bool {
-        let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-        return coreVersion >= 1.0 ? id > 151_203 : id > 32792
+        !isCoreBook(id: id)
     }
 
-    /// Cek apakah Author ID memenuhi syarat untuk dihapus berdasarkan versi core
+    #if DEBUG
+    func setBookForTesting(_ book: BooksData?, forId id: Int) {
+        state.withLock { $0.booksById[id] = book }
+    }
+    #endif
+
     static func shouldRemoveAuthor(muallifId: Int) -> Bool {
-        let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-        return coreVersion >= 1.0 ? muallifId > 3169 : muallifId > 2515
+        if AppConfig.isUsingBundleMode {
+            guard let authors = BookDownloadIndexCache.shared.coreIndexIds?.authors else { return false }
+            return !authors.contains(muallifId)
+        }
+        return DatabaseManager.shared.isAddedAuthor(authorId: muallifId)
     }
 
-    func removeBookFromMemory(id: Int, muallifId: Int) {
+    func removeBookFromMemory(
+        id: Int,
+        muallifId: Int,
+        removeBookFromCatalog: Bool? = nil,
+        removeAuthorFromCache: Bool? = nil
+    ) {
+        let shouldDropBook = removeBookFromCatalog ?? Self.shouldRemoveBook(id: id)
+        let shouldDropAuthor = removeAuthorFromCache ?? Self.shouldRemoveAuthor(muallifId: muallifId)
+        let isAuthorUnused = shouldDropAuthor && !db.isAuthorUsed(authorId: muallifId)
+
         state.withLock { state in
-            if Self.shouldRemoveBook(id: id) {
+            if shouldDropBook {
                 state.booksById.removeValue(forKey: id)
                 for root in state.allRootCategories {
                     removeBookFromHierarchy(root, bookId: id)
                 }
             }
-
-            if Self.shouldRemoveAuthor(muallifId: muallifId) {
-                if !db.isAuthorUsed(authorId: muallifId) {
-                    state.authorsCache.removeValue(forKey: muallifId)
-                }
+            if isAuthorUnused {
+                state.authorsCache.removeValue(forKey: muallifId)
             }
         }
     }

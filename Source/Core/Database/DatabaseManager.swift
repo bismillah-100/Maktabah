@@ -59,6 +59,7 @@ final class DatabaseManager: Sendable {
     private let colBokInf = "inf"
     private let colBokPdfCs = "PdfCs"
     private let colTafseerNam = "TafseerNam"
+    private let colONum = "oNum"
 
     // Column names untuk 0cat
     private let colCatId = "id"
@@ -208,7 +209,7 @@ final class DatabaseManager: Sendable {
     }
 
     private var bookSelectColumns: String {
-        "\(colBokId), \(colBokName), \(colBokArchive), \(colBokMuallif), \(colBokCat), \(colTafseerNam), \(colBokPdfCs)"
+        "\(colBokId), \(colBokName), \(colBokArchive), \(colBokMuallif), \(colBokCat), \(colTafseerNam), \(colBokPdfCs), \(colONum)"
     }
 
     private func parseBookData(from row: SQLiteRow) -> BooksData {
@@ -219,11 +220,13 @@ final class DatabaseManager: Sendable {
         let catId = !row.isNull(at: 4) ? row.int(at: 4) : nil
         let tafseer = row.string(at: 5)
         let pdfCs = !row.isNull(at: 6) ? row.int(at: 6) : nil
+        let oNum = !row.isNull(at: 7) ? row.int(at: 7) : nil
 
         let book = BooksData(id: id, book: name, archive: archive, muallif: muallif)
         book.catId = catId
         book.tafseerNam = (tafseer?.isEmpty == true) ? nil : tafseer
         book.pdfCs = pdfCs
+        book.oNum = oNum
         return book
     }
 
@@ -300,7 +303,7 @@ final class DatabaseManager: Sendable {
         let chunkSize = 900
 
         for i in stride(from: 0, to: bookIds.count, by: chunkSize) {
-            let chunk = Array(bookIds[i..<min(i + chunkSize, bookIds.count)])
+            let chunk = Array(bookIds[i ..< min(i + chunkSize, bookIds.count)])
             let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ", ")
             let sql = "SELECT \(bookSelectColumns) FROM \(booksTableName) WHERE \(colBokId) IN (\(placeholders))"
 
@@ -325,13 +328,19 @@ final class DatabaseManager: Sendable {
         return (try? db.fetch(query: sql, parameters: [authorId]) { _ in true }.first) ?? false
     }
 
+    func isAddedAuthor(authorId: Int) -> Bool {
+        guard let dbSpecial else { return false }
+        let sql = "SELECT \(colONum) FROM \(authTableName) WHERE \(colAuthId) = ? LIMIT 1;"
+        return (try? dbSpecial.fetch(query: sql, parameters: [authorId]) { $0.isNull(at: 0) }.first) ?? false
+    }
+
     func fetchBooksInfo(for bookData: BooksData) {
         guard let db else { return }
 
         let sql = "SELECT \(colBokBithoqoh), \(colBokInf) FROM \(booksTableName) WHERE \(colBokId) = ?"
 
         if let info = try? db.fetch(query: sql, parameters: [bookData.id], mapping: { row -> (String, String) in
-            return (row.string(at: 0) ?? "", row.string(at: 1) ?? "")
+            (row.string(at: 0) ?? "", row.string(at: 1) ?? "")
         }).first {
             bookData.bithoqoh = info.0
             bookData.info = info.1
@@ -351,7 +360,7 @@ final class DatabaseManager: Sendable {
         let sql = "SELECT Ramz, Nass FROM shorts WHERE Bk = ?"
 
         if let results = try? dbSpecial.fetch(query: sql, parameters: [bkid], mapping: { row -> (String, String) in
-            return (row.string(at: 0) ?? "", row.string(at: 1) ?? "")
+            (row.string(at: 0) ?? "", row.string(at: 1) ?? "")
         }) {
             for res in results {
                 dict[res.0] = res.1

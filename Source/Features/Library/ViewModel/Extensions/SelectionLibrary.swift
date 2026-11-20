@@ -77,7 +77,7 @@ extension LibraryViewModel {
     var selectedDeleteBooks: [BooksData] {
         booksForSelectedIds(in: displayedCategories).filter { book in
             if AppConfig.isUsingBundleMode {
-                isBookDownloaded(book)
+                isBookDownloaded(book) || LibraryDataManager.shouldRemoveBook(id: book.id)
             } else {
                 LibraryDataManager.shouldRemoveBook(id: book.id)
             }
@@ -89,7 +89,29 @@ extension LibraryViewModel {
     }
 
     var selectedDownloadBooks: [BooksData] {
-        booksForSelectedIds(in: displayedCategories).filter { !isBookDownloaded($0) }
+        booksForSelectedIds(in: displayedCategories).filter {
+            !isBookDownloaded($0) && LibraryDataManager.isCoreBook(id: $0.id)
+        }
+    }
+
+    nonisolated static func deleteConfirmationMessage(for books: [BooksData]) -> String {
+        guard !books.isEmpty else { return "" }
+        if books.count == 1, let book = books.first {
+            return LibraryDataManager.shouldRemoveBook(id: book.id)
+                ? String(localized: .Library.deleteCustomSingleConfirmation(book.book))
+                : String(localized: .Library.deleteDownloadedSingleConfirmation(book.book))
+        }
+
+        let customCount = books.count(where: { LibraryDataManager.shouldRemoveBook(id: $0.id) })
+        let coreCount = books.count - customCount
+        let sections = [
+            customCount > 0 ? String(localized: .Library.deleteCustomMultipleConfirmation(customCount)) : nil,
+            coreCount > 0 ? String(localized: .Library.deleteDownloadedMultipleConfirmation(coreCount)) : nil,
+        ].compactMap(\.self)
+
+        return sections.count == 1
+            ? sections[0]
+            : String(localized: .Library.deleteMixedConfirmationHeader) + "\n\n" + sections.map { "• \($0)" }.joined(separator: "\n")
     }
 
     var selectedDownloadCount: Int {

@@ -138,8 +138,9 @@ class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
         }
 
         let isDownloaded = viewModel.isBookDownloaded(book)
+        let isCustomBook = LibraryDataManager.shouldRemoveBook(id: book.id)
         let mainAction: UIAction? = if AppConfig.isUsingBundleMode {
-            if isDownloaded {
+            if isDownloaded || isCustomBook {
                 UIAction(
                     title: String(localized: .Library.deleteDownload),
                     image: UIImage(systemName: "trash"),
@@ -152,7 +153,7 @@ class iOSLibraryViewController: iOSHierarchicalCollectionViewController {
                     self?.onDownloadBook?(book)
                 }
             }
-        } else if LibraryDataManager.shouldRemoveBook(id: book.id) {
+        } else if isCustomBook {
             UIAction(
                 title: String(localized: .Library.deleteDownload),
                 image: UIImage(systemName: "trash"),
