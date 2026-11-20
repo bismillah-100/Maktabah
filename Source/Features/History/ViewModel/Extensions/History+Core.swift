@@ -50,6 +50,7 @@ extension HistoryViewModel {
 
     func updateLastContentId(_ contentId: Int, for bookId: Int) {
         if var entry = entriesByBookId[bookId] {
+            guard entry.lastContentId != contentId else { return }
             let now = Date()
             entry.lastContentId = contentId
             entry.positionUpdatedAt = now
