@@ -37,9 +37,9 @@ final class CloudKitFetcher: @unchecked Sendable {
             return await T.loadLocal() ?? localSnapshot
         }
 
-        // 4. Baca ulang snapshot lokal terbaru untuk mencegah TOCTOU tanpa menulis ulang dari ekstensi sandbox
+        // 4. Baca ulang snapshot lokal terbaru untuk mencegah TOCTOU dan simpan jika remote lebih baru
         let latestLocal = await T.loadLocal() ?? localSnapshot
-        let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: latestLocal, persistToLocal: false)
+        let (resolved, _) = await T.resolve(remote: remoteSnapshot, local: latestLocal, persistToLocal: true)
         return resolved ?? latestLocal
     }
 
