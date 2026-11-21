@@ -171,12 +171,10 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             return
         }
 
-        let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
-        outlineView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: columns)
+        reloadDataForRowIndexes(IndexSet(integer: row))
     }
 
     private func handleUpdatedAnnotations(_ annotations: [Annotation]) {
-        guard let outlineView else { return }
         var rowsToReload = IndexSet()
         for ann in annotations {
             if let id = ann.id, let row = rowIndex(forAnnotationId: id) {
@@ -184,8 +182,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             }
         }
         guard !rowsToReload.isEmpty else { return }
-        let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
-        outlineView.reloadData(forRowIndexes: rowsToReload, columnIndexes: columns)
+        reloadDataForRowIndexes(rowsToReload)
     }
 
     private func handleTagModeUpdate(diff: TagUpdateDiff?) {
@@ -202,18 +199,24 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         }
 
         outlineView.beginUpdates()
-        let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
 
         for annNode in diff.updated {
             let row = outlineView.row(forItem: annNode)
             if row != -1 {
-                outlineView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: columns)
+                reloadDataForRowIndexes(IndexSet(integer: row))
             }
         }
 
         applyTagModeRemovals(entries: diff.removed, in: outlineView)
         applyTagModeAdditions(entries: diff.added, in: outlineView)
         outlineView.endUpdates()
+    }
+
+    private func reloadDataForRowIndexes(_ indexSet: IndexSet) {
+        guard let outlineView else { return }
+        let columns = IndexSet(integersIn: 0 ..< outlineView.numberOfColumns)
+        outlineView.reloadData(forRowIndexes: indexSet, columnIndexes: columns)
+        outlineView.noteHeightOfRows(withIndexesChanged: indexSet)
     }
 
     private func applyTagModeRemovals(entries: [TagUpdateDiff.RemovedEntry], in outlineView: NSOutlineView) {

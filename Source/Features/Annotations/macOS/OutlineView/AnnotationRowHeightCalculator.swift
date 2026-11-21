@@ -19,8 +19,9 @@ enum AnnotationRowHeightCalculator {
         let columnWidth = outlineView.outlineTableColumn?.width ?? outlineView.bounds.width
         let contentWidth = max(columnWidth - 40, 120)
 
+        let displayContext = Self.displayContext(annotation.context)
         let contextHeight = measuredHeight(
-            for: annotation.context,
+            for: displayContext,
             width: contentWidth * 0.72,
             font: ReusableFunc.bundledArabicFont(ofSize: 17),
             lineLimit: UserDefaults.standard.ctxMaxNumberOfLines,
@@ -29,7 +30,7 @@ enum AnnotationRowHeightCalculator {
 
         let noteHeight: CGFloat = if let note = annotation.note, !note.isEmpty {
             measuredHeight(
-                for: note,
+                for: Self.displayNote(note),
                 width: contentWidth,
                 font: ReusableFunc.bundledArabicFont(ofSize: 15),
                 lineLimit: UserDefaults.standard.annMaxNumberOfLines
@@ -79,6 +80,14 @@ enum AnnotationRowHeightCalculator {
         let maxHeight = lineHeight * CGFloat(max(lineLimit, 1))
 
         return max(lineHeight, min(ceil(measuredRect.height), maxHeight))
+    }
+
+    static func displayContext(_ text: String) -> String {
+        text.truncatedForCellDisplay(maxCharacters: 350, maxNewlines: 2)
+    }
+
+    static func displayNote(_ text: String) -> String {
+        text.truncatedForCellDisplay(maxCharacters: 500, maxNewlines: 4)
     }
 
     static func pageAndTagsText(for annotation: Annotation, groupingMode: AnnotationGroupingMode) -> String {

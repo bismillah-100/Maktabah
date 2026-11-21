@@ -196,4 +196,26 @@ extension String {
     var localized: String {
         Bundle.main.localizedString(forKey: self, value: nil, table: nil)
     }
+
+    /// Truncates long text safely at grapheme-cluster and newline boundaries before cell shaping/measurement.
+    func truncatedForCellDisplay(maxCharacters: Int = 600, maxNewlines: Int = 8) -> String {
+        guard maxCharacters > 0, maxNewlines > 0 else { return "" }
+        var charCount = 0
+        var newlineCount = 0
+        var idx = startIndex
+        while idx < endIndex {
+            if charCount >= maxCharacters {
+                return String(self[..<idx]) + "…"
+            }
+            if self[idx].isNewline {
+                newlineCount += 1
+                if newlineCount >= maxNewlines {
+                    return String(self[..<idx]) + "…"
+                }
+            }
+            idx = index(after: idx)
+            charCount += 1
+        }
+        return self
+    }
 }
