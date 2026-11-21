@@ -40,10 +40,14 @@ extension StringProtocol {
     }
 }
 
-extension NSTextStorage {
+extension NSMutableAttributedString {
     /// Adjusts text alignment and writing direction line-by-line (paragraph-by-paragraph)
     /// based on the first strong letter of each paragraph.
-    func applyAutoDirectionAlignments(font: PlatformFont? = nil) {
+    func applyAutoDirectionAlignments(
+        font: PlatformFont? = nil,
+        color: PlatformColor? = nil,
+        lineBreakMode: NSLineBreakMode? = nil
+    ) {
         let nsString = string as NSString
         guard nsString.length > 0 else { return }
 
@@ -58,17 +62,24 @@ extension NSTextStorage {
             let targetDirection: NSWritingDirection = isRTL ? .rightToLeft : .leftToRight
 
             let currentStyle: NSMutableParagraphStyle =
-            if let existingStyle = attribute(.paragraphStyle, at: paragraphRange.location, effectiveRange: nil) as? NSParagraphStyle,
-               let newStyle = existingStyle.mutableCopy() as? NSMutableParagraphStyle
-            {
-                newStyle
-            } else {
-                NSMutableParagraphStyle()
-            }
+                if let existingStyle = attribute(.paragraphStyle, at: paragraphRange.location, effectiveRange: nil) as? NSParagraphStyle,
+                let newStyle = existingStyle.mutableCopy() as? NSMutableParagraphStyle {
+                    newStyle
+                } else {
+                    NSMutableParagraphStyle()
+                }
 
-            if currentStyle.alignment != targetAlignment || currentStyle.baseWritingDirection != targetDirection {
+            var needsStyleUpdate = currentStyle.alignment != targetAlignment || currentStyle.baseWritingDirection != targetDirection
+            if needsStyleUpdate {
                 currentStyle.alignment = targetAlignment
                 currentStyle.baseWritingDirection = targetDirection
+            }
+            if let lineBreakMode, currentStyle.lineBreakMode != lineBreakMode {
+                currentStyle.lineBreakMode = lineBreakMode
+                needsStyleUpdate = true
+            }
+
+            if needsStyleUpdate {
                 addAttribute(.paragraphStyle, value: currentStyle, range: paragraphRange)
             }
 
@@ -76,9 +87,97 @@ extension NSTextStorage {
                 addAttribute(.font, value: font, range: paragraphRange)
             }
 
+            if let color {
+                addAttribute(.foregroundColor, value: color, range: paragraphRange)
+            }
+
             lineStart = NSMaxRange(paragraphRange)
         }
         endEditing()
+    }
+}
+
+extension NSAttributedString {
+    /// Builds an attributed string with per-paragraph RTL/LTR alignment and writing direction,
+    /// reusing at most two paragraph style instances per call.
+    static func autoDirectionString(
+        _ text: String,
+        font: PlatformFont,
+        color: PlatformColor,
+        lineBreakMode: NSLineBreakMode = .byWordWrapping
+    ) -> NSAttributedString {
+        let result = NSMutableAttributedString(
+            string: text,
+            attributes: [.font: font, .foregroundColor: color]
+        )
+        let nsString = text as NSString
+        guard nsString.length > 0 else { return result }
+
+        var rtlStyle: NSParagraphStyle?
+        var ltrStyle: NSParagraphStyle?
+
+        result.beginEditing()
+        var lineStart = 0
+        while lineStart < nsString.length {
+            let paragraphRange = nsString.paragraphRange(for: NSRange(location: lineStart, length: 0))
+            let isRTL = nsString.substring(with: paragraphRange).isParagraphRTL
+
+            let style: NSParagraphStyle
+            if isRTL {
+                if let cached = rtlStyle {
+                    style = cached
+                } else {
+                    let created = NSMutableParagraphStyle()
+                    created.alignment = .right
+                    created.baseWritingDirection = .rightToLeft
+                    created.lineBreakMode = lineBreakMode
+                    rtlStyle = created
+                    style = created
+                }
+            } else {
+                if let cached = ltrStyle {
+                    style = cached
+                } else {
+                    let created = NSMutableParagraphStyle()
+                    created.alignment = .left
+                    created.baseWritingDirection = .leftToRight
+                    created.lineBreakMode = lineBreakMode
+                    ltrStyle = created
+                    style = created
+                }
+            }
+
+            result.addAttribute(.paragraphStyle, value: style, range: paragraphRange)
+            lineStart = NSMaxRange(paragraphRange)
+        }
+        result.endEditing()
+        return result
+    }
+}
+
+extension NSParagraphStyle {
+    /// Resolves paragraph direction style for editor typing attributes at `location`,
+    /// inheriting the previous paragraph direction when on a trailing empty newline.
+    static func autoDirection(for text: String, at location: Int, fallbackRTL: Bool = true) -> NSParagraphStyle {
+        let nsString = text as NSString
+        let isRTL: Bool
+        if nsString.length == 0 {
+            isRTL = fallbackRTL
+        } else {
+            let clampedLocation = min(max(location, 0), nsString.length)
+            let paragraphRange = nsString.paragraphRange(for: NSRange(location: clampedLocation, length: 0))
+            if paragraphRange.length == 0, clampedLocation > 0 {
+                let prevRange = nsString.paragraphRange(for: NSRange(location: clampedLocation - 1, length: 0))
+                isRTL = nsString.substring(with: prevRange).isParagraphRTL
+            } else {
+                isRTL = nsString.substring(with: paragraphRange).isParagraphRTL
+            }
+        }
+
+        let style = NSMutableParagraphStyle()
+        style.alignment = isRTL ? .right : .left
+        style.baseWritingDirection = isRTL ? .rightToLeft : .leftToRight
+        return style
     }
 }
 
