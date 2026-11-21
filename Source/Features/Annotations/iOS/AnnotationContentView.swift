@@ -98,8 +98,9 @@ class AnnotationContentView: UIView, UIContentView {
 
         if let note = ann.note, !note.isEmpty {
             let noteFont = noteLabel.font ?? .preferredFont(forTextStyle: .caption1)
+            let displayNote = note.truncatedForCellDisplay(maxCharacters: 350, maxNewlines: 5)
             noteLabel.attributedText = NSAttributedString.autoDirectionString(
-                note,
+                displayNote,
                 font: noteFont,
                 color: .secondaryLabel,
                 lineBreakMode: .byTruncatingTail
@@ -130,8 +131,9 @@ class AnnotationContentView: UIView, UIContentView {
     }
 
     private func buildAttributedContext(for ann: Annotation, font: UIFont) -> NSAttributedString {
+        let displayContext = ann.context.truncatedForCellDisplay(maxCharacters: 200, maxNewlines: 3)
         let attrContext = NSMutableAttributedString(
-            string: ann.context,
+            string: displayContext,
             attributes: [.font: font, .foregroundColor: UIColor.label]
         )
         let fullRg = NSRange(location: 0, length: attrContext.length)

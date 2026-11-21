@@ -81,7 +81,8 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
     }
 
     private func makeContextAttributedString(for annotation: Annotation, color: NSColor) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: annotation.context)
+        let displayContext = AnnotationRowHeightCalculator.displayContext(annotation.context)
+        let attributedString = NSMutableAttributedString(string: displayContext)
         let fullRg = NSRange(location: 0, length: attributedString.length)
 
         attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRg)
@@ -99,8 +100,9 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
     }
 
     private func makeNoteAttributedString(for note: String) -> NSAttributedString {
-        NSAttributedString.autoDirectionString(
-            note,
+        let displayNote = AnnotationRowHeightCalculator.displayNote(note)
+        return NSAttributedString.autoDirectionString(
+            displayNote,
             font: ReusableFunc.bundledArabicFont(ofSize: 15),
             color: .labelColor,
             lineBreakMode: .byWordWrapping
