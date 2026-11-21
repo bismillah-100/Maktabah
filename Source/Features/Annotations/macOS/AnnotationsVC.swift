@@ -137,6 +137,12 @@ class AnnotationsVC: NSViewController {
         return segment
     }()
 
+    lazy var titlebarAccessoryVC: NSTitlebarAccessoryViewController = {
+        let accessoryVC = NSTitlebarAccessoryViewController()
+        accessoryVC.layoutAttribute = .bottom
+        return accessoryVC
+    }()
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -160,19 +166,7 @@ class AnnotationsVC: NSViewController {
         dataSource.viewModel.onTagsChanged = { [weak self] tags in
             self?.updateChips(allTags: tags)
         }
-    }
-
-    override func viewDidAppear() {
-        super.viewDidAppear()
-        if isDataLoaded { return }
-        for c in outlineView.tableColumns {
-            c.maxWidth = .greatestFiniteMagnitude
-        }
-        ReusableFunc.showProgressWindow(view)
-        xBtn.isHidden = popover
-        dataSource.onSelectItem = { [weak self] row in self?.isRowUnselected = row == -1 }
-        outlineView.deselectAll(nil)
-        dataSource.outlineView = outlineView
+        searchField.refusesFirstResponder = true
         createRootTitlebarStack()
         if #unavailable(macOS 26) {
             let btmBox = NSBox()
@@ -181,6 +175,30 @@ class AnnotationsVC: NSViewController {
             rootStackView.insertArrangedSubview(btmBox, at: 0)
         }
         rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
+        NSLayoutConstraint.activate([
+            titlebarRootStack.leadingAnchor.constraint(equalTo: rootStackView.leadingAnchor),
+            titlebarRootStack.trailingAnchor.constraint(equalTo: rootStackView.trailingAnchor),
+        ])
+    }
+
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        searchField.refusesFirstResponder = true
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        searchField.refusesFirstResponder = false
+        if isDataLoaded { return }
+        isDataLoaded = true
+        for c in outlineView.tableColumns {
+            c.maxWidth = .greatestFiniteMagnitude
+        }
+        ReusableFunc.showProgressWindow(view)
+        xBtn.isHidden = popover
+        dataSource.onSelectItem = { [weak self] row in self?.isRowUnselected = row == -1 }
+        outlineView.deselectAll(nil)
+        dataSource.outlineView = outlineView
         Task { [weak self] in
             guard let self else { return }
             setupMaxLine()
@@ -188,8 +206,8 @@ class AnnotationsVC: NSViewController {
             dataSource.setupOutlineMenu()
             await MainActor.run { [weak self] in
                 guard let self else { return }
+                searchField.refusesFirstResponder = false
                 ReusableFunc.closeProgressWindow(view)
-                isDataLoaded = true
             }
         }
     }
@@ -222,9 +240,18 @@ class AnnotationsVC: NSViewController {
     }
 
     func openAsPanel() {
-        let panel = NSPanel()
-        panel.styleMask.insert([.fullSizeContentView, .titled])
-        panel.styleMask.insert([.utilityWindow, .resizable, .closable])
+        loadViewIfNeeded()
+
+        let initialSize = NSSize(
+            width: max(view.frame.width, 376),
+            height: max(view.frame.height, 500)
+        )
+        let panel = NSPanel(
+            contentRect: NSRect(origin: .zero, size: initialSize),
+            styleMask: [.titled, .closable, .resizable, .utilityWindow, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
         panel.title = "Annotations".localized
         panel.delegate = self
         shareBtn.isHidden = false
@@ -234,51 +261,81 @@ class AnnotationsVC: NSViewController {
         hideOnMenuItem.isHidden = false
         floatMenuItem.state = floatPanel ? .on : .off
         hideOnMenuItem.state = hideOnPanel ? .on : .off
+
+        setupPanelScrollView()
         panel.contentViewController = self
+        if SharedPopover.annotationsPopover.contentViewController === self {
+            SharedPopover.annotationsPopover.contentViewController = nil
+        }
+
         panel.isFloatingPanel = floatPanel
         panel.hidesOnDeactivate = hideOnPanel
-        panel.makeKeyAndOrderFront(nil)
         panel.setFrameAutosaveName("AnnotationsPanel")
+        setupPanelTitlebarAccessory(panel)
+        panel.makeKeyAndOrderFront(nil)
         Self.panel = panel
-
-        setupLayoutPanel(panel)
+        updateTitlebarAccessoryHeight()
     }
 
-    func setupLayoutPanel(_ panel: NSPanel) {
+    private func setupPanelScrollView() {
         rootStackView.removeArrangedSubview(scrollView)
         rootStackView.removeArrangedSubview(titlebarRootStack)
+        scrollView.removeFromSuperview()
+        titlebarRootStack.removeFromSuperview()
         rootStackView.removeFromSuperview()
-        titlebarRootStack.edgeInsets.top = 8
 
         view.addSubview(scrollView)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+    }
 
-        let titlebarAccessoryView = NSTitlebarAccessoryViewController()
-        titlebarAccessoryView.view = titlebarRootStack
-        titlebarAccessoryView.layoutAttribute = .bottom
+    private func setupPanelTitlebarAccessory(_ panel: NSPanel) {
+        titlebarRootStack.edgeInsets.top = 0
+        titlebarRootStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let oldF = titlebarAccessoryView.view.frame
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: panel.frame.width, height: 70))
+        container.translatesAutoresizingMaskIntoConstraints = true
+        container.autoresizingMask = [.width]
+        container.addSubview(titlebarRootStack)
+
+        let bottomConstraint = titlebarRootStack.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        bottomConstraint.priority = .defaultHigh
+
+        NSLayoutConstraint.activate([
+            titlebarRootStack.topAnchor.constraint(equalTo: container.topAnchor),
+            titlebarRootStack.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            titlebarRootStack.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            bottomConstraint,
+        ])
+
+        container.layoutSubtreeIfNeeded()
+        let targetHeight = max(ceil(titlebarRootStack.fittingSize.height), 44)
+        container.frame = NSRect(x: 0, y: 0, width: panel.frame.width, height: targetHeight)
+
+        titlebarAccessoryVC.view = container
         if #available(macOS 26.1, *) {
-            titlebarAccessoryView.preferredScrollEdgeEffectStyle = .soft
-            if oldF.height < 70 {
-                titlebarAccessoryView.view.frame = NSRect(
-                    origin: oldF.origin,
-                    size: CGSize(width: oldF.width, height: 70)
-                )
-            }
-        } else {
-            titlebarAccessoryView.view.frame = NSRect(
-                origin: oldF.origin,
-                size: CGSize(width: oldF.width, height: oldF.height + 42)
-            )
+            titlebarAccessoryVC.preferredScrollEdgeEffectStyle = .soft
         }
-        panel.addTitlebarAccessoryViewController(titlebarAccessoryView)
+        panel.addTitlebarAccessoryViewController(titlebarAccessoryVC)
+    }
+
+    func updateTitlebarAccessoryHeight() {
+        guard let panel = Self.panel,
+              titlebarAccessoryVC.view.superview != nil
+        else { return }
+
+        titlebarRootStack.layoutSubtreeIfNeeded()
+        let targetHeight = max(ceil(titlebarRootStack.fittingSize.height), 44)
+        var frame = titlebarAccessoryVC.view.frame
+        if abs(frame.height - targetHeight) > 0.5 || frame.width != panel.frame.width {
+            frame.size = CGSize(width: panel.frame.width, height: targetHeight)
+            titlebarAccessoryVC.view.frame = frame
+        }
     }
 
     deinit {

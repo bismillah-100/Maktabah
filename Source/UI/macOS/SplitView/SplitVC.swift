@@ -503,8 +503,6 @@ extension SplitVC {
         if sender as? NSButton == nil,
             AnnotationsVC.panel == nil
         {
-            _ = vc
-            vc.viewDidAppear()
             vc.openAsPanel()
             return
         } else if let panel = AnnotationsVC.panel {

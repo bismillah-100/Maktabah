@@ -12,16 +12,30 @@ extension AnnotationsVC {
         }
 
         titlebarRootStack.addArrangedSubview(headerStackView)
+        var widthConstraints: [NSLayoutConstraint] = [
+            headerStackView.leadingAnchor.constraint(equalTo: titlebarRootStack.leadingAnchor),
+            headerStackView.trailingAnchor.constraint(equalTo: titlebarRootStack.trailingAnchor),
+        ]
 
         if #unavailable(macOS 26) {
             let box = NSBox()
             box.boxType = .separator
             box.translatesAutoresizingMaskIntoConstraints = false
             titlebarRootStack.addArrangedSubview(box)
+            widthConstraints.append(contentsOf: [
+                box.leadingAnchor.constraint(equalTo: titlebarRootStack.leadingAnchor),
+                box.trailingAnchor.constraint(equalTo: titlebarRootStack.trailingAnchor),
+            ])
         }
 
         let filterBar = createTagFilterBar()
         titlebarRootStack.addArrangedSubview(filterBar)
+        widthConstraints.append(contentsOf: [
+            filterBar.leadingAnchor.constraint(equalTo: titlebarRootStack.leadingAnchor),
+            filterBar.trailingAnchor.constraint(equalTo: titlebarRootStack.trailingAnchor),
+        ])
+
+        NSLayoutConstraint.activate(widthConstraints)
 
         dataSource.viewModel.onTagsChanged = { [weak self] tags in
             self?.updateChips(allTags: tags)
