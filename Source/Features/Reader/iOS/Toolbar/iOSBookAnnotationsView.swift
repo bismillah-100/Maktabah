@@ -11,8 +11,8 @@ struct iOSBookAnnotationsView: View {
     let bookId: Int
     @Bindable var viewModel: BookAnnotationsViewModel
     let onSelect: (Annotation) -> Void
-    var onUpdate: ((Annotation) throws -> Void)? = nil
-    var onDelete: ((Annotation) throws -> Void)? = nil
+    var onUpdate: ((Annotation) throws -> Void)?
+    var onDelete: ((Annotation) throws -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     @State private var editingAnnotation: Annotation?
@@ -78,13 +78,7 @@ struct iOSBookAnnotationsView: View {
                         .truncationMode(.middle)
 
                     if let note = ann.note, !note.isEmpty {
-                        Text(note)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(3)
-                            .truncationMode(.middle)
+                        iOSAutoDirectionLabel(text: note)
                     }
 
                     HStack {
@@ -145,6 +139,41 @@ struct iOSBookAnnotationsView: View {
         } catch {
             UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
+    }
+}
+
+struct iOSAutoDirectionLabel: UIViewRepresentable {
+    let text: String
+    var font: UIFont = .preferredFont(forTextStyle: .caption1)
+    var color: UIColor = .secondaryLabel
+    var lineLimit: Int = 3
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.numberOfLines = lineLimit
+        label.lineBreakMode = .byTruncatingTail
+        label.backgroundColor = .clear
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        return label
+    }
+
+    func updateUIView(_ uiView: UILabel, context: Context) {
+        uiView.numberOfLines = lineLimit
+        uiView.attributedText = NSAttributedString.autoDirectionString(
+            text,
+            font: font,
+            color: color,
+            lineBreakMode: .byTruncatingTail
+        )
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UILabel, context: Context) -> CGSize? {
+        guard let width = proposal.width, width > 0 else {
+            return uiView.intrinsicContentSize
+        }
+        let fittingSize = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: ceil(fittingSize.height))
     }
 }
 

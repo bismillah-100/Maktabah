@@ -174,7 +174,7 @@ final class AnnotationCellView: NSTableCellView {
             topRowView.leadingAnchor.constraint(equalTo: contentStackView.leadingAnchor),
             topRowView.trailingAnchor.constraint(equalTo: contentStackView.trailingAnchor),
 
-            note.leadingAnchor.constraint(equalTo: contentStackView.leadingAnchor),
+            note.leadingAnchor.constraint(equalTo: contentStackView.leadingAnchor, constant: 4),
             note.trailingAnchor.constraint(equalTo: contentStackView.trailingAnchor),
 
             pagePart.leadingAnchor.constraint(equalTo: contentStackView.leadingAnchor),

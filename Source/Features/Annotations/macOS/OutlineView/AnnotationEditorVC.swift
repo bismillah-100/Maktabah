@@ -72,9 +72,17 @@ class AnnotationEditorVC: NSViewController {
         guard let textStorage = noteField.textStorage else { return }
 
         let selectedRanges = noteField.selectedRanges
-        noteField.typingAttributes[.font] = currentFont
         textStorage.applyAutoDirectionAlignments(font: currentFont)
         noteField.selectedRanges = selectedRanges
+        updateTypingAttributes()
+    }
+
+    private func updateTypingAttributes() {
+        noteField.typingAttributes[.font] = currentFont
+        noteField.typingAttributes[.paragraphStyle] = NSParagraphStyle.autoDirection(
+            for: noteField.string,
+            at: noteField.selectedRange().location
+        )
     }
 
     // MARK: - Key Handling
@@ -229,6 +237,12 @@ extension AnnotationEditorVC: NSTokenFieldDelegate {
 
 extension AnnotationEditorVC: NSTextViewDelegate {
     func textDidChange(_ notification: Notification) {
+        guard !noteField.hasMarkedText() else { return }
         updateParagraphAlignments()
+    }
+
+    func textViewDidChangeSelection(_ notification: Notification) {
+        guard !noteField.hasMarkedText() else { return }
+        updateTypingAttributes()
     }
 }

@@ -69,9 +69,9 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
         cell.applyLineLimits()
         cell.context.attributedStringValue = makeContextAttributedString(for: annotation, color: color)
 
-        if let note = annotation.note {
+        if let note = annotation.note, !note.isEmpty {
             cell.note.isHidden = false
-            cell.note.stringValue = note
+            cell.note.attributedStringValue = makeNoteAttributedString(for: note)
         } else {
             cell.note.isHidden = true
         }
@@ -96,6 +96,15 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
             attributedString.addAttribute(.underlineColor, value: effectiveColor, range: fullRg)
         }
         return attributedString
+    }
+
+    private func makeNoteAttributedString(for note: String) -> NSAttributedString {
+        NSAttributedString.autoDirectionString(
+            note,
+            font: ReusableFunc.bundledArabicFont(ofSize: 15),
+            color: .labelColor,
+            lineBreakMode: .byWordWrapping
+        )
     }
 
     private func buildPageAndTagsString(for annotation: Annotation) -> String {
