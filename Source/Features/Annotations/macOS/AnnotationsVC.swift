@@ -151,34 +151,9 @@ class AnnotationsVC: NSViewController {
         setupSortMenu()
         setupShareMenu()
         setupImportMenu()
-        ReusableFunc.setupSearchField(searchField)
-        outlineView.allowsMultipleSelection = true
-        searchField.delegate = self
-        searchField.onBecomeFirstResponder = { [weak self] in
-            self?.updateAndShowScopePanel()
-        }
-        dataSource.onAddTagsRequested = { [weak self] annotationIDs, anchorRect in
-            self?.presentTagPopover(mode: .add, annotationIDs: annotationIDs, anchorRect: anchorRect)
-        }
-        dataSource.onRemoveTagsRequested = { [weak self] annotationIDs, anchorRect in
-            self?.presentTagPopover(mode: .remove, annotationIDs: annotationIDs, anchorRect: anchorRect)
-        }
-        dataSource.viewModel.onTagsChanged = { [weak self] tags in
-            self?.updateChips(allTags: tags)
-        }
-        searchField.refusesFirstResponder = true
-        createRootTitlebarStack()
-        if #unavailable(macOS 26) {
-            let btmBox = NSBox()
-            btmBox.boxType = .separator
-            btmBox.translatesAutoresizingMaskIntoConstraints = false
-            rootStackView.insertArrangedSubview(btmBox, at: 0)
-        }
-        rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
-        NSLayoutConstraint.activate([
-            titlebarRootStack.leadingAnchor.constraint(equalTo: rootStackView.leadingAnchor),
-            titlebarRootStack.trailingAnchor.constraint(equalTo: rootStackView.trailingAnchor),
-        ])
+        setupSearchField()
+        setupOutlineView()
+        setupRootStackView()
     }
 
     override func viewWillAppear() {
@@ -191,14 +166,8 @@ class AnnotationsVC: NSViewController {
         searchField.refusesFirstResponder = false
         if isDataLoaded { return }
         isDataLoaded = true
-        for c in outlineView.tableColumns {
-            c.maxWidth = .greatestFiniteMagnitude
-        }
         ReusableFunc.showProgressWindow(view)
         xBtn.isHidden = popover
-        dataSource.onSelectItem = { [weak self] row in self?.isRowUnselected = row == -1 }
-        outlineView.deselectAll(nil)
-        dataSource.outlineView = outlineView
         Task { [weak self] in
             guard let self else { return }
             setupMaxLine()
@@ -206,7 +175,6 @@ class AnnotationsVC: NSViewController {
             dataSource.setupOutlineMenu()
             await MainActor.run { [weak self] in
                 guard let self else { return }
-                searchField.refusesFirstResponder = false
                 ReusableFunc.closeProgressWindow(view)
             }
         }
@@ -237,6 +205,33 @@ class AnnotationsVC: NSViewController {
 
     @IBAction func searchFieldDidChange(_ sender: NSSearchField) {
         dataSource.viewModel.searchText = sender.stringValue
+    }
+
+    private func setupSearchField() {
+        ReusableFunc.setupSearchField(searchField)
+        searchField.delegate = self
+        searchField.refusesFirstResponder = true
+        searchField.onBecomeFirstResponder = { [weak self] in
+            self?.updateAndShowScopePanel()
+        }
+    }
+
+    private func setupOutlineView() {
+        outlineView.allowsMultipleSelection = true
+        outlineView.tableColumns.first?.maxWidth = .greatestFiniteMagnitude
+        dataSource.onAddTagsRequested = { [weak self] annotationIDs, anchorRect in
+            self?.presentTagPopover(mode: .add, annotationIDs: annotationIDs, anchorRect: anchorRect)
+        }
+        dataSource.onRemoveTagsRequested = { [weak self] annotationIDs, anchorRect in
+            self?.presentTagPopover(mode: .remove, annotationIDs: annotationIDs, anchorRect: anchorRect)
+        }
+        dataSource.viewModel.onTagsChanged = { [weak self] tags in
+            self?.updateChips(allTags: tags)
+        }
+        dataSource.onSelectItem = { [weak self] row in
+            self?.isRowUnselected = row == -1
+        }
+        dataSource.outlineView = outlineView
     }
 
     func openAsPanel() {
@@ -275,6 +270,23 @@ class AnnotationsVC: NSViewController {
         panel.makeKeyAndOrderFront(nil)
         Self.panel = panel
         updateTitlebarAccessoryHeight()
+    }
+
+    // MARK: - LAYOUT
+
+    private func setupRootStackView() {
+        createRootTitlebarStack()
+        if #unavailable(macOS 26) {
+            let btmBox = NSBox()
+            btmBox.boxType = .separator
+            btmBox.translatesAutoresizingMaskIntoConstraints = false
+            rootStackView.insertArrangedSubview(btmBox, at: 0)
+        }
+        rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
+        NSLayoutConstraint.activate([
+            titlebarRootStack.leadingAnchor.constraint(equalTo: rootStackView.leadingAnchor),
+            titlebarRootStack.trailingAnchor.constraint(equalTo: rootStackView.trailingAnchor),
+        ])
     }
 
     private func setupPanelScrollView() {
