@@ -1069,8 +1069,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         var removedEntries: [TagUpdateDiff.RemovedEntry] = []
         var updatedNodes: [AnnotationNode] = []
 
-        for tagNode in root.children {
-            var indicesToRemove: [Int] = []
+        for (rootIdx, tagNode) in root.children.enumerated() {
+            var indicesToRemove: [(node: AnnotationNode, index: Int)] = []
 
             for (idx, child) in tagNode.children.enumerated() {
                 guard let id = child.annotation?.id, let updatedAnn = updatedAnnsDict[id] else { continue }
@@ -1080,7 +1080,7 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 let shouldRemove = (tagNode.kind == .untagged) ? !newTags.isEmpty : !newTags.contains(tagNode.title)
 
                 if shouldRemove {
-                    indicesToRemove.append(idx)
+                    indicesToRemove.append((node: child, index: idx))
                 } else {
                     child.title = title
                     child.annotation = updatedAnn
@@ -1088,10 +1088,31 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 }
             }
 
-            for idx in indicesToRemove.reversed() {
-                if let entry = removeAnnotationFromTagNode(id: tagNode.children[idx].annotation?.id ?? -1, tagNode: tagNode, root: root) {
-                    removedEntries.append(entry)
+            guard !indicesToRemove.isEmpty else { continue }
+
+            let becomesEmpty = indicesToRemove.count == tagNode.children.count
+            if becomesEmpty {
+                if let first = indicesToRemove.first {
+                    removedEntries.append(.init(
+                        annotationNode: first.node,
+                        tagNode: tagNode,
+                        tagNodeBecomesEmpty: true,
+                        oldIndex: rootIdx
+                    ))
                 }
+            } else {
+                for item in indicesToRemove {
+                    removedEntries.append(.init(
+                        annotationNode: item.node,
+                        tagNode: tagNode,
+                        tagNodeBecomesEmpty: false,
+                        oldIndex: item.index
+                    ))
+                }
+            }
+
+            for item in indicesToRemove.reversed() {
+                tagNode.children.remove(at: item.index)
             }
         }
         return (removedEntries, updatedNodes)
