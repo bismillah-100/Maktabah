@@ -16,22 +16,45 @@ extension StringProtocol {
     /// Returns `true` if RTL or empty/neutral, and `false` if LTR.
     var isParagraphRTL: Bool {
         for scalar in unicodeScalars {
+            let val = scalar.value
+
+            // 1. Fast-skip: Spasi dan kontrol ASCII standar
+            if val == 0x20 || val == 0x09 || val == 0x0A || val == 0x0D {
+                continue
+            }
+
+            // 2. Fast-skip: Simbol ASCII, tanda baca, dan angka (0-9, ., -, #)
+            // Dalam Unicode Bidi Algorithm, ini karakter netral/weak (bukan strong character).
+            if val < 0x0041 { // di bawah 'A'
+                continue
+            }
+
+            // 3. Fast-path: Huruf Latin ASCII (A-Z, a-z) -> Pasti LTR
+            if (0x0041 ... 0x005A).contains(val) || (0x0061 ... 0x007A).contains(val) {
+                return false
+            }
+
+            // 4. Fast-path: Blok Arab, Ibrani, Syriak, dan Presentation Forms -> Pasti RTL
+            if (0x0590 ... 0x08FF).contains(val) ||
+                (0xFB1D ... 0xFDFF).contains(val) ||
+                (0xFE70 ... 0xFEFF).contains(val) ||
+                (0x10800 ... 0x1EFFF).contains(val)
+            {
+                return true
+            }
+
+            // 5. Fast-path: Latin Extended / Greek / Cyrillic (< 0x0590) -> Pasti LTR
+            if val < 0x0590 {
+                return false
+            }
+
+            // 6. Slow-path fallback: Hanya untuk aksara non-Latin/non-Arab langka
             if scalar.properties.isDefaultIgnorableCodePoint || scalar.properties.isWhitespace {
                 continue
             }
-            let category = scalar.properties.generalCategory
-            switch category {
+            switch scalar.properties.generalCategory {
             case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter:
-                let val = scalar.value
-                if (0x0590 ... 0x08FF).contains(val) ||
-                    (0xFB1D ... 0xFDFF).contains(val) ||
-                    (0xFE70 ... 0xFEFF).contains(val) ||
-                    (0x10800 ... 0x1EFFF).contains(val)
-                {
-                    return true
-                } else {
-                    return false
-                }
+                return false
             default:
                 continue
             }

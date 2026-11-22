@@ -114,15 +114,18 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
     }
 
     private func formatAnnotationDate(_ timestampInt64: Int64) -> String {
-        let targetDate = Date(timeIntervalSince1970: TimeInterval(timestampInt64))
-        if calendar.isDateInToday(targetDate) {
-            return RelativeDateTimeFormatter.shared.localizedString(for: targetDate, relativeTo: Date())
-        }
-        return DateFormatter.mediumDateShortTime.string(from: targetDate)
+        AnnotationRowHeightCalculator.formatDate(timestampInt64)
     }
 
     func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
         AnnotationRowHeightCalculator.height(for: item, in: outlineView, groupingMode: groupingMode, paragraphStyle: paragraphStyle)
+    }
+
+    func outlineViewColumnDidResize(_ notification: Notification) {
+        guard let outlineView else { return }
+        let range = outlineView.rows(in: outlineView.visibleRect)
+        guard range.location != NSNotFound, range.length > 0 else { return }
+        outlineView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: range.location ..< range.location + range.length))
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
