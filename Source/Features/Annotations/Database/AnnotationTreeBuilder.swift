@@ -375,36 +375,25 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
 
     func removeAnnotationsFromTagTree(ids: [Int64], root: AnnotationNode) -> TagUpdateDiff {
         let idSet = Set(ids)
-        var removedEntries: [TagUpdateDiff.RemovedEntry] = []
+        var diffEntries: [TagUpdateDiff.RemovedEntry] = []
 
         for (rootIdx, tagNode) in root.children.enumerated() {
-            var indicesToRemove: [(node: AnnotationNode, index: Int)] = []
-            for (idx, child) in tagNode.children.enumerated() {
-                if let childId = child.annotation?.id, idSet.contains(childId) {
-                    indicesToRemove.append((node: child, index: idx))
-                }
+            let matches = tagNode.children.indices.compactMap { idx -> (node: AnnotationNode, index: Int)? in
+                let child = tagNode.children[idx]
+                guard let childId = child.annotation?.id, idSet.contains(childId) else { return nil }
+                return (child, idx)
             }
 
-            guard !indicesToRemove.isEmpty else { continue }
-
-            let becomesEmpty = indicesToRemove.count == tagNode.children.count
-            for item in indicesToRemove {
-                removedEntries.append(.init(
-                    annotationNode: item.node,
-                    tagNode: tagNode,
-                    tagNodeBecomesEmpty: becomesEmpty,
-                    oldIndex: becomesEmpty ? rootIdx : item.index
-                ))
-            }
-
-            for item in indicesToRemove.reversed() {
-                tagNode.children.remove(at: item.index)
-            }
+            diffEntries += pruneTagChildrenAndRecord(
+                from: tagNode,
+                rootIndex: rootIdx,
+                indicesToRemove: matches
+            )
         }
 
         root.children.removeAll { $0.children.isEmpty && $0.kind != .root }
 
-        return TagUpdateDiff(removed: removedEntries, added: [], updated: [])
+        return TagUpdateDiff(removed: diffEntries, added: [], updated: [])
     }
 
     private func handleBatchUpdate(_ annotations: [Annotation]) {
@@ -767,6 +756,9 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     }
 
     private func compareGroupNodes(_ lhs: AnnotationNode, _ rhs: AnnotationNode, cache: inout [ObjectIdentifier: Int64]) -> Bool {
+        if lhs.kind == .untagged { return false }
+        if rhs.kind == .untagged { return true }
+
         if lhs.kind == .dateBucket, rhs.kind == .dateBucket {
             let leftTime = maxCreatedAt(for: lhs, cache: &cache)
             let rightTime = maxCreatedAt(for: rhs, cache: &cache)
@@ -783,7 +775,10 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 return sortOption.isAscending ? orderedAscending : !orderedAscending
             }
         }
-        return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+        let titleOrder = lhs.title.localizedCaseInsensitiveCompare(rhs.title)
+        return sortOption.isAscending
+            ? (titleOrder == .orderedAscending)
+            : (titleOrder == .orderedDescending)
     }
 
     // MARK: - Book Mode Helpers
@@ -845,61 +840,12 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
     // MARK: - Tag Mode Operations
 
     private func addAnnotationToTagTree(_ annotation: Annotation, root: AnnotationNode) -> TagUpdateDiff {
-        let tags = AnnotationRepository.shared.sanitizeTagNames(annotation.tags)
-        let title = displayTitle(for: annotation)
-        var addedEntries: [TagUpdateDiff.AddedEntry] = []
-
-        if tags.isEmpty {
-            addedEntries.append(insertAnnotationIntoUntagged(annotation, title: title, root: root))
-        } else {
-            for tag in tags {
-                addedEntries.append(insertAnnotation(annotation, title: title, intoTag: tag, root: root))
-            }
-        }
-
+        let addedEntries = processBatchTagAdditions(root: root, annotations: [annotation])
         return TagUpdateDiff(removed: [], added: addedEntries, updated: [])
     }
 
     private func updateAnnotationInTagTree(_ annotation: Annotation, root: AnnotationNode) -> TagUpdateDiff {
-        guard let id = annotation.id else {
-            return TagUpdateDiff(removed: [], added: [], updated: [])
-        }
-
-        let title = displayTitle(for: annotation)
-        let newTags = Set(AnnotationRepository.shared.sanitizeTagNames(annotation.tags))
-        let existingTagNodes = root.children.filter { $0.children.contains { $0.annotation?.id == id } }
-        let existingTagNames = Set(existingTagNodes.compactMap { $0.kind == .tag ? $0.title : nil })
-        let isCurrentlyUntagged = existingTagNodes.contains { $0.kind == .untagged }
-
-        let updateContext = TagUpdateContext(
-            annotation: annotation,
-            title: title,
-            root: root,
-            existingTagNames: existingTagNames,
-            newTags: newTags,
-            isCurrentlyUntagged: isCurrentlyUntagged
-        )
-
-        let removedEntries = collectRemovedEntriesForUpdate(
-            id: id,
-            existingTagNodes: existingTagNodes,
-            context: updateContext
-        )
-
-        let updatedNodes = updateExistingAnnotationNodes(
-            id: id,
-            context: updateContext
-        )
-
-        let addedEntries = collectAddedEntriesForUpdate(
-            context: updateContext
-        )
-
-        return TagUpdateDiff(removed: removedEntries, added: addedEntries, updated: updatedNodes)
-    }
-
-    private func removeAnnotationFromTagTree(id: Int64, root: AnnotationNode) -> TagUpdateDiff {
-        removeAnnotationsFromTagTree(ids: [id], root: root)
+        performBatchTagTreeUpdate([annotation], root: root)
     }
 
     private func performBatchTagTreeUpdate(_ annotations: [Annotation], root: AnnotationNode) -> TagUpdateDiff {
@@ -913,31 +859,6 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         let addedEntries = processBatchTagAdditions(root: root, annotations: annotations)
 
         return TagUpdateDiff(removed: removedEntries, added: addedEntries, updated: updatedNodes)
-    }
-
-    private func removeAnnotationFromTagNode(
-        id: Int64,
-        tagNode: AnnotationNode,
-        root: AnnotationNode
-    ) -> TagUpdateDiff.RemovedEntry? {
-        guard let annIdx = tagNode.children.firstIndex(where: { $0.annotation?.id == id }) else {
-            return nil
-        }
-        let annNode = tagNode.children[annIdx]
-        let becomesEmpty = tagNode.children.count == 1
-        let oldIndex = becomesEmpty ? (root.children.firstIndex(where: { $0 === tagNode }) ?? -1) : annIdx
-
-        tagNode.children.remove(at: annIdx)
-        if becomesEmpty {
-            root.children.removeAll { $0 === tagNode }
-        }
-
-        return .init(
-            annotationNode: annNode,
-            tagNode: tagNode,
-            tagNodeBecomesEmpty: becomesEmpty,
-            oldIndex: oldIndex
-        )
     }
 
     private func insertAnnotationIntoContainer(
@@ -954,35 +875,9 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             bookTitle: bTitle,
             normalizedBookTitle: bTitle?.normalizeArabic(false)
         )
-        if isContainerNew {
-            container.children.append(newNode)
-        } else {
-            let idx = container.children.insertionIndex(for: newNode, using: compareNodes)
-            container.children.insert(newNode, at: idx)
-        }
+        let idx = container.children.insertionIndex(for: newNode, using: compareNodes)
+        container.children.insert(newNode, at: idx)
         return .init(annotationNode: newNode, tagNode: container, tagNodeIsNew: isContainerNew)
-    }
-
-    private func getOrCreateContainerNode(tag: String?, in root: AnnotationNode) -> (container: AnnotationNode, isNew: Bool) {
-        if let tag {
-            if let tagNode = root.children.first(where: { $0.kind == .tag && $0.title == tag }) {
-                return (tagNode, false)
-            }
-            let tagNode = AnnotationNode(title: tag, kind: .tag)
-            let insertIdx = root.children.firstIndex(where: { node in
-                guard node.kind == .tag else { return node.kind == .untagged }
-                return tag.localizedCaseInsensitiveCompare(node.title) == .orderedAscending
-            }) ?? (root.children.firstIndex(where: { $0.kind == .untagged }) ?? root.children.endIndex)
-            root.children.insert(tagNode, at: insertIdx)
-            return (tagNode, true)
-        } else {
-            if let untaggedNode = root.children.first(where: { $0.kind == .untagged }) {
-                return (untaggedNode, false)
-            }
-            let untaggedNode = AnnotationNode(title: String(localized: .Annotation.untagged), kind: .untagged)
-            root.children.append(untaggedNode)
-            return (untaggedNode, true)
-        }
     }
 
     private func insertAnnotation(
@@ -991,8 +886,15 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         intoTag tag: String,
         root: AnnotationNode
     ) -> TagUpdateDiff.AddedEntry {
-        let (container, isNew) = getOrCreateContainerNode(tag: tag, in: root)
-        return insertAnnotationIntoContainer(annotation, title: title, container: container, isContainerNew: isNew)
+        if let existingTagNode = root.children.first(where: { $0.kind == .tag && $0.title == tag }) {
+            return insertAnnotationIntoContainer(annotation, title: title, container: existingTagNode, isContainerNew: false)
+        } else {
+            let tagNode = AnnotationNode(title: tag, kind: .tag)
+            let entry = insertAnnotationIntoContainer(annotation, title: title, container: tagNode, isContainerNew: true)
+            let insertIdx = root.children.insertionIndex(for: tagNode, using: compareNodes)
+            root.children.insert(tagNode, at: insertIdx)
+            return entry
+        }
     }
 
     private func insertAnnotationIntoUntagged(
@@ -1000,66 +902,52 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         title: String,
         root: AnnotationNode
     ) -> TagUpdateDiff.AddedEntry {
-        let (container, isNew) = getOrCreateContainerNode(tag: nil, in: root)
-        return insertAnnotationIntoContainer(annotation, title: title, container: container, isContainerNew: isNew)
+        if let untaggedNode = root.children.first(where: { $0.kind == .untagged }) {
+            return insertAnnotationIntoContainer(annotation, title: title, container: untaggedNode, isContainerNew: false)
+        } else {
+            let untaggedNode = AnnotationNode(title: String(localized: .Annotation.untagged), kind: .untagged)
+            let entry = insertAnnotationIntoContainer(annotation, title: title, container: untaggedNode, isContainerNew: true)
+            root.children.append(untaggedNode)
+            return entry
+        }
     }
 
-    private struct TagUpdateContext {
-        let annotation: Annotation
-        let title: String
-        let root: AnnotationNode
-        let existingTagNames: Set<String>
-        let newTags: Set<String>
-        let isCurrentlyUntagged: Bool
-    }
-
-    private func collectRemovedEntriesForUpdate(
-        id: Int64,
-        existingTagNodes: [AnnotationNode],
-        context: TagUpdateContext
+    private func pruneTagChildrenAndRecord(
+        from tagNode: AnnotationNode,
+        rootIndex: Int,
+        indicesToRemove: [(node: AnnotationNode, index: Int)],
+        singleEntryWhenEmpty: Bool = false
     ) -> [TagUpdateDiff.RemovedEntry] {
-        var removedEntries: [TagUpdateDiff.RemovedEntry] = []
-        for tagNode in existingTagNodes where context.existingTagNames.subtracting(context.newTags).contains(tagNode.title) {
-            if let entry = removeAnnotationFromTagNode(id: id, tagNode: tagNode, root: context.root) {
-                removedEntries.append(entry)
-            }
-        }
-        if context.isCurrentlyUntagged, !context.newTags.isEmpty {
-            if let untaggedNode = context.root.children.first(where: { $0.kind == .untagged }),
-               let entry = removeAnnotationFromTagNode(id: id, tagNode: untaggedNode, root: context.root)
-            {
-                removedEntries.append(entry)
-            }
-        }
-        return removedEntries
-    }
+        guard !indicesToRemove.isEmpty else { return [] }
 
-    private func updateExistingAnnotationNodes(
-        id: Int64,
-        context: TagUpdateContext
-    ) -> [AnnotationNode] {
-        var updatedNodes: [AnnotationNode] = []
-        for tagNode in context.root.children where context.existingTagNames.intersection(context.newTags).contains(tagNode.title) {
-            if let node = tagNode.children.first(where: { $0.annotation?.id == id }) {
-                node.title = context.title
-                node.annotation = context.annotation
-                updatedNodes.append(node)
+        var entries: [TagUpdateDiff.RemovedEntry] = []
+        let becomesEmpty = indicesToRemove.count == tagNode.children.count
+
+        if becomesEmpty, singleEntryWhenEmpty {
+            if let first = indicesToRemove.first {
+                entries.append(.init(
+                    annotationNode: first.node,
+                    tagNode: tagNode,
+                    tagNodeBecomesEmpty: true,
+                    oldIndex: rootIndex
+                ))
+            }
+        } else {
+            for item in indicesToRemove {
+                entries.append(.init(
+                    annotationNode: item.node,
+                    tagNode: tagNode,
+                    tagNodeBecomesEmpty: becomesEmpty,
+                    oldIndex: becomesEmpty ? rootIndex : item.index
+                ))
             }
         }
-        return updatedNodes
-    }
 
-    private func collectAddedEntriesForUpdate(
-        context: TagUpdateContext
-    ) -> [TagUpdateDiff.AddedEntry] {
-        var addedEntries: [TagUpdateDiff.AddedEntry] = []
-        for tag in context.newTags.subtracting(context.existingTagNames) {
-            addedEntries.append(insertAnnotation(context.annotation, title: context.title, intoTag: tag, root: context.root))
+        for item in indicesToRemove.reversed() {
+            tagNode.children.remove(at: item.index)
         }
-        if context.newTags.isEmpty, !context.isCurrentlyUntagged {
-            addedEntries.append(insertAnnotationIntoUntagged(context.annotation, title: context.title, root: context.root))
-        }
-        return addedEntries
+
+        return entries
     }
 
     private func processBatchTagUpdates(
@@ -1088,32 +976,12 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 }
             }
 
-            guard !indicesToRemove.isEmpty else { continue }
-
-            let becomesEmpty = indicesToRemove.count == tagNode.children.count
-            if becomesEmpty {
-                if let first = indicesToRemove.first {
-                    removedEntries.append(.init(
-                        annotationNode: first.node,
-                        tagNode: tagNode,
-                        tagNodeBecomesEmpty: true,
-                        oldIndex: rootIdx
-                    ))
-                }
-            } else {
-                for item in indicesToRemove {
-                    removedEntries.append(.init(
-                        annotationNode: item.node,
-                        tagNode: tagNode,
-                        tagNodeBecomesEmpty: false,
-                        oldIndex: item.index
-                    ))
-                }
-            }
-
-            for item in indicesToRemove.reversed() {
-                tagNode.children.remove(at: item.index)
-            }
+            removedEntries.append(contentsOf: pruneTagChildrenAndRecord(
+                from: tagNode,
+                rootIndex: rootIdx,
+                indicesToRemove: indicesToRemove,
+                singleEntryWhenEmpty: true
+            ))
         }
         return (removedEntries, updatedNodes)
     }
@@ -1125,7 +993,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
         var addedEntries: [TagUpdateDiff.AddedEntry] = []
         for annotation in annotations {
             guard let id = annotation.id else { continue }
-            let newTags = Set(AnnotationRepository.shared.sanitizeTagNames(annotation.tags))
+            let newTags = AnnotationRepository.shared.sanitizeTagNames(annotation.tags)
+                .sorted(by: { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
             let title = displayTitle(for: annotation)
 
             if newTags.isEmpty {
@@ -1142,6 +1011,25 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
                 }
             }
         }
+
+        if sortOption.field == .createdAt {
+            var seen = Set<ObjectIdentifier>()
+            let newTagNodes = addedEntries.compactMap { entry -> AnnotationNode? in
+                guard entry.tagNodeIsNew, entry.tagNode.kind == .tag,
+                      seen.insert(ObjectIdentifier(entry.tagNode)).inserted
+                else { return nil }
+                return entry.tagNode
+            }
+
+            if !newTagNodes.isEmpty {
+                root.children.removeAll { seen.contains(ObjectIdentifier($0)) }
+                for tagNode in newTagNodes {
+                    let newIdx = root.children.insertionIndex(for: tagNode, using: compareNodes)
+                    root.children.insert(tagNode, at: newIdx)
+                }
+            }
+        }
+
         return addedEntries
     }
 

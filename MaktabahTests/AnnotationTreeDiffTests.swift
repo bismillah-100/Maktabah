@@ -9,7 +9,7 @@ import Foundation
 @testable import Maktabah_Debug
 import Testing
 
-@Suite("Annotation Tree Diff & Section Identity Tests")
+@Suite("Annotation Tree Diff & Section Identity Tests", .serialized)
 struct AnnotationTreeDiffTests {
     @Test("SwiftUIAnnotationNode produces unique ids for book nodes with different bookIds even if titles match")
     func testUniqueSectionIdsForMatchingTitles() {
@@ -258,5 +258,145 @@ struct AnnotationTreeDiffTests {
 
         vm.handleTreeDiff(diff)
         #expect(receivedDiff != nil)
+    }
+
+    @Test("Tag sorting: sorts by createdAt, context (A-Z/Z-A), page, and part, with untagged always at bottom")
+    func testTagSortingByCreatedAtAndContextWithUntaggedAtEnd() {
+        let originalSort = AnnotationTreeBuilder.shared.currentSortOptionForTesting()
+        defer { AnnotationTreeBuilder.shared.setSortOptionForTesting(originalSort) }
+
+        let annZebra = Annotation(id: 1, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 10000, context: "Zebra Ann", page: 50, part: 2, tags: ["Zebra"])
+        let annApple = Annotation(id: 2, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 1000, context: "Apple Ann", page: 10, part: 1, tags: ["Apple"])
+        let annUntagged = Annotation(id: 3, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#0000FF", type: .highlight, createdAt: 50000, context: "Untagged Ann", page: 1, part: 1, tags: [])
+
+        // 1. When sort field is .createdAt (descending) -> Zebra (10000) > Apple (1000), untagged pinned at bottom
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .createdAt, isAscending: false))
+        let rootCreated = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: rootCreated, annotations: [annApple, annZebra, annUntagged])
+
+        #expect(rootCreated.children.count == 3)
+        #expect(rootCreated.children[0].title == "Zebra")
+        #expect(rootCreated.children[1].title == "Apple")
+        #expect(rootCreated.children[2].kind == .untagged)
+
+        // 2. When sort field is .context (ascending: A-Z) -> Apple < Zebra, untagged pinned at bottom
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .context, isAscending: true))
+        let rootContextAsc = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: rootContextAsc, annotations: [annZebra, annApple, annUntagged])
+
+        #expect(rootContextAsc.children.count == 3)
+        #expect(rootContextAsc.children[0].title == "Apple")
+        #expect(rootContextAsc.children[1].title == "Zebra")
+        #expect(rootContextAsc.children[2].kind == .untagged)
+
+        // 3. When sort field is .context (descending: Z-A) -> Zebra > Apple, untagged pinned at bottom
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .context, isAscending: false))
+        let rootContextDesc = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: rootContextDesc, annotations: [annApple, annZebra, annUntagged])
+
+        #expect(rootContextDesc.children.count == 3)
+        #expect(rootContextDesc.children[0].title == "Zebra")
+        #expect(rootContextDesc.children[1].title == "Apple")
+        #expect(rootContextDesc.children[2].kind == .untagged)
+
+        // 4. When sort field is .page (ascending) -> Apple (page 10) < Zebra (page 50), untagged pinned at bottom
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .page, isAscending: true))
+        let rootPageAsc = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: rootPageAsc, annotations: [annZebra, annApple, annUntagged])
+
+        #expect(rootPageAsc.children.count == 3)
+        #expect(rootPageAsc.children[0].title == "Apple")
+        #expect(rootPageAsc.children[1].title == "Zebra")
+        #expect(rootPageAsc.children[2].kind == .untagged)
+
+        // 5. When sort field is .part (descending) -> Zebra (part 2) > Apple (part 1), untagged pinned at bottom
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .part, isAscending: false))
+        let rootPartDesc = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: rootPartDesc, annotations: [annApple, annZebra, annUntagged])
+
+        #expect(rootPartDesc.children.count == 3)
+        #expect(rootPartDesc.children[0].title == "Zebra")
+        #expect(rootPartDesc.children[1].title == "Apple")
+        #expect(rootPartDesc.children[2].kind == .untagged)
+    }
+
+    @Test("Updating annotation across tags correctly empties old tags and populates new tags")
+    func testTagUpdateDiffAcrossTags() {
+        let ann1 = Annotation(id: 50, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 1000, context: "Original", page: 1, part: 1, tags: ["OldTagA"])
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [ann1])
+
+        #expect(root.children.count == 1)
+        #expect(root.children.first?.title == "OldTagA")
+
+        let updatedAnn = Annotation(id: 50, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 1000, context: "Updated", page: 1, part: 1, tags: ["NewTagB"])
+
+        let diff = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [updatedAnn])
+        #expect(diff.count == 1)
+        #expect(diff.first?.tagNode.title == "NewTagB")
+    }
+
+    @Test("Multi-annotation addition to new tag with ascending createdAt repositions tag node correctly")
+    func testMultiAnnotationBatchAdditionRepositionsNewTagNode() {
+        let originalSort = AnnotationTreeBuilder.shared.currentSortOptionForTesting()
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .createdAt, isAscending: false))
+        defer { AnnotationTreeBuilder.shared.setSortOptionForTesting(originalSort) }
+
+        let annTagA = Annotation(id: 1, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 5000, context: "Tag A", page: 1, part: 1, tags: ["TagA"])
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [annTagA])
+
+        #expect(root.children.count == 1)
+        #expect(root.children[0].title == "TagA")
+
+        // Now add 2 annotations with new "TagB": first has createdAt 1000, second has 10000.
+        // Initially TagB would be inserted after TagA (1000 < 5000).
+        // After second annotation (10000 > 5000), TagB must be repositioned BEFORE TagA.
+        let annTagB1 = Annotation(id: 2, bkId: 10, contentId: 2, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 1000, context: "Tag B1", page: 2, part: 1, tags: ["TagB"])
+        let annTagB2 = Annotation(id: 3, bkId: 10, contentId: 3, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#0000FF", type: .highlight, createdAt: 10000, context: "Tag B2", page: 3, part: 1, tags: ["TagB"])
+
+        let entries = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [annTagB1, annTagB2])
+        #expect(entries.count == 2)
+        #expect(root.children.count == 2)
+        #expect(root.children[0].title == "TagB")
+        #expect(root.children[1].title == "TagA")
+    }
+
+    @Test("Strict weak ordering: sorting groups with identical titles in descending mode does not violate irreflexivity")
+    func testStrictWeakOrderingIdenticalGroupTitles() {
+        let originalSort = AnnotationTreeBuilder.shared.currentSortOptionForTesting()
+        defer { AnnotationTreeBuilder.shared.setSortOptionForTesting(originalSort) }
+
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .context, isAscending: false))
+        let ann1 = Annotation(id: 1, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 1000, context: "Ann 1", page: 1, part: 1, tags: ["SameTag"])
+        let ann2 = Annotation(id: 2, bkId: 10, contentId: 2, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 2000, context: "Ann 2", page: 1, part: 1, tags: ["SameTag"])
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [ann1, ann2])
+        #expect(root.children.count == 1)
+        #expect(root.children[0].title == "SameTag")
+    }
+
+    @Test("Multi-tag batch addition correctly positions multiple new tags according to createdAt")
+    func testMultiTagBatchAdditionMultipleNewTags() {
+        let originalSort = AnnotationTreeBuilder.shared.currentSortOptionForTesting()
+        AnnotationTreeBuilder.shared.setSortOptionForTesting(.init(field: .createdAt, isAscending: false))
+        defer { AnnotationTreeBuilder.shared.setSortOptionForTesting(originalSort) }
+
+        // 3 new tags added in one batch with interleaving createdAt
+        let annTagA1 = Annotation(id: 1, bkId: 10, contentId: 1, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#FF0000", type: .highlight, createdAt: 2000, context: "A1", page: 1, part: 1, tags: ["TagA"])
+        let annTagB1 = Annotation(id: 2, bkId: 10, contentId: 2, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 1000, context: "B1", page: 1, part: 1, tags: ["TagB"])
+        let annTagC1 = Annotation(id: 3, bkId: 10, contentId: 3, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#0000FF", type: .highlight, createdAt: 3000, context: "C1", page: 1, part: 1, tags: ["TagC"])
+        let annTagB2 = Annotation(id: 4, bkId: 10, contentId: 4, range: NSRange(location: 0, length: 5), rangeDiacritics: NSRange(location: 0, length: 5), colorHex: "#00FF00", type: .highlight, createdAt: 8000, context: "B2", page: 1, part: 1, tags: ["TagB"])
+
+        let root = AnnotationNode(title: "Root", kind: .root)
+        _ = AnnotationTreeBuilder.shared.processBatchTagAdditions(root: root, annotations: [annTagA1, annTagB1, annTagC1, annTagB2])
+
+        #expect(root.children.count == 3)
+        #expect(root.children[0].title == "TagB")
+        #expect(root.children[1].title == "TagC")
+        #expect(root.children[2].title == "TagA")
     }
 }

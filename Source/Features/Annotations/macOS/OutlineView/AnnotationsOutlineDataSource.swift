@@ -198,6 +198,15 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             return
         }
 
+        let rootCount = outlineView.numberOfChildren(ofItem: nil)
+        let hasInvalidRootRemoval = diff.removed.contains { entry in
+            entry.tagNodeBecomesEmpty && (entry.oldIndex < 0 || entry.oldIndex >= rootCount)
+        }
+        if hasInvalidRootRemoval {
+            outlineView.reloadData()
+            return
+        }
+
         outlineView.beginUpdates()
 
         for annNode in diff.updated {
@@ -258,10 +267,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
         for (parent, indices) in childRemovalsByParent {
             if outlineView.isItemExpanded(parent) {
-                let indexSet = IndexSet(indices.filter { $0 != -1 })
-                if !indexSet.isEmpty {
-                    outlineView.removeItems(at: indexSet, inParent: parent, withAnimation: .slideUp)
-                }
+                removeItems(at: indices, inParent: parent, in: outlineView)
             } else {
                 collapsedParentsToReload.append(parent)
             }
@@ -274,16 +280,23 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         return collapsedParentsToReload
     }
 
+    private func removeItems(
+        at indices: [Int],
+        inParent parent: AnnotationNode?,
+        in outlineView: NSOutlineView
+    ) {
+        let indexSet = IndexSet(indices.filter { $0 != -1 })
+        guard !indexSet.isEmpty else { return }
+        outlineView.removeItems(at: indexSet, inParent: parent, withAnimation: .slideUp)
+    }
+
     private func applyRemovals(
         _ removalsByParent: [AnnotationNode?: [Int]],
         in outlineView: NSOutlineView
     ) {
         for (parent, indices) in removalsByParent {
             if parent == nil || outlineView.isItemExpanded(parent) {
-                let indexSet = IndexSet(indices.filter { $0 != -1 })
-                if !indexSet.isEmpty {
-                    outlineView.removeItems(at: indexSet, inParent: parent, withAnimation: .slideUp)
-                }
+                removeItems(at: indices, inParent: parent, in: outlineView)
             } else {
                 outlineView.reloadItem(parent, reloadChildren: false)
             }
@@ -299,6 +312,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         var insertedNewTagNodes = Set<ObjectIdentifier>()
         var childrenByTagNode: [AnnotationNode: [Int]] = [:]
         var nodesToExpand: [AnnotationNode] = []
+        var rootIndicesToInsert = IndexSet()
 
         for entry in entries {
             let tagId = ObjectIdentifier(entry.tagNode)
@@ -306,7 +320,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
                 if insertedNewTagNodes.insert(tagId).inserted,
                    let rootIdx = root.children.firstIndex(where: { $0 === entry.tagNode })
                 {
-                    outlineView.insertItems(at: IndexSet(integer: rootIdx), inParent: nil, withAnimation: .slideDown)
+                    rootIndicesToInsert.insert(rootIdx)
                     if groupingMode == .timeline {
                         nodesToExpand.append(entry.tagNode)
                     }
@@ -316,6 +330,10 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             {
                 childrenByTagNode[entry.tagNode, default: []].append(annIdx)
             }
+        }
+
+        if !rootIndicesToInsert.isEmpty {
+            outlineView.insertItems(at: rootIndicesToInsert, inParent: nil, withAnimation: .slideDown)
         }
 
         var collapsedParentsToReload: [AnnotationNode] = []
@@ -515,18 +533,9 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
 
     func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any {
         if item == nil {
-            let nodes = viewModel.filteredNodes
-            guard index >= 0, index < nodes.count else {
-                DispatchQueue.main.async { outlineView.reloadData() }
-                return AnnotationNode(title: "", kind: .root)
-            }
-            return nodes[index]
+            return viewModel.filteredNodes[index]
         }
         if let node = item as? AnnotationNode {
-            guard index >= 0, index < node.children.count else {
-                DispatchQueue.main.async { outlineView.reloadItem(node, reloadChildren: true) }
-                return AnnotationNode(title: "", kind: .annotation)
-            }
             return node.children[index]
         }
         fatalError("Invalid item or index.")
