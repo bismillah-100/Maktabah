@@ -19,6 +19,52 @@ extension AnnotationsVC {
             annotationLineMenu.addItem(item)
         }
         updateLineMenuState()
+        setupDateSetting()
+    }
+
+    func setupDateSetting() {
+        guard let menu = setting?.menu else { return }
+        if menu.items.contains(where: { $0.action == #selector(toggleShowDateAction(_:)) }) {
+            updateDateMenuState()
+            return
+        }
+
+        let showDateItem = NSMenuItem(
+            title: String(localized: .Annotation.showDate),
+            action: #selector(toggleShowDateAction(_:)),
+            keyEquivalent: ""
+        )
+        showDateItem.target = self
+
+        let lineLimitsIndex = menu.items.firstIndex { item in
+            item.submenu === annotationLineMenu?.supermenu ||
+                item.submenu === contextLineMenu?.supermenu ||
+                item.title == "Line Limits" ||
+                item.submenu?.items.contains(where: { $0.submenu === annotationLineMenu }) == true
+        }
+
+        if let lineLimitsIndex {
+            menu.insertItem(showDateItem, at: lineLimitsIndex + 1)
+        } else if let reloadIndex = menu.items.firstIndex(where: { $0.action == #selector(reloadAnnotations(_:)) }) {
+            menu.insertItem(showDateItem, at: reloadIndex)
+        } else {
+            menu.addItem(showDateItem)
+        }
+        updateDateMenuState()
+    }
+
+    func updateDateMenuState() {
+        guard let menu = setting?.menu else { return }
+        if let item = menu.items.first(where: { $0.action == #selector(toggleShowDateAction(_:)) }) {
+            item.state = defaults.showAnnotationDate ? .on : .off
+        }
+    }
+
+    @objc func toggleShowDateAction(_ sender: NSMenuItem) {
+        defaults.showAnnotationDate.toggle()
+        sender.state = defaults.showAnnotationDate ? .on : .off
+        dataSource.showDate = defaults.showAnnotationDate
+        refreshAnnotationRowHeights()
     }
 
     func updateLineMenuState() {

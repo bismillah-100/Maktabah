@@ -83,6 +83,9 @@ final class AnnotationCellView: NSTableCellView {
 
     private var contentStackLeadingConstraint: NSLayoutConstraint?
     private var contentStackTrailingConstraint: NSLayoutConstraint?
+    private var contextLeadingToDateConstraint: NSLayoutConstraint?
+    private var contextLowLeadingConstraint: NSLayoutConstraint?
+    private var topRowBottomToDateConstraint: NSLayoutConstraint?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -148,6 +151,13 @@ final class AnnotationCellView: NSTableCellView {
 
         let contextLowLeading = context.leadingAnchor.constraint(equalTo: date.trailingAnchor, constant: 8)
         contextLowLeading.priority = .defaultLow
+        contextLowLeadingConstraint = contextLowLeading
+
+        let contextMinLeading = context.leadingAnchor.constraint(greaterThanOrEqualTo: date.trailingAnchor, constant: 8)
+        contextLeadingToDateConstraint = contextMinLeading
+
+        let topRowBottomMin = topRowView.bottomAnchor.constraint(greaterThanOrEqualTo: date.bottomAnchor, constant: 4)
+        topRowBottomToDateConstraint = topRowBottomMin
 
         NSLayoutConstraint.activate([
             timelineRail.centerXAnchor.constraint(equalTo: trailingAnchor, constant: -4),
@@ -167,10 +177,10 @@ final class AnnotationCellView: NSTableCellView {
             context.trailingAnchor.constraint(equalTo: topRowView.trailingAnchor),
             context.topAnchor.constraint(equalTo: topRowView.topAnchor),
             context.bottomAnchor.constraint(equalTo: topRowView.bottomAnchor),
-            context.leadingAnchor.constraint(greaterThanOrEqualTo: date.trailingAnchor, constant: 8),
+            contextMinLeading,
             contextLowLeading,
 
-            topRowView.bottomAnchor.constraint(greaterThanOrEqualTo: date.bottomAnchor, constant: 4),
+            topRowBottomMin,
             topRowView.leadingAnchor.constraint(equalTo: contentStackView.leadingAnchor),
             topRowView.trailingAnchor.constraint(equalTo: contentStackView.trailingAnchor),
 
@@ -195,6 +205,13 @@ final class AnnotationCellView: NSTableCellView {
             stackTrailing,
             contentStackView.bottomAnchor.constraint(equalTo: bottomBorder.topAnchor, constant: -10),
         ])
+    }
+
+    func setDateVisibility(showDate: Bool) {
+        date.isHidden = !showDate
+        contextLeadingToDateConstraint?.constant = showDate ? 8 : 0
+        contextLowLeadingConstraint?.constant = showDate ? 8 : 0
+        topRowBottomToDateConstraint?.priority = showDate ? .required : .defaultLow
     }
 
     func applyLineLimits() {

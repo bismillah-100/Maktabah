@@ -28,6 +28,7 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     let viewModel = AnnotationViewModel()
     let calendar = Calendar.current
     var onSelectItem: ((Int) -> Void)?
+    var showDate: Bool = UserDefaults.standard.showAnnotationDate
 
     var groupingMode: AnnotationGroupingMode {
         viewModel.groupingMode

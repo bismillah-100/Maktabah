@@ -9,7 +9,13 @@ import Cocoa
 
 @MainActor
 enum AnnotationRowHeightCalculator {
-    static func height(for item: Any, in outlineView: NSOutlineView, groupingMode: AnnotationGroupingMode, paragraphStyle: NSParagraphStyle) -> CGFloat {
+    static func height(
+        for item: Any,
+        in outlineView: NSOutlineView,
+        groupingMode: AnnotationGroupingMode,
+        paragraphStyle: NSParagraphStyle,
+        showDate: Bool = UserDefaults.standard.showAnnotationDate
+    ) -> CGFloat {
         guard let node = item as? AnnotationNode,
               let annotation = node.annotation
         else {
@@ -20,11 +26,16 @@ enum AnnotationRowHeightCalculator {
         let horizontalInset: CGFloat = groupingMode == .timeline ? 16 : 26
         let contentWidth = max(columnWidth - horizontalInset, 100)
 
-        let footnoteFont = NSFont.preferredFont(forTextStyle: .footnote)
-        let dateText = formatDate(annotation.createdAt)
-        let dateWidth = ceil(NSString(string: dateText).size(withAttributes: [.font: footnoteFont]).width)
-        let dateOccupiedWidth = dateWidth + 12
-        let contextWidth = max(contentWidth - dateOccupiedWidth, 60)
+        let contextWidth: CGFloat
+        if showDate {
+            let footnoteFont = NSFont.preferredFont(forTextStyle: .footnote)
+            let dateText = formatDate(annotation.createdAt)
+            let dateWidth = ceil(NSString(string: dateText).size(withAttributes: [.font: footnoteFont]).width)
+            let dateOccupiedWidth = dateWidth + 12
+            contextWidth = max(contentWidth - dateOccupiedWidth, 60)
+        } else {
+            contextWidth = max(contentWidth, 60)
+        }
 
         let displayContext = Self.displayContext(annotation.context)
         let contextHeight = measuredHeight(
@@ -54,7 +65,7 @@ enum AnnotationRowHeightCalculator {
             lineLimit: AnnotationCellView.pagePartLineLimit
         )
 
-        let topSectionHeight = max(contextHeight, 26)
+        let topSectionHeight = showDate ? max(contextHeight, 26) : max(contextHeight, 20)
         let stackSpacing: CGFloat = noteHeight > 0 ? 16 : 8
 
         return ceil(23 + topSectionHeight + pagePartHeight + noteHeight + stackSpacing)

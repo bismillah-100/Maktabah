@@ -172,6 +172,7 @@ class AnnotationsVC: NSViewController {
         Task { [weak self] in
             guard let self else { return }
             setupMaxLine()
+            setupDateSetting()
             reloadAnnotations(nil)
             dataSource.setupOutlineMenu()
             await MainActor.run { [weak self] in
