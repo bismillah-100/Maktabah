@@ -198,6 +198,15 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             return
         }
 
+        let rootCount = outlineView.numberOfChildren(ofItem: nil)
+        let hasInvalidRootRemoval = diff.removed.contains { entry in
+            entry.tagNodeBecomesEmpty && (entry.oldIndex < 0 || entry.oldIndex >= rootCount)
+        }
+        if hasInvalidRootRemoval {
+            outlineView.reloadData()
+            return
+        }
+
         outlineView.beginUpdates()
 
         for annNode in diff.updated {
@@ -207,9 +216,23 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
             }
         }
 
-        applyTagModeRemovals(entries: diff.removed, in: outlineView)
-        applyTagModeAdditions(entries: diff.added, in: outlineView)
+        let parentsToReloadFromRemovals = applyTagModeRemovals(entries: diff.removed, in: outlineView)
+        let (parentsToReloadFromAdditions, nodesToExpand) = applyTagModeAdditions(entries: diff.added, in: outlineView)
+
         outlineView.endUpdates()
+
+        var seenReload = Set<ObjectIdentifier>()
+        for parent in parentsToReloadFromRemovals + parentsToReloadFromAdditions {
+            if seenReload.insert(ObjectIdentifier(parent)).inserted,
+               outlineView.row(forItem: parent) != -1
+            {
+                outlineView.reloadItem(parent, reloadChildren: false)
+            }
+        }
+
+        for node in nodesToExpand {
+            outlineView.expandItem(node, expandChildren: true)
+        }
     }
 
     private func reloadDataForRowIndexes(_ indexSet: IndexSet) {
@@ -219,13 +242,52 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
         outlineView.noteHeightOfRows(withIndexesChanged: indexSet)
     }
 
-    private func applyTagModeRemovals(entries: [TagUpdateDiff.RemovedEntry], in outlineView: NSOutlineView) {
-        var removalsByParent: [AnnotationNode?: [Int]] = [:]
+    private func applyTagModeRemovals(
+        entries: [TagUpdateDiff.RemovedEntry],
+        in outlineView: NSOutlineView
+    ) -> [AnnotationNode] {
+        let emptiedTagNodeIDs = Set(
+            entries.filter(\.tagNodeBecomesEmpty).map { ObjectIdentifier($0.tagNode) }
+        )
+
+        var rootIndicesToRemove = IndexSet()
+        var childRemovalsByParent: [AnnotationNode: [Int]] = [:]
+
         for entry in entries {
-            let parent = entry.tagNodeBecomesEmpty ? nil : entry.tagNode
-            removalsByParent[parent, default: []].append(entry.oldIndex)
+            if entry.tagNodeBecomesEmpty {
+                if entry.oldIndex != -1 {
+                    rootIndicesToRemove.insert(entry.oldIndex)
+                }
+            } else if !emptiedTagNodeIDs.contains(ObjectIdentifier(entry.tagNode)) {
+                childRemovalsByParent[entry.tagNode, default: []].append(entry.oldIndex)
+            }
         }
-        applyRemovals(removalsByParent, in: outlineView)
+
+        var collapsedParentsToReload: [AnnotationNode] = []
+
+        for (parent, indices) in childRemovalsByParent {
+            if outlineView.isItemExpanded(parent) {
+                removeItems(at: indices, inParent: parent, in: outlineView)
+            } else {
+                collapsedParentsToReload.append(parent)
+            }
+        }
+
+        if !rootIndicesToRemove.isEmpty {
+            outlineView.removeItems(at: rootIndicesToRemove, inParent: nil, withAnimation: .slideUp)
+        }
+
+        return collapsedParentsToReload
+    }
+
+    private func removeItems(
+        at indices: [Int],
+        inParent parent: AnnotationNode?,
+        in outlineView: NSOutlineView
+    ) {
+        let indexSet = IndexSet(indices.filter { $0 != -1 })
+        guard !indexSet.isEmpty else { return }
+        outlineView.removeItems(at: indexSet, inParent: parent, withAnimation: .slideUp)
     }
 
     private func applyRemovals(
@@ -234,59 +296,56 @@ class AnnotationOutlineDataSource: NSObject, NSOutlineViewDataSource {
     ) {
         for (parent, indices) in removalsByParent {
             if parent == nil || outlineView.isItemExpanded(parent) {
-                let indexSet = IndexSet(indices.filter { $0 != -1 })
-                if !indexSet.isEmpty {
-                    outlineView.removeItems(at: indexSet, inParent: parent, withAnimation: .slideUp)
-                }
+                removeItems(at: indices, inParent: parent, in: outlineView)
             } else {
                 outlineView.reloadItem(parent, reloadChildren: false)
             }
         }
     }
 
-    private func applyTagModeAdditions(entries: [TagUpdateDiff.AddedEntry], in outlineView: NSOutlineView) {
-        guard let root = treeBuilder.currentRootNode() else { return }
-        guard !entries.isEmpty else { return }
+    private func applyTagModeAdditions(
+        entries: [TagUpdateDiff.AddedEntry],
+        in outlineView: NSOutlineView
+    ) -> (parentsToReload: [AnnotationNode], nodesToExpand: [AnnotationNode]) {
+        guard let root = treeBuilder.currentRootNode(), !entries.isEmpty else { return ([], []) }
 
         var insertedNewTagNodes = Set<ObjectIdentifier>()
         var childrenByTagNode: [AnnotationNode: [Int]] = [:]
         var nodesToExpand: [AnnotationNode] = []
-
-        outlineView.beginUpdates()
+        var rootIndicesToInsert = IndexSet()
 
         for entry in entries {
+            let tagId = ObjectIdentifier(entry.tagNode)
             if entry.tagNodeIsNew {
-                let tagId = ObjectIdentifier(entry.tagNode)
-                if !insertedNewTagNodes.contains(tagId) {
-                    insertedNewTagNodes.insert(tagId)
-                    if let rootIdx = root.children.firstIndex(where: { $0 === entry.tagNode }) {
-                        outlineView.insertItems(at: IndexSet(integer: rootIdx), inParent: nil, withAnimation: .slideDown)
-                        if groupingMode == .timeline {
-                            nodesToExpand.append(entry.tagNode)
-                        }
+                if insertedNewTagNodes.insert(tagId).inserted,
+                   let rootIdx = root.children.firstIndex(where: { $0 === entry.tagNode })
+                {
+                    rootIndicesToInsert.insert(rootIdx)
+                    if groupingMode == .timeline {
+                        nodesToExpand.append(entry.tagNode)
                     }
                 }
-            } else if !insertedNewTagNodes.contains(ObjectIdentifier(entry.tagNode)) {
-                if let annIdx = entry.tagNode.children.firstIndex(where: { $0 === entry.annotationNode }) {
-                    childrenByTagNode[entry.tagNode, default: []].append(annIdx)
-                }
+            } else if !insertedNewTagNodes.contains(tagId),
+                      let annIdx = entry.tagNode.children.firstIndex(where: { $0 === entry.annotationNode })
+            {
+                childrenByTagNode[entry.tagNode, default: []].append(annIdx)
             }
         }
 
+        if !rootIndicesToInsert.isEmpty {
+            outlineView.insertItems(at: rootIndicesToInsert, inParent: nil, withAnimation: .slideDown)
+        }
+
+        var collapsedParentsToReload: [AnnotationNode] = []
         for (tagNode, indices) in childrenByTagNode {
             if outlineView.isItemExpanded(tagNode) {
-                let sortedIndices = indices.sorted()
-                outlineView.insertItems(at: IndexSet(sortedIndices), inParent: tagNode, withAnimation: .slideDown)
+                outlineView.insertItems(at: IndexSet(indices.sorted()), inParent: tagNode, withAnimation: .slideDown)
             } else {
-                outlineView.reloadItem(tagNode, reloadChildren: false)
+                collapsedParentsToReload.append(tagNode)
             }
         }
 
-        outlineView.endUpdates()
-
-        for node in nodesToExpand {
-            outlineView.expandItem(node, expandChildren: true)
-        }
+        return (collapsedParentsToReload, nodesToExpand)
     }
 
     private func applyBookModeAdditions(diff: BookAdditionDiff, in outlineView: NSOutlineView) {
