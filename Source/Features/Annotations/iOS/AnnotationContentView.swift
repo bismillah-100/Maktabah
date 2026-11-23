@@ -71,7 +71,7 @@ class AnnotationContentView: UIView, UIContentView {
 
     private func setupLabels() {
         contextLabel.numberOfLines = 2
-        contextLabel.textAlignment = .right
+        contextLabel.textAlignment = .natural
         contextLabel.lineBreakMode = .byTruncatingTail
 
         noteLabel.numberOfLines = 4
@@ -132,24 +132,18 @@ class AnnotationContentView: UIView, UIContentView {
 
     private func buildAttributedContext(for ann: Annotation, font: UIFont) -> NSAttributedString {
         let displayContext = ann.context.truncatedForCellDisplay(maxCharacters: 200, maxNewlines: 3)
-        let attrContext = NSMutableAttributedString(
-            string: displayContext,
-            attributes: [.font: font, .foregroundColor: UIColor.label]
-        )
-        let fullRg = NSRange(location: 0, length: attrContext.length)
         let color = PlatformColor.effectiveAnnotationColor(
             hex: ann.colorHex,
             isUnderline: ann.type == .underline,
             defaultHighlight: .systemYellow
         )
-
-        if ann.type == .highlight {
-            attrContext.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.3), range: fullRg)
-        } else if ann.type == .underline {
-            attrContext.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: fullRg)
-            attrContext.addAttribute(.underlineColor, value: color, range: fullRg)
-        }
-        return attrContext
+        return NSAttributedString.autoDirectionContextString(
+            displayContext,
+            font: font,
+            mode: ann.type,
+            effectiveColor: color,
+            lineBreakMode: .byTruncatingTail
+        )
     }
 
     private func resolveSecondaryInfo(

@@ -82,21 +82,17 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
 
     private func makeContextAttributedString(for annotation: Annotation, color: NSColor) -> NSAttributedString {
         let displayContext = AnnotationRowHeightCalculator.displayContext(annotation.context)
-        let attributedString = NSMutableAttributedString(string: displayContext)
-        let fullRg = NSRange(location: 0, length: attributedString.length)
+        let effectiveColor = annotation.type == .underline
+            ? NSColor.effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: true)
+            : color
 
-        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: fullRg)
-        attributedString.addAttribute(.font, value: ReusableFunc.bundledArabicFont(ofSize: 17), range: fullRg)
-
-        switch annotation.type {
-        case .highlight:
-            attributedString.addAttribute(.backgroundColor, value: color.withAlphaComponent(0.5), range: fullRg)
-        case .underline:
-            let effectiveColor = NSColor.effectiveAnnotationColor(hex: annotation.colorHex, isUnderline: true)
-            attributedString.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: fullRg)
-            attributedString.addAttribute(.underlineColor, value: effectiveColor, range: fullRg)
-        }
-        return attributedString
+        return NSAttributedString.autoDirectionContextString(
+            displayContext,
+            font: ReusableFunc.bundledArabicFont(ofSize: 17),
+            mode: annotation.type,
+            effectiveColor: effectiveColor,
+            lineBreakMode: .byWordWrapping
+        )
     }
 
     private func makeNoteAttributedString(for note: String) -> NSAttributedString {

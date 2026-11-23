@@ -72,10 +72,12 @@ struct iOSBookAnnotationsView: View {
                 onSelect(ann)
             }) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(ann.context)
-                        .font(ReaderViewModel.kfgqpcTitle)
-                        .lineLimit(2)
-                        .truncationMode(.middle)
+                    iOSAutoDirectionLabel(
+                        text: ann.context,
+                        font: UIFont(name: ArabicFont.kfgqpcUthmanTahaNaskh.rawValue, size: 18) ?? .preferredFont(forTextStyle: .body),
+                        color: .label,
+                        lineLimit: 2
+                    )
 
                     if let note = ann.note, !note.isEmpty {
                         iOSAutoDirectionLabel(text: note)
