@@ -17,14 +17,16 @@ struct iOSAnnotationEditorSheet: View {
             var colors = UserDefaults.standard.recentUnderlineColors
             if selectedColorHex != "#000000",
                let current = UIColor(hex: selectedColorHex),
-               !colors.contains(where: { $0.hexString() == current.hexString() }) {
+               !colors.contains(where: { $0.hexString() == current.hexString() })
+            {
                 colors.append(current)
             }
             return colors
         } else {
             var colors = UserDefaults.standard.recentHighlightColors
             if let current = UIColor(hex: selectedColorHex),
-               !colors.contains(where: { $0.hexString() == current.hexString() }) {
+               !colors.contains(where: { $0.hexString() == current.hexString() })
+            {
                 colors.append(current)
             }
             return colors
@@ -79,7 +81,7 @@ struct iOSAnnotationEditorSheet: View {
                                             .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
                                     )
                                     .onTapGesture {
-                                        if isUnderline && color == .label {
+                                        if isUnderline, color == .label {
                                             selectedColorHex = "#000000"
                                         } else {
                                             selectedColorHex = color.hexString()
@@ -92,10 +94,8 @@ struct iOSAnnotationEditorSheet: View {
                 }
 
                 ThemeSection("Tags (comma separated)") {
-                    let isRTL = tagsText.isParagraphRTL
                     TextField("tag1, tag2...", text: $tagsText)
-                        .multilineTextAlignment(isRTL ? .trailing : .leading)
-                        .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
+                        .environment(\.layoutDirection, .rightToLeft)
                 }
 
                 ThemeSection {
@@ -131,7 +131,7 @@ struct iOSAnnotationEditorSheet: View {
                 noteText = annotation.note ?? ""
                 isUnderline = annotation.type == .underline
                 selectedColorHex = annotation.colorHex
-                if isUnderline && (selectedColorHex.isEmpty || selectedColorHex == "#000000") {
+                if isUnderline, selectedColorHex.isEmpty || selectedColorHex == "#000000" {
                     selectedColorHex = "#000000"
                 }
                 tagsText = annotation.tags.joined(separator: ", ")
@@ -142,11 +142,10 @@ struct iOSAnnotationEditorSheet: View {
     private func saveAnnotation() {
         var updated = annotation
         updated.note = noteText.isEmpty ? nil : noteText
-        let finalHex: String
-        if isUnderline && (selectedColorHex.isEmpty || selectedColorHex == "#000000" || selectedColorHex.caseInsensitiveCompare(UIColor.label.hexString()) == .orderedSame) {
-            finalHex = "#000000"
+        let finalHex: String = if isUnderline && (selectedColorHex.isEmpty || selectedColorHex == "#000000" || selectedColorHex.caseInsensitiveCompare(UIColor.label.hexString()) == .orderedSame) {
+            "#000000"
         } else {
-            finalHex = selectedColorHex
+            selectedColorHex
         }
         updated.colorHex = finalHex
         updated.type = isUnderline ? .underline : .highlight
@@ -172,6 +171,7 @@ struct iOSAutoDirectionTextView: UIViewRepresentable {
         let textView = UITextView()
         textView.delegate = context.coordinator
         textView.font = UIFont.preferredFont(forTextStyle: .body)
+        textView.adjustsFontForContentSizeCategory = true
         textView.backgroundColor = .clear
         textView.textColor = .label
         textView.isScrollEnabled = true
@@ -181,12 +181,18 @@ struct iOSAutoDirectionTextView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UITextView, context: Context) {
+        context.coordinator.parent = self
+        guard !context.coordinator.isUpdating, uiView.markedTextRange == nil else { return }
         if uiView.text != text {
+            let selectedRange = uiView.selectedRange
             uiView.text = text
             context.coordinator.updateParagraphAlignments(in: uiView)
+            let clampedLocation = min(selectedRange.location, (uiView.text as NSString).length)
+            uiView.selectedRange = NSRange(location: clampedLocation, length: 0)
         }
     }
 
+    @MainActor
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: iOSAutoDirectionTextView
         var isUpdating = false
@@ -196,21 +202,35 @@ struct iOSAutoDirectionTextView: UIViewRepresentable {
         }
 
         func textViewDidChange(_ textView: UITextView) {
-            guard !isUpdating else { return }
+            parent.text = textView.text
+            guard !isUpdating, textView.markedTextRange == nil else { return }
             isUpdating = true
+            defer { isUpdating = false }
 
             let selectedRange = textView.selectedRange
             updateParagraphAlignments(in: textView)
             textView.selectedRange = selectedRange
+        }
 
-            parent.text = textView.text
-            isUpdating = false
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            guard !isUpdating, textView.markedTextRange == nil else { return }
+            updateTypingAttributes(in: textView)
         }
 
         func updateParagraphAlignments(in textView: UITextView) {
             let font = textView.font ?? UIFont.preferredFont(forTextStyle: .body)
+            textView.textStorage.applyAutoDirectionAlignments(font: font, color: .label)
+            updateTypingAttributes(in: textView)
+        }
+
+        private func updateTypingAttributes(in textView: UITextView) {
+            let font = textView.font ?? UIFont.preferredFont(forTextStyle: .body)
             textView.typingAttributes[.font] = font
-            textView.textStorage.applyAutoDirectionAlignments(font: font)
+            textView.typingAttributes[.foregroundColor] = UIColor.label
+            textView.typingAttributes[.paragraphStyle] = NSParagraphStyle.autoDirection(
+                for: textView.text ?? "",
+                at: textView.selectedRange.location
+            )
         }
     }
 }

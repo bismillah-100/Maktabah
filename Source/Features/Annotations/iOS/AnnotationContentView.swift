@@ -77,7 +77,6 @@ class AnnotationContentView: UIView, UIContentView {
         noteLabel.numberOfLines = 4
         noteLabel.textColor = .secondaryLabel
         noteLabel.font = .preferredFont(forTextStyle: .caption1)
-        noteLabel.textAlignment = .right
 
         secondaryLabel.font = .preferredFont(forTextStyle: .caption2)
         secondaryLabel.textColor = .secondaryLabel
@@ -98,9 +97,16 @@ class AnnotationContentView: UIView, UIContentView {
         contextLabel.attributedText = buildAttributedContext(for: ann, font: arabicFont)
 
         if let note = ann.note, !note.isEmpty {
-            noteLabel.text = note
+            let noteFont = noteLabel.font ?? .preferredFont(forTextStyle: .caption1)
+            noteLabel.attributedText = NSAttributedString.autoDirectionString(
+                note,
+                font: noteFont,
+                color: .secondaryLabel,
+                lineBreakMode: .byTruncatingTail
+            )
             noteLabel.isHidden = false
         } else {
+            noteLabel.attributedText = nil
             noteLabel.isHidden = true
         }
 
