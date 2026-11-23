@@ -233,6 +233,45 @@ struct WidgetSnapshotTests {
         #expect(didChange == true)
     }
 
+    @Test("Resolve: Menyimpan remote terbaru ke disk saat persistToLocal bernilai true agar fallback offline tetap terbaru")
+    func testResolve_persistsNewerRemoteToDiskForOfflineFallback() async throws {
+        let url = try #require(HistorySnapshot.appGroupURL)
+        let originalData = FileCoordinator.shared.readSync(url: url)
+        defer {
+            if let originalData {
+                FileCoordinator.shared.writeSync(data: originalData, to: url)
+            } else {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+
+        let localItem = makeHistoryItem(id: "h1", bookId: 101, title: "Kitab Lokal Lama")
+        var localSnapshot = HistorySnapshot(items: [localItem])
+        localSnapshot.generation = 1
+        localSnapshot.lastUpdated = Date(timeIntervalSince1970: 1000)
+        await localSnapshot.saveLocal()
+
+        let remoteItem = makeHistoryItem(id: "h2", bookId: 102, title: "Kitab Remote Terbaru")
+        var remoteSnapshot = HistorySnapshot(items: [remoteItem])
+        remoteSnapshot.generation = 2
+        remoteSnapshot.lastUpdated = Date(timeIntervalSince1970: 2000)
+
+        let (resolved, didChange) = await HistorySnapshot.resolve(
+            remote: remoteSnapshot,
+            local: localSnapshot,
+            persistToLocal: true
+        )
+
+        #expect(resolved?.items.first?.id == "h2")
+        #expect(didChange == true)
+
+        // Simulasikan fallback offline / timeout membaca ulang snapshot lokal dari disk
+        let fallbackLocal = await HistorySnapshot.loadLocal()
+        #expect(fallbackLocal?.items.first?.id == "h2")
+        #expect(fallbackLocal?.items.first?.bookTitle == "Kitab Remote Terbaru")
+        #expect(fallbackLocal?.generation == 2)
+    }
+
     // MARK: - 2. FileCoordinator Tests
 
     @Test("FileCoordinator: Mampu membaca berkas langsung sebagai fallback yang tangguh")
