@@ -45,14 +45,15 @@ Root
 Menyusun anotasi berdasarkan relasi tag dari tabel `annotation_tags`:
 
 * Satu anotasi yang memiliki banyak tag akan didistribusikan ke masing-masing cabang tag terkait.
-* Anotasi tanpa label otomatis ditampung dalam grup khusus **Untagged**.
+* Anotasi tanpa label otomatis ditampung dalam grup khusus **Untagged** (`.untagged`). Grup ini dipin secara ketat selalu di posisi terbawah hierarki *root* pada seluruh skenario pengurutan.
+* Grup tag diurutkan berdasarkan `maxCreatedAt` bila kriteria pengurutan adalah waktu pembuatan (`.createdAt`), atau secara alfabetis (A-Z / Z-A) bila pengurutan berbasis konteks, kitab, atau posisi halaman.
 ```text
 Root
 ├── [Tag Node] Fiqih (5 catatan)
 │   └── [Annotation Node] Kitab Shalat...
 ├── [Tag Node] Muamalah (3 catatan)
 │   └── [Annotation Node] Kitab Jual Beli...
-└── [Tag Node] Untagged (2 catatan)
+└── [Tag Node] Untagged (2 catatan) [Pinned di Bawah]
 ```
 
 ### C. Pengelompokan Berdasarkan Linimasa (`.timeline`)
@@ -98,3 +99,10 @@ Jika dihitung secara langsung di setiap perbandingan algoritma pengurutan ($O(N 
 2. **Pengurutan Anak (`sortNodeChildren`)**: Cache dibuat saat fungsi pengurutan dipanggil dan dibagikan secara `inout` selama proses sorting berlangsung.
 3. **Penyisipan Linimasa (`addAnnotationToTimelineTree`)**: Pada saat mencari indeks penyisipan bucket baru via `insertionIndex(for:)`, evaluasi waktu maksimum bucket yang dibandingkan disimpan ke dalam cache lokal, sehingga setiap bucket yang diperiksa dalam *binary search* hanya dihitung tepat satu kali.
 4. **Bebas Resiko Cache Usang**: Variabel cache bersifat *ephemeral* (berlingkup lokal pada fungsi), langsung dibuang dari memori saat operasi selesai, dan seluruh node bersifat *read-only* selama perbandingan berlangsung.
+
+### Aturan Strict Weak Ordering & Pembaruan Batch Tag
+
+Untuk mencegah inkonsistensi posisi baris dan galat indeks pada `NSOutlineView`:
+
+* **Strict Weak Ordering**: Pembandingan node grup menerapkan urutan lemah yang ketat (*strict weak ordering*) pada nama tag dan stempel waktu, dengan pengecualian khusus untuk node `.untagged` yang senantiasa ditempatkan di posisi terbawah baik dalam mode *ascending* maupun *descending*.
+* **Preservasi `oldIndex` pada Batch Tag Diff**: Saat memproses mutasi tag massal (`processBatchTagUpdates`), penentuan apakah suatu grup menjadi kosong (`becomesEmpty`) dihitung sebelum pembuangan child node dimulai. Hal ini menghindari mutasi `root.children` di dalam *loop* perulangan sehingga nilai indeks lama (`oldIndex`) tetap valid saat dikirim ke *data source*.

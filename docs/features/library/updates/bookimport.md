@@ -209,6 +209,9 @@ final class BookImportViewModel: @unchecked Sendable {
 2. Mode operasi: `0` = Buku Baru, `1` = Timpa Buku, `2` = Ganti ID Kitab.
 3. ID buku tujuan, ditampung sebagai *string* untuk masukan *TextField* sebelum divalidasi menjadi integer.
 
+* **Validasi ID Kitab & Perlindungan Kitab Inti**:
+  Pada properti komputasi `isValid`, formulir memeriksa apakah `customBookIdText` bentrok dengan ID yang sudah ada (`isBookIdTaken`). Jika bentrok dan teridentifikasi sebagai kitab katalog inti melalui `LibraryDataManager.isCoreBook(id:)` (memeriksa `coreIndexIds` dari `index.json` pada Bundle Mode atau `0bok.oNum != nil` pada Full Mode), sistem mengunci tombol eksekusi dan memunculkan badge `idReservedBySystem` untuk melindungi integritas berkas katalog utama.
+
 ViewModel ini memanggil `executeDatabaseChanges(oldId:newId:)` pada proses *Change ID*, yang memicu tiga panggilan berurutan secara transaksional di *background thread*:
 
 1. `BookUpdateManager.shared.changeBookId`

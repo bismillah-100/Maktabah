@@ -152,11 +152,11 @@ public final class StringInterner: Sendable {
 ```
 
 * **Sinkronisasi via Mutex**: Menggunakan `Synchronization.Mutex` untuk menjamin operasi `intern` sepenuhnya *thread-safe* di lingkungan konkurensi Swift 6.
-* **Protokol `Sendable` Penuh**: Memungkinkan `StringInterner.shared` dibagikan lintas *actor* dan *thread pool* tanpa menggunakan `nonisolated(unsafe)`.
+* **Kesesuaian `Sendable` Penuh**: Memungkinkan `StringInterner.shared` dibagikan lintas *actor* dan *thread pool* tanpa menggunakan `nonisolated(unsafe)`.
 
 ---
 
-## 6. Resolusi Tata Letak TextKit 2 (`TextStorage.swift`)
+## 6. Resolusi Tata Letak TextKit 2 (`TextStorage.swift` & `IbarotTextView.swift`)
 
 Pada dokumen kitab dengan puluhan ribu baris, memicu penataan letak (*layout calculation*) secara menyeluruh dapat membebani CPU dan menyebabkan *frame drop*.
 
@@ -167,4 +167,36 @@ Menyediakan komputasi tata letak parsial (*lazy layout*):
 * **`ensureLayout(for: NSRange)`**: Mengonversi `NSRange` menjadi `NSTextRange` valid, lalu hanya mengevaluasi fragmen tata letak (*text layout fragments*) yang melingkupi rentang target tersebut tanpa memaksa komputasi seluruh dokumen.
 * **`ensureLayout(for: [NSRange])`**: Iterasi *batch* efisien untuk beberapa rentang sekaligus (misalnya seluruh hasil sorotan pencarian halaman).
 * **`ensureFullDocumentLayout()`**: Menghitung seluruh fragmen dokumen dari awal hingga akhir sebagai jalur cadangan (*fallback*) khusus saat operasi cetak atau ekspor.
+
+### Layout Fragmen Pendahulu saat Navigasi Lompat (Jump Navigation)
+
+Pada dokumen panjang dengan teks Arab RTL (khususnya berharakat) atau paragraf campuran RTL/LTR, evaluasi *lazy layout* TextKit 2 mengestimasi tinggi fragmen yang belum dihitung di atas *viewport*. Ketika pengguna menggulir ke atas, komputasi on-demand pada fragmen pendahulu dapat menghasilkan deviasi tinggi signifikan (melampaui 1.500–2.000 pt), menggeser origin dokumen dan memicu sentakan tampilan (*scroll jitter / viewport snap*).
+
+Untuk mencegah distorsi ini, `IbarotTextView.scrollAndShowFindIndicator` memicu kalkulasi layout mencakup seluruh rentang pendahulu sejak awal dokumen hingga batas akhir target:
+
+```swift
+let totalLength = textStorage?.length ?? 0
+let targetEnd = min(range.location + range.length, totalLength)
+textLayoutManager?.ensureLayout(for: NSRange(location: 0, length: targetEnd))
+```
+
+---
+
+## 7. Deteksi Arah Penulisan Otomatis & Pre-Truncation (`StringExt.swift`)
+
+Untuk menyajikan teks dwibahasa dan cuplikan kutipan secara efisien pada antarmuka anotasi (macOS & iOS):
+
+### AutoDirectionStyleCache (Enum)
+
+Menyediakan *instance* `NSParagraphStyle` statis yang *immutable* (`rtlStyle`, `ltrStyle`) untuk mengeliminasi alokasi objek *paragraph style* berulang kali pada *hotpath* perenderan baris tabel/koleksi.
+
+### Deteksi Arah Paragraf (`isParagraphRTL`)
+
+* Menentukan arah penulisan teks (*base writing direction*) dan perataan teks (*natural alignment*) per paragraf.
+* Menggunakan *fast-path integer check* pada rentang kode karakter (ASCII, Latin, Arab) guna menghindari *overhead* pemanggilan ICU / `getParagraphExecProperties` pada karakter-karakter umum.
+* Menyediakan helper `applyAutoDirectionAlignments` dan `autoDirectedAttributedString` untuk menghasilkan attributed string berarah alami dalam satu lintasan (*single-pass*).
+
+### Pre-Truncation Sel Teks (`truncatedForCellDisplay`)
+
+Sebelum teks catatan atau kutipan diproses oleh TextKit / CoreText untuk kalkulasi tinggi baris, `String.truncatedForCellDisplay(maxCharacters:maxLines:)` memotong teks mentah pada batas *grapheme cluster* dan batas maksimal baris baru (*newline*). Hal ini mengeliminasi *frame drop* dan menghemat komputasi *text shaping* pada baris yang memiliki teks sangat panjang.
 

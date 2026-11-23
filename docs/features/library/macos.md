@@ -181,7 +181,9 @@ Di bagian bawah *sidebar*, `LibraryVC` menyematkan bilah segmentasi mengambang b
 * Mengimplementasikan `NSOutlineViewDataSource` dan `NSOutlineViewDelegate`.
 * Menyediakan *context menu* klik kanan:
   * **Buka di *Tab* Baru (`openBookInNewTab`)**: Tersedia untuk kitab yang telah terunduh/terintegrasi secara lokal (`isBookIntegrated`), mendelegasikan pembuatan *window controller* baru ke `MainWindow.openBookInNewTab`.
-  * **Hapus Unduhan**: Menghapus arsip SQLite lokal dari *disk*.
+  * **Hapus Kitab / Hapus Unduhan**: Menyesuaikan secara adaptif berdasarkan status kitab:
+    * *Kitab Katalog Inti* (`LibraryDataManager.isCoreBook(id:) == true`): Menampilkan aksi "Hapus Unduhan" untuk membuang berkas arsip SQLite lokal dari *disk* tanpa mencabut rekaman dari katalog.
+    * *Kitab Kustom / Hasil Impor* (`isCoreBook == false`): Menampilkan aksi "Hapus Kitab dari Perpustakaan" untuk menghapus permanen data dari tabel katalog `0bok`, menghapus tabel `b{id}`, `t{id}`, dan FTS, serta membersihkan data pengarang yatim (*orphan author*) di `special.sqlite` jika tidak dirujuk kitab lain.
   * **Informasi Kitab**: Menampilkan *popover* informasi bibliografi kitab [`BookInfo`](file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Library/macOS/LibraryViewManager.swift#L560) yang terjangkar presisi via helper `outlineView.cellAnchor(forRow:)`.
   * **Favorit**: Menambah atau menghapus kitab dari daftar favorit.
 * **Preservasi Status Outline (`isUpdatingOutline`)**: Menggunakan blok `defer { isUpdatingOutline = previousUpdatingOutline }` untuk menjaga integritas status pembaruan saat ekspansi kategori dan pemulihan seleksi, mencegah siklus reset seleksi prematur.
@@ -190,6 +192,7 @@ Di bagian bawah *sidebar*, `LibraryVC` menyematkan bilah segmentasi mengambang b
 ### D. Animasi Batch Inkremental & Debouncing Histori (`LibraryView+Diffing`)
 Untuk mencegah *flickering* visual dan lonjakan tampilan (*content jumping*):
 
+* **Optimasi Diffing Flat List Tanpa Full Reload**: Pada `updateFlatListIncrementally`, penggantian sel `BooksData` yang sudah ada hanya dieksekusi apabila nilai judul buku benar-benar berubah secara tekstual (`old.title != new.title`), bukan sekadar perbedaan referensi objek/pointer memori. Pendekatan ini mencegah kedipan visual penuh (*full-list flash*) saat seleksi buku atau saat pembaruan status sinkronisasi CloudKit pertama kali tiba.
 * **Sinkronisasi Filter Pencarian**: Pembaruan daftar datar memvalidasi `searchQuery` aktif dan sinkronisasi `baseCategories = displayedCategories`, menjamin hasil filter tetap utuh saat dataset dimutasi.
 * **Debounce Pembaruan Histori (3 Detik)**: Notifikasi `.historyDidChange` di-*debounce* selama 3 detik pada `RunLoop.main` sebelum memicu penataan ulang baris. Hal ini mencegah outline view melompat-lompat (*jitter*) ketika pengguna menavigasi beberapa kitab secara cepat, sementara ID kitab tetap tercatat ke basis data histori secara instan.
 * **Mutasi Terarah**: Menjalankan mutasi *native* AppKit secara presisi: `outlineView.insertItems(at:inParent:withAnimation:)` dan `outlineView.removeItems(at:inParent:withAnimation:)`.
