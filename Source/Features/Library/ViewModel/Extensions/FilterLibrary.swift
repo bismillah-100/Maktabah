@@ -26,6 +26,7 @@ extension LibraryViewModel {
         case .favorites:
             showOnlyDownloaded = false
             isFlatMode = true
+            historyManager.loadBooksData()
             let favBooks = historyManager.favoriteBooks
             let cat = CategoryData(id: -1, name: String(localized: .Library.favorites), level: 1, order: 0)
             cat.children = favBooks
@@ -34,6 +35,7 @@ extension LibraryViewModel {
         case .history:
             showOnlyDownloaded = false
             isFlatMode = true
+            historyManager.loadBooksData()
             let histBooks = historyManager.historyBooks
             let cat = CategoryData(id: -2, name: String(localized: .Library.history), level: 1, order: 0)
             cat.children = histBooks
