@@ -466,4 +466,13 @@ final class DatabaseManager: Sendable {
 
         return nil
     }
+
+    #if DEBUG
+    func setDatabasesForTesting(db: SQLiteDatabase?, specialDb: SQLiteDatabase?) {
+        state.withLock { s in
+            s.db = db
+            s.dbSpecial = specialDb
+        }
+    }
+    #endif
 }
