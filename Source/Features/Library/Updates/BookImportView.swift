@@ -183,8 +183,7 @@ struct OfflineImportFormView: View {
             HStack {
                 if viewModel.isBookIdTaken {
                     if let id = Int(viewModel.customBookIdText) {
-                        let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-                        let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
+                        let system = LibraryDataManager.isCoreBook(id: id)
                         statusBadge(
                             text: system
                                 ? String(localized: .Library.idReservedBySystem)

@@ -443,12 +443,10 @@ extension LibraryViewManager: NSOutlineViewDelegate {
     }
 
     @objc func deleteBookAction(_ sender: NSMenuItem) {
-        guard let books = sender.representedObject as? [BooksData] else { return }
+        guard let books = sender.representedObject as? [BooksData], !books.isEmpty else { return }
         let alert = NSAlert()
         alert.messageText = String(localized: .Library.deleteDownload)
-        alert.informativeText = books.count == 1
-            ? String(localized: .Library.deleteDownloadedSingleConfirmation(books[0].book))
-            : String(localized: .Library.deleteDownloadedMultipleConfirmation(books.count))
+        alert.informativeText = LibraryViewModel.deleteConfirmationMessage(for: books)
         alert.addButton(withTitle: String(localized: "Delete"))
         alert.addButton(withTitle: String(localized: "Cancel"))
         alert.alertStyle = .warning
@@ -470,7 +468,7 @@ extension LibraryViewManager: NSOutlineViewDelegate {
 extension LibraryViewManager: NSMenuDelegate {
     private func isBookDownloaded(_ book: BooksData) -> Bool {
         if AppConfig.isUsingBundleMode {
-            BookArchiveIntegrator.shared.isBookIntegrated(book)
+            BookArchiveIntegrator.shared.isBookIntegrated(book) || LibraryDataManager.shouldRemoveBook(id: book.id)
         } else {
             LibraryDataManager.shouldRemoveBook(id: book.id)
         }

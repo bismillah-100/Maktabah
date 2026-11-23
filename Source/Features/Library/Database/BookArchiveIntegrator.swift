@@ -223,7 +223,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     /// Menghapus kitab dari archive dan FTS.
     nonisolated func removeBookFromArchive(_ book: BooksData) async throws {
         guard AppConfig.isUsingBundleMode || LibraryDataManager.shouldRemoveBook(id: book.id),
-              book.archive > 0,
+              book.archive >= 0,
               let archiveDbPath = AppConfig.archiveDatabasePath(archiveId: book.archive),
               let ftsDbPath = AppConfig.archiveFtsDatabasePath(archiveId: book.archive)
         else {
@@ -245,6 +245,9 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         archiveDbPath: String,
         ftsDbPath: String
     ) throws {
+        let shouldRemoveBook = LibraryDataManager.shouldRemoveBook(id: book.id)
+        let shouldRemoveAuthor = LibraryDataManager.shouldRemoveAuthor(muallifId: book.muallif)
+
         let archiveWritePath = try prepareWritableDatabasePath(archiveDbPath)
         let ftsWritePath = try prepareWritableDatabasePath(ftsDbPath)
 
@@ -277,13 +280,17 @@ final class BookArchiveIntegrator: @unchecked Sendable {
             fileReplacementFailedError = error
         }
 
-        removeBookFromMainDbIfNeeded(bookId: book.id)
-        removeAuthorFromSpecialDbIfNeeded(muallifId: book.muallif)
+        removeBookFromMainDbIfNeeded(bookId: book.id, shouldRemove: shouldRemoveBook)
+        removeAuthorFromSpecialDbIfNeeded(muallifId: book.muallif, shouldRemove: shouldRemoveAuthor)
 
         pendingVacuumArchiveIds.insert(book.archive)
         savePendingVacuumIds()
 
-        finalizeRemoval(book: book)
+        finalizeRemoval(
+            book: book,
+            removeBookFromCatalog: shouldRemoveBook,
+            removeAuthorFromCache: shouldRemoveAuthor
+        )
 
         if let error = fileReplacementFailedError {
             throw BookArchiveIntegrateError.fileReplacementFailed(error.localizedDescription)
@@ -306,8 +313,8 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         }
     }
 
-    private func removeBookFromMainDbIfNeeded(bookId: Int) {
-        guard LibraryDataManager.shouldRemoveBook(id: bookId),
+    private func removeBookFromMainDbIfNeeded(bookId: Int, shouldRemove: Bool) {
+        guard shouldRemove,
               let mainDbPath = AppConfig.mainDatabasePath else { return }
         do {
             let mainDb = try openDatabase(path: mainDbPath, flags: SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)
@@ -319,13 +326,16 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         }
     }
 
-    private func removeAuthorFromSpecialDbIfNeeded(muallifId: Int) {
-        guard LibraryDataManager.shouldRemoveAuthor(muallifId: muallifId),
+    private func removeAuthorFromSpecialDbIfNeeded(muallifId: Int, shouldRemove: Bool) {
+        guard shouldRemove,
               let specialDbPath = AppConfig.specialDatabasePath,
               !DatabaseManager.shared.isAuthorUsed(authorId: muallifId) else { return }
         do {
             let specialDb = try openDatabase(path: specialDbPath, flags: SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)
-            try exec(specialDb, "DELETE FROM Auth WHERE authid = \(muallifId);")
+            let query = AppConfig.isUsingBundleMode
+                ? "DELETE FROM Auth WHERE authid = \(muallifId);"
+                : "DELETE FROM Auth WHERE authid = \(muallifId) AND oNum IS NULL;"
+            try exec(specialDb, query)
             specialDb.truncateAndClose()
         } catch {
             Logger.library.error("Error deleting author from special database: \(error.localizedDescription, privacy: .public)")
@@ -389,13 +399,22 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         }
     }
 
-    private func finalizeRemoval(book: BooksData) {
+    private func finalizeRemoval(
+        book: BooksData,
+        removeBookFromCatalog: Bool,
+        removeAuthorFromCache: Bool
+    ) {
         DatabaseManager.shared.invalidateArchiveCache(archiveId: book.archive)
         BookPageCache.shared.remove(bookId: book.id)
         BookConnection.invalidateTOC(for: book.id)
         BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(book.id)))
         IntegrationCache.shared.unmarkIntegrated(bookId: book.id, archiveId: book.archive)
-        LibraryDataManager.shared.removeBookFromMemory(id: book.id, muallifId: book.muallif)
+        LibraryDataManager.shared.removeBookFromMemory(
+            id: book.id,
+            muallifId: book.muallif,
+            removeBookFromCatalog: removeBookFromCatalog,
+            removeAuthorFromCache: removeAuthorFromCache
+        )
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .bookIntegrated, object: book.id)
         }

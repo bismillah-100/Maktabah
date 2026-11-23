@@ -55,7 +55,7 @@ struct iOSLibraryView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text(.Library.deleteDownloadedMultipleConfirmation(viewModel.selectedDeleteCount))
+                Text(LibraryViewModel.deleteConfirmationMessage(for: viewModel.selectedDeleteBooks))
             }
             .alert(.Library.deleteDownload, isPresented: singleDeleteBinding) {
                 Button("Delete", role: .destructive) {
@@ -68,7 +68,9 @@ struct iOSLibraryView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text(.Library.deleteDownloadedSingleConfirmation(viewModel.singleBookToDelete?.book ?? ""))
+                if let book = viewModel.singleBookToDelete {
+                    Text(LibraryViewModel.deleteConfirmationMessage(for: [book]))
+                }
             }
     }
 

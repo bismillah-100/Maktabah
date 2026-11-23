@@ -97,9 +97,7 @@ final class BookImportViewModel: @unchecked Sendable {
             }
             guard let id = Int(customBookIdText), id > 0 else { return false }
             if isBookIdTaken {
-                let coreVersion = AppConfig.cachedCoreVersionDouble ?? 0.1
-                let system = coreVersion < 1.0 ? id <= 32792 : id <= 151_203
-                if system {
+                if LibraryDataManager.isCoreBook(id: id) {
                     return false
                 }
             }

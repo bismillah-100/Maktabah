@@ -65,3 +65,22 @@ Dengan pola pemisahan ini:
 2. **`LibraryDataManager`** bertanggung jawab atas struktur data dan I/O memori (*caching* model data di RAM yang *thread-safe* via Mutex).
 
 Integrasi dan pemisahan tanggung jawab ini memastikan Maktabah dapat me-*render* ribuan buku, memfilter katalog, dan mencari metadata secara cepat tanpa membebani memori maupun operasi I/O disk secara repetitif.
+
+---
+
+## Klasifikasi & Penghapusan Buku Non-Katalog (Bundle Mode vs Full Mode)
+
+Untuk membedakan kitab katalog inti dari kitab tambahan (hasil **Import Manual** maupun **Pembaruan Buku**) tanpa tabel pelacak ekstra maupun batas ID *hardcoded*, `LibraryDataManager` menerapkan strategi dua mode berdasarkan `AppConfig.isUsingBundleMode`:
+
+- **Bundle Mode (`true`)**: Menggunakan *cache* `coreIndexIds` (`Mutex<(books: Set<Int>, authors: Set<Int>)?>`) pada `BookDownloadIndexCache` yang diisi otomatis saat `index.json` dimuat (`bkid` dan `authno`), bersifat *fail-closed* bila belum tersedia.
+- **Full Library Mode (`false`, 100% offline)**: Menggunakan kolom bawaan Shamela `oNum` pada tabel `0bok` (`BooksData.oNum != nil` menandakan kitab katalog inti) dan `Auth.oNum IS NULL` + pengecekan `!isAuthorUsed` untuk membersihkan pengarang yatim di `special.sqlite`.
+
+```mermaid
+flowchart TD
+    Check["LibraryDataManager.isCoreBook(id:) / shouldRemoveAuthor(muallifId:)"] --> Mode{"AppConfig.isUsingBundleMode?"}
+    Mode -->|"true (Bundle Mode)"| Index["BookDownloadIndexCache<br/>coreIndexIds (index.json: bkid + authno)"]
+    Mode -->|"false (Full Mode - Offline)"| SQLite["0bok.oNum != nil (BooksData in-memory)<br/>Auth.oNum IS NULL (special.sqlite)"]
+    Index --> Actions["Import Form Validation · Context Menu · Bulk Selection · Delete Alert"]
+    SQLite --> Actions
+    Actions --> Remove["BookArchiveIntegrator.executeBookRemoval<br/>Capture flags sebelum delete SQLite → drop b/t/fts → hapus 0bok & Auth yatim → update memori"]
+```
