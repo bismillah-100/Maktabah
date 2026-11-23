@@ -17,11 +17,19 @@ enum AnnotationRowHeightCalculator {
         }
 
         let columnWidth = outlineView.outlineTableColumn?.width ?? outlineView.bounds.width
-        let contentWidth = max(columnWidth - 40, 120)
+        let horizontalInset: CGFloat = groupingMode == .timeline ? 16 : 26
+        let contentWidth = max(columnWidth - horizontalInset, 100)
 
+        let footnoteFont = NSFont.preferredFont(forTextStyle: .footnote)
+        let dateText = formatDate(annotation.createdAt)
+        let dateWidth = ceil(NSString(string: dateText).size(withAttributes: [.font: footnoteFont]).width)
+        let dateOccupiedWidth = dateWidth + 12
+        let contextWidth = max(contentWidth - dateOccupiedWidth, 60)
+
+        let displayContext = Self.displayContext(annotation.context)
         let contextHeight = measuredHeight(
-            for: annotation.context,
-            width: contentWidth * 0.72,
+            for: displayContext,
+            width: contextWidth,
             font: ReusableFunc.bundledArabicFont(ofSize: 17),
             lineLimit: UserDefaults.standard.ctxMaxNumberOfLines,
             paragraphStyle: paragraphStyle
@@ -29,7 +37,7 @@ enum AnnotationRowHeightCalculator {
 
         let noteHeight: CGFloat = if let note = annotation.note, !note.isEmpty {
             measuredHeight(
-                for: note,
+                for: Self.displayNote(note),
                 width: contentWidth,
                 font: ReusableFunc.bundledArabicFont(ofSize: 15),
                 lineLimit: UserDefaults.standard.annMaxNumberOfLines
@@ -46,12 +54,10 @@ enum AnnotationRowHeightCalculator {
             lineLimit: AnnotationCellView.pagePartLineLimit
         )
 
-        let footnoteFont = NSFont.preferredFont(forTextStyle: .footnote)
-        let dateHeight = ceil(footnoteFont.ascender - footnoteFont.descender + footnoteFont.leading)
-        let topSectionHeight = max(contextHeight, dateHeight + 8)
+        let topSectionHeight = max(contextHeight, 26)
         let stackSpacing: CGFloat = noteHeight > 0 ? 16 : 8
 
-        return ceil(20 + topSectionHeight + pagePartHeight + noteHeight + stackSpacing)
+        return ceil(23 + topSectionHeight + pagePartHeight + noteHeight + stackSpacing)
     }
 
     static func measuredHeight(
@@ -79,6 +85,22 @@ enum AnnotationRowHeightCalculator {
         let maxHeight = lineHeight * CGFloat(max(lineLimit, 1))
 
         return max(lineHeight, min(ceil(measuredRect.height), maxHeight))
+    }
+
+    static func displayContext(_ text: String) -> String {
+        text.truncatedForCellDisplay(maxCharacters: 350, maxNewlines: 2)
+    }
+
+    static func displayNote(_ text: String) -> String {
+        text.truncatedForCellDisplay(maxCharacters: 500, maxNewlines: 4)
+    }
+
+    static func formatDate(_ timestampInt64: Int64) -> String {
+        let targetDate = Date(timeIntervalSince1970: TimeInterval(timestampInt64))
+        if Calendar.current.isDateInToday(targetDate) {
+            return RelativeDateTimeFormatter.shared.localizedString(for: targetDate, relativeTo: Date())
+        }
+        return DateFormatter.mediumDateShortTime.string(from: targetDate)
     }
 
     static func pageAndTagsText(for annotation: Annotation, groupingMode: AnnotationGroupingMode) -> String {

@@ -160,8 +160,9 @@ struct iOSAutoDirectionLabel: UIViewRepresentable {
 
     func updateUIView(_ uiView: UILabel, context: Context) {
         uiView.numberOfLines = lineLimit
+        let displayNote = text.truncatedForCellDisplay(maxCharacters: 350, maxNewlines: 5)
         uiView.attributedText = NSAttributedString.autoDirectionString(
-            text,
+            displayNote,
             font: font,
             color: color,
             lineBreakMode: .byTruncatingTail

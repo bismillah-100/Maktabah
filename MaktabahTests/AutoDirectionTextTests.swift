@@ -81,4 +81,19 @@ struct AutoDirectionTextTests {
         #expect(updated?.alignment == .left)
         #expect(updated?.baseWritingDirection == .leftToRight)
     }
+
+    @Test("truncatedForCellDisplay leaves short strings untouched and truncates long text safely")
+    func testTruncatedForCellDisplay() {
+        let short = "نص قصير"
+        #expect(short.truncatedForCellDisplay(maxCharacters: 20, maxNewlines: 4) == short)
+
+        let arabicWithHarakat = String(repeating: "بِسْمِ ", count: 40)
+        let truncatedChars = arabicWithHarakat.truncatedForCellDisplay(maxCharacters: 25, maxNewlines: 8)
+        #expect(truncatedChars.hasSuffix("…"))
+        #expect(truncatedChars.count == 26)
+
+        let manyLines = "1\n2\n3\n4\n5\n6"
+        let truncatedLines = manyLines.truncatedForCellDisplay(maxCharacters: 100, maxNewlines: 4)
+        #expect(truncatedLines == "1\n2\n3\n4…")
+    }
 }

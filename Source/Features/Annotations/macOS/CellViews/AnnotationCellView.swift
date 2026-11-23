@@ -8,7 +8,7 @@
 import Cocoa
 
 final class AnnotationCellView: NSTableCellView {
-    static let pagePartLineLimit = 2
+    static let pagePartLineLimit = 3
 
     let date: NSTextField = {
         let field = NSTextField(labelWithString: "")

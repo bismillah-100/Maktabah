@@ -194,7 +194,7 @@ class AnnotationsVC: NSViewController {
         }
         outlineView.dataSource = dataSource
         outlineView.delegate = dataSource
-        outlineView.usesAutomaticRowHeights = true
+        outlineView.usesAutomaticRowHeights = false
         selectedGroupingMode == .book
             ? dataSource.reload()
             : dataSource.updateGrouping(mode: selectedGroupingMode)
