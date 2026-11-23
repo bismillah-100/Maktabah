@@ -139,4 +139,58 @@ struct AutoDirectionTextTests {
         let underlineColor = attr.attribute(.underlineColor, at: 0, effectiveRange: nil) as? NSColor
         #expect(underlineColor == color)
     }
+
+    @Test("showAnnotationDate default is true and toggles accurately")
+    func testShowAnnotationDateDefaults() {
+        let original = UserDefaults.standard.showAnnotationDate
+        defer { UserDefaults.standard.showAnnotationDate = original }
+
+        UserDefaults.standard.showAnnotationDate = true
+        #expect(UserDefaults.standard.showAnnotationDate == true)
+
+        UserDefaults.standard.showAnnotationDate = false
+        #expect(UserDefaults.standard.showAnnotationDate == false)
+    }
+
+    @Test("AnnotationRowHeightCalculator respects showDate flag")
+    @MainActor
+    func testRowHeightRespectsShowDate() {
+        let original = UserDefaults.standard.showAnnotationDate
+        defer { UserDefaults.standard.showAnnotationDate = original }
+
+        let ann = Annotation(
+            id: 1,
+            bkId: 100,
+            contentId: 50,
+            range: NSRange(location: 0, length: 10),
+            rangeDiacritics: NSRange(location: 0, length: 10),
+            colorHex: "#FF0000",
+            type: .highlight,
+            note: "Catatan",
+            createdAt: 1_700_000_000,
+            context: "نص تجريبي طويل للاختبار في حساب الارتفاع",
+            page: 1,
+            part: 1
+        )
+        let node = AnnotationNode(title: ann.context, kind: .annotation, annotation: ann)
+        let outlineView = NSOutlineView()
+        let style = NSParagraphStyle()
+
+        let heightWithDate = AnnotationRowHeightCalculator.height(
+            for: node,
+            in: outlineView,
+            groupingMode: .book,
+            paragraphStyle: style,
+            showDate: true
+        )
+        let heightWithoutDate = AnnotationRowHeightCalculator.height(
+            for: node,
+            in: outlineView,
+            groupingMode: .book,
+            paragraphStyle: style,
+            showDate: false
+        )
+
+        #expect(heightWithoutDate <= heightWithDate)
+    }
 }

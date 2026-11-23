@@ -76,7 +76,12 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
             cell.note.isHidden = true
         }
 
-        cell.date.stringValue = formatAnnotationDate(annotation.createdAt)
+        cell.setDateVisibility(showDate: showDate)
+        if showDate {
+            cell.date.stringValue = formatAnnotationDate(annotation.createdAt)
+        } else {
+            cell.date.stringValue = ""
+        }
         cell.setTimelineInset(groupingMode == .timeline)
     }
 
@@ -114,7 +119,13 @@ extension AnnotationOutlineDataSource: NSOutlineViewDelegate, NSTableViewDelegat
     }
 
     func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat {
-        AnnotationRowHeightCalculator.height(for: item, in: outlineView, groupingMode: groupingMode, paragraphStyle: paragraphStyle)
+        AnnotationRowHeightCalculator.height(
+            for: item,
+            in: outlineView,
+            groupingMode: groupingMode,
+            paragraphStyle: paragraphStyle,
+            showDate: showDate
+        )
     }
 
     func outlineViewColumnDidResize(_ notification: Notification) {

@@ -15,40 +15,46 @@ private let key = "LastAppMode"
 
 extension UserDefaults {
     // MARK: - fontSize (Float)
+
     var textViewFontSize: Float {
         get { float(forKey: TextViewKeys.fontSize) }
         set { set(newValue, forKey: TextViewKeys.fontSize) }
     }
 
     // MARK: - fontName (String)
+
     var textViewFontName: String {
         get { string(forKey: TextViewKeys.fontName) ?? "KFGQPC Uthman Taha Naskh" }
         set { set(newValue, forKey: TextViewKeys.fontName) }
     }
 
     // MARK: - lineHeight (Double)
+
     var lineHeight: Double {
         get { double(forKey: TextViewKeys.lineHeight) }
         set { setValue(newValue, forKey: TextViewKeys.lineHeight) }
     }
 
     // MARK: - backgroundColorLight (Int)
+
     var textViewBackgroundColorLight: Int {
         get { integer(forKey: TextViewKeys.backgroundColorLight) }
         set { set(newValue, forKey: TextViewKeys.backgroundColorLight) }
     }
 
     // MARK: - backgroundColorDark (Int)
+
     var textViewBackgroundColorDark: Int {
         get { integer(forKey: TextViewKeys.backgroundColorDark) }
         set { set(newValue, forKey: TextViewKeys.backgroundColorDark) }
     }
 
     // MARK: - showHarakat (Bool)
+
     var textViewShowHarakat: Bool {
         get {
             if object(forKey: TextViewKeys.showHarakat) == nil {
-                return true     // default
+                return true // default
             }
             return bool(forKey: TextViewKeys.showHarakat)
         }
@@ -58,6 +64,7 @@ extension UserDefaults {
     }
 
     // MARK: - extendScreenTime (Bool)
+
     var extendScreenTime: Bool {
         get {
             if object(forKey: TextViewKeys.extendScreenTime) == nil {
@@ -69,8 +76,9 @@ extension UserDefaults {
             set(newValue, forKey: TextViewKeys.extendScreenTime)
         }
     }
-    
+
     // MARK: - enableAnnotationClick (Bool)
+
     var enableAnnotationClick: Bool {
         get {
             if object(forKey: TextViewKeys.annotationClick) == nil {
@@ -78,13 +86,14 @@ extension UserDefaults {
             }
             return bool(forKey: TextViewKeys.annotationClick)
         }
-        
+
         set {
             set(newValue, forKey: TextViewKeys.annotationClick)
         }
     }
 
     // MARK: - enhancedUnderline (Bool)
+
     var textViewEnhancedUnderline: Bool {
         get {
             bool(forKey: TextViewKeys.enhancedUnderline)
@@ -93,13 +102,13 @@ extension UserDefaults {
             set(newValue, forKey: TextViewKeys.enhancedUnderline)
         }
     }
-    
+
     // MARK: - AnnotationsState
 
     var selectedAnnSortField: AnnotationSortField {
         get {
             let int = integer(forKey: AnnotationsKeys.selectedAnnSortField)
-            return AnnotationSortField.init(rawValue: int) ?? .createdAt
+            return AnnotationSortField(rawValue: int) ?? .createdAt
         }
         set {
             set(newValue.rawValue, forKey: AnnotationsKeys.selectedAnnSortField)
@@ -118,7 +127,7 @@ extension UserDefaults {
     var selectedAnnGroupingMode: AnnotationGroupingMode {
         get {
             let int = integer(forKey: AnnotationsKeys.selectedAnnGroupingMode)
-            return AnnotationGroupingMode.init(rawValue: int) ?? .book
+            return AnnotationGroupingMode(rawValue: int) ?? .book
         }
         set {
             set(newValue.rawValue, forKey: AnnotationsKeys.selectedAnnGroupingMode)
@@ -136,7 +145,7 @@ extension UserDefaults {
             set(newValue, forKey: TextViewKeys.annotationFloatWindow)
         }
     }
-    
+
     var annotationHideWindow: Bool {
         get {
             if bool(forKey: TextViewKeys.annotationHideWindow) {
@@ -148,7 +157,7 @@ extension UserDefaults {
             set(newValue, forKey: TextViewKeys.annotationHideWindow)
         }
     }
-    
+
     var annMaxNumberOfLines: Int {
         get {
             let max = integer(
@@ -161,7 +170,7 @@ extension UserDefaults {
             set(newValue, forKey: AnnotationsKeys.annMaxNumberOfLines)
         }
     }
-    
+
     var ctxMaxNumberOfLines: Int {
         get {
             let max = integer(
@@ -172,6 +181,16 @@ extension UserDefaults {
         }
         set {
             set(newValue, forKey: AnnotationsKeys.ctxMaxNumberOfLines)
+        }
+    }
+
+    var showAnnotationDate: Bool {
+        get {
+            if object(forKey: AnnotationsKeys.showAnnotationDate) == nil { return true }
+            return bool(forKey: AnnotationsKeys.showAnnotationDate)
+        }
+        set {
+            set(newValue, forKey: AnnotationsKeys.showAnnotationDate)
         }
     }
 
@@ -340,6 +359,7 @@ extension UserDefaults {
     }
 
     // MARK: - searchNearDistance (Int)
+
     static let searchNearDistanceKey = "searchNearDistance"
     var searchNearDistance: Int {
         get {
@@ -352,6 +372,7 @@ extension UserDefaults {
     }
 
     // MARK: - Search
+
     static let recordSearchHistoryKey = "recordSearchHistory"
     var recordSearchHistory: Bool {
         get {
@@ -366,6 +387,7 @@ extension UserDefaults {
     }
 
     // MARK: - Donation
+
     static let appActivationCountKey = "appActivationCount"
     static let donationLastDismissedKey = "donationLastDismissedTimestamp"
     static let hasDonatedKey = "hasDonated"
@@ -405,6 +427,6 @@ extension UserDefaults {
         static let selectedAnnGroupingMode = "selectedAnnGroupingMode"
         static let annMaxNumberOfLines = "annMaxNumberOfLines"
         static let ctxMaxNumberOfLines = "ctxMaxNumberOfLines"
+        static let showAnnotationDate = "showAnnotationDate"
     }
 }
-
