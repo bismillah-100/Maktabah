@@ -1158,7 +1158,9 @@ extension IbarotTextView: TextViewRenderable {
     }
 
     private func scrollAndShowFindIndicator(for range: NSRange) {
-        textLayoutManager?.ensureLayout(for: range)
+        let totalLength = textStorage?.length ?? 0
+        let targetEnd = min(range.location + range.length, totalLength)
+        textLayoutManager?.ensureLayout(for: NSRange(location: 0, length: targetEnd))
         scrollRangeToVisible(range)
         enclosingScrollView?.contentView.layoutSubtreeIfNeeded()
         textLayoutManager?.textViewportLayoutController.layoutViewport()
