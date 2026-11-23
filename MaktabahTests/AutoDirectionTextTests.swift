@@ -96,4 +96,47 @@ struct AutoDirectionTextTests {
         let truncatedLines = manyLines.truncatedForCellDisplay(maxCharacters: 100, maxNewlines: 4)
         #expect(truncatedLines == "1\n2\n3\n4…")
     }
+
+    @Test("Context auto direction correctly formats RTL Arabic with highlight")
+    func testContextAutoDirectionArabicHighlight() {
+        let font = NSFont.systemFont(ofSize: 17)
+        let color = NSColor.yellow
+        let attr = NSAttributedString.autoDirectionContextString(
+            "قال الشافعي رحمه الله تعالى",
+            font: font,
+            mode: .highlight,
+            effectiveColor: color,
+            lineBreakMode: .byWordWrapping
+        )
+
+        let style = attr.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle
+        #expect(style?.alignment == .right)
+        #expect(style?.baseWritingDirection == .rightToLeft)
+
+        let bg = attr.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
+        #expect(bg != nil)
+    }
+
+    @Test("Context auto direction correctly formats LTR Latin with underline")
+    func testContextAutoDirectionLatinUnderline() {
+        let font = NSFont.systemFont(ofSize: 17)
+        let color = NSColor.red
+        let attr = NSAttributedString.autoDirectionContextString(
+            "Imam Syafi'i rahimahullah berkata dalam kitab al-Umm",
+            font: font,
+            mode: .underline,
+            effectiveColor: color,
+            lineBreakMode: .byTruncatingTail
+        )
+
+        let style = attr.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle
+        #expect(style?.alignment == .left)
+        #expect(style?.baseWritingDirection == .leftToRight)
+        #expect(style?.lineBreakMode == .byTruncatingTail)
+
+        let underline = attr.attribute(.underlineStyle, at: 0, effectiveRange: nil) as? Int
+        #expect(underline == NSUnderlineStyle.single.rawValue)
+        let underlineColor = attr.attribute(.underlineColor, at: 0, effectiveRange: nil) as? NSColor
+        #expect(underlineColor == color)
+    }
 }
