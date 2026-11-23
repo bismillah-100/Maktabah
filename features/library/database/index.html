@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -1867,6 +1867,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#klasifikasi-penghapusan-buku-non-katalog-bundle-mode-vs-full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Klasifikasi &amp; Penghapusan Buku Non-Katalog (Bundle Mode vs Full Mode)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3611,6 +3622,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#klasifikasi-penghapusan-buku-non-katalog-bundle-mode-vs-full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Klasifikasi &amp; Penghapusan Buku Non-Katalog (Bundle Mode vs Full Mode)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3682,6 +3704,20 @@
 <li><strong><code>LibraryDataManager</code></strong> bertanggung jawab atas struktur data dan I/O memori (<em>caching</em> model data di RAM yang <em>thread-safe</em> via Mutex).</li>
 </ol>
 <p>Integrasi dan pemisahan tanggung jawab ini memastikan Maktabah dapat me-<em>render</em> ribuan buku, memfilter katalog, dan mencari metadata secara cepat tanpa membebani memori maupun operasi I/O disk secara repetitif.</p>
+<hr />
+<h2 id="klasifikasi-penghapusan-buku-non-katalog-bundle-mode-vs-full-mode">Klasifikasi &amp; Penghapusan Buku Non-Katalog (Bundle Mode vs Full Mode)</h2>
+<p>Untuk membedakan kitab katalog inti dari kitab tambahan (hasil <strong>Import Manual</strong> maupun <strong>Pembaruan Buku</strong>) tanpa tabel pelacak ekstra maupun batas ID <em>hardcoded</em>, <code>LibraryDataManager</code> menerapkan strategi dua mode berdasarkan <code>AppConfig.isUsingBundleMode</code>:</p>
+<ul>
+<li><strong>Bundle Mode (<code>true</code>)</strong>: Menggunakan <em>cache</em> <code>coreIndexIds</code> (<code>Mutex&lt;(books: Set&lt;Int&gt;, authors: Set&lt;Int&gt;)?&gt;</code>) pada <code>BookDownloadIndexCache</code> yang diisi otomatis saat <code>index.json</code> dimuat (<code>bkid</code> dan <code>authno</code>), bersifat <em>fail-closed</em> bila belum tersedia.</li>
+<li><strong>Full Library Mode (<code>false</code>, 100% offline)</strong>: Menggunakan kolom bawaan Shamela <code>oNum</code> pada tabel <code>0bok</code> (<code>BooksData.oNum != nil</code> menandakan kitab katalog inti) dan <code>Auth.oNum IS NULL</code> + pengecekan <code>!isAuthorUsed</code> untuk membersihkan pengarang yatim di <code>special.sqlite</code>.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TD
+    Check["LibraryDataManager.isCoreBook(id:) / shouldRemoveAuthor(muallifId:)"] --&gt; Mode{"AppConfig.isUsingBundleMode?"}
+    Mode --&gt;|"true (Bundle Mode)"| Index["BookDownloadIndexCache&lt;br/&gt;coreIndexIds (index.json: bkid + authno)"]
+    Mode --&gt;|"false (Full Mode - Offline)"| SQLite["0bok.oNum != nil (BooksData in-memory)&lt;br/&gt;Auth.oNum IS NULL (special.sqlite)"]
+    Index --&gt; Actions["Import Form Validation · Context Menu · Bulk Selection · Delete Alert"]
+    SQLite --&gt; Actions
+    Actions --&gt; Remove["BookArchiveIntegrator.executeBookRemoval&lt;br/&gt;Capture flags sebelum delete SQLite → drop b/t/fts → hapus 0bok &amp; Auth yatim → update memori"]</code></pre>
 
 
 
