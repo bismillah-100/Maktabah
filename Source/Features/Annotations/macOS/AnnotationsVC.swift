@@ -119,6 +119,7 @@ class AnnotationsVC: NSViewController {
         stack.edgeInsets.top = 10
         stack.edgeInsets.bottom = 6
         stack.orientation = .vertical
+        stack.alignment = .width
         stack.spacing = 6
         return stack
     }()
@@ -137,6 +138,12 @@ class AnnotationsVC: NSViewController {
         return segment
     }()
 
+    lazy var titlebarAccessoryVC: NSTitlebarAccessoryViewController = {
+        let accessoryVC = NSTitlebarAccessoryViewController()
+        accessoryVC.layoutAttribute = .bottom
+        return accessoryVC
+    }()
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -145,42 +152,23 @@ class AnnotationsVC: NSViewController {
         setupSortMenu()
         setupShareMenu()
         setupImportMenu()
-        ReusableFunc.setupSearchField(searchField)
-        outlineView.allowsMultipleSelection = true
-        searchField.delegate = self
-        searchField.onBecomeFirstResponder = { [weak self] in
-            self?.updateAndShowScopePanel()
-        }
-        dataSource.onAddTagsRequested = { [weak self] annotationIDs, anchorRect in
-            self?.presentTagPopover(mode: .add, annotationIDs: annotationIDs, anchorRect: anchorRect)
-        }
-        dataSource.onRemoveTagsRequested = { [weak self] annotationIDs, anchorRect in
-            self?.presentTagPopover(mode: .remove, annotationIDs: annotationIDs, anchorRect: anchorRect)
-        }
-        dataSource.viewModel.onTagsChanged = { [weak self] tags in
-            self?.updateChips(allTags: tags)
-        }
+        setupSearchField()
+        setupOutlineView()
+        setupRootStackView()
+    }
+
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        view.window?.initialFirstResponder = outlineView
     }
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        view.window?.makeFirstResponder(outlineView)
         if isDataLoaded { return }
-        for c in outlineView.tableColumns {
-            c.maxWidth = .greatestFiniteMagnitude
-        }
+        isDataLoaded = true
         ReusableFunc.showProgressWindow(view)
         xBtn.isHidden = popover
-        dataSource.onSelectItem = { [weak self] row in self?.isRowUnselected = row == -1 }
-        outlineView.deselectAll(nil)
-        dataSource.outlineView = outlineView
-        createRootTitlebarStack()
-        if #unavailable(macOS 26) {
-            let btmBox = NSBox()
-            btmBox.boxType = .separator
-            btmBox.translatesAutoresizingMaskIntoConstraints = false
-            rootStackView.insertArrangedSubview(btmBox, at: 0)
-        }
-        rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
         Task { [weak self] in
             guard let self else { return }
             setupMaxLine()
@@ -189,7 +177,6 @@ class AnnotationsVC: NSViewController {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 ReusableFunc.closeProgressWindow(view)
-                isDataLoaded = true
             }
         }
     }
@@ -221,12 +208,48 @@ class AnnotationsVC: NSViewController {
         dataSource.viewModel.searchText = sender.stringValue
     }
 
+    private func setupSearchField() {
+        ReusableFunc.setupSearchField(searchField)
+        searchField.delegate = self
+        searchField.onBecomeFirstResponder = { [weak self] in
+            self?.updateAndShowScopePanel()
+        }
+    }
+
+    private func setupOutlineView() {
+        outlineView.allowsMultipleSelection = true
+        outlineView.tableColumns.first?.maxWidth = .greatestFiniteMagnitude
+        dataSource.onAddTagsRequested = { [weak self] annotationIDs, anchorRect in
+            self?.presentTagPopover(mode: .add, annotationIDs: annotationIDs, anchorRect: anchorRect)
+        }
+        dataSource.onRemoveTagsRequested = { [weak self] annotationIDs, anchorRect in
+            self?.presentTagPopover(mode: .remove, annotationIDs: annotationIDs, anchorRect: anchorRect)
+        }
+        dataSource.viewModel.onTagsChanged = { [weak self] tags in
+            self?.updateChips(allTags: tags)
+        }
+        dataSource.onSelectItem = { [weak self] row in
+            self?.isRowUnselected = row == -1
+        }
+        dataSource.outlineView = outlineView
+    }
+
     func openAsPanel() {
-        let panel = NSPanel()
-        panel.styleMask.insert([.fullSizeContentView, .titled])
-        panel.styleMask.insert([.utilityWindow, .resizable, .closable])
+        loadViewIfNeeded()
+
+        let initialSize = NSSize(
+            width: max(view.frame.width, 376),
+            height: max(view.frame.height, 500)
+        )
+        let panel = NSPanel(
+            contentRect: NSRect(origin: .zero, size: initialSize),
+            styleMask: [.titled, .closable, .resizable, .utilityWindow, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
         panel.title = "Annotations".localized
         panel.delegate = self
+        panel.initialFirstResponder = outlineView
         shareBtn.isHidden = false
         windowBtn.isHidden = true
         setting.isHidden = false
@@ -234,51 +257,61 @@ class AnnotationsVC: NSViewController {
         hideOnMenuItem.isHidden = false
         floatMenuItem.state = floatPanel ? .on : .off
         hideOnMenuItem.state = hideOnPanel ? .on : .off
+
+        setupPanelScrollView()
         panel.contentViewController = self
+        if SharedPopover.annotationsPopover.contentViewController === self {
+            SharedPopover.annotationsPopover.contentViewController = nil
+        }
+
         panel.isFloatingPanel = floatPanel
         panel.hidesOnDeactivate = hideOnPanel
-        panel.makeKeyAndOrderFront(nil)
         panel.setFrameAutosaveName("AnnotationsPanel")
+        setupPanelTitlebarAccessory(panel)
+        panel.makeKeyAndOrderFront(nil)
         Self.panel = panel
-
-        setupLayoutPanel(panel)
     }
 
-    func setupLayoutPanel(_ panel: NSPanel) {
+    // MARK: - LAYOUT
+
+    private func setupRootStackView() {
+        createRootTitlebarStack()
+        rootStackView.alignment = .width
+        if #unavailable(macOS 26) {
+            let btmBox = NSBox()
+            btmBox.boxType = .separator
+            btmBox.translatesAutoresizingMaskIntoConstraints = false
+            rootStackView.insertArrangedSubview(btmBox, at: 0)
+        }
+        rootStackView.insertArrangedSubview(titlebarRootStack, at: 0)
+    }
+
+    private func setupPanelScrollView() {
         rootStackView.removeArrangedSubview(scrollView)
         rootStackView.removeArrangedSubview(titlebarRootStack)
+        scrollView.removeFromSuperview()
+        titlebarRootStack.removeFromSuperview()
         rootStackView.removeFromSuperview()
-        titlebarRootStack.edgeInsets.top = 8
 
         view.addSubview(scrollView)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+    }
 
-        let titlebarAccessoryView = NSTitlebarAccessoryViewController()
-        titlebarAccessoryView.view = titlebarRootStack
-        titlebarAccessoryView.layoutAttribute = .bottom
-
-        let oldF = titlebarAccessoryView.view.frame
+    private func setupPanelTitlebarAccessory(_ panel: NSPanel) {
+        titlebarRootStack.edgeInsets.top = 0
+        titlebarAccessoryVC.removeFromParent()
+        titlebarAccessoryVC.view = titlebarRootStack
         if #available(macOS 26.1, *) {
-            titlebarAccessoryView.preferredScrollEdgeEffectStyle = .soft
-            if oldF.height < 70 {
-                titlebarAccessoryView.view.frame = NSRect(
-                    origin: oldF.origin,
-                    size: CGSize(width: oldF.width, height: 70)
-                )
-            }
-        } else {
-            titlebarAccessoryView.view.frame = NSRect(
-                origin: oldF.origin,
-                size: CGSize(width: oldF.width, height: oldF.height + 42)
-            )
+            titlebarAccessoryVC.preferredScrollEdgeEffectStyle = .soft
         }
-        panel.addTitlebarAccessoryViewController(titlebarAccessoryView)
+        titlebarRootStack.layoutSubtreeIfNeeded()
+        panel.addTitlebarAccessoryViewController(titlebarAccessoryVC)
     }
 
     deinit {
