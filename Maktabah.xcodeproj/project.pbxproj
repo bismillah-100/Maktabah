@@ -4558,7 +4558,7 @@
 			repositoryURL = "https://github.com/facebook/zstd.git";
 			requirement = {
 				kind = exactVersion;
-				version = 1.5.7;
+				version = 1.6.0;
 			};
 		};
 		F30576E12FA46222005732C6 /* XCRemoteSwiftPackageReference "zstd" */ = {
