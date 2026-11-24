@@ -36,6 +36,40 @@
 </head>
 <body>
 
+<h2>Version 4.2.3</h2>
+<p class="version">November 24, 2026</p>
+<h3>New</h3>
+<ul>
+  <li>Option to toggle annotation date visibility with UserDefaults persistence under settings, bypassing date formatting and width calculations when disabled to improve scroll performance.</li>
+  <li>Per-paragraph automatic RTL/LTR writing direction and text alignment detection for annotation context and notes across macOS (outline view, editor) and iOS (collection view, reader toolbar, editor sheet).</li>
+  <li>Automatic purging of custom books and orphaned custom authors from local storage, catalog, and memory cache upon deletion, powered by dual-mode index classification.</li>
+</ul>
+<h3>Changes</h3>
+<ul>
+  <li>Update zstd library to version 1.6.0.</li>
+  <li>Updated macOS and iOS delete confirmation dialogs to clearly distinguish imported custom books from core catalog downloads.</li>
+  <li>Repositioned annotation date toggle directly below Line Limits in the settings menu.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+  <li>Pre-compute TextKit 2 layout fragments from document start to target range when jumping to annotations, search results, or Table of Contents items to prevent scroll jitter and viewport snapping on long Arabic pages.</li>
+  <li>Prevent Index out of range crash during consecutive tag group deletions in macOS annotations outline view by decoupling empty parent removal from child updates.</li>
+  <li>Ensure consistent tag group sorting across sort modes (creation date via maxCreatedAt or alphabetically, with untagged items pinned at the bottom) and batch root additions in NSOutlineView.</li>
+  <li>Refactor macOS annotations panel layout to use native Auto Layout in the titlebar accessory view controller, removing manual frame polling and preventing search field auto-focus.</li>
+  <li>Prevent full library table view reloads and visual flashes during initial CloudKit sync or book selection by preserving row references when book titles remain unchanged.</li>
+  <li>Persist remote CloudKit snapshots locally during active widget fetches to prevent watchdog timeouts and fallback gracefully during offline use.</li>
+  <li>Guard against redundant reading history updates (updateLastContentId) to prevent marking history dirty and overwriting fresh widget snapshots.</li>
+</ul>
+<h3>Improvements</h3>
+<ul>
+  <li>Pre-truncate annotation context and note text before CoreText shaping and layout calculation on macOS and iOS to improve table scrolling smoothness.</li>
+  <li>Accelerate RTL/LTR paragraph direction checks with fast-path character lookups and cached immutable NSParagraphStyle instances via AutoDirectionStyleCache.</li>
+  <li>Disable automatic row heights on macOS annotations outline view in favor of explicit cached measurements in AnnotationRowHeightCalculator.</li>
+</ul>
+
+<hr>
+
+
 <h2>Version 4.2.2</h2>
 <p class="version">November 12, 2026</p>
 <h3>New</h3>

@@ -3,6 +3,15 @@
     <channel>
         <title>Maktabah</title>
         <item>
+            <title>4.2.3</title>
+            <pubDate>Tue, 24 Nov 2026 02:31:42 +0000</pubDate>
+            <sparkle:version>198</sparkle:version>
+            <sparkle:shortVersionString>4.2.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v4.2.3/Maktabah-v4.2.3.zip" length="8440467" type="application/octet-stream" sparkle:edSignature="XNxvUXbrWhZ0tvo87grunDDUX+VlyNSiee7MIHEMRNnq3vIV4FO3Ox85v14qrknHywGzwo+SHjqwGVSLk1MeDA=="/>
+            <sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>
+        </item>
+        <item>
             <title>4.2.2</title>
             <pubDate>Thu, 12 Nov 2026 03:12:16 +0000</pubDate>
             <sparkle:version>197</sparkle:version>
@@ -18,15 +27,6 @@
             <sparkle:shortVersionString>4.2.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v4.2.1/Maktabah-v4.2.1.zip" length="8375240" type="application/octet-stream" sparkle:edSignature="oENS9DX5N19nBntyrb9nStir80mEmk4m2s/oxph3uxW7nmjp9Lv9GKcsTAmAUBcnxqdjiUi2feZliUUojcoZAA=="/>
-            <sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>
-        </item>
-        <item>
-            <title>4.2</title>
-            <pubDate>Tue, 20 Oct 2026 01:02:47 +0000</pubDate>
-            <sparkle:version>195</sparkle:version>
-            <sparkle:shortVersionString>4.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/bismillah-100/Maktabah/releases/download/v4.2/Maktabah-v4.2.zip" length="8285250" type="application/octet-stream" sparkle:edSignature="WE6fLTckLbYKSjw7qYVP2c1Zg1Kur6b+ElwOoc8jTbeaXsoK8VmmV2cZMMLUSO6WBXPM+AP0sckx1MOFxbKjDA=="/>
             <sparkle:releaseNotesLink>https://bismillah-100.github.io/Maktabah/releases-notes.html</sparkle:releaseNotesLink>
         </item>
         <item>
