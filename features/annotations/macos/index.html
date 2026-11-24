@@ -3864,16 +3864,18 @@
 <ul>
 <li><code>isFloatingPanel</code>: Bila opsi <em>float</em> aktif, panel selalu berada di atas jendela dokumen (<code>UserDefaults.standard.annotationFloatWindow</code>).</li>
 <li><code>hidesOnDeactivate</code>: Mengontrol apakah panel otomatis disembunyikan saat aplikasi Maktabah kehilangan fokus (<code>NSWindow.hidesOnDeactivate</code>).</li>
-<li><strong>Injeksi Titlebar Accessory</strong>: Saat bertransformasi menjadi panel mandiri (<code>setupLayoutPanel</code>), <code>titlebarRootStack</code> (yang berisi kolom pencarian dan filter tag) dicabut dari hierarki <code>rootStackView</code> dan disematkan ke bawah <em>titlebar</em> panel menggunakan <code>NSTitlebarAccessoryViewController</code> (<code>layoutAttribute = .bottom</code>).</li>
+<li><strong>Injeksi Titlebar Accessory</strong>: Saat bertransformasi menjadi panel mandiri (<code>setupLayoutPanel</code>), <code>titlebarRootStack</code> (yang berisi kolom pencarian dan filter tag) disematkan langsung ke bawah <em>titlebar</em> panel menggunakan <code>NSTitlebarAccessoryViewController</code> (<code>layoutAttribute = .bottom</code>) dengan native Auto Layout tanpa pembungkus manual atau polling ketinggian frame. Penataan stack vertikal disetel dengan perataan <code>.width</code> guna mengeliminasi batasan lebar redundan, dan <code>outlineView</code> disetel sebagai <em>initial first responder</em> pada panel dan jendela untuk mencegah fokus otomatis yang tidak diinginkan ke kolom pencarian.</li>
 </ul>
 </li>
 </ul>
 <h2 id="custom-tablecellview">Custom TableCellView</h2>
 <p>Komponen <code>AnnotationCellView</code> adalah turunan dari <code>NSTableCellView</code> yang dirancang untuk merender detail anotasi secara kustom.</p>
 <ul>
+<li><strong>Tipografi Arab &amp; Auto Direction</strong>:
+    Variabel <code>context</code> dan <code>note</code> kini mendukung deteksi arah paragraf otomatis (RTL/LTR) secara dinamis menggunakan <code>AutoDirectionStyleCache</code> dan <code>applyAutoDirectionAlignments</code>. Hal ini menjamin keterbacaan alami untuk kutipan bahasa Arab maupun catatan pengguna dalam bahasa Latin/Indonesia. <code>pagePart</code> tetap menggunakan <code>BundledArabicTextField</code> dengan perataan kanan-ke-kiri (RTL).</li>
 <li>
-<p><strong>Tipografi Arab</strong>:
-    Menggunakan <code>BundledArabicTextField</code> pada variabel <code>context</code>, <code>note</code>, dan <code>pagePart</code>. Konfigurasi ini secara otomatis mengimplementasikan perataan teks dari kanan ke kiri (RTL) yang sesuai dengan aturan tipografi Arab.</p>
+<p><strong>Opsi Visibilitas Tanggal</strong>:
+    Elemen tanggal (<code>dateTextField</code>) dapat disembunyikan berdasarkan preferensi <code>UserDefaults.standard.showAnnotationDate</code>. Saat disembunyikan, label tanggal ditiadakan dari hierarki tampilan dan ruang lebar sel dialokasikan sepenuhnya untuk teks kutipan.</p>
 </li>
 <li>
 <p><strong>Tata Letak</strong>:
@@ -3913,18 +3915,23 @@
     Data dari pengontrol hierarki direpresentasikan dalam bentuk struktur hierarki oleh <code>AnnotationTreeBuilder</code>. Relasi <em>parent-child</em> ini dibaca oleh <code>NSOutlineView</code> untuk merender baris sesuai mode yang aktif.</li>
 </ul>
 <h2 id="kalkulasi-tinggi-baris-dinamis-annotationrowheightcalculator">Kalkulasi Tinggi Baris Dinamis (<code>AnnotationRowHeightCalculator</code>)</h2>
-<p>Karena kutipan teks Arab, catatan pengguna, serta daftar tag memiliki panjang yang bervariasi, penentuan tinggi baris dilakukan melalui <code>@MainActor enum AnnotationRowHeightCalculator</code>:</p>
+<p>Karena kutipan teks Arab, catatan pengguna, serta daftar tag memiliki panjang yang bervariasi, penentuan tinggi baris dilakukan melalui <code>@MainActor enum AnnotationRowHeightCalculator</code> dengan menonaktifkan <code>usesAutomaticRowHeights</code> pada <code>NSOutlineView</code> demi performa optimal:</p>
 <ul>
 <li><strong>Pengukuran Komponen Teks (<code>measuredHeight</code>)</strong>:<ul>
-<li>Kutipan teks Arab (<code>context</code>): Dihitung dengan <em>font</em> Arab bawaan dan dibatasi oleh nilai preferensi <code>UserDefaults.standard.ctxMaxNumberOfLines</code>.</li>
-<li>Catatan tambahan (<code>note</code>): Dihitung menggunakan <em>font</em> sistem dan dibatasi oleh <code>UserDefaults.standard.annMaxNumberOfLines</code>.</li>
-<li>Metadata (<code>pagePart</code>): Menghitung ruang untuk nomor jilid/halaman dan <em>tag chips</em>.</li>
+<li>Kutipan teks Arab (<code>context</code>): Dipotong terlebih dahulu (<em>pre-truncated</em>) via <code>displayContext</code> (<code>truncatedForCellDisplay(maxCharacters: 350, maxNewlines: 2)</code>) dan dibatasi oleh nilai preferensi <code>UserDefaults.standard.ctxMaxNumberOfLines</code>.</li>
+<li>Catatan tambahan (<code>note</code>): Dipotong via <code>displayNote</code> (<code>truncatedForCellDisplay(maxCharacters: 500, maxNewlines: 4)</code>) dan dibatasi oleh <code>UserDefaults.standard.annMaxNumberOfLines</code>.</li>
+<li>Metadata (<code>pagePart</code>): Dibatasi maksimal 3 baris (<code>pagePartLineLimit = 3</code>) untuk mengakomodasi pembungkusan nomor jilid/halaman dan daftar tag.</li>
 </ul>
 </li>
+<li><strong>Alokasi Lebar Dinamis</strong>:
+    Saat <code>showAnnotationDate</code> bernilai <code>true</code>, lebar tanggal (<code>dateWidth + 12</code>) dikurangkan dari lebar baris untuk menghasilkan <code>contextWidth</code>. Apabila tanggal disembunyikan, <code>contextWidth</code> menggunakan lebar penuh <code>contentWidth</code>.</li>
 <li><strong>Formula Padding &amp; Spacing</strong>:
     Menghitung tinggi total secara presisi dengan formula:
-    $$\text{Total Height} = \lceil 20 + \max(\text{contextHeight}, \text{dateHeight} + 8) + \text{pagePartHeight} + \text{noteHeight} + \text{stackSpacing} \rceil$$
-    Metode ini dipanggil langsung oleh <code>outlineView(_:heightOfRowByItem:)</code> pada <code>AnnotationsOutlineDelegate</code> sehingga penghitungan tinggi baris berjalan mulus tanpa jeda saat pengguliran cepat.</li>
+    $$\text{Total Height} = \lceil 23 + \text{topSectionHeight} + \text{pagePartHeight} + \text{noteHeight} + \text{stackSpacing} \rceil$$
+    dengan:
+    $$\text{topSectionHeight} = \begin{cases} \max(\text{contextHeight}, 26) &amp; \text{jika } \text{showAnnotationDate} = \text{true} \ \max(\text{contextHeight}, 20) &amp; \text{jika } \text{showAnnotationDate} = \text{false} \end{cases}$$
+    $$\text{stackSpacing} = \begin{cases} 16 &amp; \text{jika } \text{noteHeight} &gt; 0 \ 8 &amp; \text{jika } \text{noteHeight} = 0 \end{cases}$$
+    Metode ini dipanggil langsung oleh <code>outlineView(_:heightOfRowByItem:)</code> pada <code>AnnotationsOutlineDelegate</code>, dan cache tinggi baris diinvalisir saat kolom tabel diubah ukurannya (<em>column resize</em>).</li>
 </ul>
 <h2 id="interaksi-pengguna-navigasi-reader">Interaksi Pengguna &amp; Navigasi Reader</h2>
 <p>Saat pengguna berinteraksi dengan daftar baris:</p>
@@ -3956,6 +3963,8 @@
     Menampilkan deretan titik warna di dalam menu konteks untuk <em>highlight</em> serta tombol <em>underline</em> terdedikasi. Ikon <em>underline</em> dikonfigurasi menggunakan SF Symbol dengan <code>NSImage.SymbolConfiguration(paletteColors:)</code> yang mencerminkan warna terakhir dari <code>recentUnderlineColors</code> (fallback ke <code>.labelColor</code>).</li>
 <li><strong>Panel Editor Anotasi (<code>AnnotationEditorVC</code>)</strong>:
     Panel <em>popover</em> untuk mengedit catatan teks lengkap, mengubah tipe (<em>highlight</em> vs. <em>underline</em>), memilih warna dari <code>NSColorWell</code>, serta mengatur tag melalui <code>NSTokenField</code>. Nilai warna disinkronkan secara otomatis: jika tipe <em>underline</em> aktif, warna disimpan dan dipush ke <code>UserDefaults.standard.recentUnderlineColors</code>, sehingga pembuatan <em>underline</em> berikutnya secara konsisten memakai warna tersebut.</li>
+<li><strong>Menu Opsi Tampilan &amp; Batas Baris (<code>AnVC+LineMenu.swift</code>)</strong>:
+    Menyediakan pengaturan jumlah batas baris untuk kutipan (<code>ctxMaxNumberOfLines</code>) dan catatan (<code>annMaxNumberOfLines</code>), serta <em>toggle</em> visibilitas tanggal anotasi (<code>showAnnotationDate</code>). Perubahan preferensi tanggal langsung memperbarui kalkulasi tinggi baris dan memicu pembaruan tata letak <em>outline view</em>.</li>
 </ul>
 <h3 id="alur-persistensi-warna-anotasi-highlight-underline">Alur Persistensi Warna Anotasi (Highlight &amp; Underline)</h3>
 <pre class="mermaid"><code>flowchart TD
@@ -4007,7 +4016,7 @@
 <li>Permintaan manipulasi tag memancarkan sinyal <code>onAddTagsRequested</code> atau <code>onRemoveTagsRequested</code>.</li>
 <li>Lapisan kontrol <code>AnnotationsVC</code> merespons dengan menampilkan <em>popover</em> pemilihan tag.</li>
 <li>Saat pengguna menyimpan perubahan tag, sistem menyusun objek <code>TagUpdateDiff</code>.</li>
-<li>Metode <code>handleTagModeUpdate()</code> memproses perubahan di antara blok <code>beginUpdates()</code> dan <code>endUpdates()</code> menggunakan animasi <code>slideDown</code>.</li>
+<li>Metode <code>handleTagModeUpdate()</code> memproses perubahan secara aman: pembuangan parent node yang kosong dipisahkan dari mutasi child node (<code>applyTagModeRemovals</code>), penambahan node grup baru digabungkan (<em>batching</em>) ke dalam <code>IndexSet</code>, dan pemanggilan <code>outlineView.reloadItem</code> ditunda hingga sesudah blok <code>outlineView.endUpdates()</code> selesai dieksekusi guna mencegah inkonsistensi indeks internal <code>NSOutlineView</code>.</li>
 </ol>
 </li>
 </ul>

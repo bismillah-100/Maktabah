@@ -1153,10 +1153,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-arah-teks-force-ltr" class="md-nav__link">
+  <a href="#penanganan-arah-teks-auto-rtlltr-pre-truncation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Arah Teks (Force LTR)
+        Penanganan Arah Teks, Auto RTL/LTR &amp; Pre-Truncation
       
     </span>
   </a>
@@ -3739,10 +3739,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#penanganan-arah-teks-force-ltr" class="md-nav__link">
+  <a href="#penanganan-arah-teks-auto-rtlltr-pre-truncation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Penanganan Arah Teks (Force LTR)
+        Penanganan Arah Teks, Auto RTL/LTR &amp; Pre-Truncation
       
     </span>
   </a>
@@ -3966,11 +3966,17 @@
 </ul>
 </li>
 </ul>
-<h2 id="penanganan-arah-teks-force-ltr">Penanganan Arah Teks (Force LTR)</h2>
-<p>Aplikasi Maktabah dirancang untuk mengakomodasi teks Arab sehingga secara alami memakai orientasi Kanan-ke-Kiri (RTL). Namun, pada elemen metadata tertentu, tata letak diarahkan secara eksplisit ke Kiri-ke-Kanan (<em>Force LTR</em>).</p>
+<h2 id="penanganan-arah-teks-auto-rtlltr-pre-truncation">Penanganan Arah Teks, Auto RTL/LTR &amp; Pre-Truncation</h2>
+<p>Aplikasi Maktabah dirancang untuk mengakomodasi teks Arab sehingga secara alami memakai orientasi Kanan-ke-Kiri (RTL). Namun, penataan arah teks dilakukan secara dinamis dan kontekstual:</p>
 <ul>
+<li><strong>Deteksi Arah Paragraf Otomatis (RTL/LTR)</strong>:
+    Pada <code>AnnotationContentView</code>, bilah alat pembaca <code>iOSBookAnnotationsView</code>, serta lembar penyunting <code>iOSAnnotationEditorSheet</code>, teks kutipan (<code>context</code>) dan catatan pengguna (<code>note</code>) dievaluasi per paragraf menggunakan <code>applyAutoDirectionAlignments</code>. Paragraf berbahasa Arab otomatis dialokasikan ke kanan (RTL), sedangkan catatan Latin/Indonesia diselaraskan ke kiri (LTR) secara alami.</li>
+<li><strong>Pre-Truncation untuk Performa 120 FPS</strong>:
+    Sebelum teks kutipan dan catatan dirender ke dalam <code>UICollectionViewCell</code>, teks dipotong terlebih dahulu (<em>pre-truncated</em>) melalui helper <code>truncatedForCellDisplay</code>: dibatasi hingga 200 karakter untuk konteks dan 350 karakter untuk catatan. Hal ini meringankan alokasi memori TextKit dan komputasi ukuran sel pada layar ProMotion.</li>
+<li><strong>Sinkronisasi Editor Lembar (<code>iOSAnnotationEditorSheet</code>)</strong>:
+    Menyinkronkan <code>typingAttributes</code> saat kursor berpindah ke baris kosong baru dan menjaga integritas teks tertanda (<em>marked text</em>) saat mengetik bahasa Arab/Latin. Kolom tag mempertahankan perataan alami tanpa merusak <code>layoutDirection</code> kontainer induk.</li>
 <li>
-<p><strong>Manipulasi Semantik Kontainer</strong>:
+<p><strong>Manipulasi Semantik Kontainer (Force LTR)</strong>:
     Pada <code>AnnotationContentView</code>, kontainer bawah yang memuat label nomor halaman diatur secara spesifik:
     <div class="language-swift highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">bottomStack</span><span class="p">.</span><span class="n">semanticContentAttribute</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">.</span><span class="n">forceLeftToRight</span>
 </span></code></pre></div>

@@ -1220,6 +1220,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#aturan-strict-weak-ordering-pembaruan-batch-tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aturan Strict Weak Ordering &amp; Pembaruan Batch Tag
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3740,6 +3751,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#aturan-strict-weak-ordering-pembaruan-batch-tag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aturan Strict Weak Ordering &amp; Pembaruan Batch Tag
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3798,13 +3820,14 @@
 <p>Menyusun anotasi berdasarkan relasi tag dari tabel <code>annotation_tags</code>:</p>
 <ul>
 <li>Satu anotasi yang memiliki banyak tag akan didistribusikan ke masing-masing cabang tag terkait.</li>
-<li>Anotasi tanpa label otomatis ditampung dalam grup khusus <strong>Untagged</strong>.
+<li>Anotasi tanpa label otomatis ditampung dalam grup khusus <strong>Untagged</strong> (<code>.untagged</code>). Grup ini dipin secara ketat selalu di posisi terbawah hierarki <em>root</em> pada seluruh skenario pengurutan.</li>
+<li>Grup tag diurutkan berdasarkan <code>maxCreatedAt</code> bila kriteria pengurutan adalah waktu pembuatan (<code>.createdAt</code>), atau secara alfabetis (A-Z / Z-A) bila pengurutan berbasis konteks, kitab, atau posisi halaman.
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Root
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── [Tag Node] Fiqih (5 catatan)
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│   └── [Annotation Node] Kitab Shalat...
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── [Tag Node] Muamalah (3 catatan)
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│   └── [Annotation Node] Kitab Jual Beli...
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>└── [Tag Node] Untagged (2 catatan)
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>└── [Tag Node] Untagged (2 catatan) [Pinned di Bawah]
 </span></code></pre></div></li>
 </ul>
 <h3 id="c-pengelompokan-berdasarkan-linimasa-timeline">C. Pengelompokan Berdasarkan Linimasa (<code>.timeline</code>)</h3>
@@ -3840,6 +3863,12 @@
 <li><strong>Penyisipan Linimasa (<code>addAnnotationToTimelineTree</code>)</strong>: Pada saat mencari indeks penyisipan bucket baru via <code>insertionIndex(for:)</code>, evaluasi waktu maksimum bucket yang dibandingkan disimpan ke dalam cache lokal, sehingga setiap bucket yang diperiksa dalam <em>binary search</em> hanya dihitung tepat satu kali.</li>
 <li><strong>Bebas Resiko Cache Usang</strong>: Variabel cache bersifat <em>ephemeral</em> (berlingkup lokal pada fungsi), langsung dibuang dari memori saat operasi selesai, dan seluruh node bersifat <em>read-only</em> selama perbandingan berlangsung.</li>
 </ol>
+<h3 id="aturan-strict-weak-ordering-pembaruan-batch-tag">Aturan Strict Weak Ordering &amp; Pembaruan Batch Tag</h3>
+<p>Untuk mencegah inkonsistensi posisi baris dan galat indeks pada <code>NSOutlineView</code>:</p>
+<ul>
+<li><strong>Strict Weak Ordering</strong>: Pembandingan node grup menerapkan urutan lemah yang ketat (<em>strict weak ordering</em>) pada nama tag dan stempel waktu, dengan pengecualian khusus untuk node <code>.untagged</code> yang senantiasa ditempatkan di posisi terbawah baik dalam mode <em>ascending</em> maupun <em>descending</em>.</li>
+<li><strong>Preservasi <code>oldIndex</code> pada Batch Tag Diff</strong>: Saat memproses mutasi tag massal (<code>processBatchTagUpdates</code>), penentuan apakah suatu grup menjadi kosong (<code>becomesEmpty</code>) dihitung sebelum pembuangan child node dimulai. Hal ini menghindari mutasi <code>root.children</code> di dalam <em>loop</em> perulangan sehingga nilai indeks lama (<code>oldIndex</code>) tetap valid saat dikirim ke <em>data source</em>.</li>
+</ul>
 
 
 

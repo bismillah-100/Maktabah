@@ -586,6 +586,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#preferensi-pengguna-userdefaultsswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preferensi Pengguna (UserDefaults.swift)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preferensi Pengguna (UserDefaults.swift)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#userdefaults-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UserDefaults (Extension)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3823,6 +3851,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#preferensi-pengguna-userdefaultsswift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preferensi Pengguna (UserDefaults.swift)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preferensi Pengguna (UserDefaults.swift)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#userdefaults-extension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UserDefaults (Extension)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4036,7 +4092,7 @@
 <li><code>overwriteDestination</code>: Metode migrasi memindahkan berkas dari direktori sumber dan menimpa berkas yang ada di direktori tujuan.</li>
 </ul>
 <h3 id="storageerror-enum">StorageError (Enum)</h3>
-<p>Sistem melemparkan (<code>throw</code>) jenis enum <code>StorageError</code> apabila instruksi I/O mengalami kegagalan. Karena mengadopsi <em>protocol</em> <code>LocalizedError</code>, setiap <em>case</em> menyediakan deskripsi pesan galat standar.</p>
+<p>Sistem melemparkan (<code>throw</code>) jenis enum <code>StorageError</code> apabila instruksi I/O mengalami kegagalan. Karena mengadopsi protocol <code>LocalizedError</code>, setiap <em>case</em> menyediakan deskripsi pesan galat standar.</p>
 <div class="language-swift highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">enum</span><span class="w"> </span><span class="nc">StorageError</span><span class="p">:</span><span class="w"> </span><span class="n">Error</span><span class="p">,</span><span class="w"> </span><span class="n">LocalizedError</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">invalidDirectory</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">cannotAccessSecurityScope</span>
@@ -4052,6 +4108,21 @@
 <li><code>cannotAccessSecurityScope</code>: Mekanisme <em>sandbox</em> macOS atau iOS menolak perpanjangan izin <code>security-scoped bookmark</code> yang diperlukan untuk operasi baca-tulis berkas secara persisten.</li>
 <li><code>collision</code>: Terdeteksi berkas identik di direktori tujuan (menyertakan <em>payload</em> URL tujuan).</li>
 <li><code>downloadTimeout</code>: Batas waktu pengunduhan (<em>timeout</em>) terlampaui saat sinkronisasi berkas.</li>
+</ul>
+<hr />
+<h2 id="preferensi-pengguna-userdefaultsswift">Preferensi Pengguna (<code>UserDefaults.swift</code>)</h2>
+<h3 id="userdefaults-extension">UserDefaults (Extension)</h3>
+<p><code>UserDefaults.swift</code> mengelola kunci-kunci preferensi pengguna pada tingkat sistem:</p>
+<ul>
+<li><strong>Tipografi &amp; Pembaca (<code>TextViewKeys</code>)</strong>: <code>fontSize</code>, <code>fontName</code>, <code>lineHeight</code>, <code>showHarakat</code>, <code>backgroundColorLight/Dark</code>, <code>extendScreenTime</code>, <code>enhancedUnderline</code>.</li>
+<li><strong>Anotasi &amp; Navigasi (<code>AnnotationsKeys</code>)</strong>:<ul>
+<li><code>selectedAnnSortField</code>: Kriteria pengurutan (<code>AnnotationSortField</code>: tanggal dibuat, posisi halaman/jilid, atau alfabetis).</li>
+<li><code>selectedAnnSortOrder</code>: Arah pengurutan (<code>AnnotationSortOrder</code>: <em>ascending</em> / <em>descending</em>).</li>
+<li><code>selectedAnnGroupingMode</code>: Mode pengelompokan hierarki (<code>AnnotationGroupingMode</code>: kitab, tag, atau linimasa).</li>
+<li><code>annMaxNumberOfLines</code> &amp; <code>ctxMaxNumberOfLines</code>: Batasan jumlah baris teks catatan dan kutipan konteks pada sel anotasi.</li>
+<li><code>showAnnotationDate</code>: Mengontrol visibilitas stempel tanggal pada sel anotasi (<code>Bool</code>, <em>default</em> <code>true</code>). Saat disetel ke <code>false</code>, pemformatan tanggal dan pengukuran lebar tanggal di-bypass sepenuhnya pada kalkulasi tinggi baris guna menghindari <em>frame drop</em> saat pengguliran cepat.</li>
+</ul>
+</li>
 </ul>
 
 

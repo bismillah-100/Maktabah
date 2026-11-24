@@ -3913,13 +3913,14 @@
 <li>Mengelola presentasi modal (<em>sheets</em>):</li>
 <li><strong>Offline Import Sheet (<code>OfflineImportFormView</code>)</strong>: Mengimpor berkas kitab <code>.sqlite</code> mandiri dari pengelola berkas Files iOS.</li>
 <li><strong>Update Sheet (<code>UpdateView</code>)</strong>: Memeriksa dan mengunduh pembaruan isi kitab dari GitHub Releases.</li>
-<li><strong>Bulk Delete Dialog</strong>: Dialog konfirmasi penghapusan arsip lokal kitab.</li>
+<li><strong>Bulk Delete Dialog &amp; Penghapusan Kitab</strong>: Dialog konfirmasi penghapusan buku. Untuk kitab katalog inti, tindakan menghapus berkas arsip unduhan; sedangkan untuk kitab kustom (<code>!isCoreBook</code>), tindakan menghapus kitab secara menyeluruh dari katalog perpustakaan beserta pembersihan pengarang yatim.</li>
 </ul>
 <h3 id="c-libraryviewcontrollerwrapper-struct">C. LibraryViewControllerWrapper (Struct)</h3>
 <ul>
 <li>Menjembatani <code>iOSLibraryViewController</code> (UIKit) ke SwiftUI untuk menjamin kestabilan <em>frame rate</em> 60–120 FPS saat pengguliran ribuan baris buku.</li>
 <li>Menghubungkan <em>closure</em> aksi informasi buku <code>onShowBookInfo</code> dari sel <code>iOSLibraryViewController</code> (<code>makeBookInfoAction(for:)</code>) menuju <code>navigationManager.selectedBookForInfo</code> yang disajikan di root antarmuka <code>iOSMainView</code>.</li>
 <li>Mengisolasi delegasi seleksi buku dan memperbarui status filter pencarian tanpa membuat ulang hierarki <em>view</em>.</li>
+<li><strong>Menu Konteks Adaptif</strong>: Pada sel buku, aksi hapus beradaptasi otomatis via <code>LibraryDataManager.isCoreBook(id:)</code> antara "Hapus Unduhan" (kitab inti) dan "Hapus Kitab dari Perpustakaan" (kitab kustom).</li>
 </ul>
 <h3 id="d-authormodeview-struct">D. AuthorModeView (Struct)</h3>
 <ul>

@@ -3948,7 +3948,11 @@ deactivate TV</code></pre>
 <li>Mengimplementasikan <code>NSOutlineViewDataSource</code> dan <code>NSOutlineViewDelegate</code>.</li>
 <li>Menyediakan <em>context menu</em> klik kanan:</li>
 <li><strong>Buka di <em>Tab</em> Baru (<code>openBookInNewTab</code>)</strong>: Tersedia untuk kitab yang telah terunduh/terintegrasi secara lokal (<code>isBookIntegrated</code>), mendelegasikan pembuatan <em>window controller</em> baru ke <code>MainWindow.openBookInNewTab</code>.</li>
-<li><strong>Hapus Unduhan</strong>: Menghapus arsip SQLite lokal dari <em>disk</em>.</li>
+<li><strong>Hapus Kitab / Hapus Unduhan</strong>: Menyesuaikan secara adaptif berdasarkan status kitab:<ul>
+<li><em>Kitab Katalog Inti</em> (<code>LibraryDataManager.isCoreBook(id:) == true</code>): Menampilkan aksi "Hapus Unduhan" untuk membuang berkas arsip SQLite lokal dari <em>disk</em> tanpa mencabut rekaman dari katalog.</li>
+<li><em>Kitab Kustom / Hasil Impor</em> (<code>isCoreBook == false</code>): Menampilkan aksi "Hapus Kitab dari Perpustakaan" untuk menghapus permanen data dari tabel katalog <code>0bok</code>, menghapus tabel <code>b{id}</code>, <code>t{id}</code>, dan FTS, serta membersihkan data pengarang yatim (<em>orphan author</em>) di <code>special.sqlite</code> jika tidak dirujuk kitab lain.</li>
+</ul>
+</li>
 <li><strong>Informasi Kitab</strong>: Menampilkan <em>popover</em> informasi bibliografi kitab <a href="file:///Volumes/Dokumen/Downloads/Shamela/Repositories/Maktabah/Source/Features/Library/macOS/LibraryViewManager.swift#L560"><code>BookInfo</code></a> yang terjangkar presisi via helper <code>outlineView.cellAnchor(forRow:)</code>.</li>
 <li><strong>Favorit</strong>: Menambah atau menghapus kitab dari daftar favorit.</li>
 <li><strong>Preservasi Status Outline (<code>isUpdatingOutline</code>)</strong>: Menggunakan blok <code>defer { isUpdatingOutline = previousUpdatingOutline }</code> untuk menjaga integritas status pembaruan saat ekspansi kategori dan pemulihan seleksi, mencegah siklus reset seleksi prematur.</li>
@@ -3957,6 +3961,7 @@ deactivate TV</code></pre>
 <h3 id="d-animasi-batch-inkremental-debouncing-histori-libraryviewdiffing">D. Animasi Batch Inkremental &amp; Debouncing Histori (<code>LibraryView+Diffing</code>)</h3>
 <p>Untuk mencegah <em>flickering</em> visual dan lonjakan tampilan (<em>content jumping</em>):</p>
 <ul>
+<li><strong>Optimasi Diffing Flat List Tanpa Full Reload</strong>: Pada <code>updateFlatListIncrementally</code>, penggantian sel <code>BooksData</code> yang sudah ada hanya dieksekusi apabila nilai judul buku benar-benar berubah secara tekstual (<code>old.title != new.title</code>), bukan sekadar perbedaan referensi objek/pointer memori. Pendekatan ini mencegah kedipan visual penuh (<em>full-list flash</em>) saat seleksi buku atau saat pembaruan status sinkronisasi CloudKit pertama kali tiba.</li>
 <li><strong>Sinkronisasi Filter Pencarian</strong>: Pembaruan daftar datar memvalidasi <code>searchQuery</code> aktif dan sinkronisasi <code>baseCategories = displayedCategories</code>, menjamin hasil filter tetap utuh saat dataset dimutasi.</li>
 <li><strong>Debounce Pembaruan Histori (3 Detik)</strong>: Notifikasi <code>.historyDidChange</code> di-<em>debounce</em> selama 3 detik pada <code>RunLoop.main</code> sebelum memicu penataan ulang baris. Hal ini mencegah outline view melompat-lompat (<em>jitter</em>) ketika pengguna menavigasi beberapa kitab secara cepat, sementara ID kitab tetap tercatat ke basis data histori secara instan.</li>
 <li><strong>Mutasi Terarah</strong>: Menjalankan mutasi <em>native</em> AppKit secara presisi: <code>outlineView.insertItems(at:inParent:withAnimation:)</code> dan <code>outlineView.removeItems(at:inParent:withAnimation:)</code>.</li>

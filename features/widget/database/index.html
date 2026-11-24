@@ -3293,6 +3293,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-persistensi-offline-snapshot-pencegahan-overwrite-riwayat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Persistensi Offline Snapshot &amp; Pencegahan Overwrite Riwayat
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3577,6 +3588,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#4-persistensi-offline-snapshot-pencegahan-overwrite-riwayat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Persistensi Offline Snapshot &amp; Pencegahan Overwrite Riwayat
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3684,6 +3706,13 @@
 <p>Dengan pola ini:
 1. Snapshot lokal hanya ditulis ulang jika terjadi perbedaan isi (<code>items != currentLocal.items</code>), menghemat siklus disk I/O.
 2. Ekstensi widget dapat menampilkan kutipan anotasi dan riwayat terakhir secara instan (&lt; 10 ms) tanpa perlu menginisialisasi pustaka SQLite.</p>
+<hr />
+<h2 id="4-persistensi-offline-snapshot-pencegahan-overwrite-riwayat">4. Persistensi Offline Snapshot &amp; Pencegahan Overwrite Riwayat</h2>
+<p>Untuk menjaga keandalan widget di kondisi jaringan terbatas:</p>
+<ul>
+<li><strong>Persistensi Snapshot CloudKit Aktif (<code>CloudKitFetcher.fetchActive</code>)</strong>: Saat snapshot yang lebih baru berhasil ditarik dari CloudKit, sistem secara otomatis mengeksekusi persistensi lokal (<code>persistToLocal: true</code>). Hal ini memastikan snapshot terbaru tetap tersimpan di <em>disk</em> App Group dan dapat dimuat secara <em>offline</em> jika siklus pembaruan widget berikutnya mengalami batas waktu (<em>timeout</em>).</li>
+<li><strong>Pencegahan Pembaruan Riwayat Redundan (<code>HistoryViewModel</code>)</strong>: Fungsi <code>updateLastContentId(_:for:)</code> melakukan validasi awal terhadap <code>contentId</code>. Apabila <code>contentId</code> tidak mengalami perubahan (misalnya saat merestorasi <em>tab</em> atau memuat ulang halaman yang sama), status riwayat tidak ditandai sebagai <em>dirty</em>, mencegah penimpaan snapshot widget lokal oleh data riwayat yang sebenarnya belum berubah.</li>
+</ul>
 
 
 

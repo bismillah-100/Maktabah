@@ -4185,7 +4185,13 @@
 <ol>
 <li>Berisi URL dari berkas lokal yang telah disalin ke direktori sementara (<em>temporary</em>).</li>
 <li>Mode operasi: <code>0</code> = Buku Baru, <code>1</code> = Timpa Buku, <code>2</code> = Ganti ID Kitab.</li>
-<li>ID buku tujuan, ditampung sebagai <em>string</em> untuk masukan <em>TextField</em> sebelum divalidasi menjadi integer.</li>
+<li>
+<p>ID buku tujuan, ditampung sebagai <em>string</em> untuk masukan <em>TextField</em> sebelum divalidasi menjadi integer.</p>
+</li>
+<li>
+<p><strong>Validasi ID Kitab &amp; Perlindungan Kitab Inti</strong>:
+  Pada properti komputasi <code>isValid</code>, formulir memeriksa apakah <code>customBookIdText</code> bentrok dengan ID yang sudah ada (<code>isBookIdTaken</code>). Jika bentrok dan teridentifikasi sebagai kitab katalog inti melalui <code>LibraryDataManager.isCoreBook(id:)</code> (memeriksa <code>coreIndexIds</code> dari <code>index.json</code> pada Bundle Mode atau <code>0bok.oNum != nil</code> pada Full Mode), sistem mengunci tombol eksekusi dan memunculkan badge <code>idReservedBySystem</code> untuk melindungi integritas berkas katalog utama.</p>
+</li>
 </ol>
 <p>ViewModel ini memanggil <code>executeDatabaseChanges(oldId:newId:)</code> pada proses <em>Change ID</em>, yang memicu tiga panggilan berurutan secara transaksional di <em>background thread</em>:</p>
 <ol>
