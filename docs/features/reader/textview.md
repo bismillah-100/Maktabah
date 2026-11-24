@@ -69,6 +69,16 @@ Contoh penggunaan:
 2. **Pencarian & Anotasi (`highlightAndScrollToAnns`, `highlightAndScrollToText`)**:
     Operasi ini menunggu proses *layouting* dokumen selesai. Membungkus fungsi perenderan ke antrean serial menjamin bahwa *layoutManager* sudah tuntas menghitung metrik sebelum `scrollRangeToVisible(_:)` dipanggil.
 
+3. **Pencegahan Scroll Jitter pada Navigasi Lompat (`scrollAndShowFindIndicator`)**:
+    Pada teks Arab berukuran panjang yang memuat harakat atau paragraf campuran, TextKit 2 menerapkan *lazy layout estimation* pada fragmen di atas *viewport*. Apabila sistem hanya memanggil `ensureLayout(for: range)` pada rentang target terisolasi, fragmen pendahulu di atas layar tetap belum terhitung secara akurat. Ketika pengguna menggulir ke atas, resolusi tinggi on-demand pada fragmen pendahulu dapat menimbulkan deviasi tinggi besar (>1.500 pt) yang menggeser *document origin* dan memicu lonjakan visual (*viewport jitter / scroll snapping*).
+
+    `IbarotTextView` menanggulanginya dengan memastikan seluruh fragmen sejak awal dokumen hingga akhir rentang target dihitung secara penuh sebelum `scrollRangeToVisible(_:)` dieksekusi:
+    ```swift
+    let totalLength = textStorage?.length ?? 0
+    let targetEnd = min(range.location + range.length, totalLength)
+    textLayoutManager?.ensureLayout(for: NSRange(location: 0, length: targetEnd))
+    ```
+
 ---
 
 ## Penjelasan Detail Mengenai CachedArabicLayoutFragment

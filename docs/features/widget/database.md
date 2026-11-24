@@ -105,3 +105,12 @@ if isRemoteNewer {
 Dengan pola ini:
 1. Snapshot lokal hanya ditulis ulang jika terjadi perbedaan isi (`items != currentLocal.items`), menghemat siklus disk I/O.
 2. Ekstensi widget dapat menampilkan kutipan anotasi dan riwayat terakhir secara instan (< 10 ms) tanpa perlu menginisialisasi pustaka SQLite.
+
+---
+
+## 4. Persistensi Offline Snapshot & Pencegahan Overwrite Riwayat
+
+Untuk menjaga keandalan widget di kondisi jaringan terbatas:
+
+* **Persistensi Snapshot CloudKit Aktif (`CloudKitFetcher.fetchActive`)**: Saat snapshot yang lebih baru berhasil ditarik dari CloudKit, sistem secara otomatis mengeksekusi persistensi lokal (`persistToLocal: true`). Hal ini memastikan snapshot terbaru tetap tersimpan di *disk* App Group dan dapat dimuat secara *offline* jika siklus pembaruan widget berikutnya mengalami batas waktu (*timeout*).
+* **Pencegahan Pembaruan Riwayat Redundan (`HistoryViewModel`)**: Fungsi `updateLastContentId(_:for:)` melakukan validasi awal terhadap `contentId`. Apabila `contentId` tidak mengalami perubahan (misalnya saat merestorasi *tab* atau memuat ulang halaman yang sama), status riwayat tidak ditandai sebagai *dirty*, mencegah penimpaan snapshot widget lokal oleh data riwayat yang sebenarnya belum berubah.

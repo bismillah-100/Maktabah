@@ -170,13 +170,14 @@ init(_ configuration: ListContentConfiguration) {
 * Mengelola presentasi modal (*sheets*):
   * **Offline Import Sheet (`OfflineImportFormView`)**: Mengimpor berkas kitab `.sqlite` mandiri dari pengelola berkas Files iOS.
   * **Update Sheet (`UpdateView`)**: Memeriksa dan mengunduh pembaruan isi kitab dari GitHub Releases.
-  * **Bulk Delete Dialog**: Dialog konfirmasi penghapusan arsip lokal kitab.
+  * **Bulk Delete Dialog & Penghapusan Kitab**: Dialog konfirmasi penghapusan buku. Untuk kitab katalog inti, tindakan menghapus berkas arsip unduhan; sedangkan untuk kitab kustom (`!isCoreBook`), tindakan menghapus kitab secara menyeluruh dari katalog perpustakaan beserta pembersihan pengarang yatim.
 
 ### C. LibraryViewControllerWrapper (Struct)
 
 * Menjembatani `iOSLibraryViewController` (UIKit) ke SwiftUI untuk menjamin kestabilan *frame rate* 60–120 FPS saat pengguliran ribuan baris buku.
 * Menghubungkan *closure* aksi informasi buku `onShowBookInfo` dari sel `iOSLibraryViewController` (`makeBookInfoAction(for:)`) menuju `navigationManager.selectedBookForInfo` yang disajikan di root antarmuka `iOSMainView`.
 * Mengisolasi delegasi seleksi buku dan memperbarui status filter pencarian tanpa membuat ulang hierarki *view*.
+* **Menu Konteks Adaptif**: Pada sel buku, aksi hapus beradaptasi otomatis via `LibraryDataManager.isCoreBook(id:)` antara "Hapus Unduhan" (kitab inti) dan "Hapus Kitab dari Perpustakaan" (kitab kustom).
 
 ### D. AuthorModeView (Struct)
 

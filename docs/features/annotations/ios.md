@@ -122,11 +122,17 @@ Antarmuka mendukung tata letak dinamis yang disesuaikan berdasarkan dua konsep:
     *   Memiliki mode pergantian logika (AND/OR) yang ditandai dengan perubahan ikon.
     *   Diperbarui secara asinkron sehingga elemen baru disisipkan pada indeks yang tepat tanpa mengganggu status gulir elemen lainnya.
 
-## Penanganan Arah Teks (Force LTR)
+## Penanganan Arah Teks, Auto RTL/LTR & Pre-Truncation
 
-Aplikasi Maktabah dirancang untuk mengakomodasi teks Arab sehingga secara alami memakai orientasi Kanan-ke-Kiri (RTL). Namun, pada elemen metadata tertentu, tata letak diarahkan secara eksplisit ke Kiri-ke-Kanan (*Force LTR*).
+Aplikasi Maktabah dirancang untuk mengakomodasi teks Arab sehingga secara alami memakai orientasi Kanan-ke-Kiri (RTL). Namun, penataan arah teks dilakukan secara dinamis dan kontekstual:
 
-*   **Manipulasi Semantik Kontainer**:
+*   **Deteksi Arah Paragraf Otomatis (RTL/LTR)**:
+    Pada `AnnotationContentView`, bilah alat pembaca `iOSBookAnnotationsView`, serta lembar penyunting `iOSAnnotationEditorSheet`, teks kutipan (`context`) dan catatan pengguna (`note`) dievaluasi per paragraf menggunakan `applyAutoDirectionAlignments`. Paragraf berbahasa Arab otomatis dialokasikan ke kanan (RTL), sedangkan catatan Latin/Indonesia diselaraskan ke kiri (LTR) secara alami.
+*   **Pre-Truncation untuk Performa 120 FPS**:
+    Sebelum teks kutipan dan catatan dirender ke dalam `UICollectionViewCell`, teks dipotong terlebih dahulu (*pre-truncated*) melalui helper `truncatedForCellDisplay`: dibatasi hingga 200 karakter untuk konteks dan 350 karakter untuk catatan. Hal ini meringankan alokasi memori TextKit dan komputasi ukuran sel pada layar ProMotion.
+*   **Sinkronisasi Editor Lembar (`iOSAnnotationEditorSheet`)**:
+    Menyinkronkan `typingAttributes` saat kursor berpindah ke baris kosong baru dan menjaga integritas teks tertanda (*marked text*) saat mengetik bahasa Arab/Latin. Kolom tag mempertahankan perataan alami tanpa merusak `layoutDirection` kontainer induk.
+*   **Manipulasi Semantik Kontainer (Force LTR)**:
     Pada `AnnotationContentView`, kontainer bawah yang memuat label nomor halaman diatur secara spesifik:
     ```swift
     bottomStack.semanticContentAttribute = .forceLeftToRight

@@ -66,14 +66,16 @@ stateDiagram-v2
 
     *   `isFloatingPanel`: Bila opsi *float* aktif, panel selalu berada di atas jendela dokumen (`UserDefaults.standard.annotationFloatWindow`).
     *   `hidesOnDeactivate`: Mengontrol apakah panel otomatis disembunyikan saat aplikasi Maktabah kehilangan fokus (`NSWindow.hidesOnDeactivate`).
-    *   **Injeksi Titlebar Accessory**: Saat bertransformasi menjadi panel mandiri (`setupLayoutPanel`), `titlebarRootStack` (yang berisi kolom pencarian dan filter tag) dicabut dari hierarki `rootStackView` dan disematkan ke bawah *titlebar* panel menggunakan `NSTitlebarAccessoryViewController` (`layoutAttribute = .bottom`).
+    *   **Injeksi Titlebar Accessory**: Saat bertransformasi menjadi panel mandiri (`setupLayoutPanel`), `titlebarRootStack` (yang berisi kolom pencarian dan filter tag) disematkan langsung ke bawah *titlebar* panel menggunakan `NSTitlebarAccessoryViewController` (`layoutAttribute = .bottom`) dengan native Auto Layout tanpa pembungkus manual atau polling ketinggian frame. Penataan stack vertikal disetel dengan perataan `.width` guna mengeliminasi batasan lebar redundan, dan `outlineView` disetel sebagai *initial first responder* pada panel dan jendela untuk mencegah fokus otomatis yang tidak diinginkan ke kolom pencarian.
 
 ## Custom TableCellView
 
 Komponen `AnnotationCellView` adalah turunan dari `NSTableCellView` yang dirancang untuk merender detail anotasi secara kustom.
 
-*   **Tipografi Arab**:
-    Menggunakan `BundledArabicTextField` pada variabel `context`, `note`, dan `pagePart`. Konfigurasi ini secara otomatis mengimplementasikan perataan teks dari kanan ke kiri (RTL) yang sesuai dengan aturan tipografi Arab.
+*   **Tipografi Arab & Auto Direction**:
+    Variabel `context` dan `note` kini mendukung deteksi arah paragraf otomatis (RTL/LTR) secara dinamis menggunakan `AutoDirectionStyleCache` dan `applyAutoDirectionAlignments`. Hal ini menjamin keterbacaan alami untuk kutipan bahasa Arab maupun catatan pengguna dalam bahasa Latin/Indonesia. `pagePart` tetap menggunakan `BundledArabicTextField` dengan perataan kanan-ke-kiri (RTL).
+*   **Opsi Visibilitas Tanggal**:
+    Elemen tanggal (`dateTextField`) dapat disembunyikan berdasarkan preferensi `UserDefaults.standard.showAnnotationDate`. Saat disembunyikan, label tanggal ditiadakan dari hierarki tampilan dan ruang lebar sel dialokasikan sepenuhnya untuk teks kutipan.
 
 *   **Tata Letak**:
     Elemen antarmuka disusun menggunakan `NSStackView` vertikal dengan batasan fleksibel (`contentStackLeadingConstraint` dan `contentStackTrailingConstraint`) untuk menyesuaikan ruang margin secara dinamis.
@@ -107,16 +109,21 @@ Berkas `TimelineOutlineViews.swift` bertanggung jawab atas elemen visual penunju
 
 ## Kalkulasi Tinggi Baris Dinamis (`AnnotationRowHeightCalculator`)
 
-Karena kutipan teks Arab, catatan pengguna, serta daftar tag memiliki panjang yang bervariasi, penentuan tinggi baris dilakukan melalui `@MainActor enum AnnotationRowHeightCalculator`:
+Karena kutipan teks Arab, catatan pengguna, serta daftar tag memiliki panjang yang bervariasi, penentuan tinggi baris dilakukan melalui `@MainActor enum AnnotationRowHeightCalculator` dengan menonaktifkan `usesAutomaticRowHeights` pada `NSOutlineView` demi performa optimal:
 
 *   **Pengukuran Komponen Teks (`measuredHeight`)**:
-    *   Kutipan teks Arab (`context`): Dihitung dengan *font* Arab bawaan dan dibatasi oleh nilai preferensi `UserDefaults.standard.ctxMaxNumberOfLines`.
-    *   Catatan tambahan (`note`): Dihitung menggunakan *font* sistem dan dibatasi oleh `UserDefaults.standard.annMaxNumberOfLines`.
-    *   Metadata (`pagePart`): Menghitung ruang untuk nomor jilid/halaman dan *tag chips*.
+    *   Kutipan teks Arab (`context`): Dipotong terlebih dahulu (*pre-truncated*) via `displayContext` (`truncatedForCellDisplay(maxCharacters: 350, maxNewlines: 2)`) dan dibatasi oleh nilai preferensi `UserDefaults.standard.ctxMaxNumberOfLines`.
+    *   Catatan tambahan (`note`): Dipotong via `displayNote` (`truncatedForCellDisplay(maxCharacters: 500, maxNewlines: 4)`) dan dibatasi oleh `UserDefaults.standard.annMaxNumberOfLines`.
+    *   Metadata (`pagePart`): Dibatasi maksimal 3 baris (`pagePartLineLimit = 3`) untuk mengakomodasi pembungkusan nomor jilid/halaman dan daftar tag.
+*   **Alokasi Lebar Dinamis**:
+    Saat `showAnnotationDate` bernilai `true`, lebar tanggal (`dateWidth + 12`) dikurangkan dari lebar baris untuk menghasilkan `contextWidth`. Apabila tanggal disembunyikan, `contextWidth` menggunakan lebar penuh `contentWidth`.
 *   **Formula Padding & Spacing**:
     Menghitung tinggi total secara presisi dengan formula:
-    $$\text{Total Height} = \lceil 20 + \max(\text{contextHeight}, \text{dateHeight} + 8) + \text{pagePartHeight} + \text{noteHeight} + \text{stackSpacing} \rceil$$
-    Metode ini dipanggil langsung oleh `outlineView(_:heightOfRowByItem:)` pada `AnnotationsOutlineDelegate` sehingga penghitungan tinggi baris berjalan mulus tanpa jeda saat pengguliran cepat.
+    $$\text{Total Height} = \lceil 23 + \text{topSectionHeight} + \text{pagePartHeight} + \text{noteHeight} + \text{stackSpacing} \rceil$$
+    dengan:
+    $$\text{topSectionHeight} = \begin{cases} \max(\text{contextHeight}, 26) & \text{jika } \text{showAnnotationDate} = \text{true} \\ \max(\text{contextHeight}, 20) & \text{jika } \text{showAnnotationDate} = \text{false} \end{cases}$$
+    $$\text{stackSpacing} = \begin{cases} 16 & \text{jika } \text{noteHeight} > 0 \\ 8 & \text{jika } \text{noteHeight} = 0 \end{cases}$$
+    Metode ini dipanggil langsung oleh `outlineView(_:heightOfRowByItem:)` pada `AnnotationsOutlineDelegate`, dan cache tinggi baris diinvalisir saat kolom tabel diubah ukurannya (*column resize*).
 
 ## Interaksi Pengguna & Navigasi Reader
 
@@ -146,6 +153,8 @@ macOS menyediakan interaksi langsung dari *sidebar*:
     Menampilkan deretan titik warna di dalam menu konteks untuk *highlight* serta tombol *underline* terdedikasi. Ikon *underline* dikonfigurasi menggunakan SF Symbol dengan `NSImage.SymbolConfiguration(paletteColors:)` yang mencerminkan warna terakhir dari `recentUnderlineColors` (fallback ke `.labelColor`).
 *   **Panel Editor Anotasi (`AnnotationEditorVC`)**:
     Panel *popover* untuk mengedit catatan teks lengkap, mengubah tipe (*highlight* vs. *underline*), memilih warna dari `NSColorWell`, serta mengatur tag melalui `NSTokenField`. Nilai warna disinkronkan secara otomatis: jika tipe *underline* aktif, warna disimpan dan dipush ke `UserDefaults.standard.recentUnderlineColors`, sehingga pembuatan *underline* berikutnya secara konsisten memakai warna tersebut.
+*   **Menu Opsi Tampilan & Batas Baris (`AnVC+LineMenu.swift`)**:
+    Menyediakan pengaturan jumlah batas baris untuk kutipan (`ctxMaxNumberOfLines`) dan catatan (`annMaxNumberOfLines`), serta *toggle* visibilitas tanggal anotasi (`showAnnotationDate`). Perubahan preferensi tanggal langsung memperbarui kalkulasi tinggi baris dan memicu pembaruan tata letak *outline view*.
 
 ### Alur Persistensi Warna Anotasi (Highlight & Underline)
 
@@ -199,4 +208,4 @@ Aplikasi memanfaatkan observasi Combine untuk merespons pembaruan status secara 
     1. Permintaan manipulasi tag memancarkan sinyal `onAddTagsRequested` atau `onRemoveTagsRequested`.
     2. Lapisan kontrol `AnnotationsVC` merespons dengan menampilkan *popover* pemilihan tag.
     3. Saat pengguna menyimpan perubahan tag, sistem menyusun objek `TagUpdateDiff`.
-    4. Metode `handleTagModeUpdate()` memproses perubahan di antara blok `beginUpdates()` dan `endUpdates()` menggunakan animasi `slideDown`.
+    4. Metode `handleTagModeUpdate()` memproses perubahan secara aman: pembuangan parent node yang kosong dipisahkan dari mutasi child node (`applyTagModeRemovals`), penambahan node grup baru digabungkan (*batching*) ke dalam `IndexSet`, dan pemanggilan `outlineView.reloadItem` ditunda hingga sesudah blok `outlineView.endUpdates()` selesai dieksekusi guna mencegah inkonsistensi indeks internal `NSOutlineView`.

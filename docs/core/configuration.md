@@ -214,7 +214,7 @@ enum MigrationResolution {
 
 ### StorageError (Enum)
 
-Sistem melemparkan (`throw`) jenis enum `StorageError` apabila instruksi I/O mengalami kegagalan. Karena mengadopsi *protocol* `LocalizedError`, setiap *case* menyediakan deskripsi pesan galat standar.
+Sistem melemparkan (`throw`) jenis enum `StorageError` apabila instruksi I/O mengalami kegagalan. Karena mengadopsi protocol `LocalizedError`, setiap *case* menyediakan deskripsi pesan galat standar.
 
 ```swift
 enum StorageError: Error, LocalizedError {
@@ -233,3 +233,19 @@ enum StorageError: Error, LocalizedError {
 * `cannotAccessSecurityScope`: Mekanisme *sandbox* macOS atau iOS menolak perpanjangan izin `security-scoped bookmark` yang diperlukan untuk operasi baca-tulis berkas secara persisten.
 * `collision`: Terdeteksi berkas identik di direktori tujuan (menyertakan *payload* URL tujuan).
 * `downloadTimeout`: Batas waktu pengunduhan (*timeout*) terlampaui saat sinkronisasi berkas.
+
+---
+
+## Preferensi Pengguna (`UserDefaults.swift`)
+
+### UserDefaults (Extension)
+
+`UserDefaults.swift` mengelola kunci-kunci preferensi pengguna pada tingkat sistem:
+
+* **Tipografi & Pembaca (`TextViewKeys`)**: `fontSize`, `fontName`, `lineHeight`, `showHarakat`, `backgroundColorLight/Dark`, `extendScreenTime`, `enhancedUnderline`.
+* **Anotasi & Navigasi (`AnnotationsKeys`)**:
+    * `selectedAnnSortField`: Kriteria pengurutan (`AnnotationSortField`: tanggal dibuat, posisi halaman/jilid, atau alfabetis).
+    * `selectedAnnSortOrder`: Arah pengurutan (`AnnotationSortOrder`: *ascending* / *descending*).
+    * `selectedAnnGroupingMode`: Mode pengelompokan hierarki (`AnnotationGroupingMode`: kitab, tag, atau linimasa).
+    * `annMaxNumberOfLines` & `ctxMaxNumberOfLines`: Batasan jumlah baris teks catatan dan kutipan konteks pada sel anotasi.
+    * `showAnnotationDate`: Mengontrol visibilitas stempel tanggal pada sel anotasi (`Bool`, *default* `true`). Saat disetel ke `false`, pemformatan tanggal dan pengukuran lebar tanggal di-bypass sepenuhnya pada kalkulasi tinggi baris guna menghindari *frame drop* saat pengguliran cepat.
