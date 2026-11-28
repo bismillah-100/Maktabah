@@ -29,11 +29,24 @@ final class IntegrationCache: Sendable {
     private struct IntegrationState: Sendable {
         var integrated: [Int: Set<Int>] = [:] // [archiveId: Set<bookId>]
         var loadedArchives: Set<Int> = [] // archive yang sudah di-load ke RAM
+        var generations: [Int: UInt64] = [:]
     }
 
     private let state = Mutex(IntegrationState())
+    private let archiveLocks = Mutex<[Int: NSLock]>([:])
     private let ioLock = Mutex(())
     private var fm: FileManager { .default }
+
+    private func lockForArchive(_ archiveId: Int) -> NSLock {
+        archiveLocks.withLock { locks in
+            if let existing = locks[archiveId] {
+                return existing
+            }
+            let created = NSLock()
+            locks[archiveId] = created
+            return created
+        }
+    }
 
     private init() {
         cleanLegacyCacheIfNeeded()
@@ -75,41 +88,53 @@ final class IntegrationCache: Sendable {
     func markIntegrated(bookId: Int, archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
 
-        // Pastikan cache archive ini sudah di-load di luar lock agar tidak deadlock
-        ensureLoaded(archiveId: archiveId)
-
-        state.withLock { state in
-            if state.integrated[archiveId] == nil {
-                state.integrated[archiveId] = []
+        lockForArchive(archiveId).withLock {
+            ensureLoadedLocked(archiveId: archiveId)
+            state.withLock { state in
+                if state.integrated[archiveId] == nil {
+                    state.integrated[archiveId] = []
+                }
+                state.integrated[archiveId]?.insert(bookId)
+                state.loadedArchives.insert(archiveId)
+                state.generations[archiveId, default: 0] &+= 1
             }
-            state.integrated[archiveId]?.insert(bookId)
-            state.loadedArchives.insert(archiveId)
+            persistCache(for: archiveId)
         }
-        persistCache(for: archiveId)
     }
 
     /// Hapus tanda kitab sebagai terintegrasi dan persist ke JSON.
     func unmarkIntegrated(bookId: Int, archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
 
-        ensureLoaded(archiveId: archiveId)
-
-        state.withLock { state in
-            if var books = state.integrated[archiveId] {
-                books.remove(bookId)
-                state.integrated[archiveId] = books
+        lockForArchive(archiveId).withLock {
+            ensureLoadedLocked(archiveId: archiveId)
+            state.withLock { state in
+                if var books = state.integrated[archiveId] {
+                    books.remove(bookId)
+                    state.integrated[archiveId] = books
+                }
+                state.loadedArchives.insert(archiveId)
+                state.generations[archiveId, default: 0] &+= 1
             }
-            state.loadedArchives.insert(archiveId)
+            persistCache(for: archiveId)
         }
-        persistCache(for: archiveId)
     }
 
     /// Bangun cache untuk archive tertentu dengan scan SQLite sekali.
     /// Hanya perlu dipanggil bila cache file belum ada.
     func build(for archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
+        lockForArchive(archiveId).withLock {
+            buildLocked(for: archiveId)
+        }
+    }
+
+    private func buildLocked(for archiveId: Int) {
+        guard AppConfig.isUsingBundleMode else { return }
         guard let file = cacheFile(for: archiveId) else { return }
         guard !fm.fileExists(atPath: file.path) else { return }
+
+        let startGeneration = state.withLock { $0.generations[archiveId, default: 0] }
 
         guard let archivePath = AppConfig.archiveDatabasePath(archiveId: archiveId),
               let ftsPath = AppConfig.archiveFtsDatabasePath(archiveId: archiveId)
@@ -120,7 +145,8 @@ final class IntegrationCache: Sendable {
         else {
             // Archive belum ada → cache kosong, simpan supaya kita tahu sudah di-scan
             let shouldSave = state.withLock { state -> Bool in
-                if state.loadedArchives.contains(archiveId) { return false }
+                guard state.generations[archiveId, default: 0] == startGeneration,
+                      !state.loadedArchives.contains(archiveId) else { return false }
                 state.integrated[archiveId] = []
                 state.loadedArchives.insert(archiveId)
                 return true
@@ -134,11 +160,11 @@ final class IntegrationCache: Sendable {
         let bookIds = scanIntegratedBookIds(archivePath: archivePath, ftsPath: ftsPath)
 
         let shouldSave = state.withLock { state -> Bool in
+            guard state.generations[archiveId, default: 0] == startGeneration else {
+                return false
+            }
             if state.loadedArchives.contains(archiveId) {
-                var current = state.integrated[archiveId] ?? []
-                current.formUnion(bookIds)
-                state.integrated[archiveId] = current
-                return true
+                return false
             }
             state.integrated[archiveId] = Set(bookIds)
             state.loadedArchives.insert(archiveId)
@@ -177,12 +203,26 @@ final class IntegrationCache: Sendable {
     // periphery:ignore
     /// Invalidasi cache untuk archive tertentu (misal setelah rollback / manual fix).
     func invalidate(archiveId: Int) {
-        state.withLock { state in
-            state.integrated.removeValue(forKey: archiveId)
-            state.loadedArchives.remove(archiveId)
+        lockForArchive(archiveId).withLock {
+            state.withLock { state in
+                state.integrated.removeValue(forKey: archiveId)
+                state.loadedArchives.remove(archiveId)
+                state.generations[archiveId, default: 0] &+= 1
+            }
+            if let file = cacheFile(for: archiveId) {
+                try? fm.removeItem(at: file)
+            }
         }
-        if let file = cacheFile(for: archiveId) {
-            try? fm.removeItem(at: file)
+    }
+
+    /// Kosongkan seluruh cache in-memory tanpa menyentuh file JSON (mis. saat ganti folder atau cleanup).
+    func resetInMemoryCache() {
+        state.withLock { state in
+            for archiveId in Set(state.integrated.keys).union(state.loadedArchives) {
+                state.generations[archiveId, default: 0] &+= 1
+            }
+            state.integrated.removeAll()
+            state.loadedArchives.removeAll()
         }
     }
 
@@ -190,14 +230,22 @@ final class IntegrationCache: Sendable {
 
     private func ensureLoaded(archiveId: Int) {
         guard AppConfig.isUsingBundleMode else { return }
-        let alreadyLoaded = state.withLock { $0.loadedArchives.contains(archiveId) }
-        if alreadyLoaded { return }
+        if state.withLock({ $0.loadedArchives.contains(archiveId) }) { return }
+
+        lockForArchive(archiveId).withLock {
+            ensureLoadedLocked(archiveId: archiveId)
+        }
+    }
+
+    private func ensureLoadedLocked(archiveId: Int) {
+        guard AppConfig.isUsingBundleMode else { return }
+        if state.withLock({ $0.loadedArchives.contains(archiveId) }) { return }
 
         guard let file = cacheFile(for: archiveId),
               fm.fileExists(atPath: file.path)
         else {
             // Belum ada cache → build sekarang (sekali saja)
-            build(for: archiveId)
+            buildLocked(for: archiveId)
             return
         }
 
@@ -205,15 +253,12 @@ final class IntegrationCache: Sendable {
               let json = try? JSONDecoder().decode(CacheFile.self, from: data)
         else {
             // File corrupt → rebuild
-            build(for: archiveId)
+            buildLocked(for: archiveId)
             return
         }
 
         state.withLock { state in
             if state.loadedArchives.contains(archiveId) {
-                var current = state.integrated[archiveId] ?? []
-                current.formUnion(json.bookIds)
-                state.integrated[archiveId] = current
                 return
             }
             state.integrated[archiveId] = Set(json.bookIds)

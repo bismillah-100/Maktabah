@@ -97,4 +97,33 @@ struct BookPageCacheTests {
         cache.removeAll()
         #expect(cache.get(bookId: bookB, contentId: 2) == nil)
     }
+
+    @Test("BookCacheCoordinator menginvalidasi BookPageCache, TOC, totalParts, dan emit BookLifecycleEvent")
+    @MainActor
+    func testBookCacheCoordinator_invalidateAndEmit() {
+        let bookId = 9905
+        let newBookId = 9906
+        cache.set(bookId: bookId, content: BookContent(id: 1, nash: "Konten"))
+        BookConnection.tocTreeCache.setObject([TOCNode(from: TOC(bab: "Bab", level: 1, sub: 0, id: 1))] as NSArray, forKey: NSNumber(value: bookId))
+        BookConnection.totalPartsCache.setObject(NSNumber(value: 3), forKey: NSString(string: String(bookId)))
+
+        var receivedEvent: BookLifecycleEvent?
+        let token = NotificationCenter.default.addObserver(
+            forName: .bookLifecycleDidChange,
+            object: nil,
+            queue: .main
+        ) { notification in
+            receivedEvent = notification.bookLifecycleEvent
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        let event = BookLifecycleEvent.idChanged(oldId: bookId, newId: newBookId, oldArchiveId: nil, newArchiveId: nil)
+        BookCacheCoordinator.shared.invalidateSynchronously(for: event)
+        BookLifecycleCoordinator.shared.emitOnMainActor(event)
+
+        #expect(cache.get(bookId: bookId, contentId: 1) == nil)
+        #expect(BookConnection.tocTreeCache.object(forKey: NSNumber(value: bookId)) == nil)
+        #expect(BookConnection.totalPartsCache.object(forKey: NSString(string: String(bookId))) == nil)
+        #expect(receivedEvent == event)
+    }
 }

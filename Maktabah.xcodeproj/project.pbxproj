@@ -412,6 +412,15 @@
 		F30577952FA4987B005732C6 /* NotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577942FA4987B005732C6 /* NotificationName.swift */; };
 		F30577962FA4987B005732C6 /* NotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577942FA4987B005732C6 /* NotificationName.swift */; };
 		F30577972FA4987B005732C6 /* NotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30577942FA4987B005732C6 /* NotificationName.swift */; };
+		A10000012FA4990000000011 /* BookLifecycleEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012FA4990000000001 /* BookLifecycleEvent.swift */; };
+		A10000012FA4990000000012 /* BookLifecycleEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012FA4990000000001 /* BookLifecycleEvent.swift */; };
+		A10000012FA4990000000013 /* BookLifecycleEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012FA4990000000001 /* BookLifecycleEvent.swift */; };
+		A10000022FA4990000000021 /* BookCacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022FA4990000000002 /* BookCacheCoordinator.swift */; };
+		A10000022FA4990000000022 /* BookCacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022FA4990000000002 /* BookCacheCoordinator.swift */; };
+		A10000022FA4990000000023 /* BookCacheCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022FA4990000000002 /* BookCacheCoordinator.swift */; };
+		A10000032FA4990000000031 /* BookLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000032FA4990000000003 /* BookLifecycleCoordinator.swift */; };
+		A10000032FA4990000000032 /* BookLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000032FA4990000000003 /* BookLifecycleCoordinator.swift */; };
+		A10000032FA4990000000033 /* BookLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000032FA4990000000003 /* BookLifecycleCoordinator.swift */; };
 		F30577992FA4BE8D005732C6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F30577982FA4BE8D005732C6 /* LaunchScreen.storyboard */; };
 		F30C5099303FA12200627AF8 /* ResultsViewTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */; };
 		F30C509A303FA12200627AF8 /* ResultsViewTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */; };
@@ -1159,6 +1168,9 @@
 		F30577802FA463B1005732C6 /* BookListWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookListWrapper.swift; sourceTree = "<group>"; };
 		F30577812FA463B1005732C6 /* iOSIbarotTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSIbarotTextView.swift; sourceTree = "<group>"; };
 		F30577942FA4987B005732C6 /* NotificationName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationName.swift; sourceTree = "<group>"; };
+		A10000012FA4990000000001 /* BookLifecycleEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookLifecycleEvent.swift; sourceTree = "<group>"; };
+		A10000022FA4990000000002 /* BookCacheCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCacheCoordinator.swift; sourceTree = "<group>"; };
+		A10000032FA4990000000003 /* BookLifecycleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookLifecycleCoordinator.swift; sourceTree = "<group>"; };
 		F30577982FA4BE8D005732C6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F30C5098303FA12200627AF8 /* ResultsViewTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewTextField.swift; sourceTree = "<group>"; };
 		F30C509B303FA15B00627AF8 /* ResultsViewMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsViewMenu.swift; sourceTree = "<group>"; };
@@ -1503,6 +1515,7 @@
 				4B8C9DCE2F6984120049E4EF /* ArchiveDatabaseTools.swift */,
 				4B8C9DD82F6985210049E4EF /* ArchiveErrors.swift */,
 				4B540F462EDF25A4001D8C0B /* BookConnection.swift */,
+				A10000022FA4990000000002 /* BookCacheCoordinator.swift */,
 				3373C7B02164CDBB77BFFF48 /* CloudKitSyncManager.swift */,
 				4BDAB9832F69B946007D0945 /* CoreDatabaseDownloader.swift */,
 				F3D46E9A2FD1D45900079FF9 /* CoreUpdateAlert.swift */,
@@ -1701,6 +1714,7 @@
 			isa = PBXGroup;
 			children = (
 				F30577942FA4987B005732C6 /* NotificationName.swift */,
+				A10000012FA4990000000001 /* BookLifecycleEvent.swift */,
 				F364898830131EAE00B9285B /* NotificationToken.swift */,
 				F3D33FEA3041BC970036D4DE /* WidgetDeepLink.swift */,
 			);
@@ -2458,6 +2472,7 @@
 			isa = PBXGroup;
 			children = (
 				4B8C9DCF2F6984120049E4EF /* BookArchiveIntegrator.swift */,
+				A10000032FA4990000000003 /* BookLifecycleCoordinator.swift */,
 				4B8C9DD02F6984120049E4EF /* BookDownloadManager.swift */,
 				4B8C9DD62F69848F0049E4EF /* IntegrationCache.swift */,
 				4B33928A2EE02E710028C706 /* LibraryDataManager.swift */,
@@ -3149,6 +3164,9 @@
 				4BAB8A462F2867A200732FC9 /* TextViewState.swift in Sources */,
 				4BA393722EF1E6CD00736DFF /* DSFSearchField.swift in Sources */,
 				F30577972FA4987B005732C6 /* NotificationName.swift in Sources */,
+				A10000012FA4990000000013 /* BookLifecycleEvent.swift in Sources */,
+				A10000022FA4990000000023 /* BookCacheCoordinator.swift in Sources */,
+				A10000032FA4990000000033 /* BookLifecycleCoordinator.swift in Sources */,
 				F3D33FEB3041BC970036D4DE /* WidgetDeepLink.swift in Sources */,
 				4B3202722EDB5E3D003B95D1 /* Navigation.swift in Sources */,
 				4B58EDCE2EE3DDEE00073495 /* ResultsViewModel.swift in Sources */,
@@ -3316,6 +3334,9 @@
 				4B7C90B72F83494200454BE1 /* LibraryViewManager.swift in Sources */,
 				F3D9CB203009BF7B00076C43 /* ZSTDContextWrapper.swift in Sources */,
 				F30577962FA4987B005732C6 /* NotificationName.swift in Sources */,
+				A10000012FA4990000000012 /* BookLifecycleEvent.swift in Sources */,
+				A10000022FA4990000000022 /* BookCacheCoordinator.swift in Sources */,
+				A10000032FA4990000000032 /* BookLifecycleCoordinator.swift in Sources */,
 				F3D33FEC3041BC970036D4DE /* WidgetDeepLink.swift in Sources */,
 				4B7C90B82F83494200454BE1 /* StringExt.swift in Sources */,
 				F35A7BD22FE304E800355E70 /* BookAnnotationsViewModel.swift in Sources */,
@@ -3686,6 +3707,9 @@
 				F3A20B142FD2E8DF0023F561 /* iOSCoreUpdateProgressOverlayView.swift in Sources */,
 				F30577252FA46222005732C6 /* SearchEngine.swift in Sources */,
 				F30577952FA4987B005732C6 /* NotificationName.swift in Sources */,
+				A10000012FA4990000000011 /* BookLifecycleEvent.swift in Sources */,
+				A10000022FA4990000000021 /* BookCacheCoordinator.swift in Sources */,
+				A10000032FA4990000000031 /* BookLifecycleCoordinator.swift in Sources */,
 				F3D33FED3041BC970036D4DE /* WidgetDeepLink.swift in Sources */,
 				F31111992FC0A9C00024B638 /* iOSFolderSelectionGroup.swift in Sources */,
 				F38FF4362FA89EEE003E7B71 /* iOSReaderTabView.swift in Sources */,

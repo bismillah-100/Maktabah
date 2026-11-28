@@ -197,16 +197,12 @@ final class BookUpdateManager: Sendable {
 
     @MainActor
     func integrateBooks(metadata: BookMetadata) {
-        // Mark as integrated since the tables are already copied to the archive
-        IntegrationCache.shared.markIntegrated(
-            bookId: metadata.bkid,
-            archiveId: metadata.archive
+        let event = BookLifecycleEvent.integrated(
+            bookIds: [metadata.bkid],
+            archiveIds: [metadata.archive]
         )
-
-        NotificationCenter.default.post(
-            name: .bookIntegrated,
-            object: metadata.bkid
-        )
+        BookCacheCoordinator.shared.invalidateSynchronously(for: event)
+        BookLifecycleCoordinator.shared.emitOnMainActor(event)
     }
 
     func makeWorkingDirectory() throws -> URL {

@@ -15,6 +15,7 @@ extension Notification.Name {
     static let didChangeFont = Notification.Name("didChangeFont")
     static let didChangeLineHeight = Notification.Name("didChangeLineHeight")
     static let didChangeEnhancedUnderline = Notification.Name("didChangeEnhancedUnderline")
+    static let bookLifecycleDidChange = Notification.Name("bookLifecycleDidChange")
 
     // MARK: - WINDOW OBSERVATIONS
     static let windowTabBarDidChange = Notification.Name("windowTabBarDidChange")

@@ -114,11 +114,15 @@ final class SettingsViewModel {
         let url = URL(fileURLWithPath: path)
         let fm = FileManager.default
 
+        BookCacheCoordinator.shared.closeAllArchiveConnections()
+
         do {
             let items = try fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
             for item in items {
                 try fm.removeItem(at: item)
             }
+            BookCacheCoordinator.shared.invalidateSynchronously(for: .bundledDataCleaned)
+            BookLifecycleCoordinator.shared.emitOnMainActor(.bundledDataCleaned)
             refreshPaths()
         } catch {
             Logger.reader.error("Failed to cleanup bundled data: \(error.localizedDescription, privacy: .public)")

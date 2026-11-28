@@ -942,14 +942,22 @@ extension LibraryDataManager {
     func removeBookFromMemory(
         id: Int,
         muallifId: Int,
+        archiveId: Int? = nil,
         removeBookFromCatalog: Bool? = nil,
         removeAuthorFromCache: Bool? = nil
     ) {
         let shouldDropBook = removeBookFromCatalog ?? Self.shouldRemoveBook(id: id)
         let shouldDropAuthor = removeAuthorFromCache ?? Self.shouldRemoveAuthor(muallifId: muallifId)
         let isAuthorUnused = shouldDropAuthor && !db.isAuthorUsed(authorId: muallifId)
+        let tableName = "b\(id)"
 
         state.withLock { state in
+            let targetArchiveId = archiveId ?? state.booksById[id]?.archive ?? 0
+            if targetArchiveId > 0, state.archives[targetArchiveId] != nil {
+                state.archives[targetArchiveId]?.tables.removeAll { $0 == tableName }
+                state.archives[targetArchiveId]?.books.removeAll { $0.id == id }
+            }
+
             if shouldDropBook {
                 state.booksById.removeValue(forKey: id)
                 for root in state.allRootCategories {

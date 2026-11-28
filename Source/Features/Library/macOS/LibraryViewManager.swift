@@ -308,7 +308,9 @@ class LibraryViewManager: NSObject {
             }
         } else if let book = item as? BooksData {
             viewModel.toggleBookSelection(book)
-            ReusableFunc.updateBuiltInRecents(with: book.book, in: searchField)
+            if let searchField {
+                ReusableFunc.updateBuiltInRecents(with: book.book, in: searchField)
+            }
 
             var parent = outlineView.parent(forItem: book)
             while let currentParent = parent {
@@ -426,7 +428,7 @@ extension LibraryViewManager: NSOutlineViewDelegate {
 
         selectionSubject.send(selectedRow)
 
-        if let item = outlineView.item(atRow: selectedRow) as? BooksData {
+        if let searchField, let item = outlineView.item(atRow: selectedRow) as? BooksData {
             ReusableFunc.updateBuiltInRecents(with: item.book, in: searchField)
         }
     }

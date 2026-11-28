@@ -196,4 +196,19 @@ final class IntegrationCacheTests {
         state.updateIntegrationPhase(.data)
         #expect(state.progress == 0.9)
     }
+
+    @Test("resetInMemoryCache mengosongkan RAM lalu memuat ulang dari JSON tanpa kehilangan data")
+    func testResetInMemoryCache() {
+        let archiveId = 996
+        let bookId = 88001
+
+        cache.invalidate(archiveId: archiveId)
+        cache.markIntegrated(bookId: bookId, archiveId: archiveId)
+        #expect(cache.isIntegrated(bookId: bookId, archiveId: archiveId) == true)
+
+        cache.resetInMemoryCache()
+        #expect(cache.isIntegrated(bookId: bookId, archiveId: archiveId) == true)
+
+        cache.invalidate(archiveId: archiveId)
+    }
 }

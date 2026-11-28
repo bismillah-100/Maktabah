@@ -130,14 +130,12 @@ final class DatabaseManager: Sendable {
     /// Reopen database connections dan reset cache library
     /// serta mengirim notifikasi.
     func reloadConnectionAndLibrary() {
+        BookCacheCoordinator.shared.closeAllArchiveConnections()
         LibraryDataManager.shared.resetState()
         DatabaseManager.shared.setupFolders()
         TarjamahGlobalManager.shared.setupConnection()
-        BookPageCache.shared.removeAll()
-        NotificationCenter.default.post(
-            name: .libraryFolderChanged,
-            object: nil
-        )
+        BookCacheCoordinator.shared.invalidateSynchronously(for: .libraryFolderChanged)
+        BookLifecycleCoordinator.shared.emitFromSyncContext(.libraryFolderChanged)
     }
 
     /// Read version from table 'v' in main.sqlite
@@ -422,6 +420,19 @@ final class DatabaseManager: Sendable {
     func invalidateArchiveCache(archiveId: Int) {
         state.withLock {
             _ = $0.archiveAvailabilityCache.removeValue(forKey: archiveId)
+        }
+    }
+
+    func invalidateShortCache(bookId: Int) {
+        state.withLock {
+            _ = $0.shortsCache.removeValue(forKey: String(bookId))
+        }
+    }
+
+    func invalidateAllRuntimeCaches() {
+        state.withLock {
+            $0.shortsCache.removeAll()
+            $0.archiveAvailabilityCache.removeAll()
         }
     }
 

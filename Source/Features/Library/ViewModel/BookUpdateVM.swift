@@ -160,6 +160,22 @@ final class BookUpdateViewModel: @unchecked Sendable {
             updateResults = results
 
             try await LibraryDataManager.shared.processBookUpdates(results)
+
+            let updatedIds = Set(results.filter { $0.action == .updated }.map(\.bookId))
+            let insertedIds = Set(results.filter { $0.action == .inserted }.map(\.bookId))
+            if !updatedIds.isEmpty {
+                await BookLifecycleCoordinator.shared.emit(
+                    .updated(bookIds: updatedIds, oldArchiveIds: [], newArchiveIds: []),
+                    postLegacyBooksChanged: false,
+                    postLegacyIntegratedIds: Array(updatedIds)
+                )
+            }
+            if !insertedIds.isEmpty {
+                await BookLifecycleCoordinator.shared.emit(
+                    .integrated(bookIds: insertedIds, archiveIds: [])
+                )
+            }
+
             refreshAvailableUpdatesState()
         } catch {
             progressMessage = "Error: \(error.localizedDescription)"

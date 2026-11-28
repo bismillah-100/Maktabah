@@ -25,8 +25,6 @@ extension BookUpdateManager {
             )
         }
 
-        try preCreateArchiveTables(archiveId: metadata.archive, bookId: metadata.bkid)
-
         let workingDirectory = try makeWorkingDirectory()
         let downloadedBookURL = workingDirectory.appendingPathComponent(
             "book_\(metadata.bkid)_\(UUID().uuidString).sqlite"
@@ -133,11 +131,15 @@ extension BookUpdateManager {
         }
 
         try convertBookDatabase(at: stagedUpdate.downloadedBookURL, bookId: stagedUpdate.metadata.bkid)
+        let oldArchiveId = LibraryDataManager.shared.booksById[stagedUpdate.metadata.bkid]?.archive
         try await BookArchiveSingleFlight.shared.run(
             archiveId: stagedUpdate.metadata.archive,
             bookId: stagedUpdate.metadata.bkid
         ) { [weak self] in
             guard let self else { return }
+            if isOfflineImport {
+                try preCreateArchiveTables(archiveId: stagedUpdate.metadata.archive, bookId: stagedUpdate.metadata.bkid)
+            }
             try replaceArchiveDatabase(
                 with: stagedUpdate.downloadedBookURL,
                 archiveId: stagedUpdate.metadata.archive,
@@ -148,11 +150,18 @@ extension BookUpdateManager {
 
         try saveBookMetadata(stagedUpdate.metadata, exists: exists, isOfflineImport: isOfflineImport)
 
-        // Hapus cache per-kitab di folder Books jika ada, agar pembaca beralih ke arsip yang diperbarui
-        BookDownloadManager.shared.removeCachedBook(bookId: stagedUpdate.metadata.bkid)
-        BookPageCache.shared.remove(bookId: stagedUpdate.metadata.bkid)
-        BookConnection.invalidateTOC(for: stagedUpdate.metadata.bkid)
-        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(stagedUpdate.metadata.bkid)))
+        let oldArchiveIds: Set<Int> = oldArchiveId.map { [$0] } ?? []
+        let event: BookLifecycleEvent = exists
+            ? .updated(
+                bookIds: [stagedUpdate.metadata.bkid],
+                oldArchiveIds: oldArchiveIds,
+                newArchiveIds: [stagedUpdate.metadata.archive]
+            )
+            : .integrated(
+                bookIds: [stagedUpdate.metadata.bkid],
+                archiveIds: [stagedUpdate.metadata.archive]
+            )
+        BookCacheCoordinator.shared.invalidateSynchronously(for: event)
 
         return BookUpdateResult(
             bookId: stagedUpdate.metadata.bkid,
@@ -524,12 +533,6 @@ extension BookUpdateManager {
 
         checkpoint(db: db, archivePath: targetPath, ftsPath: ftsDBPath)
         dbPtr = nil
-
-        IntegrationCache.shared.markIntegrated(bookId: bookId, archiveId: archiveId)
-        DatabaseManager.shared.invalidateArchiveCache(archiveId: archiveId)
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .bookIntegrated, object: bookId)
-        }
     }
 
     private func appendOrBuildFTS(db: OpaquePointer, tableName: String, bookId: Int) throws {

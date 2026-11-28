@@ -174,6 +174,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         // Masuk ke antrean serial BookArchiveSingleFlight hanya untuk fase penulisan SQLite ke arsip.
         try await BookArchiveSingleFlight.shared.run(archiveId: book.archive, bookId: book.id) { [weak self] in
             guard let self else { return }
+            BookCacheCoordinator.shared.closeArchiveConnections(archiveIds: [book.archive])
             try await executeArchiveIntegration(
                 book: book,
                 sourceURL: sourceURL,
@@ -245,6 +246,7 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         archiveDbPath: String,
         ftsDbPath: String
     ) throws {
+        BookCacheCoordinator.shared.closeArchiveConnections(archiveIds: [book.archive])
         let shouldRemoveBook = LibraryDataManager.shouldRemoveBook(id: book.id)
         let shouldRemoveAuthor = LibraryDataManager.shouldRemoveAuthor(muallifId: book.muallif)
 
@@ -388,15 +390,12 @@ final class BookArchiveIntegrator: @unchecked Sendable {
     /// Invalidasi cache DB, hapus file sementara, update IntegrationCache,
     /// lalu beri tahu LibraryViewManager agar refresh parent row.
     private func finalizeIntegration(book: BooksData) {
-        DatabaseManager.shared.invalidateArchiveCache(archiveId: book.archive)
-        BookDownloadManager.shared.removeCachedBook(bookId: book.id)
-        BookPageCache.shared.remove(bookId: book.id)
-        BookConnection.invalidateTOC(for: book.id)
-        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(book.id)))
-        IntegrationCache.shared.markIntegrated(bookId: book.id, archiveId: book.archive)
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .bookIntegrated, object: book.id)
-        }
+        let event = BookLifecycleEvent.integrated(
+            bookIds: [book.id],
+            archiveIds: [book.archive]
+        )
+        BookCacheCoordinator.shared.invalidateSynchronously(for: event)
+        BookLifecycleCoordinator.shared.emitFromSyncContext(event)
     }
 
     private func finalizeRemoval(
@@ -404,20 +403,21 @@ final class BookArchiveIntegrator: @unchecked Sendable {
         removeBookFromCatalog: Bool,
         removeAuthorFromCache: Bool
     ) {
-        DatabaseManager.shared.invalidateArchiveCache(archiveId: book.archive)
-        BookPageCache.shared.remove(bookId: book.id)
-        BookConnection.invalidateTOC(for: book.id)
-        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(book.id)))
-        IntegrationCache.shared.unmarkIntegrated(bookId: book.id, archiveId: book.archive)
+        let removedFromCatalog: Set<Int> = removeBookFromCatalog ? [book.id] : []
+        let event = BookLifecycleEvent.deleted(
+            bookIds: [book.id],
+            archiveIds: [book.archive],
+            removedFromCatalog: removedFromCatalog
+        )
+        BookCacheCoordinator.shared.invalidateSynchronously(for: event)
         LibraryDataManager.shared.removeBookFromMemory(
             id: book.id,
             muallifId: book.muallif,
+            archiveId: book.archive,
             removeBookFromCatalog: removeBookFromCatalog,
             removeAuthorFromCache: removeAuthorFromCache
         )
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .bookIntegrated, object: book.id)
-        }
+        BookLifecycleCoordinator.shared.emitFromSyncContext(event)
     }
 
     private func hasIntegratedBook(

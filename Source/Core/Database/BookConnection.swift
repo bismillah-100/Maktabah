@@ -526,4 +526,9 @@ extension BookConnection {
     static func invalidateTOC(for bookId: Int) {
         tocTreeCache.removeObject(forKey: NSNumber(value: bookId))
     }
+
+    static func invalidateAllCaches() {
+        tocTreeCache.removeAllObjects()
+        totalPartsCache.removeAllObjects()
+    }
 }
