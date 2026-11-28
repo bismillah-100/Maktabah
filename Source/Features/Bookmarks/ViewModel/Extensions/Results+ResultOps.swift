@@ -73,7 +73,7 @@ extension ResultsViewModel {
         var groupedResults: [String: GroupedResult] = [:]
 
         for item in results {
-            let origTable = item.tableName.hasPrefix("b") ? String(item.tableName.dropFirst()) : item.tableName
+            let origTable = BookTableName.numericIdString(from: item.tableName)
             guard let arc = Int(item.archive),
                   let table = Int(origTable) else { continue }
 

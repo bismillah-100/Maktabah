@@ -42,7 +42,11 @@ extension SearchViewModel {
 
         let tablesToScan = resolveTablesToScan()
         if tablesToScan.isEmpty {
-            stopSearch(); return
+            stopSearch()
+            #if os(macOS)
+            searchDidComplete.send()
+            #endif
+            return
         }
 
         let task = Task.detached(priority: .userInitiated) { [weak self, tablesToScan] in
@@ -68,7 +72,7 @@ extension SearchViewModel {
 
     func handleSearchCompletion() {
         emitComplete()
-        var delay: Double = 0.5
+        var delay = 0.5
         #if os(macOS)
         delay = 1
         #endif

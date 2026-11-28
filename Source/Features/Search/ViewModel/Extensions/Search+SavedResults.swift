@@ -85,10 +85,11 @@ extension SearchViewModel {
     }
 
     func processSavedItem(_ item: SavedResultsItem) async -> SearchResultItem? {
-        guard let bookContent = bkConn.getContent(bkid: item.tableName, contentId: item.bookId)
+        let numericBkId = BookTableName.numericIdString(from: item.tableName)
+        guard let bookContent = bkConn.getContent(bkid: numericBkId, contentId: item.bookId)
         else { return nil }
 
-        let bookId = Int(item.tableName.dropFirst()) ?? 0
+        let bookId = Int(numericBkId) ?? 0
         let book = ldm.booksById[bookId]
         let isMultilingual = book?.isMultiLanguage ?? false
 
@@ -110,7 +111,7 @@ extension SearchViewModel {
 
         return SearchResultItem(
             archive: item.archive,
-            tableName: item.tableName,
+            tableName: BookTableName.prefixedTableName(from: item.tableName),
             bookId: item.bookId,
             bookTitle: item.bookTitle,
             page: bookContent.page,

@@ -9,7 +9,6 @@ class iOSSearchFilterViewController: iOSHierarchicalCollectionViewController {
     var onSelectionChanged: ((Set<Int>) -> Void)?
 
     private var bookCache: [Int: [BooksData]] = [:] // key: category.id
-    private var fullCategories: Set<Int> = [] // Cache untuk kategori yang semua bukunya terpilih
 
     override func viewDidLoad() {
         super.viewDidLoad()

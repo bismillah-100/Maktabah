@@ -141,13 +141,26 @@ class IbarotTextVC: NSViewController {
         viewModel.tocViewModel.onTOCLoaded = { [weak self] nodes in
             guard let self else { return }
             sidebarVC?.updateTOC(nodes)
+            let sidebarRestore = (pendingSidebarRestoreState?.bookId == viewModel.currentBook?.id) ? pendingSidebarRestoreState : nil
+            pendingSidebarRestoreState = nil
+            if let sidebarRestore {
+                sidebarVC?.restorePresentation(
+                    expandedNodeIDs: sidebarRestore.expandedNodeIDs,
+                    scrollOrigin: sidebarRestore.scrollOrigin
+                )
+            }
             if viewModel.currentContentId > 0 {
-                handleNavigationToContent(viewModel.currentContentId)
+                handleNavigationToContent(
+                    viewModel.currentContentId,
+                    scrollToSelection: sidebarRestore?.scrollOrigin == nil,
+                    restoreScrollOrigin: sidebarRestore?.scrollOrigin
+                )
             }
         }
     }
 
     private var observerTokens: [NotificationToken] = []
+    private var pendingSidebarRestoreState: (bookId: Int, expandedNodeIDs: [Int], scrollOrigin: CGPoint?)?
 
     private func setupNotificationObservers() {
         observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
@@ -174,30 +187,6 @@ class IbarotTextVC: NSViewController {
                 if viewModel.currentBook?.id == bookId {
                     if !BookArchiveIntegrator.shared.isBookIntegrated(viewModel.currentBook!) {
                         clearUI()
-                    }
-                }
-            }
-        }))
-
-        observerTokens.append(NotificationToken(token: NotificationCenter.default.addObserver(
-            forName: .bookIdMigrated,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let userInfo = notification.userInfo,
-                  let oldId = userInfo["oldId"] as? Int,
-                  let newId = userInfo["newId"] as? Int
-            else { return }
-
-            MainActor.assumeIsolated { [weak self] in
-                guard let self else { return }
-
-                if viewModel.currentBook?.id == oldId {
-                    // ReaderViewModel handleBookIdMigrated will update its currentBook.
-                    // We just need to make sure IbarotTextVC doesn't crash or holds onto stale state.
-                    // Re-rendering or updating title can be triggered here if necessary.
-                    if let newBookData = LibraryDataManager.shared.booksById[newId] {
-                        viewModel.currentBook = newBookData
                     }
                 }
             }
@@ -239,6 +228,7 @@ class IbarotTextVC: NSViewController {
         set {
             guard var state = splitVC?.currentState else { return }
             state.edit { $0.currentRowi = newValue }
+            splitVC?.currentState = state
         }
     }
 
@@ -375,6 +365,9 @@ class IbarotTextVC: NSViewController {
     // MARK: - State Management
 
     func clearUI() {
+        pendingRestoreTask?.cancel()
+        pendingRestoreTask = nil
+        pendingSidebarRestoreState = nil
         textView.string.removeAll()
         sidebarVC?.cleanUpOutlineView()
         viewModel.cleanUpState()
@@ -389,7 +382,11 @@ class IbarotTextVC: NSViewController {
 
     private var lastSelectedContentIdFromSidebar: Int?
 
-    private func handleNavigationToContent(_ contentId: Int) {
+    private func handleNavigationToContent(
+        _ contentId: Int,
+        scrollToSelection: Bool = true,
+        restoreScrollOrigin: CGPoint? = nil
+    ) {
         guard let sidebarVC else { return }
 
         if lastSelectedContentIdFromSidebar == contentId {
@@ -401,7 +398,10 @@ class IbarotTextVC: NSViewController {
         Task.detached { [weak self] in
             if let self, let node = await viewModel.tocViewModel.findNode(forContentId: contentId) {
                 let path = await viewModel.tocViewModel.pathToNode(node)
-                await sidebarVC.selectNode(node, path: path)
+                await sidebarVC.selectNode(node, path: path, scrollToSelection: scrollToSelection)
+                if let restoreScrollOrigin {
+                    await sidebarVC.restoreScrollPosition(restoreScrollOrigin)
+                }
             }
             await MainActor.run {
                 sidebarVC.enableDelegate = true
@@ -448,6 +448,7 @@ extension IbarotTextVC {
         _ book: BooksData,
         loadContent: Bool = true
     ) async throws {
+        pendingSidebarRestoreState = nil
         do {
             try await viewModel.connectBookWithBundleFallback(book)
             didChangeBook(book: book)
@@ -569,6 +570,7 @@ extension IbarotTextVC {
     func setRowiDisplayMode() {
         guard var state = splitVC?.currentState else { return }
         state.edit { $0.authorDisplayMode = .bookContent }
+        splitVC?.currentState = state
     }
 
     func setAuthorRowiDisplay(rowi: Rowi) {
@@ -577,6 +579,7 @@ extension IbarotTextVC {
             $0.currentRowi = rowi
             $0.authorDisplayMode = .rowiInfo
         }
+        splitVC?.currentState = state
         Logger.reader.debug("Author mode: display mode (\(String(describing: state.authorDisplayMode), privacy: .public))")
     }
 }
@@ -656,16 +659,33 @@ extension IbarotTextVC: ReaderStateComponent {
     }
 
     func restore(from state: ReaderState) {
-        guard state.hasContent, let book = state.currentBook
+        guard state.hasContent, let stateBook = state.currentBook
         else { clearUI(); return }
+
+        guard let book = LibraryDataManager.shared.booksById[stateBook.id] else {
+            cleanUpState()
+            return
+        }
 
         try? viewModel.bookConnection.connect(archive: book.archive)
 
         if AppConfig.isUsingBundleMode,
            !BookArchiveIntegrator.shared.isBookIntegrated(book)
         {
-            viewModel.currentBook = nil
+            cleanUpState()
             return
+        }
+
+        var resolvedState = state
+        resolvedState.currentBook = book
+        if !state.expandedNodeIDs.isEmpty || state.sidebarScrollPosition != nil {
+            pendingSidebarRestoreState = (
+                bookId: book.id,
+                expandedNodeIDs: state.expandedNodeIDs,
+                scrollOrigin: state.sidebarScrollPosition
+            )
+        } else {
+            pendingSidebarRestoreState = nil
         }
 
         libraryVC?.dataVM.viewModel.selectedBookName = book.book
@@ -674,27 +694,27 @@ extension IbarotTextVC: ReaderStateComponent {
         }
 
         pendingRestoreTask?.cancel()
-        pendingRestoreTask = Task { @MainActor [weak self] in
+        pendingRestoreTask = Task { @MainActor [weak self, resolvedState] in
             guard let self, !Task.isCancelled else { return }
 
             await waitForSearchLayoutSettle()
             guard !Task.isCancelled else { return }
 
-            viewModel.restore(from: state)
+            viewModel.restore(from: resolvedState)
 
-            if let query = state.searchQuery {
-                let mode = state.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
-                let nearDistance = state.searchNearDistance ?? 10
+            if let query = resolvedState.searchQuery {
+                let mode = resolvedState.searchModeRaw.flatMap { SearchMode(rawValue: $0) }
+                let nearDistance = resolvedState.searchNearDistance ?? 10
                 await textDelegate?.highlightAndScrollToText(query, mode: mode, nearDistance: nearDistance)
             }
 
             guard !Task.isCancelled else { return }
 
-            if let scrollPos = state.scrollPosition {
+            if let scrollPos = resolvedState.scrollPosition {
                 await textDelegate?.scrollTo(scrollPos)
             }
 
-            if let range = state.selectedRange {
+            if let range = resolvedState.selectedRange {
                 await textDelegate?.restoreSelectedRange(range)
             }
 

@@ -146,6 +146,39 @@ struct SearchTests {
 
         #expect(viewModel.isSearching == false)
     }
+
+    // MARK: - 5. Book ID Migration & Table Prefix Tests
+
+    @Test("SearchViewModel.migrateBookId mencocokkan tableName, menjaga rowId bookId, dan migrasi targetBookId")
+    @MainActor
+    func testSearchViewModel_migrateBookId() {
+        let viewModel = SearchViewModel()
+        viewModel.selectedBookIds = [42, 99]
+        viewModel.targetBookId = "b42"
+        viewModel.results = [
+            SearchResultItem(archive: "1", tableName: "b42", bookId: 7, bookTitle: "Lama", page: 7, part: 1),
+            SearchResultItem(archive: "1", tableName: "b100", bookId: 42, bookTitle: "Kitab Lain", page: 42, part: 1)
+        ]
+
+        viewModel.migrateBookId(from: 42, to: 500)
+
+        #expect(viewModel.selectedBookIds == [99, 500])
+        #expect(viewModel.targetBookId == "b500")
+        #expect(viewModel.results[0].tableName == "b500")
+        #expect(viewModel.results[0].bookId == 7)
+        #expect(viewModel.results[1].tableName == "b100")
+        #expect(viewModel.results[1].bookId == 42)
+    }
+
+    @Test("BookTableName mengekstrak dan memformat nama tabel secara konsisten")
+    func testBookTableNameHelpers() {
+        #expect(BookTableName.numericIdString(from: "5") == "5")
+        #expect(BookTableName.numericIdString(from: "b123") == "123")
+        #expect(BookTableName.bookId(from: "5") == 5)
+        #expect(BookTableName.bookId(from: "b123") == 123)
+        #expect(BookTableName.prefixedTableName(from: "5") == "b5")
+        #expect(BookTableName.prefixedTableName(from: "b123") == "b123")
+    }
 }
 
 /// Helper isolation wrapper untuk testing callback asynchronous

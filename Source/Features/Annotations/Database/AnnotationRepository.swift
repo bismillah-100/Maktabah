@@ -461,6 +461,7 @@ final class AnnotationRepository: SyncPendingManaging, Sendable {
 
             for i in 0 ..< affectedAnnotations.count {
                 var ann = affectedAnnotations[i]
+                ann.bkId = newId
                 if let ckId = ann.ckRecordId {
                     try self.addPendingSync(ckRecordId: ckId, operation: "upload")
                 }

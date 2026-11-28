@@ -23,7 +23,7 @@ class ResultWriter: NSViewController {
     var query: String = ""
     var searchMode: SearchMode = .phrase
     var searchViewModel: SearchViewModel?
-    
+
     var nsBtns: [NSButton] {
         [xButton, okButton]
     }
@@ -37,7 +37,7 @@ class ResultWriter: NSViewController {
         outlineView.dataSource = resultsVM
         outlineView.delegate = resultsVM
         if #available(macOS 26, *) {
-            nsBtns.forEach { button in
+            for button in nsBtns {
                 button.borderShape = .capsule
             }
         }
@@ -49,7 +49,7 @@ class ResultWriter: NSViewController {
         ReusableFunc.showProgressWindow(view)
         textField.stringValue = query
         queryTextField.stringValue = query
-        Task.detached() { [weak self] in
+        Task.detached { [weak self] in
             await self?.viewModel.getFolders()
             await MainActor.run { [weak self] in
                 guard let self else { return }
@@ -80,7 +80,8 @@ class ResultWriter: NSViewController {
             guard !name.isEmpty else { return }
 
             if row >= 0,
-               let item = outlineView.item(atRow: row) as? FolderNode {
+               let item = outlineView.item(atRow: row) as? FolderNode
+            {
                 addSubFolder(parentNode: item, name: name)
                 return
             }
@@ -111,8 +112,8 @@ class ResultWriter: NSViewController {
     }
 
     @IBAction func saveClicked(_ sender: Any) {
-        let query = OptionSearchVC.query
-        if query.isEmpty { return }
+        let resolvedQuery = !query.isEmpty ? query : (searchViewModel?.query ?? "")
+        if resolvedQuery.isEmpty { return }
 
         let folderId: Int64?
 
@@ -133,7 +134,7 @@ class ResultWriter: NSViewController {
         do {
             try viewModel.saveSearchResults(
                 results: results,
-                query: query,
+                query: resolvedQuery,
                 searchMode: searchMode.rawValue,
                 nearDistance: searchViewModel?.nearDistance ?? 10,
                 folderId: folderId,

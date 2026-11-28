@@ -32,10 +32,7 @@ extension SearchViewModel {
 
     /// Resolve `BooksData` dari `SearchResultItem`. Returns nil jika tidak ditemukan.
     func resolveBook(from result: SearchResultItem) -> BooksData? {
-        let table = result.tableName.hasPrefix("b")
-            ? String(result.tableName.dropFirst())
-            : result.tableName
-        guard let tableInt = Int(table) else { return nil }
+        guard let tableInt = BookTableName.bookId(from: result.tableName) else { return nil }
         return ldm.getBook([tableInt]).first
     }
 }

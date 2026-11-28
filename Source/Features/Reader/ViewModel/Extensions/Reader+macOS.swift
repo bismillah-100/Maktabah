@@ -45,16 +45,21 @@ extension ReaderViewModel {
             return nil
         }
 
-        guard let book = state.currentBook else { return nil }
+        guard let stateBook = state.currentBook,
+              let book = LibraryDataManager.shared.booksById[stateBook.id]
+        else {
+            cleanUpState()
+            return nil
+        }
 
         do {
             try bookConnection.connect(archive: book.archive)
             if AppConfig.isUsingBundleMode,
                !BookArchiveIntegrator.shared.isBookIntegrated(book)
             {
-                currentBook = nil
+                cleanUpState()
                 return nil
-            } else if currentBook?.id != book.id {
+            } else if currentBook !== book {
                 currentBook = book
             }
 

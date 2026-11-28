@@ -336,6 +336,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if mainWindowController?.window === window {
             mainWindowController = windowControllers.first
         }
+        if !isTerminating, !windowControllers.isEmpty {
+            scheduleSessionSave()
+        }
     }
 
     // MARK: - App Launch
@@ -486,6 +489,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         showOfflineImportWindow()
     }
 
+    private weak var offlineImportWindow: NSWindow?
+
     private func showOfflineImportWindow() {
         let contentView = OfflineImportFormView(onImport: { [weak self]
             (url: URL, metadata: BookMetadata, authorRow: [String: any Sendable]?) async in
@@ -506,6 +511,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             title: "Import Offline Book"
         )
 
+        offlineImportWindow = window
         window.titleVisibility = .hidden
         window.makeKeyAndOrderFront(nil as Any?)
     }
@@ -524,6 +530,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             try? await LibraryDataManager.shared.processBookUpdates([result])
             BookUpdateManager.shared.integrateBooks(metadata: metadata)
+            offlineImportWindow?.close()
+            offlineImportWindow = nil
 
             ReusableFunc.showAlert(
                 title: String(localized: .Library.importSuccess),

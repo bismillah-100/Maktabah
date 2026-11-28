@@ -41,6 +41,18 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             self?.buildAnnotationTree()
         }
 
+        NotificationCenter.default.publisher(for: .bookLifecycleDidChange)
+            .sink { [weak self] notification in
+                guard let event = notification.bookLifecycleEvent else { return }
+                switch event {
+                case .deleted, .updated, .idChanged, .libraryFolderChanged, .bundledDataCleaned:
+                    self?.buildAnnotationTree()
+                case .integrated:
+                    break
+                }
+            }
+            .store(in: &cancellables)
+
         buildAnnotationTree()
     }
 

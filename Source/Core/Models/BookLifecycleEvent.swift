@@ -19,3 +19,17 @@ extension Notification {
         object as? BookLifecycleEvent
     }
 }
+
+enum BookTableName {
+    static func numericIdString(from raw: String) -> String {
+        raw.hasPrefix("b") ? String(raw.dropFirst()) : raw
+    }
+
+    static func bookId(from raw: String) -> Int? {
+        Int(numericIdString(from: raw))
+    }
+
+    static func prefixedTableName(from raw: String) -> String {
+        "b\(numericIdString(from: raw))"
+    }
+}

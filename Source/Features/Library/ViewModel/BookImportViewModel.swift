@@ -8,6 +8,7 @@
 import Foundation
 import OSLog
 import SwiftUI
+import Synchronization
 
 @Observable
 final class BookImportViewModel: @unchecked Sendable {
@@ -162,6 +163,12 @@ final class BookImportViewModel: @unchecked Sendable {
             bookName = book.book
             archiveId = book.archive
             categoryId = book.catId ?? 0
+            selectedAuthorId = book.muallif
+            isNewAuthor = false
+            isMultiLanguage = book.isMultiLanguage
+            tafseerNam = book.tafseerNam ?? ""
+            betaka = book.bithoqoh
+            inf = book.info
         }
         showBookPicker = false
     }
@@ -172,8 +179,10 @@ final class BookImportViewModel: @unchecked Sendable {
     }
 
     func handleImportModeChanged(newMode: Int) {
-        if newMode == 2, let selectedBookId {
-            customBookIdText = "\(selectedBookId)"
+        if newMode == 2 {
+            customBookIdText = selectedBookId.map(String.init) ?? ""
+        } else if newMode == 0 {
+            customBookIdText = maxBkid > 0 ? "\(maxBkid + 1)" : ""
         }
         updateAnnotationCount()
     }
@@ -205,8 +214,21 @@ final class BookImportViewModel: @unchecked Sendable {
             let count = await Task.detached(priority: .utility) {
                 AnnotationStore.shared.loadAnnotations(bkId: id).count
             }.value
+            guard targetBookIdForAnnotationCheck == id else { return }
             newIdAnnotationCount = count
         }
+    }
+
+    deinit {
+        if let sqliteURL {
+            try? FileManager.default.removeItem(at: sqliteURL)
+        }
+    }
+
+    func cleanupTemporaryFile() {
+        guard let url = sqliteURL else { return }
+        sqliteURL = nil
+        try? FileManager.default.removeItem(at: url)
     }
 
     // MARK: - File Import Handling
@@ -233,6 +255,7 @@ final class BookImportViewModel: @unchecked Sendable {
                 }
 
                 try FileManager.default.copyItem(at: selectedURL, to: tempURL)
+                cleanupTemporaryFile()
                 sqliteURL = tempURL
             } catch {
                 Logger.library.error("Error copying file: \(error.localizedDescription, privacy: .public)")
@@ -249,7 +272,10 @@ final class BookImportViewModel: @unchecked Sendable {
     func performImport(onImport: (URL, BookMetadata, [String: Any]?) async -> Void) async {
         guard let url = sqliteURL else { return }
         isImporting = true
-        defer { isImporting = false }
+        defer {
+            isImporting = false
+            cleanupTemporaryFile()
+        }
 
         let finalBookId = importMode == 0 ? (Int(customBookIdText) ?? (maxBkid + 1)) : (selectedBookId ?? 0)
         var finalAuthId: Int? = nil
@@ -290,23 +316,30 @@ final class BookImportViewModel: @unchecked Sendable {
     func performChangeBookId() async {
         guard let oldId = selectedBookId else { return }
         guard let newId = Int(customBookIdText), newId > 0 else { return }
+        let targetArchiveId = LibraryDataManager.shared.booksById[oldId]?.archive ?? archiveId
 
         isImporting = true
         defer { isImporting = false }
 
         do {
-            let (annotationsToSync, resultsToSync) = try await executeDatabaseChanges(oldId: oldId, newId: newId)
-            await reloadLocalCache(oldId: oldId, newId: newId)
+            let (migratedArchiveId, annotationsToSync, resultsToSync) = try await executeDatabaseChanges(
+                oldId: oldId,
+                newId: newId,
+                archiveId: targetArchiveId
+            )
+            let event = BookLifecycleEvent.idChanged(
+                oldId: oldId,
+                newId: newId,
+                oldArchiveId: migratedArchiveId,
+                newArchiveId: migratedArchiveId
+            )
+            await reloadLocalCache(event: event)
             uploadToCloudKit(annotationsToSync: annotationsToSync, resultsToSync: resultsToSync)
 
             await setupData(force: true)
             selectedBookId = newId
 
-            NotificationCenter.default.post(
-                name: .bookIdMigrated,
-                object: nil,
-                userInfo: ["oldId": oldId, "newId": newId]
-            )
+            await BookLifecycleCoordinator.shared.emit(event)
 
             ReusableFunc.showAlert(
                 title: "Success",
@@ -320,26 +353,50 @@ final class BookImportViewModel: @unchecked Sendable {
         }
     }
 
-    private func executeDatabaseChanges(oldId: Int, newId: Int) async throws -> ([Annotation], [SyncResult]) {
-        try await Task.detached(priority: .userInitiated) {
-            try BookUpdateManager.shared.changeBookId(oldId: oldId, newId: newId)
-            let annotations = try AnnotationStore.shared.updateAnnotationsBookId(oldId: oldId, newId: newId)
-            let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
-            return (annotations, results)
-        }.value
+    private func executeDatabaseChanges(
+        oldId: Int,
+        newId: Int,
+        archiveId: Int
+    ) async throws -> (archiveId: Int, annotations: [Annotation], results: [SyncResult]) {
+        let output = Mutex<(archiveId: Int, annotations: [Annotation], results: [SyncResult])?>(nil)
+        try await BookArchiveSingleFlight.shared.run(archiveId: archiveId, bookId: oldId) {
+            let value = try await Task.detached(priority: .userInitiated) {
+                let migratedArchiveId = try BookUpdateManager.shared.changeBookIdAndReturnArchive(oldId: oldId, newId: newId)
+                do {
+                    let annotations = try AnnotationStore.shared.updateAnnotationsBookId(
+                        oldId: oldId,
+                        newId: newId,
+                        uploadToCloudKit: false
+                    )
+                    do {
+                        let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)
+                        return (migratedArchiveId, annotations, results)
+                    } catch {
+                        _ = try? AnnotationStore.shared.updateAnnotationsBookId(
+                            oldId: newId,
+                            newId: oldId,
+                            uploadToCloudKit: false
+                        )
+                        throw error
+                    }
+                } catch {
+                    BookUpdateManager.shared.rollbackChangeBookId(
+                        oldId: oldId,
+                        newId: newId,
+                        archiveId: migratedArchiveId
+                    )
+                    throw error
+                }
+            }.value
+            output.withLock { $0 = value }
+        }
+        return output.withLock { $0 } ?? (archiveId, [], [])
     }
 
-    private func reloadLocalCache(oldId: Int, newId: Int) async {
+    private func reloadLocalCache(event: BookLifecycleEvent) async {
+        BookCacheCoordinator.shared.invalidateSynchronously(for: event)
         await LibraryDataManager.shared.reloadAllData()
-
-        if let book = LibraryDataManager.shared.booksById[newId] {
-            IntegrationCache.shared.unmarkIntegrated(bookId: oldId, archiveId: book.archive)
-            IntegrationCache.shared.markIntegrated(bookId: newId, archiveId: book.archive)
-        }
-
-        BookPageCache.shared.remove(bookId: oldId)
-        BookConnection.invalidateTOC(for: oldId)
-        BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(oldId)))
+        await LibraryDataManager.shared.buildArchive()
     }
 
     private func uploadToCloudKit(

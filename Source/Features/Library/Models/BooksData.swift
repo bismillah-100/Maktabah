@@ -7,11 +7,11 @@ import Foundation
 
 final class BooksData: Codable, Identifiable, @unchecked Sendable {
     let id: Int
-    let book: String
-    let normalizedBook: String
+    var book: String
+    var normalizedBook: String
 
-    let archive: Int
-    let muallif: Int
+    var archive: Int
+    var muallif: Int
     var catId: Int?
     var downloadFilename: String?
     var compressedDownloadSize: Int64?
@@ -48,5 +48,21 @@ final class BooksData: Codable, Identifiable, @unchecked Sendable {
         self.muallif = muallif
         self.bithoqoh = bithoqoh.convertToArabicDigits()
         self.info = info.convertToArabicDigits()
+    }
+
+    func applyMetadata(from updated: BooksData) {
+        guard id == updated.id else { return }
+        book = StringInterner.shared.intern(updated.book)
+        normalizedBook = updated.normalizedBook
+        archive = updated.archive
+        muallif = updated.muallif
+        catId = updated.catId
+        downloadFilename = updated.downloadFilename
+        compressedDownloadSize = updated.compressedDownloadSize
+        tafseerNam = updated.tafseerNam
+        pdfCs = updated.pdfCs
+        oNum = updated.oNum
+        bithoqoh = updated.bithoqoh
+        info = updated.info
     }
 }

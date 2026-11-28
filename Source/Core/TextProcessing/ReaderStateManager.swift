@@ -16,6 +16,95 @@ class ReaderStateManager {
     private var viewerModeState: ReaderState = .init()
     private var searchModeState: ReaderState = .init()
     private var authorModeState: ReaderState = .init()
+    private var lifecycleToken: NotificationToken?
+
+    init() {
+        lifecycleToken = NotificationToken(
+            token: NotificationCenter.default.addObserver(
+                forName: .bookLifecycleDidChange,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let event = notification.bookLifecycleEvent else { return }
+                MainActor.assumeIsolated { [weak self] in
+                    self?.applyLifecycleEvent(event)
+                }
+            }
+        )
+    }
+
+    private func applyLifecycleEvent(_ event: BookLifecycleEvent) {
+        viewerModeState = Self.sanitizedState(viewerModeState, for: event)
+        searchModeState = Self.sanitizedState(searchModeState, for: event)
+        authorModeState = Self.sanitizedState(authorModeState, for: event)
+
+        if case .libraryFolderChanged = event {
+            try? Self.fileManager.removeItem(at: Self.tabsSessionFileURL)
+        } else if case .bundledDataCleaned = event {
+            try? Self.fileManager.removeItem(at: Self.tabsSessionFileURL)
+        }
+    }
+
+    private static func sanitizedState(_ state: ReaderState, for event: BookLifecycleEvent) -> ReaderState {
+        var next = state
+        switch event {
+        case let .deleted(bookIds, _, removedFromCatalog):
+            let deletedTables = Set(bookIds.map { "b\($0)" })
+            if let book = next.currentBook, bookIds.contains(book.id) {
+                let isRemoved = removedFromCatalog.contains(book.id) || (AppConfig.isUsingBundleMode && !BookArchiveIntegrator.shared.isBookIntegrated(book))
+                if isRemoved {
+                    clearBookFields(&next)
+                }
+            }
+            if let results = next.searchResults {
+                next.searchResults = results.filter { !deletedTables.contains($0.tableName) }
+            }
+
+        case let .idChanged(oldId, newId, _, _):
+            if next.currentBook?.id == oldId, let fresh = LibraryDataManager.shared.booksById[newId] {
+                next.currentBook = fresh
+            }
+            if let results = next.searchResults {
+                let oldTable = "b\(oldId)"
+                let newTable = "b\(newId)"
+                let newTitle = LibraryDataManager.shared.booksById[newId]?.book
+                next.searchResults = results.map { item in
+                    guard item.tableName == oldTable else { return item }
+                    return SearchResultItem(
+                        archive: item.archive,
+                        tableName: newTable,
+                        bookId: item.bookId,
+                        bookTitle: newTitle ?? item.bookTitle,
+                        page: item.page,
+                        part: item.part,
+                        attributedText: item.attributedText
+                    )
+                }
+            }
+
+        case let .updated(bookIds, _, _), let .integrated(bookIds, _):
+            if let currentId = next.currentBook?.id, bookIds.contains(currentId),
+               let fresh = LibraryDataManager.shared.booksById[currentId]
+            {
+                next.currentBook = fresh
+            }
+
+        case .libraryFolderChanged, .bundledDataCleaned:
+            next = ReaderState()
+        }
+        return next
+    }
+
+    private static func clearBookFields(_ state: inout ReaderState) {
+        state.currentBook = nil
+        state.currentPage = nil
+        state.currentID = nil
+        state.currentPart = nil
+        state.expandedNodeIDs = []
+        state.sidebarScrollPosition = nil
+        state.scrollPosition = nil
+        state.selectedRange = nil
+    }
 
     private static let fileManager = FileManager.default
 

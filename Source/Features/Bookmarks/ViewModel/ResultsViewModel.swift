@@ -38,7 +38,7 @@ class ResultsViewModel {
     }
 
     var allResults: [ResultNode] {
-        folderResults.values.flatMap { $0 }
+        folderResults.values.flatMap(\.self)
     }
 
     /// Dipanggil setelah setiap operasi yang mengubah data.
@@ -65,6 +65,23 @@ class ResultsViewModel {
             name: .bookIdMigrated,
             object: nil
         )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleBookLifecycleDidChange(_:)),
+            name: .bookLifecycleDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func handleBookLifecycleDidChange(_ notification: Notification) {
+        guard let event = notification.bookLifecycleEvent else { return }
+        switch event {
+        case .deleted, .updated, .idChanged, .libraryFolderChanged, .bundledDataCleaned:
+            scheduleReloadTree()
+        case .integrated:
+            break
+        }
     }
 
     @objc private func handleBookIdMigrated(_ notification: Notification) {

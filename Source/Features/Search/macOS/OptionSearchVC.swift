@@ -40,11 +40,8 @@ class OptionSearchVC: NSViewController {
         viewModel.results
     }
 
-    static var query: String = .init()
-
     var searchText: String = .init() {
         didSet {
-            Self.query = searchText
             viewModel.query = searchText
         }
     }
@@ -71,11 +68,21 @@ class OptionSearchVC: NSViewController {
     }
 
     private var cancellables = Set<AnyCancellable>()
+    private var lifecycleToken: NotificationToken?
     private var resultsLoadingTask: Task<Void, Never>?
     private let cellTasks = NSMapTable<NSTableCellView, CellTaskBox>.weakToStrongObjects()
     private var migrationButton: NSView?
     private var nearDistanceField: NSTextField?
     private var nearDistanceWidthConstraint: NSLayoutConstraint?
+
+    private func cancelAllCellTasks() {
+        if let enumerator = cellTasks.objectEnumerator() {
+            while let box = enumerator.nextObject() as? CellTaskBox {
+                box.task.cancel()
+            }
+        }
+        cellTasks.removeAllObjects()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -109,6 +116,43 @@ class OptionSearchVC: NSViewController {
 
         bindViewModelPublishers()
         setupNearDistanceControl()
+        observeBookLifecycle()
+    }
+
+    private func observeBookLifecycle() {
+        lifecycleToken = NotificationToken(
+            token: NotificationCenter.default.addObserver(
+                forName: .bookLifecycleDidChange,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let event = notification.bookLifecycleEvent else { return }
+                MainActor.assumeIsolated { [weak self] in
+                    self?.handleBookLifecycleEvent(event)
+                }
+            }
+        )
+    }
+
+    private func handleBookLifecycleEvent(_ event: BookLifecycleEvent) {
+        switch event {
+        case let .idChanged(oldId, newId, _, _):
+            let oldPrefixed = BookTableName.prefixedTableName(from: String(oldId))
+            if bkId == oldPrefixed {
+                bkId = BookTableName.prefixedTableName(from: String(newId))
+            } else if bkId == String(oldId) {
+                bkId = String(newId)
+            }
+
+        case .libraryFolderChanged, .bundledDataCleaned:
+            cleanUpState()
+            migrationButton?.removeFromSuperview()
+            migrationButton = nil
+            setupMigrationButtonIfNeeded()
+
+        case .deleted, .updated, .integrated:
+            break
+        }
     }
 
     override func viewDidAppear() {
@@ -186,7 +230,7 @@ class OptionSearchVC: NSViewController {
 
     @objc private func showMigrationOptions(_ sender: NSView) {
         let menu = NSMenu()
-        let hideItem = NSMenuItem(title: String(localized: ".ftsMigrationHideBannerBtn"), action: #selector(hideMigrationBanner), keyEquivalent: "")
+        let hideItem = NSMenuItem(title: String(localized: .ftsMigrationHideBannerBtn), action: #selector(hideMigrationBanner), keyEquivalent: "")
         hideItem.target = self
         menu.addItem(hideItem)
 
@@ -359,12 +403,11 @@ class OptionSearchVC: NSViewController {
 
     @IBAction func cleanUp(_ sender: Any) {
         stopSearch(sender)
+        cancelAllCellTasks()
         viewModel.clearResults()
-        tableView.removeRows(
-            at: IndexSet(
-                integersIn: 0 ..< tableView.numberOfRows
-            )
-        )
+        searchField.stringValue = ""
+        searchText = ""
+        tableView.reloadData()
         tableView.sortDescriptors.removeAll()
         onCleanUp?()
         if !bkId.isEmpty {
@@ -443,13 +486,11 @@ class OptionSearchVC: NSViewController {
 
     @IBAction func stopSearch(_ sender: Any?) {
         viewModel.stopSearch()
-        startButton.state = .off
-        startButton.image = NSImage(
-            systemSymbolName: "play.fill",
-            accessibilityDescription: .none
-        )
+        updateStartButton(state: .off)
         resetProgressBar()
         resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
+        cancelAllCellTasks()
     }
 
     private func setupNearDistanceControl() {
@@ -711,6 +752,8 @@ extension OptionSearchVC: ResultsDelegate {
         tableView.reloadData()
         stopSearch(nil)
         resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
+        cancelAllCellTasks()
 
         guard !savedResults.isEmpty else { return }
 
@@ -757,8 +800,16 @@ extension OptionSearchVC: ReaderStateComponent {
     }
 
     func restore(from state: ReaderState) {
+        resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
+        cancelAllCellTasks()
+
         guard let savedResults = state.searchResults,
-              !savedResults.isEmpty else { return }
+              !savedResults.isEmpty
+        else {
+            cleanUpState()
+            return
+        }
 
         viewModel.restore(from: state)
 
@@ -773,10 +824,24 @@ extension OptionSearchVC: ReaderStateComponent {
     }
 
     func cleanUpState() {
+        resultsLoadingTask?.cancel()
+        resultsLoadingTask = nil
+        cancelAllCellTasks()
         viewModel.cleanUpState()
-        searchField.stringValue = ""
+        searchField?.stringValue = ""
         searchText = ""
-        tableView.reloadData()
+        tableView?.sortDescriptors.removeAll()
+        optionsSegment?.selectedSegment = SearchMode.phrase.rawValue
+        nearDistanceField?.stringValue = "\(viewModel.nearDistance)"
+        nearDistanceField?.isHidden = true
+        nearDistanceWidthConstraint?.constant = 0
+        if startButton != nil {
+            updateStartButton(state: .off)
+        }
+        if progressTable != nil {
+            resetProgressBar()
+        }
+        tableView?.reloadData()
     }
 }
 

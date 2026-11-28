@@ -7,7 +7,7 @@ import Foundation
 
 struct Annotation: Sendable, Equatable, Identifiable {
     var id: Int64? // nil sebelum disimpan
-    let bkId: Int // book id
+    var bkId: Int // book id
     let contentId: Int // BookContent.id
     var range: NSRange // NSRange berbasis UTF-16 (NSString)
     let rangeDiacritics: NSRange

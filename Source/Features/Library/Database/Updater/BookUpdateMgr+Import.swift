@@ -189,8 +189,13 @@ extension BookUpdateManager {
     }
 
     func changeBookId(oldId: Int, newId: Int) throws {
-        LibraryDataManager.shared.closeAllArchiveConnections()
-        guard let mainPath = AppConfig.mainDatabasePath else { return }
+        _ = try changeBookIdAndReturnArchive(oldId: oldId, newId: newId)
+    }
+
+    @discardableResult
+    func changeBookIdAndReturnArchive(oldId: Int, newId: Int) throws -> Int {
+        BookCacheCoordinator.shared.closeAllArchiveConnections()
+        guard let mainPath = AppConfig.mainDatabasePath else { return 0 }
 
         let db = try openDatabase(path: mainPath)
         defer { db.truncateAndClose() }
@@ -208,6 +213,28 @@ extension BookUpdateManager {
         }
 
         try updateMainDatabaseBookId(db: db, archivePath: archivePath, ftsPath: ftsPath, oldId: oldId, newId: newId)
+        return archiveId
+    }
+
+    func rollbackChangeBookId(oldId: Int, newId: Int, archiveId: Int) {
+        BookCacheCoordinator.shared.closeAllArchiveConnections()
+        let archivePath = archiveId > 0 ? AppConfig.archiveDatabasePath(archiveId: archiveId) : nil
+        let ftsPath = archiveId > 0 ? AppConfig.archiveFtsDatabasePath(archiveId: archiveId) : nil
+        rollbackBookIdRenames(archivePath: archivePath, ftsPath: ftsPath, oldId: oldId, newId: newId)
+
+        guard let mainPath = AppConfig.mainDatabasePath,
+              let db = try? openDatabase(path: mainPath)
+        else { return }
+        defer { db.truncateAndClose() }
+
+        let revertSql = "UPDATE `0bok` SET `bkid` = ? WHERE `bkid` = ?;"
+        var stmt: OpaquePointer?
+        if sqlite3_prepare_v2(db, revertSql, -1, &stmt, nil) == SQLITE_OK {
+            sqlite3_bind_int64(stmt, 1, Int64(oldId))
+            sqlite3_bind_int64(stmt, 2, Int64(newId))
+            sqlite3_step(stmt)
+        }
+        sqlite3_finalize(stmt)
     }
 
     private func fetchArchiveId(for bookId: Int, db: OpaquePointer?) -> Int {

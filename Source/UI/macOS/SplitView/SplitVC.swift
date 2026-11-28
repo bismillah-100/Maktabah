@@ -9,15 +9,14 @@ import Cocoa
 import OSLog
 
 class SplitVC: NSSplitViewController {
-
     // MARK: - Managers
+
     /// Manager khusus untuk menangani state persistence
     let stateManager = ReaderStateManager()
 
     // MARK: - Shared Components
-    lazy var ibarotTextVC: IbarotTextVC = {
-        viewerSplitVC.ibarotVC
-    }()
+
+    lazy var ibarotTextVC: IbarotTextVC = viewerSplitVC.ibarotVC
 
     lazy var viewerSplitVC: ViewerSplitVC = {
         // Setup ViewerSplitVC (SINGLETON)
@@ -27,12 +26,13 @@ class SplitVC: NSSplitViewController {
     }()
 
     // MARK: - Child View Controllers
+
     // Mode-specific Sidebars
     private(set) var libraryVC: LibraryVC?
     private(set) var searchSidebarVC: SearchSidebarVC?
     private(set) var rowiSidebarVC: RowiSidebarVC?
 
-    // Mode-specific Results
+    /// Mode-specific Results
     private(set) var optionSearchVC: OptionSearchVC?
 
     lazy var authorViewModel = NarratorViewModel()
@@ -44,6 +44,7 @@ class SplitVC: NSSplitViewController {
     }()
 
     // MARK: - Split View Items
+
     private(set) var sidebarItem: NSSplitViewItem!
     private(set) var contentItem: NSSplitViewItem!
     private(set) var searchFieldAccessoryItem: Any?
@@ -53,9 +54,10 @@ class SplitVC: NSSplitViewController {
     private var sidebarContainerVC: NSViewController?
 
     // MARK: - Current Mode
+
     var currentMode: AppMode = .viewer
 
-    // Akses ke state manager untuk VC lain jika dibutuhkan
+    /// Akses ke state manager untuk VC lain jika dibutuhkan
     var currentState: ReaderState {
         get { stateManager.getState(for: currentMode) }
         set { stateManager.setState(newValue, for: currentMode) }
@@ -63,6 +65,8 @@ class SplitVC: NSSplitViewController {
 
     var optSearchPopover: NSPopover?
     var optSearch: OptionSearchVC?
+    private var optSearchBookId: Int?
+    private var lifecycleToken: NotificationToken?
 
     // MARK: - Lifecycle
 
@@ -72,17 +76,60 @@ class SplitVC: NSSplitViewController {
             viewerSplitVC.splitView.autosaveName = "UnifiedViewerSplitView"
         }
         splitView.autosaveName = "UnifiedSplitView"
+        observeBookLifecycle()
+    }
+
+    private func observeBookLifecycle() {
+        guard lifecycleToken == nil else { return }
+        lifecycleToken = NotificationToken(
+            token: NotificationCenter.default.addObserver(
+                forName: .bookLifecycleDidChange,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let event = notification.bookLifecycleEvent else { return }
+                MainActor.assumeIsolated { [weak self] in
+                    self?.handleBookLifecycleForOptionSearch(event)
+                }
+            }
+        )
+    }
+
+    private func handleBookLifecycleForOptionSearch(_ event: BookLifecycleEvent) {
+        switch event {
+        case let .deleted(bookIds, _, _):
+            if let optSearchBookId, bookIds.contains(optSearchBookId) {
+                resetOptionSearchPopover()
+            }
+        case let .idChanged(oldId, newId, _, _):
+            if optSearchBookId == oldId {
+                optSearchBookId = newId
+            }
+        case .libraryFolderChanged, .bundledDataCleaned:
+            resetOptionSearchPopover()
+        case .integrated, .updated:
+            break
+        }
+    }
+
+    private func resetOptionSearchPopover() {
+        optSearch?.cleanUpState()
+        optSearchPopover?.close()
+        optSearch = nil
+        optSearchPopover = nil
+        optSearchBookId = nil
     }
 
     // MARK: - Mode Switching
+
     func components(for mode: AppMode) -> [ReaderStateComponent?] {
         switch mode {
         case .viewer:
-            return [ibarotTextVC]  // Cuma init yang diperlukan
+            [ibarotTextVC] // Cuma init yang diperlukan
         case .search:
-            return [ibarotTextVC, optionSearchVC]
+            [ibarotTextVC, optionSearchVC]
         case .narrator:
-            return [ibarotTextVC, rowiResultsVC]
+            [ibarotTextVC, rowiResultsVC]
         }
     }
 
@@ -92,7 +139,7 @@ class SplitVC: NSSplitViewController {
         // Simpan title sebelum switch
         persistCurrentStateToDisk(persistToDisk: !restoreState)
 
-        ibarotTextVC.textView.string.removeAll()
+        ibarotTextVC.clearUI()
 
         // Remove all split items except the persistent sidebar (if present).
         let itemsToRemove = splitViewItems.filter { $0 != sidebarItem }
@@ -147,13 +194,14 @@ class SplitVC: NSSplitViewController {
 
         if #available(macOS 26.1, *) {
             let button: NSButton? = currentMode == .search
-            ? searchSidebarVC?.selectAllButton
-            : nil
+                ? searchSidebarVC?.selectAllButton
+                : nil
 
             if currentMode == .search {
                 unhideSearchField()
                 if let accessoryItem = searchFieldAccessoryItem as? SplitVCAccessoryItem,
-                   let sidebar = activeSidebarForSearch {
+                   let sidebar = activeSidebarForSearch
+                {
                     sidebar.connectSearchField(accessoryItem.searchField)
                     accessoryItem.addButton(button)
                 }
@@ -167,7 +215,8 @@ class SplitVC: NSSplitViewController {
                 removeAccessoryView()
             }
             if let accessoryItem = searchFieldAccessoryItem as? SplitVCAccessoryItem,
-               let sidebar = activeSidebarForSearch {
+               let sidebar = activeSidebarForSearch
+            {
                 sidebar.connectSearchField(accessoryItem.searchField)
                 accessoryItem.addButton(button)
             }
@@ -323,6 +372,7 @@ class SplitVC: NSSplitViewController {
     }
 
     // MARK: AccessoryView
+
     var searchFieldIsHidden: Bool {
         get {
             UserDefaults.standard.sidebarSearchField
@@ -335,9 +385,9 @@ class SplitVC: NSSplitViewController {
     /// Sidebar yang sedang aktif, diperlakukan seragam sebagai SearchableLibrarySidebar.
     private var activeSidebarForSearch: (any SearchableLibrarySidebar)? {
         switch currentMode {
-        case .viewer: return libraryVC
-        case .search: return searchSidebarVC
-        case .narrator: return rowiSidebarVC
+        case .viewer: libraryVC
+        case .search: searchSidebarVC
+        case .narrator: rowiSidebarVC
         }
     }
 
@@ -361,7 +411,6 @@ class SplitVC: NSSplitViewController {
     @available(macOS 26.1, *)
     func unhideSearchField() {
         if currentState.isSidebarCollapsed {
-            searchFieldIsHidden = true
             return
         }
 
@@ -396,14 +445,14 @@ class SplitVC: NSSplitViewController {
 
 extension SplitVC {
     /*
-    var currentSidebarVC: NSViewController? {
-        switch currentMode {
-        case .viewer: return libraryVC
-        case .search: return searchSidebarVC
-        case .author: return rowiSidebarVC
-        }
-    }
-     */
+     var currentSidebarVC: NSViewController? {
+         switch currentMode {
+         case .viewer: return libraryVC
+         case .search: return searchSidebarVC
+         case .author: return rowiSidebarVC
+         }
+     }
+      */
 
     func setAnnotationsPanelDelegate() {
         if let annVC = SharedPopover.annotationsVC {
@@ -433,7 +482,7 @@ extension SplitVC {
                 libraryVC?.updateContentInset()
                 return
             }
-            if let libraryVC = libraryVC {
+            if let libraryVC {
                 libraryVC.searchFieldIsHidden.toggle()
                 libraryVC.unhideSearchField()
             }
@@ -501,7 +550,7 @@ extension SplitVC {
         vc.dataSource.delegate = ibarotTextVC
 
         if sender as? NSButton == nil,
-            AnnotationsVC.panel == nil
+           AnnotationsVC.panel == nil
         {
             vc.openAsPanel()
             return
@@ -520,6 +569,11 @@ extension SplitVC {
     }
 
     func searchCurrentBook(_ sender: NSButton) {
+        let currentBookId = ibarotTextVC.textView.bkId.flatMap { Int("\($0)") }
+        if optSearch != nil, optSearchBookId != currentBookId {
+            resetOptionSearchPopover()
+        }
+
         OptionSearchPopover.present(
             popover: &optSearchPopover,
             searchVC: &optSearch,
@@ -529,7 +583,11 @@ extension SplitVC {
             onCleanUp: { [weak self] in
                 self?.optSearch = nil
                 self?.optSearchPopover = nil
+                self?.optSearchBookId = nil
             }
         )
+        if optSearch != nil {
+            optSearchBookId = currentBookId
+        }
     }
 }

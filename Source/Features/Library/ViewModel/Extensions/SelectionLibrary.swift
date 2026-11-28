@@ -145,7 +145,17 @@ extension LibraryViewModel {
     }
 
     nonisolated func deleteSingleBook(_ book: BooksData) async {
-        try? await BookArchiveIntegrator.shared.removeBookFromArchive(book)
+        do {
+            try await BookArchiveIntegrator.shared.removeBookFromArchive(book)
+            await MainActor.run {
+                selectedBookIds.remove(book.id)
+                if selectedBookName == book.book {
+                    selectedBookName = nil
+                }
+            }
+        } catch {
+            // Failure leaves UI selection intact
+        }
     }
 
     func restoreSelectionEntry(byBookName bookName: String) -> (category: CategoryData, book: BooksData)? {

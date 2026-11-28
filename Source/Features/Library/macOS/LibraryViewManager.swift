@@ -455,8 +455,6 @@ extension LibraryViewManager: NSOutlineViewDelegate {
 
         guard alert.runModal() == .alertFirstButtonReturn else { return }
 
-        removeDeletedBooksRows(books)
-
         Task {
             for book in books {
                 try? await BookArchiveIntegrator.shared.removeBookFromArchive(book)

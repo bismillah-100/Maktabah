@@ -36,6 +36,10 @@ struct SearchModeView: View {
                     onLeadingAction: {
                         viewModel.clearResults()
                         viewModel.query = ""
+                        kitabFilter = ""
+                        sortKey = .bookTitle
+                        sortAscending = true
+                        isSearchFieldFocused = false
                     },
                     showSortMenu: true,
                     showSaveMenu: true,
@@ -60,6 +64,11 @@ struct SearchModeView: View {
             }
             .sheet(isPresented: $showingSavedResults) {
                 iOSSavedResultsView()
+            }
+            .onChange(of: showingSavedResults) { _, isPresented in
+                if !isPresented {
+                    kitabFilter = ""
+                }
             }
             .animation(.easeInOut(duration: 0.5), value: viewModel.results.isEmpty)
             .animation(.interpolatingSpring(stiffness: 300, damping: 20),

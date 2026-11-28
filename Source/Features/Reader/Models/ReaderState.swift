@@ -128,6 +128,22 @@ struct ReaderState: Codable {
 
 /// Extension untuk mudah compare state
 extension ReaderState: Equatable {
+    private static func tarjamahResultsEqual(_ lhs: [TarjamahResult]?, _ rhs: [TarjamahResult]?) -> Bool {
+        switch (lhs, rhs) {
+        case (.none, .none):
+            return true
+        case let (.some(l), .some(r)):
+            guard l.count == r.count else { return false }
+            return zip(l, r).allSatisfy {
+                $0.tarjamah.id == $1.tarjamah.id
+                    && $0.tarjamah.bk == $1.tarjamah.bk
+                    && $0.content == $1.content
+            }
+        default:
+            return false
+        }
+    }
+
     static func == (lhs: ReaderState, rhs: ReaderState) -> Bool {
         lhs.currentBook?.id == rhs.currentBook?.id
             && lhs.currentID == rhs.currentID
@@ -136,10 +152,14 @@ extension ReaderState: Equatable {
             && lhs.currentRowi?.id == rhs.currentRowi?.id
             && lhs.authorDisplayMode == rhs.authorDisplayMode
             && lhs.isSidebarCollapsed == rhs.isSidebarCollapsed
+            && lhs.expandedNodeIDs == rhs.expandedNodeIDs
             && lhs.searchQuery == rhs.searchQuery
             && lhs.searchModeRaw == rhs.searchModeRaw
             && lhs.searchNearDistance == rhs.searchNearDistance
+            && lhs.searchResults == rhs.searchResults
             && lhs.authorSearchQuery == rhs.authorSearchQuery
+            && lhs.authorRowiMode == rhs.authorRowiMode
+            && tarjamahResultsEqual(lhs.authorTarjamahResults, rhs.authorTarjamahResults)
             && lhs.scrollPosition == rhs.scrollPosition
             && lhs.selectedRange == rhs.selectedRange
             && lhs.sidebarScrollPosition == rhs.sidebarScrollPosition

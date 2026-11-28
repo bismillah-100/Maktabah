@@ -31,6 +31,30 @@ extension LibraryViewManager {
                 self?.handleBooksChanged(notification)
             }
             .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .bookLifecycleDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                guard let event = notification.bookLifecycleEvent else { return }
+                self?.handleBookLifecycleEvent(event)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleBookLifecycleEvent(_ event: BookLifecycleEvent) {
+        switch event {
+        case let .deleted(bookIds, _, removedFromCatalog):
+            for bookId in bookIds {
+                viewModel.selectedBookIds.remove(bookId)
+                if viewModel.showOnlyDownloaded || removedFromCatalog.contains(bookId) || dataManager.booksById[bookId] == nil {
+                    removeBookFromDisplayed(bookId: bookId)
+                } else {
+                    reloadParentCategory(ofBookId: bookId)
+                }
+            }
+        default:
+            break
+        }
     }
 
     func updateFlatList(
@@ -217,19 +241,30 @@ extension LibraryViewManager {
     }
 
     private func reloadUpdatedBooks(_ bookIds: Set<Int>) {
+        var needsTreeRebuild = viewModel.isFlatMode
+
         for bookId in bookIds {
             guard let book = dataManager.booksById[bookId] else { continue }
             for (oldName, value) in viewModel.bookLookup where value.book.id == bookId {
                 viewModel.bookLookup.removeValue(forKey: oldName)
                 viewModel.bookLookup[book.book] = (value.category, book)
+                if value.category.id != book.catId {
+                    needsTreeRebuild = true
+                }
                 break
             }
-            outlineView.reloadItem(book, reloadChildren: false)
+            if !needsTreeRebuild {
+                outlineView.reloadItem(book, reloadChildren: false)
+            }
+        }
+
+        if needsTreeRebuild {
+            viewModel.applyFilter(viewModel.filterMode)
         }
     }
 
     private func reloadParentCategory(ofBookId bookId: Int) {
-        if viewModel.showOnlyDownloaded {
+        if viewModel.showOnlyDownloaded || dataManager.booksById[bookId] == nil {
             handleIntegratedBookUpdate(bookId)
             return
         }

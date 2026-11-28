@@ -126,6 +126,8 @@ class HistoryViewModel: ViewModelBase {
         entriesByBookId[newId] = migrated
         if let idx = historyOrder.firstIndex(of: oldId) {
             historyOrder[idx] = newId
+            var seen = Set<Int>()
+            historyOrder = historyOrder.filter { seen.insert($0).inserted }
         }
 
         // Update DB: delete old, insert new

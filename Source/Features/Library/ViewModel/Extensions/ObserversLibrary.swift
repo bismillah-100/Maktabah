@@ -38,22 +38,33 @@ extension LibraryViewModel {
         #if os(iOS)
         addObserver(forName: .bookIntegrated, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { [weak self] in
-                self?.updateDisplayedCategories()
+                self?.refreshLibraryPresentationAfterMutation()
             }
         }
         #endif
     }
 
     private func observeBooksChanged() {
-        addObserver(forName: .booksChanged, object: nil, queue: .main) { [weak self] notification in
+        addObserver(forName: .booksChanged, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { [weak self] in
                 #if os(iOS)
-                self?.updateDisplayedCategories()
+                self?.refreshLibraryPresentationAfterMutation()
                 #endif
                 self?.checkBookUpdatesPeriodically(force: true)
             }
         }
     }
+
+    #if os(iOS)
+    private func refreshLibraryPresentationAfterMutation() {
+        _hasBuiltAuthorHierarchy = false
+        selectedBookIds = selectedBookIds.filter { dataManager.booksById[$0] != nil }
+        if let selected = selectedBookName, bookLookup[selected] == nil {
+            selectedBookName = nil
+        }
+        applyFilter(filterMode)
+    }
+    #endif
 
     private func observeLibraryFolderChanged() {
         addObserver(forName: .libraryFolderChanged, object: nil, queue: .main) { [weak self] _ in

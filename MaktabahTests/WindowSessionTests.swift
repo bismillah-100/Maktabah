@@ -77,6 +77,48 @@ struct ReaderStateModelTests {
         #expect(state1 != state2)
     }
 
+    @Test("Equatable implementation: membedakan expandedNodeIDs, searchResults, dan authorRowiMode")
+    func testEquatable_differentiatesSidebarAndSearchState() {
+        var state1 = ReaderState()
+        state1.expandedNodeIDs = [1, 2]
+        state1.authorRowiMode = "sidebar"
+        state1.sidebarScrollPosition = CGPoint(x: 0, y: 120)
+
+        var state2 = state1
+        #expect(state1 == state2)
+
+        state2.expandedNodeIDs = [1, 2, 3]
+        #expect(state1 != state2)
+
+        state2.expandedNodeIDs = [1, 2]
+        state2.authorRowiMode = "fullSearch"
+        #expect(state1 != state2)
+
+        state2.authorRowiMode = "sidebar"
+        state2.searchResults = [SearchResultItem(archive: "1", tableName: "b10", bookId: 1, bookTitle: "Kitab", page: 1, part: 1)]
+        #expect(state1 != state2)
+    }
+
+    @Test("BooksData.applyMetadata memperbarui properti in-place tanpa mengganti pointer instance")
+    func testBooksData_applyMetadataInPlace() {
+        let original = BooksData(id: 500, book: "الكتاب القديم", archive: 1, muallif: 10)
+        original.catId = 2
+        let alias = original
+
+        let updated = BooksData(id: 500, book: "الكتاب الجديد", archive: 3, muallif: 20, bithoqoh: "بطاقة", info: "معلومات")
+        updated.catId = 5
+        updated.pdfCs = 4
+
+        original.applyMetadata(from: updated)
+
+        #expect(original === alias)
+        #expect(alias.book == "الكتاب الجديد")
+        #expect(alias.archive == 3)
+        #expect(alias.muallif == 20)
+        #expect(alias.catId == 5)
+        #expect(alias.pdfCs == 4)
+    }
+
     @Test("TabStateSnapshot & WindowTabsSession: roundtrip Codable serialization")
     func testTabSnapshotAndSessionRoundtrip() throws {
         var viewerState = ReaderState()
@@ -313,5 +355,37 @@ struct AppDelegateLifecycleTests {
         let mirror = Mirror(reflecting: appDelegate)
         let isTerminating = mirror.children.first(where: { $0.label == "isTerminating" })?.value as? Bool
         #expect(isTerminating == true)
+    }
+
+    @Test("ReaderStateManager membersihkan buku terhapus pada mode non-aktif saat .deleted diterima")
+    func testReaderStateManager_sanitizesDeletedBookAcrossModes() {
+        let manager = ReaderStateManager()
+        let deletedBook = BooksData(id: 7701, book: "Kitab Terhapus", archive: 20, muallif: 1)
+
+        var viewerState = ReaderState()
+        viewerState.currentBook = deletedBook
+        viewerState.currentPage = 10
+        viewerState.expandedNodeIDs = [1, 2]
+        manager.setState(viewerState, for: .viewer)
+
+        var searchState = ReaderState()
+        searchState.searchResults = [
+            SearchResultItem(archive: "20", tableName: "b7701", bookId: 1, bookTitle: "Kitab Terhapus", page: 1, part: 1),
+            SearchResultItem(archive: "1", tableName: "b10", bookId: 2, bookTitle: "Kitab Utuh", page: 2, part: 1)
+        ]
+        manager.setState(searchState, for: .search)
+
+        BookLifecycleCoordinator.shared.emitOnMainActor(
+            .deleted(bookIds: [7701], archiveIds: [20], removedFromCatalog: [7701])
+        )
+
+        let updatedViewer = manager.getState(for: .viewer)
+        #expect(updatedViewer.currentBook == nil)
+        #expect(updatedViewer.currentPage == nil)
+        #expect(updatedViewer.expandedNodeIDs.isEmpty)
+
+        let updatedSearch = manager.getState(for: .search)
+        #expect(updatedSearch.searchResults?.count == 1)
+        #expect(updatedSearch.searchResults?.first?.tableName == "b10")
     }
 }

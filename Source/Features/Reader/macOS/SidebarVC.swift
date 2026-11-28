@@ -323,7 +323,7 @@ extension SidebarVC: NSOutlineViewDelegate {
 
 extension SidebarVC {
     @MainActor
-    func selectNode(_ node: TOCNode, path: [TOCNode]?) {
+    func selectNode(_ node: TOCNode, path: [TOCNode]?, scrollToSelection: Bool = true) {
         guard let outlineView else { return }
 
         enableDelegate = false
@@ -343,13 +343,66 @@ extension SidebarVC {
             // hindari re-select jika sudah selected
             if outlineView.selectedRow != row {
                 outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-                outlineView.scrollRowToVisible(row)
+                if scrollToSelection {
+                    outlineView.scrollRowToVisible(row)
+                }
             }
         } else {
             outlineView.deselectAll(nil)
         }
 
         enableDelegate = true
+    }
+
+    @MainActor
+    func restorePresentation(expandedNodeIDs: [Int], scrollOrigin: CGPoint?) {
+        guard let outlineView else { return }
+        let expandedSet = Set(expandedNodeIDs)
+
+        enableDelegate = false
+        defer { enableDelegate = true }
+
+        if !expandedSet.isEmpty {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0
+                outlineView.beginUpdates()
+                func expandMatchingNodes(in nodes: [TOCNode]) {
+                    for node in nodes where !node.children.isEmpty {
+                        if expandedSet.contains(node.id) {
+                            outlineView.expandItem(node)
+                        }
+                        expandMatchingNodes(in: node.children)
+                    }
+                }
+                expandMatchingNodes(in: tocTree)
+                outlineView.endUpdates()
+            }
+            rebuildLookupCache()
+        }
+
+        if let scrollOrigin {
+            restoreScrollPosition(scrollOrigin)
+        }
+    }
+
+    @MainActor
+    func restoreScrollPosition(_ origin: CGPoint) {
+        guard let scrollView,
+              let documentView = scrollView.documentView
+        else { return }
+        scrollView.layoutSubtreeIfNeeded()
+
+        let docBounds = documentView.bounds
+        let clipBounds = scrollView.contentView.bounds
+        let maxX = max(0, docBounds.width - clipBounds.width)
+        let maxY = max(0, docBounds.height - clipBounds.height)
+        let clampedOrigin = CGPoint(
+            x: min(max(0, origin.x), maxX),
+            y: min(max(0, origin.y), maxY)
+        )
+
+        scrollView.contentView.scroll(to: clampedOrigin)
+        scrollView.reflectScrolledClipView(scrollView.contentView)
     }
 
     @objc private func onDoubleClick(_ sender: AnyObject) {

@@ -178,6 +178,12 @@ class ReaderViewModel: ViewModelBase {
         guard let newBookData = LibraryDataManager.shared.booksById[newId] else { return }
 
         currentBook = newBookData
+        #if os(iOS)
+        bookAnnotationsViewModel.bookId = newId
+        Task { [weak self] in
+            await self?.bookAnnotationsViewModel.loadBookAnnotations(bookId: newId)
+        }
+        #endif
         BookPageCache.shared.remove(bookId: oldId)
         BookPageCache.shared.remove(bookId: newId)
         BookConnection.invalidateTOC(for: oldId)
@@ -186,7 +192,7 @@ class ReaderViewModel: ViewModelBase {
         BookConnection.totalPartsCache.removeObject(forKey: NSString(string: String(newId)))
 
         do {
-            try bookConnection.connect(archive: newBookData.archive)
+            try bookConnection.connect(archive: newBookData.archive, force: true)
         } catch {
             Logger.reader.error("Failed to reconnect after migrateBookId: \(error.localizedDescription, privacy: .public)")
         }

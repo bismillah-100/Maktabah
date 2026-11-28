@@ -120,22 +120,30 @@ final class SearchViewModel: ViewModelBase {
             selectedBookIds.insert(newId)
         }
 
-        for i in 0 ..< results.count where results[i].bookId == oldId {
+        let oldTable = BookTableName.prefixedTableName(from: String(oldId))
+        let newTable = BookTableName.prefixedTableName(from: String(newId))
+        let updatedTitle = ldm.booksById[newId]?.book
+
+        for i in 0 ..< results.count where results[i].tableName == oldTable {
             let oldItem = results[i]
             results[i] = SearchResultItem(
                 archive: oldItem.archive,
-                tableName: "b\(newId)",
-                bookId: newId,
-                bookTitle: oldItem.bookTitle,
+                tableName: newTable,
+                bookId: oldItem.bookId,
+                bookTitle: updatedTitle ?? oldItem.bookTitle,
                 page: oldItem.page,
                 part: oldItem.part,
                 attributedText: oldItem.attributedText
             )
         }
 
-        if targetBookId == String(oldId) {
+        if targetBookId == oldTable {
+            targetBookId = newTable
+        } else if targetBookId == String(oldId) {
             targetBookId = String(newId)
         }
+
+        SearchHitResolver.shared.clearCache()
 
         #if os(macOS)
         searchNeedsReload.send(())

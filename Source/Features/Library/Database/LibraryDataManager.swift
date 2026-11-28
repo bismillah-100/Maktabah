@@ -1039,7 +1039,7 @@ extension LibraryDataManager {
                     insertedBooks.append(inserted)
                 }
             case .updated:
-                if let updatedId = try applyUpdatedBook(result.bookId) {
+                if let updatedId = try await applyUpdatedBook(result.bookId) {
                     updatedBookIds.insert(updatedId)
                 }
             case .skipped:
@@ -1073,16 +1073,53 @@ extension LibraryDataManager {
         return inserted
     }
 
-    private func applyUpdatedBook(_ bookId: Int) throws -> Int? {
-        guard let book = try db.fetchBook(byId: bookId) else { return nil }
+    private func applyUpdatedBook(_ bookId: Int) async throws -> Int? {
+        guard let fetchedBook = try db.fetchBook(byId: bookId) else { return nil }
+        let existingBook = state.withLock { $0.booksById[bookId] }
 
-        state.withLock { state in
-            state.booksById[bookId] = book
-            updateBookInHierarchy(book, in: state.allRootCategories)
+        if let existingBook {
+            let oldCatId = existingBook.catId
+            let oldArchive = existingBook.archive
+            let oldTitle = existingBook.book
+
+            await MainActor.run {
+                existingBook.applyMetadata(from: fetchedBook)
+            }
+
+            state.withLock { state in
+                if oldCatId != fetchedBook.catId || oldTitle != fetchedBook.book {
+                    for root in state.allRootCategories {
+                        removeBookFromHierarchy(root, bookId: bookId)
+                    }
+                    if let newCatId = fetchedBook.catId, let targetCat = state.categoryMap[newCatId] {
+                        targetCat.insertBookSorted(existingBook)
+                    }
+                }
+
+                if oldArchive != fetchedBook.archive, oldArchive > 0 {
+                    let tableName = "b\(bookId)"
+                    state.archives[oldArchive]?.tables.removeAll { $0 == tableName }
+                    state.archives[oldArchive]?.books.removeAll { $0.id == bookId }
+                }
+            }
+
+            if oldArchive != fetchedBook.archive {
+                IntegrationCache.shared.unmarkIntegrated(bookId: bookId, archiveId: oldArchive)
+                DatabaseManager.shared.invalidateArchiveCache(archiveId: oldArchive)
+            }
+
+            updateArchiveForBooks([existingBook])
+        } else {
+            state.withLock { state in
+                state.booksById[bookId] = fetchedBook
+                if let newCatId = fetchedBook.catId, let targetCat = state.categoryMap[newCatId] {
+                    targetCat.insertBookSorted(fetchedBook)
+                }
+            }
+            updateArchiveForBooks([fetchedBook])
         }
 
         BookPageCache.shared.remove(bookId: bookId)
-        updateArchiveForBooks([book])
         return bookId
     }
 

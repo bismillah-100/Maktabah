@@ -179,8 +179,8 @@ final class WidgetUpdateCoordinator: @unchecked Sendable {
         let bookTitleMap = Dictionary(books.map { ($0.id, $0.book) },
                                       uniquingKeysWith: { first, _ in first })
 
-        let historyItems = recents.map { entry -> HistorySnapshot.Item in
-            let title = bookTitleMap[entry.bookId] ?? "Book ID: \(entry.bookId)"
+        let historyItems = recents.compactMap { entry -> HistorySnapshot.Item? in
+            guard let title = bookTitleMap[entry.bookId] else { return nil }
             let date = entry.lastOpenedAt ?? entry.positionUpdatedAt ?? entry.updatedAt
             return HistorySnapshot.Item(
                 id: String(entry.id),

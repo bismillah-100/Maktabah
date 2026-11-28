@@ -98,6 +98,53 @@ class iOSNavigationManager {
                 }
             )
         )
+
+        observerTokens.append(
+            NotificationToken(
+                token: NotificationCenter.default.addObserver(
+                    forName: .bookLifecycleDidChange,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] notification in
+                    guard let event = notification.bookLifecycleEvent else { return }
+                    Task { @MainActor [weak self] in
+                        self?.handleBookLifecycleEvent(event)
+                    }
+                }
+            )
+        )
+    }
+
+    private func handleBookLifecycleEvent(_ event: BookLifecycleEvent) {
+        switch event {
+        case let .deleted(bookIds, _, _):
+            for id in bookIds {
+                handleBookIntegrationChanged(bookId: id)
+            }
+
+        case let .updated(bookIds, _, _), let .integrated(bookIds, _):
+            let ldm = LibraryDataManager.shared
+            for i in 0 ..< openTabs.count where bookIds.contains(openTabs[i].book.id) {
+                if let freshBook = ldm.booksById[openTabs[i].book.id] {
+                    let oldTab = openTabs[i]
+                    openTabs[i] = ReaderTab(
+                        id: oldTab.id,
+                        book: freshBook,
+                        initialContentId: oldTab.initialContentId,
+                        viewModel: oldTab.viewModel
+                    )
+                    if selectedBook?.id == freshBook.id {
+                        selectedBook = freshBook
+                    }
+                }
+            }
+
+        case .bundledDataCleaned:
+            clearAllTabs()
+
+        case .idChanged, .libraryFolderChanged:
+            break
+        }
     }
 
     private func handleBookIdMigrated(oldId: Int, newId: Int) {
@@ -112,7 +159,6 @@ class iOSNavigationManager {
                 initialContentId: oldTab.initialContentId,
                 viewModel: oldTab.viewModel
             )
-            openTabs[i].viewModel.currentBook = newBookData
         }
 
         if selectedBook?.id == oldId {

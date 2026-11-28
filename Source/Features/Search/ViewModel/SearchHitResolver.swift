@@ -37,15 +37,16 @@ final class SearchHitResolver {
         }
 
         guard let payload = await Task.detached(priority: .userInitiated, operation: { () -> (snippet: String, keywords: [String])? in
+            let table = BookTableName.prefixedTableName(from: item.tableName)
             guard let content = await LibraryDataManager.shared.fetchSingleContent(
                 archive: item.archive,
-                table: item.tableName,
+                table: table,
                 rowId: item.bookId
             ) else {
                 return nil
             }
 
-            let bookId = Int(item.tableName.dropFirst()) ?? 0
+            let bookId = BookTableName.bookId(from: item.tableName) ?? 0
             let book = LibraryDataManager.shared.getBook([bookId]).first
             let isMultilingual = book?.isMultiLanguage ?? false
             let isImported = book?.isImported ?? false
@@ -55,13 +56,12 @@ final class SearchHitResolver {
             let normalized = stripped.convertToArabicDigits(isMultilingual: isMultilingual)
             let keywordsConverted = keywords.map { $0.convertToArabicDigits(isMultilingual: isMultilingual) }
 
-            let snippet: String
-            if mode == .near {
-                snippet = normalized
+            let snippet: String = if mode == .near {
+                normalized
                     .normalizeArabic()
                     .snippetNear(keywords: keywordsConverted, nearDistance: nearDistance, contextLength: 60)
             } else {
-                snippet = normalized
+                normalized
                     .normalizeArabic()
                     .snippetAround(keywords: keywordsConverted, contextLength: 60)
             }
@@ -71,11 +71,10 @@ final class SearchHitResolver {
             return nil
         }
 
-        let attributed: NSAttributedString
-        if mode == .near {
-            attributed = payload.snippet.highlightedAttributedText(keywords: payload.keywords, nearDistance: nearDistance)
+        let attributed: NSAttributedString = if mode == .near {
+            payload.snippet.highlightedAttributedText(keywords: payload.keywords, nearDistance: nearDistance)
         } else {
-            attributed = payload.snippet.highlightedAttributedText(keywords: payload.keywords)
+            payload.snippet.highlightedAttributedText(keywords: payload.keywords)
         }
 
         cache.setObject(attributed, forKey: key)
