@@ -366,7 +366,8 @@ final class BookImportViewModel: @unchecked Sendable {
                     let annotations = try AnnotationStore.shared.updateAnnotationsBookId(
                         oldId: oldId,
                         newId: newId,
-                        uploadToCloudKit: false
+                        uploadToCloudKit: false,
+                        notifyTreeBuilder: false
                     )
                     do {
                         let results = try ResultsHandler.shared.migrateBookId(from: oldId, to: newId)

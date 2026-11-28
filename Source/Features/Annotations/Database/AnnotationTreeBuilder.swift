@@ -45,10 +45,8 @@ final class AnnotationTreeBuilder: @unchecked Sendable {
             .sink { [weak self] notification in
                 guard let event = notification.bookLifecycleEvent else { return }
                 switch event {
-                case .deleted, .updated, .idChanged, .libraryFolderChanged, .bundledDataCleaned:
+                case .deleted, .updated, .integrated, .idChanged, .libraryFolderChanged, .bundledDataCleaned:
                     self?.buildAnnotationTree()
-                case .integrated:
-                    break
                 }
             }
             .store(in: &cancellables)

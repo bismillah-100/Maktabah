@@ -331,6 +331,7 @@ class iOSAnnotationViewController: UIViewController {
                         title: updatedAnnotation.note?.isEmpty == false ? updatedAnnotation.note! : updatedAnnotation.context,
                         kind: .annotation,
                         annotation: updatedAnnotation,
+                        bookTitle: oldItem.node.bookTitle,
                         children: nil
                     )
                     let updatedItem = AnnotationItem.annotation(updatedNode)
@@ -560,14 +561,15 @@ class iOSAnnotationViewController: UIViewController {
             }
         }
 
-        if !isSearching, !existing.items.isEmpty {
-            let existingExpanded = existing.isExpanded(groupItem)
+        if !isSearching, let existingGroup = existing.items.first(where: { $0.isGroup }) {
+            let existingExpanded = existing.isExpanded(existingGroup)
             if existingExpanded != isExpanded {
                 if existingExpanded {
                     expandedGroups.insert(sectionID)
                     sectionSnapshot.expand([groupItem])
                 } else {
                     expandedGroups.remove(sectionID)
+                    sectionSnapshot.collapse([groupItem])
                 }
             }
         }

@@ -164,6 +164,9 @@ class iOSNavigationManager {
         if selectedBook?.id == oldId {
             selectedBook = newBookData
         }
+        if selectedBookForInfo?.id == oldId {
+            selectedBookForInfo = newBookData
+        }
     }
 
     private func handleBookIntegrationChanged(bookId: Int) {

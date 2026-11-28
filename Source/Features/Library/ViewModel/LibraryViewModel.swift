@@ -43,6 +43,7 @@ final class LibraryViewModel: ViewModelBase {
         didSet {
             #if os(iOS)
             UserDefaults.standard.set(showOnlyDownloaded ? 1 : 0, forKey: "filterSegmentIndex")
+            filterMode = showOnlyDownloaded ? .downloaded : .all
             #endif
             resetAuthorPagination()
             updateDisplayedCategories()
@@ -120,6 +121,9 @@ final class LibraryViewModel: ViewModelBase {
 
     override init() {
         super.init()
+        #if os(iOS)
+        filterMode = showOnlyDownloaded ? .downloaded : .all
+        #endif
         MainActor.assumeIsolated {
             setupObservers()
         }
@@ -223,7 +227,11 @@ final class LibraryViewModel: ViewModelBase {
         }
 
         // Apply the filter to rebuild baseCategories, displayedCategories, and bookLookup
+        #if os(iOS)
+        applyFilter(showOnlyDownloaded ? .downloaded : filterMode)
+        #else
         applyFilter(filterMode)
+        #endif
     }
 
     func importOfflineBook(from url: URL, metadata: BookMetadata, authorRow: [String: any Sendable]?) async {

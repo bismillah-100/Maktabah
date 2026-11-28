@@ -317,51 +317,7 @@ extension LibraryViewManager {
         }
     }
 
-    func removeBookFromDisplayed(bookId: Int) {
-        viewModel.selectedBookIds.remove(bookId)
-
-        let parent: CategoryData?
-        let parentItem: Any?
-
-        if viewModel.isFlatMode {
-            parent = viewModel.displayedCategories.first
-            parentItem = nil
-        } else {
-            let foundParent = viewModel.bookLookup.values.first(where: { $0.book.id == bookId })?.category
-                ?? findParentCategory(ofBookId: bookId, in: viewModel.displayedCategories)
-            parent = foundParent
-            parentItem = foundParent
-        }
-
-        guard let parent,
-              let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId })
-        else {
-            return
-        }
-
-        let book = parent.children[childIndex] as? BooksData
-        let bookName = book?.book
-
-        isUpdatingOutline = true
-        outlineView.beginUpdates()
-
-        parent.children.remove(at: childIndex)
-        outlineView.removeItems(at: IndexSet(integer: childIndex), inParent: parentItem, withAnimation: [.slideUp])
-
-        if !viewModel.isFlatMode {
-            cleanEmptyCategory(parent)
-        }
-
-        outlineView.endUpdates()
-        isUpdatingOutline = false
-
-        if let bookName {
-            viewModel.bookLookup.removeValue(forKey: bookName)
-            if viewModel.selectedBookName == bookName {
-                viewModel.selectedBookName = nil
-            }
-        }
-
+    private func removeBookFromBaseCategories(bookId: Int) {
         if viewModel.searchQuery.isEmpty {
             viewModel.baseCategories = viewModel.displayedCategories
         } else if let baseParent = findParentCategory(ofBookId: bookId, in: viewModel.baseCategories),
@@ -372,6 +328,100 @@ extension LibraryViewManager {
                 viewModel.baseCategories.removeAll { $0 === baseParent || $0.id == baseParent.id }
             }
         }
+    }
+
+    func removeBookFromDisplayed(bookId: Int) {
+        viewModel.selectedBookIds.remove(bookId)
+
+        let lookupEntry = viewModel.bookLookup.values.first(where: { $0.book.id == bookId })
+        if let existingBook = lookupEntry?.book {
+            let row = outlineView.row(forItem: existingBook)
+            if row >= 0, outlineView.isRowSelected(row) {
+                outlineView.deselectRow(row)
+            }
+            viewModel.bookLookup.removeValue(forKey: existingBook.book)
+            if viewModel.selectedBookName == existingBook.book {
+                viewModel.selectedBookName = nil
+            }
+        }
+
+        let parent: CategoryData?
+        let parentItem: Any?
+
+        if viewModel.isFlatMode {
+            parent = viewModel.displayedCategories.first
+            parentItem = nil
+        } else {
+            let foundParent = lookupEntry?.category
+                ?? findParentCategory(ofBookId: bookId, in: viewModel.displayedCategories)
+            parent = foundParent
+            parentItem = foundParent
+        }
+
+        guard let parent else {
+            outlineView.reloadData()
+            removeBookFromBaseCategories(bookId: bookId)
+            return
+        }
+
+        if let childIndex = parent.children.firstIndex(where: { ($0 as? BooksData)?.id == bookId }) {
+            let book = parent.children[childIndex] as? BooksData
+            let bookName = book?.book
+
+            isUpdatingOutline = true
+            outlineView.beginUpdates()
+
+            parent.children.remove(at: childIndex)
+            outlineView.removeItems(at: IndexSet(integer: childIndex), inParent: parentItem, withAnimation: [.slideUp])
+
+            if !viewModel.isFlatMode {
+                cleanEmptyCategory(parent)
+            }
+
+            outlineView.endUpdates()
+            isUpdatingOutline = false
+
+            if let bookName {
+                viewModel.bookLookup.removeValue(forKey: bookName)
+                if viewModel.selectedBookName == bookName {
+                    viewModel.selectedBookName = nil
+                }
+            }
+            removeBookFromBaseCategories(bookId: bookId)
+            return
+        }
+
+        // In All Books mode, displayedCategories shares CategoryData instances with allRootCategories,
+        // which removeBookFromMemory already mutated before emitting the lifecycle event.
+        if !viewModel.isFlatMode,
+           !parent.children.isEmpty,
+           outlineView.row(forItem: parent) != -1
+        {
+            let outlineChildCount = outlineView.numberOfChildren(ofItem: parentItem)
+            if outlineChildCount == parent.children.count + 1,
+               let outlineIndex = (0 ..< outlineChildCount).first(where: {
+                   (outlineView.child($0, ofItem: parentItem) as? BooksData)?.id == bookId
+               })
+            {
+                isUpdatingOutline = true
+                outlineView.beginUpdates()
+                outlineView.removeItems(at: IndexSet(integer: outlineIndex), inParent: parentItem, withAnimation: [.slideUp])
+                outlineView.endUpdates()
+                isUpdatingOutline = false
+                removeBookFromBaseCategories(bookId: bookId)
+                return
+            }
+        }
+
+        if viewModel.isFlatMode {
+            parent.children.removeAll { ($0 as? BooksData)?.id == bookId }
+            if parent.children.isEmpty {
+                viewModel.displayedCategories.removeAll { $0 === parent }
+            }
+        }
+        outlineView.reloadData()
+        viewModel.buildBookLookup()
+        removeBookFromBaseCategories(bookId: bookId)
     }
 
     func removeDeletedBooksRows(_ deletedBooks: [BooksData]) {

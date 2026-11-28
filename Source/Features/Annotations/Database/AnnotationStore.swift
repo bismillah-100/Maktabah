@@ -259,7 +259,12 @@ final class AnnotationStore: Sendable {
     }
 
     @discardableResult
-    func updateAnnotationsBookId(oldId: Int, newId: Int, uploadToCloudKit: Bool = true) throws -> [Annotation] {
+    func updateAnnotationsBookId(
+        oldId: Int,
+        newId: Int,
+        uploadToCloudKit: Bool = true,
+        notifyTreeBuilder: Bool = true
+    ) throws -> [Annotation] {
         let updated = try repository.updateAnnotationsBookId(oldId: oldId, newId: newId)
 
         clearAllCaches()
@@ -268,7 +273,9 @@ final class AnnotationStore: Sendable {
             CloudKitSyncManager.shared.upload(annotations: updated, trackPending: false)
         }
 
-        emit(.treeInvalidated)
+        if notifyTreeBuilder {
+            emit(.treeInvalidated)
+        }
         return updated
     }
 

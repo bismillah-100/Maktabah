@@ -192,4 +192,60 @@ struct LibraryFlatModeTests {
         #expect(outlineView.row(forItem: bookARenamed) == 2)
         #expect(outlineView.row(forItem: bookA1) == -1)
     }
+
+    @Test("removeBookFromDisplayed removes selected row even if shared CategoryData was pre-mutated")
+    func testRemoveBookFromDisplayedWhenParentAlreadyMutated() {
+        let outlineView = NSOutlineView(frame: NSRect(x: 0, y: 0, width: 250, height: 400))
+        outlineView.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("Book")))
+        let searchField = DSFSearchField(frame: NSRect(x: 0, y: 0, width: 200, height: 30), recentsAutosaveName: nil)
+
+        let manager = LibraryViewManager(outlineView: outlineView, searchField: searchField)
+        outlineView.dataSource = manager
+        outlineView.delegate = manager
+        manager.isSetupComplete = true
+        manager.viewModel.filterMode = .all
+        manager.viewModel.isFlatMode = false
+
+        let category = CategoryData(id: 10, name: "Karya Impor", level: 0, order: 0)
+        let bookA = BooksData(id: 7001, book: "Kitab Impor Satu", archive: 20, muallif: 1)
+        let bookB = BooksData(id: 7002, book: "Kitab Impor Dua", archive: 20, muallif: 1)
+        category.children = [bookA, bookB]
+
+        manager.viewModel.displayedCategories = [category]
+        manager.viewModel.baseCategories = [category]
+        manager.viewModel.bookLookup = [
+            bookA.book: (category: category, book: bookA),
+            bookB.book: (category: category, book: bookB),
+        ]
+        outlineView.reloadData()
+        outlineView.expandItem(category)
+
+        let rowA = outlineView.row(forItem: bookA)
+        #expect(rowA >= 0)
+        outlineView.selectRowIndexes(IndexSet(integer: rowA), byExtendingSelection: false)
+        manager.viewModel.selectedBookName = bookA.book
+
+        // Simulate removeBookFromMemory mutating the shared allRootCategories/displayedCategories array first
+        category.children.removeAll { ($0 as? BooksData)?.id == bookA.id }
+
+        manager.removeBookFromDisplayed(bookId: bookA.id)
+
+        #expect(outlineView.row(forItem: bookA) == -1)
+        #expect(outlineView.row(forItem: bookB) >= 0)
+        #expect(manager.viewModel.selectedBookName == nil)
+        #expect(manager.viewModel.bookLookup[bookA.book] == nil)
+
+        // Simulate last child removed + category stripped from shared root array before diff handler runs
+        let rowB = outlineView.row(forItem: bookB)
+        #expect(rowB >= 0)
+        outlineView.selectRowIndexes(IndexSet(integer: rowB), byExtendingSelection: false)
+        manager.viewModel.selectedBookName = bookB.book
+        category.children.removeAll()
+        manager.viewModel.displayedCategories.removeAll()
+
+        manager.removeBookFromDisplayed(bookId: bookB.id)
+
+        #expect(outlineView.numberOfRows == 0)
+        #expect(manager.viewModel.selectedBookName == nil)
+    }
 }

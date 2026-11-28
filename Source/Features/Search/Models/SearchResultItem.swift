@@ -32,6 +32,20 @@ struct SearchResultItem: Codable, CopyableResult, Hashable, Sendable, Identifiab
         rawAttributedText != nil
     }
 
+    /// Creates a migrated item pointing to `newTableName` while preserving lazy-resolution state
+    /// (`nil` stays `nil` rather than turning into an empty attributed string).
+    func migratingBook(toTable newTableName: String, bookTitle updatedTitle: String?) -> SearchResultItem {
+        SearchResultItem(
+            archive: archive,
+            tableName: newTableName,
+            bookId: bookId,
+            bookTitle: updatedTitle ?? bookTitle,
+            page: page,
+            part: part,
+            attributedText: rawAttributedText
+        )
+    }
+
     var id: String { "\(archive)_\(tableName)_\(bookId)" }
     var uniqueId: String { id }
 

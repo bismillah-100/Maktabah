@@ -70,15 +70,7 @@ class ReaderStateManager {
                 let newTitle = LibraryDataManager.shared.booksById[newId]?.book
                 next.searchResults = results.map { item in
                     guard item.tableName == oldTable else { return item }
-                    return SearchResultItem(
-                        archive: item.archive,
-                        tableName: newTable,
-                        bookId: item.bookId,
-                        bookTitle: newTitle ?? item.bookTitle,
-                        page: item.page,
-                        part: item.part,
-                        attributedText: item.attributedText
-                    )
+                    return item.migratingBook(toTable: newTable, bookTitle: newTitle)
                 }
             }
 

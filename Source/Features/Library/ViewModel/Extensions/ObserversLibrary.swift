@@ -57,12 +57,17 @@ extension LibraryViewModel {
 
     #if os(iOS)
     private func refreshLibraryPresentationAfterMutation() {
+        rootCategories = dataManager.allRootCategories
         _hasBuiltAuthorHierarchy = false
+        if viewMode == .author {
+            _authorHierarchy = dataManager.buildAuthorHierarchy()
+            _hasBuiltAuthorHierarchy = true
+        }
         selectedBookIds = selectedBookIds.filter { dataManager.booksById[$0] != nil }
         if let selected = selectedBookName, bookLookup[selected] == nil {
             selectedBookName = nil
         }
-        applyFilter(filterMode)
+        applyFilter(showOnlyDownloaded ? .downloaded : filterMode)
     }
     #endif
 

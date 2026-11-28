@@ -157,6 +157,15 @@ struct SearchTests {
         viewModel.targetBookId = "b42"
         viewModel.results = [
             SearchResultItem(archive: "1", tableName: "b42", bookId: 7, bookTitle: "Lama", page: 7, part: 1),
+            SearchResultItem(
+                archive: "1",
+                tableName: "b42",
+                bookId: 8,
+                bookTitle: "Lama",
+                page: 8,
+                part: 1,
+                attributedText: NSAttributedString(string: "cuplikan lama")
+            ),
             SearchResultItem(archive: "1", tableName: "b100", bookId: 42, bookTitle: "Kitab Lain", page: 42, part: 1)
         ]
 
@@ -166,8 +175,12 @@ struct SearchTests {
         #expect(viewModel.targetBookId == "b500")
         #expect(viewModel.results[0].tableName == "b500")
         #expect(viewModel.results[0].bookId == 7)
-        #expect(viewModel.results[1].tableName == "b100")
-        #expect(viewModel.results[1].bookId == 42)
+        #expect(viewModel.results[0].hasResolvedSnippet == false)
+        #expect(viewModel.results[1].tableName == "b500")
+        #expect(viewModel.results[1].hasResolvedSnippet == true)
+        #expect(viewModel.results[1].attributedText.string == "cuplikan lama")
+        #expect(viewModel.results[2].tableName == "b100")
+        #expect(viewModel.results[2].bookId == 42)
     }
 
     @Test("BookTableName mengekstrak dan memformat nama tabel secara konsisten")

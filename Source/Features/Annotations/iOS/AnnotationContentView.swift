@@ -197,7 +197,9 @@ enum AnnotationItem: Hashable, @unchecked Sendable {
             hasher.combine("ann")
             hasher.combine(node.id)
             hasher.combine(node.title)
+            hasher.combine(node.bookTitle)
             if let ann = node.annotation {
+                hasher.combine(ann.bkId)
                 hasher.combine(ann.colorHex)
                 hasher.combine(ann.note)
                 hasher.combine(ann.tags)
@@ -213,6 +215,8 @@ enum AnnotationItem: Hashable, @unchecked Sendable {
         case let (.annotation(a), .annotation(b)):
             a.id == b.id &&
                 a.title == b.title &&
+                a.bookTitle == b.bookTitle &&
+                a.annotation?.bkId == b.annotation?.bkId &&
                 a.annotation?.type == b.annotation?.type &&
                 a.annotation?.colorHex == b.annotation?.colorHex &&
                 a.annotation?.note == b.annotation?.note &&

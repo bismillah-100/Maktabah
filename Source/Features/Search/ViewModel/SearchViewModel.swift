@@ -125,16 +125,7 @@ final class SearchViewModel: ViewModelBase {
         let updatedTitle = ldm.booksById[newId]?.book
 
         for i in 0 ..< results.count where results[i].tableName == oldTable {
-            let oldItem = results[i]
-            results[i] = SearchResultItem(
-                archive: oldItem.archive,
-                tableName: newTable,
-                bookId: oldItem.bookId,
-                bookTitle: updatedTitle ?? oldItem.bookTitle,
-                page: oldItem.page,
-                part: oldItem.part,
-                attributedText: oldItem.attributedText
-            )
+            results[i] = results[i].migratingBook(toTable: newTable, bookTitle: updatedTitle)
         }
 
         if targetBookId == oldTable {
